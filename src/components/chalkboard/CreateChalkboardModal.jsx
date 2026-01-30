@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Camera, AlertCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,7 +24,7 @@ import { addDays } from 'date-fns';
 const boards = [
   { value: 'help_needed', label: '🆘 Help Needed', allowAnonymous: true },
   { value: 'events', label: '📅 Events', showEventFields: true },
-  { value: 'dating', label: '💕 Dating', ageRestricted: true },
+  { value: 'dating', label: '💕 Dating', ageRestricted: true, requiresPhoto: true },
   { value: 'jobs', label: '💼 Jobs & Opportunities' },
   { value: 'roommates', label: '🏠 Roommates & Housing' },
   { value: 'kosher_food', label: '🍽️ Kosher Food & Places' }
@@ -42,6 +42,8 @@ export default function CreateChalkboardModal({ open, onOpenChange, currentUser,
 
   const selectedBoard = boards.find(b => b.value === boardType);
   const isUnder18 = currentUser?.age_range === '13-17';
+  const hasProfilePhoto = currentUser?.avatar_url;
+  const isDatingWithoutPhoto = boardType === 'dating' && !hasProfilePhoto;
 
   const filteredBoards = boards.filter(b => {
     if (b.ageRestricted && isUnder18) return false;
@@ -50,6 +52,7 @@ export default function CreateChalkboardModal({ open, onOpenChange, currentUser,
 
   const handleSubmit = async () => {
     if (!boardType || !title.trim() || !content.trim()) return;
+    if (boardType === 'dating' && !currentUser.avatar_url) return;
     
     setIsSubmitting(true);
     
@@ -60,6 +63,7 @@ export default function CreateChalkboardModal({ open, onOpenChange, currentUser,
       author_name: isAnonymous ? 'Anonymous' : (currentUser.display_name || currentUser.full_name?.split(' ')[0]),
       author_id: currentUser.id,
       author_age_range: currentUser.age_range || '18+',
+      author_avatar_url: currentUser.avatar_url || null,
       is_anonymous: isAnonymous,
       city: currentUser.city || 'Five Towns',
       location_details: locationDetails.trim(),
@@ -167,6 +171,18 @@ export default function CreateChalkboardModal({ open, onOpenChange, currentUser,
               <Switch checked={isAnonymous} onCheckedChange={setIsAnonymous} />
             </div>
           )}
+
+          {isDatingWithoutPhoto && (
+            <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-amber-900">Profile photo required</p>
+                <p className="text-sm text-amber-700 mt-1">
+                  Dating posts require a profile photo. Please add one in Settings before posting.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
@@ -175,7 +191,7 @@ export default function CreateChalkboardModal({ open, onOpenChange, currentUser,
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={!boardType || !title.trim() || !content.trim() || isSubmitting}
+            disabled={!boardType || !title.trim() || !content.trim() || isSubmitting || isDatingWithoutPhoto}
             className="bg-indigo-600 hover:bg-indigo-700"
           >
             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Post'}

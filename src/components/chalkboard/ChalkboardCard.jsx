@@ -25,6 +25,7 @@ export default function ChalkboardCard({ post, currentUser, onComment, onMessage
   const config = boardConfig[post.board_type] || boardConfig.help_needed;
   const isOwner = currentUser?.id === post.author_id;
   const timeAgo = formatDistanceToNow(new Date(post.created_date), { addSuffix: true });
+  const isDating = post.board_type === 'dating';
   
   const isExpired = post.expires_at && new Date(post.expires_at) < new Date();
   const canViewDating = post.board_type !== 'dating' || currentUser?.age_range === '18+';
@@ -35,6 +36,14 @@ export default function ChalkboardCard({ post, currentUser, onComment, onMessage
 
   return (
     <div className={`bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow ${isExpired ? 'opacity-60' : ''}`}>
+      {isDating && post.author_avatar_url && (
+        <div className="flex justify-center mb-5 -mt-2">
+          <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-pink-100 shadow-lg">
+            <img src={post.author_avatar_url} alt={post.author_name} className="w-full h-full object-cover" />
+          </div>
+        </div>
+      )}
+      
       <div className="flex items-start justify-between mb-3">
         <Badge variant="outline" className={`${config.color} border`}>
           {config.icon} {config.label}
@@ -93,9 +102,15 @@ export default function ChalkboardCard({ post, currentUser, onComment, onMessage
             <span className="text-sm text-slate-500 italic">Anonymous</span>
           ) : (
             <Link to={createPageUrl('Profile') + `?id=${post.author_id}`} className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium">
-                {post.author_name?.charAt(0)?.toUpperCase()}
-              </div>
+              {!isDating && (
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium overflow-hidden">
+                  {post.author_avatar_url ? (
+                    <img src={post.author_avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    post.author_name?.charAt(0)?.toUpperCase()
+                  )}
+                </div>
+              )}
               <span className="text-sm font-medium text-slate-700">{post.author_name}</span>
               <Badge variant="outline" className="text-xs scale-90">{post.author_age_range}</Badge>
             </Link>
