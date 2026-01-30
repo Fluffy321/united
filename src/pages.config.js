@@ -47,8 +47,22 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import Feed from './pages/Feed';
+import Chalkboard from './pages/Chalkboard';
+import Messages from './pages/Messages';
+import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 
-export const pagesConfig = {
-	Pages: {}
+
+export const PAGES = {
+    "Feed": Feed,
+    "Chalkboard": Chalkboard,
+    "Messages": Messages,
+    "Profile": Profile,
+    "Settings": Settings,
 }
 
+export const pagesConfig = {
+    mainPage: "Feed",
+    Pages: PAGES,
+};

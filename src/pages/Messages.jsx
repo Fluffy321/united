@@ -1,0 +1,132 @@
+import React, { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import ConversationList from '@/components/messages/ConversationList';
+import ChatView from '@/components/messages/ChatView';
+import ReportModal from '@/components/common/ReportModal';
+import { toast } from 'sonner';
+
+export default function Messages() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [showReport, setShowReport] = useState(false);
+  const [reportTarget, setReportTarget] = useState({ id: null, type: null });
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    loadUser();
+    checkUrlParams();
+  }, []);
+
+  const loadUser = async () => {
+    const user = await base44.auth.me();
+    setCurrentUser(user);
+  };
+
+  const checkUrlParams = () => {
+    const params = new URLSearchParams(window.location.search);
+    const convId = params.get('conversation');
+    if (convId) {
+      loadConversation(convId);
+    }
+  };
+
+  const loadConversation = async (id) => {
+    const conv = await base44.entities.Conversation.filter({ id });
+    if (conv[0]) {
+      setSelectedConversation(conv[0]);
+    }
+  };
+
+  const { data: conversations = [], isLoading } = useQuery({
+    queryKey: ['conversations', currentUser?.id],
+    queryFn: async () => {
+      const allConvs = await base44.entities.Conversation.list('-updated_date', 50);
+      return allConvs.filter(c => c.participant_ids?.includes(currentUser.id));
+    },
+    enabled: !!currentUser
+  });
+
+  const handleReport = (id, type) => {
+    setReportTarget({ id, type });
+    setShowReport(true);
+  };
+
+  const handleBlock = async (userId) => {
+    await base44.entities.Block.create({
+      blocker_id: currentUser.id,
+      blocked_id: userId
+    });
+    toast.success('User blocked');
+    setSelectedConversation(null);
+    queryClient.invalidateQueries({ queryKey: ['conversations'] });
+  };
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-4xl mx-auto h-screen flex">
+        {/* Conversation List - Desktop always visible, Mobile only when no chat selected */}
+        <div className={`w-full lg:w-96 lg:border-r border-slate-200 ${
+          selectedConversation ? 'hidden lg:block' : 'block'
+        }`}>
+          <div className="p-4 border-b border-slate-100">
+            <h1 className="text-xl font-bold text-slate-900">Messages</h1>
+          </div>
+          
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+            </div>
+          ) : (
+            <ConversationList 
+              conversations={conversations}
+              currentUser={currentUser}
+              selectedId={selectedConversation?.id}
+              onSelect={setSelectedConversation}
+            />
+          )}
+        </div>
+
+        {/* Chat View */}
+        <div className={`flex-1 ${
+          selectedConversation ? 'block' : 'hidden lg:flex lg:items-center lg:justify-center'
+        }`}>
+          {selectedConversation ? (
+            <ChatView 
+              conversation={selectedConversation}
+              currentUser={currentUser}
+              onBack={() => setSelectedConversation(null)}
+              onReport={handleReport}
+              onBlock={handleBlock}
+            />
+          ) : (
+            <div className="text-center p-8 hidden lg:block">
+              <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">💬</span>
+              </div>
+              <p className="text-slate-600 font-medium">Select a conversation</p>
+              <p className="text-sm text-slate-400 mt-1">Choose from your existing conversations</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <ReportModal 
+        open={showReport}
+        onOpenChange={setShowReport}
+        contentId={reportTarget.id}
+        contentType={reportTarget.type}
+        currentUser={currentUser}
+      />
+    </div>
+  );
+}
