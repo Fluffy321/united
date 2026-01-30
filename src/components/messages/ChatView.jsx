@@ -1,0 +1,179 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Send, Loader2, ArrowLeft, MoreVertical, Flag, Ban } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { base44 } from '@/api/base44Client';
+import { formatDistanceToNow } from 'date-fns';
+
+export default function ChatView({ conversation, currentUser, onBack, onReport, onBlock }) {
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const getOtherParticipant = () => {
+    const idx = conversation.participant_ids?.indexOf(currentUser.id);
+    const otherIdx = idx === 0 ? 1 : 0;
+    return {
+      id: conversation.participant_ids?.[otherIdx],
+      name: conversation.participant_names?.[otherIdx] || 'Unknown',
+      age: conversation.participant_ages?.[otherIdx] || '18+'
+    };
+  };
+
+  const other = getOtherParticipant();
+
+  useEffect(() => {
+    loadMessages();
+    markAsRead();
+  }, [conversation.id]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const loadMessages = async () => {
+    setIsLoading(true);
+    const data = await base44.entities.Message.filter({ conversation_id: conversation.id }, 'created_date');
+    setMessages(data);
+    setIsLoading(false);
+  };
+
+  const markAsRead = async () => {
+    const unreadCount = { ...conversation.unread_count, [currentUser.id]: 0 };
+    await base44.entities.Conversation.update(conversation.id, { unread_count: unreadCount });
+  };
+
+  const handleSend = async () => {
+    if (!newMessage.trim()) return;
+    
+    setIsSending(true);
+    
+    await base44.entities.Message.create({
+      conversation_id: conversation.id,
+      sender_id: currentUser.id,
+      sender_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],
+      sender_age_range: currentUser.age_range || '18+',
+      recipient_id: other.id,
+      content: newMessage.trim()
+    });
+
+    const unreadCount = { 
+      ...conversation.unread_count, 
+      [other.id]: (conversation.unread_count?.[other.id] || 0) + 1 
+    };
+
+    await base44.entities.Conversation.update(conversation.id, {
+      last_message: newMessage.trim(),
+      last_message_at: new Date().toISOString(),
+      unread_count: unreadCount
+    });
+
+    setNewMessage('');
+    setIsSending(false);
+    loadMessages();
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center gap-3 p-4 border-b border-slate-100 bg-white">
+        <Button variant="ghost" size="icon" onClick={onBack} className="lg:hidden">
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+          {other.name?.charAt(0)?.toUpperCase()}
+        </div>
+        
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-slate-900">{other.name}</span>
+            <Badge variant="outline" className="text-xs font-normal">{other.age}</Badge>
+          </div>
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="w-5 h-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onReport(other.id, 'user')}>
+              <Flag className="w-4 h-4 mr-2" />
+              Report User
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onBlock(other.id)} className="text-red-600">
+              <Ban className="w-4 h-4 mr-2" />
+              Block User
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-slate-500">Start the conversation!</p>
+          </div>
+        ) : (
+          messages.map(msg => {
+            const isOwn = msg.sender_id === currentUser.id;
+            return (
+              <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[75%] ${isOwn ? 'order-2' : ''}`}>
+                  <div className={`px-4 py-2.5 rounded-2xl ${
+                    isOwn 
+                      ? 'bg-indigo-600 text-white rounded-br-md' 
+                      : 'bg-white text-slate-800 rounded-bl-md shadow-sm'
+                  }`}>
+                    <p className="text-[15px] leading-relaxed">{msg.content}</p>
+                  </div>
+                  <p className={`text-xs text-slate-400 mt-1 ${isOwn ? 'text-right' : ''}`}>
+                    {formatDistanceToNow(new Date(msg.created_date), { addSuffix: true })}
+                  </p>
+                </div>
+              </div>
+            );
+          })
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="p-4 border-t border-slate-100 bg-white">
+        <div className="flex gap-2">
+          <Input 
+            placeholder="Type a message..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            className="flex-1"
+          />
+          <Button 
+            size="icon" 
+            onClick={handleSend} 
+            disabled={!newMessage.trim() || isSending}
+            className="bg-indigo-600 hover:bg-indigo-700"
+          >
+            {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
