@@ -120,21 +120,36 @@ export default function Feed() {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Daily Prompt */}
+        {/* Pinned Daily Prompt */}
         {activePrompt && (
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-5 mb-6 text-white shadow-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-5 h-5" />
-              <span className="text-sm font-medium opacity-90">Today's Prompt</span>
+          <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 mb-6 shadow-xl overflow-hidden">
+            {/* Pin Badge */}
+            <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1">
+              <span className="text-white text-xs font-semibold">📌 PINNED</span>
             </div>
-            <p className="text-lg font-semibold mb-4">{activePrompt.prompt_text}</p>
-            <Button 
-              variant="secondary" 
-              className="bg-white/20 hover:bg-white/30 text-white border-0"
-              onClick={() => setShowCreatePost(true)}
-            >
-              Share your thoughts
-            </Button>
+            
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="w-6 h-6 text-white" />
+              <span className="text-sm font-semibold text-white/90 uppercase tracking-wide">Daily Community Prompt</span>
+            </div>
+            
+            <p className="text-xl font-bold text-white mb-4 leading-relaxed pr-20">{activePrompt.prompt_text}</p>
+            
+            <div className="flex items-center gap-3">
+              <Button 
+                className="bg-white text-indigo-600 hover:bg-white/90 font-semibold shadow-md"
+                onClick={() => setShowCreatePost(true)}
+              >
+                Share Your Story
+              </Button>
+              <span className="text-white/80 text-sm">
+                {activePrompt.responses_count || 0} responses today
+              </span>
+            </div>
+
+            {/* Decorative elements */}
+            <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+            <div className="absolute -top-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
           </div>
         )}
 
