@@ -21,11 +21,22 @@ const boardConfig = {
   kosher_food: { label: 'Kosher Food', color: 'bg-purple-100 text-purple-700 border-purple-200', icon: '🍽️' }
 };
 
+const helpCategoryLabels = {
+  advice: '💭 Advice',
+  lonely: '🤝 Want to Talk',
+  school: '📚 School',
+  jobs: '💼 Jobs',
+  family: '👨‍👩‍👧‍👦 Family',
+  antisemitism: '✡️ Antisemitism',
+  other: '📝 Other'
+};
+
 export default function ChalkboardCard({ post, currentUser, onComment, onMessage, onDelete, onReport }) {
   const config = boardConfig[post.board_type] || boardConfig.help_needed;
   const isOwner = currentUser?.id === post.author_id;
   const timeAgo = formatDistanceToNow(new Date(post.created_date), { addSuffix: true });
   const isDating = post.board_type === 'dating';
+  const isHelpPost = post.board_type === 'help_needed';
   
   const isExpired = post.expires_at && new Date(post.expires_at) < new Date();
   const canViewDating = post.board_type !== 'dating' || currentUser?.age_range === '18+';
@@ -35,7 +46,9 @@ export default function ChalkboardCard({ post, currentUser, onComment, onMessage
   }
 
   return (
-    <div className={`bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow ${isExpired ? 'opacity-60' : ''}`}>
+    <div className={`bg-white rounded-2xl p-5 shadow-sm border-2 hover:shadow-md transition-shadow ${
+      isHelpPost ? 'border-red-200 bg-red-50/20' : 'border-slate-100'
+    } ${isExpired ? 'opacity-60' : ''}`}>
       {isDating && post.author_avatar_url && (
         <div className="flex justify-center mb-5 -mt-2">
           <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-pink-100 shadow-lg">
@@ -45,9 +58,16 @@ export default function ChalkboardCard({ post, currentUser, onComment, onMessage
       )}
       
       <div className="flex items-start justify-between mb-3">
-        <Badge variant="outline" className={`${config.color} border`}>
-          {config.icon} {config.label}
-        </Badge>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge variant="outline" className={`${config.color} border`}>
+            {config.icon} {config.label}
+          </Badge>
+          {post.help_category && (
+            <Badge variant="outline" className="text-xs bg-red-50">
+              {helpCategoryLabels[post.help_category]}
+            </Badge>
+          )}
+        </div>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

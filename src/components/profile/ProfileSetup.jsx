@@ -22,10 +22,19 @@ const INTERESTS = [
 
 const CITIES = ["Five Towns", "Brooklyn", "Manhattan", "Queens", "Long Island"];
 
+const NEIGHBORHOODS = {
+  "Five Towns": ["Lawrence", "Cedarhurst", "Woodmere", "Hewlett", "Inwood"],
+  "Brooklyn": ["Flatbush", "Midwood", "Boro Park", "Williamsburg", "Crown Heights"],
+  "Manhattan": ["Upper West Side", "Upper East Side", "Lower East Side", "Washington Heights"],
+  "Queens": ["Kew Gardens", "Forest Hills", "Jamaica Estates"],
+  "Long Island": ["Great Neck", "Roslyn", "Woodbury"]
+};
+
 export default function ProfileSetup({ user, onComplete }) {
   const [displayName, setDisplayName] = useState(user?.display_name || user?.full_name?.split(' ')[0] || '');
   const [birthYear, setBirthYear] = useState(user?.birth_year || '');
   const [city, setCity] = useState(user?.city || 'Five Towns');
+  const [neighborhood, setNeighborhood] = useState(user?.neighborhood || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [interests, setInterests] = useState(user?.interests || []);
   const [avatarFile, setAvatarFile] = useState(null);
@@ -74,10 +83,12 @@ export default function ProfileSetup({ user, onComplete }) {
       birth_year: parseInt(birthYear),
       age_range: calculateAgeRange(parseInt(birthYear)),
       city,
+      neighborhood: neighborhood.trim(),
       bio: bio.trim(),
       interests,
       avatar_url: avatarUrl,
-      is_profile_complete: true
+      is_profile_complete: true,
+      followed_boards: ['help_needed', 'events', 'kosher_food']
     });
 
     setIsSubmitting(false);
@@ -174,13 +185,27 @@ export default function ProfileSetup({ user, onComplete }) {
             <div className="space-y-4">
               <div>
                 <Label>City</Label>
-                <Select value={city} onValueChange={setCity}>
+                <Select value={city} onValueChange={(v) => { setCity(v); setNeighborhood(''); }}>
                   <SelectTrigger className="mt-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {CITIES.map(c => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Neighborhood</Label>
+                <Select value={neighborhood} onValueChange={setNeighborhood}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select neighborhood" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {NEIGHBORHOODS[city]?.map(n => (
+                      <SelectItem key={n} value={n}>{n}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

@@ -22,12 +22,22 @@ import { base44 } from '@/api/base44Client';
 import { addDays } from 'date-fns';
 
 const boards = [
-  { value: 'help_needed', label: '🆘 Help Needed', allowAnonymous: true },
+  { value: 'help_needed', label: '🆘 Help Needed', allowAnonymous: true, hasCategory: true },
   { value: 'events', label: '📅 Events', showEventFields: true },
   { value: 'dating', label: '💕 Dating', ageRestricted: true, requiresPhoto: true },
   { value: 'jobs', label: '💼 Jobs & Opportunities' },
   { value: 'roommates', label: '🏠 Roommates & Housing' },
   { value: 'kosher_food', label: '🍽️ Kosher Food & Places' }
+];
+
+const helpCategories = [
+  { value: 'advice', label: '💭 Advice' },
+  { value: 'lonely', label: '🤝 Want to Talk' },
+  { value: 'school', label: '📚 School' },
+  { value: 'jobs', label: '💼 Jobs' },
+  { value: 'family', label: '👨‍👩‍👧‍👦 Family' },
+  { value: 'antisemitism', label: '✡️ Antisemitism' },
+  { value: 'other', label: '📝 Other' }
 ];
 
 export default function CreateChalkboardModal({ open, onOpenChange, currentUser, onPostCreated, defaultBoard }) {
@@ -38,6 +48,7 @@ export default function CreateChalkboardModal({ open, onOpenChange, currentUser,
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [eventDate, setEventDate] = useState('');
   const [eventTime, setEventTime] = useState('');
+  const [helpCategory, setHelpCategory] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedBoard = boards.find(b => b.value === boardType);
@@ -69,7 +80,8 @@ export default function CreateChalkboardModal({ open, onOpenChange, currentUser,
       location_details: locationDetails.trim(),
       expires_at: addDays(new Date(), 14).toISOString(),
       event_date: eventDate || null,
-      event_time: eventTime || null
+      event_time: eventTime || null,
+      help_category: boardType === 'help_needed' ? helpCategory : null
     });
 
     setBoardType(defaultBoard || '');
@@ -79,6 +91,7 @@ export default function CreateChalkboardModal({ open, onOpenChange, currentUser,
     setIsAnonymous(false);
     setEventDate('');
     setEventTime('');
+    setHelpCategory('');
     setIsSubmitting(false);
     onOpenChange(false);
     onPostCreated?.();
@@ -162,11 +175,30 @@ export default function CreateChalkboardModal({ open, onOpenChange, currentUser,
             </div>
           )}
 
+          {selectedBoard?.hasCategory && (
+            <div>
+              <Label>What do you need help with?</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {helpCategories.map(cat => (
+                  <Button
+                    key={cat.value}
+                    type="button"
+                    variant={helpCategory === cat.value ? "default" : "outline"}
+                    className={`text-sm ${helpCategory === cat.value ? "bg-red-600 hover:bg-red-700" : ""}`}
+                    onClick={() => setHelpCategory(cat.value)}
+                  >
+                    {cat.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {selectedBoard?.allowAnonymous && (
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-amber-50 border border-amber-200 rounded-xl">
               <div>
-                <p className="font-medium text-slate-900">Post anonymously</p>
-                <p className="text-sm text-slate-500">Your name won't be shown (moderators can still see)</p>
+                <p className="font-medium text-amber-900">Post anonymously</p>
+                <p className="text-sm text-amber-700">Your name won't be shown (moderators can still see)</p>
               </div>
               <Switch checked={isAnonymous} onCheckedChange={setIsAnonymous} />
             </div>
