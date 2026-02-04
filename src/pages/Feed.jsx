@@ -1,35 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Loader2, Sparkles, Filter } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import PostCard from '@/components/feed/PostCard';
-import CreatePostModal from '@/components/feed/CreatePostModal';
+import DailyPromptCard from '@/components/feed/DailyPromptCard';
+import QuickActions from '@/components/feed/QuickActions';
+import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
+import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 import ReportModal from '@/components/common/ReportModal';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import ShabbatBanner from '@/components/feed/ShabbatBanner';
-import ActivityIndicator from '@/components/feed/ActivityIndicator';
 import { toast } from 'sonner';
-
-const INTERESTS = ["All", "Torah & Learning", "Sports", "Music", "Art", "Tech", "Food", "Travel"];
 
 export default function Feed() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [showCreatePost, setShowCreatePost] = useState(false);
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [postModalType, setPostModalType] = useState('feed');
+  const [showPromptReply, setShowPromptReply] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
-  const [selectedInterest, setSelectedInterest] = useState('All');
-  const [activePrompt, setActivePrompt] = useState(null);
+  const [pinnedPrompt, setPinnedPrompt] = useState(null);
   const [userLikes, setUserLikes] = useState([]);
   const queryClient = useQueryClient();
 
   useEffect(() => {
     loadUser();
-    loadPrompt();
+    loadPinnedPrompt();
     loadUserLikes();
   }, []);
 
@@ -38,9 +38,14 @@ export default function Feed() {
     setCurrentUser(user);
   };
 
-  const loadPrompt = async () => {
-    const prompts = await base44.entities.CommunityPrompt.filter({ is_active: true }, '-created_date', 1);
-    if (prompts.length > 0) setActivePrompt(prompts[0]);
+  const loadPinnedPrompt = async () => {
+    const prompts = await base44.entities.DailyPrompt.filter({ is_pinned: true });
+    if (prompts.length > 0) {
+      setPinnedPrompt(prompts[0]);
+    } else {
+      const newest = await base44.entities.DailyPrompt.list('-created_date', 1);
+      if (newest.length > 0) setPinnedPrompt(newest[0]);
+    }
   };
 
   const loadUserLikes = async () => {
@@ -50,44 +55,17 @@ export default function Feed() {
   };
 
   const { data: posts = [], isLoading } = useQuery({
-    queryKey: ['posts', selectedInterest],
+    queryKey: ['unified-posts'],
     queryFn: async () => {
-      let regularPosts;
-      if (selectedInterest === 'All') {
-        regularPosts = await base44.entities.Post.list('-created_date', 50);
-      } else {
-        const allPosts = await base44.entities.Post.list('-created_date', 100);
-        regularPosts = allPosts.filter(p => p.interests?.includes(selectedInterest));
-      }
-
-      // Get older prompts (exclude the newest/pinned one) and convert to posts
-      const allPrompts = await base44.entities.CommunityPrompt.filter({ is_active: true }, '-created_date', 50);
-      const olderPrompts = allPrompts.slice(1).map(prompt => ({
-        id: `prompt_${prompt.id}`,
-        content: prompt.prompt_text,
-        author_name: 'United Community',
-        author_id: 'system',
-        author_age_range: '18+',
-        city: prompt.city,
-        interests: [],
-        likes_count: prompt.responses_count || 0,
-        comments_count: 0,
-        is_prompt: true,
-        created_date: prompt.created_date,
-        prompt_id: prompt.id
-      }));
-
-      // Merge and sort by date
-      return [...regularPosts, ...olderPrompts].sort((a, b) => 
-        new Date(b.created_date) - new Date(a.created_date)
-      );
+      const allPosts = await base44.entities.UnifiedPost.list('-created_date', 100);
+      return allPosts;
     }
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Post.delete(id),
+    mutationFn: (id) => base44.entities.UnifiedPost.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
       toast.success('Post deleted');
     }
   });
@@ -99,31 +77,23 @@ export default function Feed() {
     if (isLiked) {
       const like = await base44.entities.Like.filter({ post_id: postId, user_id: currentUser.id });
       if (like[0]) await base44.entities.Like.delete(like[0].id);
-      await base44.entities.Post.update(postId, { likes_count: Math.max(0, (post.likes_count || 0) - 1) });
+      await base44.entities.UnifiedPost.update(postId, { likes_count: Math.max(0, (post.likes_count || 0) - 1) });
       setUserLikes(prev => prev.filter(id => id !== postId));
     } else {
       await base44.entities.Like.create({ post_id: postId, user_id: currentUser.id });
-      await base44.entities.Post.update(postId, { likes_count: (post.likes_count || 0) + 1 });
+      await base44.entities.UnifiedPost.update(postId, { likes_count: (post.likes_count || 0) + 1 });
       setUserLikes(prev => [...prev, postId]);
     }
-    queryClient.invalidateQueries({ queryKey: ['posts'] });
+    queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
   };
 
-  const handleRepost = async (post) => {
-    await base44.entities.Post.create({
-      content: post.content,
-      image_url: post.image_url,
-      author_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],
-      author_id: currentUser.id,
-      author_age_range: currentUser.age_range || '18+',
-      city: currentUser.city || 'Five Towns',
-      interests: post.interests,
-      is_repost: true,
-      original_post_id: post.id
-    });
-    await base44.entities.Post.update(post.id, { reposts_count: (post.reposts_count || 0) + 1 });
-    queryClient.invalidateQueries({ queryKey: ['posts'] });
-    toast.success('Reposted!');
+  const handleQuickAction = (type) => {
+    setPostModalType(type);
+    setShowPostModal(true);
+  };
+
+  const handlePromptReply = () => {
+    setShowPromptReply(true);
   };
 
   const handleReport = (id, type) => {
@@ -147,61 +117,15 @@ export default function Feed() {
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Shabbat Banner */}
-        <ShabbatBanner onCreatePost={() => setShowCreatePost(true)} />
-
-        {/* Activity Indicator */}
-        <ActivityIndicator currentUser={currentUser} />
+        <ShabbatBanner onCreatePost={() => setShowPostModal(true)} />
 
         {/* Pinned Daily Prompt */}
-        {activePrompt && (
-          <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 mb-6 shadow-xl overflow-hidden">
-            {/* Pin Badge */}
-            <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1">
-              <span className="text-white text-xs font-semibold">📌 PINNED</span>
-            </div>
-            
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="w-6 h-6 text-white" />
-              <span className="text-sm font-semibold text-white/90 uppercase tracking-wide">Daily Community Prompt</span>
-            </div>
-            
-            <p className="text-xl font-bold text-white mb-4 leading-relaxed pr-20">{activePrompt.prompt_text}</p>
-            
-            <div className="flex items-center gap-3">
-              <Button 
-                className="bg-white text-indigo-600 hover:bg-white/90 font-semibold shadow-md"
-                onClick={() => setShowCreatePost(true)}
-              >
-                Share Your Story
-              </Button>
-              <span className="text-white/80 text-sm">
-                {activePrompt.responses_count || 0} responses today
-              </span>
-            </div>
-
-            {/* Decorative elements */}
-            <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-            <div className="absolute -top-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-          </div>
+        {pinnedPrompt && (
+          <DailyPromptCard prompt={pinnedPrompt} onReply={handlePromptReply} />
         )}
 
-        {/* Interest Filter */}
-        <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide">
-          {INTERESTS.map(interest => (
-            <Badge 
-              key={interest}
-              variant={selectedInterest === interest ? "default" : "outline"}
-              className={`cursor-pointer whitespace-nowrap transition-all py-1.5 px-4 ${
-                selectedInterest === interest 
-                  ? 'bg-indigo-600 hover:bg-indigo-700' 
-                  : 'bg-white hover:bg-slate-100'
-              }`}
-              onClick={() => setSelectedInterest(interest)}
-            >
-              {interest}
-            </Badge>
-          ))}
-        </div>
+        {/* Quick Actions */}
+        <QuickActions onAction={handleQuickAction} />
 
         {/* Posts */}
         {isLoading ? (
@@ -219,37 +143,44 @@ export default function Feed() {
         ) : (
           <div className="space-y-4">
             {posts.map(post => (
-              <PostCard 
+              <UnifiedPostCard 
                 key={post.id}
                 post={post}
                 currentUser={currentUser}
                 liked={userLikes.includes(post.id)}
                 onLike={handleLike}
                 onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
-                onRepost={handleRepost}
                 onDelete={(id) => deleteMutation.mutate(id)}
                 onReport={handleReport}
               />
             ))}
           </div>
         )}
-
-        {/* Create Post FAB */}
-        <Button 
-          size="lg"
-          className="fixed bottom-24 right-6 rounded-full w-14 h-14 shadow-xl bg-indigo-600 hover:bg-indigo-700"
-          onClick={() => setShowCreatePost(true)}
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
       </div>
 
-      <CreatePostModal 
-        open={showCreatePost} 
-        onOpenChange={setShowCreatePost}
+      <UnifiedPostModal 
+        open={showPostModal} 
+        onOpenChange={(open) => {
+          setShowPostModal(open);
+          if (!open) queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+        }}
         currentUser={currentUser}
-        prompt={activePrompt}
-        onPostCreated={() => queryClient.invalidateQueries({ queryKey: ['posts'] })}
+        postType={postModalType}
+      />
+
+      <UnifiedPostModal 
+        open={showPromptReply} 
+        onOpenChange={(open) => {
+          setShowPromptReply(open);
+          if (!open) {
+            queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+            loadPinnedPrompt();
+          }
+        }}
+        currentUser={currentUser}
+        postType="prompt_reply"
+        promptId={pinnedPrompt?.id}
+        promptText={pinnedPrompt?.question}
       />
 
       <CommentsSheet 
@@ -257,7 +188,7 @@ export default function Feed() {
         onOpenChange={setShowComments}
         post={selectedPost}
         currentUser={currentUser}
-        onCommentAdded={() => queryClient.invalidateQueries({ queryKey: ['posts'] })}
+        onCommentAdded={() => queryClient.invalidateQueries({ queryKey: ['unified-posts'] })}
       />
 
       <ReportModal 
