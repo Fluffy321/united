@@ -9,6 +9,7 @@ import CreatePostModal from '@/components/feed/CreatePostModal';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 import ReportModal from '@/components/common/ReportModal';
 import ProfileSetup from '@/components/profile/ProfileSetup';
+import ShabbatBanner from '@/components/feed/ShabbatBanner';
 import { toast } from 'sonner';
 
 const INTERESTS = ["All", "Torah & Learning", "Sports", "Music", "Art", "Tech", "Food", "Travel"];
@@ -120,6 +121,9 @@ export default function Feed() {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-2xl mx-auto px-4 py-6">
+        {/* Shabbat Banner */}
+        <ShabbatBanner onCreatePost={() => setShowCreatePost(true)} />
+
         {/* Pinned Daily Prompt */}
         {activePrompt && (
           <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 mb-6 shadow-xl overflow-hidden">

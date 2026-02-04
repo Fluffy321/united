@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ChalkboardCard from '@/components/chalkboard/ChalkboardCard';
+import EventCard from '@/components/chalkboard/EventCard';
 import CreateChalkboardModal from '@/components/chalkboard/CreateChalkboardModal';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 import ReportModal from '@/components/common/ReportModal';
@@ -159,15 +160,26 @@ export default function Chalkboard() {
         ) : (
           <div className="space-y-4">
             {posts.map(post => (
-              <ChalkboardCard 
-                key={post.id}
-                post={post}
-                currentUser={currentUser}
-                onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
-                onMessage={handleMessage}
-                onDelete={(id) => deleteMutation.mutate(id)}
-                onReport={handleReport}
-              />
+              post.board_type === 'events' ? (
+                <EventCard
+                  key={post.id}
+                  event={post}
+                  currentUser={currentUser}
+                  onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
+                  onDelete={(id) => deleteMutation.mutate(id)}
+                  onReport={handleReport}
+                />
+              ) : (
+                <ChalkboardCard 
+                  key={post.id}
+                  post={post}
+                  currentUser={currentUser}
+                  onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
+                  onMessage={handleMessage}
+                  onDelete={(id) => deleteMutation.mutate(id)}
+                  onReport={handleReport}
+                />
+              )
             ))}
           </div>
         )}
