@@ -17,6 +17,7 @@ export default function EventCard({ event, currentUser, onComment, onDelete, onR
   const [attendees, setAttendees] = useState([]);
   const [isAttending, setIsAttending] = useState(false);
   const [attendeeCount, setAttendeeCount] = useState(event.attendee_count || 0);
+  const [remindMe, setRemindMe] = useState(false);
 
   useEffect(() => {
     loadAttendees();
@@ -41,6 +42,7 @@ export default function EventCard({ event, currentUser, onComment, onDelete, onR
         });
         setAttendeeCount(prev => Math.max(0, prev - 1));
         setIsAttending(false);
+        setRemindMe(false);
         toast.success('RSVP removed');
       }
     } else {
@@ -58,6 +60,15 @@ export default function EventCard({ event, currentUser, onComment, onDelete, onR
       toast.success('You\'re going!');
     }
     loadAttendees();
+  };
+
+  const toggleReminder = () => {
+    setRemindMe(!remindMe);
+    if (!remindMe) {
+      toast.success('We\'ll remind you 1 hour before!');
+    } else {
+      toast.success('Reminder cancelled');
+    }
   };
 
   const isOwner = currentUser.id === event.author_id;
@@ -143,33 +154,46 @@ export default function EventCard({ event, currentUser, onComment, onDelete, onR
         )}
 
         {/* Actions */}
-        <div className="flex gap-2 pt-2">
-          <Button 
-            className={isAttending 
-              ? "bg-green-600 hover:bg-green-700 flex-1" 
-              : "bg-indigo-600 hover:bg-indigo-700 flex-1"
-            }
-            onClick={handleRSVP}
-          >
-            {isAttending ? (
-              <>
-                <Check className="w-4 h-4 mr-2" />
-                I'm Going
-              </>
-            ) : (
-              <>
-                <Users className="w-4 h-4 mr-2" />
-                RSVP
-              </>
-            )}
-          </Button>
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => onComment(event)}
-          >
-            <MessageCircle className="w-4 h-4" />
-          </Button>
+        <div className="space-y-2 pt-2">
+          <div className="flex gap-2">
+            <Button 
+              className={isAttending 
+                ? "bg-green-600 hover:bg-green-700 flex-1" 
+                : "bg-indigo-600 hover:bg-indigo-700 flex-1"
+              }
+              onClick={handleRSVP}
+            >
+              {isAttending ? (
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  I'm Going
+                </>
+              ) : (
+                <>
+                  <Users className="w-4 h-4 mr-2" />
+                  RSVP
+                </>
+              )}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => onComment(event)}
+            >
+              <MessageCircle className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {isAttending && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs"
+              onClick={toggleReminder}
+            >
+              {remindMe ? '✓ Will remind you' : '🔔 Remind me 1 hour before'}
+            </Button>
+          )}
         </div>
 
         {/* Host info */}

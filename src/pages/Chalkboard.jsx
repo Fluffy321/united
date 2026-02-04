@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, Filter } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ChalkboardCard from '@/components/chalkboard/ChalkboardCard';
 import EventCard from '@/components/chalkboard/EventCard';
+import EmptyBoardState from '@/components/chalkboard/EmptyBoardState';
 import CreateChalkboardModal from '@/components/chalkboard/CreateChalkboardModal';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 import ReportModal from '@/components/common/ReportModal';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { startOfWeek, endOfWeek } from 'date-fns';
 
 const boards = [
   { value: 'all', label: '🔖 All', color: 'bg-slate-100 text-slate-700', desc: 'View all community boards' },
@@ -26,6 +28,7 @@ const boards = [
 export default function Chalkboard() {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedBoard, setSelectedBoard] = useState('all');
+  const [eventFilter, setEventFilter] = useState('this_week');
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -50,17 +53,40 @@ export default function Chalkboard() {
   });
 
   const { data: posts = [], isLoading } = useQuery({
-    queryKey: ['chalkboard', selectedBoard],
+    queryKey: ['chalkboard', selectedBoard, eventFilter],
     queryFn: async () => {
+      let allPosts;
       if (selectedBoard === 'all') {
-        const allPosts = await base44.entities.ChalkboardPost.list('-created_date', 50);
-        // Filter out dating posts for under 18
+        allPosts = await base44.entities.ChalkboardPost.list('-created_date', 50);
         if (isUnder18) {
-          return allPosts.filter(p => p.board_type !== 'dating');
+          allPosts = allPosts.filter(p => p.board_type !== 'dating');
         }
-        return allPosts;
+      } else {
+        allPosts = await base44.entities.ChalkboardPost.filter({ board_type: selectedBoard }, '-created_date', 50);
       }
-      return base44.entities.ChalkboardPost.filter({ board_type: selectedBoard }, '-created_date', 50);
+
+      // Apply event filter
+      if (selectedBoard === 'events' && eventFilter !== 'all') {
+        const now = new Date();
+        const weekStart = startOfWeek(now);
+        const weekEnd = endOfWeek(now);
+
+        allPosts = allPosts.filter(post => {
+          if (!post.event_date) return eventFilter === 'upcoming';
+          const eventDate = new Date(post.event_date);
+          
+          if (eventFilter === 'this_week') {
+            return eventDate >= weekStart && eventDate <= weekEnd;
+          } else if (eventFilter === 'upcoming') {
+            return eventDate > now;
+          } else if (eventFilter === 'past') {
+            return eventDate < now;
+          }
+          return true;
+        });
+      }
+
+      return allPosts;
     },
     enabled: !!currentUser
   });
@@ -144,19 +170,37 @@ export default function Chalkboard() {
           )}
         </div>
 
+        {/* Event Filter */}
+        {selectedBoard === 'events' && (
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="w-4 h-4 text-slate-400" />
+            {['this_week', 'upcoming', 'past'].map(filter => (
+              <Badge
+                key={filter}
+                variant={eventFilter === filter ? "default" : "outline"}
+                className={`cursor-pointer transition-all ${
+                  eventFilter === filter 
+                    ? 'bg-indigo-600 hover:bg-indigo-700' 
+                    : 'hover:bg-slate-100'
+                }`}
+                onClick={() => setEventFilter(filter)}
+              >
+                {filter === 'this_week' ? 'This Week' : filter === 'upcoming' ? 'Upcoming' : 'Past'}
+              </Badge>
+            ))}
+          </div>
+        )}
+
         {/* Posts */}
         {isLoading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl">
-            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">📋</span>
-            </div>
-            <p className="text-slate-600 font-medium">No posts in this board</p>
-            <p className="text-sm text-slate-400 mt-1">Be the first to post!</p>
-          </div>
+          <EmptyBoardState 
+            boardType={selectedBoard}
+            onCreatePost={() => setShowCreatePost(true)}
+          />
         ) : (
           <div className="space-y-4">
             {posts.map(post => (
