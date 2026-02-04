@@ -39,8 +39,11 @@ export default function Feed() {
   };
 
   const loadPrompt = async () => {
-    const prompts = await base44.entities.CommunityPrompt.filter({ is_active: true }, '-created_date', 1);
-    if (prompts.length > 0) setActivePrompt(prompts[0]);
+    const prompts = await base44.entities.CommunityPrompt.filter({ is_active: true });
+    if (prompts.length > 0) {
+      const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+      setActivePrompt(randomPrompt);
+    }
   };
 
   const loadUserLikes = async () => {
