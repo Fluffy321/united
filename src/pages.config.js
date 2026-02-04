@@ -53,6 +53,7 @@ import Messages from './pages/Messages';
 import Organization from './pages/Organization';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import FeedV2 from './pages/FeedV2';
 import __Layout from './Layout.jsx';
 
 
@@ -63,6 +64,7 @@ export const PAGES = {
     "Organization": Organization,
     "Profile": Profile,
     "Settings": Settings,
+    "FeedV2": FeedV2,
 }
 
 export const pagesConfig = {
