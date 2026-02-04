@@ -295,6 +295,17 @@ export default function Settings() {
                   Your data is stored securely. Contact support for data requests.
                 </p>
               </div>
+
+              <div className="pt-4 border-t">
+                <a 
+                  href="https://united.community/guidelines" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                >
+                  📋 Community Guidelines & Safety Rules
+                </a>
+              </div>
             </div>
 
             <div className="mt-6">
