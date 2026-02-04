@@ -50,9 +50,9 @@
 import Chalkboard from './pages/Chalkboard';
 import Feed from './pages/Feed';
 import Messages from './pages/Messages';
+import Organization from './pages/Organization';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
-import Organization from './pages/Organization';
 import __Layout from './Layout.jsx';
 
 
@@ -60,9 +60,9 @@ export const PAGES = {
     "Chalkboard": Chalkboard,
     "Feed": Feed,
     "Messages": Messages,
+    "Organization": Organization,
     "Profile": Profile,
     "Settings": Settings,
-    "Organization": Organization,
 }
 
 export const pagesConfig = {

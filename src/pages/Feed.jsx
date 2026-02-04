@@ -39,11 +39,8 @@ export default function Feed() {
   };
 
   const loadPrompt = async () => {
-    const prompts = await base44.entities.CommunityPrompt.filter({ is_active: true });
-    if (prompts.length > 0) {
-      const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-      setActivePrompt(randomPrompt);
-    }
+    const prompts = await base44.entities.CommunityPrompt.filter({ is_active: true }, '-created_date', 1);
+    if (prompts.length > 0) setActivePrompt(prompts[0]);
   };
 
   const loadUserLikes = async () => {
@@ -55,11 +52,35 @@ export default function Feed() {
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['posts', selectedInterest],
     queryFn: async () => {
+      let regularPosts;
       if (selectedInterest === 'All') {
-        return base44.entities.Post.list('-created_date', 50);
+        regularPosts = await base44.entities.Post.list('-created_date', 50);
+      } else {
+        const allPosts = await base44.entities.Post.list('-created_date', 100);
+        regularPosts = allPosts.filter(p => p.interests?.includes(selectedInterest));
       }
-      const allPosts = await base44.entities.Post.list('-created_date', 100);
-      return allPosts.filter(p => p.interests?.includes(selectedInterest));
+
+      // Get older prompts (exclude the newest/pinned one) and convert to posts
+      const allPrompts = await base44.entities.CommunityPrompt.filter({ is_active: true }, '-created_date', 50);
+      const olderPrompts = allPrompts.slice(1).map(prompt => ({
+        id: `prompt_${prompt.id}`,
+        content: prompt.prompt_text,
+        author_name: 'United Community',
+        author_id: 'system',
+        author_age_range: '18+',
+        city: prompt.city,
+        interests: [],
+        likes_count: prompt.responses_count || 0,
+        comments_count: 0,
+        is_prompt: true,
+        created_date: prompt.created_date,
+        prompt_id: prompt.id
+      }));
+
+      // Merge and sort by date
+      return [...regularPosts, ...olderPrompts].sort((a, b) => 
+        new Date(b.created_date) - new Date(a.created_date)
+      );
     }
   });
 
