@@ -5,12 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from 'date-fns';
 
 const CATEGORY_COLORS = {
-  'Errand': 'bg-blue-100 text-blue-700',
-  'Lost & Found': 'bg-purple-100 text-purple-700',
-  'Quick Favor': 'bg-green-100 text-green-700',
-  'Tutoring': 'bg-yellow-100 text-yellow-700',
-  'Shabbat Help': 'bg-indigo-100 text-indigo-700',
-  'Other': 'bg-slate-100 text-slate-700'
+  'Errand': 'bg-blue-600 text-white font-bold',
+  'Lost & Found': 'bg-purple-600 text-white font-bold',
+  'Quick Favor': 'bg-green-600 text-white font-bold',
+  'Tutoring': 'bg-yellow-500 text-white font-bold',
+  'Shabbat Help': 'bg-indigo-600 text-white font-bold',
+  'Other': 'bg-slate-600 text-white font-bold'
 };
 
 export default function MitzvahRequestCard({ request, currentUser, onClaim, onMessage, onComplete }) {
