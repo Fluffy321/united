@@ -28,7 +28,7 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
           <Badge className={`${CATEGORY_COLORS[request.category]} border-0 mb-1.5 text-xs`}>
             {request.category}
           </Badge>
-          <h3 className="font-bold text-[15px] text-slate-900">{request.title}</h3>
+          <h3 className="font-bold text-[15px] text-black">{request.title}</h3>
         </div>
         
         {isCompleted && (
@@ -39,7 +39,7 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
         )}
       </div>
 
-      <p className="text-slate-600 text-sm mb-2 leading-relaxed">{request.description}</p>
+      <p className="text-black text-sm mb-2 leading-relaxed font-bold">{request.description}</p>
 
       <div className="flex items-center justify-between pt-2 border-t border-slate-100">
         <div className="text-sm text-slate-500">
