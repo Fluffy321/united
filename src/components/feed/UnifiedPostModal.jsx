@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Loader2, MapPin } from 'lucide-react';
+import { X, Loader2, MapPin, Check } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -16,21 +16,78 @@ import {
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
-const PLACEHOLDERS = [
-  'Share something happening near you...',
-  'Ask the community a question...',
-  'What\'s going on today?',
-  'Need something or planning something?'
-];
+const PLACEHOLDERS = {
+  feed: [
+    'Share something happening near you...',
+    'Ask the community a question...',
+    'What\'s going on today?',
+    'Need something or planning something?'
+  ],
+  help: [
+    'What do you need help with today?',
+    'Ask your community something...',
+    'Need advice or support?',
+    'What\'s going on?'
+  ]
+};
 
 const HELP_CATEGORIES = [
-  { value: 'advice', label: 'Advice', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  { value: 'lonely', label: 'Lonely', color: 'bg-purple-100 text-purple-700 border-purple-200' },
-  { value: 'school', label: 'School', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
-  { value: 'jobs', label: 'Jobs', color: 'bg-green-100 text-green-700 border-green-200' },
-  { value: 'family', label: 'Family', color: 'bg-orange-100 text-orange-700 border-orange-200' },
-  { value: 'antisemitism', label: 'Antisemitism', color: 'bg-red-100 text-red-700 border-red-200' },
-  { value: 'other', label: 'Other', color: 'bg-slate-100 text-slate-700 border-slate-200' }
+  { 
+    value: 'advice', 
+    label: 'Advice', 
+    bgColor: '#E8F1FF',
+    textColor: '#1E40AF',
+    selectedBg: '#BFDBFE',
+    emoji: '💡'
+  },
+  { 
+    value: 'lonely', 
+    label: 'Lonely', 
+    bgColor: '#F1E6FF',
+    textColor: '#7C3AED',
+    selectedBg: '#DDD6FE',
+    emoji: '🤝'
+  },
+  { 
+    value: 'school', 
+    label: 'School', 
+    bgColor: '#FFF6D6',
+    textColor: '#B45309',
+    selectedBg: '#FDE68A',
+    emoji: '📚'
+  },
+  { 
+    value: 'jobs', 
+    label: 'Jobs', 
+    bgColor: '#E6F7EC',
+    textColor: '#15803D',
+    selectedBg: '#BBF7D0',
+    emoji: '💼'
+  },
+  { 
+    value: 'family', 
+    label: 'Family', 
+    bgColor: '#FFEBD6',
+    textColor: '#C2410C',
+    selectedBg: '#FED7AA',
+    emoji: '👨‍👩‍👧‍👦'
+  },
+  { 
+    value: 'antisemitism', 
+    label: 'Antisemitism', 
+    bgColor: '#FFE3E3',
+    textColor: '#991B1B',
+    selectedBg: '#FECACA',
+    emoji: '🛡️'
+  },
+  { 
+    value: 'other', 
+    label: 'Other', 
+    bgColor: '#F2F2F2',
+    textColor: '#374151',
+    selectedBg: '#E5E7EB',
+    emoji: '💬'
+  }
 ];
 
 export default function UnifiedPostModal({ open, onOpenChange, currentUser, postType = 'feed', promptId = null, promptText = null }) {
@@ -46,10 +103,11 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
 
   useEffect(() => {
     if (open) {
-      const randomPlaceholder = PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)];
+      const placeholderList = isHelp ? PLACEHOLDERS.help : PLACEHOLDERS.feed;
+      const randomPlaceholder = placeholderList[Math.floor(Math.random() * placeholderList.length)];
       setPlaceholder(randomPlaceholder);
     }
-  }, [open]);
+  }, [open, isHelp]);
 
   const isPromptReply = !!promptId;
   const isHelp = postType === 'help';
@@ -182,34 +240,35 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
           {isHelp && (
             <>
               <div>
-                <Label>Category</Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {HELP_CATEGORIES.map(cat => (
-                      <SelectItem 
-                        key={cat.value} 
-                        value={cat.value}
-                        className="cursor-pointer hover:bg-slate-50 transition-colors"
+                <Label className="mb-3 block">What type of help do you need?</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {HELP_CATEGORIES.map(cat => {
+                    const isSelected = category === cat.value;
+                    return (
+                      <button
+                        key={cat.value}
+                        type="button"
+                        onClick={() => setCategory(cat.value)}
+                        className="relative rounded-xl p-3 text-left transition-all duration-200 hover:scale-105 active:scale-95"
+                        style={{
+                          backgroundColor: isSelected ? cat.selectedBg : cat.bgColor,
+                          color: cat.textColor,
+                          boxShadow: isSelected ? `0 0 0 2px ${cat.textColor}40` : 'none'
+                        }}
                       >
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${cat.color.split(' ')[0].replace('bg-', 'bg-')}`} />
-                          {cat.label}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{cat.emoji}</span>
+                            <span className="font-medium text-sm">{cat.label}</span>
+                          </div>
+                          {isSelected && (
+                            <Check className="w-4 h-4 animate-in zoom-in duration-150" strokeWidth={3} />
+                          )}
                         </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                {selectedCategory && (
-                  <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <Badge className={`${selectedCategory.color} border font-medium`}>
-                      {selectedCategory.label}
-                    </Badge>
-                  </div>
-                )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
