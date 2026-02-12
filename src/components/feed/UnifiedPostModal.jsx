@@ -113,7 +113,8 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
   const isHelp = postType === 'help';
   const isEvent = postType === 'event';
   const requiresTitle = isEvent || postType === 'job' || postType === 'housing';
-  const selectedCategory = HELP_CATEGORIES.find(cat => cat.value === category);
+  const categories = HELP_CATEGORIES || [];
+  const selectedCategory = categories.find(cat => cat.value === category);
 
   const getModalTitle = () => {
     if (isPromptReply) return 'Reply to Prompt';
@@ -242,7 +243,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
               <div>
                 <Label className="mb-3 block">What type of help do you need?</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  {HELP_CATEGORIES.map(cat => {
+                  {categories.map(cat => {
                     const isSelected = category === cat.value;
                     return (
                       <button
