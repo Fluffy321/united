@@ -19,7 +19,22 @@ export default function Profile() {
 
   useEffect(() => {
     loadProfile();
+    loadMitzvahPoints();
   }, []);
+
+  const [mitzvahPoints, setMitzvahPoints] = useState(0);
+
+  const loadMitzvahPoints = async () => {
+    const params = new URLSearchParams(window.location.search);
+    const profileId = params.get('id');
+    const user = await base44.auth.me();
+    const targetUserId = profileId || user.id;
+    
+    const points = await base44.entities.MitzvahPoints.filter({ user_id: targetUserId });
+    if (points.length > 0) {
+      setMitzvahPoints(points[0].total_points);
+    }
+  };
 
   const loadProfile = async () => {
     const user = await base44.auth.me();
@@ -148,6 +163,15 @@ export default function Profile() {
               <MapPin className="w-4 h-4" />
               <span>{profileUser.city || 'Five Towns'}</span>
             </div>
+
+            {mitzvahPoints > 0 && (
+              <div className="mb-4 inline-flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-full px-4 py-2 border border-indigo-200">
+                <span className="text-xl">✨</span>
+                <span className="font-semibold text-indigo-700">
+                  {mitzvahPoints} Mitzvah Points
+                </span>
+              </div>
+            )}
 
             {profileUser.bio && (
               <p className="text-slate-600 mb-4 max-w-sm mx-auto">{profileUser.bio}</p>
