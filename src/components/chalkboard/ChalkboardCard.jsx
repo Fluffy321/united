@@ -124,8 +124,8 @@ export default function ChalkboardCard({ post, currentUser, onComment, onMessage
             <Link to={createPageUrl('Profile') + `?id=${post.author_id}`} className="flex items-center gap-2">
               {!isDating && (
                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium overflow-hidden">
-                  {post.author_avatar_url ? (
-                    <img src={post.author_avatar_url} alt="" className="w-full h-full object-cover" />
+                  {post.avatar_url || post.author_avatar_url ? (
+                    <img src={post.avatar_url || post.author_avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     post.author_name?.charAt(0)?.toUpperCase()
                   )}

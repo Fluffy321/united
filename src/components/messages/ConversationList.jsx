@@ -45,8 +45,12 @@ export default function ConversationList({ conversations, currentUser, selectedI
             }`}
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
-                {other.name?.charAt(0)?.toUpperCase()}
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0 overflow-hidden">
+                {other.avatar ? (
+                  <img src={other.avatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  other.name?.charAt(0)?.toUpperCase()
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
