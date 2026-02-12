@@ -22,13 +22,13 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
   const timeAgo = formatDistanceToNow(new Date(request.created_date), { addSuffix: true });
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-3">
+    <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-2">
         <div>
-          <Badge className={`${CATEGORY_COLORS[request.category]} border-0 mb-2`}>
+          <Badge className={`${CATEGORY_COLORS[request.category]} border-0 mb-1.5 text-xs`}>
             {request.category}
           </Badge>
-          <h3 className="font-bold text-lg text-slate-900">{request.title}</h3>
+          <h3 className="font-bold text-[15px] text-slate-900">{request.title}</h3>
         </div>
         
         {isCompleted && (
@@ -39,9 +39,9 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
         )}
       </div>
 
-      <p className="text-slate-600 text-sm mb-4 leading-relaxed">{request.description}</p>
+      <p className="text-slate-600 text-sm mb-2 leading-relaxed">{request.description}</p>
 
-      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+      <div className="flex items-center justify-between pt-2 border-t border-slate-100">
         <div className="text-sm text-slate-500">
           {request.is_anonymous ? (
             <span>Anonymous • {timeAgo}</span>
