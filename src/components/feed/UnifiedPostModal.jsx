@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Loader2, MapPin } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
@@ -15,8 +16,21 @@ import {
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
+const PLACEHOLDERS = [
+  'Share something happening near you...',
+  'Ask the community a question...',
+  'What\'s going on today?',
+  'Need something or planning something?'
+];
+
 const HELP_CATEGORIES = [
-  'advice', 'lonely', 'school', 'jobs', 'family', 'antisemitism', 'other'
+  { value: 'advice', label: 'Advice', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  { value: 'lonely', label: 'Lonely', color: 'bg-purple-100 text-purple-700 border-purple-200' },
+  { value: 'school', label: 'School', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+  { value: 'jobs', label: 'Jobs', color: 'bg-green-100 text-green-700 border-green-200' },
+  { value: 'family', label: 'Family', color: 'bg-orange-100 text-orange-700 border-orange-200' },
+  { value: 'antisemitism', label: 'Antisemitism', color: 'bg-red-100 text-red-700 border-red-200' },
+  { value: 'other', label: 'Other', color: 'bg-slate-100 text-slate-700 border-slate-200' }
 ];
 
 export default function UnifiedPostModal({ open, onOpenChange, currentUser, postType = 'feed', promptId = null, promptText = null }) {
@@ -28,11 +42,20 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
   const [eventDate, setEventDate] = useState('');
   const [eventTime, setEventTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [placeholder, setPlaceholder] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      const randomPlaceholder = PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)];
+      setPlaceholder(randomPlaceholder);
+    }
+  }, [open]);
 
   const isPromptReply = !!promptId;
   const isHelp = postType === 'help';
   const isEvent = postType === 'event';
   const requiresTitle = isEvent || postType === 'job' || postType === 'housing';
+  const selectedCategory = HELP_CATEGORIES.find(cat => cat.value === category);
 
   const getModalTitle = () => {
     if (isPromptReply) return 'Reply to Prompt';
@@ -151,8 +174,8 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
             <Textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Write here..."
-              className="mt-1 min-h-[120px] resize-none"
+              placeholder={placeholder || 'Write here...'}
+              className="mt-1 min-h-[120px] resize-none focus:ring-2 focus:ring-indigo-500 transition-all"
             />
           </div>
 
@@ -166,15 +189,30 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
                   </SelectTrigger>
                   <SelectContent>
                     {HELP_CATEGORIES.map(cat => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      <SelectItem 
+                        key={cat.value} 
+                        value={cat.value}
+                        className="cursor-pointer hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${cat.color.split(' ')[0].replace('bg-', 'bg-')}`} />
+                          {cat.label}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                
+                {selectedCategory && (
+                  <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <Badge className={`${selectedCategory.color} border font-medium`}>
+                      {selectedCategory.label}
+                    </Badge>
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
                 <div>
                   <Label className="text-sm font-medium">Post anonymously</Label>
                   <p className="text-xs text-slate-500">Your identity will be hidden</p>
@@ -226,10 +264,18 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
         </div>
 
         <div className="flex justify-end gap-3 pt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            className="hover:bg-slate-50 transition-colors"
+          >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isSubmitting}
+            className="bg-indigo-600 hover:bg-indigo-700 transition-all hover:shadow-md"
+          >
             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Post'}
           </Button>
         </div>
