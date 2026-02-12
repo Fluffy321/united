@@ -133,14 +133,14 @@ export default function MitzvahCircle() {
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <HandHeart className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+              <HandHeart className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Mitzvah Circle</h1>
-              <p className="text-sm text-slate-600">Help someone nearby in 5 minutes</p>
+              <h1 className="text-xl font-bold text-slate-900">Mitzvah Circle</h1>
+              <p className="text-xs text-slate-600">Help someone nearby in 5 minutes</p>
             </div>
           </div>
         </div>

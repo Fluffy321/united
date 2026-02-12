@@ -46,18 +46,18 @@ export default function ChalkboardCard({ post, currentUser, onComment, onMessage
   }
 
   return (
-    <div className={`bg-white rounded-2xl p-5 shadow-sm border-2 hover:shadow-md transition-shadow ${
+    <div className={`bg-white rounded-2xl p-4 shadow-sm border-2 hover:shadow-md transition-shadow ${
       isHelpPost ? 'border-red-200 bg-red-50/20' : 'border-slate-100'
     } ${isExpired ? 'opacity-60' : ''}`}>
       {isDating && post.author_avatar_url && (
-        <div className="flex justify-center mb-5 -mt-2">
-          <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-pink-100 shadow-lg">
+        <div className="flex justify-center mb-4 -mt-2">
+          <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-pink-100 shadow-lg">
             <img src={post.author_avatar_url} alt={post.author_name} className="w-full h-full object-cover" />
           </div>
         </div>
       )}
       
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="outline" className={`${config.color} border`}>
             {config.icon} {config.label}
@@ -91,11 +91,11 @@ export default function ChalkboardCard({ post, currentUser, onComment, onMessage
         </DropdownMenu>
       </div>
 
-      <h3 className="font-semibold text-lg text-slate-900 mb-2">{post.title}</h3>
-      <p className="text-slate-600 text-sm leading-relaxed mb-4">{post.content}</p>
+      <h3 className="font-semibold text-base text-slate-900 mb-1.5">{post.title}</h3>
+      <p className="text-slate-600 text-sm leading-relaxed mb-3">{post.content}</p>
 
       {post.event_date && (
-        <div className="flex items-center gap-4 text-sm text-slate-500 mb-4">
+        <div className="flex items-center gap-4 text-sm text-slate-500 mb-3">
           <div className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
             <span>{format(new Date(post.event_date), 'MMM d, yyyy')}</span>
@@ -109,14 +109,14 @@ export default function ChalkboardCard({ post, currentUser, onComment, onMessage
         </div>
       )}
 
-      <div className="flex items-center gap-4 text-sm text-slate-500 mb-4">
+      <div className="flex items-center gap-4 text-sm text-slate-500 mb-3">
         <div className="flex items-center gap-1">
           <MapPin className="w-4 h-4" />
           <span>{post.location_details || post.city}</span>
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+      <div className="flex items-center justify-between pt-2 border-t border-slate-100">
         <div className="flex items-center gap-2">
           {post.is_anonymous ? (
             <span className="text-sm text-slate-500 italic">Anonymous</span>

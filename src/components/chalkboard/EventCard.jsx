@@ -76,18 +76,18 @@ export default function EventCard({ event, currentUser, onComment, onDelete, onR
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
-      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 text-white">
+      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-3 text-white">
         <div className="flex justify-between items-start">
           <div className="flex-1">
-            <Badge className="bg-white/20 text-white mb-2">📅 Event</Badge>
+            <Badge className="bg-white/20 text-white mb-1.5 text-xs">📅 Event</Badge>
             {event.is_organization_post && event.organization_name && (
-              <div className="flex items-center gap-1 mb-2">
+              <div className="flex items-center gap-1 mb-1.5">
                 <span className="text-xs bg-white/20 rounded-full px-2 py-0.5">
                   ✓ {event.organization_name}
                 </span>
               </div>
             )}
-            <h3 className="font-bold text-xl mb-1">{event.title}</h3>
+            <h3 className="font-bold text-lg mb-1">{event.title}</h3>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -110,10 +110,10 @@ export default function EventCard({ event, currentUser, onComment, onDelete, onR
         </div>
       </div>
 
-      <div className="p-4 space-y-4">
-        <p className="text-slate-700">{event.content}</p>
+      <div className="p-3 space-y-3">
+        <p className="text-slate-700 text-sm">{event.content}</p>
 
-        <div className="space-y-2 text-sm">
+        <div className="space-y-1.5 text-sm">
           {eventDate && (
             <div className="flex items-center gap-2 text-slate-600">
               <Calendar className="w-4 h-4" />
@@ -136,10 +136,10 @@ export default function EventCard({ event, currentUser, onComment, onDelete, onR
 
         {/* Attendees */}
         {attendeeCount > 0 && (
-          <div className="flex items-center gap-3 pt-2 border-t">
+          <div className="flex items-center gap-3 pt-1.5 border-t">
             <div className="flex -space-x-2">
               {attendees.map((attendee, idx) => (
-                <Avatar key={idx} className="w-8 h-8 border-2 border-white">
+                <Avatar key={idx} className="w-7 h-7 border-2 border-white">
                   <AvatarImage src={attendee.user_avatar} />
                   <AvatarFallback className="text-xs">
                     {attendee.user_name?.[0]}
@@ -147,14 +147,14 @@ export default function EventCard({ event, currentUser, onComment, onDelete, onR
                 </Avatar>
               ))}
             </div>
-            <span className="text-sm text-slate-600">
+            <span className="text-xs text-slate-600">
               {attendeeCount} {attendeeCount === 1 ? 'person' : 'people'} going
             </span>
           </div>
         )}
 
         {/* Actions */}
-        <div className="space-y-2 pt-2">
+        <div className="space-y-1.5 pt-1.5">
           <div className="flex gap-2">
             <Button 
               className={isAttending 
@@ -198,7 +198,7 @@ export default function EventCard({ event, currentUser, onComment, onDelete, onR
 
         {/* Host info */}
         {!event.is_organization_post && (
-          <div className="flex items-center gap-2 pt-2 border-t text-xs text-slate-500">
+          <div className="flex items-center gap-2 pt-1.5 border-t text-xs text-slate-500">
             <span>Hosted by {event.author_name}</span>
             {event.author_age_range && (
               <Badge variant="outline" className="text-xs">

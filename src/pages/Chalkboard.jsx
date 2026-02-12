@@ -202,7 +202,7 @@ export default function Chalkboard() {
             onCreatePost={() => setShowCreatePost(true)}
           />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {posts.map(post => (
               post.board_type === 'events' ? (
                 <EventCard

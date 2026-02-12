@@ -29,8 +29,8 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const typeConfig = TYPE_CONFIGS[post.type] || TYPE_CONFIGS.feed;
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-4">
+    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3 flex-1">
           {isAnonymous ? (
             <div className="flex items-center gap-3">
@@ -91,25 +91,25 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       </div>
 
       {post.prompt_text && (
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl px-4 py-3 mb-4 border border-indigo-100">
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl px-3 py-2 mb-3 border border-indigo-100">
           <p className="text-sm text-indigo-700 font-medium">💭 {post.prompt_text}</p>
         </div>
       )}
 
       {post.title && (
-        <h3 className="font-bold text-lg text-slate-900 mb-2">{post.title}</h3>
+        <h3 className="font-bold text-base text-slate-900 mb-2">{post.title}</h3>
       )}
 
-      <p className="text-slate-800 text-[15px] leading-relaxed mb-4 whitespace-pre-wrap">{post.body}</p>
+      <p className="text-slate-800 text-sm leading-relaxed mb-3 whitespace-pre-wrap">{post.body}</p>
 
       {post.image_url && (
-        <div className="rounded-xl overflow-hidden mb-4">
+        <div className="rounded-xl overflow-hidden mb-3">
           <img src={post.image_url} alt="" className="w-full object-cover max-h-96" />
         </div>
       )}
 
       {post.type === 'event' && (
-        <div className="bg-blue-50 rounded-xl p-4 mb-4 space-y-2">
+        <div className="bg-blue-50 rounded-xl p-3 mb-3 space-y-2">
           {post.event_date && (
             <div className="flex items-center gap-2 text-sm text-blue-900">
               <Calendar className="w-4 h-4" />
@@ -132,14 +132,14 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       )}
 
       {post.location_text && post.type !== 'event' && (
-        <div className="flex items-center gap-2 text-sm text-slate-600 mb-4">
+        <div className="flex items-center gap-2 text-sm text-slate-600 mb-3">
           <MapPin className="w-4 h-4" />
           <span>{post.location_text}</span>
         </div>
       )}
 
       {post.category && post.type === 'help' && (
-        <Badge variant="outline" className="mb-4">
+        <Badge variant="outline" className="mb-3">
           {post.category}
         </Badge>
       )}
