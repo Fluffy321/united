@@ -29,8 +29,8 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const typeConfig = TYPE_CONFIGS[post.type] || TYPE_CONFIGS.feed;
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-3">
+    <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-3 flex-1">
           {isAnonymous ? (
             <div className="flex items-center gap-3">
@@ -97,10 +97,10 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       )}
 
       {post.title && (
-        <h3 className="font-bold text-base text-slate-900 mb-2">{post.title}</h3>
+        <h3 className="font-bold text-[15px] text-slate-900 mb-1.5">{post.title}</h3>
       )}
 
-      <p className="text-slate-800 text-sm leading-relaxed mb-3 whitespace-pre-wrap">{post.body}</p>
+      <p className="text-slate-800 text-sm leading-relaxed mb-2 whitespace-pre-wrap">{post.body}</p>
 
       {post.image_url && (
         <div className="rounded-xl overflow-hidden mb-3">

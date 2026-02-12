@@ -15,6 +15,7 @@ export default function MitzvahCircle() {
   const [currentUser, setCurrentUser] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [activeTab, setActiveTab] = useState('open');
+  const [categoryFilter, setCategoryFilter] = useState('All');
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -28,10 +29,20 @@ export default function MitzvahCircle() {
   };
 
   const { data: requests = [], isLoading } = useQuery({
-    queryKey: ['mitzvah-requests', activeTab],
+    queryKey: ['mitzvah-requests', activeTab, categoryFilter],
     queryFn: async () => {
       const status = activeTab === 'open' ? 'Open' : 'Completed';
-      const allRequests = await base44.entities.MitzvahRequest.filter({ status }, '-created_date', 100);
+      let allRequests;
+      
+      if (categoryFilter === 'All') {
+        allRequests = await base44.entities.MitzvahRequest.filter({ status }, '-created_date', 100);
+      } else {
+        allRequests = await base44.entities.MitzvahRequest.filter({ 
+          status, 
+          category: categoryFilter 
+        }, '-created_date', 100);
+      }
+      
       return allRequests;
     }
   });
@@ -146,13 +157,34 @@ export default function MitzvahCircle() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="open">Needs Help</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
           </TabsList>
+        </Tabs>
 
-          <TabsContent value="open" className="mt-6">
+        {/* Category Filters */}
+        <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide mb-4">
+          {['All', 'Errand', 'Quick Favor', 'Lost & Found', 'Tutoring', 'Shabbat Help', 'Other'].map(cat => (
+            <Button
+              key={cat}
+              variant={categoryFilter === cat ? "default" : "outline"}
+              size="sm"
+              className={`whitespace-nowrap text-xs h-8 ${
+                categoryFilter === cat 
+                  ? 'bg-indigo-600 hover:bg-indigo-700' 
+                  : 'hover:bg-slate-100'
+              }`}
+              onClick={() => setCategoryFilter(cat)}
+            >
+              {cat}
+            </Button>
+          ))}
+        </div>
+
+        <div>
+          <div value="open">
             {isLoading ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />

@@ -51,10 +51,10 @@ import Chalkboard from './pages/Chalkboard';
 import Feed from './pages/Feed';
 import FeedV2 from './pages/FeedV2';
 import Messages from './pages/Messages';
+import MitzvahCircle from './pages/MitzvahCircle';
 import Organization from './pages/Organization';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
-import MitzvahCircle from './pages/MitzvahCircle';
 import __Layout from './Layout.jsx';
 
 
@@ -63,10 +63,10 @@ export const PAGES = {
     "Feed": Feed,
     "FeedV2": FeedV2,
     "Messages": Messages,
+    "MitzvahCircle": MitzvahCircle,
     "Organization": Organization,
     "Profile": Profile,
     "Settings": Settings,
-    "MitzvahCircle": MitzvahCircle,
 }
 
 export const pagesConfig = {
