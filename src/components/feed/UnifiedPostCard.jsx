@@ -2,6 +2,7 @@ import React from 'react';
 import { Heart, MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import UserAvatar from '@/components/common/UserAvatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,13 +45,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             </div>
           ) : (
             <Link to={createPageUrl('Profile') + `?id=${post.user_id}`} className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg overflow-hidden">
-                {post.avatar_url ? (
-                  <img src={post.avatar_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  post.user_name?.charAt(0)?.toUpperCase()
-                )}
-              </div>
+              <UserAvatar user={{...post, display_name: post.user_name}} size="lg" />
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-slate-900">{post.user_name}</span>

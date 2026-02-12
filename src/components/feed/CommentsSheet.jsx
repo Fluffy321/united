@@ -3,6 +3,7 @@ import { Send, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import UserAvatar from '@/components/common/UserAvatar';
 import {
   Sheet,
   SheetContent,
@@ -83,13 +84,7 @@ export default function CommentsSheet({ open, onOpenChange, post, currentUser, o
             ) : (
               comments.map(comment => (
                 <div key={comment.id} className="flex gap-3">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm flex-shrink-0 overflow-hidden border border-slate-200">
-                    {comment.avatar_url ? (
-                      <img src={comment.avatar_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      comment.author_name?.charAt(0)?.toUpperCase()
-                    )}
-                  </div>
+                  <UserAvatar user={{...comment, display_name: comment.author_name}} size="sm" />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-slate-900 text-sm">{comment.author_name}</span>

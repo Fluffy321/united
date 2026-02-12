@@ -27,15 +27,19 @@ const AVATAR_URLS = [
   "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=200&h=200&fit=crop",
 ];
 
+const AVATAR_PRESETS = ['smile', 'heart', 'star', 'zap', 'moon', 'sun', 'music', 'coffee', 'camera', 'book', 'palette', 'rocket', 'sparkles', 'cloud', 'crown', 'flame', 'leaf', 'mountain', 'trophy', 'gift', 'umbrella', 'anchor', 'compass', 'feather', 'globe', 'key', 'target', 'puzzle', 'lightbulb'];
+
+const AVATAR_THEMES = ['ocean-blue', 'sunset-orange', 'purple-glow', 'mint-green', 'midnight-dark', 'gold-shine', 'soft-pink', 'sky-gradient'];
+
 const SAMPLE_USERS = [
-  { id: "seed_user_1", name: "Sarah Miller", age_range: "18+", avatar_url: AVATAR_URLS[0] },
-  { id: "seed_user_2", name: "David Cohen", age_range: "18+", avatar_url: AVATAR_URLS[1] },
-  { id: "seed_user_3", name: "Rachel Goldstein", age_range: "18+", avatar_url: AVATAR_URLS[2] },
-  { id: "seed_user_4", name: "Michael Schwartz", age_range: "18+", avatar_url: AVATAR_URLS[3] },
-  { id: "seed_user_5", name: "Emma Levine", age_range: "18+", avatar_url: AVATAR_URLS[4] },
-  { id: "seed_user_6", name: "Jake Friedman", age_range: "18+", avatar_url: AVATAR_URLS[5] },
-  { id: "seed_user_7", name: "Leah Shapiro", age_range: "18+", avatar_url: AVATAR_URLS[6] },
-  { id: "seed_user_8", name: "Noah Kaplan", age_range: "18+", avatar_url: AVATAR_URLS[7] },
+  { id: "seed_user_1", name: "Sarah Miller", age_range: "18+", avatar_type: "avatar", avatar_preset_id: "heart", avatar_theme: "soft-pink" },
+  { id: "seed_user_2", name: "David Cohen", age_range: "18+", avatar_type: "avatar", avatar_preset_id: "rocket", avatar_theme: "ocean-blue" },
+  { id: "seed_user_3", name: "Rachel Goldstein", age_range: "18+", avatar_type: "avatar", avatar_preset_id: "sparkles", avatar_theme: "purple-glow" },
+  { id: "seed_user_4", name: "Michael Schwartz", age_range: "18+", avatar_type: "avatar", avatar_preset_id: "coffee", avatar_theme: "sunset-orange" },
+  { id: "seed_user_5", name: "Emma Levine", age_range: "18+", avatar_type: "avatar", avatar_preset_id: "star", avatar_theme: "gold-shine" },
+  { id: "seed_user_6", name: "Jake Friedman", age_range: "18+", avatar_type: "avatar", avatar_preset_id: "music", avatar_theme: "mint-green" },
+  { id: "seed_user_7", name: "Leah Shapiro", age_range: "18+", avatar_type: "avatar", avatar_preset_id: "palette", avatar_theme: "sky-gradient" },
+  { id: "seed_user_8", name: "Noah Kaplan", age_range: "18+", avatar_type: "avatar", avatar_preset_id: "trophy", avatar_theme: "midnight-dark" },
 ];
 
 const FEED_POSTS = [
@@ -145,7 +149,9 @@ Deno.serve(async (req) => {
         user_id: user.id,
         user_name: user.name,
         user_age_range: user.age_range,
-        avatar_url: user.avatar_url,
+        avatar_type: user.avatar_type,
+        avatar_preset_id: user.avatar_preset_id,
+        avatar_theme: user.avatar_theme,
         type: "feed",
         board: "feed",
         body: selectedPosts[i],
@@ -177,7 +183,9 @@ Deno.serve(async (req) => {
           author_id: user.id,
           author_name: user.name,
           author_age_range: user.age_range,
-          avatar_url: user.avatar_url,
+          avatar_type: user.avatar_type,
+          avatar_preset_id: user.avatar_preset_id,
+          avatar_theme: user.avatar_theme,
           is_seeded: true,
           created_date: commentDate.toISOString()
         });
@@ -242,7 +250,9 @@ Deno.serve(async (req) => {
           user_id: user.id,
           user_name: user.name,
           user_age_range: user.age_range,
-          avatar_url: user.avatar_url,
+          avatar_type: user.avatar_type,
+          avatar_preset_id: user.avatar_preset_id,
+          avatar_theme: user.avatar_theme,
           type: "prompt_reply",
           board: "feed",
           body: selectedReplies[i],

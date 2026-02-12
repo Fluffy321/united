@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2, Camera, LogOut, Shield, Bell, UserCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, Camera, LogOut, Shield, Bell, UserCircle, Image, Smile, Type } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import UserAvatar from '@/components/common/UserAvatar';
+import AvatarPicker from '@/components/profile/AvatarPicker';
+import ThemePicker from '@/components/profile/ThemePicker';
 import {
   Select,
   SelectContent,
@@ -40,6 +43,9 @@ export default function Settings() {
   const [interests, setInterests] = useState([]);
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarType, setAvatarType] = useState('initials');
+  const [avatarPresetId, setAvatarPresetId] = useState(null);
+  const [avatarTheme, setAvatarTheme] = useState('ocean-blue');
   const [isSaving, setIsSaving] = useState(false);
   const [notifications, setNotifications] = useState({
     messages: true,
@@ -60,6 +66,9 @@ export default function Settings() {
     setBio(user.bio || '');
     setInterests(user.interests || []);
     setAvatarPreview(user.avatar_url);
+    setAvatarType(user.avatar_type || 'initials');
+    setAvatarPresetId(user.avatar_preset_id || 'smile');
+    setAvatarTheme(user.avatar_theme || 'ocean-blue');
     setNotifications(user.notification_settings || {
       messages: true,
       comments: true,
@@ -96,7 +105,7 @@ export default function Settings() {
     if (avatarFile) {
       const { file_url } = await base44.integrations.Core.UploadFile({ file: avatarFile });
       avatarUrl = file_url;
-    } else if (avatarPreview === null) {
+    } else if (avatarPreview === null && avatarType === 'photo') {
       avatarUrl = null;
     }
 
@@ -106,11 +115,15 @@ export default function Settings() {
       bio: bio.trim(),
       interests,
       avatar_url: avatarUrl,
-      avatar_updated_at: avatarUrl !== currentUser?.avatar_url ? new Date().toISOString() : currentUser?.avatar_updated_at
+      avatar_type: avatarType,
+      avatar_preset_id: avatarType === 'avatar' ? avatarPresetId : null,
+      avatar_theme: avatarType === 'avatar' ? avatarTheme : null,
+      avatar_updated_at: new Date().toISOString()
     });
 
     setIsSaving(false);
     toast.success('Profile updated');
+    loadUser();
   };
 
   const handleSaveNotifications = async () => {
@@ -163,35 +176,89 @@ export default function Settings() {
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
-            {/* Avatar */}
-            <div className="flex flex-col items-center gap-3">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-slate-200">
-                  {avatarPreview ? (
-                    <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-3xl text-white font-bold">
-                      {displayName?.charAt(0)?.toUpperCase() || '?'}
-                    </span>
+            {/* Avatar Preview */}
+            <div className="flex justify-center">
+              <UserAvatar user={{...currentUser, display_name: displayName, avatar_type: avatarType, avatar_url: avatarPreview, avatar_preset_id: avatarPresetId, avatar_theme: avatarTheme}} size="xl" />
+            </div>
+
+            {/* Avatar Type Selection */}
+            <div className="bg-white rounded-xl p-6 space-y-4">
+              <Label>Profile Look</Label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  onClick={() => setAvatarType('photo')}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    avatarType === 'photo' 
+                      ? 'border-indigo-600 bg-indigo-50' 
+                      : 'border-slate-200 hover:border-indigo-300'
+                  }`}
+                >
+                  <Image className="w-6 h-6 mx-auto mb-2 text-slate-700" />
+                  <p className="text-sm font-medium">Photo</p>
+                </button>
+                
+                <button
+                  onClick={() => setAvatarType('avatar')}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    avatarType === 'avatar' 
+                      ? 'border-indigo-600 bg-indigo-50' 
+                      : 'border-slate-200 hover:border-indigo-300'
+                  }`}
+                >
+                  <Smile className="w-6 h-6 mx-auto mb-2 text-slate-700" />
+                  <p className="text-sm font-medium">Avatar</p>
+                </button>
+                
+                <button
+                  onClick={() => setAvatarType('initials')}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    avatarType === 'initials' 
+                      ? 'border-indigo-600 bg-indigo-50' 
+                      : 'border-slate-200 hover:border-indigo-300'
+                  }`}
+                >
+                  <Type className="w-6 h-6 mx-auto mb-2 text-slate-700" />
+                  <p className="text-sm font-medium">Initials</p>
+                </button>
+              </div>
+
+              {/* Photo Upload */}
+              {avatarType === 'photo' && (
+                <div className="pt-4 border-t space-y-3">
+                  <input type="file" accept="image/jpeg,image/png,image/heic,image/jpg" id="avatar" className="hidden" onChange={handleAvatarChange} />
+                  <Button 
+                    variant="outline" 
+                    className="w-full gap-2"
+                    onClick={() => document.getElementById('avatar').click()}
+                  >
+                    <Camera className="w-4 h-4" />
+                    {avatarPreview ? 'Change Photo' : 'Upload Photo'}
+                  </Button>
+                  {avatarPreview && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleRemoveAvatar}
+                      className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      Remove Photo
+                    </Button>
                   )}
                 </div>
-                <input type="file" accept="image/jpeg,image/png,image/heic,image/jpg" id="avatar" className="hidden" onChange={handleAvatarChange} />
-                <label 
-                  htmlFor="avatar" 
-                  className="absolute bottom-0 right-0 w-8 h-8 bg-indigo-600 rounded-full shadow-md flex items-center justify-center cursor-pointer hover:bg-indigo-700 transition-colors"
-                >
-                  <Camera className="w-4 h-4 text-white" />
-                </label>
-              </div>
-              {avatarPreview && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleRemoveAvatar}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  Remove Photo
-                </Button>
+              )}
+
+              {/* Avatar Picker */}
+              {avatarType === 'avatar' && (
+                <div className="pt-4 border-t space-y-4">
+                  <AvatarPicker 
+                    selectedPreset={avatarPresetId}
+                    onSelect={setAvatarPresetId}
+                  />
+                  <ThemePicker 
+                    selectedTheme={avatarTheme}
+                    onSelect={setAvatarTheme}
+                  />
+                </div>
               )}
             </div>
 
