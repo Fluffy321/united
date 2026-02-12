@@ -183,65 +183,37 @@ export default function MitzvahCircle() {
           ))}
         </div>
 
-        <div>
-          <div value="open">
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-              </div>
-            ) : requests.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-2xl">
-                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                  <HandHeart className="w-8 h-8 text-slate-400" />
-                </div>
-                <p className="text-slate-600 font-medium">No open requests</p>
-                <p className="text-sm text-slate-400 mt-1">Check back soon!</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {requests.map(request => (
-                  <MitzvahRequestCard
-                    key={request.id}
-                    request={request}
-                    currentUser={currentUser}
-                    onClaim={handleClaim}
-                    onMessage={handleMessage}
-                    onComplete={handleComplete}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="completed" className="mt-6">
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-              </div>
-            ) : requests.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-2xl">
-                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                  <HandHeart className="w-8 h-8 text-slate-400" />
-                </div>
-                <p className="text-slate-600 font-medium">No completed mitzvahs yet</p>
-                <p className="text-sm text-slate-400 mt-1">Be the first to help!</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {requests.map(request => (
-                  <MitzvahRequestCard
-                    key={request.id}
-                    request={request}
-                    currentUser={currentUser}
-                    onClaim={handleClaim}
-                    onMessage={handleMessage}
-                    onComplete={handleComplete}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+        {/* Content */}
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+          </div>
+        ) : requests.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-2xl">
+            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+              <HandHeart className="w-8 h-8 text-slate-400" />
+            </div>
+            <p className="text-slate-600 font-medium">
+              {activeTab === 'open' ? 'No open requests' : 'No completed mitzvahs yet'}
+            </p>
+            <p className="text-sm text-slate-400 mt-1">
+              {activeTab === 'open' ? 'Check back soon!' : 'Be the first to help!'}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {requests.map(request => (
+              <MitzvahRequestCard
+                key={request.id}
+                request={request}
+                currentUser={currentUser}
+                onClaim={handleClaim}
+                onMessage={handleMessage}
+                onComplete={handleComplete}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Create Button */}
         <Button 
