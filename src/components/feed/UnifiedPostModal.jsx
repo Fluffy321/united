@@ -103,11 +103,11 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
 
   useEffect(() => {
     if (open) {
-      const placeholderList = isHelp ? PLACEHOLDERS.help : PLACEHOLDERS.feed;
+      const placeholderList = postType === 'help' ? PLACEHOLDERS.help : PLACEHOLDERS.feed;
       const randomPlaceholder = placeholderList[Math.floor(Math.random() * placeholderList.length)];
       setPlaceholder(randomPlaceholder);
     }
-  }, [open, isHelp]);
+  }, [open, postType]);
 
   const isPromptReply = !!promptId;
   const isHelp = postType === 'help';
