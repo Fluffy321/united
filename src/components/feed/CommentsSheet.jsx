@@ -27,7 +27,18 @@ export default function CommentsSheet({ open, onOpenChange, post, currentUser, o
   const loadComments = async () => {
     setIsLoading(true);
     const data = await base44.entities.Comment.filter({ post_id: post.id, post_type: 'feed' }, '-created_date');
-    setComments(data);
+    
+    // Fetch avatars for comment authors
+    const authorIds = [...new Set(data.map(c => c.author_id))];
+    const users = await base44.entities.User.list();
+    const userMap = Object.fromEntries(users.map(u => [u.id, u.avatar_url]));
+    
+    const commentsWithAvatars = data.map(c => ({
+      ...c,
+      avatar_url: userMap[c.author_id] || null
+    }));
+    
+    setComments(commentsWithAvatars);
     setIsLoading(false);
   };
 
@@ -72,8 +83,12 @@ export default function CommentsSheet({ open, onOpenChange, post, currentUser, o
             ) : (
               comments.map(comment => (
                 <div key={comment.id} className="flex gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm flex-shrink-0">
-                    {comment.author_name?.charAt(0)?.toUpperCase()}
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm flex-shrink-0 overflow-hidden border border-slate-200">
+                    {comment.avatar_url ? (
+                      <img src={comment.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      comment.author_name?.charAt(0)?.toUpperCase()
+                    )}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">

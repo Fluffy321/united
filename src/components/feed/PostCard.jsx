@@ -47,8 +47,12 @@ export default function PostCard({ post, currentUser, onLike, onComment, onRepos
           </div>
         ) : (
           <Link to={createPageUrl('Profile') + `?id=${post.author_id}`} className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg">
-              {post.author_name?.charAt(0)?.toUpperCase()}
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg overflow-hidden">
+              {post.avatar_url ? (
+                <img src={post.avatar_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                post.author_name?.charAt(0)?.toUpperCase()
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">

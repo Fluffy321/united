@@ -84,6 +84,11 @@ export default function Settings() {
     }
   };
 
+  const handleRemoveAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview(null);
+  };
+
   const handleSaveProfile = async () => {
     setIsSaving(true);
 
@@ -91,6 +96,8 @@ export default function Settings() {
     if (avatarFile) {
       const { file_url } = await base44.integrations.Core.UploadFile({ file: avatarFile });
       avatarUrl = file_url;
+    } else if (avatarPreview === null) {
+      avatarUrl = null;
     }
 
     await base44.auth.updateMe({
@@ -98,7 +105,8 @@ export default function Settings() {
       city,
       bio: bio.trim(),
       interests,
-      avatar_url: avatarUrl
+      avatar_url: avatarUrl,
+      avatar_updated_at: avatarUrl !== currentUser?.avatar_url ? new Date().toISOString() : currentUser?.avatar_updated_at
     });
 
     setIsSaving(false);
@@ -156,9 +164,9 @@ export default function Settings() {
 
           <TabsContent value="profile" className="space-y-6">
             {/* Avatar */}
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-3">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center overflow-hidden">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-slate-200">
                   {avatarPreview ? (
                     <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -167,14 +175,24 @@ export default function Settings() {
                     </span>
                   )}
                 </div>
-                <input type="file" accept="image/*" id="avatar" className="hidden" onChange={handleAvatarChange} />
+                <input type="file" accept="image/jpeg,image/png,image/heic,image/jpg" id="avatar" className="hidden" onChange={handleAvatarChange} />
                 <label 
                   htmlFor="avatar" 
-                  className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
+                  className="absolute bottom-0 right-0 w-8 h-8 bg-indigo-600 rounded-full shadow-md flex items-center justify-center cursor-pointer hover:bg-indigo-700 transition-colors"
                 >
-                  <Camera className="w-4 h-4 text-slate-600" />
+                  <Camera className="w-4 h-4 text-white" />
                 </label>
               </div>
+              {avatarPreview && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleRemoveAvatar}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  Remove Photo
+                </Button>
+              )}
             </div>
 
             <div className="bg-white rounded-xl p-6 space-y-4">
