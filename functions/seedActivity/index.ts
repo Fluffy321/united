@@ -1,14 +1,41 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
 
+const AVATAR_URLS = [
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1521119989659-a83eee488004?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1463453091185-61582044d556?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1502767089025-6572583495f9?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1496345875659-11f7dd282d1d?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1557862921-37829c790f19?w=200&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=200&h=200&fit=crop",
+];
+
 const SAMPLE_USERS = [
-  { id: "seed_user_1", name: "Sarah Miller", age_range: "18+" },
-  { id: "seed_user_2", name: "David Cohen", age_range: "18+" },
-  { id: "seed_user_3", name: "Rachel Goldstein", age_range: "18+" },
-  { id: "seed_user_4", name: "Michael Schwartz", age_range: "18+" },
-  { id: "seed_user_5", name: "Emma Levine", age_range: "18+" },
-  { id: "seed_user_6", name: "Jake Friedman", age_range: "18+" },
-  { id: "seed_user_7", name: "Leah Shapiro", age_range: "18+" },
-  { id: "seed_user_8", name: "Noah Kaplan", age_range: "18+" },
+  { id: "seed_user_1", name: "Sarah Miller", age_range: "18+", avatar_url: AVATAR_URLS[0] },
+  { id: "seed_user_2", name: "David Cohen", age_range: "18+", avatar_url: AVATAR_URLS[1] },
+  { id: "seed_user_3", name: "Rachel Goldstein", age_range: "18+", avatar_url: AVATAR_URLS[2] },
+  { id: "seed_user_4", name: "Michael Schwartz", age_range: "18+", avatar_url: AVATAR_URLS[3] },
+  { id: "seed_user_5", name: "Emma Levine", age_range: "18+", avatar_url: AVATAR_URLS[4] },
+  { id: "seed_user_6", name: "Jake Friedman", age_range: "18+", avatar_url: AVATAR_URLS[5] },
+  { id: "seed_user_7", name: "Leah Shapiro", age_range: "18+", avatar_url: AVATAR_URLS[6] },
+  { id: "seed_user_8", name: "Noah Kaplan", age_range: "18+", avatar_url: AVATAR_URLS[7] },
 ];
 
 const FEED_POSTS = [
@@ -118,6 +145,7 @@ Deno.serve(async (req) => {
         user_id: user.id,
         user_name: user.name,
         user_age_range: user.age_range,
+        avatar_url: user.avatar_url,
         type: "feed",
         board: "feed",
         body: selectedPosts[i],
@@ -149,6 +177,7 @@ Deno.serve(async (req) => {
           author_id: user.id,
           author_name: user.name,
           author_age_range: user.age_range,
+          avatar_url: user.avatar_url,
           is_seeded: true,
           created_date: commentDate.toISOString()
         });
@@ -213,6 +242,7 @@ Deno.serve(async (req) => {
           user_id: user.id,
           user_name: user.name,
           user_age_range: user.age_range,
+          avatar_url: user.avatar_url,
           type: "prompt_reply",
           board: "feed",
           body: selectedReplies[i],
