@@ -9,7 +9,8 @@ export default function ConversationList({ conversations, currentUser, selectedI
     return {
       id: conv.participant_ids?.[otherIdx],
       name: conv.participant_names?.[otherIdx] || 'Unknown',
-      age: conv.participant_ages?.[otherIdx] || '18+'
+      age: conv.participant_ages?.[otherIdx] || '18+',
+      avatar: conv.participant_avatars?.[otherIdx] || null
     };
   };
 

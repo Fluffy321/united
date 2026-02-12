@@ -25,7 +25,8 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     return {
       id: conversation.participant_ids?.[otherIdx],
       name: conversation.participant_names?.[otherIdx] || 'Unknown',
-      age: conversation.participant_ages?.[otherIdx] || '18+'
+      age: conversation.participant_ages?.[otherIdx] || '18+',
+      avatar: conversation.participant_avatars?.[otherIdx] || null
     };
   };
 

@@ -43,7 +43,17 @@ export default function Messages() {
     queryKey: ['conversations', currentUser?.id],
     queryFn: async () => {
       const allConvs = await base44.entities.Conversation.list('-updated_date', 50);
-      return allConvs.filter(c => c.participant_ids?.includes(currentUser.id));
+      const userConvs = allConvs.filter(c => c.participant_ids?.includes(currentUser.id));
+      
+      // Fetch avatar URLs for all participants
+      const allUserIds = [...new Set(userConvs.flatMap(c => c.participant_ids))];
+      const users = await base44.entities.User.list();
+      const userMap = Object.fromEntries(users.map(u => [u.id, u.avatar_url]));
+      
+      return userConvs.map(conv => ({
+        ...conv,
+        participant_avatars: conv.participant_ids?.map(id => userMap[id] || null)
+      }));
     },
     enabled: !!currentUser
   });
