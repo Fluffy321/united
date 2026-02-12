@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import PostCard from '@/components/feed/PostCard';
 import ReportModal from '@/components/common/ReportModal';
+import UserAvatar from '@/components/common/UserAvatar';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
@@ -144,12 +145,8 @@ export default function Profile() {
         {/* Profile Card */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex flex-col items-center -mt-16 mb-4">
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-4xl font-bold border-4 border-white shadow-lg overflow-hidden">
-              {profileUser.avatar_url ? (
-                <img src={profileUser.avatar_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                displayName.charAt(0).toUpperCase()
-              )}
+            <div className="border-4 border-white shadow-lg">
+              <UserAvatar user={{...profileUser, display_name: displayName}} size="xl" />
             </div>
           </div>
 
