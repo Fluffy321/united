@@ -91,8 +91,8 @@ export default function ChalkboardCard({ post, currentUser, onComment, onMessage
         </DropdownMenu>
       </div>
 
-      <h3 className="font-semibold text-[15px] text-slate-900 mb-1">{post.title}</h3>
-      <p className="text-slate-600 text-sm leading-relaxed mb-2">{post.content}</p>
+      <h3 className="font-bold text-[15px] text-black mb-1">{post.title}</h3>
+      <p className="text-black text-sm leading-relaxed mb-2 font-bold">{post.content}</p>
 
       {post.event_date && (
         <div className="flex items-center gap-4 text-sm text-slate-500 mb-2">

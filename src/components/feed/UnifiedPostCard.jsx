@@ -92,15 +92,15 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
       {post.prompt_text && (
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl px-3 py-2 mb-3 border border-indigo-100">
-          <p className="text-sm text-indigo-700 font-medium">💭 {post.prompt_text}</p>
+          <p className="text-sm text-indigo-700 font-bold">💭 {post.prompt_text}</p>
         </div>
       )}
 
       {post.title && (
-        <h3 className="font-bold text-[15px] text-slate-900 mb-1.5">{post.title}</h3>
+        <h3 className="font-bold text-[15px] text-black mb-1.5">{post.title}</h3>
       )}
 
-      <p className="text-slate-800 text-sm leading-relaxed mb-2 whitespace-pre-wrap">{post.body}</p>
+      <p className="text-black text-sm leading-relaxed mb-2 whitespace-pre-wrap font-bold">{post.body}</p>
 
       {post.image_url && (
         <div className="rounded-xl overflow-hidden mb-3">
