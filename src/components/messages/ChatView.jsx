@@ -90,8 +90,12 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           <ArrowLeft className="w-5 h-5" />
         </Button>
         
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-          {other.name?.charAt(0)?.toUpperCase()}
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold overflow-hidden">
+          {other.avatar ? (
+            <img src={other.avatar} alt="" className="w-full h-full object-cover" />
+          ) : (
+            other.name?.charAt(0)?.toUpperCase()
+          )}
         </div>
         
         <div className="flex-1">
