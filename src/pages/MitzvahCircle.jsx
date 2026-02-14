@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Loader2, HandHeart, MapPin } from 'lucide-react';
+import { Plus, Loader2, HandHeart, MapPin, List, Map as MapIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { base44 } from '@/api/base44Client';
@@ -7,6 +7,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import MitzvahRequestCard from '@/components/mitzvah/MitzvahRequestCard';
 import CreateMitzvahModal from '@/components/mitzvah/CreateMitzvahModal';
 import LocationPrompt from '@/components/mitzvah/LocationPrompt';
+import MitzvahMap from '@/components/mitzvah/MitzvahMap';
+import MitzvahMapSheet from '@/components/mitzvah/MitzvahMapSheet';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -31,6 +33,8 @@ export default function MitzvahCircle() {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [locationFilter, setLocationFilter] = useState('all');
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  const [viewMode, setViewMode] = useState('list');
+  const [selectedMapRequest, setSelectedMapRequest] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -204,28 +208,51 @@ export default function MitzvahCircle() {
           </div>
         </div>
 
-        {/* Location Filter Toggle */}
-        {currentUser?.location_lat && currentUser?.location_lng && (
-          <div className="flex gap-2 mb-4">
+        {/* View Mode Toggle */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex gap-2">
             <Button
-              variant={locationFilter === 'near' ? 'default' : 'outline'}
+              variant={viewMode === 'list' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setLocationFilter('near')}
-              className={locationFilter === 'near' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
+              onClick={() => setViewMode('list')}
+              className={viewMode === 'list' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
             >
-              <MapPin className="w-4 h-4 mr-1" />
-              Near Me
+              <List className="w-4 h-4 mr-1" />
+              List
             </Button>
             <Button
-              variant={locationFilter === 'all' ? 'default' : 'outline'}
+              variant={viewMode === 'map' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setLocationFilter('all')}
-              className={locationFilter === 'all' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
+              onClick={() => setViewMode('map')}
+              className={viewMode === 'map' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
             >
-              All
+              <MapIcon className="w-4 h-4 mr-1" />
+              Map
             </Button>
           </div>
-        )}
+
+          {/* Location Filter */}
+          {currentUser?.location_lat && currentUser?.location_lng && (
+            <div className="flex gap-2">
+              <Button
+                variant={locationFilter === 'near' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setLocationFilter('near')}
+                className={locationFilter === 'near' ? 'bg-green-600 hover:bg-green-700' : ''}
+              >
+                <MapPin className="w-4 h-4 mr-1" />
+                Near Me
+              </Button>
+              <Button
+                variant={locationFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setLocationFilter('all')}
+              >
+                All
+              </Button>
+            </div>
+          )}
+        </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
@@ -271,8 +298,8 @@ export default function MitzvahCircle() {
               {activeTab === 'open' ? 'Check back soon!' : 'Be the first to help!'}
             </p>
           </div>
-        ) : (
-          <div className="space-y-2">
+        ) : viewMode === 'list' ? (
+          <div className="space-y-2 pb-24">
             {requests.map(request => (
               <MitzvahRequestCard
                 key={request.id}
@@ -284,6 +311,17 @@ export default function MitzvahCircle() {
                 showDistance={locationFilter === 'near'}
               />
             ))}
+          </div>
+        ) : (
+          <div className="pb-24">
+            <MitzvahMap
+              requests={requests.filter(r => r.status === 'Open')}
+              userLocation={currentUser?.location_lat && currentUser?.location_lng ? {
+                lat: currentUser.location_lat,
+                lng: currentUser.location_lng
+              } : null}
+              onSelectRequest={setSelectedMapRequest}
+            />
           </div>
         )}
 
@@ -316,6 +354,15 @@ export default function MitzvahCircle() {
           queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
         }}
       />
+
+      {selectedMapRequest && (
+        <MitzvahMapSheet
+          request={selectedMapRequest}
+          currentUser={currentUser}
+          onClose={() => setSelectedMapRequest(null)}
+          onClaim={handleClaim}
+        />
+      )}
     </div>
   );
 }
