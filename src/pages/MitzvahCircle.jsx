@@ -1,21 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Loader2, HandHeart } from 'lucide-react';
+import { Plus, Loader2, HandHeart, MapPin } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import MitzvahRequestCard from '@/components/mitzvah/MitzvahRequestCard';
 import CreateMitzvahModal from '@/components/mitzvah/CreateMitzvahModal';
+import LocationPrompt from '@/components/mitzvah/LocationPrompt';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+
+// Calculate distance between two coordinates in miles
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
 
 export default function MitzvahCircle() {
   const [currentUser, setCurrentUser] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [activeTab, setActiveTab] = useState('open');
   const [categoryFilter, setCategoryFilter] = useState('All');
+  const [locationFilter, setLocationFilter] = useState('all');
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -26,10 +41,21 @@ export default function MitzvahCircle() {
   const loadUser = async () => {
     const user = await base44.auth.me();
     setCurrentUser(user);
+
+    // Check if user has location
+    if (user.location_lat && user.location_lng) {
+      setLocationFilter('near');
+    } else {
+      // Check if prompt was dismissed
+      const dismissed = localStorage.getItem('locationPromptDismissed');
+      if (!dismissed) {
+        setTimeout(() => setShowLocationPrompt(true), 2000);
+      }
+    }
   };
 
   const { data: requests = [], isLoading } = useQuery({
-    queryKey: ['mitzvah-requests', activeTab, categoryFilter],
+    queryKey: ['mitzvah-requests', activeTab, categoryFilter, locationFilter],
     queryFn: async () => {
       const status = activeTab === 'open' ? 'Open' : 'Completed';
       let allRequests;
@@ -42,9 +68,31 @@ export default function MitzvahCircle() {
           category: categoryFilter 
         }, '-created_date', 100);
       }
+
+      // Calculate distances and filter if "Near Me" is selected
+      if (locationFilter === 'near' && currentUser?.location_lat && currentUser?.location_lng) {
+        const requestsWithDistance = allRequests.map(req => {
+          if (req.location_lat && req.location_lng) {
+            const distance = calculateDistance(
+              currentUser.location_lat,
+              currentUser.location_lng,
+              req.location_lat,
+              req.location_lng
+            );
+            return { ...req, distance };
+          }
+          return { ...req, distance: 999 }; // Put requests without location at the end
+        });
+
+        // Filter to within 10 miles and sort by distance
+        return requestsWithDistance
+          .filter(req => req.distance <= 10)
+          .sort((a, b) => a.distance - b.distance);
+      }
       
       return allRequests;
-    }
+    },
+    enabled: !!currentUser
   });
 
   const claimMutation = useMutation({
@@ -156,6 +204,29 @@ export default function MitzvahCircle() {
           </div>
         </div>
 
+        {/* Location Filter Toggle */}
+        {currentUser?.location_lat && currentUser?.location_lng && (
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant={locationFilter === 'near' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setLocationFilter('near')}
+              className={locationFilter === 'near' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
+            >
+              <MapPin className="w-4 h-4 mr-1" />
+              Near Me
+            </Button>
+            <Button
+              variant={locationFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setLocationFilter('all')}
+              className={locationFilter === 'all' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
+            >
+              All
+            </Button>
+          </div>
+        )}
+
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
           <TabsList className="grid w-full grid-cols-2">
@@ -210,6 +281,7 @@ export default function MitzvahCircle() {
                 onClaim={handleClaim}
                 onMessage={handleMessage}
                 onComplete={handleComplete}
+                showDistance={locationFilter === 'near'}
               />
             ))}
           </div>
@@ -232,6 +304,17 @@ export default function MitzvahCircle() {
           if (!open) queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
         }}
         currentUser={currentUser}
+      />
+
+      <LocationPrompt
+        show={showLocationPrompt}
+        onDismiss={() => setShowLocationPrompt(false)}
+        onLocationSet={() => {
+          setShowLocationPrompt(false);
+          setLocationFilter('near');
+          loadUser();
+          queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+        }}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Hand, MessageCircle, CheckCircle2, Clock } from 'lucide-react';
+import { Hand, MessageCircle, CheckCircle2, Clock, MapPin } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from 'date-fns';
@@ -13,7 +13,7 @@ const CATEGORY_COLORS = {
   'Other': 'bg-slate-600 text-white font-bold'
 };
 
-export default function MitzvahRequestCard({ request, currentUser, onClaim, onMessage, onComplete }) {
+export default function MitzvahRequestCard({ request, currentUser, onClaim, onMessage, onComplete, showDistance }) {
   const isOpen = request.status === 'Open';
   const isClaimed = request.status === 'Claimed';
   const isCompleted = request.status === 'Completed';
@@ -21,13 +21,27 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
   const isHelper = currentUser?.id === request.claimed_by_user_id;
   const timeAgo = formatDistanceToNow(new Date(request.created_date), { addSuffix: true });
 
+  const formatDistance = (distance) => {
+    if (!distance || distance >= 999) return null;
+    if (distance < 0.5) return 'Nearby';
+    return `${distance.toFixed(1)} mi`;
+  };
+
   return (
     <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-2">
-        <div>
-          <Badge className={`${CATEGORY_COLORS[request.category]} border-0 mb-1.5 text-xs`}>
-            {request.category}
-          </Badge>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1.5">
+            <Badge className={`${CATEGORY_COLORS[request.category]} border-0 text-xs`}>
+              {request.category}
+            </Badge>
+            {showDistance && formatDistance(request.distance) && (
+              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                <MapPin className="w-3 h-3 mr-1" />
+                {formatDistance(request.distance)}
+              </Badge>
+            )}
+          </div>
           <h3 className="font-bold text-[15px] text-black">{request.title}</h3>
         </div>
         
