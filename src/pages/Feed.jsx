@@ -19,6 +19,9 @@ import HappeningTonightSection from '@/components/feed/HappeningTonightSection';
 import CommunityWinsCard from '@/components/feed/CommunityWinsCard';
 import TopHelpersCard from '@/components/feed/TopHelpersCard';
 import MitzvahSharePrompt from '@/components/feed/MitzvahSharePrompt';
+import StreakBanner from '@/components/feed/StreakBanner';
+import StreakProgress from '@/components/feed/StreakProgress';
+import LogMitzvahModal from '@/components/feed/LogMitzvahModal';
 import { toast } from 'sonner';
 import { format, isToday, parseISO, subHours, startOfWeek, endOfWeek } from 'date-fns';
 
@@ -34,6 +37,7 @@ export default function Feed() {
   const [pinnedPrompt, setPinnedPrompt] = useState(null);
   const [userLikes, setUserLikes] = useState([]);
   const [showSharePrompt, setShowSharePrompt] = useState(false);
+  const [showLogMitzvah, setShowLogMitzvah] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -202,6 +206,41 @@ export default function Feed() {
     }
   });
 
+  const { data: userStreak, refetch: refetchStreak } = useQuery({
+    queryKey: ['user-streak', currentUser?.id],
+    queryFn: async () => {
+      const existing = await base44.entities.UserStreak.filter({ user_id: currentUser.id });
+      if (existing.length > 0) return existing[0];
+      
+      const newStreak = await base44.entities.UserStreak.create({
+        user_id: currentUser.id,
+        current_streak: 0,
+        longest_streak: 0,
+        last_activity_date: format(new Date(), 'yyyy-MM-dd'),
+        badge_level: 'none'
+      });
+      return newStreak;
+    },
+    enabled: !!currentUser
+  });
+
+  const { data: todayMitzvahCount = 0 } = useQuery({
+    queryKey: ['today-mitzvah-count', currentUser?.id],
+    queryFn: async () => {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const actions = await base44.entities.MitzvahAction.filter({ user_id: currentUser.id });
+      const logs = await base44.entities.MitzvahLog.filter({ user_id: currentUser.id, date: today });
+      
+      const todayActions = actions.filter(a => {
+        const actionDate = format(parseISO(a.created_date), 'yyyy-MM-dd');
+        return actionDate === today;
+      });
+      
+      return todayActions.length + logs.length;
+    },
+    enabled: !!currentUser
+  });
+
   const todayStats = {
     eventsToday: todayEvents.length,
     mitzvahNeeds: openMitzvahRequests.length,
@@ -288,15 +327,69 @@ export default function Feed() {
         });
       }
 
+      await updateStreak();
       queryClient.invalidateQueries(['open-mitzvah']);
       queryClient.invalidateQueries(['today-actions']);
       queryClient.invalidateQueries(['top-helpers-week']);
       queryClient.invalidateQueries(['weekly-stats']);
+      queryClient.invalidateQueries(['today-mitzvah-count']);
       toast.success('You claimed this mitzvah! +10 points');
       setShowSharePrompt(true);
       setTimeout(() => setShowSharePrompt(false), 8000);
     } catch (error) {
       toast.error('Failed to claim mitzvah');
+    }
+  };
+
+  const handleLogMitzvah = async ({ description, category }) => {
+    try {
+      await base44.entities.MitzvahLog.create({
+        user_id: currentUser.id,
+        user_name: currentUser.display_name || currentUser.full_name,
+        description,
+        category,
+        date: format(new Date(), 'yyyy-MM-dd')
+      });
+
+      await updateStreak();
+      queryClient.invalidateQueries(['today-mitzvah-count']);
+      queryClient.invalidateQueries(['user-streak']);
+      toast.success('Mitzvah logged! 🎉');
+    } catch (error) {
+      toast.error('Failed to log mitzvah');
+    }
+  };
+
+  const updateStreak = async () => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const count = todayMitzvahCount + 1;
+
+    if (count >= 2) {
+      const lastDate = userStreak?.last_activity_date;
+      const yesterday = format(new Date(Date.now() - 86400000), 'yyyy-MM-dd');
+      
+      let newStreak = 1;
+      if (lastDate === yesterday) {
+        newStreak = (userStreak.current_streak || 0) + 1;
+      } else if (lastDate === today) {
+        newStreak = userStreak.current_streak || 1;
+      }
+
+      const newLongest = Math.max(newStreak, userStreak?.longest_streak || 0);
+      let badgeLevel = 'none';
+      if (newStreak >= 30) badgeLevel = 'elite';
+      else if (newStreak >= 10) badgeLevel = 'gold';
+      else if (newStreak >= 5) badgeLevel = 'silver';
+      else if (newStreak >= 2) badgeLevel = 'basic';
+
+      await base44.entities.UserStreak.update(userStreak.id, {
+        current_streak: newStreak,
+        longest_streak: newLongest,
+        last_activity_date: today,
+        badge_level: badgeLevel
+      });
+
+      refetchStreak();
     }
   };
 
@@ -319,6 +412,23 @@ export default function Feed() {
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Shabbat Banner */}
         <ShabbatBanner onCreatePost={() => setShowPostModal(true)} />
+
+        {/* Streak Banner */}
+        {userStreak && (
+          <StreakBanner 
+            streak={userStreak}
+            todayCount={todayMitzvahCount}
+            onLogMitzvah={() => setShowLogMitzvah(true)}
+          />
+        )}
+
+        {/* Streak Progress */}
+        {userStreak && (
+          <StreakProgress 
+            todayCount={todayMitzvahCount}
+            streak={userStreak}
+          />
+        )}
 
         {/* Activity Pulse */}
         <ActivityPulseBanner stats={pulseStats} />
@@ -469,6 +579,12 @@ export default function Feed() {
       />
 
       {showSharePrompt && <MitzvahSharePrompt onClose={() => setShowSharePrompt(false)} />}
+      
+      <LogMitzvahModal 
+        open={showLogMitzvah}
+        onOpenChange={setShowLogMitzvah}
+        onSubmit={handleLogMitzvah}
+      />
     </div>
   );
 }

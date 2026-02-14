@@ -7,9 +7,11 @@ import { useQuery } from '@tanstack/react-query';
 import PostCard from '@/components/feed/PostCard';
 import ReportModal from '@/components/common/ReportModal';
 import UserAvatar from '@/components/common/UserAvatar';
+import StreakBadge from '@/components/profile/StreakBadge';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 export default function Profile() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -62,6 +64,15 @@ export default function Profile() {
   const { data: posts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['user-posts', profileUser?.id],
     queryFn: () => base44.entities.Post.filter({ author_id: profileUser.id }, '-created_date', 20),
+    enabled: !!profileUser
+  });
+
+  const { data: userStreak } = useQuery({
+    queryKey: ['user-streak', profileUser?.id],
+    queryFn: async () => {
+      const existing = await base44.entities.UserStreak.filter({ user_id: profileUser.id });
+      return existing[0] || null;
+    },
     enabled: !!profileUser
   });
 
@@ -161,14 +172,22 @@ export default function Profile() {
               <span>{profileUser.city || 'Five Towns'}</span>
             </div>
 
-            {mitzvahPoints > 0 && (
-              <div className="mb-4 inline-flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-full px-4 py-2 border border-indigo-200">
-                <span className="text-xl">✨</span>
-                <span className="font-semibold text-indigo-700">
-                  {mitzvahPoints} Mitzvah Points
-                </span>
-              </div>
-            )}
+            <div className="space-y-3 mb-4">
+              {mitzvahPoints > 0 && (
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-full px-4 py-2 border border-indigo-200">
+                  <span className="text-xl">✨</span>
+                  <span className="font-semibold text-indigo-700">
+                    {mitzvahPoints} Mitzvah Points
+                  </span>
+                </div>
+              )}
+
+              {userStreak && userStreak.current_streak > 0 && (
+                <div className="flex justify-center">
+                  <StreakBadge streak={userStreak} />
+                </div>
+              )}
+            </div>
 
             {profileUser.bio && (
               <p className="text-slate-600 mb-4 max-w-sm mx-auto">{profileUser.bio}</p>
