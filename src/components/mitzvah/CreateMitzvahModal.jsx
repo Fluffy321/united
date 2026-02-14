@@ -34,7 +34,7 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
     setIsSubmitting(true);
 
     try {
-      await base44.entities.MitzvahRequest.create({
+      const requestData = {
         title: title.trim(),
         description: description.trim(),
         category,
@@ -42,7 +42,16 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
         created_by_name: isAnonymous ? 'Anonymous' : currentUser.display_name,
         is_anonymous: isAnonymous,
         city: currentUser.city || 'Five Towns'
-      });
+      };
+
+      // Add user's location if available
+      if (currentUser.location_lat && currentUser.location_lng) {
+        requestData.location_lat = currentUser.location_lat;
+        requestData.location_lng = currentUser.location_lng;
+        requestData.location_text = currentUser.neighborhood || currentUser.city || 'Five Towns';
+      }
+
+      await base44.entities.MitzvahRequest.create(requestData);
 
       toast.success('Mitzvah request posted!');
       onOpenChange(false);
