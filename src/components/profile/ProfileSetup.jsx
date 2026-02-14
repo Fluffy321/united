@@ -30,6 +30,16 @@ const NEIGHBORHOODS = {
   "Long Island": ["Great Neck", "Roslyn", "Woodbury"]
 };
 
+const getRandomPreset = () => {
+  const presets = ['smile', 'heart', 'star', 'zap', 'moon', 'sun', 'music', 'coffee', 'camera', 'book', 'palette', 'rocket', 'sparkles', 'cloud', 'crown', 'flame', 'leaf', 'mountain', 'trophy', 'gift', 'umbrella', 'anchor', 'compass', 'feather', 'globe', 'key', 'target', 'puzzle', 'lightbulb'];
+  return presets[Math.floor(Math.random() * presets.length)];
+};
+
+const getRandomTheme = () => {
+  const themes = ['ocean-blue', 'sunset-orange', 'purple-glow', 'mint-green', 'midnight-dark', 'gold-shine', 'soft-pink', 'sky-gradient'];
+  return themes[Math.floor(Math.random() * themes.length)];
+};
+
 export default function ProfileSetup({ user, onComplete }) {
   const [displayName, setDisplayName] = useState(user?.display_name || user?.full_name?.split(' ')[0] || '');
   const [birthYear, setBirthYear] = useState(user?.birth_year || '');
@@ -41,6 +51,10 @@ export default function ProfileSetup({ user, onComplete }) {
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar_url || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
+  
+  // Auto-assign avatar preset and theme if not already set
+  const [avatarPresetId] = useState(user?.avatar_preset_id || getRandomPreset());
+  const [avatarTheme] = useState(user?.avatar_theme || getRandomTheme());
 
   const currentYear = new Date().getFullYear();
   const minYear = currentYear - 100;
@@ -87,6 +101,9 @@ export default function ProfileSetup({ user, onComplete }) {
       bio: bio.trim(),
       interests,
       avatar_url: avatarUrl,
+      avatar_type: avatarUrl ? 'photo' : 'avatar',
+      avatar_preset_id: avatarPresetId,
+      avatar_theme: avatarTheme,
       is_profile_complete: true,
       followed_boards: ['help_needed', 'events', 'kosher_food']
     });
