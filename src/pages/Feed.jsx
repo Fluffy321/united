@@ -174,6 +174,21 @@ export default function Feed() {
     }
   });
 
+  const { data: recentMitzvah } = useQuery({
+    queryKey: ['recent-mitzvah'],
+    queryFn: async () => {
+      const actions = await base44.entities.MitzvahAction.list('-created_date', 1);
+      if (actions.length > 0) {
+        return actions[0].request_title;
+      }
+      const logs = await base44.entities.MitzvahLog.list('-created_date', 1);
+      if (logs.length > 0) {
+        return logs[0].description;
+      }
+      return null;
+    }
+  });
+
   const { data: topHelpers = [] } = useQuery({
     queryKey: ['top-helpers-week'],
     queryFn: async () => {
@@ -435,7 +450,7 @@ export default function Feed() {
         <ActivityPulseBanner stats={pulseStats} />
 
         {/* Community Wins */}
-        <CommunityWinsCard weeklyStats={weeklyStats} />
+        <CommunityWinsCard weeklyStats={weeklyStats} recentMitzvah={recentMitzvah} />
 
         {/* Top Helpers */}
         <TopHelpersCard helpers={topHelpers} />
