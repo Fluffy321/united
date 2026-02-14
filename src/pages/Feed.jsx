@@ -10,14 +10,8 @@ import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 import ReportModal from '@/components/common/ReportModal';
 import ProfileSetup from '@/components/profile/ProfileSetup';
-import ShabbatBanner from '@/components/feed/ShabbatBanner';
-import TodaySummaryCard from '@/components/feed/TodaySummaryCard';
 import HappeningTodayCard from '@/components/feed/HappeningTodayCard';
 import MitzvahNowCard from '@/components/feed/MitzvahNowCard';
-import ActivityPulseBanner from '@/components/feed/ActivityPulseBanner';
-import HappeningTonightSection from '@/components/feed/HappeningTonightSection';
-import CommunityWinsCard from '@/components/feed/CommunityWinsCard';
-import TopHelpersCard from '@/components/feed/TopHelpersCard';
 import MitzvahSharePrompt from '@/components/feed/MitzvahSharePrompt';
 import StreakBanner from '@/components/feed/StreakBanner';
 import StreakProgress from '@/components/feed/StreakProgress';
@@ -103,123 +97,7 @@ export default function Feed() {
     }
   });
 
-  const { data: tonightEvents = [] } = useQuery({
-    queryKey: ['tonight-events'],
-    queryFn: async () => {
-      const events = await base44.entities.UnifiedPost.filter({ type: 'event' }, '-created_date', 20);
-      const now = new Date();
-      const tonight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-      const twelveHoursFromNow = subHours(tonight, 12);
-      
-      return events.filter(e => {
-        if (!e.event_date || !e.event_time) return false;
-        const eventDateTime = parseISO(`${e.event_date}T${e.event_time}`);
-        return eventDateTime >= now && eventDateTime <= twelveHoursFromNow;
-      });
-    }
-  });
 
-  const { data: activeUsersToday = 0 } = useQuery({
-    queryKey: ['active-users-today'],
-    queryFn: async () => {
-      const todayPosts = await base44.entities.UnifiedPost.list('-created_date', 200);
-      const uniqueUsers = new Set(todayPosts.filter(p => isToday(parseISO(p.created_date))).map(p => p.user_id));
-      return uniqueUsers.size;
-    }
-  });
-
-  const { data: weeklyStats } = useQuery({
-    queryKey: ['weekly-stats'],
-    queryFn: async () => {
-      const weekStart = format(startOfWeek(new Date()), 'yyyy-MM-dd');
-      const existing = await base44.entities.WeeklyStats.filter({ week_start: weekStart });
-      
-      if (existing.length > 0) return existing[0];
-      
-      const actions = await base44.entities.MitzvahAction.list('-created_date', 500);
-      const weekActions = actions.filter(a => {
-        const actionDate = parseISO(a.created_date);
-        return actionDate >= startOfWeek(new Date()) && actionDate <= endOfWeek(new Date());
-      });
-      
-      const helperCounts = {};
-      weekActions.forEach(a => {
-        helperCounts[a.user_id] = (helperCounts[a.user_id] || 0) + 1;
-      });
-      
-      const allUsers = await base44.entities.User.list();
-      const newUsers = allUsers.filter(u => {
-        const joinDate = parseISO(u.created_date);
-        return joinDate >= startOfWeek(new Date()) && joinDate <= endOfWeek(new Date());
-      });
-
-      const topHelpers = Object.entries(helperCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([userId, count]) => {
-          const user = allUsers.find(u => u.id === userId);
-          return { ...user, count };
-        });
-
-      return {
-        week_start: weekStart,
-        mitzvahs_completed: weekActions.length,
-        new_users: newUsers.length,
-        total_posts: posts.filter(p => {
-          const postDate = parseISO(p.created_date);
-          return postDate >= startOfWeek(new Date()) && postDate <= endOfWeek(new Date());
-        }).length,
-        top_helpers: topHelpers
-      };
-    }
-  });
-
-  const { data: recentMitzvah } = useQuery({
-    queryKey: ['recent-mitzvah'],
-    queryFn: async () => {
-      const actions = await base44.entities.MitzvahAction.list('-created_date', 1);
-      if (actions.length > 0) {
-        return actions[0].request_title;
-      }
-      const logs = await base44.entities.MitzvahLog.list('-created_date', 1);
-      if (logs.length > 0) {
-        return logs[0].description;
-      }
-      return null;
-    }
-  });
-
-  const { data: topHelpers = [] } = useQuery({
-    queryKey: ['top-helpers-week'],
-    queryFn: async () => {
-      const actions = await base44.entities.MitzvahAction.list('-created_date', 500);
-      const weekActions = actions.filter(a => {
-        const actionDate = parseISO(a.created_date);
-        return actionDate >= startOfWeek(new Date()) && actionDate <= endOfWeek(new Date());
-      });
-      
-      const helperCounts = {};
-      weekActions.forEach(a => {
-        helperCounts[a.user_id] = (helperCounts[a.user_id] || 0) + 1;
-      });
-      
-      const allUsers = await base44.entities.User.list();
-      const helpers = Object.entries(helperCounts)
-        .sort((a, b) => b[1] - a[1])
-        .map(([userId, count]) => {
-          const user = allUsers.find(u => u.id === userId);
-          const badges = [];
-          
-          if (count === 1) badges.push('first_mitzvah');
-          if (count >= 3) badges.push('weekly_helper');
-          if (count >= 10) badges.push('community_helper');
-          
-          return { ...user, count, badges };
-        });
-
-      return helpers;
-    }
-  });
 
   const { data: userStreak, refetch: refetchStreak } = useQuery({
     queryKey: ['user-streak', currentUser?.id],
@@ -256,18 +134,7 @@ export default function Feed() {
     enabled: !!currentUser
   });
 
-  const todayStats = {
-    eventsToday: todayEvents.length,
-    mitzvahNeeds: openMitzvahRequests.length,
-    newPostsToday: posts.filter(p => isToday(parseISO(p.created_date))).length,
-    actionsToday: todayActions.length
-  };
 
-  const pulseStats = {
-    activeUsers: activeUsersToday,
-    mitzvahs: todayActions.length,
-    posts: posts.filter(p => isToday(parseISO(p.created_date))).length
-  };
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.UnifiedPost.delete(id),
@@ -426,74 +293,37 @@ export default function Feed() {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Shabbat Banner */}
-        <ShabbatBanner onCreatePost={() => setShowPostModal(true)} />
-
-        {/* Streak Banner */}
+        {/* Your Daily Mitzvah Reminder */}
         {userStreak && (
-          <StreakBanner 
-            streak={userStreak}
-            todayCount={todayMitzvahCount}
-            onLogMitzvah={() => setShowLogMitzvah(true)}
-          />
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-slate-900 mb-3">Your Daily Mitzvah Reminder</h2>
+            <StreakBanner 
+              streak={userStreak}
+              todayCount={todayMitzvahCount}
+              onLogMitzvah={() => setShowLogMitzvah(true)}
+            />
+            <div className="mt-3">
+              <StreakProgress 
+                todayCount={todayMitzvahCount}
+                streak={userStreak}
+              />
+            </div>
+          </div>
         )}
-
-        {/* Streak Progress */}
-        {userStreak && (
-          <StreakProgress 
-            todayCount={todayMitzvahCount}
-            streak={userStreak}
-          />
-        )}
-
-        {/* Activity Pulse */}
-        <ActivityPulseBanner stats={pulseStats} />
-
-        {/* Community Wins */}
-        <CommunityWinsCard weeklyStats={weeklyStats} recentMitzvah={recentMitzvah} />
-
-        {/* Top Helpers */}
-        <TopHelpersCard helpers={topHelpers} />
-
-        {/* Today Summary */}
-        <TodaySummaryCard stats={todayStats} />
-
-        {/* Happening Tonight */}
-        <HappeningTonightSection 
-          events={tonightEvents}
-          mitzvahRequests={openMitzvahRequests.slice(0, 3)}
-          onViewEvent={handleViewEvent}
-          onHelpMitzvah={handleHelpMitzvah}
-        />
 
         {/* Happening Today */}
-        {todayEvents.length > 0 && (
+        {(todayEvents.length > 0 || openMitzvahRequests.length > 0) && (
           <div className="mb-6">
-            <h2 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
-              <span className="text-orange-600">🔥</span>
-              Happening Today
-            </h2>
+            <h2 className="text-lg font-bold text-slate-900 mb-3">Happening Today</h2>
             <div className="space-y-3">
-              {todayEvents.slice(0, 3).map(event => (
+              {todayEvents.slice(0, 2).map(event => (
                 <HappeningTodayCard 
                   key={event.id}
                   event={event}
                   onView={handleViewEvent}
                 />
               ))}
-            </div>
-          </div>
-        )}
-
-        {/* Mitzvah Happening Now */}
-        {openMitzvahRequests.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
-              <span className="text-purple-600">💜</span>
-              Mitzvah Happening Now
-            </h2>
-            <div className="space-y-3">
-              {openMitzvahRequests.slice(0, 3).map(request => (
+              {openMitzvahRequests.slice(0, 2).map(request => (
                 <MitzvahNowCard 
                   key={request.id}
                   request={request}
