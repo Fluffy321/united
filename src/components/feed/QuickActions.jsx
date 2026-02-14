@@ -11,7 +11,9 @@ export default function QuickActions({ onAction }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 mb-6">
+    <div className="mb-6">
+      <p className="text-sm text-slate-600 mb-3 font-medium">What would you like to do today?</p>
+      <div className="grid grid-cols-2 gap-3">
       {actions.map((action) => {
         const Icon = action.icon;
         return (
@@ -26,6 +28,7 @@ export default function QuickActions({ onAction }) {
           </Button>
         );
       })}
+      </div>
     </div>
   );
 }

@@ -5,12 +5,12 @@ import { format } from 'date-fns';
 
 export default function HappeningTodayCard({ event, onView }) {
   return (
-    <div className="bg-white rounded-xl border border-orange-200 p-4 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl border border-orange-100 p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-orange-600" />
+            <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-orange-500" />
             </div>
             <div>
               <h3 className="font-semibold text-slate-900">{event.title}</h3>
@@ -30,7 +30,7 @@ export default function HappeningTodayCard({ event, onView }) {
         <Button 
           size="sm" 
           onClick={() => onView(event)}
-          className="bg-orange-600 hover:bg-orange-700"
+          className="bg-orange-500 hover:bg-orange-600"
         >
           Details
         </Button>
