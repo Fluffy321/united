@@ -14,8 +14,13 @@ import ShabbatBanner from '@/components/feed/ShabbatBanner';
 import TodaySummaryCard from '@/components/feed/TodaySummaryCard';
 import HappeningTodayCard from '@/components/feed/HappeningTodayCard';
 import MitzvahNowCard from '@/components/feed/MitzvahNowCard';
+import ActivityPulseBanner from '@/components/feed/ActivityPulseBanner';
+import HappeningTonightSection from '@/components/feed/HappeningTonightSection';
+import CommunityWinsCard from '@/components/feed/CommunityWinsCard';
+import TopHelpersCard from '@/components/feed/TopHelpersCard';
+import MitzvahSharePrompt from '@/components/feed/MitzvahSharePrompt';
 import { toast } from 'sonner';
-import { format, isToday, parseISO } from 'date-fns';
+import { format, isToday, parseISO, subHours, startOfWeek, endOfWeek } from 'date-fns';
 
 export default function Feed() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -28,6 +33,7 @@ export default function Feed() {
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [pinnedPrompt, setPinnedPrompt] = useState(null);
   const [userLikes, setUserLikes] = useState([]);
+  const [showSharePrompt, setShowSharePrompt] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -93,11 +99,120 @@ export default function Feed() {
     }
   });
 
+  const { data: tonightEvents = [] } = useQuery({
+    queryKey: ['tonight-events'],
+    queryFn: async () => {
+      const events = await base44.entities.UnifiedPost.filter({ type: 'event' }, '-created_date', 20);
+      const now = new Date();
+      const tonight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+      const twelveHoursFromNow = subHours(tonight, 12);
+      
+      return events.filter(e => {
+        if (!e.event_date || !e.event_time) return false;
+        const eventDateTime = parseISO(`${e.event_date}T${e.event_time}`);
+        return eventDateTime >= now && eventDateTime <= twelveHoursFromNow;
+      });
+    }
+  });
+
+  const { data: activeUsersToday = 0 } = useQuery({
+    queryKey: ['active-users-today'],
+    queryFn: async () => {
+      const todayPosts = await base44.entities.UnifiedPost.list('-created_date', 200);
+      const uniqueUsers = new Set(todayPosts.filter(p => isToday(parseISO(p.created_date))).map(p => p.user_id));
+      return uniqueUsers.size;
+    }
+  });
+
+  const { data: weeklyStats } = useQuery({
+    queryKey: ['weekly-stats'],
+    queryFn: async () => {
+      const weekStart = format(startOfWeek(new Date()), 'yyyy-MM-dd');
+      const existing = await base44.entities.WeeklyStats.filter({ week_start: weekStart });
+      
+      if (existing.length > 0) return existing[0];
+      
+      const actions = await base44.entities.MitzvahAction.list('-created_date', 500);
+      const weekActions = actions.filter(a => {
+        const actionDate = parseISO(a.created_date);
+        return actionDate >= startOfWeek(new Date()) && actionDate <= endOfWeek(new Date());
+      });
+      
+      const helperCounts = {};
+      weekActions.forEach(a => {
+        helperCounts[a.user_id] = (helperCounts[a.user_id] || 0) + 1;
+      });
+      
+      const allUsers = await base44.entities.User.list();
+      const newUsers = allUsers.filter(u => {
+        const joinDate = parseISO(u.created_date);
+        return joinDate >= startOfWeek(new Date()) && joinDate <= endOfWeek(new Date());
+      });
+
+      const topHelpers = Object.entries(helperCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([userId, count]) => {
+          const user = allUsers.find(u => u.id === userId);
+          return { ...user, count };
+        });
+
+      return {
+        week_start: weekStart,
+        mitzvahs_completed: weekActions.length,
+        new_users: newUsers.length,
+        total_posts: posts.filter(p => {
+          const postDate = parseISO(p.created_date);
+          return postDate >= startOfWeek(new Date()) && postDate <= endOfWeek(new Date());
+        }).length,
+        top_helpers: topHelpers
+      };
+    }
+  });
+
+  const { data: topHelpers = [] } = useQuery({
+    queryKey: ['top-helpers-week'],
+    queryFn: async () => {
+      const actions = await base44.entities.MitzvahAction.list('-created_date', 500);
+      const weekActions = actions.filter(a => {
+        const actionDate = parseISO(a.created_date);
+        return actionDate >= startOfWeek(new Date()) && actionDate <= endOfWeek(new Date());
+      });
+      
+      const helperCounts = {};
+      weekActions.forEach(a => {
+        helperCounts[a.user_id] = (helperCounts[a.user_id] || 0) + 1;
+      });
+      
+      const allUsers = await base44.entities.User.list();
+      const helpers = Object.entries(helperCounts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([userId, count]) => {
+          const user = allUsers.find(u => u.id === userId);
+          const badges = [];
+          
+          if (count === 1) badges.push('first_mitzvah');
+          if (count >= 3) badges.push('weekly_helper');
+          if (count >= 10) badges.push('community_helper');
+          
+          return { ...user, count, badges };
+        });
+
+      return helpers;
+    }
+  });
+
   const todayStats = {
     eventsToday: todayEvents.length,
     mitzvahNeeds: openMitzvahRequests.length,
     newPostsToday: posts.filter(p => isToday(parseISO(p.created_date))).length,
     actionsToday: todayActions.length
+  };
+
+  const pulseStats = {
+    activeUsers: activeUsersToday,
+    mitzvahs: todayActions.length,
+    posts: posts.filter(p => isToday(parseISO(p.created_date))).length
   };
 
   const deleteMutation = useMutation({
@@ -175,7 +290,11 @@ export default function Feed() {
 
       queryClient.invalidateQueries(['open-mitzvah']);
       queryClient.invalidateQueries(['today-actions']);
+      queryClient.invalidateQueries(['top-helpers-week']);
+      queryClient.invalidateQueries(['weekly-stats']);
       toast.success('You claimed this mitzvah! +10 points');
+      setShowSharePrompt(true);
+      setTimeout(() => setShowSharePrompt(false), 8000);
     } catch (error) {
       toast.error('Failed to claim mitzvah');
     }
@@ -201,8 +320,25 @@ export default function Feed() {
         {/* Shabbat Banner */}
         <ShabbatBanner onCreatePost={() => setShowPostModal(true)} />
 
+        {/* Activity Pulse */}
+        <ActivityPulseBanner stats={pulseStats} />
+
+        {/* Community Wins */}
+        <CommunityWinsCard weeklyStats={weeklyStats} />
+
+        {/* Top Helpers */}
+        <TopHelpersCard helpers={topHelpers} />
+
         {/* Today Summary */}
         <TodaySummaryCard stats={todayStats} />
+
+        {/* Happening Tonight */}
+        <HappeningTonightSection 
+          events={tonightEvents}
+          mitzvahRequests={openMitzvahRequests.slice(0, 3)}
+          onViewEvent={handleViewEvent}
+          onHelpMitzvah={handleHelpMitzvah}
+        />
 
         {/* Happening Today */}
         {todayEvents.length > 0 && (
@@ -331,6 +467,8 @@ export default function Feed() {
         contentType={reportTarget.type}
         currentUser={currentUser}
       />
+
+      {showSharePrompt && <MitzvahSharePrompt onClose={() => setShowSharePrompt(false)} />}
     </div>
   );
 }
