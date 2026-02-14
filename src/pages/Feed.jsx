@@ -16,6 +16,8 @@ import MitzvahSharePrompt from '@/components/feed/MitzvahSharePrompt';
 import StreakBanner from '@/components/feed/StreakBanner';
 import StreakProgress from '@/components/feed/StreakProgress';
 import LogMitzvahModal from '@/components/feed/LogMitzvahModal';
+import QuickPostPrompt from '@/components/feed/QuickPostPrompt';
+import QuickPostModal from '@/components/feed/QuickPostModal';
 import { toast } from 'sonner';
 import { format, isToday, parseISO, subHours, startOfWeek, endOfWeek } from 'date-fns';
 
@@ -32,6 +34,9 @@ export default function Feed() {
   const [userLikes, setUserLikes] = useState([]);
   const [showSharePrompt, setShowSharePrompt] = useState(false);
   const [showLogMitzvah, setShowLogMitzvah] = useState(false);
+  const [showQuickPostPrompt, setShowQuickPostPrompt] = useState(false);
+  const [showQuickPostModal, setShowQuickPostModal] = useState(false);
+  const [scrollStartTime, setScrollStartTime] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -39,6 +44,34 @@ export default function Feed() {
     loadPinnedPrompt();
     loadUserLikes();
   }, []);
+
+  useEffect(() => {
+    // Check if dismissed in last 24 hours
+    const dismissedTime = localStorage.getItem('quickPostPromptDismissed');
+    if (dismissedTime) {
+      const hoursSinceDismiss = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60);
+      if (hoursSinceDismiss < 24) return;
+    }
+
+    // Start tracking scroll time
+    setScrollStartTime(Date.now());
+
+    const timer = setTimeout(() => {
+      setShowQuickPostPrompt(true);
+    }, 17000); // 17 seconds
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleDismissQuickPost = () => {
+    setShowQuickPostPrompt(false);
+    localStorage.setItem('quickPostPromptDismissed', Date.now().toString());
+  };
+
+  const handleOpenQuickPost = () => {
+    setShowQuickPostPrompt(false);
+    setShowQuickPostModal(true);
+  };
 
   const loadUser = async () => {
     const user = await base44.auth.me();
@@ -430,6 +463,23 @@ export default function Feed() {
         open={showLogMitzvah}
         onOpenChange={setShowLogMitzvah}
         onSubmit={handleLogMitzvah}
+      />
+
+      <QuickPostPrompt 
+        show={showQuickPostPrompt}
+        onQuickPost={handleOpenQuickPost}
+        onDismiss={handleDismissQuickPost}
+      />
+
+      <QuickPostModal 
+        open={showQuickPostModal}
+        onOpenChange={(open) => {
+          setShowQuickPostModal(open);
+          if (!open) {
+            queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+          }
+        }}
+        currentUser={currentUser}
       />
     </div>
   );
