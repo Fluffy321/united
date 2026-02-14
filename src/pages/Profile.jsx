@@ -8,10 +8,12 @@ import PostCard from '@/components/feed/PostCard';
 import ReportModal from '@/components/common/ReportModal';
 import UserAvatar from '@/components/common/UserAvatar';
 import StreakBadge from '@/components/profile/StreakBadge';
+import WeeklySummary from '@/components/profile/WeeklySummary';
+import MitzvahTimeline from '@/components/profile/MitzvahTimeline';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns';
 
 export default function Profile() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -74,6 +76,36 @@ export default function Profile() {
       return existing[0] || null;
     },
     enabled: !!profileUser
+  });
+
+  const { data: mitzvahLogs = [] } = useQuery({
+    queryKey: ['mitzvah-logs', profileUser?.id],
+    queryFn: async () => {
+      const logs = await base44.entities.MitzvahLog.filter({ user_id: profileUser.id }, '-created_date', 50);
+      return logs;
+    },
+    enabled: !!profileUser && isOwnProfile
+  });
+
+  const { data: weeklyMitzvahCount = 0 } = useQuery({
+    queryKey: ['weekly-mitzvah-count', profileUser?.id],
+    queryFn: async () => {
+      const actions = await base44.entities.MitzvahAction.filter({ user_id: profileUser.id });
+      const logs = await base44.entities.MitzvahLog.filter({ user_id: profileUser.id });
+      
+      const weekActions = actions.filter(a => {
+        const date = parseISO(a.created_date);
+        return date >= startOfWeek(new Date()) && date <= endOfWeek(new Date());
+      });
+      
+      const weekLogs = logs.filter(l => {
+        const date = parseISO(l.date);
+        return date >= startOfWeek(new Date()) && date <= endOfWeek(new Date());
+      });
+      
+      return weekActions.length + weekLogs.length;
+    },
+    enabled: !!profileUser && isOwnProfile
   });
 
   const handleMessage = async () => {
@@ -150,11 +182,11 @@ export default function Profile() {
             </div>
           )}
         </div>
-      </div>
+        </div>
 
-      <div className="max-w-2xl mx-auto px-4 -mt-16">
+        <div className="max-w-2xl mx-auto px-4 -mt-16">
         {/* Profile Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
           <div className="flex flex-col items-center -mt-16 mb-4">
             <div className="border-4 border-white shadow-lg">
               <UserAvatar user={{...profileUser, display_name: displayName}} size="xl" />

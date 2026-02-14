@@ -341,20 +341,21 @@ export default function Feed() {
     }
   };
 
-  const handleLogMitzvah = async ({ description, category }) => {
+  const handleLogMitzvah = async ({ description, category, reflection }) => {
     try {
       await base44.entities.MitzvahLog.create({
         user_id: currentUser.id,
         user_name: currentUser.display_name || currentUser.full_name,
         description,
         category,
+        reflection,
         date: format(new Date(), 'yyyy-MM-dd')
       });
 
       await updateStreak();
       queryClient.invalidateQueries(['today-mitzvah-count']);
       queryClient.invalidateQueries(['user-streak']);
-      toast.success('Mitzvah logged! 🎉');
+      toast.success('You made a difference today. 💜');
     } catch (error) {
       toast.error('Failed to log mitzvah');
     }

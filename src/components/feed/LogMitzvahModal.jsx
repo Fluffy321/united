@@ -10,16 +10,18 @@ const CATEGORIES = ['Chesed', 'Torah Study', 'Prayer', 'Tzedakah', 'Kindness', '
 export default function LogMitzvahModal({ open, onOpenChange, onSubmit }) {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
+  const [reflection, setReflection] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!description.trim()) return;
     
     setLoading(true);
-    await onSubmit({ description, category: category || 'Other' });
+    await onSubmit({ description, category: category || 'Other', reflection });
     setLoading(false);
     setDescription('');
     setCategory('');
+    setReflection('');
     onOpenChange(false);
   };
 
@@ -58,6 +60,19 @@ export default function LogMitzvahModal({ open, onOpenChange, onSubmit }) {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold text-slate-700 mb-2 block">
+              Reflection (optional)
+            </label>
+            <Textarea
+              placeholder="Who did this help? How did this make you feel?"
+              value={reflection}
+              onChange={(e) => setReflection(e.target.value)}
+              rows={2}
+              className="resize-none text-sm"
+            />
           </div>
 
           <Button 
