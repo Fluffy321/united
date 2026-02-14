@@ -71,8 +71,8 @@ export default function UserAvatar({ user, size = 'md', className = '' }) {
     );
   }
 
-  // Avatar preset type
-  if (user?.avatar_type === 'avatar' && user?.avatar_preset_id && user?.avatar_theme) {
+  // Avatar preset type (default for all users unless photo)
+  if (user?.avatar_preset_id && user?.avatar_theme) {
     const Icon = AVATAR_PRESETS[user.avatar_preset_id];
     const gradient = AVATAR_THEMES[user.avatar_theme] || AVATAR_THEMES['ocean-blue'];
     
@@ -85,7 +85,7 @@ export default function UserAvatar({ user, size = 'md', className = '' }) {
     }
   }
 
-  // Initials fallback
+  // Fallback only if preset/theme are truly missing
   const initials = user?.display_name?.charAt(0)?.toUpperCase() || 
                    user?.full_name?.charAt(0)?.toUpperCase() || 
                    user?.user_name?.charAt(0)?.toUpperCase() || '?';
