@@ -256,6 +256,21 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* Weekly Summary - Own Profile Only */}
+        {isOwnProfile && (
+          <div className="mb-4">
+            <WeeklySummary mitzvahCount={weeklyMitzvahCount} />
+          </div>
+        )}
+
+        {/* Mitzvah Timeline - Own Profile Only */}
+        {isOwnProfile && mitzvahLogs.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Your Mitzvah Journey</h2>
+            <MitzvahTimeline logs={mitzvahLogs} />
+          </div>
+        )}
+
         {/* Posts */}
         <div className="mb-4">
           <h2 className="text-lg font-semibold text-slate-900">Recent Posts</h2>
