@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DailyPromptCard from '@/components/feed/DailyPromptCard';
@@ -12,7 +11,11 @@ import CommentsSheet from '@/components/feed/CommentsSheet';
 import ReportModal from '@/components/common/ReportModal';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import ShabbatBanner from '@/components/feed/ShabbatBanner';
+import TodaySummaryCard from '@/components/feed/TodaySummaryCard';
+import HappeningTodayCard from '@/components/feed/HappeningTodayCard';
+import MitzvahNowCard from '@/components/feed/MitzvahNowCard';
 import { toast } from 'sonner';
+import { format, isToday, parseISO } from 'date-fns';
 
 export default function Feed() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -62,6 +65,41 @@ export default function Feed() {
     }
   });
 
+  const { data: todayEvents = [] } = useQuery({
+    queryKey: ['today-events'],
+    queryFn: async () => {
+      const events = await base44.entities.UnifiedPost.filter({ type: 'event' }, '-created_date', 20);
+      const today = format(new Date(), 'yyyy-MM-dd');
+      return events.filter(e => e.event_date === today);
+    }
+  });
+
+  const { data: openMitzvahRequests = [] } = useQuery({
+    queryKey: ['open-mitzvah'],
+    queryFn: async () => {
+      const requests = await base44.entities.MitzvahRequest.filter({ status: 'Open' }, '-created_date', 10);
+      return requests.filter(r => {
+        const createdToday = isToday(parseISO(r.created_date));
+        return createdToday;
+      });
+    }
+  });
+
+  const { data: todayActions = [] } = useQuery({
+    queryKey: ['today-actions'],
+    queryFn: async () => {
+      const actions = await base44.entities.MitzvahAction.list('-created_date', 100);
+      return actions.filter(a => isToday(parseISO(a.created_date)));
+    }
+  });
+
+  const todayStats = {
+    eventsToday: todayEvents.length,
+    mitzvahNeeds: openMitzvahRequests.length,
+    newPostsToday: posts.filter(p => isToday(parseISO(p.created_date))).length,
+    actionsToday: todayActions.length
+  };
+
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.UnifiedPost.delete(id),
     onSuccess: () => {
@@ -101,6 +139,48 @@ export default function Feed() {
     setShowReport(true);
   };
 
+  const handleViewEvent = (event) => {
+    setSelectedPost(event);
+    setShowComments(true);
+  };
+
+  const handleHelpMitzvah = async (request) => {
+    try {
+      await base44.entities.MitzvahRequest.update(request.id, { 
+        status: 'Claimed',
+        claimed_by_user_id: currentUser.id,
+        claimed_by_name: currentUser.display_name || currentUser.full_name
+      });
+      
+      await base44.entities.MitzvahAction.create({
+        user_id: currentUser.id,
+        user_name: currentUser.display_name || currentUser.full_name,
+        request_id: request.id,
+        request_title: request.title,
+        points_awarded: 10
+      });
+
+      const existingPoints = await base44.entities.MitzvahPoints.filter({ user_id: currentUser.id });
+      if (existingPoints.length > 0) {
+        await base44.entities.MitzvahPoints.update(existingPoints[0].id, {
+          total_points: (existingPoints[0].total_points || 0) + 10
+        });
+      } else {
+        await base44.entities.MitzvahPoints.create({
+          user_id: currentUser.id,
+          user_name: currentUser.display_name || currentUser.full_name,
+          total_points: 10
+        });
+      }
+
+      queryClient.invalidateQueries(['open-mitzvah']);
+      queryClient.invalidateQueries(['today-actions']);
+      toast.success('You claimed this mitzvah! +10 points');
+    } catch (error) {
+      toast.error('Failed to claim mitzvah');
+    }
+  };
+
   if (!currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -113,26 +193,75 @@ export default function Feed() {
     return <ProfileSetup user={currentUser} onComplete={loadUser} />;
   }
 
+  const feedPosts = posts.filter(p => p.type === 'feed' || p.type === 'prompt_reply');
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Shabbat Banner */}
         <ShabbatBanner onCreatePost={() => setShowPostModal(true)} />
 
-        {/* Pinned Daily Prompt */}
+        {/* Today Summary */}
+        <TodaySummaryCard stats={todayStats} />
+
+        {/* Happening Today */}
+        {todayEvents.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+              <span className="text-orange-600">🔥</span>
+              Happening Today
+            </h2>
+            <div className="space-y-3">
+              {todayEvents.slice(0, 3).map(event => (
+                <HappeningTodayCard 
+                  key={event.id}
+                  event={event}
+                  onView={handleViewEvent}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Mitzvah Happening Now */}
+        {openMitzvahRequests.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+              <span className="text-purple-600">💜</span>
+              Mitzvah Happening Now
+            </h2>
+            <div className="space-y-3">
+              {openMitzvahRequests.slice(0, 3).map(request => (
+                <MitzvahNowCard 
+                  key={request.id}
+                  request={request}
+                  onHelp={handleHelpMitzvah}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Daily Prompt */}
         {pinnedPrompt && (
-          <DailyPromptCard prompt={pinnedPrompt} onReply={handlePromptReply} />
+          <div className="mb-6">
+            <DailyPromptCard prompt={pinnedPrompt} onReply={handlePromptReply} />
+          </div>
         )}
 
         {/* Quick Actions */}
         <QuickActions onAction={handleQuickAction} />
 
-        {/* Posts */}
+        {/* Community Posts */}
+        <div className="mb-3">
+          <h2 className="text-lg font-bold text-slate-900">Community Posts</h2>
+        </div>
+
         {isLoading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
           </div>
-        ) : posts.length === 0 ? (
+        ) : feedPosts.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl">
             <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">📝</span>
@@ -141,8 +270,8 @@ export default function Feed() {
             <p className="text-sm text-slate-400 mt-1">Be the first to share something!</p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {posts.map(post => (
+          <div className="space-y-2 pb-24">
+            {feedPosts.map(post => (
               <UnifiedPostCard 
                 key={post.id}
                 post={post}
@@ -162,7 +291,11 @@ export default function Feed() {
         open={showPostModal} 
         onOpenChange={(open) => {
           setShowPostModal(open);
-          if (!open) queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+          if (!open) {
+            queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+            queryClient.invalidateQueries({ queryKey: ['today-events'] });
+            queryClient.invalidateQueries({ queryKey: ['open-mitzvah'] });
+          }
         }}
         currentUser={currentUser}
         postType={postModalType}
