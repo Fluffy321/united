@@ -1,14 +1,14 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Clipboard, MessageCircle, User, HandHeart } from 'lucide-react';
+import { Home, Clipboard, MessageCircle, User, HandHeart, Newspaper } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
 
 const navItems = [
   { name: 'Feed', icon: Home, page: 'Feed', color: 'blue' },
+  { name: 'News', icon: Newspaper, page: 'News', color: 'cyan' },
   { name: 'Chalkboard', icon: Clipboard, page: 'Chalkboard', color: 'orange' },
   { name: 'Mitzvah', icon: HandHeart, page: 'MitzvahCircle', color: 'purple' },
-  { name: 'Messages', icon: MessageCircle, page: 'Messages', color: 'teal' },
   { name: 'Profile', icon: User, page: 'Profile', color: 'slate' }
 ];
 
@@ -16,6 +16,10 @@ const colorStyles = {
   blue: {
     active: 'bg-blue-600 text-white',
     inactive: 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'
+  },
+  cyan: {
+    active: 'bg-cyan-600 text-white',
+    inactive: 'text-slate-400 hover:text-cyan-600 hover:bg-cyan-50'
   },
   orange: {
     active: 'bg-orange-500 text-white',

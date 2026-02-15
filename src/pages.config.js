@@ -54,6 +54,7 @@ import MitzvahCircle from './pages/MitzvahCircle';
 import Organization from './pages/Organization';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import News from './pages/News';
 import __Layout from './Layout.jsx';
 
 
@@ -65,6 +66,7 @@ export const PAGES = {
     "Organization": Organization,
     "Profile": Profile,
     "Settings": Settings,
+    "News": News,
 }
 
 export const pagesConfig = {
