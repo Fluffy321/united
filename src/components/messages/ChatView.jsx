@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, ArrowLeft, MoreVertical, Flag, Ban } from 'lucide-react';
+import { Send, Loader2, ArrowLeft, MoreVertical, Flag, Ban, CheckCircle2, HandHeart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -11,12 +11,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { base44 } from '@/api/base44Client';
 import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 
 export default function ChatView({ conversation, currentUser, onBack, onReport, onBlock }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [mitzvahRequest, setMitzvahRequest] = useState(null);
+  const [helpOffer, setHelpOffer] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef(null);
 
   const getOtherParticipant = () => {
@@ -35,6 +39,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   useEffect(() => {
     loadMessages();
     markAsRead();
+    loadMitzvahContext();
   }, [conversation.id]);
 
   useEffect(() => {
@@ -51,6 +56,83 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const markAsRead = async () => {
     const unreadCount = { ...conversation.unread_count, [currentUser.id]: 0 };
     await base44.entities.Conversation.update(conversation.id, { unread_count: unreadCount });
+  };
+
+  const loadMitzvahContext = async () => {
+    if (conversation.request_id) {
+      try {
+        const [request] = await base44.entities.MitzvahRequest.filter({ id: conversation.request_id });
+        setMitzvahRequest(request || null);
+
+        if (request) {
+          const [offer] = await base44.entities.HelpOffer.filter({ request_id: request.id });
+          setHelpOffer(offer || null);
+        }
+      } catch (error) {
+        console.error('Failed to load mitzvah context:', error);
+      }
+    }
+  };
+
+  const handleMarkCompleted = async () => {
+    if (!helpOffer || !mitzvahRequest) return;
+    
+    setIsProcessing(true);
+    try {
+      await base44.entities.HelpOffer.update(helpOffer.id, {
+        completed_by_helper: true
+      });
+      
+      toast.success('Marked as completed. Waiting for requester confirmation.');
+      loadMitzvahContext();
+    } catch (error) {
+      toast.error('Failed to mark as completed');
+    }
+    setIsProcessing(false);
+  };
+
+  const handleConfirmCompleted = async () => {
+    if (!mitzvahRequest || !helpOffer) return;
+    
+    setIsProcessing(true);
+    try {
+      // Update request status
+      await base44.entities.MitzvahRequest.update(mitzvahRequest.id, {
+        status: 'Completed',
+        completed_at: new Date().toISOString()
+      });
+
+      // Award points
+      await base44.entities.MitzvahAction.create({
+        user_id: mitzvahRequest.claimed_by_user_id,
+        user_name: mitzvahRequest.claimed_by_name,
+        request_id: mitzvahRequest.id,
+        request_title: mitzvahRequest.title,
+        points_awarded: 10
+      });
+
+      const [points] = await base44.entities.MitzvahPoints.filter({ user_id: mitzvahRequest.claimed_by_user_id });
+      if (points) {
+        await base44.entities.MitzvahPoints.update(points.id, {
+          total_points: points.total_points + 10
+        });
+      } else {
+        await base44.entities.MitzvahPoints.create({
+          user_id: mitzvahRequest.claimed_by_user_id,
+          user_name: mitzvahRequest.claimed_by_name,
+          total_points: 10
+        });
+      }
+
+      // Update offer
+      await base44.entities.HelpOffer.update(helpOffer.id, { status: 'completed' });
+
+      toast.success('Mitzvah completed! Helper earned 10 points ✨');
+      loadMitzvahContext();
+    } catch (error) {
+      toast.error('Failed to confirm completion');
+    }
+    setIsProcessing(false);
   };
 
   const handleSend = async () => {
@@ -125,6 +207,21 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         </DropdownMenu>
       </div>
 
+      {/* Mitzvah Context Banner */}
+      {mitzvahRequest && (
+        <div className="bg-indigo-50 border-b border-indigo-100 p-3">
+          <div className="flex items-start gap-2">
+            <HandHeart className="w-5 h-5 text-indigo-600 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-indigo-900">{mitzvahRequest.title}</p>
+              <p className="text-xs text-indigo-700 mt-0.5">
+                Status: {mitzvahRequest.status === 'InProgress' ? 'In Progress' : mitzvahRequest.status}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
         {isLoading ? (
@@ -158,6 +255,57 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         )}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Completion Actions */}
+      {mitzvahRequest && mitzvahRequest.status === 'InProgress' && (
+        <div className="px-4 py-3 bg-white border-t border-slate-100">
+          {currentUser.id === mitzvahRequest.claimed_by_user_id && !helpOffer?.completed_by_helper && (
+            <Button
+              onClick={handleMarkCompleted}
+              disabled={isProcessing}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+              {isProcessing ? 'Processing...' : 'Mark as Completed'}
+            </Button>
+          )}
+          
+          {currentUser.id === mitzvahRequest.created_by_user_id && helpOffer?.completed_by_helper && (
+            <div className="space-y-2">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-2">
+                <p className="text-xs text-green-900">
+                  <strong>{mitzvahRequest.claimed_by_name}</strong> marked this as completed. Please confirm!
+                </p>
+              </div>
+              <Button
+                onClick={handleConfirmCompleted}
+                disabled={isProcessing}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                {isProcessing ? 'Processing...' : 'Confirm Completed'}
+              </Button>
+            </div>
+          )}
+
+          {currentUser.id === mitzvahRequest.created_by_user_id && !helpOffer?.completed_by_helper && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-xs text-amber-900">
+                Waiting for helper to mark this as completed.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {mitzvahRequest && mitzvahRequest.status === 'Completed' && (
+        <div className="px-4 py-3 bg-green-50 border-t border-green-100">
+          <div className="flex items-center gap-2 justify-center text-green-900">
+            <CheckCircle2 className="w-5 h-5" />
+            <span className="text-sm font-semibold">Mitzvah Completed!</span>
+          </div>
+        </div>
+      )}
 
       {/* Input */}
       <div className="p-4 border-t border-slate-100 bg-white">
