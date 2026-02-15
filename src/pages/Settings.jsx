@@ -24,6 +24,7 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
+import CitySelector from '@/components/common/CitySelector';
 
 const INTERESTS = [
   "Torah & Learning", "Sports", "Music", "Art", "Tech", 
@@ -31,12 +32,12 @@ const INTERESTS = [
   "Fitness", "Reading", "Photography", "Movies", "Outdoors"
 ];
 
-const CITIES = ["Five Towns", "Brooklyn", "Manhattan", "Queens", "Long Island"];
-
 export default function Settings() {
   const [currentUser, setCurrentUser] = useState(null);
   const [displayName, setDisplayName] = useState('');
-  const [city, setCity] = useState('Five Towns');
+  const [cityPreset, setCityPreset] = useState('');
+  const [cityCustom, setCityCustom] = useState('');
+  const [cityState, setCityState] = useState('');
   const [bio, setBio] = useState('');
   const [interests, setInterests] = useState([]);
   const [avatarFile, setAvatarFile] = useState(null);
@@ -58,7 +59,9 @@ export default function Settings() {
 
     setCurrentUser(user);
     setDisplayName(user.display_name || user.full_name?.split(' ')[0] || '');
-    setCity(user.city || 'Five Towns');
+    setCityPreset(user.cityPreset || 'Lawrence');
+    setCityCustom(user.cityCustom || '');
+    setCityState(user.cityState || '');
     setBio(user.bio || '');
     setInterests(user.interests || []);
     setAvatarPreview(user.avatar_url);
@@ -115,7 +118,9 @@ export default function Settings() {
 
       await base44.auth.updateMe({
         display_name: displayName.trim(),
-        city,
+        cityPreset,
+        cityCustom,
+        cityState,
         bio: bio.trim(),
         interests,
         avatar_url: avatarUrl
@@ -237,19 +242,16 @@ export default function Settings() {
                 />
               </div>
 
-              <div>
-                <Label>City</Label>
-                <Select value={city} onValueChange={setCity}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CITIES.map(c => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <CitySelector 
+                cityPreset={cityPreset}
+                cityCustom={cityCustom}
+                cityState={cityState}
+                onChange={({ cityPreset: cp, cityCustom: cc, cityState: cs }) => {
+                  setCityPreset(cp || '');
+                  setCityCustom(cc || '');
+                  setCityState(cs || '');
+                }}
+              />
 
               <div>
                 <Label>Bio</Label>

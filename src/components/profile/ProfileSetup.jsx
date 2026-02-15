@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import CitySelector from '@/components/common/CitySelector';
 
 const INTERESTS = [
   "Torah & Learning", "Sports", "Music", "Art", "Tech", 
@@ -21,21 +22,12 @@ const INTERESTS = [
   "Fitness", "Reading", "Photography", "Movies", "Outdoors"
 ];
 
-const CITIES = ["Five Towns", "Brooklyn", "Manhattan", "Queens", "Long Island"];
-
-const NEIGHBORHOODS = {
-  "Five Towns": ["Lawrence", "Cedarhurst", "Woodmere", "Hewlett", "Inwood"],
-  "Brooklyn": ["Flatbush", "Midwood", "Boro Park", "Williamsburg", "Crown Heights"],
-  "Manhattan": ["Upper West Side", "Upper East Side", "Lower East Side", "Washington Heights"],
-  "Queens": ["Kew Gardens", "Forest Hills", "Jamaica Estates"],
-  "Long Island": ["Great Neck", "Roslyn", "Woodbury"]
-};
-
 export default function ProfileSetup({ user, onComplete }) {
   const [displayName, setDisplayName] = useState(user?.display_name || user?.full_name?.split(' ')[0] || '');
   const [birthYear, setBirthYear] = useState(user?.birth_year || '');
-  const [city, setCity] = useState(user?.city || 'Five Towns');
-  const [neighborhood, setNeighborhood] = useState(user?.neighborhood || '');
+  const [cityPreset, setCityPreset] = useState(user?.cityPreset || 'Lawrence');
+  const [cityCustom, setCityCustom] = useState(user?.cityCustom || '');
+  const [cityState, setCityState] = useState(user?.cityState || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [interests, setInterests] = useState(user?.interests || []);
   const [avatarFile, setAvatarFile] = useState(null);
@@ -119,8 +111,9 @@ export default function ProfileSetup({ user, onComplete }) {
         display_name: displayName.trim(),
         birth_year: parseInt(birthYear),
         age_range: calculateAgeRange(parseInt(birthYear)),
-        city,
-        neighborhood: neighborhood.trim(),
+        cityPreset,
+        cityCustom,
+        cityState,
         bio: bio.trim(),
         interests,
         is_profile_complete: true,
@@ -264,36 +257,19 @@ export default function ProfileSetup({ user, onComplete }) {
             </div>
           )}
 
-          {/* Step 3: Location */}
+          {/* Step 3: Location & Bio */}
           {step === 3 && (
             <div className="space-y-4">
-              <div>
-                <Label>City</Label>
-                <Select value={city} onValueChange={(v) => { setCity(v); setNeighborhood(''); }}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CITIES.map(c => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Neighborhood</Label>
-                <Select value={neighborhood} onValueChange={setNeighborhood}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select neighborhood" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NEIGHBORHOODS[city]?.map(n => (
-                      <SelectItem key={n} value={n}>{n}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <CitySelector 
+                cityPreset={cityPreset}
+                cityCustom={cityCustom}
+                cityState={cityState}
+                onChange={({ cityPreset: cp, cityCustom: cc, cityState: cs }) => {
+                  setCityPreset(cp || '');
+                  setCityCustom(cc || '');
+                  setCityState(cs || '');
+                }}
+              />
 
               <div>
                 <Label>Bio (optional)</Label>
