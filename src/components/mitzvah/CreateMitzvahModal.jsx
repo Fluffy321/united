@@ -52,7 +52,22 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
         requestData.location_lng = currentUser.location_lng;
       }
 
-      await base44.entities.MitzvahRequest.create(requestData);
+      const newRequest = await base44.entities.MitzvahRequest.create(requestData);
+
+      // Notify nearby users if location is available
+      if (requestData.location_lat && requestData.location_lng) {
+        try {
+          await base44.functions.invoke('notifyNearbyUsers', {
+            requestId: newRequest.id,
+            requestTitle: title.trim(),
+            locationLabel: requestData.location_label,
+            lat: requestData.location_lat,
+            lng: requestData.location_lng
+          });
+        } catch (error) {
+          console.error('Failed to notify nearby users:', error);
+        }
+      }
 
       toast.success('Mitzvah request posted!');
       onOpenChange(false);

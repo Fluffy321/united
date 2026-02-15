@@ -31,8 +31,8 @@ export default function MitzvahCircle() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [activeTab, setActiveTab] = useState('open');
   const [categoryFilter, setCategoryFilter] = useState('All');
-  const [locationFilter, setLocationFilter] = useState('all');
-  const [timeFilter, setTimeFilter] = useState('all');
+  const [locationFilter, setLocationFilter] = useState('near');
+  const [timeFilter, setTimeFilter] = useState('anytime');
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [viewMode, setViewMode] = useState('list');
   const [selectedMapRequest, setSelectedMapRequest] = useState(null);
@@ -48,7 +48,7 @@ export default function MitzvahCircle() {
     const user = await base44.auth.me();
     setCurrentUser(user);
 
-    // Check if user has location
+    // Check if user has location - set "Near Me" as default
     if (user.location_lat && user.location_lng) {
       setLocationFilter('near');
     } else {
