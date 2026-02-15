@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2, Camera, Sparkles } from 'lucide-react';
+import { Loader2, Camera, Upload, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
 const INTERESTS = [
   "Torah & Learning", "Sports", "Music", "Art", "Tech", 
@@ -30,16 +31,6 @@ const NEIGHBORHOODS = {
   "Long Island": ["Great Neck", "Roslyn", "Woodbury"]
 };
 
-const getRandomPreset = () => {
-  const presets = ['smile', 'heart', 'star', 'zap', 'moon', 'sun', 'music', 'coffee', 'camera', 'book', 'palette', 'rocket', 'sparkles', 'cloud', 'crown', 'flame', 'leaf', 'mountain', 'trophy', 'gift', 'umbrella', 'anchor', 'compass', 'feather', 'globe', 'key', 'target', 'puzzle', 'lightbulb'];
-  return presets[Math.floor(Math.random() * presets.length)];
-};
-
-const getRandomTheme = () => {
-  const themes = ['ocean-blue', 'sunset-orange', 'purple-glow', 'mint-green', 'midnight-dark', 'gold-shine', 'soft-pink', 'sky-gradient'];
-  return themes[Math.floor(Math.random() * themes.length)];
-};
-
 export default function ProfileSetup({ user, onComplete }) {
   const [displayName, setDisplayName] = useState(user?.display_name || user?.full_name?.split(' ')[0] || '');
   const [birthYear, setBirthYear] = useState(user?.birth_year || '');
@@ -50,11 +41,7 @@ export default function ProfileSetup({ user, onComplete }) {
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar_url || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [step, setStep] = useState(1);
-  
-  // Auto-assign avatar preset and theme if not already set
-  const [avatarPresetId] = useState(user?.avatar_preset_id || getRandomPreset());
-  const [avatarTheme] = useState(user?.avatar_theme || getRandomTheme());
+  const [step, setStep] = useState(user?.avatar_url ? 2 : 1);
 
   const currentYear = new Date().getFullYear();
   const minYear = currentYear - 100;
@@ -76,40 +63,76 @@ export default function ProfileSetup({ user, onComplete }) {
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload a valid image file (JPG or PNG)');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image must be smaller than 5MB');
+        return;
+      }
+
       setAvatarFile(file);
       setAvatarPreview(URL.createObjectURL(file));
     }
   };
 
+  const removeAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview(null);
+  };
+
+  const handleContinueToDetails = async () => {
+    if (!avatarFile && !avatarPreview) {
+      toast.error('Please upload a profile photo to continue');
+      return;
+    }
+
+    // Upload avatar if new file selected
+    if (avatarFile) {
+      setIsSubmitting(true);
+      try {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: avatarFile });
+        await base44.auth.updateMe({ avatar_url: file_url });
+        setAvatarPreview(file_url);
+        setIsSubmitting(false);
+        setStep(2);
+      } catch (error) {
+        toast.error('Failed to upload photo');
+        setIsSubmitting(false);
+      }
+    } else {
+      setStep(2);
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!displayName.trim() || !birthYear) return;
+    if (!displayName.trim() || !birthYear || !avatarPreview) return;
     
     setIsSubmitting(true);
 
-    let avatarUrl = user?.avatar_url;
-    if (avatarFile) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: avatarFile });
-      avatarUrl = file_url;
+    try {
+      await base44.auth.updateMe({
+        display_name: displayName.trim(),
+        birth_year: parseInt(birthYear),
+        age_range: calculateAgeRange(parseInt(birthYear)),
+        city,
+        neighborhood: neighborhood.trim(),
+        bio: bio.trim(),
+        interests,
+        is_profile_complete: true,
+        followed_boards: ['help_needed', 'events', 'kosher_food']
+      });
+
+      setIsSubmitting(false);
+      onComplete?.();
+    } catch (error) {
+      toast.error('Failed to complete setup');
+      setIsSubmitting(false);
     }
-
-    await base44.auth.updateMe({
-      display_name: displayName.trim(),
-      birth_year: parseInt(birthYear),
-      age_range: calculateAgeRange(parseInt(birthYear)),
-      city,
-      neighborhood: neighborhood.trim(),
-      bio: bio.trim(),
-      interests,
-      avatar_url: avatarUrl,
-      avatar_type: avatarUrl ? 'photo' : 'avatar',
-      avatar_preset_id: avatarPresetId,
-      avatar_theme: avatarTheme,
-      is_profile_complete: true,
-      followed_boards: ['help_needed', 'events', 'kosher_food']
-    });
-
-    setIsSubmitting(false);
-    onComplete?.();
   };
 
   return (
@@ -117,7 +140,7 @@ export default function ProfileSetup({ user, onComplete }) {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Sparkles className="w-8 h-8 text-white" />
+            <Camera className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Welcome to United</h1>
           <p className="text-slate-500 mt-1">Let's set up your profile</p>
@@ -126,7 +149,7 @@ export default function ProfileSetup({ user, onComplete }) {
         <div className="bg-white rounded-2xl shadow-xl p-6">
           {/* Progress */}
           <div className="flex gap-2 mb-6">
-            {[1, 2, 3].map(s => (
+            {[1, 2, 3, 4].map(s => (
               <div 
                 key={s}
                 className={`flex-1 h-1.5 rounded-full transition-colors ${
@@ -136,29 +159,67 @@ export default function ProfileSetup({ user, onComplete }) {
             ))}
           </div>
 
+          {/* Step 1: Profile Photo (Required) */}
           {step === 1 && (
             <div className="space-y-4">
-              <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center overflow-hidden">
-                    {avatarPreview ? (
-                      <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-3xl text-white font-bold">
-                        {displayName?.charAt(0)?.toUpperCase() || '?'}
-                      </span>
-                    )}
-                  </div>
-                  <input type="file" accept="image/*" id="avatar" className="hidden" onChange={handleAvatarChange} />
-                  <label 
-                    htmlFor="avatar" 
-                    className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
-                  >
-                    <Camera className="w-4 h-4 text-slate-600" />
-                  </label>
+              <div className="text-center">
+                <h2 className="text-lg font-bold text-slate-900 mb-2">Upload Your Profile Photo</h2>
+                <p className="text-sm text-slate-500 mb-6">A real photo helps build trust in our community</p>
+                
+                <div className="flex justify-center mb-6">
+                  {avatarPreview ? (
+                    <div className="relative">
+                      <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-indigo-100 shadow-lg">
+                        <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
+                      </div>
+                      <button
+                        onClick={removeAvatar}
+                        className="absolute top-0 right-0 w-8 h-8 bg-red-500 text-white rounded-full shadow-md flex items-center justify-center hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label 
+                      htmlFor="avatar-upload"
+                      className="w-32 h-32 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center cursor-pointer hover:from-slate-200 hover:to-slate-300 transition-all border-4 border-dashed border-slate-300"
+                    >
+                      <Upload className="w-8 h-8 text-slate-400 mb-2" />
+                      <span className="text-xs text-slate-500 font-medium">Upload Photo</span>
+                    </label>
+                  )}
+                  <input 
+                    type="file" 
+                    accept="image/jpeg,image/jpg,image/png" 
+                    id="avatar-upload" 
+                    className="hidden" 
+                    onChange={handleAvatarChange} 
+                  />
+                </div>
+
+                <div className="bg-blue-50 rounded-lg p-3 text-left">
+                  <p className="text-xs text-blue-900 font-medium mb-1">📸 Photo Guidelines:</p>
+                  <ul className="text-xs text-blue-800 space-y-1 ml-4">
+                    <li>• Clear, recent photo of your face</li>
+                    <li>• JPG or PNG format only</li>
+                    <li>• Maximum file size: 5MB</li>
+                  </ul>
                 </div>
               </div>
 
+              <Button 
+                className="w-full bg-indigo-600 hover:bg-indigo-700 mt-6"
+                onClick={handleContinueToDetails}
+                disabled={(!avatarFile && !avatarPreview) || isSubmitting}
+              >
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Continue'}
+              </Button>
+            </div>
+          )}
+
+          {/* Step 2: Basic Info */}
+          {step === 2 && (
+            <div className="space-y-4">
               <div>
                 <Label>First Name</Label>
                 <Input 
@@ -188,17 +249,23 @@ export default function ProfileSetup({ user, onComplete }) {
                 )}
               </div>
 
-              <Button 
-                className="w-full bg-indigo-600 hover:bg-indigo-700"
-                onClick={() => setStep(2)}
-                disabled={!displayName.trim() || !birthYear}
-              >
-                Continue
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
+                  Back
+                </Button>
+                <Button 
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                  onClick={() => setStep(3)}
+                  disabled={!displayName.trim() || !birthYear}
+                >
+                  Continue
+                </Button>
+              </div>
             </div>
           )}
 
-          {step === 2 && (
+          {/* Step 3: Location */}
+          {step === 3 && (
             <div className="space-y-4">
               <div>
                 <Label>City</Label>
@@ -241,12 +308,12 @@ export default function ProfileSetup({ user, onComplete }) {
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
+                <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
                   Back
                 </Button>
                 <Button 
                   className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-                  onClick={() => setStep(3)}
+                  onClick={() => setStep(4)}
                 >
                   Continue
                 </Button>
@@ -254,7 +321,8 @@ export default function ProfileSetup({ user, onComplete }) {
             </div>
           )}
 
-          {step === 3 && (
+          {/* Step 4: Interests */}
+          {step === 4 && (
             <div className="space-y-4">
               <div>
                 <Label>Interests (pick up to 5)</Label>
@@ -278,7 +346,7 @@ export default function ProfileSetup({ user, onComplete }) {
               </div>
 
               <div className="flex gap-2 pt-4">
-                <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
+                <Button variant="outline" onClick={() => setStep(3)} className="flex-1">
                   Back
                 </Button>
                 <Button 
