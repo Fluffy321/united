@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2, Camera, LogOut, Shield, Bell, UserCircle, Image, Smile, Type } from 'lucide-react';
+import { ArrowLeft, Loader2, Camera, LogOut, Shield, Bell, UserCircle, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,8 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import UserAvatar from '@/components/common/UserAvatar';
-import AvatarPicker from '@/components/profile/AvatarPicker';
-import ThemePicker from '@/components/profile/ThemePicker';
 import {
   Select,
   SelectContent,
@@ -43,9 +41,6 @@ export default function Settings() {
   const [interests, setInterests] = useState([]);
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
-  const [avatarType, setAvatarType] = useState('initials');
-  const [avatarPresetId, setAvatarPresetId] = useState(null);
-  const [avatarTheme, setAvatarTheme] = useState('ocean-blue');
   const [isSaving, setIsSaving] = useState(false);
   const [notifications, setNotifications] = useState({
     messages: true,
@@ -58,34 +53,8 @@ export default function Settings() {
     loadUser();
   }, []);
 
-  const getRandomPreset = () => {
-    const presets = ['smile', 'heart', 'star', 'zap', 'moon', 'sun', 'music', 'coffee', 'camera', 'book', 'palette', 'rocket', 'sparkles', 'cloud', 'crown', 'flame', 'leaf', 'mountain', 'trophy', 'gift', 'umbrella', 'anchor', 'compass', 'feather', 'globe', 'key', 'target', 'puzzle', 'lightbulb'];
-    return presets[Math.floor(Math.random() * presets.length)];
-  };
-
-  const getRandomTheme = () => {
-    const themes = ['ocean-blue', 'sunset-orange', 'purple-glow', 'mint-green', 'midnight-dark', 'gold-shine', 'soft-pink', 'sky-gradient'];
-    return themes[Math.floor(Math.random() * themes.length)];
-  };
-
   const loadUser = async () => {
     const user = await base44.auth.me();
-    
-    // Auto-assign avatar on first load if missing
-    const needsAvatar = !user.avatar_preset_id || !user.avatar_theme;
-    let assignedPreset = user.avatar_preset_id;
-    let assignedTheme = user.avatar_theme;
-
-    if (needsAvatar) {
-      assignedPreset = getRandomPreset();
-      assignedTheme = getRandomTheme();
-      
-      await base44.auth.updateMe({
-        avatar_type: user.avatar_url ? 'photo' : 'avatar',
-        avatar_preset_id: assignedPreset,
-        avatar_theme: assignedTheme
-      });
-    }
 
     setCurrentUser(user);
     setDisplayName(user.display_name || user.full_name?.split(' ')[0] || '');
@@ -93,9 +62,6 @@ export default function Settings() {
     setBio(user.bio || '');
     setInterests(user.interests || []);
     setAvatarPreview(user.avatar_url);
-    setAvatarType(user.avatar_url ? 'photo' : 'avatar');
-    setAvatarPresetId(assignedPreset);
-    setAvatarTheme(assignedTheme);
     setNotifications(user.notification_settings || {
       messages: true,
       comments: true,
@@ -115,51 +81,53 @@ export default function Settings() {
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload a valid image file (JPG or PNG)');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image must be smaller than 5MB');
+        return;
+      }
+
       setAvatarFile(file);
       setAvatarPreview(URL.createObjectURL(file));
     }
   };
 
-  const handleRemoveAvatar = () => {
-    setAvatarFile(null);
-    setAvatarPreview(null);
-  };
-
   const handleSaveProfile = async () => {
+    if (!avatarPreview && !avatarFile) {
+      toast.error('Profile photo is required');
+      return;
+    }
+
     setIsSaving(true);
 
-    let avatarUrl = currentUser?.avatar_url;
-    if (avatarFile) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: avatarFile });
-      avatarUrl = file_url;
-    } else if (avatarPreview === null) {
-      avatarUrl = null;
+    try {
+      let avatarUrl = currentUser?.avatar_url;
+      if (avatarFile) {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: avatarFile });
+        avatarUrl = file_url;
+      }
+
+      await base44.auth.updateMe({
+        display_name: displayName.trim(),
+        city,
+        bio: bio.trim(),
+        interests,
+        avatar_url: avatarUrl
+      });
+
+      setIsSaving(false);
+      toast.success('Profile updated');
+      loadUser();
+    } catch (error) {
+      toast.error('Failed to update profile');
+      setIsSaving(false);
     }
-
-    const updateData = {
-      display_name: displayName.trim(),
-      city,
-      bio: bio.trim(),
-      interests,
-      avatar_preset_id: avatarPresetId,
-      avatar_theme: avatarTheme,
-      avatar_updated_at: new Date().toISOString()
-    };
-
-    // Only set avatar_type and avatar_url if photo exists
-    if (avatarUrl) {
-      updateData.avatar_url = avatarUrl;
-      updateData.avatar_type = 'photo';
-    } else {
-      updateData.avatar_url = null;
-      updateData.avatar_type = 'avatar';
-    }
-
-    await base44.auth.updateMe(updateData);
-
-    setIsSaving(false);
-    toast.success('Profile updated');
-    loadUser();
   };
 
   const handleSaveNotifications = async () => {
@@ -212,72 +180,50 @@ export default function Settings() {
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
-            {/* Avatar Preview */}
-            <div className="flex justify-center">
-              <UserAvatar user={{...currentUser, display_name: displayName, avatar_type: avatarPreview ? 'photo' : 'avatar', avatar_url: avatarPreview, avatar_preset_id: avatarPresetId, avatar_theme: avatarTheme}} size="xl" />
-            </div>
+            {/* Profile Photo */}
+            <div className="bg-white rounded-xl p-6">
+              <div className="flex flex-col items-center gap-4">
+                {avatarPreview ? (
+                  <div className="relative">
+                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-slate-200 shadow-lg">
+                      <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    <button
+                      onClick={() => document.getElementById('avatar-upload').click()}
+                      className="absolute bottom-0 right-0 w-10 h-10 bg-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-700 transition-colors"
+                    >
+                      <Camera className="w-5 h-5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <div className="w-32 h-32 rounded-full bg-slate-200 flex items-center justify-center mb-4">
+                      <UserCircle className="w-16 h-16 text-slate-400" />
+                    </div>
+                    <p className="text-sm text-red-600 font-medium mb-2">Profile photo required</p>
+                  </div>
+                )}
 
-            {/* Avatar Management */}
-            <div className="bg-white rounded-xl p-6 space-y-4">
-              <Label>Profile Look</Label>
-              
-              <div className="space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-2"
-                  onClick={() => setAvatarType(avatarType === 'avatar' ? 'photo' : 'avatar')}
-                >
-                  <Smile className="w-4 h-4" />
-                  Change Avatar Icon
-                </Button>
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/jpg,image/png" 
+                  id="avatar-upload" 
+                  className="hidden" 
+                  onChange={handleAvatarChange} 
+                />
                 
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-2"
-                  onClick={() => setAvatarType('avatar')}
-                >
-                  <Image className="w-4 h-4" />
-                  Change Color Theme
-                </Button>
-              </div>
-
-              {/* Avatar Picker */}
-              {avatarType === 'avatar' && (
-                <div className="pt-4 border-t space-y-4">
-                  <AvatarPicker 
-                    selectedPreset={avatarPresetId}
-                    onSelect={setAvatarPresetId}
-                  />
-                  <ThemePicker 
-                    selectedTheme={avatarTheme}
-                    onSelect={setAvatarTheme}
-                  />
-                </div>
-              )}
-
-              {/* Photo Upload */}
-              <div className="pt-4 border-t space-y-3">
-                <Label className="text-sm">Upload Photo (optional)</Label>
-                <input type="file" accept="image/jpeg,image/png,image/heic,image/jpg" id="avatar" className="hidden" onChange={handleAvatarChange} />
                 <Button 
                   variant="outline" 
-                  className="w-full gap-2"
-                  onClick={() => document.getElementById('avatar').click()}
+                  className="gap-2"
+                  onClick={() => document.getElementById('avatar-upload').click()}
                 >
                   <Camera className="w-4 h-4" />
                   {avatarPreview ? 'Change Photo' : 'Upload Photo'}
                 </Button>
-                {avatarPreview && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleRemoveAvatar}
-                    className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    Remove Photo
-                  </Button>
-                )}
-                <p className="text-xs text-slate-500">Your photo will show instead of your avatar</p>
+
+                <p className="text-xs text-slate-500 text-center max-w-xs">
+                  Use a clear photo of yourself. JPG or PNG, max 5MB.
+                </p>
               </div>
             </div>
 

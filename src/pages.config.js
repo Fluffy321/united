@@ -48,27 +48,27 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import Chalkboard from './pages/Chalkboard';
+import CommunityUpdates from './pages/CommunityUpdates';
 import Feed from './pages/Feed';
 import Messages from './pages/Messages';
 import MitzvahCircle from './pages/MitzvahCircle';
+import News from './pages/News';
 import Organization from './pages/Organization';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
-import News from './pages/News';
-import CommunityUpdates from './pages/CommunityUpdates';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Chalkboard": Chalkboard,
+    "CommunityUpdates": CommunityUpdates,
     "Feed": Feed,
     "Messages": Messages,
     "MitzvahCircle": MitzvahCircle,
+    "News": News,
     "Organization": Organization,
     "Profile": Profile,
     "Settings": Settings,
-    "News": News,
-    "CommunityUpdates": CommunityUpdates,
 }
 
 export const pagesConfig = {
