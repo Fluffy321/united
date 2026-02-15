@@ -6,7 +6,7 @@ import { Toaster } from 'sonner';
 
 const navItems = [
   { name: 'Feed', icon: Home, page: 'Feed', color: 'blue' },
-  { name: 'News', icon: Newspaper, page: 'News', color: 'cyan' },
+  { name: 'Updates', icon: Newspaper, page: 'CommunityUpdates', color: 'cyan' },
   { name: 'Chalkboard', icon: Clipboard, page: 'Chalkboard', color: 'orange' },
   { name: 'Mitzvah', icon: HandHeart, page: 'MitzvahCircle', color: 'purple' },
   { name: 'Profile', icon: User, page: 'Profile', color: 'slate' }

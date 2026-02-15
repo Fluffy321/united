@@ -55,6 +55,7 @@ import Organization from './pages/Organization';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import News from './pages/News';
+import CommunityUpdates from './pages/CommunityUpdates';
 import __Layout from './Layout.jsx';
 
 
@@ -67,6 +68,7 @@ export const PAGES = {
     "Profile": Profile,
     "Settings": Settings,
     "News": News,
+    "CommunityUpdates": CommunityUpdates,
 }
 
 export const pagesConfig = {
