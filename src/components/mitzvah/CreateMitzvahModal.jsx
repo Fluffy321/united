@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import CitySelector from '@/components/common/CitySelector';
 
 const CATEGORIES = ['Errand', 'Lost & Found', 'Quick Favor', 'Tutoring', 'Shabbat Help', 'Other'];
 
@@ -22,6 +23,7 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
+  const [locationLabel, setLocationLabel] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,14 +43,13 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
         created_by_user_id: currentUser.id,
         created_by_name: isAnonymous ? 'Anonymous' : currentUser.display_name,
         is_anonymous: isAnonymous,
-        city: currentUser.city || 'Five Towns'
+        location_label: locationLabel || currentUser.cityPreset || currentUser.cityCustom || 'Five Towns'
       };
 
       // Add user's location if available
       if (currentUser.location_lat && currentUser.location_lng) {
         requestData.location_lat = currentUser.location_lat;
         requestData.location_lng = currentUser.location_lng;
-        requestData.location_text = currentUser.neighborhood || currentUser.city || 'Five Towns';
       }
 
       await base44.entities.MitzvahRequest.create(requestData);
@@ -60,6 +61,7 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
       setTitle('');
       setDescription('');
       setCategory('');
+      setLocationLabel('');
       setIsAnonymous(false);
     } catch (error) {
       toast.error('Failed to post request');
@@ -76,6 +78,11 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
           <DialogDescription>
             Ask the community for help with something small
           </DialogDescription>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+            <p className="text-xs text-blue-900">
+              <strong>Privacy:</strong> Don't post exact addresses publicly. Share precise details only after someone accepts.
+            </p>
+          </div>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -113,6 +120,17 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label>Approximate Location</Label>
+            <Input
+              value={locationLabel}
+              onChange={(e) => setLocationLabel(e.target.value)}
+              placeholder={currentUser.cityPreset || currentUser.cityCustom || "e.g., Cedarhurst"}
+              className="mt-1"
+            />
+            <p className="text-xs text-slate-500 mt-1">General area only (e.g., neighborhood name)</p>
           </div>
 
           <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">

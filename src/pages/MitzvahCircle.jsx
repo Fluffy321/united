@@ -7,8 +7,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import MitzvahRequestCard from '@/components/mitzvah/MitzvahRequestCard';
 import CreateMitzvahModal from '@/components/mitzvah/CreateMitzvahModal';
 import LocationPrompt from '@/components/mitzvah/LocationPrompt';
-import MitzvahMap from '@/components/mitzvah/MitzvahMap';
-import MitzvahMapSheet from '@/components/mitzvah/MitzvahMapSheet';
+import MitzvahMapView from '@/components/mitzvah/MitzvahMapView';
+import MitzvahDetailSheet from '@/components/mitzvah/MitzvahDetailSheet';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -32,9 +32,11 @@ export default function MitzvahCircle() {
   const [activeTab, setActiveTab] = useState('open');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [locationFilter, setLocationFilter] = useState('all');
+  const [timeFilter, setTimeFilter] = useState('all');
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [viewMode, setViewMode] = useState('list');
   const [selectedMapRequest, setSelectedMapRequest] = useState(null);
+  const [showDetailSheet, setShowDetailSheet] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -313,16 +315,47 @@ export default function MitzvahCircle() {
             ))}
           </div>
         ) : (
-          <div className="pb-24">
-            <MitzvahMap
-              requests={requests.filter(r => r.status === 'Open')}
-              userLocation={currentUser?.location_lat && currentUser?.location_lng ? {
-                lat: currentUser.location_lat,
-                lng: currentUser.location_lng
-              } : null}
-              onSelectRequest={setSelectedMapRequest}
-            />
-          </div>
+          <>
+            {/* Map Filters */}
+            <div className="mb-3 space-y-2">
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                {['Today', 'This Week', 'Anytime'].map(time => (
+                  <Button
+                    key={time}
+                    variant={timeFilter === time.toLowerCase().replace(' ', '') ? "default" : "outline"}
+                    size="sm"
+                    className={`whitespace-nowrap text-xs h-8 ${
+                      timeFilter === time.toLowerCase().replace(' ', '')
+                        ? 'bg-indigo-600 hover:bg-indigo-700' 
+                        : 'hover:bg-slate-100'
+                    }`}
+                    onClick={() => setTimeFilter(time.toLowerCase().replace(' ', ''))}
+                  >
+                    {time}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="pb-24">
+              <MitzvahMapView
+                requests={requests.filter(r => r.status === 'Open' || r.status === 'InProgress')}
+                userLocation={currentUser?.location_lat && currentUser?.location_lng ? {
+                  lat: currentUser.location_lat,
+                  lng: currentUser.location_lng
+                } : null}
+                onSelectRequest={(req) => {
+                  setSelectedMapRequest(req);
+                  setShowDetailSheet(true);
+                }}
+                filters={{
+                  category: categoryFilter,
+                  location: locationFilter,
+                  time: timeFilter
+                }}
+              />
+            </div>
+          </>
         )}
 
         {/* Create Button */}
@@ -356,11 +389,15 @@ export default function MitzvahCircle() {
       />
 
       {selectedMapRequest && (
-        <MitzvahMapSheet
+        <MitzvahDetailSheet
           request={selectedMapRequest}
           currentUser={currentUser}
-          onClose={() => setSelectedMapRequest(null)}
-          onClaim={handleClaim}
+          open={showDetailSheet}
+          onClose={() => {
+            setShowDetailSheet(false);
+            setSelectedMapRequest(null);
+          }}
+          onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
         />
       )}
     </div>
