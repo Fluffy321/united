@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { Button } from "@/components/ui/button";
@@ -126,45 +125,43 @@ export default function MitzvahMapView({ requests, userLocation, onSelectRequest
           </Marker>
         )}
 
-        <MarkerClusterGroup chunkedLoading>
-          {filteredRequests.map(request => (
-            <Marker
-              key={request.id}
-              position={[request.location_lat, request.location_lng]}
-              icon={createCustomIcon(CATEGORY_COLORS[request.category])}
-              eventHandlers={{
-                click: () => onSelectRequest(request)
-              }}
-            >
-              <Popup>
-                <div className="p-2 min-w-[200px]">
-                  <Badge className="mb-2" style={{ backgroundColor: CATEGORY_COLORS[request.category] }}>
-                    {request.category}
-                  </Badge>
-                  <h3 className="font-bold text-sm mb-1">{request.title}</h3>
-                  <p className="text-xs text-slate-600 mb-2 line-clamp-2">{request.description}</p>
-                  {request.location_label && (
-                    <div className="flex items-center gap-1 text-xs text-slate-500 mb-2">
-                      <MapPin className="w-3 h-3" />
-                      {request.location_label}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1 text-xs text-slate-500 mb-3">
-                    <Clock className="w-3 h-3" />
-                    {formatDistanceToNow(new Date(request.created_date), { addSuffix: true })}
+        {filteredRequests.map(request => (
+          <Marker
+            key={request.id}
+            position={[request.location_lat, request.location_lng]}
+            icon={createCustomIcon(CATEGORY_COLORS[request.category])}
+            eventHandlers={{
+              click: () => onSelectRequest(request)
+            }}
+          >
+            <Popup>
+              <div className="p-2 min-w-[200px]">
+                <Badge className="mb-2" style={{ backgroundColor: CATEGORY_COLORS[request.category] }}>
+                  {request.category}
+                </Badge>
+                <h3 className="font-bold text-sm mb-1">{request.title}</h3>
+                <p className="text-xs text-slate-600 mb-2 line-clamp-2">{request.description}</p>
+                {request.location_label && (
+                  <div className="flex items-center gap-1 text-xs text-slate-500 mb-2">
+                    <MapPin className="w-3 h-3" />
+                    {request.location_label}
                   </div>
-                  <Button 
-                    size="sm" 
-                    className="w-full bg-indigo-600 hover:bg-indigo-700"
-                    onClick={() => onSelectRequest(request)}
-                  >
-                    View Details
-                  </Button>
+                )}
+                <div className="flex items-center gap-1 text-xs text-slate-500 mb-3">
+                  <Clock className="w-3 h-3" />
+                  {formatDistanceToNow(new Date(request.created_date), { addSuffix: true })}
                 </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MarkerClusterGroup>
+                <Button 
+                  size="sm" 
+                  className="w-full bg-indigo-600 hover:bg-indigo-700"
+                  onClick={() => onSelectRequest(request)}
+                >
+                  View Details
+                </Button>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
     </div>
   );
