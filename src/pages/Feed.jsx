@@ -99,7 +99,9 @@ export default function Feed() {
     queryFn: async () => {
       const allPosts = await base44.entities.UnifiedPost.list('-created_date', 100);
       return allPosts;
-    }
+    },
+    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: false
   });
 
   const { data: todayEvents = [] } = useQuery({
@@ -108,7 +110,9 @@ export default function Feed() {
       const events = await base44.entities.UnifiedPost.filter({ type: 'event' }, '-created_date', 20);
       const today = format(new Date(), 'yyyy-MM-dd');
       return events.filter(e => e.event_date === today);
-    }
+    },
+    staleTime: 60000, // 1 minute
+    refetchOnWindowFocus: false
   });
 
   const { data: openMitzvahRequests = [] } = useQuery({
@@ -119,7 +123,9 @@ export default function Feed() {
         const createdToday = isToday(parseISO(r.created_date));
         return createdToday;
       });
-    }
+    },
+    staleTime: 60000, // 1 minute
+    refetchOnWindowFocus: false
   });
 
   const { data: todayActions = [] } = useQuery({
@@ -127,7 +133,9 @@ export default function Feed() {
     queryFn: async () => {
       const actions = await base44.entities.MitzvahAction.list('-created_date', 100);
       return actions.filter(a => isToday(parseISO(a.created_date)));
-    }
+    },
+    staleTime: 60000, // 1 minute
+    refetchOnWindowFocus: false
   });
 
 
@@ -147,7 +155,9 @@ export default function Feed() {
       });
       return newStreak;
     },
-    enabled: !!currentUser
+    enabled: !!currentUser,
+    staleTime: 300000, // 5 minutes
+    refetchOnWindowFocus: false
   });
 
   const { data: todayMitzvahCount = 0 } = useQuery({
@@ -164,7 +174,9 @@ export default function Feed() {
       
       return todayActions.length + logs.length;
     },
-    enabled: !!currentUser
+    enabled: !!currentUser,
+    staleTime: 120000, // 2 minutes
+    refetchOnWindowFocus: false
   });
 
 
