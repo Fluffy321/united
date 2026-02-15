@@ -3,7 +3,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { type, recipientId, helperName, requestTitle } = await req.json();
+    const { type, recipientId, helperName, requestTitle, locationLabel } = await req.json();
 
     // Get recipient email
     const [recipient] = await base44.asServiceRole.entities.User.filter({ id: recipientId });
@@ -24,8 +24,11 @@ Deno.serve(async (req) => {
       subject = 'New message about your mitzvah offer';
       body = `You have a new message about the mitzvah: "${requestTitle}"\n\nCheck your messages to respond.\n\n- United Community`;
     } else if (type === 'nearby_request') {
-      subject = 'New mitzvah request near you';
-      body = `A new mitzvah request has been posted near ${requestTitle}: "${requestTitle}"\n\nCheck the Mitzvah Circle to see if you can help!\n\n- United Community`;
+      subject = `New mitzvah request near ${locationLabel || 'you'}`;
+      body = `A new mitzvah request has been posted near ${locationLabel || 'your area'}: "${requestTitle}"\n\nCheck the Mitzvah Circle to see if you can help!\n\n- United Community`;
+    } else if (type === 'mitzvah_completed') {
+      subject = 'Mitzvah completed!';
+      body = `Great news! Your mitzvah "${requestTitle}" has been marked as completed.\n\n${helperName} has earned 10 points for helping!\n\n- United Community`;
     }
 
     await base44.asServiceRole.integrations.Core.SendEmail({

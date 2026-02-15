@@ -113,12 +113,16 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
       });
 
       // Send notification
-      await base44.functions.invoke('sendMitzvahNotification', {
-        type: 'help_accepted',
-        recipientId: request.created_by_user_id,
-        helperName: currentUser.display_name,
-        requestTitle: request.title
-      });
+      try {
+        await base44.functions.invoke('sendMitzvahNotification', {
+          type: 'help_accepted',
+          recipientId: request.created_by_user_id,
+          helperName: currentUser.display_name,
+          requestTitle: request.title
+        });
+      } catch (error) {
+        console.error('Notification failed:', error);
+      }
 
       toast.success('You\'ve offered to help! Opening chat...');
       onRefresh?.();
@@ -188,6 +192,18 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
         await base44.entities.HelpOffer.update(offer.id, { status: 'completed' });
       }
 
+      // Send completion notification to helper
+      try {
+        await base44.functions.invoke('sendMitzvahNotification', {
+          type: 'mitzvah_completed',
+          recipientId: request.claimed_by_user_id,
+          helperName: request.claimed_by_name,
+          requestTitle: request.title
+        });
+      } catch (error) {
+        console.error('Notification failed:', error);
+      }
+
       toast.success('Mitzvah completed! Helper earned 10 points ✨');
       onRefresh?.();
       onClose();
@@ -229,9 +245,36 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
     setIsProcessing(false);
   };
 
-  const handleReport = () => {
-    toast.success('Report submitted. Our team will review it.');
-    onClose();
+  const handleReport = async () => {
+    try {
+      await base44.entities.Report.create({
+        reporter_id: currentUser.id,
+        reported_content_id: request.id,
+        content_type: 'request',
+        reason: 'safety_concern',
+        details: 'Reported from mitzvah detail view'
+      });
+      toast.success('Report submitted. Our team will review it.');
+      onClose();
+    } catch (error) {
+      toast.error('Failed to submit report');
+    }
+  };
+
+  const handleReportUser = async () => {
+    try {
+      await base44.entities.Report.create({
+        reporter_id: currentUser.id,
+        reported_content_id: request.created_by_user_id,
+        content_type: 'user',
+        reason: 'safety_concern',
+        details: 'Reported from mitzvah request'
+      });
+      toast.success('User reported. Our team will review it.');
+      onClose();
+    } catch (error) {
+      toast.error('Failed to report user');
+    }
   };
 
   const handleMessage = async () => {
@@ -402,14 +445,24 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
             )}
 
             {!isRequester && (
-              <Button 
-                onClick={handleReport}
-                variant="ghost"
-                className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <Flag className="w-4 h-4 mr-2" />
-                Report Issue
-              </Button>
+              <div className="space-y-2">
+                <Button 
+                  onClick={handleReport}
+                  variant="ghost"
+                  className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Flag className="w-4 h-4 mr-2" />
+                  Report Request
+                </Button>
+                <Button 
+                  onClick={handleReportUser}
+                  variant="ghost"
+                  className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Flag className="w-4 h-4 mr-2" />
+                  Report User
+                </Button>
+              </div>
             )}
           </div>
         </div>
