@@ -69,8 +69,9 @@ export default function MitzvahMapView({ requests, userLocation, onSelectRequest
     }
   }, [userLocation, filters.location]);
 
-  // Filter requests based on filters
+  // Filter requests based on filters - only show open requests
   const filteredRequests = requests.filter(req => {
+    if (req.status !== 'open') return false;
     if (filters.category !== 'All' && req.category !== filters.category) return false;
     
     if (filters.time === 'today') {

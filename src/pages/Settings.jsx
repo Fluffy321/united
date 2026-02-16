@@ -348,6 +348,29 @@ export default function Settings() {
                 </p>
               </div>
 
+              {currentUser?.role === 'admin' && (
+                <div className="pt-4 border-t">
+                  <h3 className="font-semibold text-slate-900 mb-2">Admin Tools</h3>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={async () => {
+                      setIsSaving(true);
+                      try {
+                        await base44.functions.invoke('seedLaunchContent');
+                        toast.success('Seeded 40 items successfully!');
+                      } catch (error) {
+                        toast.error('Failed to seed content');
+                      }
+                      setIsSaving(false);
+                    }}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : '🌱 Seed Launch Content'}
+                  </Button>
+                </div>
+              )}
+
               <div className="pt-4 border-t">
                 <a 
                   href="https://united.community/guidelines" 
