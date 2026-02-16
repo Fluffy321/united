@@ -80,20 +80,16 @@ export default function CommunityUpdates() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-              <Newspaper className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">Community Updates</h1>
-              <p className="text-xs text-slate-600">Local happenings and news</p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-white">
+      {/* Header Section */}
+      <div className="bg-[#EEF4FF] border-b border-slate-100">
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Community Updates</h1>
+          <p className="text-sm" style={{ color: '#5F6B7A' }}>Latest from your community and beyond</p>
         </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-4 py-6">
 
         {/* Section A: Local Updates */}
         <div className="mb-8">

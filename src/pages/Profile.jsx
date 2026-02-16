@@ -150,14 +150,14 @@ export default function Profile() {
   const displayName = profileUser.display_name || profileUser.full_name?.split(' ')[0] || 'User';
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="bg-gradient-to-br from-indigo-600 to-purple-600 pt-8 pb-20 px-4">
+      <div className="bg-gradient-to-b from-[#E6F0FF] to-white pt-8 pb-20 px-4">
         <div className="max-w-2xl mx-auto flex justify-between items-start">
           <div></div>
           {isOwnProfile ? (
             <Link to={createPageUrl('Settings')}>
-              <Button variant="ghost" size="icon" className="text-white/80 hover:text-white hover:bg-white/10">
+              <Button variant="ghost" size="icon" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100">
                 <Settings className="w-5 h-5" />
               </Button>
             </Link>
@@ -166,7 +166,7 @@ export default function Profile() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="text-white/80 hover:text-white hover:bg-white/10"
+                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 onClick={() => setShowReport(true)}
               >
                 <Flag className="w-5 h-5" />
@@ -174,7 +174,7 @@ export default function Profile() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="text-white/80 hover:text-white hover:bg-white/10"
+                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 onClick={handleBlock}
               >
                 <Ban className="w-5 h-5" />
