@@ -49,6 +49,7 @@
  */
 import AdminModerationQueue from './pages/AdminModerationQueue';
 import Chalkboard from './pages/Chalkboard';
+import Communities from './pages/Communities';
 import CommunityUpdates from './pages/CommunityUpdates';
 import Feed from './pages/Feed';
 import Messages from './pages/Messages';
@@ -58,13 +59,13 @@ import Organization from './pages/Organization';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import ShulPage from './pages/ShulPage';
-import Communities from './pages/Communities';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AdminModerationQueue": AdminModerationQueue,
     "Chalkboard": Chalkboard,
+    "Communities": Communities,
     "CommunityUpdates": CommunityUpdates,
     "Feed": Feed,
     "Messages": Messages,
@@ -74,7 +75,6 @@ export const PAGES = {
     "Profile": Profile,
     "Settings": Settings,
     "ShulPage": ShulPage,
-    "Communities": Communities,
 }
 
 export const pagesConfig = {

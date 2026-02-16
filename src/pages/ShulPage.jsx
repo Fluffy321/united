@@ -12,6 +12,11 @@ import { toast } from 'sonner';
 import ShulPostCard from '@/components/shul/ShulPostCard';
 import ShulEventCard from '@/components/shul/ShulEventCard';
 import CreateShulPostModal from '@/components/shul/CreateShulPostModal';
+import MinyanStatusWidget from '@/components/shul/MinyanStatusWidget';
+import WeeklyScheduleWidget from '@/components/shul/WeeklyScheduleWidget';
+import MealTrainBoard from '@/components/shul/MealTrainBoard';
+import RideBoard from '@/components/shul/RideBoard';
+import VolunteerBoard from '@/components/shul/VolunteerBoard';
 
 export default function ShulPage() {
   const location = useLocation();
@@ -148,19 +153,20 @@ export default function ShulPage() {
   const isAdmin = membership?.role === 'admin';
   const isMember = !!membership;
 
-  const feedPosts = posts.filter(p => p.type === 'announcement' || p.type === 'discussion');
+  const announcements = posts.filter(p => p.type === 'announcement' && p.is_pinned);
+  const feedPosts = posts.filter(p => (p.type === 'announcement' || p.type === 'discussion') && !p.is_pinned);
   const eventPosts = posts.filter(p => p.type === 'event');
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-2xl mx-auto px-4 py-4">
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-b border-blue-700">
+        <div className="max-w-4xl mx-auto px-4 py-5">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate(-1)}
-            className="mb-3"
+            className="mb-3 text-white hover:bg-white/10"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
@@ -168,14 +174,14 @@ export default function ShulPage() {
 
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-2xl font-bold text-slate-900">{shul.name}</h1>
+              <div className="flex items-center gap-2 mb-2">
+                <h1 className="text-2xl font-bold">{shul.name}</h1>
                 {shul.verified && (
-                  <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                  <Badge className="bg-white/20 border-0">✓</Badge>
                 )}
               </div>
               
-              <div className="flex items-center gap-4 text-sm text-slate-600 mb-2">
+              <div className="flex items-center gap-4 text-sm text-blue-100 mb-2">
                 <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
                   {shul.town}
@@ -187,7 +193,7 @@ export default function ShulPage() {
               </div>
 
               {shul.description && (
-                <p className="text-sm text-slate-700 mb-3">{shul.description}</p>
+                <p className="text-sm text-blue-50 mb-3">{shul.description}</p>
               )}
             </div>
           </div>
@@ -197,7 +203,7 @@ export default function ShulPage() {
               <Button
                 onClick={() => joinMutation.mutate()}
                 disabled={joinMutation.isPending}
-                className="bg-indigo-600 hover:bg-indigo-700"
+                className="bg-white text-blue-600 hover:bg-blue-50"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Join Community
@@ -205,8 +211,9 @@ export default function ShulPage() {
             ) : (
               <Button
                 onClick={() => toggleNotificationsMutation.mutate()}
-                variant="outline"
+                variant="ghost"
                 size="sm"
+                className="bg-white/10 hover:bg-white/20 text-white border-0"
               >
                 {membership.notifications_enabled ? (
                   <>
@@ -224,7 +231,7 @@ export default function ShulPage() {
             {isAdmin && (
               <Button
                 onClick={() => setShowCreatePost(true)}
-                className="bg-indigo-600 hover:bg-indigo-700"
+                className="bg-white text-blue-600 hover:bg-blue-50"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New Post
@@ -234,12 +241,39 @@ export default function ShulPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="max-w-2xl mx-auto px-4 py-4">
+      {/* Dashboard Widgets */}
+      <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <MinyanStatusWidget shulId={shulId} currentUser={currentUser} />
+          <WeeklyScheduleWidget shulId={shulId} />
+        </div>
+
+        {/* Pinned Announcements */}
+        {announcements.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+              📌 Announcements
+            </h3>
+            <div className="space-y-3">
+              {announcements.map(post => (
+                <ShulPostCard
+                  key={post.id}
+                  post={post}
+                  currentUser={currentUser}
+                  isAdmin={isAdmin}
+                  onRefresh={() => queryClient.invalidateQueries({ queryKey: ['shul-posts'] })}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="feed">Feed</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
+            <TabsTrigger value="chesed">Chesed</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
           </TabsList>
 
@@ -276,6 +310,12 @@ export default function ShulPage() {
                 />
               ))
             )}
+          </TabsContent>
+
+          <TabsContent value="chesed" className="space-y-6">
+            <MealTrainBoard shulId={shulId} currentUser={currentUser} isAdmin={isAdmin} />
+            <RideBoard shulId={shulId} currentUser={currentUser} />
+            <VolunteerBoard shulId={shulId} currentUser={currentUser} isAdmin={isAdmin} />
           </TabsContent>
 
           <TabsContent value="members" className="space-y-2">
