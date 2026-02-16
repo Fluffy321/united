@@ -53,7 +53,10 @@ export default function MitzvahCircle() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [activeTab, setActiveTab] = useState('open');
   const [categoryFilter, setCategoryFilter] = useState('All');
-  const [locationFilter, setLocationFilter] = useState('near');
+  const [locationFilter, setLocationFilter] = useState(() => {
+    // Default to 'near' if user has origin (device location or cityPreset)
+    return 'near';
+  });
   const [timeFilter, setTimeFilter] = useState('anytime');
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [viewMode, setViewMode] = useState('list');
@@ -89,15 +92,17 @@ export default function MitzvahCircle() {
     const user = await base44.auth.me();
     setCurrentUser(user);
 
-    // Check if user has location - set "Near Me" as default
-    if (user.location_lat && user.location_lng) {
-      setLocationFilter('near');
-    } else {
+    // Check if user has origin (device location or town selection)
+    const hasOrigin = (user.location_lat && user.location_lng) || (user.cityPreset && TOWN_CENTERS[user.cityPreset]);
+    
+    if (!hasOrigin) {
       // Check if prompt was dismissed
       const dismissed = localStorage.getItem('locationPromptDismissed');
       if (!dismissed) {
         setTimeout(() => setShowLocationPrompt(true), 2000);
       }
+      // If no origin, default to 'all' instead of 'near'
+      setLocationFilter('all');
     }
   };
 
@@ -389,15 +394,77 @@ export default function MitzvahCircle() {
                   <strong>Admin Debug:</strong> Requests with coords: {requests.filter(r => r.approxLat && r.approxLng && r.status === 'open').length}
                 </div>
               )}
+              
+              {/* Count label */}
+              <div className="mb-3 text-sm font-medium text-slate-700">
+                {locationFilter === 'near' 
+                  ? `${requests.filter(r => r.status === 'open' || r.status === 'in_progress').length} open mitzvahs near you`
+                  : `${requests.filter(r => r.status === 'open' || r.status === 'in_progress').length} open mitzvahs`
+                }
+              </div>
+              
               <MitzvahMapView
                 requests={requests.filter(r => r.status === 'open' || r.status === 'in_progress')}
-                userLocation={currentUser?.location_lat && currentUser?.location_lng ? {
-                  lat: currentUser.location_lat,
-                  lng: currentUser.location_lng
-                } : null}
+                userOrigin={getUserOrigin(currentUser)}
+                currentUser={currentUser}
                 onSelectRequest={(req) => {
                   setSelectedMapRequest(req);
                   setShowDetailSheet(true);
+                }}
+                onHelpRequest={async (req) => {
+                  try {
+                    // Create help offer
+                    const helpOffer = await base44.entities.HelpOffer.create({
+                      request_id: req.id,
+                      helper_user_id: currentUser.id,
+                      helper_name: currentUser.display_name,
+                      status: 'active'
+                    });
+
+                    // Update request status
+                    await base44.entities.MitzvahRequest.update(req.id, {
+                      status: 'in_progress',
+                      claimed_by_user_id: currentUser.id,
+                      claimed_by_name: currentUser.display_name
+                    });
+
+                    // Create or open conversation
+                    const conversations = await base44.entities.Conversation.filter({ 
+                      participant_ids: { $all: [currentUser.id, req.created_by_user_id] } 
+                    });
+                    
+                    if (conversations.length > 0) {
+                      // Update help offer with conversation ID
+                      await base44.entities.HelpOffer.update(helpOffer.id, {
+                        conversation_id: conversations[0].id
+                      });
+                      navigate(createPageUrl('Messages') + `?conversation=${conversations[0].id}`);
+                    } else {
+                      const otherUser = await base44.entities.User.filter({ id: req.created_by_user_id });
+                      if (otherUser.length > 0) {
+                        const newConversation = await base44.entities.Conversation.create({
+                          participant_ids: [currentUser.id, req.created_by_user_id],
+                          participant_names: [currentUser.display_name, otherUser[0].display_name],
+                          participant_ages: [currentUser.age_range, otherUser[0].age_range],
+                          last_message: '',
+                          last_message_at: new Date().toISOString(),
+                          request_id: req.id
+                        });
+                        
+                        // Update help offer with conversation ID
+                        await base44.entities.HelpOffer.update(helpOffer.id, {
+                          conversation_id: newConversation.id
+                        });
+                        
+                        navigate(createPageUrl('Messages') + `?conversation=${newConversation.id}`);
+                      }
+                    }
+
+                    queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+                    toast.success('You\'ve offered to help! 💙');
+                  } catch (error) {
+                    toast.error('Failed to offer help');
+                  }
                 }}
                 filters={{
                   category: categoryFilter,
