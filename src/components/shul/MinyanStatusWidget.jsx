@@ -71,9 +71,9 @@ export default function MinyanStatusWidget({ shulId, currentUser }) {
   };
 
   return (
-    <Card className="bg-white border border-slate-200" style={{ boxShadow: '0 2px 8px rgba(15, 94, 215, 0.08)' }}>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900">
+    <Card className="bg-white border border-slate-100 rounded-2xl" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)' }}>
+      <CardHeader className="pb-5">
+        <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-900">
           <Users className="w-5 h-5 text-[#0F5ED7]" />
           Today's Minyan
         </CardTitle>
@@ -85,7 +85,7 @@ export default function MinyanStatusWidget({ shulId, currentUser }) {
           const userComing = isUserComing(type);
 
           return (
-            <div key={type} className="bg-white rounded-lg p-3 shadow-sm">
+            <div key={type} className="bg-white rounded-2xl p-4 border border-slate-100">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-slate-500" />
@@ -99,7 +99,7 @@ export default function MinyanStatusWidget({ shulId, currentUser }) {
               <Button
                 onClick={() => markAttendingMutation.mutate({ minyanType: type })}
                 size="sm"
-                className={`w-full font-semibold ${
+                className={`w-full font-semibold rounded-2xl ${
                   userComing 
                     ? 'bg-[#0F5ED7] hover:bg-[#0D4EB8] text-white' 
                     : 'bg-white border-2 border-[#0F5ED7] text-[#0F5ED7] hover:bg-[#E6F0FF]'

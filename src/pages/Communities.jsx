@@ -51,10 +51,10 @@ export default function Communities() {
   return (
     <div className="min-h-screen bg-white pb-20">
       {/* Header */}
-      <div className="bg-white border-b border-slate-100 sticky top-0 z-10" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-        <div className="max-w-2xl mx-auto px-4 py-5">
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">Communities</h1>
-          <p className="text-sm text-slate-600">Connect with your local kehillah</p>
+      <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Communities</h1>
+          <p className="text-sm" style={{ color: '#5F6B7A' }}>Connect with your local kehillah</p>
         </div>
       </div>
 
@@ -64,13 +64,12 @@ export default function Communities() {
         {myShuls.length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-bold text-slate-900 mb-4">My Communities</h2>
-            <div className="space-y-3">
+            <div className="space-y-0">
               {myShuls.map(shul => (
                 <div
                   key={shul.id}
                   onClick={() => handleShulClick(shul)}
-                  className="bg-white rounded-xl p-5 border border-slate-200 hover:border-[#0F5ED7] transition-all cursor-pointer"
-                  style={{ boxShadow: '0 2px 8px rgba(15, 94, 215, 0.08)' }}
+                  className="bg-white p-5 border-b border-slate-100 hover:bg-slate-50 transition-all cursor-pointer first:rounded-t-2xl last:rounded-b-2xl last:border-b-0"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -101,10 +100,10 @@ export default function Communities() {
 
         {/* All Communities */}
         <div>
-          <h2 className="text-xl font-bold text-slate-900 mb-4">
+          <h2 className="text-2xl font-bold text-slate-900 mb-5">
             {myShuls.length > 0 ? 'Discover More' : 'All Communities'}
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-0 border border-slate-100 rounded-2xl overflow-hidden">
             {otherShuls.length === 0 ? (
               <div className="text-center py-12 text-slate-500">
                 No communities yet
@@ -114,8 +113,7 @@ export default function Communities() {
                 <div
                   key={shul.id}
                   onClick={() => handleShulClick(shul)}
-                  className="bg-white rounded-xl p-5 border border-slate-200 hover:border-[#0F5ED7] transition-all cursor-pointer"
-                  style={{ boxShadow: '0 2px 8px rgba(15, 94, 215, 0.08)' }}
+                  className="bg-white p-5 border-b border-slate-100 hover:bg-slate-50 transition-all cursor-pointer last:border-b-0"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

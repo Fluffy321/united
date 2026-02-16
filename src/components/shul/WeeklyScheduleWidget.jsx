@@ -27,7 +27,7 @@ export default function WeeklyScheduleWidget({ shulId }) {
         <p className="text-sm text-slate-500 text-center py-4">No schedule items yet</p>
       ) : (
         items.map((item, idx) => (
-          <div key={idx} className="bg-white rounded-lg p-3 border border-slate-200">
+          <div key={idx} className="bg-white rounded-2xl p-4 border border-slate-100">
             <div className="flex items-start justify-between">
               <div>
                 <p className="font-semibold text-sm">{item.title}</p>
@@ -52,9 +52,9 @@ export default function WeeklyScheduleWidget({ shulId }) {
   );
 
   return (
-    <Card className="bg-white border border-slate-200" style={{ boxShadow: '0 2px 8px rgba(15, 94, 215, 0.08)' }}>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900">
+    <Card className="bg-white border border-slate-100 rounded-2xl" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)' }}>
+      <CardHeader className="pb-5">
+        <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-900">
           <Calendar className="w-5 h-5 text-[#0F5ED7]" />
           Weekly Schedule
         </CardTitle>

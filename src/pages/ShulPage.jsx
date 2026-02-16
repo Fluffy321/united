@@ -161,7 +161,7 @@ export default function ShulPage() {
     <div className="min-h-screen bg-white pb-20">
       {/* Header */}
       <div className="bg-white border-b border-slate-100">
-        <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="max-w-4xl mx-auto px-4 py-8">
           <Button
             variant="ghost"
             size="sm"
@@ -174,14 +174,14 @@ export default function ShulPage() {
 
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <h1 className="text-2xl font-bold text-slate-900">{shul.name}</h1>
+              <div className="flex items-center gap-2 mb-3">
+                <h1 className="text-3xl font-bold text-slate-900">{shul.name}</h1>
                 {shul.verified && (
                   <Badge className="bg-[#E6F0FF] text-[#0F5ED7] border-0">✓</Badge>
                 )}
               </div>
               
-              <div className="flex items-center gap-4 text-sm text-slate-600 mb-2">
+              <div className="flex items-center gap-4 text-sm mb-2" style={{ color: '#5F6B7A' }}>
                 <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
                   {shul.town}
@@ -193,7 +193,7 @@ export default function ShulPage() {
               </div>
 
               {shul.description && (
-                <p className="text-sm text-slate-700 mb-4">{shul.description}</p>
+                <p className="text-sm mb-4" style={{ color: '#5F6B7A' }}>{shul.description}</p>
               )}
             </div>
           </div>
@@ -203,7 +203,7 @@ export default function ShulPage() {
               <Button
                 onClick={() => joinMutation.mutate()}
                 disabled={joinMutation.isPending}
-                className="bg-[#0F5ED7] hover:bg-[#0D4EB8] text-white font-semibold"
+                className="bg-[#0F5ED7] hover:bg-[#0D4EB8] text-white font-semibold rounded-2xl"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Join Community
@@ -230,7 +230,8 @@ export default function ShulPage() {
             {isAdmin && (
               <Button
                 onClick={() => setShowCreatePost(true)}
-                className="bg-[#0F5ED7] hover:bg-[#0D4EB8] text-white font-semibold"
+                variant="outline"
+                className="border-[#0F5ED7] text-[#0F5ED7] hover:bg-[#E6F0FF] font-semibold rounded-2xl"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New Post
@@ -241,18 +242,18 @@ export default function ShulPage() {
       </div>
 
       {/* Dashboard Widgets */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <MinyanStatusWidget shulId={shulId} currentUser={currentUser} />
           <WeeklyScheduleWidget shulId={shulId} />
         </div>
 
         {/* Pinned Announcements */}
         {announcements.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-xl font-bold mb-4 text-slate-900">
-              📌 Announcements
-            </h3>
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold mb-5 text-slate-900">
+              Announcements
+            </h2>
             <div className="space-y-3">
               {announcements.map(post => (
                 <ShulPostCard

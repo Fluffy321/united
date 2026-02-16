@@ -67,7 +67,8 @@ export default function Layout({ children, currentPageName }) {
           --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
           --primary-blue: #0F5ED7;
           --accent-blue: #E6F0FF;
-          --card-shadow: 0 2px 8px rgba(15, 94, 215, 0.08);
+          --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+          --text-body: #5F6B7A;
         }
 
         body {
@@ -89,6 +90,7 @@ export default function Layout({ children, currentPageName }) {
           background-color: var(--primary-blue);
           color: white;
           font-weight: 600;
+          border-radius: 16px;
         }
 
         .primary-btn:hover {
@@ -97,9 +99,14 @@ export default function Layout({ children, currentPageName }) {
 
         .card-modern {
           background: white;
-          border: 1px solid #E5E7EB;
-          border-radius: 12px;
-          box-shadow: var(--card-shadow);
+          border: none;
+          border-bottom: 1px solid #F0F1F3;
+          border-radius: 0;
+          box-shadow: none;
+        }
+
+        .section-spacing {
+          margin-bottom: 32px;
         }
       `}</style>
 
