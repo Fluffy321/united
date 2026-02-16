@@ -1,13 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Clipboard, MessageCircle, User, HandHeart, Newspaper } from 'lucide-react';
+import { Home, Clipboard, MessageCircle, User, HandHeart, Newspaper, Users } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
 
 const navItems = [
   { name: 'Feed', icon: Home, page: 'Feed', color: 'blue' },
   { name: 'Updates', icon: Newspaper, page: 'CommunityUpdates', color: 'cyan' },
-  { name: 'Chalkboard', icon: Clipboard, page: 'Chalkboard', color: 'orange' },
+  { name: 'Communities', icon: Users, page: 'Communities', color: 'teal' },
   { name: 'Mitzvah', icon: HandHeart, page: 'MitzvahCircle', color: 'purple' },
   { name: 'Profile', icon: User, page: 'Profile', color: 'slate' }
 ];
@@ -40,7 +40,7 @@ const colorStyles = {
 };
 
 export default function Layout({ children, currentPageName }) {
-  const hideNav = ['Settings'].includes(currentPageName);
+  const hideNav = ['Settings', 'ShulPage'].includes(currentPageName);
   const hideBottomPadding = ['Messages'].includes(currentPageName);
   const wideNav = navItems.length > 4;
 
