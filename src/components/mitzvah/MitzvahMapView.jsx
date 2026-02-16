@@ -142,10 +142,10 @@ export default function MitzvahMapView({ requests, userLocation, onSelectRequest
                 </Badge>
                 <h3 className="font-bold text-sm mb-1">{request.title}</h3>
                 <p className="text-xs text-slate-600 mb-2 line-clamp-2">{request.description}</p>
-                {request.location_label && (
+                {request.locationLabel && (
                   <div className="flex items-center gap-1 text-xs text-slate-500 mb-2">
                     <MapPin className="w-3 h-3" />
-                    {request.location_label}
+                    {request.locationLabel}
                   </div>
                 )}
                 <div className="flex items-center gap-1 text-xs text-slate-500 mb-3">

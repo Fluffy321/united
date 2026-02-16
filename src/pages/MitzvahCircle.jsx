@@ -63,7 +63,7 @@ export default function MitzvahCircle() {
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['mitzvah-requests', activeTab, categoryFilter, locationFilter],
     queryFn: async () => {
-      const status = activeTab === 'open' ? 'Open' : 'Completed';
+      const status = activeTab === 'open' ? 'open' : 'completed';
       let allRequests;
       
       if (categoryFilter === 'All') {
@@ -78,12 +78,12 @@ export default function MitzvahCircle() {
       // Calculate distances and filter if "Near Me" is selected
       if (locationFilter === 'near' && currentUser?.location_lat && currentUser?.location_lng) {
         const requestsWithDistance = allRequests.map(req => {
-          if (req.location_lat && req.location_lng) {
+          if (req.approxLat && req.approxLng) {
             const distance = calculateDistance(
               currentUser.location_lat,
               currentUser.location_lng,
-              req.location_lat,
-              req.location_lng
+              req.approxLat,
+              req.approxLng
             );
             return { ...req, distance };
           }
@@ -338,8 +338,13 @@ export default function MitzvahCircle() {
             </div>
 
             <div className="pb-24">
+              {currentUser?.role === 'admin' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mb-3 text-xs text-yellow-900">
+                  <strong>Admin Debug:</strong> Requests with coords: {requests.filter(r => r.approxLat && r.approxLng && r.status === 'open').length}
+                </div>
+              )}
               <MitzvahMapView
-                requests={requests.filter(r => r.status === 'Open' || r.status === 'InProgress')}
+                requests={requests.filter(r => r.status === 'open' || r.status === 'in_progress')}
                 userLocation={currentUser?.location_lat && currentUser?.location_lng ? {
                   lat: currentUser.location_lat,
                   lng: currentUser.location_lng

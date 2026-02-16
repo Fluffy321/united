@@ -24,18 +24,18 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
 
   const isRequester = currentUser?.id === request?.created_by_user_id;
   const isHelper = currentUser?.id === request?.claimed_by_user_id;
-  const isOpen = request?.status === 'Open';
-  const isInProgress = request?.status === 'InProgress';
-  const isCompleted = request?.status === 'Completed';
-  const isCancelled = request?.status === 'Cancelled';
+  const isOpen = request?.status === 'open' || request?.status === 'Open';
+  const isInProgress = request?.status === 'in_progress' || request?.status === 'InProgress';
+  const isCompleted = request?.status === 'completed' || request?.status === 'Completed';
+  const isCancelled = request?.status === 'cancelled' || request?.status === 'Cancelled';
 
   const calculateDistance = () => {
-    if (!currentUser?.location_lat || !request?.location_lat) return null;
+    if (!currentUser?.location_lat || !request?.approxLat) return null;
     const R = 3959;
-    const dLat = (request.location_lat - currentUser.location_lat) * Math.PI / 180;
-    const dLon = (request.location_lng - currentUser.location_lng) * Math.PI / 180;
+    const dLat = (request.approxLat - currentUser.location_lat) * Math.PI / 180;
+    const dLon = (request.approxLng - currentUser.location_lng) * Math.PI / 180;
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(currentUser.location_lat * Math.PI / 180) * Math.cos(request.location_lat * Math.PI / 180) *
+      Math.cos(currentUser.location_lat * Math.PI / 180) * Math.cos(request.approxLat * Math.PI / 180) *
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;
@@ -90,7 +90,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
 
       // Update request status
       await base44.entities.MitzvahRequest.update(request.id, {
-        status: 'InProgress',
+        status: 'in_progress',
         claimed_by_user_id: currentUser.id,
         claimed_by_name: currentUser.display_name
       });
@@ -160,7 +160,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
     try {
       // Update request
       await base44.entities.MitzvahRequest.update(request.id, {
-        status: 'Completed',
+        status: 'completed',
         completed_at: new Date().toISOString()
       });
 
@@ -217,7 +217,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
     setIsProcessing(true);
     try {
       await base44.entities.MitzvahRequest.update(request.id, {
-        status: 'Cancelled'
+        status: 'cancelled'
       });
       toast.success('Request cancelled');
       onRefresh?.();
@@ -232,7 +232,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
     setIsProcessing(true);
     try {
       await base44.entities.MitzvahRequest.update(request.id, {
-        status: 'Open',
+        status: 'open',
         claimed_by_user_id: null,
         claimed_by_name: null
       });
@@ -337,10 +337,10 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
 
           {/* Location & Time */}
           <div className="flex flex-wrap gap-3">
-            {request.location_label && (
+            {request.locationLabel && (
               <div className="flex items-center gap-2 text-sm text-slate-600">
                 <MapPin className="w-4 h-4" />
-                <span>{request.location_label}</span>
+                <span>{request.locationLabel}</span>
                 {calculateDistance() && (
                   <Badge variant="outline" className="ml-1">{calculateDistance()}</Badge>
                 )}
