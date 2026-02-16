@@ -336,19 +336,20 @@ export default function Feed() {
   const feedPosts = posts.filter(p => p.type === 'feed' || p.type === 'prompt_reply');
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Header with City */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
             Today in {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
           </h1>
+          <p className="text-sm" style={{ color: '#5F6B7A' }}>Stay connected with your community</p>
         </div>
 
         {/* Your Daily Mitzvah Reminder */}
         {userStreak && (
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-slate-900 mb-3">Your Daily Mitzvah Reminder</h2>
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-slate-900 mb-5">Your Daily Mitzvah</h2>
             <StreakBanner 
               streak={userStreak}
               todayCount={todayMitzvahCount}
@@ -365,8 +366,8 @@ export default function Feed() {
 
         {/* Happening Today */}
         {(todayEvents.length > 0 || openMitzvahRequests.length > 0) && (
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-slate-900 mb-3">Happening Today</h2>
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-slate-900 mb-5">Happening Today</h2>
             <div className="space-y-3">
               {todayEvents.slice(0, 2).map(event => (
                 <HappeningTodayCard 
@@ -388,17 +389,19 @@ export default function Feed() {
         
         {/* Daily Prompt */}
         {pinnedPrompt && (
-          <div className="mb-6">
+          <div className="mb-10">
             <DailyPromptCard prompt={pinnedPrompt} onReply={handlePromptReply} />
           </div>
         )}
 
         {/* Quick Actions */}
-        <QuickActions onAction={handleQuickAction} />
+        <div className="mb-10">
+          <QuickActions onAction={handleQuickAction} />
+        </div>
 
         {/* Community Posts */}
-        <div className="mb-3">
-          <h2 className="text-lg font-bold text-slate-900">Community Posts</h2>
+        <div className="mb-5">
+          <h2 className="text-2xl font-bold text-slate-900">Community Posts</h2>
         </div>
 
         {isLoading ? (
@@ -414,7 +417,7 @@ export default function Feed() {
             <p className="text-sm text-slate-400 mt-1">Be the first to share something!</p>
           </div>
         ) : (
-          <div className="space-y-2 pb-24">
+          <div className="space-y-0 pb-24 border-t border-slate-100">
             {feedPosts.map(post => (
               <UnifiedPostCard 
                 key={post.id}
