@@ -85,7 +85,7 @@ export default function MitzvahMapView({ requests, userLocation, onSelectRequest
       if (reqDate < weekAgo) return false;
     }
     
-    return req.location_lat && req.location_lng && !req.is_hidden;
+    return req.approxLat && req.approxLng && !req.is_hidden;
   });
 
   return (
@@ -128,7 +128,7 @@ export default function MitzvahMapView({ requests, userLocation, onSelectRequest
         {filteredRequests.map(request => (
           <Marker
             key={request.id}
-            position={[request.location_lat, request.location_lng]}
+            position={[request.approxLat, request.approxLng]}
             icon={createCustomIcon(CATEGORY_COLORS[request.category])}
             eventHandlers={{
               click: () => onSelectRequest(request)
