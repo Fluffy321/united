@@ -10,6 +10,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
+    // Check if already seeded (idempotent check)
+    const existingRequests = await base44.asServiceRole.entities.MitzvahRequest.filter({
+      status: 'open'
+    }, '-created_date', 50);
+    
+    const requestsWithCoords = existingRequests.filter(r => r.approxLat && r.approxLng);
+    if (requestsWithCoords.length >= 10) {
+      return Response.json({ seeded: false, message: 'Already seeded (>= 10 open requests with coordinates)' });
+    }
+
     // Five Towns locations with realistic coordinates
     const locations = [
       { label: 'Lawrence', lat: 40.6157, lng: -73.7296 },
@@ -163,6 +173,7 @@ Deno.serve(async (req) => {
     }
 
     return Response.json({ 
+      seeded: true,
       success: true,
       message: 'Seeded 40 items successfully',
       created: {

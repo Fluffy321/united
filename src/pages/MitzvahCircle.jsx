@@ -42,7 +42,26 @@ export default function MitzvahCircle() {
 
   useEffect(() => {
     loadUser();
+    autoSeedOnce();
   }, []);
+
+  const autoSeedOnce = async () => {
+    try {
+      const user = await base44.auth.me();
+      if (user?.role !== 'admin') return;
+      
+      const hasSeeded = localStorage.getItem('seededLaunchContent');
+      if (hasSeeded === 'true') return;
+      
+      const result = await base44.functions.invoke('seedLaunchContent', {});
+      if (result.data?.seeded) {
+        localStorage.setItem('seededLaunchContent', 'true');
+        queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+      }
+    } catch (error) {
+      console.error('Auto-seed failed:', error);
+    }
+  };
 
   const loadUser = async () => {
     const user = await base44.auth.me();
