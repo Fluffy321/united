@@ -118,10 +118,10 @@ export default function Layout({ children, currentPageName }) {
           <motion.div
             key={currentPageName}
             custom={direction}
-            initial={{ x: direction > 0 ? '100%' : '-100%', opacity: 0 }}
+            initial={{ x: direction > 0 ? '100%' : '-100%', opacity: 0.8 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: direction > 0 ? '-100%' : '100%', opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            exit={{ x: direction > 0 ? '-100%' : '100%', opacity: 0.8 }}
+            transition={{ type: 'tween', duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.2}
