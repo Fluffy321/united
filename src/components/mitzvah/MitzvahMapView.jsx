@@ -4,8 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Hand, Eye, MapPin, Clock } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Hand, MapPin } from 'lucide-react';
 
 // Fix for default marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -71,15 +70,15 @@ export default function MitzvahMapView({ requests, userOrigin, currentUser, onSe
   const [mapZoom, setMapZoom] = useState(13);
 
   useEffect(() => {
-    if (userLocation && filters.location === 'near') {
-      setMapCenter([userLocation.lat, userLocation.lng]);
+    if (userOrigin && filters.location === 'near') {
+      setMapCenter([userOrigin.lat, userOrigin.lng]);
       setMapZoom(14);
     } else {
       // Default to Five Towns area
       setMapCenter([40.6223, -73.7159]);
       setMapZoom(13);
     }
-  }, [userLocation, filters.location]);
+  }, [userOrigin, filters.location]);
 
   // Filter requests based on filters - only show open requests
   const filteredRequests = requests.filter(req => {
@@ -91,7 +90,7 @@ export default function MitzvahMapView({ requests, userOrigin, currentUser, onSe
       today.setHours(0, 0, 0, 0);
       const reqDate = new Date(req.created_date);
       if (reqDate < today) return false;
-    } else if (filters.time === 'week') {
+    } else if (filters.time === 'thisweek') {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       const reqDate = new Date(req.created_date);
@@ -100,6 +99,12 @@ export default function MitzvahMapView({ requests, userOrigin, currentUser, onSe
     
     return req.approxLat && req.approxLng && !req.is_hidden;
   });
+
+  const formatDistance = (dist) => {
+    if (!dist) return null;
+    if (dist < 0.5) return 'Nearby';
+    return `${dist.toFixed(1)} mi`;
+  };
 
   return (
     <div className="relative">
@@ -115,9 +120,9 @@ export default function MitzvahMapView({ requests, userOrigin, currentUser, onSe
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {userLocation && (
+        {userOrigin && (
           <Marker 
-            position={[userLocation.lat, userLocation.lng]}
+            position={[userOrigin.lat, userOrigin.lng]}
             icon={L.divIcon({
               className: 'user-location-marker',
               html: `<div style="
@@ -138,43 +143,69 @@ export default function MitzvahMapView({ requests, userOrigin, currentUser, onSe
           </Marker>
         )}
 
-        {filteredRequests.map(request => (
-          <Marker
-            key={request.id}
-            position={[request.approxLat, request.approxLng]}
-            icon={createCustomIcon(CATEGORY_COLORS[request.category])}
-            eventHandlers={{
-              click: () => onSelectRequest(request)
-            }}
-          >
-            <Popup>
-              <div className="p-2 min-w-[200px]">
-                <Badge className="mb-2" style={{ backgroundColor: CATEGORY_COLORS[request.category] }}>
-                  {request.category}
-                </Badge>
-                <h3 className="font-bold text-sm mb-1">{request.title}</h3>
-                <p className="text-xs text-slate-600 mb-2 line-clamp-2">{request.description}</p>
-                {request.locationLabel && (
-                  <div className="flex items-center gap-1 text-xs text-slate-500 mb-2">
-                    <MapPin className="w-3 h-3" />
-                    {request.locationLabel}
+        {filteredRequests.map(request => {
+          const distance = userOrigin 
+            ? calculateDistance(userOrigin.lat, userOrigin.lng, request.approxLat, request.approxLng)
+            : null;
+          
+          const isRequester = currentUser?.id === request.created_by_user_id;
+
+          return (
+            <Marker
+              key={request.id}
+              position={[request.approxLat, request.approxLng]}
+              icon={createCustomIcon(CATEGORY_COLORS[request.category])}
+            >
+              <Popup maxWidth={280}>
+                <div className="p-3">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <Badge className="text-xs font-semibold text-white border-0" 
+                      style={{ backgroundColor: CATEGORY_COLORS[request.category] }}>
+                      {request.category}
+                    </Badge>
+                    {distance && (
+                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        {formatDistance(distance)}
+                      </Badge>
+                    )}
                   </div>
-                )}
-                <div className="flex items-center gap-1 text-xs text-slate-500 mb-3">
-                  <Clock className="w-3 h-3" />
-                  {formatDistanceToNow(new Date(request.created_date), { addSuffix: true })}
+                  
+                  <h3 className="font-bold text-sm mb-1.5 text-slate-900">{request.title}</h3>
+                  <p className="text-xs text-slate-600 mb-2 line-clamp-2">{request.description}</p>
+                  
+                  {request.locationLabel && (
+                    <div className="flex items-center gap-1 text-xs text-slate-500 mb-3">
+                      <MapPin className="w-3 h-3" />
+                      {request.locationLabel}
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => onSelectRequest(request)}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-xs"
+                    >
+                      View Details
+                    </Button>
+                    {!isRequester && request.status === 'open' && (
+                      <Button
+                        onClick={() => onHelpRequest(request)}
+                        size="sm"
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-xs"
+                      >
+                        <Hand className="w-3 h-3 mr-1" />
+                        I'll Help
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                <Button 
-                  size="sm" 
-                  className="w-full bg-indigo-600 hover:bg-indigo-700"
-                  onClick={() => onSelectRequest(request)}
-                >
-                  View Details
-                </Button>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
     </div>
   );
