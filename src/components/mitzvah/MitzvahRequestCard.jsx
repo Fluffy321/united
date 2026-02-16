@@ -14,9 +14,9 @@ const CATEGORY_COLORS = {
 };
 
 export default function MitzvahRequestCard({ request, currentUser, onClaim, onMessage, onComplete, showDistance }) {
-  const isOpen = request.status === 'Open';
-  const isClaimed = request.status === 'Claimed';
-  const isCompleted = request.status === 'Completed';
+  const isOpen = request.status === 'open' || request.status === 'Open';
+  const isClaimed = request.status === 'in_progress' || request.status === 'Claimed';
+  const isCompleted = request.status === 'completed' || request.status === 'Completed';
   const isRequester = currentUser?.id === request.created_by_user_id;
   const isHelper = currentUser?.id === request.claimed_by_user_id;
   const timeAgo = formatDistanceToNow(new Date(request.created_date), { addSuffix: true });
