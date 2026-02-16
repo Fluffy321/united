@@ -40,29 +40,30 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
         title: title.trim(),
         description: description.trim(),
         category,
+        status: 'open',
         created_by_user_id: currentUser.id,
         created_by_name: isAnonymous ? 'Anonymous' : currentUser.display_name,
         is_anonymous: isAnonymous,
-        location_label: locationLabel || currentUser.cityPreset || currentUser.cityCustom || 'Five Towns'
+        locationLabel: locationLabel || currentUser.cityPreset || currentUser.cityCustom || 'Five Towns'
       };
 
       // Add user's location if available
       if (currentUser.location_lat && currentUser.location_lng) {
-        requestData.location_lat = currentUser.location_lat;
-        requestData.location_lng = currentUser.location_lng;
+        requestData.approxLat = currentUser.location_lat;
+        requestData.approxLng = currentUser.location_lng;
       }
 
       const newRequest = await base44.entities.MitzvahRequest.create(requestData);
 
       // Notify nearby users if location is available
-      if (requestData.location_lat && requestData.location_lng) {
+      if (requestData.approxLat && requestData.approxLng) {
         try {
           await base44.functions.invoke('notifyNearbyUsers', {
             requestId: newRequest.id,
             requestTitle: title.trim(),
-            locationLabel: requestData.location_label,
-            lat: requestData.location_lat,
-            lng: requestData.location_lng
+            locationLabel: requestData.locationLabel,
+            lat: requestData.approxLat,
+            lng: requestData.approxLng
           });
         } catch (error) {
           console.error('Failed to notify nearby users:', error);
