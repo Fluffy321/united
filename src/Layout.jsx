@@ -1,8 +1,9 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Clipboard, MessageCircle, User, HandHeart, Newspaper, Users } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
   { name: 'Feed', icon: Home, page: 'Feed', color: 'blue' },
@@ -40,9 +41,24 @@ const colorStyles = {
       };
 
 export default function Layout({ children, currentPageName }) {
-  const hideNav = ['Settings', 'ShulPage'].includes(currentPageName);
+  const navigate = useNavigate();
+  const [direction, setDirection] = useState(0);
+  const hideNav = ['Settings', 'ShulPage', 'Messages'].includes(currentPageName);
   const hideBottomPadding = ['Messages'].includes(currentPageName);
-  const wideNav = navItems.length > 4;
+  
+  const swipeablePages = ['Feed', 'CommunityUpdates', 'Communities', 'MitzvahCircle', 'Profile'];
+  const currentIndex = swipeablePages.indexOf(currentPageName);
+  const isSwipeable = currentIndex !== -1;
+
+  const handleSwipe = (newDirection) => {
+    if (!isSwipeable) return;
+    
+    const newIndex = currentIndex + newDirection;
+    if (newIndex >= 0 && newIndex < swipeablePages.length) {
+      setDirection(newDirection);
+      navigate(createPageUrl(swipeablePages[newIndex]));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -91,33 +107,66 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main Content */}
       <main className={!hideBottomPadding ? 'pb-20' : ''}>
-        {children}
+        {isSwipeable ? (
+          <motion.div
+            key={currentPageName}
+            custom={direction}
+            initial={{ x: direction > 0 ? '100%' : '-100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: direction > 0 ? '-100%' : '100%', opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(e, { offset, velocity }) => {
+              const swipe = Math.abs(offset.x) * velocity.x;
+              if (swipe > 10000) {
+                handleSwipe(offset.x > 0 ? -1 : 1);
+              } else if (Math.abs(offset.x) > 100) {
+                handleSwipe(offset.x > 0 ? -1 : 1);
+              }
+            }}
+            style={{ touchAction: 'pan-y' }}
+          >
+            {children}
+          </motion.div>
+        ) : (
+          children
+        )}
       </main>
 
       {/* Bottom Navigation */}
       {!hideNav && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-50" style={{ boxShadow: '0 -2px 8px rgba(0,0,0,0.04)' }}>
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-50" style={{ boxShadow: '0 -1px 3px rgba(0,0,0,0.03)' }}>
           <div className="max-w-2xl mx-auto px-4">
-            <div className="flex items-center justify-around py-3 gap-2">
+            <div className="flex items-center justify-around gap-2">
               {navItems.map(item => {
                 const isActive = currentPageName === item.page;
                 const Icon = item.icon;
-                const styles = colorStyles[item.color];
 
                 return (
                   <Link 
                     key={item.page}
                     to={createPageUrl(item.page)}
-                    className={`flex flex-col items-center py-2 px-4 rounded-lg transition-all ${
-                      isActive 
-                        ? styles.active + ' font-bold'
-                        : styles.inactive + ' font-medium hover:text-slate-600'
-                    }`}
+                    className="flex flex-col items-center py-3 px-3 transition-all relative"
                   >
-                    <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5px]' : 'stroke-[2px]'}`} />
-                    <span className="text-[11px] mt-1.5">
+                    <Icon className={`w-6 h-6 ${
+                      isActive 
+                        ? 'stroke-[2.5px] text-[#0F5ED7]' 
+                        : 'stroke-[2px] text-slate-400'
+                    }`} />
+                    <span className={`text-[10px] mt-1.5 ${
+                      isActive ? 'font-bold text-[#0F5ED7]' : 'font-medium text-slate-500'
+                    }`}>
                       {item.name}
                     </span>
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#0F5ED7] rounded-full"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
                   </Link>
                 );
               })}
