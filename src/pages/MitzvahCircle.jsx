@@ -247,19 +247,22 @@ export default function MitzvahCircle() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="mb-4">
+      {/* Gradient Header */}
+      <div className="bg-gradient-to-b from-[#E6F0FF] to-white border-b border-slate-100">
+        <div className="max-w-2xl mx-auto px-4 py-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0F5ED7] to-[#0D4EB8] flex items-center justify-center">
               <HandHeart className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">Mitzvah Circle</h1>
-              <p className="text-xs text-slate-600">Help someone nearby in 5 minutes</p>
+              <h1 className="text-3xl font-bold text-slate-900">Mitzvah Circle</h1>
+              <p className="text-sm" style={{ color: '#5F6B7A' }}>Help someone nearby in 5 minutes</p>
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-4 py-6">
 
         {/* View Mode Toggle */}
         <div className="flex items-center justify-between mb-4">

@@ -74,7 +74,7 @@ export default function Layout({ children, currentPageName }) {
         body {
           font-family: var(--font-sans);
           -webkit-font-smoothing: antialiased;
-          background-color: #FFFFFF;
+          background-color: #F8FAFB;
         }
 
         .scrollbar-hide::-webkit-scrollbar {

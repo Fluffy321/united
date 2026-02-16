@@ -337,18 +337,21 @@ export default function Feed() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* Header with City */}
-        <div className="mb-8">
+      {/* Header Section with Light Blue Background */}
+      <div className="bg-[#EEF4FF] border-b border-slate-100">
+        <div className="max-w-2xl mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">
             Today in {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
           </h1>
           <p className="text-sm" style={{ color: '#5F6B7A' }}>Stay connected with your community</p>
         </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-4 py-8">
 
         {/* Your Daily Mitzvah Reminder */}
         {userStreak && (
-          <div className="mb-10">
+          <div className="mb-10 bg-[#EEF4FF] -mx-4 px-4 py-6 rounded-2xl">
             <h2 className="text-2xl font-bold text-slate-900 mb-5">Your Daily Mitzvah</h2>
             <StreakBanner 
               streak={userStreak}
@@ -361,6 +364,7 @@ export default function Feed() {
                 streak={userStreak}
               />
             </div>
+          </div>
           </div>
         )}
 

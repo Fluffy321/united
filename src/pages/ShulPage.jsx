@@ -161,8 +161,8 @@ export default function ShulPage() {
 
   return (
     <div className="min-h-screen bg-white pb-20">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-100">
+      {/* Header with Gradient */}
+      <div className="bg-gradient-to-b from-[#E6F0FF] to-white border-b border-slate-100">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <Button
             variant="ghost"

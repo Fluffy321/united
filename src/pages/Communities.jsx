@@ -50,8 +50,8 @@ export default function Communities() {
 
   return (
     <div className="min-h-screen bg-white pb-20">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
+      {/* Header with Gradient */}
+      <div className="bg-gradient-to-b from-[#E6F0FF] to-white border-b border-slate-100 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Communities</h1>
           <p className="text-sm" style={{ color: '#5F6B7A' }}>Connect with your local kehillah</p>
