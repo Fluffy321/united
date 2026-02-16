@@ -37,7 +37,7 @@ export default function Communities() {
   const otherShuls = shuls.filter(s => !myShulIds.has(s.id));
 
   const handleShulClick = (shul) => {
-    navigate(createPageUrl('ShulPage') + `?id=${shul.id}`);
+    navigate(createPageUrl('ShulPage') + `?shulId=${shul.id}`);
   };
 
   if (!currentUser) {
@@ -145,11 +145,12 @@ export default function Communities() {
               onClick={async () => {
                 try {
                   const { data } = await base44.functions.invoke('seedYoungIsrael');
-                  if (data.success) {
-                    // Refresh all queries to show new data
-                    queryClient.invalidateQueries({ queryKey: ['shuls'] });
-                    queryClient.invalidateQueries({ queryKey: ['my-shul-memberships'] });
+                  if (data.success && data.shulId) {
+                    // Refresh queries and auto-navigate to the new shul
+                    await queryClient.invalidateQueries({ queryKey: ['shuls'] });
+                    await queryClient.invalidateQueries({ queryKey: ['my-shul-memberships'] });
                     toast.success('Young Israel of Woodmere seeded!');
+                    navigate(createPageUrl('ShulPage') + `?shulId=${data.shulId}`);
                   } else {
                     toast.info(data.message || 'Already seeded');
                   }

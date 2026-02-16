@@ -24,11 +24,27 @@ export default function ShulPage() {
   const [activeTab, setActiveTab] = useState('feed');
 
   const params = new URLSearchParams(location.search);
-  const shulId = params.get('id');
+  const shulId = params.get('shulId');
 
   useEffect(() => {
     loadData();
   }, [shulId]);
+
+  useEffect(() => {
+    // Auto-load first verified shul if no shulId provided (fallback for dev)
+    if (!shulId) {
+      const loadFirstShul = async () => {
+        const shuls = await base44.entities.Shul.filter({ verified: true });
+        if (shuls.length > 0) {
+          navigate(createPageUrl('ShulPage') + `?shulId=${shuls[0].id}`, { replace: true });
+        } else {
+          // No shuls exist, redirect to Communities
+          navigate(createPageUrl('Communities'), { replace: true });
+        }
+      };
+      loadFirstShul();
+    }
+  }, [shulId, navigate]);
 
   const loadData = async () => {
     const user = await base44.auth.me();

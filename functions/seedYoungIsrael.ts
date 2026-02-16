@@ -163,6 +163,7 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       message: 'Young Israel of Woodmere seeded successfully',
+      shulId: shul.id,
       stats: {
         announcements: 8,
         events: 5,
