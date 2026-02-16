@@ -12,6 +12,7 @@ import {
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { motion } from 'framer-motion';
 
 const TYPE_CONFIGS = {
   feed: { label: 'POST', color: 'bg-slate-100 text-slate-700' },
