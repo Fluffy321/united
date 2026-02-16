@@ -6,17 +6,23 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
 
     if (user?.role !== 'admin') {
-      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+      return Response.json({ ok: false, error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     // Check if already seeded
-    const existing = await base44.entities.Shul.filter({ name: 'Young Israel of Woodmere' });
+    const existing = await base44.asServiceRole.entities.Shul.filter({ name: 'Young Israel of Woodmere', verified: true });
     if (existing.length > 0) {
-      return Response.json({ message: 'Young Israel of Woodmere already exists' });
+      return Response.json({ 
+        ok: true, 
+        success: true,
+        alreadySeeded: true, 
+        shulId: existing[0].id,
+        message: 'Young Israel of Woodmere already exists' 
+      });
     }
 
     // Create the shul
-    const shul = await base44.entities.Shul.create({
+    const shul = await base44.asServiceRole.entities.Shul.create({
       name: 'Young Israel of Woodmere',
       address: '1025 Broadway, Woodmere, NY 11598',
       town: 'Woodmere',
@@ -26,6 +32,8 @@ Deno.serve(async (req) => {
       verified: true,
       member_count: 0
     });
+
+    console.log('Shul created:', shul.id);
 
     // Get some users to be admins and members
     const allUsers = await base44.asServiceRole.entities.User.list();
@@ -161,6 +169,7 @@ Deno.serve(async (req) => {
     });
 
     return Response.json({
+      ok: true,
       success: true,
       message: 'Young Israel of Woodmere seeded successfully',
       shulId: shul.id,
@@ -174,6 +183,12 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Seed error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('Stack:', error.stack);
+    return Response.json({ 
+      ok: false,
+      success: false,
+      error: error.message,
+      stack: error.stack 
+    }, { status: 500 });
   }
 });

@@ -145,17 +145,27 @@ export default function Communities() {
               onClick={async () => {
                 try {
                   const { data } = await base44.functions.invoke('seedYoungIsrael');
-                  if (data.success && data.shulId) {
+                  console.log('Seed response:', data);
+                  
+                  if (data.ok && data.shulId) {
                     // Refresh queries and auto-navigate to the new shul
                     await queryClient.invalidateQueries({ queryKey: ['shuls'] });
                     await queryClient.invalidateQueries({ queryKey: ['my-shul-memberships'] });
-                    toast.success('Young Israel of Woodmere seeded!');
+                    
+                    if (data.alreadySeeded) {
+                      toast.info('Young Israel of Woodmere already exists');
+                    } else {
+                      toast.success('Young Israel of Woodmere seeded!');
+                    }
+                    
                     navigate(createPageUrl('ShulPage') + `?shulId=${data.shulId}`);
                   } else {
-                    toast.info(data.message || 'Already seeded');
+                    toast.error(data.error || 'Seeding failed');
+                    console.error('Seed error details:', data);
                   }
                 } catch (error) {
-                  toast.error('Seeding failed');
+                  console.error('Seed invocation error:', error);
+                  toast.error(`Seeding failed: ${error.message}`);
                 }
               }}
               size="sm"
