@@ -39,7 +39,7 @@ export default function WeeklyScheduleWidget({ shulId }) {
                 )}
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium text-blue-600">{item.time}</p>
+                <p className="text-sm font-semibold text-[#0F5ED7]">{item.time}</p>
                 <Badge variant="outline" className="mt-1 text-xs capitalize">
                   {item.day_of_week}
                 </Badge>
@@ -52,10 +52,10 @@ export default function WeeklyScheduleWidget({ shulId }) {
   );
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-slate-600" />
+    <Card className="bg-white border border-slate-200" style={{ boxShadow: '0 2px 8px rgba(15, 94, 215, 0.08)' }}>
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900">
+          <Calendar className="w-5 h-5 text-[#0F5ED7]" />
           Weekly Schedule
         </CardTitle>
       </CardHeader>

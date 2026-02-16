@@ -158,15 +158,15 @@ export default function ShulPage() {
   const eventPosts = posts.filter(p => p.type === 'event');
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
+    <div className="min-h-screen bg-white pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-b border-blue-700">
-        <div className="max-w-4xl mx-auto px-4 py-5">
+      <div className="bg-white border-b border-slate-100">
+        <div className="max-w-4xl mx-auto px-4 py-6">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate(-1)}
-            className="mb-3 text-white hover:bg-white/10"
+            className="mb-4 text-slate-600 hover:text-slate-900"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
@@ -175,13 +175,13 @@ export default function ShulPage() {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <h1 className="text-2xl font-bold">{shul.name}</h1>
+                <h1 className="text-2xl font-bold text-slate-900">{shul.name}</h1>
                 {shul.verified && (
-                  <Badge className="bg-white/20 border-0">✓</Badge>
+                  <Badge className="bg-[#E6F0FF] text-[#0F5ED7] border-0">✓</Badge>
                 )}
               </div>
               
-              <div className="flex items-center gap-4 text-sm text-blue-100 mb-2">
+              <div className="flex items-center gap-4 text-sm text-slate-600 mb-2">
                 <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
                   {shul.town}
@@ -193,17 +193,17 @@ export default function ShulPage() {
               </div>
 
               {shul.description && (
-                <p className="text-sm text-blue-50 mb-3">{shul.description}</p>
+                <p className="text-sm text-slate-700 mb-4">{shul.description}</p>
               )}
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             {!isMember ? (
               <Button
                 onClick={() => joinMutation.mutate()}
                 disabled={joinMutation.isPending}
-                className="bg-white text-blue-600 hover:bg-blue-50"
+                className="bg-[#0F5ED7] hover:bg-[#0D4EB8] text-white font-semibold"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Join Community
@@ -211,9 +211,8 @@ export default function ShulPage() {
             ) : (
               <Button
                 onClick={() => toggleNotificationsMutation.mutate()}
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="bg-white/10 hover:bg-white/20 text-white border-0"
               >
                 {membership.notifications_enabled ? (
                   <>
@@ -231,7 +230,7 @@ export default function ShulPage() {
             {isAdmin && (
               <Button
                 onClick={() => setShowCreatePost(true)}
-                className="bg-white text-blue-600 hover:bg-blue-50"
+                className="bg-[#0F5ED7] hover:bg-[#0D4EB8] text-white font-semibold"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New Post
@@ -242,16 +241,16 @@ export default function ShulPage() {
       </div>
 
       {/* Dashboard Widgets */}
-      <div className="max-w-4xl mx-auto px-4 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <MinyanStatusWidget shulId={shulId} currentUser={currentUser} />
           <WeeklyScheduleWidget shulId={shulId} />
         </div>
 
         {/* Pinned Announcements */}
         {announcements.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+          <div className="mb-8">
+            <h3 className="text-xl font-bold mb-4 text-slate-900">
               📌 Announcements
             </h3>
             <div className="space-y-3">

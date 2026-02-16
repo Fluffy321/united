@@ -71,11 +71,11 @@ export default function MinyanStatusWidget({ shulId, currentUser }) {
   };
 
   return (
-    <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Users className="w-5 h-5 text-blue-600" />
-          Today's Minyan Status
+    <Card className="bg-white border border-slate-200" style={{ boxShadow: '0 2px 8px rgba(15, 94, 215, 0.08)' }}>
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900">
+          <Users className="w-5 h-5 text-[#0F5ED7]" />
+          Today's Minyan
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -98,9 +98,12 @@ export default function MinyanStatusWidget({ shulId, currentUser }) {
               </div>
               <Button
                 onClick={() => markAttendingMutation.mutate({ minyanType: type })}
-                variant={userComing ? "default" : "outline"}
                 size="sm"
-                className="w-full"
+                className={`w-full font-semibold ${
+                  userComing 
+                    ? 'bg-[#0F5ED7] hover:bg-[#0D4EB8] text-white' 
+                    : 'bg-white border-2 border-[#0F5ED7] text-[#0F5ED7] hover:bg-[#E6F0FF]'
+                }`}
               >
                 <UserPlus className="w-4 h-4 mr-2" />
                 {userComing ? "I'm Coming ✓" : "I'm Coming"}

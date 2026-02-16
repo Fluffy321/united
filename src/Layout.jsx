@@ -13,31 +13,31 @@ const navItems = [
 ];
 
 const colorStyles = {
-  blue: {
-    active: 'bg-blue-600 text-white',
-    inactive: 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'
-  },
-  cyan: {
-    active: 'bg-cyan-600 text-white',
-    inactive: 'text-slate-400 hover:text-cyan-600 hover:bg-cyan-50'
-  },
-  orange: {
-    active: 'bg-orange-500 text-white',
-    inactive: 'text-slate-400 hover:text-orange-500 hover:bg-orange-50'
-  },
-  purple: {
-    active: 'bg-purple-600 text-white',
-    inactive: 'text-slate-400 hover:text-purple-600 hover:bg-purple-50'
-  },
-  teal: {
-    active: 'bg-teal-600 text-white',
-    inactive: 'text-slate-400 hover:text-teal-600 hover:bg-teal-50'
-  },
-  slate: {
-    active: 'bg-slate-700 text-white',
-    inactive: 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'
-  }
-};
+        blue: {
+          active: 'text-[#0F5ED7]',
+          inactive: 'text-slate-400'
+        },
+        cyan: {
+          active: 'text-[#0F5ED7]',
+          inactive: 'text-slate-400'
+        },
+        orange: {
+          active: 'text-[#0F5ED7]',
+          inactive: 'text-slate-400'
+        },
+        purple: {
+          active: 'text-[#0F5ED7]',
+          inactive: 'text-slate-400'
+        },
+        teal: {
+          active: 'text-[#0F5ED7]',
+          inactive: 'text-slate-400'
+        },
+        slate: {
+          active: 'text-[#0F5ED7]',
+          inactive: 'text-slate-400'
+        }
+      };
 
 export default function Layout({ children, currentPageName }) {
   const hideNav = ['Settings', 'ShulPage'].includes(currentPageName);
@@ -45,24 +45,45 @@ export default function Layout({ children, currentPageName }) {
   const wideNav = navItems.length > 4;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-white">
       <style>{`
         :root {
           --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+          --primary-blue: #0F5ED7;
+          --accent-blue: #E6F0FF;
+          --card-shadow: 0 2px 8px rgba(15, 94, 215, 0.08);
         }
-        
+
         body {
           font-family: var(--font-sans);
           -webkit-font-smoothing: antialiased;
+          background-color: #FFFFFF;
         }
 
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
-        
+
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+
+        .primary-btn {
+          background-color: var(--primary-blue);
+          color: white;
+          font-weight: 600;
+        }
+
+        .primary-btn:hover {
+          background-color: #0D4EB8;
+        }
+
+        .card-modern {
+          background: white;
+          border: 1px solid #E5E7EB;
+          border-radius: 12px;
+          box-shadow: var(--card-shadow);
         }
       `}</style>
 
@@ -75,9 +96,9 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Bottom Navigation */}
       {!hideNav && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
-          <div className="max-w-2xl mx-auto px-3">
-            <div className="flex items-center justify-around py-2.5 gap-1">
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-50" style={{ boxShadow: '0 -2px 8px rgba(0,0,0,0.04)' }}>
+          <div className="max-w-2xl mx-auto px-4">
+            <div className="flex items-center justify-around py-3 gap-2">
               {navItems.map(item => {
                 const isActive = currentPageName === item.page;
                 const Icon = item.icon;
@@ -87,14 +108,14 @@ export default function Layout({ children, currentPageName }) {
                   <Link 
                     key={item.page}
                     to={createPageUrl(item.page)}
-                    className={`flex flex-col items-center py-2.5 px-3 rounded-xl transition-all ${
+                    className={`flex flex-col items-center py-2 px-4 rounded-lg transition-all ${
                       isActive 
-                        ? styles.active
-                        : styles.inactive
+                        ? styles.active + ' font-bold'
+                        : styles.inactive + ' font-medium hover:text-slate-600'
                     }`}
                   >
                     <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5px]' : 'stroke-[2px]'}`} />
-                    <span className={`text-[11px] mt-1 ${isActive ? 'font-bold' : 'font-semibold'}`}>
+                    <span className="text-[11px] mt-1.5">
                       {item.name}
                     </span>
                   </Link>
