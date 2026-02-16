@@ -4,6 +4,7 @@ import { Home, Clipboard, MessageCircle, User, HandHeart, Newspaper, Users } fro
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import SwipeableTabs from '@/components/common/SwipeableTabs';
 
 const navItems = [
   { name: 'Feed', icon: Home, page: 'Feed', color: 'blue' },
@@ -42,7 +43,6 @@ const colorStyles = {
 
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
-  const [direction, setDirection] = useState(0);
   const hideNav = ['Settings', 'ShulPage', 'Messages'].includes(currentPageName);
   const hideBottomPadding = ['Messages'].includes(currentPageName);
   
@@ -50,12 +50,8 @@ export default function Layout({ children, currentPageName }) {
   const currentIndex = swipeablePages.indexOf(currentPageName);
   const isSwipeable = currentIndex !== -1;
 
-  const handleSwipe = (newDirection) => {
-    if (!isSwipeable) return;
-    
-    const newIndex = currentIndex + newDirection;
+  const handleTabChange = (newIndex) => {
     if (newIndex >= 0 && newIndex < swipeablePages.length) {
-      setDirection(newDirection);
       navigate(createPageUrl(swipeablePages[newIndex]));
     }
   };
@@ -113,30 +109,15 @@ export default function Layout({ children, currentPageName }) {
       <Toaster position="top-center" richColors />
 
       {/* Main Content */}
-      <main className={!hideBottomPadding ? 'pb-20' : ''}>
+      <main className={!hideBottomPadding ? 'pb-20 h-screen' : 'h-screen'}>
         {isSwipeable ? (
-          <motion.div
-            key={currentPageName}
-            custom={direction}
-            initial={{ x: direction > 0 ? '100%' : '-100%', opacity: 0.8 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: direction > 0 ? '-100%' : '100%', opacity: 0.8 }}
-            transition={{ type: 'tween', duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
-            onDragEnd={(e, { offset, velocity }) => {
-              const swipe = Math.abs(offset.x) * velocity.x;
-              if (swipe > 10000) {
-                handleSwipe(offset.x > 0 ? -1 : 1);
-              } else if (Math.abs(offset.x) > 100) {
-                handleSwipe(offset.x > 0 ? -1 : 1);
-              }
-            }}
-            style={{ touchAction: 'pan-y' }}
+          <SwipeableTabs 
+            tabs={swipeablePages}
+            activeIndex={currentIndex}
+            onIndexChange={handleTabChange}
           >
             {children}
-          </motion.div>
+          </SwipeableTabs>
         ) : (
           children
         )}
@@ -147,14 +128,21 @@ export default function Layout({ children, currentPageName }) {
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-50" style={{ boxShadow: '0 -1px 3px rgba(0,0,0,0.03)' }}>
           <div className="max-w-2xl mx-auto px-4">
             <div className="flex items-center justify-around gap-2">
-              {navItems.map(item => {
+              {navItems.map((item, idx) => {
                 const isActive = currentPageName === item.page;
                 const Icon = item.icon;
 
                 return (
-                  <Link 
+                  <button 
                     key={item.page}
-                    to={createPageUrl(item.page)}
+                    onClick={() => {
+                      const pageIndex = swipeablePages.indexOf(item.page);
+                      if (pageIndex !== -1) {
+                        handleTabChange(pageIndex);
+                      } else {
+                        navigate(createPageUrl(item.page));
+                      }
+                    }}
                     className="flex flex-col items-center py-3 px-3 transition-all relative"
                   >
                     <Icon className={`w-6 h-6 ${
@@ -174,7 +162,7 @@ export default function Layout({ children, currentPageName }) {
                         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                       />
                     )}
-                  </Link>
+                  </button>
                 );
               })}
             </div>
