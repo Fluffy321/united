@@ -14,6 +14,15 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
+// Town center coordinates for Five Towns
+const TOWN_CENTERS = {
+  'Lawrence': { lat: 40.6157, lng: -73.7296 },
+  'Cedarhurst': { lat: 40.6223, lng: -73.7246 },
+  'Woodmere': { lat: 40.6323, lng: -73.7129 },
+  'Hewlett': { lat: 40.6434, lng: -73.6946 },
+  'Inwood': { lat: 40.6229, lng: -73.7501 }
+};
+
 // Calculate distance between two coordinates in miles
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 3959; // Earth's radius in miles
@@ -24,6 +33,19 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
+};
+
+// Get user's origin point for distance calculations
+const getUserOrigin = (user) => {
+  // Prefer device geolocation
+  if (user?.location_lat && user?.location_lng) {
+    return { lat: user.location_lat, lng: user.location_lng };
+  }
+  // Fallback to selected town center
+  if (user?.cityPreset && TOWN_CENTERS[user.cityPreset]) {
+    return TOWN_CENTERS[user.cityPreset];
+  }
+  return null;
 };
 
 export default function MitzvahCircle() {
@@ -94,13 +116,14 @@ export default function MitzvahCircle() {
         }, '-created_date', 100);
       }
 
-      // Calculate distances and filter if "Near Me" is selected
-      if (locationFilter === 'near' && currentUser?.location_lat && currentUser?.location_lng) {
+      // Calculate distances for all requests if user has an origin
+      const userOrigin = getUserOrigin(currentUser);
+      if (userOrigin) {
         const requestsWithDistance = allRequests.map(req => {
           if (req.approxLat && req.approxLng) {
             const distance = calculateDistance(
-              currentUser.location_lat,
-              currentUser.location_lng,
+              userOrigin.lat,
+              userOrigin.lng,
               req.approxLat,
               req.approxLng
             );
@@ -109,10 +132,14 @@ export default function MitzvahCircle() {
           return { ...req, distance: 999 }; // Put requests without location at the end
         });
 
-        // Filter to within 10 miles and sort by distance
-        return requestsWithDistance
-          .filter(req => req.distance <= 10)
-          .sort((a, b) => a.distance - b.distance);
+        // If "Near Me" filter is active, filter to within 10 miles
+        if (locationFilter === 'near') {
+          return requestsWithDistance
+            .filter(req => req.distance <= 10)
+            .sort((a, b) => a.distance - b.distance);
+        }
+        
+        return requestsWithDistance.sort((a, b) => a.distance - b.distance);
       }
       
       return allRequests;
@@ -253,7 +280,7 @@ export default function MitzvahCircle() {
           </div>
 
           {/* Location Filter */}
-          {currentUser?.location_lat && currentUser?.location_lng && (
+          {getUserOrigin(currentUser) && (
             <div className="flex gap-2">
               <Button
                 variant={locationFilter === 'near' ? 'default' : 'outline'}
@@ -329,7 +356,7 @@ export default function MitzvahCircle() {
                 onClaim={handleClaim}
                 onMessage={handleMessage}
                 onComplete={handleComplete}
-                showDistance={locationFilter === 'near'}
+                showDistance={!!getUserOrigin(currentUser) && request.distance !== undefined && request.distance < 999}
               />
             ))}
           </div>
