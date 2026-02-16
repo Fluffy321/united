@@ -50,16 +50,18 @@ export default function ShulPage() {
     }
   };
 
-  const { data: posts = [] } = useQuery({
+  const { data: posts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['shul-posts', shulId],
     queryFn: () => base44.entities.ShulPost.filter({ shul_id: shulId }, '-created_date', 50),
-    enabled: !!shulId
+    enabled: !!shulId,
+    staleTime: 30000
   });
 
-  const { data: members = [] } = useQuery({
+  const { data: members = [], isLoading: membersLoading } = useQuery({
     queryKey: ['shul-members', shulId],
     queryFn: () => base44.entities.ShulMember.filter({ shul_id: shulId }),
-    enabled: !!shulId
+    enabled: !!shulId,
+    staleTime: 30000
   });
 
   const joinMutation = useMutation({
@@ -94,12 +96,37 @@ export default function ShulPage() {
     }
   });
 
-  if (!shul || !currentUser) {
+  // Show loading only briefly, then show page skeleton
+  const [showLoading, setShowLoading] = useState(true);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setShowLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if ((!shul || !currentUser) && showLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-slate-600">Loading...</div>
       </div>
     );
+  }
+
+  if (!shul) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-slate-600 mb-4">Community not found</p>
+          <Button onClick={() => navigate(createPageUrl('Communities'))}>
+            Back to Communities
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return null;
   }
 
   const isAdmin = membership?.role === 'admin';

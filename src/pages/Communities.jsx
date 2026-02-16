@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { MapPin, Users, CheckCircle2, ChevronRight } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export default function Communities() {
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     loadUser();
@@ -141,9 +143,18 @@ export default function Communities() {
             <p className="text-sm text-yellow-900 mb-2 font-medium">Admin Actions</p>
             <Button
               onClick={async () => {
-                const { data } = await base44.functions.invoke('seedYoungIsrael');
-                if (data.success) {
-                  window.location.reload();
+                try {
+                  const { data } = await base44.functions.invoke('seedYoungIsrael');
+                  if (data.success) {
+                    // Refresh all queries to show new data
+                    queryClient.invalidateQueries({ queryKey: ['shuls'] });
+                    queryClient.invalidateQueries({ queryKey: ['my-shul-memberships'] });
+                    toast.success('Young Israel of Woodmere seeded!');
+                  } else {
+                    toast.info(data.message || 'Already seeded');
+                  }
+                } catch (error) {
+                  toast.error('Seeding failed');
                 }
               }}
               size="sm"
