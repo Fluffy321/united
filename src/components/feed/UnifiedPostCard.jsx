@@ -30,7 +30,12 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const typeConfig = TYPE_CONFIGS[post.type] || TYPE_CONFIGS.feed;
 
   return (
-    <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+      className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 hover:shadow-md transition-shadow"
+    >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-3 flex-1">
           {isAnonymous ? (
@@ -164,6 +169,6 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           <span>{post.comments_count || 0}</span>
         </Button>
       </div>
-    </div>
+    </motion.div>
   );
 }

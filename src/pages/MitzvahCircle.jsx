@@ -308,7 +308,14 @@ export default function MitzvahCircle() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={(newTab) => {
+            setTabDirection(newTab === 'completed' ? 1 : -1);
+            setActiveTab(newTab);
+          }} 
+          className="mb-4"
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="open">Needs Help</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>

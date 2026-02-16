@@ -9,6 +9,7 @@ import { ArrowLeft, MapPin, Users, CheckCircle2, Bell, BellOff, Plus } from 'luc
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 import ShulPostCard from '@/components/shul/ShulPostCard';
 import ShulEventCard from '@/components/shul/ShulEventCard';
 import CreateShulPostModal from '@/components/shul/CreateShulPostModal';
@@ -27,6 +28,7 @@ export default function ShulPage() {
   const [membership, setMembership] = useState(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [activeTab, setActiveTab] = useState('feed');
+  const [tabDirection, setTabDirection] = useState(0);
 
   const params = new URLSearchParams(location.search);
   const shulId = params.get('shulId');
@@ -269,7 +271,16 @@ export default function ShulPage() {
         )}
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs 
+          value={activeTab} 
+          onValueChange={(newTab) => {
+            const tabs = ['feed', 'events', 'chesed', 'members'];
+            const oldIndex = tabs.indexOf(activeTab);
+            const newIndex = tabs.indexOf(newTab);
+            setTabDirection(newIndex > oldIndex ? 1 : -1);
+            setActiveTab(newTab);
+          }}
+        >
           <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="feed">Feed</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
@@ -278,6 +289,12 @@ export default function ShulPage() {
           </TabsList>
 
           <TabsContent value="feed" className="space-y-3">
+            <motion.div
+              key="feed"
+              initial={{ x: tabDirection > 0 ? 100 : -100, opacity: 0.8 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+            >
             {feedPosts.length === 0 ? (
               <div className="text-center py-12 text-slate-500">
                 No posts yet
@@ -293,9 +310,16 @@ export default function ShulPage() {
                 />
               ))
             )}
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="events" className="space-y-3">
+            <motion.div
+              key="events"
+              initial={{ x: tabDirection > 0 ? 100 : -100, opacity: 0.8 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+            >
             {eventPosts.length === 0 ? (
               <div className="text-center py-12 text-slate-500">
                 No upcoming events
@@ -310,15 +334,29 @@ export default function ShulPage() {
                 />
               ))
             )}
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="chesed" className="space-y-6">
+            <motion.div
+              key="chesed"
+              initial={{ x: tabDirection > 0 ? 100 : -100, opacity: 0.8 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+            >
             <MealTrainBoard shulId={shulId} currentUser={currentUser} isAdmin={isAdmin} />
             <RideBoard shulId={shulId} currentUser={currentUser} />
             <VolunteerBoard shulId={shulId} currentUser={currentUser} isAdmin={isAdmin} />
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="members" className="space-y-2">
+            <motion.div
+              key="members"
+              initial={{ x: tabDirection > 0 ? 100 : -100, opacity: 0.8 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+            >
             {members.map(member => (
               <div key={member.id} className="bg-white rounded-lg p-3 flex items-center justify-between">
                 <div>
@@ -331,6 +369,7 @@ export default function ShulPage() {
                 )}
               </div>
             ))}
+            </motion.div>
           </TabsContent>
         </Tabs>
       </div>
