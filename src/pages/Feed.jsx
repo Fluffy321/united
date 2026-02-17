@@ -437,7 +437,7 @@ export default function Feed() {
             <p className="text-sm text-slate-400 mt-1">Be the first to share something!</p>
           </div>
         ) : (
-          <div className="space-y-0 pb-24 border-t border-slate-100">
+          <div className="space-y-6 pb-24">
             {feedPosts.map(post => (
               <UnifiedPostCard 
                 key={post.id}
