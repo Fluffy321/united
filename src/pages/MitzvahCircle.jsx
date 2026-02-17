@@ -314,7 +314,6 @@ export default function MitzvahCircle() {
         <Tabs 
           value={activeTab} 
           onValueChange={(newTab) => {
-            setTabDirection(newTab === 'completed' ? 1 : -1);
             setActiveTab(newTab);
           }} 
           className="mb-4"
