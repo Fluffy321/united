@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const FIVE_TOWNS_RSS = "https://fivetownscentral.com/feed/";
-const ISRAEL_RSS = "https://www.timesofisrael.com/feed/";
+const FIVE_TOWNS_RSS = "https://www.5tjt.com/feed/";
+const ISRAEL_RSS = "https://www.jewishpress.com/sections/community/five-towns/feed/";
 
 Deno.serve(async (req) => {
   try {
