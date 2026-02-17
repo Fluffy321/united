@@ -194,31 +194,10 @@ export default function CommunityUpdates() {
               <p className="text-xs text-slate-500">Loading headlines...</p>
             </div>
           ) : fiveTownsError || !fiveTownsData?.ok ? (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-xs font-semibold text-amber-900 mb-1">{fiveTownsData?.error || 'Failed to load'}</p>
-                  {fiveTownsData?.attempts && (
-                    <div className="text-xs text-amber-800 mb-2 space-y-0.5">
-                      {fiveTownsData.attempts.map((attempt, i) => (
-                        <div key={i} className="font-mono">
-                          {attempt.url.split('/')[2]} - {attempt.status}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setRetryCount(prev => ({ ...prev, fivetowns: prev.fivetowns + 1 }))}
-                    className="h-7 text-xs"
-                  >
-                    Try alternate source
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <RssErrorBlock
+              data={fiveTownsData}
+              onRetry={() => setRetryCount(prev => ({ ...prev, fivetowns: prev.fivetowns + 1 }))}
+            />
           ) : !fiveTownsData?.items?.length ? (
             <div className="text-center py-6 bg-white rounded-xl border border-slate-100">
               <p className="text-xs text-slate-500">No headlines available</p>
@@ -275,31 +254,10 @@ export default function CommunityUpdates() {
               <p className="text-xs text-slate-500">Loading headlines...</p>
             </div>
           ) : israelError || !israelData?.ok ? (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-xs font-semibold text-amber-900 mb-1">{israelData?.error || 'Failed to load'}</p>
-                  {israelData?.attempts && (
-                    <div className="text-xs text-amber-800 mb-2 space-y-0.5">
-                      {israelData.attempts.map((attempt, i) => (
-                        <div key={i} className="font-mono">
-                          {attempt.url.split('/')[2]} - {attempt.status}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setRetryCount(prev => ({ ...prev, israel: prev.israel + 1 }))}
-                    className="h-7 text-xs"
-                  >
-                    Try alternate source
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <RssErrorBlock
+              data={israelData}
+              onRetry={() => setRetryCount(prev => ({ ...prev, israel: prev.israel + 1 }))}
+            />
           ) : !israelData?.items?.length ? (
             <div className="text-center py-6 bg-white rounded-xl border border-slate-100">
               <p className="text-xs text-slate-500">No headlines available</p>
