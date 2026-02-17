@@ -40,6 +40,7 @@ export default function Feed() {
   const [showQuickPostModal, setShowQuickPostModal] = useState(false);
   const [scrollStartTime, setScrollStartTime] = useState(null);
   const [showFABTypeSelector, setShowFABTypeSelector] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('all');
   const queryClient = useQueryClient();
 
   useEffect(() => {
