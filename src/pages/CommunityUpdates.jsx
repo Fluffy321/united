@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Newspaper, Loader2, ExternalLink, Calendar, MessageSquare, RefreshCw, AlertCircle } from 'lucide-react';
+import { Loader2, Calendar, MessageSquare, RefreshCw } from 'lucide-react';
+import RssErrorBlock from '@/components/updates/RssErrorBlock';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
