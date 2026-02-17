@@ -41,13 +41,18 @@ export default function CommunityUpdates() {
     }
   });
 
+  const [fiveTownsAltSource, setFiveTownsAltSource] = useState(false);
+  const [israelAltSource, setIsraelAltSource] = useState(false);
+
   const RSS_FEEDS = {
-    fivetowns: 'https://fivetownscentral.com/feed/',
-    israel: 'https://www.timesofisrael.com/feed/'
+    fivetowns: fiveTownsAltSource ? 'https://www.jewishpress.com/sections/community/five-towns/feed/' : 'https://www.5tjt.com/feed/',
+    fivetowns_alt: 'https://www.jewishpress.com/sections/community/five-towns/feed/',
+    israel: israelAltSource ? 'https://www.timesofisrael.com/feed/' : 'https://www.jewishpress.com/sections/community/five-towns/feed/',
+    israel_alt: 'https://www.timesofisrael.com/feed/'
   };
 
   const { data: fiveTownsData, isLoading: fiveTownsLoading, error: fiveTownsError, refetch: refetchFiveTowns } = useQuery({
-    queryKey: ['rss-headlines-fivetowns'],
+    queryKey: ['rss-headlines-fivetowns', fiveTownsAltSource],
     queryFn: async () => {
       const { data } = await base44.functions.invoke('getHeadlines', { rssUrl: RSS_FEEDS.fivetowns });
       return data;
@@ -57,7 +62,7 @@ export default function CommunityUpdates() {
   });
 
   const { data: israelData, isLoading: israelLoading, error: israelError, refetch: refetchIsrael } = useQuery({
-    queryKey: ['rss-headlines-israel'],
+    queryKey: ['rss-headlines-israel', israelAltSource],
     queryFn: async () => {
       const { data } = await base44.functions.invoke('getHeadlines', { rssUrl: RSS_FEEDS.israel });
       return data;
@@ -199,8 +204,16 @@ export default function CommunityUpdates() {
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-semibold text-amber-900">{fiveTownsData?.error || 'Failed to load'}</p>
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-amber-900 mb-2">{fiveTownsData?.error || 'Failed to load'}</p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setFiveTownsAltSource(!fiveTownsAltSource)}
+                    className="h-7 text-xs"
+                  >
+                    Try alternate source
+                  </Button>
                 </div>
               </div>
             </div>
@@ -263,8 +276,16 @@ export default function CommunityUpdates() {
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-semibold text-amber-900">{israelData?.error || 'Failed to load'}</p>
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-amber-900 mb-2">{israelData?.error || 'Failed to load'}</p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsraelAltSource(!israelAltSource)}
+                    className="h-7 text-xs"
+                  >
+                    Try alternate source
+                  </Button>
                 </div>
               </div>
             </div>
