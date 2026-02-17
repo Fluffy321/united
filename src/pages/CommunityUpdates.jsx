@@ -42,34 +42,33 @@ export default function CommunityUpdates() {
   });
 
   const RSS_FEEDS = {
-    yeshivaworld: 'https://www.theyeshivaworld.com/feed/',
-    jta: 'https://www.jta.org/feed',
-    timesofisrael: 'https://www.timesofisrael.com/feed/'
+    fivetowns: 'https://fivetownscentral.com/feed/',
+    israel: 'https://www.timesofisrael.com/feed/'
   };
 
-  const { data: headlinesData, isLoading: newsLoading, error: newsError, refetch: refetchHeadlines } = useQuery({
-    queryKey: ['rss-headlines', selectedNewsSource],
+  const { data: fiveTownsData, isLoading: fiveTownsLoading, error: fiveTownsError, refetch: refetchFiveTowns } = useQuery({
+    queryKey: ['rss-headlines-fivetowns'],
     queryFn: async () => {
-      const rssUrl = RSS_FEEDS[selectedNewsSource];
-      if (!rssUrl) {
-        throw new Error('Invalid news source');
-      }
-
-      const { data } = await base44.functions.invoke('getHeadlines', { rssUrl });
-      
-      if (data.error) {
-        throw new Error(data.error + (data.details ? `: ${data.details}` : ''));
-      }
-
+      const { data } = await base44.functions.invoke('getHeadlines', { rssUrl: RSS_FEEDS.fivetowns });
       return data;
     },
     staleTime: 300000, // 5 minutes
-    retry: 2
+    retry: 1
+  });
+
+  const { data: israelData, isLoading: israelLoading, error: israelError, refetch: refetchIsrael } = useQuery({
+    queryKey: ['rss-headlines-israel'],
+    queryFn: async () => {
+      const { data } = await base44.functions.invoke('getHeadlines', { rssUrl: RSS_FEEDS.israel });
+      return data;
+    },
+    staleTime: 300000, // 5 minutes
+    retry: 1
   });
 
   const handleRefresh = async () => {
     toast.promise(
-      refetchHeadlines(),
+      Promise.all([refetchFiveTowns(), refetchIsrael()]),
       {
         loading: 'Refreshing headlines...',
         success: 'Headlines updated',
@@ -176,130 +175,129 @@ export default function CommunityUpdates() {
           )}
         </div>
 
-        {/* Section B: News Headlines */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">Headlines</h2>
+        {/* Section B: Five Towns Headlines */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">Five Towns News</h2>
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleRefresh}
-              disabled={newsLoading}
+              onClick={() => refetchFiveTowns()}
+              disabled={fiveTownsLoading}
               className="h-7 px-2"
             >
-              <RefreshCw className={`w-4 h-4 ${newsLoading ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
-          
-          {/* Source Filters */}
-          <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide mb-4">
-            <Button
-              variant={selectedNewsSource === 'yeshivaworld' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedNewsSource('yeshivaworld')}
-              className={`whitespace-nowrap text-xs h-7 ${
-                selectedNewsSource === 'yeshivaworld' 
-                  ? 'bg-[#0F5ED7] hover:bg-[#0D4EB8]' 
-                  : 'hover:bg-slate-100'
-              }`}
-            >
-              YeshivaWorld
-            </Button>
-            <Button
-              variant={selectedNewsSource === 'jta' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedNewsSource('jta')}
-              className={`whitespace-nowrap text-xs h-7 ${
-                selectedNewsSource === 'jta' 
-                  ? 'bg-[#0F5ED7] hover:bg-[#0D4EB8]' 
-                  : 'hover:bg-slate-100'
-              }`}
-            >
-              JTA
-            </Button>
-            <Button
-              variant={selectedNewsSource === 'timesofisrael' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedNewsSource('timesofisrael')}
-              className={`whitespace-nowrap text-xs h-7 ${
-                selectedNewsSource === 'timesofisrael' 
-                  ? 'bg-[#0F5ED7] hover:bg-[#0D4EB8]' 
-                  : 'hover:bg-slate-100'
-              }`}
-            >
-              Times of Israel
+              <RefreshCw className={`w-4 h-4 ${fiveTownsLoading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
 
-          {/* News Items */}
-          {newsLoading ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7] mb-2" />
-              <p className="text-sm text-slate-500">Loading headlines...</p>
+          {fiveTownsLoading ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7] mb-2" />
+              <p className="text-xs text-slate-500">Loading headlines...</p>
             </div>
-          ) : newsError ? (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          ) : fiveTownsError || !fiveTownsData?.ok ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-red-900 mb-1">Failed to load headlines</p>
-                  <p className="text-xs text-red-700">{newsError.message}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRefresh}
-                    className="mt-3 text-xs h-7"
-                  >
-                    Try Again
-                  </Button>
+                  <p className="text-xs font-semibold text-amber-900">{fiveTownsData?.error || 'Failed to load'}</p>
                 </div>
               </div>
             </div>
-          ) : !headlinesData?.items?.length ? (
-            <div className="text-center py-12 bg-white rounded-xl border border-slate-100">
-              <Newspaper className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-              <p className="text-sm font-medium text-slate-600 mb-1">No headlines returned</p>
-              <p className="text-xs text-slate-400">
-                {headlinesData?.error || 'Try refreshing or selecting a different source'}
-              </p>
+          ) : !fiveTownsData?.items?.length ? (
+            <div className="text-center py-6 bg-white rounded-xl border border-slate-100">
+              <p className="text-xs text-slate-500">No headlines available</p>
             </div>
           ) : (
             <div className="space-y-2">
-              {headlinesData.items.map((item, index) => (
-                <article 
-                  key={index} 
-                  className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow"
+              {fiveTownsData.items.map((item, index) => (
+                <a
+                  key={index}
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-shadow"
                 >
-                  <div className="flex-1">
-                    <h3 className="font-bold text-sm text-slate-900 leading-snug mb-2">
-                      {item.title}
-                    </h3>
-                    
-                    {item.description && (
-                      <p className="text-xs text-slate-600 mb-3 line-clamp-2">
-                        {item.description}
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                        <span className="font-medium">{item.source}</span>
-                        <span>•</span>
-                        <span>{formatDistanceToNow(new Date(item.pubDate), { addSuffix: true })}</span>
-                      </div>
-                      
-                      <a 
-                        href={item.link} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-[#0F5ED7] hover:text-[#0D4EB8] text-xs font-semibold flex items-center gap-1 flex-shrink-0"
-                      >
-                        Read
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
+                  <h3 className="font-bold text-sm text-slate-900 leading-snug mb-2">
+                    {item.title}
+                  </h3>
+                  
+                  {item.excerpt && (
+                    <p className="text-xs text-slate-600 mb-2 line-clamp-2">
+                      {item.excerpt}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <span className="font-medium">{item.source}</span>
+                    <span>•</span>
+                    <span>{formatDistanceToNow(new Date(item.pubDate), { addSuffix: true })}</span>
                   </div>
-                </article>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Section C: Israel Headlines */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">Israel News</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetchIsrael()}
+              disabled={israelLoading}
+              className="h-7 px-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${israelLoading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+
+          {israelLoading ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7] mb-2" />
+              <p className="text-xs text-slate-500">Loading headlines...</p>
+            </div>
+          ) : israelError || !israelData?.ok ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-semibold text-amber-900">{israelData?.error || 'Failed to load'}</p>
+                </div>
+              </div>
+            </div>
+          ) : !israelData?.items?.length ? (
+            <div className="text-center py-6 bg-white rounded-xl border border-slate-100">
+              <p className="text-xs text-slate-500">No headlines available</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {israelData.items.map((item, index) => (
+                <a
+                  key={index}
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-shadow"
+                >
+                  <h3 className="font-bold text-sm text-slate-900 leading-snug mb-2">
+                    {item.title}
+                  </h3>
+                  
+                  {item.excerpt && (
+                    <p className="text-xs text-slate-600 mb-2 line-clamp-2">
+                      {item.excerpt}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <span className="font-medium">{item.source}</span>
+                    <span>•</span>
+                    <span>{formatDistanceToNow(new Date(item.pubDate), { addSuffix: true })}</span>
+                  </div>
+                </a>
               ))}
             </div>
           )}
