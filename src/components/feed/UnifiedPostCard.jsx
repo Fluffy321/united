@@ -110,7 +110,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
       {post.image_url && (
         <div className="rounded-xl overflow-hidden mb-3">
-          <img src={post.image_url} alt="" className="w-full object-cover max-h-96" />
+          <img src={post.image_url} alt="" className="w-full object-cover max-h-80" loading="lazy" decoding="async" />
         </div>
       )}
 
