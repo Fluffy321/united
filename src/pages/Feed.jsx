@@ -19,6 +19,7 @@ import LogMitzvahModal from '@/components/feed/LogMitzvahModal';
 import QuickPostPrompt from '@/components/feed/QuickPostPrompt';
 import QuickPostModal from '@/components/feed/QuickPostModal';
 import PostTypeSelector from '@/components/feed/PostTypeSelector';
+import FeedCategoryTabs from '@/components/feed/FeedCategoryTabs';
 import { toast } from 'sonner';
 import { format, isToday, parseISO, subHours, startOfWeek, endOfWeek } from 'date-fns';
 
