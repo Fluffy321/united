@@ -18,6 +18,7 @@ import StreakProgress from '@/components/feed/StreakProgress';
 import LogMitzvahModal from '@/components/feed/LogMitzvahModal';
 import QuickPostPrompt from '@/components/feed/QuickPostPrompt';
 import QuickPostModal from '@/components/feed/QuickPostModal';
+import PostTypeSelector from '@/components/feed/PostTypeSelector';
 import { toast } from 'sonner';
 import { format, isToday, parseISO, subHours, startOfWeek, endOfWeek } from 'date-fns';
 
@@ -37,6 +38,7 @@ export default function Feed() {
   const [showQuickPostPrompt, setShowQuickPostPrompt] = useState(false);
   const [showQuickPostModal, setShowQuickPostModal] = useState(false);
   const [scrollStartTime, setScrollStartTime] = useState(null);
+  const [showFABTypeSelector, setShowFABTypeSelector] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -505,6 +507,15 @@ export default function Feed() {
           }
         }}
         currentUser={currentUser}
+      />
+
+      <PostTypeSelector 
+        open={showFABTypeSelector}
+        onOpenChange={setShowFABTypeSelector}
+        onSelectType={(type) => {
+          setPostModalType(type);
+          setShowPostModal(true);
+        }}
       />
     </div>
   );
