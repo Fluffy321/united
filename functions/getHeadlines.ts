@@ -1,7 +1,65 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const FIVE_TOWNS_RSS = "https://www.5tjt.com/feed/";
-const ISRAEL_RSS = "https://www.jewishpress.com/sections/community/five-towns/feed/";
+const FALLBACK_FEEDS = {
+  fivetowns: [
+    'https://5tjt.com/feed',
+    'https://www.jewishpress.com/feed/'
+  ],
+  israel: [
+    'https://www.israelnationalnews.com/RSS.aspx',
+    'https://www.jpost.com/rss',
+    'https://www.timesofisrael.com/the-daily-edition/rss-feed/'
+  ]
+};
+
+async function tryFetchFeed(urls) {
+  const attempts = [];
+  
+  for (const url of urls) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; MitzvahApp/1.0)',
+          'Accept': 'application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.7'
+        },
+        redirect: 'follow'
+      });
+      clearTimeout(timeoutId);
+      
+      attempts.push({ url, status: response.status });
+      
+      // Skip 404/403 and try next
+      if (response.status === 404 || response.status === 403) {
+        continue;
+      }
+      
+      if (!response.ok) {
+        continue;
+      }
+      
+      const xmlText = await response.text();
+      
+      // Detect blocked/HTML responses
+      const lowerText = xmlText.toLowerCase();
+      if (xmlText.trim().startsWith('<!doctype html') || lowerText.includes('cloudflare')) {
+        continue;
+      }
+      
+      return { success: true, xmlText, url, attempts };
+      
+    } catch (error) {
+      clearTimeout(timeoutId);
+      attempts.push({ url, status: 'timeout/error' });
+      continue;
+    }
+  }
+  
+  return { success: false, attempts };
+}
 
 Deno.serve(async (req) => {
   try {
@@ -13,60 +71,22 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const rssUrl = body?.rssUrl || FIVE_TOWNS_RSS;
+    const sourceType = body?.sourceType || 'fivetowns';
+    const urls = FALLBACK_FEEDS[sourceType] || [body?.rssUrl || FALLBACK_FEEDS.fivetowns[0]];
 
-    // Fetch RSS feed from server-side with timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+    // Try to fetch from fallback URLs
+    const fetchResult = await tryFetchFeed(urls);
     
-    let response;
-    try {
-      response = await fetch(rssUrl, { 
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; MitzvahApp/1.0)',
-          'Accept': 'application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.7'
-        },
-        redirect: 'follow'
-      });
-      clearTimeout(timeoutId);
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      return Response.json({ 
-        ok: false, 
-        error: 'Failed to fetch RSS feed',
-        items: []
-      }, { status: 200 });
-    }
-
-    // Check for 403 blocked
-    if (response.status === 403) {
-      return Response.json({ 
+    if (!fetchResult.success) {
+      return Response.json({
         ok: false,
-        error: '403 blocked. Use alternate feed or proxy.',
+        error: 'All sources failed',
+        attempts: fetchResult.attempts,
         items: []
       }, { status: 200 });
     }
-
-    if (!response.ok) {
-      return Response.json({ 
-        ok: false,
-        error: `RSS feed returned ${response.status}`,
-        items: []
-      }, { status: 200 });
-    }
-
-    const xmlText = await response.text();
-
-    // Detect blocked/HTML responses
-    const lowerText = xmlText.toLowerCase();
-    if (xmlText.trim().startsWith('<!doctype html') || lowerText.includes('cloudflare')) {
-      return Response.json({ 
-        ok: false,
-        error: 'Feed blocked (HTML/403). Use different RSS source.',
-        items: []
-      }, { status: 200 });
-    }
+    
+    const { xmlText, url: successUrl } = fetchResult;
 
     // Parse XML to JSON
     const parser = new DOMParser();

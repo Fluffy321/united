@@ -41,20 +41,12 @@ export default function CommunityUpdates() {
     }
   });
 
-  const [fiveTownsAltSource, setFiveTownsAltSource] = useState(false);
-  const [israelAltSource, setIsraelAltSource] = useState(false);
-
-  const RSS_FEEDS = {
-    fivetowns: fiveTownsAltSource ? 'https://www.jewishpress.com/sections/community/five-towns/feed/' : 'https://www.5tjt.com/feed/',
-    fivetowns_alt: 'https://www.jewishpress.com/sections/community/five-towns/feed/',
-    israel: israelAltSource ? 'https://www.timesofisrael.com/feed/' : 'https://www.jewishpress.com/sections/community/five-towns/feed/',
-    israel_alt: 'https://www.timesofisrael.com/feed/'
-  };
+  const [retryCount, setRetryCount] = useState({ fivetowns: 0, israel: 0 });
 
   const { data: fiveTownsData, isLoading: fiveTownsLoading, error: fiveTownsError, refetch: refetchFiveTowns } = useQuery({
-    queryKey: ['rss-headlines-fivetowns', fiveTownsAltSource],
+    queryKey: ['rss-headlines-fivetowns', retryCount.fivetowns],
     queryFn: async () => {
-      const { data } = await base44.functions.invoke('getHeadlines', { rssUrl: RSS_FEEDS.fivetowns });
+      const { data } = await base44.functions.invoke('getHeadlines', { sourceType: 'fivetowns' });
       return data;
     },
     staleTime: 300000, // 5 minutes
@@ -62,9 +54,9 @@ export default function CommunityUpdates() {
   });
 
   const { data: israelData, isLoading: israelLoading, error: israelError, refetch: refetchIsrael } = useQuery({
-    queryKey: ['rss-headlines-israel', israelAltSource],
+    queryKey: ['rss-headlines-israel', retryCount.israel],
     queryFn: async () => {
-      const { data } = await base44.functions.invoke('getHeadlines', { rssUrl: RSS_FEEDS.israel });
+      const { data } = await base44.functions.invoke('getHeadlines', { sourceType: 'israel' });
       return data;
     },
     staleTime: 300000, // 5 minutes
@@ -205,11 +197,20 @@ export default function CommunityUpdates() {
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-xs font-semibold text-amber-900 mb-2">{fiveTownsData?.error || 'Failed to load'}</p>
+                  <p className="text-xs font-semibold text-amber-900 mb-1">{fiveTownsData?.error || 'Failed to load'}</p>
+                  {fiveTownsData?.attempts && (
+                    <div className="text-xs text-amber-800 mb-2 space-y-0.5">
+                      {fiveTownsData.attempts.map((attempt, i) => (
+                        <div key={i} className="font-mono">
+                          {attempt.url.split('/')[2]} - {attempt.status}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setFiveTownsAltSource(!fiveTownsAltSource)}
+                    onClick={() => setRetryCount(prev => ({ ...prev, fivetowns: prev.fivetowns + 1 }))}
                     className="h-7 text-xs"
                   >
                     Try alternate source
@@ -277,11 +278,20 @@ export default function CommunityUpdates() {
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-xs font-semibold text-amber-900 mb-2">{israelData?.error || 'Failed to load'}</p>
+                  <p className="text-xs font-semibold text-amber-900 mb-1">{israelData?.error || 'Failed to load'}</p>
+                  {israelData?.attempts && (
+                    <div className="text-xs text-amber-800 mb-2 space-y-0.5">
+                      {israelData.attempts.map((attempt, i) => (
+                        <div key={i} className="font-mono">
+                          {attempt.url.split('/')[2]} - {attempt.status}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setIsraelAltSource(!israelAltSource)}
+                    onClick={() => setRetryCount(prev => ({ ...prev, israel: prev.israel + 1 }))}
                     className="h-7 text-xs"
                   >
                     Try alternate source
