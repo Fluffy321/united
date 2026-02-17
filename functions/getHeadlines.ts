@@ -1,5 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+const FIVE_TOWNS_RSS = "https://fivetownscentral.com/feed/";
+const ISRAEL_RSS = "https://www.timesofisrael.com/feed/";
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -10,11 +13,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { rssUrl } = body;
-
-    if (!rssUrl) {
-      return Response.json({ ok: false, error: 'RSS URL required', items: [] }, { status: 200 });
-    }
+    const rssUrl = body?.rssUrl || FIVE_TOWNS_RSS;
 
     // Fetch RSS feed from server-side with timeout
     const controller = new AbortController();
