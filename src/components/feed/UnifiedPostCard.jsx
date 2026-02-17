@@ -32,10 +32,11 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-      className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 hover:shadow-md transition-shadow"
+      transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+      className="bg-white rounded-2xl px-4 py-5 border border-slate-100"
+      style={{ contain: 'content' }}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-3 flex-1">
