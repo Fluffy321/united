@@ -348,18 +348,23 @@ export default function Feed() {
   const feedPosts = filteredPosts;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#F8FAFB]" style={{ scrollBehavior: 'smooth' }}>
       {/* Header Section with Light Blue Background */}
       <div className="bg-[#EEF4FF] border-b border-slate-100">
-        <div className="max-w-2xl mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+        <div className="max-w-2xl mx-auto px-4 py-6">
+          <h1 className="text-2xl font-bold text-slate-900 mb-0.5">
             Today in {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
           </h1>
           <p className="text-sm" style={{ color: '#5F6B7A' }}>Stay connected with your community</p>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      {/* Sticky Category Tabs */}
+      <div className="max-w-2xl mx-auto">
+        <FeedCategoryTabs activeCategory={activeCategory} onChange={setActiveCategory} />
+      </div>
+
+      <div className="max-w-2xl mx-auto px-4 py-6">
 
         {/* Your Daily Mitzvah Reminder */}
         {userStreak && (
