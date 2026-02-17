@@ -337,7 +337,15 @@ export default function Feed() {
     return <ProfileSetup user={currentUser} onComplete={loadUser} />;
   }
 
-  const feedPosts = posts.filter(p => p.type === 'feed' || p.type === 'prompt_reply');
+  const filteredPosts = (() => {
+    if (activeCategory === 'all') return posts;
+    if (activeCategory === 'mitzvah') return posts.filter(p => p.type === 'help' || p.board === 'help');
+    if (activeCategory === 'event') return posts.filter(p => p.type === 'event');
+    if (activeCategory === 'help') return posts.filter(p => p.type === 'help');
+    return posts.filter(p => p.type === activeCategory || p.board === activeCategory);
+  })().slice(0, 30);
+
+  const feedPosts = filteredPosts;
 
   return (
     <div className="min-h-screen bg-white">
