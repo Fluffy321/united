@@ -1,10 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Clipboard, MessageCircle, User, HandHeart, Newspaper, Users } from 'lucide-react';
+import { Home, Clipboard, MessageCircle, User, HandHeart, Newspaper, Users, Loader2 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import SwipeableTabs from '@/components/common/SwipeableTabs';
+
+// Lazy load main pages
+const Feed = lazy(() => import('@/pages/Feed'));
+const CommunityUpdates = lazy(() => import('@/pages/CommunityUpdates'));
+const Communities = lazy(() => import('@/pages/Communities'));
+const MitzvahCircle = lazy(() => import('@/pages/MitzvahCircle'));
+const Profile = lazy(() => import('@/pages/Profile'));
 
 const navItems = [
   { name: 'Feed', icon: Home, page: 'Feed', color: 'blue' },
@@ -109,14 +116,28 @@ export default function Layout({ children, currentPageName }) {
       <Toaster position="top-center" richColors />
 
       {/* Main Content */}
-      <main className={!hideBottomPadding ? 'pb-20 h-screen' : 'h-screen'}>
+      <main className={!hideBottomPadding ? 'h-screen' : 'h-screen'}>
         {isSwipeable ? (
           <SwipeableTabs 
-            tabs={swipeablePages}
+            tabs={['Feed', 'Updates', 'Communities', 'Mitzvah', 'Profile']}
             activeIndex={currentIndex}
             onIndexChange={handleTabChange}
           >
-            {children}
+            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+              <Feed />
+            </Suspense>
+            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+              <CommunityUpdates />
+            </Suspense>
+            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+              <Communities />
+            </Suspense>
+            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+              <MitzvahCircle />
+            </Suspense>
+            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+              <Profile />
+            </Suspense>
           </SwipeableTabs>
         ) : (
           children
