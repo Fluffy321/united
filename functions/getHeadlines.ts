@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { XMLParser } from 'npm:fast-xml-parser@4.3.6';
 
 const FALLBACK_FEEDS = {
   fivetowns: [
@@ -12,179 +13,226 @@ const FALLBACK_FEEDS = {
   ]
 };
 
-async function tryFetchFeed(urls) {
-  const attempts = [];
-  
-  for (const url of urls) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-    
-    try {
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; MitzvahApp/1.0)',
-          'Accept': 'application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.7'
-        },
-        redirect: 'follow'
-      });
-      clearTimeout(timeoutId);
-      
-      attempts.push({ url, status: response.status });
-      
-      // Skip 404/403 and try next
-      if (response.status === 404 || response.status === 403) {
-        continue;
-      }
-      
-      if (!response.ok) {
-        continue;
-      }
-      
-      const xmlText = await response.text();
-      
-      // Detect blocked/HTML responses
-      const lowerText = xmlText.toLowerCase();
-      if (xmlText.trim().startsWith('<!doctype html') || lowerText.includes('cloudflare')) {
-        continue;
-      }
-      
-      return { success: true, xmlText, url, attempts };
-      
-    } catch (error) {
-      clearTimeout(timeoutId);
-      attempts.push({ url, status: 'timeout/error' });
-      continue;
-    }
+function parseXml(xmlText) {
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '@_',
+    cdataPropName: '__cdata',
+    textNodeName: '#text',
+    parseTagValue: false,
+    trimValues: true,
+    isArray: (name) => ['item', 'entry'].includes(name)
+  });
+  return parser.parse(xmlText);
+}
+
+function extractItems(parsed, sourceUrl) {
+  // RSS format: rss.channel.item[]
+  const rssChannel = parsed?.rss?.channel;
+  if (rssChannel) {
+    const channelTitle = rssChannel.title?.['__cdata'] || rssChannel.title || sourceUrl;
+    const rawItems = rssChannel.item || [];
+    return { format: 'rss', channelTitle, rawItems };
   }
-  
-  return { success: false, attempts };
+
+  // Atom format: feed.entry[]
+  const atomFeed = parsed?.feed;
+  if (atomFeed) {
+    const channelTitle = atomFeed.title?.['__cdata'] || atomFeed.title || sourceUrl;
+    const rawItems = atomFeed.entry || [];
+    return { format: 'atom', channelTitle, rawItems };
+  }
+
+  return null;
+}
+
+function mapRssItem(item, channelTitle) {
+  const title = item.title?.['__cdata'] || item.title || '';
+  const link = item.link?.['__cdata'] || item.link || item.guid?.['#text'] || item.guid || '';
+  const pubDate = item.pubDate || item['dc:date'] || '';
+  const description = item.description?.['__cdata'] || item.description || '';
+  const plain = description.replace(/<[^>]*>/g, '').trim();
+  return {
+    title: String(title).trim(),
+    link: String(link).trim(),
+    pubDate: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+    excerpt: plain.slice(0, 200) + (plain.length > 200 ? '...' : ''),
+    source: String(channelTitle).trim()
+  };
+}
+
+function mapAtomEntry(entry, channelTitle) {
+  const title = entry.title?.['__cdata'] || entry.title || '';
+  const linkAttr = entry.link?.['@_href'] || '';
+  const altLink = Array.isArray(entry.link)
+    ? (entry.link.find(l => l['@_rel'] === 'alternate') || entry.link[0])?.['@_href'] || ''
+    : linkAttr;
+  const updated = entry.updated || entry.published || '';
+  const summary = entry.summary?.['__cdata'] || entry.summary || entry.content?.['__cdata'] || entry.content || '';
+  const plain = String(summary).replace(/<[^>]*>/g, '').trim();
+  return {
+    title: String(title).trim(),
+    link: String(altLink).trim(),
+    pubDate: updated ? new Date(updated).toISOString() : new Date().toISOString(),
+    excerpt: plain.slice(0, 200) + (plain.length > 200 ? '...' : ''),
+    source: String(channelTitle).trim()
+  };
 }
 
 Deno.serve(async (req) => {
+  const attempts = [];
+  let stage = 'input';
+  let lastUrl = '';
+  let lastStatus = null;
+  let lastSample = '';
+
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
     if (!user) {
-      return Response.json({ ok: false, error: 'Unauthorized', items: [] }, { status: 200 });
+      return Response.json({ ok: false, stage: 'auth', error: 'Unauthorized', items: [] });
     }
 
-    const body = await req.json();
+    stage = 'input';
+    let body = {};
+    try { body = await req.json(); } catch (_) {}
     const sourceType = body?.sourceType || 'fivetowns';
-    const urls = FALLBACK_FEEDS[sourceType] || [body?.rssUrl || FALLBACK_FEEDS.fivetowns[0]];
+    const urls = FALLBACK_FEEDS[sourceType] || FALLBACK_FEEDS.fivetowns;
 
-    // Try to fetch from fallback URLs
-    const fetchResult = await tryFetchFeed(urls);
-    
-    if (!fetchResult.success) {
+    let xmlText = null;
+    let successUrl = null;
+
+    for (const url of urls) {
+      lastUrl = url;
+      stage = 'fetch';
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+      let response;
+      try {
+        response = await fetch(url, {
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; MitzvahApp/1.0)',
+            'Accept': 'application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.7'
+          },
+          redirect: 'follow'
+        });
+        clearTimeout(timeoutId);
+      } catch (fetchErr) {
+        clearTimeout(timeoutId);
+        attempts.push({ url, status: 'timeout/error', stage: 'fetch', error: String(fetchErr) });
+        continue;
+      }
+
+      stage = 'status';
+      lastStatus = response.status;
+      attempts.push({ url, status: response.status, stage: 'status' });
+
+      if (response.status === 403 || response.status === 404 || !response.ok) {
+        continue;
+      }
+
+      stage = 'contentType';
+      const text = await response.text();
+      lastSample = text.slice(0, 300);
+
+      stage = 'detectHtml';
+      const lower = text.toLowerCase().trimStart();
+      if (lower.startsWith('<!doctype html') || lower.includes('cloudflare')) {
+        attempts.push({ url, status: response.status, stage: 'blocked', error: 'Feed blocked (HTML). Use different source.' });
+        continue;
+      }
+
+      xmlText = text;
+      successUrl = url;
+      break;
+    }
+
+    if (!xmlText) {
       return Response.json({
         ok: false,
+        stage,
+        rssUrl: lastUrl,
+        status: lastStatus,
         error: 'All sources failed',
-        attempts: fetchResult.attempts,
+        sample: lastSample,
+        attempts,
         items: []
-      }, { status: 200 });
-    }
-    
-    const { xmlText, url: successUrl } = fetchResult;
-
-    // Parse XML to JSON
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(xmlText, 'text/xml');
-
-    // Check for parsing errors
-    const parserError = doc.querySelector('parsererror');
-    if (parserError) {
-      return Response.json({ 
-        ok: false,
-        error: 'Parse failed',
-        sample: xmlText.slice(0, 200),
-        items: []
-      }, { status: 200 });
-    }
-
-    // Try RSS format first (<item>), then Atom (<entry>)
-    let items = [];
-    let channelTitle = '';
-    
-    const rssItems = doc.querySelectorAll('item');
-    if (rssItems.length > 0) {
-      // RSS format
-      channelTitle = doc.querySelector('channel > title')?.textContent || 'Unknown Source';
-      
-      items = Array.from(rssItems).map(item => {
-        const title = item.querySelector('title')?.textContent || '';
-        const link = item.querySelector('link')?.textContent || '';
-        const pubDate = item.querySelector('pubDate')?.textContent || '';
-        const description = item.querySelector('description')?.textContent || '';
-        
-        // Strip HTML tags from description and limit to 200 chars
-        const plainDescription = description.replace(/<[^>]*>/g, '').trim();
-        const excerpt = plainDescription.substring(0, 200) + (plainDescription.length > 200 ? '...' : '');
-
-        return {
-          title: title.trim(),
-          link: link.trim(),
-          pubDate: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
-          excerpt: excerpt,
-          source: channelTitle
-        };
       });
-    } else {
-      // Try Atom format (<entry>)
-      const atomEntries = doc.querySelectorAll('entry');
-      if (atomEntries.length > 0) {
-        channelTitle = doc.querySelector('feed > title')?.textContent || 'Unknown Source';
-        
-        items = Array.from(atomEntries).map(entry => {
-          const title = entry.querySelector('title')?.textContent || '';
-          const linkEl = entry.querySelector('link[href]');
-          const link = linkEl?.getAttribute('href') || '';
-          const updated = entry.querySelector('updated')?.textContent || '';
-          const summary = entry.querySelector('summary')?.textContent || entry.querySelector('content')?.textContent || '';
-          
-          const plainSummary = summary.replace(/<[^>]*>/g, '').trim();
-          const excerpt = plainSummary.substring(0, 200) + (plainSummary.length > 200 ? '...' : '');
-
-          return {
-            title: title.trim(),
-            link: link.trim(),
-            pubDate: updated ? new Date(updated).toISOString() : new Date().toISOString(),
-            excerpt: excerpt,
-            source: channelTitle
-          };
-        });
-      }
     }
 
-    // If no items found, return parse error
-    if (items.length === 0) {
-      return Response.json({ 
+    stage = 'parse';
+    let parsed;
+    try {
+      parsed = parseXml(xmlText);
+    } catch (parseErr) {
+      return Response.json({
         ok: false,
-        error: 'Parse failed',
-        sample: xmlText.slice(0, 200),
+        stage: 'parse',
+        rssUrl: successUrl,
+        status: lastStatus,
+        error: String(parseErr),
+        sample: xmlText.slice(0, 300),
+        attempts,
         items: []
-      }, { status: 200 });
+      });
     }
 
-    // Filter out items without links and sort by date
-    const validItems = items
-      .filter(item => item.link && item.title)
+    stage = 'map';
+    const extracted = extractItems(parsed, successUrl);
+    if (!extracted) {
+      return Response.json({
+        ok: false,
+        stage: 'map',
+        rssUrl: successUrl,
+        status: lastStatus,
+        error: 'No RSS channel or Atom feed found in parsed XML',
+        sample: xmlText.slice(0, 300),
+        attempts,
+        items: []
+      });
+    }
+
+    const { format, channelTitle, rawItems } = extracted;
+    const items = rawItems
+      .map(item => {
+        try {
+          return format === 'atom' ? mapAtomEntry(item, channelTitle) : mapRssItem(item, channelTitle);
+        } catch (_) {
+          return null;
+        }
+      })
+      .filter(item => item && item.link && item.title)
       .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
       .slice(0, 10);
 
-    return Response.json({ 
-      ok: true, 
-      items: validItems,
-      count: validItems.length
-    }, { status: 200 });
+    if (items.length === 0) {
+      return Response.json({
+        ok: false,
+        stage: 'map',
+        rssUrl: successUrl,
+        status: lastStatus,
+        error: `Parsed ${format} but found 0 valid items (rawItems: ${rawItems.length})`,
+        sample: xmlText.slice(0, 300),
+        attempts,
+        items: []
+      });
+    }
 
-  } catch (error) {
-    console.error('getHeadlines error:', error);
-    return Response.json({ 
+    return Response.json({ ok: true, items, count: items.length, source: channelTitle });
+
+  } catch (err) {
+    return Response.json({
       ok: false,
-      error: 'Unexpected error',
+      stage,
+      rssUrl: lastUrl,
+      status: lastStatus,
+      error: String(err),
+      sample: lastSample,
+      attempts,
       items: []
-    }, { status: 200 });
+    });
   }
 });
