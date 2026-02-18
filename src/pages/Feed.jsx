@@ -340,13 +340,10 @@ export default function Feed() {
 
   const feedPosts = (() => {
     if (activeCategory === 'all') return posts.slice(0, 50);
-    if (activeCategory === 'help') return posts.filter(p => p.type === 'help' || p.board === 'help');
+    if (activeCategory === 'discussion') return posts.filter(p => p.type === 'feed' || p.type === 'prompt_reply');
     if (activeCategory === 'event') return posts.filter(p => p.type === 'event');
     if (activeCategory === 'job') return posts.filter(p => p.type === 'job');
-    // housing posts have no dedicated tab — they appear in 'all'
-    // dating posts have no dedicated tab — they appear in 'all'
-    // shul posts have no dedicated tab — they appear in 'all'
-    if (activeCategory === 'news') return posts.filter(p => p.type === 'news');
+    if (activeCategory === 'help') return posts.filter(p => p.type === 'help' || p.board === 'help');
     return posts.slice(0, 50);
   })();
 

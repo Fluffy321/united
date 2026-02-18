@@ -3,10 +3,10 @@ import { motion } from 'framer-motion';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
-  { id: 'help', label: 'Help' },
+  { id: 'discussion', label: 'Discussion' },
   { id: 'event', label: 'Events' },
   { id: 'job', label: 'Jobs' },
-  { id: 'news', label: 'News' },
+  { id: 'help', label: 'Help' },
 ];
 
 export default function FeedCategoryTabs({ activeCategory, onChange }) {
