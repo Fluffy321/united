@@ -48,7 +48,7 @@ const getUserOrigin = (user) => {
   return null;
 };
 
-export default function MitzvahCircle() {
+export default function MitzvahCircle({ isActive = true }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [activeTab, setActiveTab] = useState('open');
@@ -485,14 +485,16 @@ export default function MitzvahCircle() {
           </>
         )}
 
-        {/* Create Button */}
-        <Button 
-          size="lg"
-          className="fixed bottom-24 right-6 rounded-full w-14 h-14 shadow-xl bg-indigo-600 hover:bg-indigo-700"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
+        {/* Create Button — only visible when Mitzvah tab is active */}
+        {isActive && (
+          <Button 
+            size="lg"
+            className="fixed bottom-24 right-6 rounded-full w-14 h-14 shadow-xl bg-indigo-600 hover:bg-indigo-700 z-40"
+            onClick={() => setShowCreateModal(true)}
+          >
+            <Plus className="w-6 h-6" />
+          </Button>
+        )}
       </div>
 
       <CreateMitzvahModal
