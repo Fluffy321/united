@@ -1,17 +1,9 @@
 import React from 'react';
-import { HandHeart, Calendar, Briefcase, Megaphone, MoreHorizontal } from 'lucide-react';
+import { Calendar, Briefcase, Megaphone, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 export default function PostTypeSelector({ open, onOpenChange, onSelectType }) {
   const postTypes = [
-    { 
-      icon: HandHeart, 
-      label: 'Need Help', 
-      description: 'Request assistance from the community',
-      type: 'help', 
-      color: 'text-amber-700',
-      bg: 'bg-amber-50'
-    },
     { 
       icon: Calendar, 
       label: 'Post Event', 
