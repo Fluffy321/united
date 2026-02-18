@@ -1,37 +1,57 @@
 import React from 'react';
-import { MessageSquare, HandHeart, Calendar, Briefcase } from 'lucide-react';
+import { MessageSquare, HandHeart, Calendar, Briefcase, Home, Heart, Megaphone, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 export default function PostTypeSelector({ open, onOpenChange, onSelectType }) {
   const postTypes = [
     { 
-      icon: MessageSquare, 
-      label: 'Ask Question', 
-      description: 'Get advice or start a discussion',
-      type: 'feed', 
-      color: 'text-slate-700'
-    },
-    { 
       icon: HandHeart, 
       label: 'Need Help', 
       description: 'Request assistance from the community',
       type: 'help', 
-      color: 'text-amber-700'
+      color: 'text-amber-700',
+      bg: 'bg-amber-50'
     },
     { 
       icon: Calendar, 
       label: 'Post Event', 
-      description: 'Share an upcoming event',
+      description: 'Share an upcoming community event',
       type: 'event', 
-      color: 'text-blue-700'
+      color: 'text-blue-700',
+      bg: 'bg-blue-50'
     },
     { 
       icon: Briefcase, 
-      label: 'Job/Opportunity', 
-      description: 'Share a job or volunteer opportunity',
+      label: 'Job / Opportunity', 
+      description: 'Share a job or volunteer opening',
       type: 'job', 
-      color: 'text-green-700'
-    }
+      color: 'text-green-700',
+      bg: 'bg-green-50'
+    },
+    { 
+      icon: Home, 
+      label: 'Housing', 
+      description: 'Apartment, rental, or roommate needed',
+      type: 'housing', 
+      color: 'text-purple-700',
+      bg: 'bg-purple-50'
+    },
+    { 
+      icon: Megaphone, 
+      label: 'Announcement', 
+      description: 'Share community news or updates',
+      type: 'feed', 
+      color: 'text-slate-700',
+      bg: 'bg-slate-100'
+    },
+    { 
+      icon: MoreHorizontal, 
+      label: 'Other', 
+      description: 'Anything else on your mind',
+      type: 'feed', 
+      color: 'text-slate-500',
+      bg: 'bg-slate-100'
+    },
   ];
 
   return (
