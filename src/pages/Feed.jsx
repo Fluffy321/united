@@ -337,15 +337,17 @@ export default function Feed() {
     return <ProfileSetup user={currentUser} onComplete={loadUser} />;
   }
 
-  const filteredPosts = (() => {
-    if (activeCategory === 'all') return posts;
-    if (activeCategory === 'mitzvah') return posts.filter(p => p.type === 'help' || p.board === 'help');
+  const feedPosts = (() => {
+    if (activeCategory === 'all') return posts.slice(0, 50);
+    if (activeCategory === 'help') return posts.filter(p => p.type === 'help' || p.board === 'help');
     if (activeCategory === 'event') return posts.filter(p => p.type === 'event');
-    if (activeCategory === 'help') return posts.filter(p => p.type === 'help');
-    return posts.filter(p => p.type === activeCategory || p.board === activeCategory);
-  })().slice(0, 30);
-
-  const feedPosts = filteredPosts;
+    if (activeCategory === 'job') return posts.filter(p => p.type === 'job');
+    if (activeCategory === 'housing') return posts.filter(p => p.type === 'housing');
+    if (activeCategory === 'dating') return posts.filter(p => p.type === 'dating' || p.board === 'dating');
+    if (activeCategory === 'shul') return posts.filter(p => p.type === 'shul' || p.board === 'shul' || (p.category && p.category.toLowerCase().includes('shul')));
+    if (activeCategory === 'news') return posts.filter(p => p.type === 'news');
+    return posts.slice(0, 50);
+  })();
 
   return (
     <div className="min-h-screen bg-[#F8FAFB]" style={{ scrollBehavior: 'smooth' }}>
