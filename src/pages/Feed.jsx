@@ -82,11 +82,6 @@ export default function Feed() {
     setShowQuickPostModal(true);
   };
 
-  const loadUser = async () => {
-    const user = await base44.auth.me();
-    setCurrentUser(user);
-  };
-
   const loadPinnedPrompt = async () => {
     const prompts = await base44.entities.DailyPrompt.filter({ is_pinned: true });
     if (prompts.length > 0) {
