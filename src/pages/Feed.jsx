@@ -99,11 +99,15 @@ export default function Feed() {
     setUserLikes(likes.map(l => l.post_id));
   };
 
-  const { data: posts = [], isLoading } = useQuery({
+  const { data: posts = [], isLoading, isError, refetch: refetchPosts } = useQuery({
     queryKey: ['unified-posts'],
     queryFn: () => base44.entities.UnifiedPost.list('-created_date', 100),
-    staleTime: 120000, // 2 minutes
-    refetchOnWindowFocus: false
+    staleTime: 300000, // 5 minutes — don't refetch unless stale
+    gcTime: 600000,    // keep in cache 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // use cache if available
+    retry: 1,
+    enabled: !!currentUser
   });
 
   const { data: todayEvents = [] } = useQuery({
@@ -113,8 +117,11 @@ export default function Feed() {
       const today = format(new Date(), 'yyyy-MM-dd');
       return events.filter(e => e.event_date === today);
     },
-    staleTime: 300000, // 5 minutes
+    staleTime: 600000,
+    gcTime: 600000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1,
     enabled: !!currentUser
   });
 
@@ -124,8 +131,11 @@ export default function Feed() {
       const requests = await base44.entities.MitzvahRequest.filter({ status: 'Open' }, '-created_date', 10);
       return requests.filter(r => isToday(parseISO(r.created_date)));
     },
-    staleTime: 300000, // 5 minutes
+    staleTime: 600000,
+    gcTime: 600000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1,
     enabled: !!currentUser
   });
 
@@ -135,8 +145,11 @@ export default function Feed() {
       const actions = await base44.entities.MitzvahAction.list('-created_date', 100);
       return actions.filter(a => isToday(parseISO(a.created_date)));
     },
-    staleTime: 300000, // 5 minutes
+    staleTime: 600000,
+    gcTime: 600000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1,
     enabled: !!currentUser
   });
 
