@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MapPin, Users, CheckCircle2, Bell, BellOff, Plus } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+
+import CommunityHubHeader from '@/components/shul/CommunityHubHeader';
 import ShulPostCard from '@/components/shul/ShulPostCard';
 import ShulEventCard from '@/components/shul/ShulEventCard';
 import CreateShulPostModal from '@/components/shul/CreateShulPostModal';
@@ -18,34 +18,39 @@ import WeeklyScheduleWidget from '@/components/shul/WeeklyScheduleWidget';
 import MealTrainBoard from '@/components/shul/MealTrainBoard';
 import RideBoard from '@/components/shul/RideBoard';
 import VolunteerBoard from '@/components/shul/VolunteerBoard';
+import AdminBroadcastModal from '@/components/shul/AdminBroadcastModal';
+import MembersTab from '@/components/shul/MembersTab';
+import MediaTab from '@/components/shul/MediaTab';
 
 export default function ShulPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
   const [currentUser, setCurrentUser] = useState(null);
   const [shul, setShul] = useState(null);
   const [membership, setMembership] = useState(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
-  const [activeTab, setActiveTab] = useState('feed');
+  const [showBroadcast, setShowBroadcast] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [tabDirection, setTabDirection] = useState(0);
 
   const params = new URLSearchParams(location.search);
   const shulId = params.get('shulId');
+
+  const TABS = ['dashboard', 'events', 'chesed', 'members', 'media'];
 
   useEffect(() => {
     loadData();
   }, [shulId]);
 
   useEffect(() => {
-    // Auto-load first verified shul if no shulId provided (fallback for dev)
     if (!shulId) {
       const loadFirstShul = async () => {
         const shuls = await base44.entities.Shul.filter({ verified: true });
         if (shuls.length > 0) {
           navigate(createPageUrl('ShulPage') + `?shulId=${shuls[0].id}`, { replace: true });
         } else {
-          // No shuls exist, redirect to Communities
           navigate(createPageUrl('Communities'), { replace: true });
         }
       };
@@ -56,31 +61,22 @@ export default function ShulPage() {
   const loadData = async () => {
     const user = await base44.auth.me();
     setCurrentUser(user);
-
     if (shulId) {
       const shuls = await base44.entities.Shul.filter({ id: shulId });
-      if (shuls.length > 0) {
-        setShul(shuls[0]);
-      }
-
-      const memberships = await base44.entities.ShulMember.filter({
-        shul_id: shulId,
-        user_id: user.id
-      });
-      if (memberships.length > 0) {
-        setMembership(memberships[0]);
-      }
+      if (shuls.length > 0) setShul(shuls[0]);
+      const memberships = await base44.entities.ShulMember.filter({ shul_id: shulId, user_id: user.id });
+      if (memberships.length > 0) setMembership(memberships[0]);
     }
   };
 
-  const { data: posts = [], isLoading: postsLoading } = useQuery({
+  const { data: posts = [] } = useQuery({
     queryKey: ['shul-posts', shulId],
     queryFn: () => base44.entities.ShulPost.filter({ shul_id: shulId }, '-created_date', 50),
     enabled: !!shulId,
     staleTime: 30000
   });
 
-  const { data: members = [], isLoading: membersLoading } = useQuery({
+  const { data: members = [] } = useQuery({
     queryKey: ['shul-members', shulId],
     queryFn: () => base44.entities.ShulMember.filter({ shul_id: shulId }),
     enabled: !!shulId,
@@ -93,282 +89,227 @@ export default function ShulPage() {
         shul_id: shul.id,
         shul_name: shul.name,
         user_id: currentUser.id,
-        user_name: currentUser.display_name,
+        user_name: currentUser.display_name || currentUser.full_name,
         role: 'member'
       });
     },
     onSuccess: async (newMembership) => {
-      await base44.entities.Shul.update(shul.id, {
-        member_count: (shul.member_count || 0) + 1
-      });
+      await base44.entities.Shul.update(shul.id, { member_count: (shul.member_count || 0) + 1 });
       setMembership(newMembership);
+      setShul(prev => ({ ...prev, member_count: (prev.member_count || 0) + 1 }));
       queryClient.invalidateQueries({ queryKey: ['shul-members'] });
-      toast.success('You\'ve joined the community!');
+      toast.success("You've joined the community! You'll now receive updates.");
     }
   });
 
   const toggleNotificationsMutation = useMutation({
-    mutationFn: async () => {
-      return base44.entities.ShulMember.update(membership.id, {
+    mutationFn: () =>
+      base44.entities.ShulMember.update(membership.id, {
         notifications_enabled: !membership.notifications_enabled
-      });
-    },
+      }),
     onSuccess: (updated) => {
       setMembership(updated);
-      toast.success(updated.notifications_enabled ? 'Notifications enabled' : 'Notifications disabled');
+      toast.success(updated.notifications_enabled ? 'Notifications enabled' : 'Notifications muted');
     }
   });
 
-  // Show loading only briefly, then show page skeleton
-  const [showLoading, setShowLoading] = useState(true);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => setShowLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
+  const handleTabChange = (newTab) => {
+    const oldIndex = TABS.indexOf(activeTab);
+    const newIndex = TABS.indexOf(newTab);
+    setTabDirection(newIndex > oldIndex ? 1 : -1);
+    setActiveTab(newTab);
+  };
 
-  if ((!shul || !currentUser) && showLoading) {
+  if (!shul || !currentUser) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-600">Loading...</div>
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" />
       </div>
     );
-  }
-
-  if (!shul) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-slate-600 mb-4">Community not found</p>
-          <Button onClick={() => navigate(createPageUrl('Communities'))}>
-            Back to Communities
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return null;
   }
 
   const isAdmin = membership?.role === 'admin';
-  const isMember = !!membership;
-
-  const announcements = posts.filter(p => p.type === 'announcement' && p.is_pinned);
+  const pinnedAnnouncements = posts.filter(p => p.type === 'announcement' && p.is_pinned);
   const feedPosts = posts.filter(p => (p.type === 'announcement' || p.type === 'discussion') && !p.is_pinned);
   const eventPosts = posts.filter(p => p.type === 'event');
 
   return (
-    <div className="min-h-screen bg-white pb-20">
-      {/* Header with Gradient */}
-      <div className="bg-gradient-to-b from-[#E6F0FF] to-white border-b border-slate-100">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(-1)}
-            className="mb-4 text-slate-600 hover:text-slate-900"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
+    <div className="min-h-screen bg-[#F8FAFB] pb-20">
+      <CommunityHubHeader
+        shul={shul}
+        membership={membership}
+        isAdmin={isAdmin}
+        onJoin={() => joinMutation.mutate()}
+        onToggleNotifications={() => toggleNotificationsMutation.mutate()}
+        onNewPost={() => setShowCreatePost(true)}
+        onBroadcast={() => setShowBroadcast(true)}
+        joining={joinMutation.isPending}
+      />
 
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-3">
-                <h1 className="text-3xl font-bold text-slate-900">{shul.name}</h1>
-                {shul.verified && (
-                  <Badge className="bg-[#E6F0FF] text-[#0F5ED7] border-0">✓</Badge>
-                )}
-              </div>
-              
-              <div className="flex items-center gap-4 text-sm mb-2" style={{ color: '#5F6B7A' }}>
-                <div className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  {shul.town}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  {shul.member_count || 0} members
-                </div>
-              </div>
-
-              {shul.description && (
-                <p className="text-sm mb-4" style={{ color: '#5F6B7A' }}>{shul.description}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            {!isMember ? (
-              <Button
-                onClick={() => joinMutation.mutate()}
-                disabled={joinMutation.isPending}
-                className="bg-[#0F5ED7] hover:bg-[#0D4EB8] text-white font-semibold rounded-2xl"
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Tab Navigation */}
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
+          <TabsList className="flex w-full mb-6 bg-white border border-slate-100 rounded-2xl p-1 overflow-x-auto scrollbar-hide">
+            {[
+              { value: 'dashboard', label: '🏠 Dashboard' },
+              { value: 'events', label: '📅 Events' },
+              { value: 'chesed', label: '🤝 Chesed' },
+              { value: 'members', label: '👥 Members' },
+              { value: 'media', label: '📄 Media' }
+            ].map(tab => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="flex-1 min-w-fit text-xs font-semibold rounded-xl data-[state=active]:bg-[#0F5ED7] data-[state=active]:text-white whitespace-nowrap"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Join Community
-              </Button>
-            ) : (
-              <Button
-                onClick={() => toggleNotificationsMutation.mutate()}
-                variant="outline"
-                size="sm"
-              >
-                {membership.notifications_enabled ? (
-                  <>
-                    <BellOff className="w-4 h-4 mr-2" />
-                    Mute
-                  </>
-                ) : (
-                  <>
-                    <Bell className="w-4 h-4 mr-2" />
-                    Unmute
-                  </>
-                )}
-              </Button>
-            )}
-            {isAdmin && (
-              <Button
-                onClick={() => setShowCreatePost(true)}
-                variant="outline"
-                className="border-[#0F5ED7] text-[#0F5ED7] hover:bg-[#E6F0FF] font-semibold rounded-2xl"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New Post
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Dashboard Widgets */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          <MinyanStatusWidget shulId={shulId} currentUser={currentUser} />
-          <WeeklyScheduleWidget shulId={shulId} />
-        </div>
-
-        {/* Pinned Announcements */}
-        {announcements.length > 0 && (
-          <div className="mb-10">
-            <h2 className="text-2xl font-bold mb-5 text-slate-900">
-              Announcements
-            </h2>
-            <div className="space-y-3">
-              {announcements.map(post => (
-                <ShulPostCard
-                  key={post.id}
-                  post={post}
-                  currentUser={currentUser}
-                  isAdmin={isAdmin}
-                  onRefresh={() => queryClient.invalidateQueries({ queryKey: ['shul-posts'] })}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tabs */}
-        <Tabs 
-          value={activeTab} 
-          onValueChange={(newTab) => {
-            const tabs = ['feed', 'events', 'chesed', 'members'];
-            const oldIndex = tabs.indexOf(activeTab);
-            const newIndex = tabs.indexOf(newTab);
-            setTabDirection(newIndex > oldIndex ? 1 : -1);
-            setActiveTab(newTab);
-          }}
-        >
-          <TabsList className="grid w-full grid-cols-4 mb-6">
-            <TabsTrigger value="feed">Feed</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="chesed">Chesed</TabsTrigger>
-            <TabsTrigger value="members">Members</TabsTrigger>
+                {tab.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
-          <TabsContent value="feed" className="space-y-3">
+          {/* DASHBOARD */}
+          <TabsContent value="dashboard">
             <motion.div
-              key="feed"
-              initial={{ x: tabDirection > 0 ? 100 : -100, opacity: 0.8 }}
+              key="dashboard"
+              initial={{ x: tabDirection > 0 ? 60 : -60, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+              transition={{ duration: 0.22 }}
+              className="space-y-6"
             >
-            {feedPosts.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
-                No posts yet
+              {/* Minyan + Schedule Widgets */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <MinyanStatusWidget shulId={shulId} currentUser={currentUser} />
+                <WeeklyScheduleWidget shulId={shulId} />
               </div>
-            ) : (
-              feedPosts.map(post => (
-                <ShulPostCard
-                  key={post.id}
-                  post={post}
-                  currentUser={currentUser}
-                  isAdmin={isAdmin}
-                  onRefresh={() => queryClient.invalidateQueries({ queryKey: ['shul-posts'] })}
-                />
-              ))
-            )}
-            </motion.div>
-          </TabsContent>
 
-          <TabsContent value="events" className="space-y-3">
-            <motion.div
-              key="events"
-              initial={{ x: tabDirection > 0 ? 100 : -100, opacity: 0.8 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-            >
-            {eventPosts.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
-                No upcoming events
-              </div>
-            ) : (
-              eventPosts.map(post => (
-                <ShulEventCard
-                  key={post.id}
-                  post={post}
-                  currentUser={currentUser}
-                  isAdmin={isAdmin}
-                />
-              ))
-            )}
-            </motion.div>
-          </TabsContent>
-
-          <TabsContent value="chesed" className="space-y-6">
-            <motion.div
-              key="chesed"
-              initial={{ x: tabDirection > 0 ? 100 : -100, opacity: 0.8 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-            >
-            <MealTrainBoard shulId={shulId} currentUser={currentUser} isAdmin={isAdmin} />
-            <RideBoard shulId={shulId} currentUser={currentUser} />
-            <VolunteerBoard shulId={shulId} currentUser={currentUser} isAdmin={isAdmin} />
-            </motion.div>
-          </TabsContent>
-
-          <TabsContent value="members" className="space-y-2">
-            <motion.div
-              key="members"
-              initial={{ x: tabDirection > 0 ? 100 : -100, opacity: 0.8 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-            >
-            {members.map(member => (
-              <div key={member.id} className="bg-white rounded-lg p-3 flex items-center justify-between">
+              {/* Pinned Announcements */}
+              {pinnedAnnouncements.length > 0 && (
                 <div>
-                  <div className="font-medium text-slate-900">{member.user_name}</div>
+                  <h2 className="text-lg font-bold text-slate-900 mb-3">📌 Pinned</h2>
+                  <div className="space-y-3">
+                    {pinnedAnnouncements.map(post => (
+                      <ShulPostCard
+                        key={post.id}
+                        post={post}
+                        currentUser={currentUser}
+                        isAdmin={isAdmin}
+                        onRefresh={() => queryClient.invalidateQueries({ queryKey: ['shul-posts'] })}
+                      />
+                    ))}
+                  </div>
                 </div>
-                {member.role === 'admin' && (
-                  <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">
-                    Admin
-                  </Badge>
+              )}
+
+              {/* Recent Feed */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-bold text-slate-900">Community Feed</h2>
+                  {isAdmin && (
+                    <button
+                      onClick={() => setShowCreatePost(true)}
+                      className="text-sm text-[#0F5ED7] font-semibold"
+                    >
+                      + Add Post
+                    </button>
+                  )}
+                </div>
+                {feedPosts.length === 0 ? (
+                  <div className="text-center py-10 bg-white rounded-2xl text-slate-500">
+                    <p className="text-2xl mb-2">💬</p>
+                    <p>No posts yet. Be the first!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {feedPosts.slice(0, 10).map(post => (
+                      <ShulPostCard
+                        key={post.id}
+                        post={post}
+                        currentUser={currentUser}
+                        isAdmin={isAdmin}
+                        onRefresh={() => queryClient.invalidateQueries({ queryKey: ['shul-posts'] })}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
-            ))}
+            </motion.div>
+          </TabsContent>
+
+          {/* EVENTS */}
+          <TabsContent value="events">
+            <motion.div
+              key="events"
+              initial={{ x: tabDirection > 0 ? 60 : -60, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.22 }}
+              className="space-y-4"
+            >
+              {isAdmin && (
+                <button
+                  onClick={() => setShowCreatePost(true)}
+                  className="w-full border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center text-slate-500 hover:border-[#0F5ED7] hover:text-[#0F5ED7] transition-colors font-medium text-sm"
+                >
+                  + Add Event
+                </button>
+              )}
+              {eventPosts.length === 0 ? (
+                <div className="text-center py-12 text-slate-500">
+                  <p className="text-3xl mb-2">📅</p>
+                  <p>No upcoming events</p>
+                </div>
+              ) : (
+                eventPosts.map(post => (
+                  <ShulEventCard
+                    key={post.id}
+                    post={post}
+                    currentUser={currentUser}
+                    isAdmin={isAdmin}
+                  />
+                ))
+              )}
+            </motion.div>
+          </TabsContent>
+
+          {/* CHESED */}
+          <TabsContent value="chesed">
+            <motion.div
+              key="chesed"
+              initial={{ x: tabDirection > 0 ? 60 : -60, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.22 }}
+              className="space-y-6"
+            >
+              <MealTrainBoard shulId={shulId} currentUser={currentUser} isAdmin={isAdmin} />
+              <RideBoard shulId={shulId} currentUser={currentUser} />
+              <VolunteerBoard shulId={shulId} currentUser={currentUser} isAdmin={isAdmin} />
+            </motion.div>
+          </TabsContent>
+
+          {/* MEMBERS */}
+          <TabsContent value="members">
+            <motion.div
+              key="members"
+              initial={{ x: tabDirection > 0 ? 60 : -60, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.22 }}
+            >
+              <MembersTab members={members} currentUserId={currentUser.id} />
+            </motion.div>
+          </TabsContent>
+
+          {/* MEDIA */}
+          <TabsContent value="media">
+            <motion.div
+              key="media"
+              initial={{ x: tabDirection > 0 ? 60 : -60, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.22 }}
+            >
+              <MediaTab
+                shul={shul}
+                isAdmin={isAdmin}
+                onShulUpdate={setShul}
+              />
             </motion.div>
           </TabsContent>
         </Tabs>
@@ -383,6 +324,14 @@ export default function ShulPage() {
           queryClient.invalidateQueries({ queryKey: ['shul-posts'] });
           setShowCreatePost(false);
         }}
+      />
+
+      <AdminBroadcastModal
+        open={showBroadcast}
+        onOpenChange={setShowBroadcast}
+        shul={shul}
+        currentUser={currentUser}
+        memberCount={members.length}
       />
     </div>
   );
