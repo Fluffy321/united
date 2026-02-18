@@ -167,8 +167,11 @@ export default function Feed() {
       });
     },
     enabled: !!currentUser,
-    staleTime: 600000, // 10 minutes
-    refetchOnWindowFocus: false
+    staleTime: 600000,
+    gcTime: 600000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1
   });
 
   const { data: todayMitzvahCount = 0 } = useQuery({
@@ -183,8 +186,11 @@ export default function Feed() {
       return todayActionCount + logs.length;
     },
     enabled: !!currentUser,
-    staleTime: 300000, // 5 minutes
-    refetchOnWindowFocus: false
+    staleTime: 600000,
+    gcTime: 600000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1
   });
 
 
