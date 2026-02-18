@@ -181,6 +181,17 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           <MessageCircle className="w-5 h-5" />
           <span>{post.comments_count || 0}</span>
         </Button>
+
+        {ACTION_BUTTON[post.type] && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onComment(post)}
+            className="ml-auto gap-1.5 text-[#0F5ED7] font-semibold hover:bg-blue-50 text-xs"
+          >
+            {ACTION_BUTTON[post.type].label}
+          </Button>
+        )}
       </div>
     </motion.div>
   );
