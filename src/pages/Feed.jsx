@@ -21,7 +21,8 @@ import QuickPostModal from '@/components/feed/QuickPostModal';
 import PostTypeSelector from '@/components/feed/PostTypeSelector';
 import FeedCategoryTabs from '@/components/feed/FeedCategoryTabs';
 import { toast } from 'sonner';
-import { format, isToday, parseISO, subHours, startOfWeek, endOfWeek } from 'date-fns';
+import { format, isToday, parseISO } from 'date-fns';
+import { SlidersHorizontal } from 'lucide-react';
 
 export default function Feed() {
   const [currentUser, setCurrentUser] = useState(null);
