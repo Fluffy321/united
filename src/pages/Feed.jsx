@@ -501,6 +501,17 @@ export default function Feed() {
           setShowPostModal(true);
         }}
       />
-    </div>
-  );
+
+      {/* Bottom Post pill */}
+      <div className="fixed bottom-[72px] left-0 right-0 flex justify-center pointer-events-none z-30">
+        <button
+          onClick={() => setShowFABTypeSelector(true)}
+          className="pointer-events-auto flex items-center gap-2 bg-[#0F5ED7] text-white text-sm font-semibold px-6 py-2.5 rounded-full shadow-lg hover:bg-[#0D4EB8] active:scale-95 transition-all"
+        >
+          <span className="text-base leading-none">+</span>
+          Post
+        </button>
+      </div>
+      </div>
+      );
 }
