@@ -101,11 +101,8 @@ export default function Feed() {
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['unified-posts'],
-    queryFn: async () => {
-      const allPosts = await base44.entities.UnifiedPost.list('-created_date', 100);
-      return allPosts;
-    },
-    staleTime: 30000, // 30 seconds
+    queryFn: () => base44.entities.UnifiedPost.list('-created_date', 100),
+    staleTime: 120000, // 2 minutes
     refetchOnWindowFocus: false
   });
 
@@ -116,21 +113,20 @@ export default function Feed() {
       const today = format(new Date(), 'yyyy-MM-dd');
       return events.filter(e => e.event_date === today);
     },
-    staleTime: 60000, // 1 minute
-    refetchOnWindowFocus: false
+    staleTime: 300000, // 5 minutes
+    refetchOnWindowFocus: false,
+    enabled: !!currentUser
   });
 
   const { data: openMitzvahRequests = [] } = useQuery({
     queryKey: ['open-mitzvah'],
     queryFn: async () => {
       const requests = await base44.entities.MitzvahRequest.filter({ status: 'Open' }, '-created_date', 10);
-      return requests.filter(r => {
-        const createdToday = isToday(parseISO(r.created_date));
-        return createdToday;
-      });
+      return requests.filter(r => isToday(parseISO(r.created_date)));
     },
-    staleTime: 60000, // 1 minute
-    refetchOnWindowFocus: false
+    staleTime: 300000, // 5 minutes
+    refetchOnWindowFocus: false,
+    enabled: !!currentUser
   });
 
   const { data: todayActions = [] } = useQuery({
@@ -139,29 +135,26 @@ export default function Feed() {
       const actions = await base44.entities.MitzvahAction.list('-created_date', 100);
       return actions.filter(a => isToday(parseISO(a.created_date)));
     },
-    staleTime: 60000, // 1 minute
-    refetchOnWindowFocus: false
+    staleTime: 300000, // 5 minutes
+    refetchOnWindowFocus: false,
+    enabled: !!currentUser
   });
-
-
 
   const { data: userStreak, refetch: refetchStreak } = useQuery({
     queryKey: ['user-streak', currentUser?.id],
     queryFn: async () => {
       const existing = await base44.entities.UserStreak.filter({ user_id: currentUser.id });
       if (existing.length > 0) return existing[0];
-      
-      const newStreak = await base44.entities.UserStreak.create({
+      return base44.entities.UserStreak.create({
         user_id: currentUser.id,
         current_streak: 0,
         longest_streak: 0,
         last_activity_date: format(new Date(), 'yyyy-MM-dd'),
         badge_level: 'none'
       });
-      return newStreak;
     },
     enabled: !!currentUser,
-    staleTime: 300000, // 5 minutes
+    staleTime: 600000, // 10 minutes
     refetchOnWindowFocus: false
   });
 
@@ -169,18 +162,15 @@ export default function Feed() {
     queryKey: ['today-mitzvah-count', currentUser?.id],
     queryFn: async () => {
       const today = format(new Date(), 'yyyy-MM-dd');
-      const actions = await base44.entities.MitzvahAction.filter({ user_id: currentUser.id });
-      const logs = await base44.entities.MitzvahLog.filter({ user_id: currentUser.id, date: today });
-      
-      const todayActions = actions.filter(a => {
-        const actionDate = format(parseISO(a.created_date), 'yyyy-MM-dd');
-        return actionDate === today;
-      });
-      
-      return todayActions.length + logs.length;
+      const [actions, logs] = await Promise.all([
+        base44.entities.MitzvahAction.filter({ user_id: currentUser.id }),
+        base44.entities.MitzvahLog.filter({ user_id: currentUser.id, date: today })
+      ]);
+      const todayActionCount = actions.filter(a => format(parseISO(a.created_date), 'yyyy-MM-dd') === today).length;
+      return todayActionCount + logs.length;
     },
     enabled: !!currentUser,
-    staleTime: 120000, // 2 minutes
+    staleTime: 300000, // 5 minutes
     refetchOnWindowFocus: false
   });
 
