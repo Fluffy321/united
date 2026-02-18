@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, HandHeart, Calendar, Briefcase, Home, Heart, Megaphone, MoreHorizontal } from 'lucide-react';
+import { HandHeart, Calendar, Briefcase, Megaphone, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 export default function PostTypeSelector({ open, onOpenChange, onSelectType }) {
