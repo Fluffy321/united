@@ -30,11 +30,6 @@ export default function SwipeableTabs({
 
   return (
     <div className="relative w-full h-full overflow-hidden">
-      {/* Debug Label */}
-      <div className="fixed top-16 right-4 z-50 bg-black/80 text-white text-xs px-3 py-1.5 rounded-lg font-mono shadow-lg">
-        tabIndex: {activeIndex} / {tabs.length - 1}
-      </div>
-
       {/* Tab Content Container */}
       <motion.div
         className="flex h-full w-full"
