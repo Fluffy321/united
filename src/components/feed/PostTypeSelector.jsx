@@ -73,7 +73,7 @@ export default function PostTypeSelector({ open, onOpenChange, onSelectType }) {
                 }}
                 className="w-full flex items-start gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-colors text-left"
               >
-                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
+                <div className={`flex-shrink-0 w-12 h-12 ${type.bg} rounded-xl flex items-center justify-center`}>
                   <Icon className={`w-6 h-6 ${type.color}`} />
                 </div>
                 <div className="flex-1 min-w-0">
