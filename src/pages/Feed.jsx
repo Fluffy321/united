@@ -93,9 +93,9 @@ export default function Feed() {
     }
   };
 
-  const loadUserLikes = async () => {
-    const user = await base44.auth.me();
-    const likes = await base44.entities.Like.filter({ user_id: user.id });
+  const loadUserLikes = async (user) => {
+    const u = user || await base44.auth.me();
+    const likes = await base44.entities.Like.filter({ user_id: u.id });
     setUserLikes(likes.map(l => l.post_id));
   };
 
