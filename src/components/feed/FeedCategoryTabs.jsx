@@ -6,7 +6,6 @@ const CATEGORIES = [
   { id: 'help', label: 'Help' },
   { id: 'event', label: 'Events' },
   { id: 'job', label: 'Jobs' },
-  { id: 'shul', label: 'Shul' },
   { id: 'news', label: 'News' },
 ];
 

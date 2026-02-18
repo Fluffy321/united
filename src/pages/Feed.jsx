@@ -345,7 +345,7 @@ export default function Feed() {
     if (activeCategory === 'job') return posts.filter(p => p.type === 'job');
     // housing posts have no dedicated tab — they appear in 'all'
     // dating posts have no dedicated tab — they appear in 'all'
-    if (activeCategory === 'shul') return posts.filter(p => p.type === 'shul' || p.board === 'shul' || (p.category && p.category.toLowerCase().includes('shul')));
+    // shul posts have no dedicated tab — they appear in 'all'
     if (activeCategory === 'news') return posts.filter(p => p.type === 'news');
     return posts.slice(0, 50);
   })();
