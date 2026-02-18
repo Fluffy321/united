@@ -369,18 +369,7 @@ export default function Feed() {
 
       <div className="max-w-2xl mx-auto px-4 pt-4">
 
-        {/* Create Post inline prompt */}
-        <div className="mb-4">
-          <button
-            onClick={() => setShowFABTypeSelector(true)}
-            className="w-full flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 py-3 text-slate-400 hover:border-[#0F5ED7] hover:text-[#0F5ED7] transition-all text-sm"
-          >
-            <div className="w-8 h-8 rounded-full bg-[#EEF4FF] flex items-center justify-center flex-shrink-0">
-              <span className="text-[#0F5ED7] font-bold text-lg leading-none">+</span>
-            </div>
-            <span>Share something with the community…</span>
-          </button>
-        </div>
+
 
         {/* Pinned widgets — always at top, only on "All" tab */}
         {activeCategory === 'all' && (
