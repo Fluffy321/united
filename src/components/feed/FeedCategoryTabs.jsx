@@ -40,7 +40,7 @@ export default function FeedCategoryTabs({ activeCategory, onChange }) {
           <button
             key={cat.id}
             onClick={() => onChange(cat.id)}
-            className={`relative flex-shrink-0 px-5 py-3 text-sm font-medium transition-colors ${
+            className={`relative flex-1 px-2 py-3 text-sm font-medium transition-colors ${
               isActive ? 'text-[#0F5ED7]' : 'text-slate-500'
             }`}
           >
