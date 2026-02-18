@@ -1,5 +1,4 @@
-import React, { useRef, useState, useLayoutEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef, useEffect, useCallback } from 'react';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -10,35 +9,46 @@ const CATEGORIES = [
 ];
 
 export default function FeedCategoryTabs({ activeCategory, onChange }) {
-  const containerRef = useRef(null);
-  const tabRefs = useRef({});
+  const barRef = useRef(null);
+  const labelRefs = useRef({});
+  const underlineRef = useRef(null);
   const dragStartX = useRef(null);
-  const [underline, setUnderline] = useState({ left: 0, width: 0 });
 
-  useLayoutEffect(() => {
-    const activeTab = tabRefs.current[activeCategory];
-    const container = containerRef.current;
-    if (!activeTab || !container) return;
+  const recalc = useCallback(() => {
+    const bar = barRef.current;
+    const label = labelRefs.current[activeCategory];
+    const underline = underlineRef.current;
+    if (!bar || !label || !underline) return;
 
-    const tabRect = activeTab.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
+    const barRect = bar.getBoundingClientRect();
+    const labelRect = label.getBoundingClientRect();
+    const scrollLeft = bar.scrollLeft || 0;
 
-    const textSpan = activeTab.querySelector('span');
-    const textRect = textSpan ? textSpan.getBoundingClientRect() : tabRect;
+    const width = labelRect.width;
+    const left = (labelRect.left - barRect.left) + scrollLeft;
 
-    // Use the text element's actual position relative to the container
-    const left = textRect.left - containerRect.left;
-    setUnderline({ left, width: textRect.width });
+    underline.style.width = `${width}px`;
+    underline.style.transform = `translateX(${left}px)`;
   }, [activeCategory]);
 
-  const handlePointerDown = (e) => {
-    dragStartX.current = e.clientX;
-  };
+  useEffect(() => {
+    // Immediate + after paint + after fonts settle
+    recalc();
+    requestAnimationFrame(recalc);
+    const t = setTimeout(recalc, 50);
+    return () => clearTimeout(t);
+  }, [recalc]);
 
+  useEffect(() => {
+    window.addEventListener('resize', recalc);
+    return () => window.removeEventListener('resize', recalc);
+  }, [recalc]);
+
+  const handlePointerDown = (e) => { dragStartX.current = e.clientX; };
   const handlePointerUp = (e) => {
     if (dragStartX.current === null) return;
     const diff = dragStartX.current - e.clientX;
-    if (Math.abs(diff) < 40) return;
+    if (Math.abs(diff) < 40) { dragStartX.current = null; return; }
     const idx = CATEGORIES.findIndex(c => c.id === activeCategory);
     if (diff > 0 && idx < CATEGORIES.length - 1) onChange(CATEGORIES[idx + 1].id);
     if (diff < 0 && idx > 0) onChange(CATEGORIES[idx - 1].id);
@@ -47,8 +57,8 @@ export default function FeedCategoryTabs({ activeCategory, onChange }) {
 
   return (
     <div
-      ref={containerRef}
-      className="relative flex border-b border-slate-100 bg-white select-none"
+      ref={barRef}
+      className="relative flex border-b border-slate-100 bg-white select-none overflow-x-auto scrollbar-hide"
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
     >
@@ -57,22 +67,23 @@ export default function FeedCategoryTabs({ activeCategory, onChange }) {
         return (
           <button
             key={cat.id}
-            ref={(el) => { tabRefs.current[cat.id] = el; }}
             onClick={() => onChange(cat.id)}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 text-sm font-medium transition-colors whitespace-nowrap px-4 ${
               isActive ? 'text-[#0F5ED7]' : 'text-slate-500'
             }`}
           >
-            <span>{cat.label}</span>
+            <span ref={(el) => { labelRefs.current[cat.id] = el; }}>
+              {cat.label}
+            </span>
           </button>
         );
       })}
 
-      {/* Single animated underline */}
-      <motion.div
-        className="absolute bottom-0 h-0.5 bg-[#0F5ED7] rounded-full"
-        animate={{ left: underline.left, width: underline.width }}
-        transition={{ duration: 0.22, ease: 'easeOut' }}
+      {/* Underline — positioned via transform for smoothness */}
+      <div
+        ref={underlineRef}
+        className="absolute bottom-0 left-0 h-0.5 bg-[#0F5ED7] rounded-full transition-all duration-200 ease-out"
+        style={{ width: 0, transform: 'translateX(0px)' }}
       />
     </div>
   );
