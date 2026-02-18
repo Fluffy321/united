@@ -45,9 +45,13 @@ export default function Feed() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    loadUser();
-    loadPinnedPrompt();
-    loadUserLikes();
+    const init = async () => {
+      const user = await base44.auth.me();
+      setCurrentUser(user);
+      // Run these in parallel after we have the user — single auth.me() call
+      await Promise.all([loadPinnedPrompt(), loadUserLikes(user)]);
+    };
+    init();
   }, []);
 
   useEffect(() => {
