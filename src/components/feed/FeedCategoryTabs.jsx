@@ -23,11 +23,11 @@ export default function FeedCategoryTabs({ activeCategory, onChange }) {
     const tabRect = activeTab.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
 
-    // Measure just the text by using a temporary span
     const textSpan = activeTab.querySelector('span');
     const textRect = textSpan ? textSpan.getBoundingClientRect() : tabRect;
 
-    const left = tabRect.left - containerRect.left + (tabRect.width - textRect.width) / 2;
+    // Use the text element's actual position relative to the container
+    const left = textRect.left - containerRect.left;
     setUnderline({ left, width: textRect.width });
   }, [activeCategory]);
 
