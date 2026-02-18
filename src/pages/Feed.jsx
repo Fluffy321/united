@@ -352,73 +352,28 @@ export default function Feed() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFB]" style={{ scrollBehavior: 'smooth' }}>
-      {/* Header Section with Light Blue Background */}
-      <div className="bg-[#EEF4FF] border-b border-slate-100">
-        <div className="max-w-2xl mx-auto px-4 py-6">
-          <h1 className="text-2xl font-bold text-slate-900 mb-0.5">
+
+      {/* Minimal Header Bar */}
+      <div className="bg-white border-b border-slate-100 sticky top-0 z-20">
+        <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
+          <span className="font-bold text-slate-900 text-base">
             Today in {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
-          </h1>
-          <p className="text-sm" style={{ color: '#5F6B7A' }}>Stay connected with your community</p>
+          </span>
+          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors">
+            <SlidersHorizontal className="w-4 h-4 text-slate-500" />
+          </button>
+        </div>
+
+        {/* Sticky Category Tabs — directly below header */}
+        <div className="max-w-2xl mx-auto">
+          <FeedCategoryTabs activeCategory={activeCategory} onChange={setActiveCategory} />
         </div>
       </div>
 
-      {/* Sticky Category Tabs */}
-      <div className="max-w-2xl mx-auto">
-        <FeedCategoryTabs activeCategory={activeCategory} onChange={setActiveCategory} />
-      </div>
+      <div className="max-w-2xl mx-auto px-4 pt-4">
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
-
-        {/* Your Daily Mitzvah Reminder */}
-        {userStreak && (
-          <div className="mb-10 bg-[#EEF4FF] -mx-4 px-4 py-6 rounded-2xl">
-            <h2 className="text-2xl font-bold text-slate-900 mb-5">Your Daily Mitzvah</h2>
-            <StreakBanner 
-              streak={userStreak}
-              todayCount={todayMitzvahCount}
-              onLogMitzvah={() => setShowLogMitzvah(true)}
-            />
-            <div className="mt-3">
-              <StreakProgress 
-                todayCount={todayMitzvahCount}
-                streak={userStreak}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Happening Today */}
-        {(todayEvents.length > 0 || openMitzvahRequests.length > 0) && (
-          <div className="mb-10">
-            <h2 className="text-2xl font-bold text-slate-900 mb-5">Happening Today</h2>
-            <div className="space-y-3">
-              {todayEvents.slice(0, 2).map(event => (
-                <HappeningTodayCard 
-                  key={event.id}
-                  event={event}
-                  onView={handleViewEvent}
-                />
-              ))}
-              {openMitzvahRequests.slice(0, 2).map(request => (
-                <MitzvahNowCard 
-                  key={request.id}
-                  request={request}
-                  onHelp={handleHelpMitzvah}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {/* Daily Prompt */}
-        {pinnedPrompt && (
-          <div className="mb-10">
-            <DailyPromptCard prompt={pinnedPrompt} onReply={handlePromptReply} />
-          </div>
-        )}
-
-        {/* Create Post FAB area - inline prompt */}
-        <div className="mb-8">
+        {/* Create Post inline prompt */}
+        <div className="mb-4">
           <button
             onClick={() => setShowFABTypeSelector(true)}
             className="w-full flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 py-3 text-slate-400 hover:border-[#0F5ED7] hover:text-[#0F5ED7] transition-all text-sm"
@@ -428,11 +383,6 @@ export default function Feed() {
             </div>
             <span>Share something with the community…</span>
           </button>
-        </div>
-
-        {/* Community Posts */}
-        <div className="mb-5">
-          <h2 className="text-2xl font-bold text-slate-900">Community Posts</h2>
         </div>
 
         {isLoading ? (
