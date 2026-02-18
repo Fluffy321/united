@@ -343,7 +343,7 @@ export default function Feed() {
     if (activeCategory === 'help') return posts.filter(p => p.type === 'help' || p.board === 'help');
     if (activeCategory === 'event') return posts.filter(p => p.type === 'event');
     if (activeCategory === 'job') return posts.filter(p => p.type === 'job');
-    if (activeCategory === 'housing') return posts.filter(p => p.type === 'housing');
+    // housing posts have no dedicated tab — they appear in 'all'
     if (activeCategory === 'dating') return posts.filter(p => p.type === 'dating' || p.board === 'dating');
     if (activeCategory === 'shul') return posts.filter(p => p.type === 'shul' || p.board === 'shul' || (p.category && p.category.toLowerCase().includes('shul')));
     if (activeCategory === 'news') return posts.filter(p => p.type === 'news');

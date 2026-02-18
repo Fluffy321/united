@@ -29,14 +29,6 @@ export default function PostTypeSelector({ open, onOpenChange, onSelectType }) {
       bg: 'bg-green-50'
     },
     { 
-      icon: Home, 
-      label: 'Housing', 
-      description: 'Apartment, rental, or roommate needed',
-      type: 'housing', 
-      color: 'text-purple-700',
-      bg: 'bg-purple-50'
-    },
-    { 
       icon: Megaphone, 
       label: 'Announcement', 
       description: 'Share community news or updates',
