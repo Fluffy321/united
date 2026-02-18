@@ -16,12 +16,23 @@ import { motion } from 'framer-motion';
 
 const TYPE_CONFIGS = {
   feed: { label: 'POST', color: 'bg-slate-100 text-slate-700' },
-  help: { label: 'HELP', color: 'bg-amber-100 text-amber-700' },
+  help: { label: 'HELP NEEDED', color: 'bg-amber-100 text-amber-700' },
   event: { label: 'EVENT', color: 'bg-blue-100 text-blue-700' },
   job: { label: 'JOB', color: 'bg-green-100 text-green-700' },
   housing: { label: 'HOUSING', color: 'bg-purple-100 text-purple-700' },
+  dating: { label: 'DATING', color: 'bg-pink-100 text-pink-700' },
   food: { label: 'FOOD', color: 'bg-orange-100 text-orange-700' },
+  shul: { label: 'SHUL', color: 'bg-indigo-100 text-indigo-700' },
+  news: { label: 'NEWS', color: 'bg-cyan-100 text-cyan-700' },
   prompt_reply: { label: 'PROMPT REPLY', color: 'bg-indigo-100 text-indigo-700' }
+};
+
+const ACTION_BUTTON = {
+  help: { label: 'Offer Help', icon: null },
+  event: { label: 'RSVP', icon: null },
+  job: { label: 'Apply', icon: null },
+  housing: { label: 'Interested', icon: null },
+  dating: { label: 'Connect', icon: null },
 };
 
 export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, liked }) {
