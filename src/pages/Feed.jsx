@@ -503,10 +503,10 @@ export default function Feed() {
       />
 
       {/* Bottom Post pill */}
-      <div className="fixed bottom-[72px] left-0 right-0 flex justify-center pointer-events-none z-30">
+      <div className="fixed bottom-[80px] right-5 z-30">
         <button
           onClick={() => setShowFABTypeSelector(true)}
-          className="pointer-events-auto flex items-center gap-2 bg-[#0F5ED7] text-white text-sm font-semibold px-6 py-2.5 rounded-full shadow-lg hover:bg-[#0D4EB8] active:scale-95 transition-all"
+          className="flex items-center gap-2 bg-[#0F5ED7] text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-lg hover:bg-[#0D4EB8] active:scale-95 transition-all"
         >
           <span className="text-base leading-none">+</span>
           Post
