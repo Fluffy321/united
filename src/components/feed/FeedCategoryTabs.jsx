@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useLayoutEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const CATEGORIES = [
@@ -11,7 +11,25 @@ const CATEGORIES = [
 
 export default function FeedCategoryTabs({ activeCategory, onChange }) {
   const containerRef = useRef(null);
+  const tabRefs = useRef({});
   const dragStartX = useRef(null);
+  const [underline, setUnderline] = useState({ left: 0, width: 0 });
+
+  useLayoutEffect(() => {
+    const activeTab = tabRefs.current[activeCategory];
+    const container = containerRef.current;
+    if (!activeTab || !container) return;
+
+    const tabRect = activeTab.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    // Measure just the text by using a temporary span
+    const textSpan = activeTab.querySelector('span');
+    const textRect = textSpan ? textSpan.getBoundingClientRect() : tabRect;
+
+    const left = tabRect.left - containerRect.left + (tabRect.width - textRect.width) / 2;
+    setUnderline({ left, width: textRect.width });
+  }, [activeCategory]);
 
   const handlePointerDown = (e) => {
     dragStartX.current = e.clientX;
@@ -30,7 +48,7 @@ export default function FeedCategoryTabs({ activeCategory, onChange }) {
   return (
     <div
       ref={containerRef}
-      className="flex gap-0 overflow-x-auto scrollbar-hide select-none border-b border-slate-100 bg-white sticky top-0 z-10"
+      className="relative flex border-b border-slate-100 bg-white select-none"
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
     >
@@ -39,22 +57,23 @@ export default function FeedCategoryTabs({ activeCategory, onChange }) {
         return (
           <button
             key={cat.id}
+            ref={(el) => { tabRefs.current[cat.id] = el; }}
             onClick={() => onChange(cat.id)}
-            className={`relative flex-1 px-2 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${
               isActive ? 'text-[#0F5ED7]' : 'text-slate-500'
             }`}
           >
-            {cat.label}
-            {isActive && (
-              <motion.div
-                layoutId="feedCategoryUnderline"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0F5ED7] rounded-full"
-                transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-              />
-            )}
+            <span>{cat.label}</span>
           </button>
         );
       })}
+
+      {/* Single animated underline */}
+      <motion.div
+        className="absolute bottom-0 h-0.5 bg-[#0F5ED7] rounded-full"
+        animate={{ left: underline.left, width: underline.width }}
+        transition={{ duration: 0.22, ease: 'easeOut' }}
+      />
     </div>
   );
 }
