@@ -133,7 +133,7 @@ export default function Layout({ children, currentPageName }) {
               <Communities />
             </Suspense>
             <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <MitzvahCircle />
+              <MitzvahCircle isActive={currentIndex === 3} />
             </Suspense>
             <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
               <Profile />
