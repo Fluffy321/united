@@ -398,18 +398,49 @@ export default function Feed() {
             <p className="text-sm text-slate-400 mt-1">Be the first to share something!</p>
           </div>
         ) : (
-          <div className="space-y-6 pb-24">
-            {feedPosts.map(post => (
-              <UnifiedPostCard 
-                key={post.id}
-                post={post}
-                currentUser={currentUser}
-                liked={userLikes.includes(post.id)}
-                onLike={handleLike}
-                onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
-                onDelete={(id) => deleteMutation.mutate(id)}
-                onReport={handleReport}
-              />
+          <div className="space-y-4 pb-24">
+            {feedPosts.map((post, index) => (
+              <React.Fragment key={post.id}>
+                {/* After 3rd post: Daily Mitzvah widget */}
+                {index === 3 && userStreak && activeCategory === 'all' && (
+                  <div className="bg-[#EEF4FF] rounded-2xl px-4 py-5">
+                    <p className="text-xs font-bold text-[#0F5ED7] uppercase tracking-wide mb-3">Your Daily Mitzvah</p>
+                    <StreakBanner
+                      streak={userStreak}
+                      todayCount={todayMitzvahCount}
+                      onLogMitzvah={() => setShowLogMitzvah(true)}
+                    />
+                    <div className="mt-2">
+                      <StreakProgress todayCount={todayMitzvahCount} streak={userStreak} />
+                    </div>
+                  </div>
+                )}
+                {/* After 6th post: Happening Today */}
+                {index === 6 && (todayEvents.length > 0 || openMitzvahRequests.length > 0) && activeCategory === 'all' && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Happening Today</p>
+                    {todayEvents.slice(0, 2).map(event => (
+                      <HappeningTodayCard key={event.id} event={event} onView={handleViewEvent} />
+                    ))}
+                    {openMitzvahRequests.slice(0, 2).map(request => (
+                      <MitzvahNowCard key={request.id} request={request} onHelp={handleHelpMitzvah} />
+                    ))}
+                  </div>
+                )}
+                {/* After 10th post: Daily Prompt */}
+                {index === 10 && pinnedPrompt && activeCategory === 'all' && (
+                  <DailyPromptCard prompt={pinnedPrompt} onReply={handlePromptReply} />
+                )}
+                <UnifiedPostCard
+                  post={post}
+                  currentUser={currentUser}
+                  liked={userLikes.includes(post.id)}
+                  onLike={handleLike}
+                  onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
+                  onDelete={(id) => deleteMutation.mutate(id)}
+                  onReport={handleReport}
+                />
+              </React.Fragment>
             ))}
           </div>
         )}
