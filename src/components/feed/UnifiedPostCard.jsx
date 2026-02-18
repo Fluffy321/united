@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, Briefcase, Home, ExternalLink } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from '@/components/common/UserAvatar';
