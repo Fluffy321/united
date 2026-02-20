@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Clipboard, MessageCircle, User, HandHeart, Newspaper, Users, Loader2 } from 'lucide-react';
+import { Home, User, HandHeart, Newspaper, Users, Loader2 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
