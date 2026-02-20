@@ -6,6 +6,7 @@ const CATEGORIES = [
   { id: 'event', label: 'Events' },
   { id: 'job', label: 'Jobs' },
   { id: 'help', label: 'Help' },
+  { id: 'news', label: 'News' },
 ];
 
 export default function FeedCategoryTabs({ activeCategory, onChange }) {
