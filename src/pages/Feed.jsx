@@ -346,13 +346,15 @@ export default function Feed() {
     return <ProfileSetup user={currentUser} onComplete={loadUser} />;
   }
 
+  const visiblePosts = posts.filter(p => p.type !== 'dating');
   const feedPosts = (() => {
-    if (activeCategory === 'all') return posts.slice(0, 50);
-    if (activeCategory === 'discussion') return posts.filter(p => p.type === 'feed' || p.type === 'prompt_reply');
-    if (activeCategory === 'event') return posts.filter(p => p.type === 'event');
-    if (activeCategory === 'job') return posts.filter(p => p.type === 'job');
-    if (activeCategory === 'help') return posts.filter(p => p.type === 'help' || p.board === 'help');
-    return posts.slice(0, 50);
+    if (activeCategory === 'all') return visiblePosts.slice(0, 50);
+    if (activeCategory === 'discussion') return visiblePosts.filter(p => p.type === 'feed' || p.type === 'prompt_reply');
+    if (activeCategory === 'event') return visiblePosts.filter(p => p.type === 'event');
+    if (activeCategory === 'job') return visiblePosts.filter(p => p.type === 'job');
+    if (activeCategory === 'help') return visiblePosts.filter(p => p.type === 'help' || p.board === 'help');
+    if (activeCategory === 'news') return visiblePosts.filter(p => p.type === 'news');
+    return visiblePosts.slice(0, 50);
   })();
 
   return (
