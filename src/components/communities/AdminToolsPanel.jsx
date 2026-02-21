@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Loader2, Plus, Sparkles, Bell, Pin, BarChart2, Users, FileText, Upload, Image } from 'lucide-react';
+import { Loader2, Plus, Sparkles, Bell, Pin, BarChart2, Users, FileText, Upload, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
