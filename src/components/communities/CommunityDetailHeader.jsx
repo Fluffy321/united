@@ -68,6 +68,11 @@ export default function CommunityDetailHeader({ community, isFollowing, isAdmin,
           <h1 className="font-bold text-slate-900 text-xl">{community.name}</h1>
           {community.is_claimed && <CheckCircle2 className="w-4 h-4 text-blue-500" />}
           {community.is_featured && <Star className="w-4 h-4 text-amber-400 fill-amber-400" />}
+          {community.is_seeded && !community.is_claimed && (
+            <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-200 px-1.5 py-0.5 rounded-full font-medium">
+              Auto-generated
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2 flex-wrap mb-2">
