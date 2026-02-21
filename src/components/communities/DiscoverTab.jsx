@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import CommunityListCard from './CommunityListCard';
-import TrendingCarousel from './TrendingCarousel';
+import CommunityLogo from './CommunityLogo';
 
 const FILTERS = ['All', 'Shuls', 'Schools', 'Yeshivas', 'Organizations'];
 const FILTER_MAP = { 'All': null, 'Shuls': 'Shul', 'Schools': 'School', 'Yeshivas': 'Yeshiva', 'Organizations': 'Other' };
@@ -230,12 +230,7 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
                       onClick={() => onViewCommunity(c.id)}
                       className="flex-shrink-0 w-44 bg-white rounded-2xl border border-slate-100 p-3 cursor-pointer active:scale-[0.98] transition-transform"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-[#EEF4FF] flex items-center justify-center mb-2 text-xl">
-                        {c.logo_url
-                          ? <img src={c.logo_url} alt="" className="w-full h-full object-cover rounded-xl" />
-                          : { Shul: '🕍', School: '📚', Yeshiva: '📖', Seminary: '🎓', Camp: '⛺', Other: '🏛️' }[c.type] || '🏛️'
-                        }
-                      </div>
+                      <CommunityLogo community={c} size="md" className="mb-2" />
                       <p className="font-bold text-xs text-slate-900 line-clamp-2 mb-0.5">{c.name}</p>
                       <p className="text-[10px] text-slate-400 mb-2">{(c.follower_count || 0).toLocaleString()} members</p>
                       <button
