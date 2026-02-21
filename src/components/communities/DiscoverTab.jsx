@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Loader2, Sparkles, Clock } from 'lucide-react';
+import { Search, Loader2, Sparkles, Clock, Flame, ChevronDown, Play, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -8,12 +8,18 @@ import TrendingCarousel from './TrendingCarousel';
 
 const FILTERS = ['All', 'Shuls', 'Schools', 'Yeshivas', 'Organizations'];
 const FILTER_MAP = { 'All': null, 'Shuls': 'Shul', 'Schools': 'School', 'Yeshivas': 'Yeshiva', 'Organizations': 'Other' };
+const PAGE_SIZE = 30;
 
-export default function DiscoverTab({ communities, isLoading, currentUser, joinedIds, onJoinChange, onViewCommunity }) {
+export default function DiscoverTab({ communities, isLoading, currentUser, joinedIds, onJoinChange, onViewCommunity, onSeedDone }) {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [joiningId, setJoiningId] = useState(null);
+  const [showAll, setShowAll] = useState(false);
+  const [allPage, setAllPage] = useState(1);
+  const [seeding, setSeeding] = useState(false);
+  const [seedResult, setSeedResult] = useState(null);
   const queryClient = useQueryClient();
+  const isAdmin = currentUser?.role === 'admin';
 
   const handleJoin = async (e, community) => {
     e.stopPropagation();
@@ -38,7 +44,27 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
     setJoiningId(null);
   };
 
-  const isSearching = search.trim() || activeFilter !== 'All';
+  const handleRunSeed = async () => {
+    setSeeding(true);
+    setSeedResult(null);
+    try {
+      const res = await base44.functions.invoke('seedCommunitiesDirectory', {
+        volumeCommunities: 1500,
+        volumePostsPerCommunity: 2,
+        volumeEventsPerCommunity: 1,
+        clearSeeded: false,
+      });
+      setSeedResult(res.data);
+      toast.success(`✅ Seeded ${res.data.communities_created} communities!`);
+      queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+      if (onSeedDone) onSeedDone();
+    } catch (e) {
+      toast.error(e.message || 'Seed failed');
+    }
+    setSeeding(false);
+  };
+
+  const isFiltering = search.trim() || activeFilter !== 'All';
 
   const filtered = useMemo(() => {
     let list = communities;
@@ -56,7 +82,11 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
     return list;
   }, [communities, search, activeFilter]);
 
-  // Sections for non-search state
+  const trending = useMemo(() =>
+    [...communities].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0)).slice(0, 8),
+    [communities]
+  );
+
   const newThisWeek = useMemo(() => {
     const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     return communities
@@ -65,22 +95,66 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
       .slice(0, 6);
   }, [communities]);
 
-  const recommended = useMemo(() => {
-    return communities
-      .filter(c => !joinedIds.has(c.id))
-      .sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0))
-      .slice(0, 20);
-  }, [communities, joinedIds]);
+  const allSorted = useMemo(() =>
+    [...communities].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0)),
+    [communities]
+  );
+
+  const allVisible = allSorted.slice(0, allPage * PAGE_SIZE);
+  const hasMore = allVisible.length < allSorted.length;
+
+  const listToShow = isFiltering ? filtered : (showAll ? allSorted.slice(0, allPage * PAGE_SIZE) : allSorted.slice(0, PAGE_SIZE));
+
+  const CardList = ({ items }) => (
+    <div className="px-4 space-y-3">
+      {items.map(c => (
+        <CommunityListCard
+          key={c.id}
+          community={c}
+          joined={joinedIds.has(c.id)}
+          loading={joiningId === c.id}
+          onJoin={handleJoin}
+          onView={onViewCommunity}
+        />
+      ))}
+    </div>
+  );
 
   return (
     <div className="pt-4 pb-28">
+      {/* Admin seed button */}
+      {isAdmin && (
+        <div className="px-4 mb-4">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold text-slate-700">Admin: Seed Directory</p>
+              <p className="text-[11px] text-slate-400">Populate 1,500 communities instantly</p>
+            </div>
+            <button
+              onClick={handleRunSeed}
+              disabled={seeding}
+              className="flex items-center gap-1.5 text-xs font-semibold bg-[#0F5ED7] text-white px-3 py-1.5 rounded-lg disabled:opacity-60"
+            >
+              {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+              {seeding ? 'Seeding…' : 'Run Seed'}
+            </button>
+          </div>
+          {seedResult && (
+            <div className="mt-2 flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {seedResult.communities_created} communities · {seedResult.posts_created} posts · {seedResult.events_created} events added
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Search */}
       <div className="relative mb-3 px-4">
         <Search className="absolute left-7 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, city, type..."
+          onChange={e => { setSearch(e.target.value); setShowAll(false); setAllPage(1); }}
+          placeholder="Search by name, city, type…"
           className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl outline-none focus:border-[#0F5ED7] transition-colors"
         />
       </div>
@@ -90,7 +164,7 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
         {FILTERS.map(f => (
           <button
             key={f}
-            onClick={() => setActiveFilter(f)}
+            onClick={() => { setActiveFilter(f); setShowAll(false); setAllPage(1); }}
             className={`whitespace-nowrap text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
               activeFilter === f
                 ? 'bg-[#0F5ED7] text-white border-[#0F5ED7]'
@@ -103,36 +177,80 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>
-      ) : isSearching ? (
-        /* ── Search results ── */
-        <div className="px-4 space-y-3 mt-1">
+        <div className="flex flex-col items-center py-12 gap-2">
+          <Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" />
+          <p className="text-xs text-slate-400">Loading {communities.length > 0 ? communities.length : ''} communities…</p>
+        </div>
+      ) : isFiltering ? (
+        /* ── Filtered / search results (all) ── */
+        <div className="mt-1">
+          <p className="px-4 mb-3 text-xs text-slate-400">{filtered.length} results</p>
           {filtered.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-slate-500 text-sm">No communities found</p>
             </div>
-          ) : filtered.map(c => (
-            <CommunityListCard
-              key={c.id}
-              community={c}
-              joined={joinedIds.has(c.id)}
-              loading={joiningId === c.id}
-              onJoin={handleJoin}
-              onView={onViewCommunity}
-            />
-          ))}
+          ) : <CardList items={filtered} />}
+        </div>
+      ) : showAll ? (
+        /* ── Full "View All" list with pagination ── */
+        <div className="mt-1">
+          <div className="flex items-center justify-between px-4 mb-3">
+            <p className="text-sm font-bold text-slate-800">All Communities ({allSorted.length})</p>
+            <button onClick={() => setShowAll(false)} className="text-xs text-[#0F5ED7] font-medium">← Back</button>
+          </div>
+          <CardList items={allVisible} />
+          {hasMore && (
+            <div className="px-4 mt-4">
+              <button
+                onClick={() => setAllPage(p => p + 1)}
+                className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-[#0F5ED7] bg-[#EEF4FF] rounded-xl py-2.5"
+              >
+                <ChevronDown className="w-4 h-4" /> Load more ({allSorted.length - allVisible.length} remaining)
+              </button>
+            </div>
+          )}
         </div>
       ) : (
-        /* ── Curated sections ── */
+        /* ── Curated home view ── */
         <>
           {/* Trending carousel */}
-          <TrendingCarousel
-            communities={communities}
-            joinedIds={joinedIds}
-            joiningId={joiningId}
-            onJoin={handleJoin}
-            onView={onViewCommunity}
-          />
+          {trending.length > 0 && (
+            <div className="mb-5">
+              <div className="flex items-center gap-1.5 mb-3 px-4">
+                <Flame className="w-4 h-4 text-orange-500" />
+                <span className="text-sm font-bold text-slate-800">Trending Near You</span>
+              </div>
+              <div className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
+                {trending.map(c => {
+                  const joined = joinedIds.has(c.id);
+                  const loading = joiningId === c.id;
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => onViewCommunity(c.id)}
+                      className="flex-shrink-0 w-44 bg-white rounded-2xl border border-slate-100 p-3 cursor-pointer active:scale-[0.98] transition-transform"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-[#EEF4FF] flex items-center justify-center mb-2 text-xl">
+                        {c.logo_url
+                          ? <img src={c.logo_url} alt="" className="w-full h-full object-cover rounded-xl" />
+                          : { Shul: '🕍', School: '📚', Yeshiva: '📖', Seminary: '🎓', Camp: '⛺', Other: '🏛️' }[c.type] || '🏛️'
+                        }
+                      </div>
+                      <p className="font-bold text-xs text-slate-900 line-clamp-2 mb-0.5">{c.name}</p>
+                      <p className="text-[10px] text-slate-400 mb-2">{(c.follower_count || 0).toLocaleString()} members</p>
+                      <button
+                        onClick={e => { e.stopPropagation(); handleJoin(e, c); }}
+                        disabled={loading}
+                        className={`w-full text-xs h-7 rounded-lg font-semibold transition-colors ${joined ? 'bg-slate-100 text-slate-600' : 'bg-[#0F5ED7] text-white'}`}
+                      >
+                        {loading ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : joined ? 'Joined' : 'Join'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* New this week */}
           {newThisWeek.length > 0 && (
@@ -141,39 +259,36 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
                 <Clock className="w-4 h-4 text-[#0F5ED7]" />
                 <span className="text-sm font-bold text-slate-800">New This Week</span>
               </div>
-              <div className="px-4 space-y-3">
-                {newThisWeek.map(c => (
-                  <CommunityListCard
-                    key={c.id}
-                    community={c}
-                    joined={joinedIds.has(c.id)}
-                    loading={joiningId === c.id}
-                    onJoin={handleJoin}
-                    onView={onViewCommunity}
-                  />
-                ))}
-              </div>
+              <CardList items={newThisWeek} />
             </div>
           )}
 
-          {/* Recommended / All */}
+          {/* All communities preview + "View all" */}
           <div className="mb-5">
-            <div className="flex items-center gap-1.5 mb-3 px-4">
-              <Sparkles className="w-4 h-4 text-purple-500" />
-              <span className="text-sm font-bold text-slate-800">Recommended for You</span>
+            <div className="flex items-center justify-between mb-3 px-4">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-purple-500" />
+                <span className="text-sm font-bold text-slate-800">All Communities</span>
+                <span className="text-xs text-slate-400">({allSorted.length})</span>
+              </div>
+              <button
+                onClick={() => { setShowAll(true); setAllPage(1); }}
+                className="text-xs font-semibold text-[#0F5ED7]"
+              >
+                View all →
+              </button>
             </div>
-            <div className="px-4 space-y-3">
-              {recommended.map(c => (
-                <CommunityListCard
-                  key={c.id}
-                  community={c}
-                  joined={joinedIds.has(c.id)}
-                  loading={joiningId === c.id}
-                  onJoin={handleJoin}
-                  onView={onViewCommunity}
-                />
-              ))}
-            </div>
+            <CardList items={allSorted.slice(0, PAGE_SIZE)} />
+            {allSorted.length > PAGE_SIZE && (
+              <div className="px-4 mt-3">
+                <button
+                  onClick={() => { setShowAll(true); setAllPage(1); }}
+                  className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-[#0F5ED7] bg-[#EEF4FF] rounded-xl py-2.5"
+                >
+                  <ChevronDown className="w-4 h-4" /> View all {allSorted.length} communities
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}
