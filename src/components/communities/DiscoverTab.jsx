@@ -176,7 +176,7 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
           </div>
           {/* Global toggle */}
           <div className="flex items-center justify-between px-1">
-            <span className="text-[11px] text-slate-400">Show all (non-NY) communities — admin only</span>
+            <span className="text-[11px] text-slate-400">Show Global (non–Five Towns) — admin only</span>
             <button
               onClick={() => setShowGlobal(g => !g)}
               className={`relative w-9 h-5 rounded-full transition-colors ${showGlobal ? 'bg-[#0F5ED7]' : 'bg-slate-300'}`}
