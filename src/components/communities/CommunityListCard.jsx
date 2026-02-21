@@ -22,12 +22,7 @@ export default function CommunityListCard({ community, joined, loading, onJoin, 
       className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
     >
       {/* Logo */}
-      <div className="w-12 h-12 rounded-xl flex-shrink-0 bg-[#EEF4FF] flex items-center justify-center overflow-hidden border border-slate-100 relative">
-        {community.logo_url
-          ? <img src={community.logo_url} alt="" className="w-full h-full object-cover" />
-          : <span className="text-[#0F5ED7] font-bold text-xl">{TYPE_EMOJI[community.type] || community.name?.charAt(0)}</span>
-        }
-      </div>
+      <CommunityLogo community={community} size="md" />
 
       {/* Info */}
       <div className="flex-1 min-w-0">

@@ -26,13 +26,7 @@ export default function CommunityDetailHeader({ community, isFollowing, isAdmin,
         </button>
 
         {/* Logo */}
-        <div className="w-9 h-9 rounded-xl bg-[#E6F0FF] flex items-center justify-center overflow-hidden flex-shrink-0">
-          {community.logo_url ? (
-            <img src={community.logo_url} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-[#0F5ED7] font-bold text-base">{community.name?.charAt(0)}</span>
-          )}
-        </div>
+        <CommunityLogo community={community} size="sm" />
 
         {/* Name + meta */}
         <div className="flex-1 min-w-0">
