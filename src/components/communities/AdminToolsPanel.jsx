@@ -18,7 +18,7 @@ const PREMIUM_FEATURES = [
   { icon: Sparkles, label: 'Featured Placement', desc: 'Highlighted in the directory' },
 ];
 
-export default function AdminToolsPanel({ community, org, currentUser, onPostCreated, onLogoUpdated }) {
+export default function AdminToolsPanel({ community, org, currentUser, onPostCreated, onLogoUpdated, onInfoUpdated }) {
   const [tab, setTab] = useState('posts');
   const [postTitle, setPostTitle] = useState('');
   const [postBody, setPostBody] = useState('');
@@ -30,6 +30,30 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoPreview, setLogoPreview] = useState(community?.logo_url || null);
   const fileInputRef = useRef(null);
+
+  // Edit Info state
+  const [infoWebsite, setInfoWebsite] = useState(community?.website || '');
+  const [infoPhone, setInfoPhone] = useState(community?.phone || '');
+  const [infoAddress, setInfoAddress] = useState(community?.address || '');
+  const [infoHours, setInfoHours] = useState(community?.hours || '');
+  const [infoDescShort, setInfoDescShort] = useState(community?.description_short || '');
+  const [infoDescLong, setInfoDescLong] = useState(community?.description_long || '');
+  const [savingInfo, setSavingInfo] = useState(false);
+
+  const handleSaveInfo = async () => {
+    setSavingInfo(true);
+    await base44.entities.Community.update(community.id, {
+      website: infoWebsite.trim() || undefined,
+      phone: infoPhone.trim() || undefined,
+      address: infoAddress.trim() || undefined,
+      hours: infoHours.trim() || undefined,
+      description_short: infoDescShort.trim() || undefined,
+      description_long: infoDescLong.trim() || undefined,
+    });
+    toast.success('Info saved!');
+    setSavingInfo(false);
+    onInfoUpdated?.();
+  };
 
   const isPremium = org?.plan === 'PREMIUM';
 
