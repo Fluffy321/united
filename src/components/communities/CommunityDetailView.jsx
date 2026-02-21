@@ -127,21 +127,32 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-3">
         {activeTab === 'about' && (
-          <div className="bg-white rounded-2xl p-4 border border-slate-100">
-            {community.description_short ? (
-              <p className="text-sm text-slate-700 leading-relaxed">{community.description_short}</p>
-            ) : (
-              <p className="text-sm text-slate-400 italic">No description yet.</p>
-            )}
-            {!community.is_claimed && (
-              <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <p className="text-sm font-semibold text-amber-800 mb-1">Is this your organization?</p>
-                <p className="text-xs text-amber-700 mb-2">Claim this page to update info, post announcements, and more — for free.</p>
+          <div className="space-y-3">
+            {community.is_seeded && !community.is_claimed && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                <p className="text-xs font-semibold text-amber-700 mb-1">⚡ Auto-generated listing</p>
+                <p className="text-xs text-amber-600 mb-2">This page was automatically created. Claim it to add real info, post announcements, and engage your community — free.</p>
                 <button onClick={() => setShowClaim(true)} className="text-xs font-bold text-[#0F5ED7] underline">
                   Claim this page →
                 </button>
               </div>
             )}
+            <div className="bg-white rounded-2xl p-4 border border-slate-100">
+              {community.description_short ? (
+                <p className="text-sm text-slate-700 leading-relaxed">{community.description_short}</p>
+              ) : (
+                <p className="text-sm text-slate-400 italic">No description yet.</p>
+              )}
+              {!community.is_claimed && !community.is_seeded && (
+                <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                  <p className="text-sm font-semibold text-amber-800 mb-1">Is this your organization?</p>
+                  <p className="text-xs text-amber-700 mb-2">Claim this page to update info, post announcements, and more — for free.</p>
+                  <button onClick={() => setShowClaim(true)} className="text-xs font-bold text-[#0F5ED7] underline">
+                    Claim this page →
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
