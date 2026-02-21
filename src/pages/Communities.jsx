@@ -67,8 +67,8 @@ export default function Communities() {
   };
 
   const handleSeedDone = () => {
+    queryClient.removeQueries({ queryKey: ['communities-list'] });
     refetchCommunities();
-    refetchMemberships();
   };
 
   return (
