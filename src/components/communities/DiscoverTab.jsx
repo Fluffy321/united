@@ -106,7 +106,7 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
       );
     }
     return list;
-  }, [communities, search, activeFilter]);
+  }, [baseCommunities, search, activeFilter]);
 
   const trending = useMemo(() =>
     [...baseCommunities].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0)).slice(0, 8),
