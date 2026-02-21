@@ -9,26 +9,7 @@ import CommunityLogo from './CommunityLogo';
 const FILTERS = ['All', 'Shuls', 'Schools', 'Yeshivas', 'Organizations'];
 const FILTER_MAP = { 'All': null, 'Shuls': 'Shul', 'Schools': 'School', 'Yeshivas': 'Yeshiva', 'Organizations': 'Other' };
 const PAGE_SIZE = 100;
-
-const NY_NEIGHBORHOODS = new Set([
-  'upper west side', 'washington heights', 'flatbush', 'borough park',
-  'crown heights', 'riverdale', 'kew gardens hills', 'forest hills',
-  'great neck', 'lawrence', 'cedarhurst', 'woodmere', 'inwood', 'hewlett',
-  'five towns', 'manhattan', 'brooklyn', 'queens', 'bronx', 'staten island',
-  'flushing', 'jamaica', 'astoria', 'bayside', 'whitestone', 'douglaston',
-  'monsey', 'spring valley', 'new city', 'suffern', 'yonkers',
-  'new rochelle', 'mount vernon', 'white plains', 'scarsdale',
-  'pelham', 'bronxville', 'larchmont', 'mamaroneck',
-]);
-
-function isNY(c) {
-  const addr = (c.address || '').toLowerCase();
-  const hood = (c.neighborhood || '').toLowerCase();
-  if (addr.includes(', ny') || addr.includes('new york')) return true;
-  if (NY_NEIGHBORHOODS.has(hood)) return true;
-  for (const n of NY_NEIGHBORHOODS) { if (addr.includes(n)) return true; }
-  return false;
-}
+const FIVE_TOWNS = new Set(['Lawrence', 'Cedarhurst', 'Woodmere', 'Inwood', 'Hewlett']);
 
 export default function DiscoverTab({ communities, isLoading, currentUser, joinedIds, onJoinChange, onViewCommunity, onSeedDone }) {
   const [search, setSearch] = useState('');
