@@ -17,7 +17,7 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
   const [proof, setProof] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
-  const [logoUrl, setLogoUrl] = useState(community?.logo_url || null);
+  const [logoUrl, setLogoUrl] = useState(community?.logo_url ?? null);
   const [logoUploading, setLogoUploading] = useState(false);
   const fileRef = useRef(null);
 
