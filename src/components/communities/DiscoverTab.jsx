@@ -49,14 +49,13 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
     setSeedResult(null);
     try {
       const res = await base44.functions.invoke('seedCommunitiesDirectory', {
-        volumeCommunities: 1500,
+        volumeCommunities: 500,
         volumePostsPerCommunity: 2,
         volumeEventsPerCommunity: 1,
-        clearSeeded: false,
       });
       setSeedResult(res.data);
-      toast.success(`✅ Seeded ${res.data.communities_created} communities!`);
-      queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+      toast.success(`Inserted ${res.data?.communities_created ?? 0} communities`);
+      queryClient.removeQueries({ queryKey: ['communities-list'] });
       if (onSeedDone) onSeedDone();
     } catch (e) {
       toast.error(e.message || 'Seed failed');
