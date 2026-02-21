@@ -214,6 +214,16 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
         </div>
       )}
 
+      {/* Debug counter */}
+      <div className="px-4 mb-2 flex items-center justify-between">
+        <span className="text-[11px] text-slate-400">
+          Showing {isFiltering ? filtered.length : baseCommunities.length} of {communities.length} communities
+        </span>
+        {isAdmin && showSeededOnly && (
+          <span className="text-[10px] bg-amber-100 text-amber-700 rounded px-1.5 py-0.5 font-semibold">Seeded only</span>
+        )}
+      </div>
+
       {/* Search */}
       <div className="relative mb-3 px-4">
         <Search className="absolute left-7 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
