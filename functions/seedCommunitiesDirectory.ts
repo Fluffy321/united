@@ -170,53 +170,47 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const volumeCommunities = body.volumeCommunities || 200;
-    const volumePostsPerCommunity = body.volumePostsPerCommunity || 3;
-    const volumeEventsPerCommunity = body.volumeEventsPerCommunity || 2;
-    const clearSeeded = body.clearSeeded || false;
+    const volumeCommunities = Math.min(body.volumeCommunities || 500, 500);
+    const volumePostsPerCommunity = body.volumePostsPerCommunity ?? 2;
+    const volumeEventsPerCommunity = body.volumeEventsPerCommunity ?? 1;
 
-    // Optional: clear previous seeded data
-    if (clearSeeded) {
-      const existing = await base44.asServiceRole.entities.Community.list('-created_date', 2000);
-      const seeded = existing.filter(c => c.is_seeded);
-      for (const c of seeded) {
-        await base44.asServiceRole.entities.Community.delete(c.id);
-      }
+    // Always clear seeded data first, then re-insert fresh batch
+    console.log('[seed] Clearing existing seeded communities…');
+    const existing = await base44.asServiceRole.entities.Community.list('-created_date', 3000);
+    const seeded = existing.filter(c => c.is_seeded);
+    console.log(`[seed] Found ${seeded.length} seeded communities to delete`);
+    for (const c of seeded) {
+      await base44.asServiceRole.entities.Community.delete(c.id);
     }
+    console.log('[seed] Cleared.');
 
-    // Check what already exists to avoid dupes
-    const existingCommunities = await base44.asServiceRole.entities.Community.list('-created_date', 2000);
-    const existingNames = new Set(existingCommunities.map(c => c.name));
+    // Build the full list of community records to create (no dupes)
+    const usedNames = new Set();
+    const toCreate = [];
 
-    const createdCommunities = [];
-    let commCount = 0;
-
-    // Generate communities across cities
     for (const { city, neighborhoods } of CITIES) {
-      if (commCount >= volumeCommunities) break;
-
+      if (toCreate.length >= volumeCommunities) break;
       for (const neighborhood of neighborhoods) {
-        if (commCount >= volumeCommunities) break;
+        if (toCreate.length >= volumeCommunities) break;
 
-        // Generate a mix of types per neighborhood
         const entries = [
-          { names: SHUL_NAMES, type: 'Shul', descs: SHUL_DESCS, count: randInt(2, 5) },
-          { names: SCHOOL_NAMES, type: 'School', descs: SCHOOL_DESCS, count: randInt(1, 2) },
-          { names: YESHIVA_NAMES, type: 'Yeshiva', descs: YESHIVA_DESCS, count: randInt(0, 2) },
-          { names: SEMINARY_NAMES, type: 'Seminary', descs: SEMINARY_DESCS, count: randInt(0, 1) },
-          { names: ORG_NAMES, type: 'Other', descs: ORG_DESCS, count: randInt(1, 3) },
+          { names: SHUL_NAMES,    type: 'Shul',     descs: SHUL_DESCS,     count: randInt(2, 4) },
+          { names: SCHOOL_NAMES,  type: 'School',   descs: SCHOOL_DESCS,   count: randInt(1, 2) },
+          { names: YESHIVA_NAMES, type: 'Yeshiva',  descs: YESHIVA_DESCS,  count: randInt(0, 2) },
+          { names: SEMINARY_NAMES,type: 'Seminary', descs: SEMINARY_DESCS, count: randInt(0, 1) },
+          { names: ORG_NAMES,     type: 'Other',    descs: ORG_DESCS,      count: randInt(1, 3) },
         ];
 
         for (const { names, type, descs, count } of entries) {
           for (let i = 0; i < count; i++) {
-            if (commCount >= volumeCommunities) break;
-            const name = makeName(names, neighborhood);
-            const uniqueName = existingNames.has(name) ? `${name} (${city})` : name;
-            if (existingNames.has(uniqueName)) continue;
-            existingNames.add(uniqueName);
+            if (toCreate.length >= volumeCommunities) break;
+            const rawName = makeName(names, neighborhood);
+            const uniqueName = usedNames.has(rawName) ? `${rawName} (${city})` : rawName;
+            if (usedNames.has(uniqueName)) continue;
+            usedNames.add(uniqueName);
 
             const logoUrl = getClearbitLogo(uniqueName);
-            const community = await base44.asServiceRole.entities.Community.create({
+            toCreate.push({
               name: uniqueName,
               type,
               neighborhood,
@@ -226,65 +220,92 @@ Deno.serve(async (req) => {
               is_featured: false,
               is_seeded: true,
               follower_count: randInt(40, 1200),
-              ...(logoUrl ? { logo_url: logoUrl, logo_source: 'AUTO' } : {}),
+              ...(logoUrl ? { logo_url: logoUrl, logo_source: 'AUTO' } : { logo_source: 'NONE' }),
             });
-
-            createdCommunities.push(community);
-            commCount++;
           }
         }
       }
     }
 
-    // Seed posts + events per community
+    console.log(`[seed] Inserting ${toCreate.length} communities…`);
+
+    // Insert in parallel batches of 20 for speed
+    const BATCH = 20;
+    const createdCommunities = [];
+    for (let i = 0; i < toCreate.length; i += BATCH) {
+      const batch = toCreate.slice(i, i + BATCH);
+      const results = await Promise.all(
+        batch.map(c => base44.asServiceRole.entities.Community.create(c))
+      );
+      createdCommunities.push(...results);
+    }
+
+    console.log(`[seed] Inserted ${createdCommunities.length} communities.`);
+
+    // Seed posts + events in parallel batches (skip if volume = 0)
     let postCount = 0;
     let eventCount = 0;
 
-    for (const community of createdCommunities) {
-      // Posts
-      const numPosts = Math.min(volumePostsPerCommunity, randInt(1, 6));
-      for (let i = 0; i < numPosts; i++) {
-        const post = pick(SAMPLE_POSTS);
-        await base44.asServiceRole.entities.CommunityPost.create({
-          community_id: community.id,
-          author_user_id: 'seeded',
-          author_name: community.name,
-          is_official: true,
-          type: 'announcement',
-          title: post.title,
-          body: post.body,
-          is_seeded: true,
-        });
-        postCount++;
+    if (volumePostsPerCommunity > 0 || volumeEventsPerCommunity > 0) {
+      const postJobs = [];
+      const eventJobs = [];
+
+      for (const community of createdCommunities) {
+        const numPosts = volumePostsPerCommunity > 0 ? Math.min(volumePostsPerCommunity, randInt(1, 3)) : 0;
+        for (let i = 0; i < numPosts; i++) {
+          const post = pick(SAMPLE_POSTS);
+          postJobs.push(base44.asServiceRole.entities.CommunityPost.create({
+            community_id: community.id,
+            author_user_id: 'seeded',
+            author_name: community.name,
+            is_official: true,
+            type: 'announcement',
+            title: post.title,
+            body: post.body,
+            is_seeded: true,
+          }));
+        }
+
+        const numEvents = volumeEventsPerCommunity > 0 ? Math.min(volumeEventsPerCommunity, randInt(1, 2)) : 0;
+        for (let i = 0; i < numEvents; i++) {
+          const evt = pick(UPCOMING_EVENTS);
+          eventJobs.push(base44.asServiceRole.entities.CommunityPost.create({
+            community_id: community.id,
+            author_user_id: 'seeded',
+            author_name: community.name,
+            is_official: true,
+            type: 'event',
+            title: evt.title,
+            body: evt.body,
+            event_date: futureDate(randInt(3, 90)),
+            event_time: `${randInt(6, 9)}:00 PM`,
+            is_seeded: true,
+          }));
+        }
       }
 
-      // Events
-      const numEvents = Math.min(volumeEventsPerCommunity, randInt(1, 4));
-      for (let i = 0; i < numEvents; i++) {
-        const evt = pick(UPCOMING_EVENTS);
-        await base44.asServiceRole.entities.CommunityPost.create({
-          community_id: community.id,
-          author_user_id: 'seeded',
-          author_name: community.name,
-          is_official: true,
-          type: 'event',
-          title: evt.title,
-          body: evt.body,
-          event_date: futureDate(randInt(3, 90)),
-          event_time: `${randInt(6, 9)}:00 PM`,
-          is_seeded: true,
-        });
-        eventCount++;
+      // Run posts and events in parallel chunks
+      const PCHUNK = 50;
+      for (let i = 0; i < postJobs.length; i += PCHUNK) {
+        await Promise.all(postJobs.slice(i, i + PCHUNK));
+        postCount += Math.min(PCHUNK, postJobs.length - i);
+      }
+      for (let i = 0; i < eventJobs.length; i += PCHUNK) {
+        await Promise.all(eventJobs.slice(i, i + PCHUNK));
+        eventCount += Math.min(PCHUNK, eventJobs.length - i);
       }
     }
 
+    console.log(`[seed] Done. communities=${createdCommunities.length} posts=${postCount} events=${eventCount}`);
+
     return Response.json({
       ok: true,
-      communities_created: commCount,
+      communities_created: createdCommunities.length,
       posts_created: postCount,
       events_created: eventCount,
     });
   } catch (err) {
+    console.error('[seed] ERROR:', err.message);
     return Response.json({ error: err.message }, { status: 500 });
   }
 });
