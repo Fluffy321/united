@@ -49,7 +49,6 @@
  */
 import AdminModerationQueue from './pages/AdminModerationQueue';
 import Chalkboard from './pages/Chalkboard';
-import Communities from './pages/Communities';
 import CommunityUpdates from './pages/CommunityUpdates';
 import Feed from './pages/Feed';
 import Messages from './pages/Messages';
@@ -65,7 +64,6 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "AdminModerationQueue": AdminModerationQueue,
     "Chalkboard": Chalkboard,
-    "Communities": Communities,
     "CommunityUpdates": CommunityUpdates,
     "Feed": Feed,
     "Messages": Messages,
