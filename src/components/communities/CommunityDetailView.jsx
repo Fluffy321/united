@@ -105,6 +105,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
               queryClient.invalidateQueries({ queryKey: ['community-posts', communityId] });
             }}
             onLogoUpdated={() => queryClient.invalidateQueries({ queryKey: ['community', communityId] })}
+            onInfoUpdated={() => queryClient.invalidateQueries({ queryKey: ['community', communityId] })}
           />
         </div>
       )}
