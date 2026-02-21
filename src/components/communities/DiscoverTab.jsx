@@ -187,7 +187,7 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
           {seedResult && (
             <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              {seedResult.communities_created} communities · {seedResult.posts_created} posts · {seedResult.events_created} events added
+              {seedResult.communities_created} Five Towns communities added
             </div>
           )}
         </div>
