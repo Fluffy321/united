@@ -343,7 +343,7 @@ export default function Feed() {
   }
 
   if (!currentUser.is_profile_complete) {
-    return <ProfileSetup user={currentUser} onComplete={loadUser} />;
+    return <ProfileSetup user={currentUser} onComplete={() => base44.auth.me().then(setCurrentUser)} />;
   }
 
   const visiblePosts = posts.filter(p => p.type !== 'dating');

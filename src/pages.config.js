@@ -48,7 +48,6 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import AdminModerationQueue from './pages/AdminModerationQueue';
-import Chalkboard from './pages/Chalkboard';
 import CommunityUpdates from './pages/CommunityUpdates';
 import Feed from './pages/Feed';
 import Messages from './pages/Messages';
@@ -63,7 +62,6 @@ import __Layout from './Layout.jsx';
 
 export const PAGES = {
     "AdminModerationQueue": AdminModerationQueue,
-    "Chalkboard": Chalkboard,
     "CommunityUpdates": CommunityUpdates,
     "Feed": Feed,
     "Messages": Messages,
