@@ -58,6 +58,7 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import ShulPage from './pages/ShulPage';
 import Communities from './pages/Communities';
+import AdminSeedControl from './pages/AdminSeedControl';
 import __Layout from './Layout.jsx';
 
 
@@ -73,6 +74,7 @@ export const PAGES = {
     "Settings": Settings,
     "ShulPage": ShulPage,
     "Communities": Communities,
+    "AdminSeedControl": AdminSeedControl,
 }
 
 export const pagesConfig = {
