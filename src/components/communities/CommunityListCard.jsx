@@ -13,7 +13,6 @@ const TYPE_COLORS = {
   Other:    'bg-slate-100 text-slate-600',
 };
 
-const TYPE_EMOJI = { Shul: '🕍', School: '📚', Yeshiva: '📖', Seminary: '🎓', Camp: '⛺', Other: '🏛️' };
 
 export default function CommunityListCard({ community, joined, loading, onJoin, onView }) {
   return (
