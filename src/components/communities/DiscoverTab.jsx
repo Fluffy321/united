@@ -151,8 +151,8 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
           {/* Seed row */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold text-slate-700">Admin: Seed Directory</p>
-              <p className="text-[11px] text-slate-400">Insert 500 Five Towns communities</p>
+              <p className="text-xs font-semibold text-slate-700">Run Five Towns Seed</p>
+              <p className="text-[11px] text-slate-400">Insert curated Five Towns directory</p>
             </div>
             <button
               onClick={handleRunSeed}
@@ -166,8 +166,8 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
           {/* Prune row */}
           <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold text-red-700">Prune Non‑NY</p>
-              <p className="text-[11px] text-red-400">Delete seeded communities outside New York</p>
+              <p className="text-xs font-semibold text-red-700">Prune Non–Five Towns</p>
+              <p className="text-[11px] text-red-400">Delete seeded communities outside Five Towns</p>
             </div>
             <button
               onClick={handlePrune}
