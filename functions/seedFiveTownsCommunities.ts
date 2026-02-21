@@ -86,10 +86,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Admin only' }, { status: 403 });
     }
 
-    // 1. Clear existing seeded Five Towns communities
-    console.log('[seedFT] Clearing existing seeded Five Towns communities…');
-    const existing = await base44.asServiceRole.entities.Community.list('-created_date', 2000);
-    const toRemove = existing.filter(c => c.is_seeded && !c.is_claimed && FIVE_TOWNS.has(c.neighborhood));
+    // 1. Count before
+    const allBefore = await base44.asServiceRole.entities.Community.list('-created_date', 5000);
+    const totalCommunitiesBefore = allBefore.length;
+    console.log(`[seedFT] DB count before: ${totalCommunitiesBefore}`);
+
+    // 2. Clear existing seeded Five Towns communities
+    const toRemove = allBefore.filter(c => c.is_seeded && !c.is_claimed && FIVE_TOWNS.has(c.neighborhood));
     console.log(`[seedFT] Removing ${toRemove.length} old seeded records…`);
     const DCHUNK = 20;
     for (let i = 0; i < toRemove.length; i += DCHUNK) {
@@ -98,7 +101,7 @@ Deno.serve(async (req) => {
       ));
     }
 
-    // 2. Build insert list
+    // 3. Build insert list
     const toCreate = FIVE_TOWNS_COMMUNITIES.map(entry => {
       const domain = getDomain(entry.website);
       const logoUrl = domain ? `https://logo.clearbit.com/${domain}` : null;
