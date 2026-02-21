@@ -64,13 +64,9 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
     setSeeding(true);
     setSeedResult(null);
     try {
-      const res = await base44.functions.invoke('seedCommunitiesDirectory', {
-        volumeCommunities: 500,
-        volumePostsPerCommunity: 2,
-        volumeEventsPerCommunity: 1,
-      });
+      const res = await base44.functions.invoke('seedFiveTownsCommunities', {});
       setSeedResult(res.data);
-      toast.success(`Inserted ${res.data?.communities_created ?? 0} communities`);
+      toast.success(`Inserted ${res.data?.communities_created ?? 0} Five Towns communities`);
       queryClient.removeQueries({ queryKey: ['communities-list'] });
       if (onSeedDone) onSeedDone();
     } catch (e) {
