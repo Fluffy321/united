@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckCircle2, Globe, Phone, MapPin, Star, ArrowLeft, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import CommunityLogo from './CommunityLogo';
 
 const TYPE_COLORS = {
   Shul:     'bg-blue-100 text-blue-700',
