@@ -81,8 +81,16 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
 
   const isFiltering = search.trim() || activeFilter !== 'All';
 
+  // Base list: only Five Towns unless admin toggles global view
+  const baseCommunities = useMemo(() =>
+    (isAdmin && showGlobal)
+      ? communities
+      : communities.filter(c => FIVE_TOWNS.includes(c.neighborhood)),
+    [communities, isAdmin, showGlobal]
+  );
+
   const filtered = useMemo(() => {
-    let list = communities;
+    let list = baseCommunities;
     const typeFilter = FILTER_MAP[activeFilter];
     if (typeFilter) list = list.filter(c => c.type === typeFilter);
     if (search.trim()) {
