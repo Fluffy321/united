@@ -21,6 +21,7 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
   const [seedResult, setSeedResult] = useState(null);
   const [pruning, setPruning] = useState(false);
   const [showGlobal, setShowGlobal] = useState(false);
+  const [showSeededOnly, setShowSeededOnly] = useState(false);
   const queryClient = useQueryClient();
   const isAdmin = currentUser?.role === 'admin';
 
