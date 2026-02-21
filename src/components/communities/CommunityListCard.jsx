@@ -34,13 +34,17 @@ export default function CommunityListCard({ community, joined, loading, onJoin, 
           <Badge className={`${TYPE_COLORS[community.type] || TYPE_COLORS.Other} border-0 text-[10px] font-semibold px-1.5 py-0`}>
             {community.type}
           </Badge>
-          {community.neighborhood && (
+          {(community.address || community.neighborhood) && (
             <span className="flex items-center gap-0.5 text-xs text-slate-400">
-              <MapPin className="w-3 h-3" />{community.neighborhood}
+              <MapPin className="w-3 h-3 flex-shrink-0" />
+              <span className="truncate max-w-[120px]">{community.address ? community.address.split(',')[0] : community.neighborhood}</span>
             </span>
           )}
           {community.follower_count > 0 && (
             <span className="text-xs text-slate-400">· {community.follower_count.toLocaleString()} members</span>
+          )}
+          {community.website && (
+            <Globe className="w-3 h-3 text-[#0F5ED7] flex-shrink-0" />
           )}
         </div>
         {community.description_short && (
