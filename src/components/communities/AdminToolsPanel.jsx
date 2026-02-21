@@ -101,12 +101,12 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-      <div className="flex border-b border-slate-100">
-        {['posts', 'events', 'logo', 'premium'].map(t => (
+      <div className="flex border-b border-slate-100 overflow-x-auto scrollbar-hide">
+        {['posts', 'events', 'info', 'logo', 'premium'].map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`flex-1 py-3 text-sm font-medium capitalize transition-colors ${
+            className={`flex-shrink-0 flex-1 py-3 text-sm font-medium capitalize transition-colors ${
               tab === t ? 'text-[#0F5ED7] border-b-2 border-[#0F5ED7]' : 'text-slate-500'
             }`}
           >
