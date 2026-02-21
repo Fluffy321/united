@@ -1,101 +1,269 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const FIVE_TOWNS_COMMUNITIES = [
-  // SHULS - Lawrence
-  { name: "Young Israel of Lawrence-Cedarhurst", type: "Shul", neighborhood: "Lawrence", address: "8 Oakland Ave, Lawrence, NY 11559", phone: "(516) 239-2720", website: "https://yilc.org", rabbi_or_principal: "Rabbi Yehuda Oppenheimer", description_short: "A vibrant Modern Orthodox synagogue serving the Lawrence-Cedarhurst community with daily minyanim and diverse programming." },
-  { name: "Congregation Bais Ephraim Yitzchok", type: "Shul", neighborhood: "Lawrence", address: "Lawrence, NY 11559", description_short: "Traditional Orthodox congregation in Lawrence with Shabbos and weekday services." },
-  { name: "Congregation Shaaray Tefila", type: "Shul", neighborhood: "Lawrence", address: "93 Broadway, Lawrence, NY 11559", phone: "(516) 239-1444", rabbi_or_principal: "Rabbi Robert Kasman", description_short: "One of the oldest congregations in the Five Towns area with rich history." },
-  { name: "White Shul (Congregation Kneseth Israel)", type: "Shul", neighborhood: "Lawrence", address: "728 Lawrence Ave, Lawrence, NY 11559", description_short: "Known as the White Shul, serving the Lawrence community with traditional Orthodox davening." },
-  { name: "Congregation Ohr Torah", type: "Shul", neighborhood: "Lawrence", address: "Lawrence, NY 11559", description_short: "Orthodox congregation in Lawrence offering daily and Shabbos services." },
+// ─── SEED DATA ───────────────────────────────────────────────────────────────
 
-  // SHULS - Cedarhurst
-  { name: "Congregation Shaarei Orah", type: "Shul", neighborhood: "Cedarhurst", address: "Cedarhurst, NY 11516", description_short: "Cedarhurst Sephardic congregation with vibrant Shabbat and holiday programming." },
-  { name: "Young Israel of Cedarhurst", type: "Shul", neighborhood: "Cedarhurst", address: "185 Rockaway Turnpike, Cedarhurst, NY 11516", phone: "(516) 374-0003", description_short: "Active Modern Orthodox shul in Cedarhurst with youth programs and community events." },
-  { name: "Congregation Aish Kodesh", type: "Shul", neighborhood: "Cedarhurst", address: "Cedarhurst, NY 11516", description_short: "A spirited congregation focused on joyful, meaningful prayer and community connection." },
-  { name: "North Shore Synagogue", type: "Shul", neighborhood: "Cedarhurst", address: "Cedarhurst, NY 11516", description_short: "Conservative congregation serving the greater Five Towns area with diverse programming." },
-
-  // SHULS - Woodmere
-  { name: "Young Israel of Woodmere", type: "Shul", neighborhood: "Woodmere", address: "859 Woodmere Blvd, Woodmere, NY 11598", phone: "(516) 295-0950", website: "https://yiwoodmere.org", rabbi_or_principal: "Rabbi Hershel Billet", description_short: "A premier Modern Orthodox congregation in Woodmere known for outstanding Torah education and dynamic community life." },
-  { name: "Congregation Ahavas Yisroel", type: "Shul", neighborhood: "Woodmere", address: "Woodmere, NY 11598", description_short: "Woodmere congregation fostering love of Israel and Torah-true values." },
-  { name: "Hebrew Institute of Long Island", type: "Shul", neighborhood: "Woodmere", address: "Woodmere, NY 11598", description_short: "Prominent congregation offering diverse Shabbat and weekday programming in Woodmere." },
-  { name: "Sephardic Congregation of Hewlett-Woodmere", type: "Shul", neighborhood: "Woodmere", address: "Woodmere, NY 11598", description_short: "Serving the Sephardic community in the Hewlett-Woodmere area with traditional davening." },
-  { name: "Congregation Beis Yisroel of Woodmere", type: "Shul", neighborhood: "Woodmere", address: "Woodmere, NY 11598", description_short: "Close-knit Orthodox kehilla in the heart of Woodmere." },
-
-  // SHULS - Hewlett
-  { name: "Congregation Tifereth Israel", type: "Shul", neighborhood: "Hewlett", address: "Hewlett, NY 11557", description_short: "Hewlett congregation with traditional Orthodox davening and active community programming." },
-  { name: "Young Israel of Hewlett", type: "Shul", neighborhood: "Hewlett", address: "Hewlett, NY 11557", description_short: "Friendly Modern Orthodox shul serving the Hewlett community for decades." },
-
-  // SHULS - Inwood
-  { name: "Congregation Bet Yosef of Inwood", type: "Shul", neighborhood: "Inwood", address: "Inwood, NY 11096", description_short: "Traditional Sephardic congregation serving the Inwood community." },
-
-  // SCHOOLS - Lawrence
-  { name: "The Hebrew Academy of the Five Towns & Rockaway (HAFTR)", type: "School", neighborhood: "Lawrence", address: "635 Central Ave, Lawrence, NY 11559", phone: "(516) 295-4100", website: "https://haftr.org", rabbi_or_principal: "Rabbi Kenneth Hain", description_short: "HAFTR provides a comprehensive Jewish and secular education to over 1,000 students from Early Childhood through High School." },
-  { name: "Brandeis School of San Francisco", type: "School", neighborhood: "Lawrence", address: "Lawrence, NY 11559", description_short: "Jewish day school offering strong dual-curriculum education in the Five Towns." },
-  { name: "Lawrence Woodmere Academy", type: "School", neighborhood: "Lawrence", address: "336 Woodmere Blvd, Woodmere, NY 11598", phone: "(516) 374-9000", website: "https://lwa.org", description_short: "Independent co-educational college preparatory school serving students from Pre-K through Grade 12." },
-
-  // SCHOOLS - Cedarhurst
-  { name: "Stella K. Abraham High School for Girls (SKA)", type: "School", neighborhood: "Cedarhurst", address: "350 Hungry Harbor Rd, North Woodmere, NY 11581", phone: "(516) 374-0001", website: "https://skahs.org", description_short: "SKA is a leading Modern Orthodox high school for girls, combining rigorous Judaic and general studies." },
-  { name: "Rambam Mesivta", type: "School", neighborhood: "Cedarhurst", address: "Cedarhurst, NY 11516", phone: "(516) 371-3383", website: "https://rambammesivta.org", description_short: "Rambam Mesivta is a unique high school for boys emphasizing Torah learning while preparing students for college." },
-
-  // SCHOOLS - Woodmere
-  { name: "DRS Yeshiva High School for Boys", type: "School", neighborhood: "Woodmere", address: "700 Ibsen St, Woodmere, NY 11598", phone: "(516) 295-7700", website: "https://drsyeshiva.org", rabbi_or_principal: "Rabbi Binyamin Kwalwasser", description_short: "DRS is a leading Modern Orthodox yeshiva high school that combines rigorous Torah study with excellence in secular education." },
-  { name: "Woodmere Academy", type: "School", neighborhood: "Woodmere", address: "336 Woodmere Blvd, Woodmere, NY 11598", description_short: "Providing quality education with strong values in the heart of Woodmere." },
-  { name: "Shulamith School for Girls", type: "School", neighborhood: "Woodmere", address: "Woodmere, NY 11598", phone: "(516) 239-2375", description_short: "Shulamith is a leading Orthodox day school for girls with a strong emphasis on Torah education and character development." },
-  { name: "Beis Yaakov of the Five Towns", type: "School", neighborhood: "Woodmere", address: "Woodmere, NY 11598", description_short: "Provides girls with a thorough Torah education in the tradition of Sarah Schenirer." },
-
-  // YESHIVAS
-  { name: "Yeshiva of Far Rockaway (Derech Ayson)", type: "Yeshiva", neighborhood: "Lawrence", address: "802 Hicksville Rd, Far Rockaway, NY 11691", phone: "(718) 327-7244", description_short: "A prestigious beis medrash and kollel with a distinguished tradition of Torah scholarship." },
-  { name: "Mesivta of Long Island", type: "Yeshiva", neighborhood: "Lawrence", address: "Lawrence, NY 11559", description_short: "Yeshiva high school providing intensive Torah learning alongside quality secular education." },
-  { name: "Yeshivat Torat Shraga", type: "Yeshiva", neighborhood: "Woodmere", address: "Woodmere, NY 11598", description_short: "Beit Midrash program for post-high school bochurim in the Five Towns area." },
-  { name: "Chofetz Chaim Torah Center", type: "Yeshiva", neighborhood: "Cedarhurst", address: "Cedarhurst, NY 11516", description_short: "Providing high-quality Torah learning and religious growth programs for the community." },
-  { name: "Yeshiva Darchei Torah", type: "Yeshiva", neighborhood: "Lawrence", address: "257 Beach 17th St, Far Rockaway, NY 11691", phone: "(718) 868-2300", rabbi_or_principal: "Rabbi Yaakov Bender", description_short: "A premier yeshiva gedolah known for its warm atmosphere and exceptional Torah learning." },
-
-  // SEMINARIES
-  { name: "Michlalah Jerusalem College", type: "Seminary", neighborhood: "Lawrence", address: "Lawrence, NY 11559", description_short: "Post-high school seminary program offering intensive Torah studies for young women." },
-  { name: "Five Towns Seminary", type: "Seminary", neighborhood: "Cedarhurst", address: "Cedarhurst, NY 11516", description_short: "Year-round seminary program for young women seeking deeper Torah education." },
-
-  // CAMPS
-  { name: "Camp HASC", type: "Camp", neighborhood: "Other", address: "Five Towns Area, NY", website: "https://camphasc.org", description_short: "Summer camp serving individuals with developmental disabilities in a Torah-true environment." },
-  { name: "Camp Morasha", type: "Camp", neighborhood: "Other", address: "Five Towns Area, NY", description_short: "Classic Bnei Akiva affiliated summer camp with strong Jewish identity programming." },
-  { name: "Camp Moshava", type: "Camp", neighborhood: "Other", address: "Five Towns Area, NY", description_short: "Religious Zionist summer camp affiliated with Bnei Akiva with decades of tradition." },
-
-  // OTHER
-  { name: "Five Towns Jewish Community Council (FTJCC)", type: "Other", neighborhood: "Lawrence", address: "Lawrence, NY 11559", description_short: "Community organization supporting the needs of Five Towns Jewish families through social services and advocacy." },
-  { name: "Bikur Cholim of the Five Towns & Far Rockaway", type: "Other", neighborhood: "Cedarhurst", address: "Cedarhurst, NY 11516", description_short: "Chesed organization providing support to the sick and their families in the Five Towns community." },
-  { name: "Torah Academy for Girls (TAG)", type: "School", neighborhood: "Lawrence", address: "Lawrence, NY 11559", description_short: "Orthodox day school for girls providing a comprehensive dual-curriculum education." },
-  { name: "HALB Elementary", type: "School", neighborhood: "Lawrence", address: "Lawrence, NY 11559", description_short: "Elementary division of the Hebrew Academy of the Five Towns & Rockaway." },
-  { name: "Congregation Ahavas Chaim", type: "Shul", neighborhood: "Woodmere", address: "Woodmere, NY 11598", description_short: "Growing kehilla in Woodmere with warm atmosphere and active shiurim schedule." },
-  { name: "Congregation Ohav Sholom", type: "Shul", neighborhood: "Cedarhurst", address: "Cedarhurst, NY 11516", description_short: "Cedarhurst shul with rich history in the Five Towns community." },
+const CITIES = [
+  { city: 'New York', neighborhoods: ['Upper West Side', 'Washington Heights', 'Flatbush', 'Borough Park', 'Crown Heights', 'Riverdale', 'Kew Gardens Hills', 'Forest Hills', 'Great Neck'] },
+  { city: 'New Jersey', neighborhoods: ['Teaneck', 'Englewood', 'Lakewood', 'Passaic', 'Bergenfield', 'Paramus', 'Fair Lawn', 'Livingston', 'West Orange'] },
+  { city: 'Miami', neighborhoods: ['Bal Harbour', 'Surfside', 'Aventura', 'North Miami Beach', 'Boca Raton', 'Hollywood', 'Hallandale', 'Sunny Isles'] },
+  { city: 'Los Angeles', neighborhoods: ['Pico-Robertson', 'Hancock Park', 'Beverly Hills', 'Valley Village', 'Encino', 'Tarzana', 'Westwood', 'Beverlywood'] },
+  { city: 'Chicago', neighborhoods: ['West Rogers Park', 'Skokie', 'Lincolnwood', 'Morton Grove', 'Buffalo Grove', 'Northbrook'] },
+  { city: 'Toronto', neighborhoods: ['Thornhill', 'North York', 'Lawrence Park', 'Bayside', 'Vaughan', 'Markham'] },
+  { city: 'London', neighborhoods: ['Golders Green', 'Stamford Hill', 'Edgware', 'Hendon', 'Finchley', 'Temple Fortune', 'Borehamwood'] },
+  { city: 'Jerusalem', neighborhoods: ['Rechavia', 'Katamon', 'Geula', 'Mea Shearim', 'Ramot', 'Ramat Eshkol', 'Talpiot'] },
+  { city: 'Tel Aviv', neighborhoods: ['Ramat Aviv', 'Dizengoff', 'Florentin', 'Neve Tzedek', 'Ramat Gan', 'Bnei Brak'] },
+  { city: 'Five Towns', neighborhoods: ['Lawrence', 'Cedarhurst', 'Woodmere', 'Hewlett', 'Inwood'] },
 ];
+
+const SHUL_NAMES = [
+  'Congregation Beth Israel', 'Young Israel of {n}', 'Congregation Shaarei Torah',
+  'Congregation Beit Yosef', 'Kehillas {n}', 'Congregation Ohel Moshe',
+  'Congregation Ahavas Yisroel', 'Congregation Ohr HaChaim', 'Congregation Kol Torah',
+  'Beit Knesset {n}', 'Congregation Bais Ephraim', 'Congregation Tifereth Israel',
+  'Congregation Shaarei Rachamim', 'Congregation Beis Tefila', 'Congregation Adas Israel',
+  'Congregation Shaarei Orah', 'Congregation Mishkan Yaakov', 'Congregation Aish Kodesh',
+  'Kehillas Beis Avrohom', 'Congregation Zichron Dovid', 'Young Israel of {n} Heights',
+  "Or Chadash Congregation", 'Congregation Reishis Chochma', 'Congregation Shaar HaShamayim',
+  'Agudath Israel of {n}', 'The {n} Minyan', 'Beit Knesset HaGra', 'Congregation Ohr Shraga',
+];
+
+const SCHOOL_NAMES = [
+  'Hebrew Academy of {n}', 'Torah Day School of {n}', 'Yeshiva of {n}',
+  'Jewish Community Day School', 'Beit Rivkah School', 'Beis Yaakov of {n}',
+  '{n} Jewish Academy', 'Hillel Academy', 'Torah Institute of {n}',
+  'Maimonides Day School', 'Rambam Academy', 'Bnos Beis Yaakov',
+  'Yeshiva Darchei Torah', 'Torah Temimah Elementary', 'Shulamith School',
+  'Ohr Torah Day School', 'Ezra Academy', 'RASG Hebrew Academy',
+];
+
+const YESHIVA_NAMES = [
+  'Yeshivas Ohr Elchonon', 'Mesivta of {n}', 'Yeshiva Gedola of {n}',
+  'Beis Medrash of {n}', 'Kollel Beis HaTalmud', 'Yeshivas Bircas Mordechai',
+  'Zichron Meir Yeshiva', 'Yeshivas Mir {n}', 'Yeshiva Ketana of {n}',
+  'Mesivtha Tifereth Jerusalem', 'Beis HaMidrash of {n}', 'Kollel Torah Mitzion',
+  'Yeshivas Chofetz Chaim', 'Ner Israel of {n}',
+];
+
+const SEMINARY_NAMES = [
+  'Bais Yaakov Seminary of {n}', '{n} Seminary for Women', 'Machon Chaya',
+  'Ateres Bais Yaakov', "Bnos Chava Seminary", 'Torah Academy Seminary',
+  'Beis Leah Seminary', 'Ohr Sarah Seminary',
+];
+
+const ORG_NAMES = [
+  'Jewish Federation of {n}', 'Bikur Cholim of {n}', 'AMIT {n} Chapter',
+  'Hatzalah of {n}', 'Tomchei Shabbos {n}', 'Chabad of {n}',
+  'Aish HaTorah {n}', 'NCSY {n} Region', 'JCC of {n}',
+  'Friendship Circle of {n}', 'HASC Center', 'Bnei Akiva of {n}',
+  'Emunah of {n}', 'Wizo {n}', 'ORT {n}', 'Jewish Outreach Network {n}',
+];
+
+const SHUL_DESCS = [
+  'A warm and welcoming Orthodox congregation with daily minyanim and engaging shiurim for all levels.',
+  'Vibrant Modern Orthodox shul fostering a strong sense of community through Torah learning and chesed.',
+  'Traditional congregation serving the community with Shabbat programming, youth groups, and adult education.',
+  'Close-knit kehilla with a focus on joyful, meaningful tefillah and strong social connections.',
+  'Dynamic shul with diverse membership offering everything from beginner classes to advanced chavrusos.',
+  'Established congregation providing spiritual leadership and community programming for over 50 years.',
+  'Progressive Orthodox community blending traditional davening with modern relevance and inclusivity.',
+  'Family-oriented shul with active Shabbos youth program, weeknight shiurim, and holiday events.',
+  'A spiritual home built on Torah values with an emphasis on warmth, growth, and community involvement.',
+  'Sephardic congregation maintaining rich minhagim while creating meaningful modern Jewish experiences.',
+];
+
+const SCHOOL_DESCS = [
+  'Providing students with a dual-curriculum education combining rigorous Torah studies and academic excellence.',
+  'Nurturing the whole child through Jewish values, strong secular academics, and extracurricular enrichment.',
+  'A coeducational Jewish day school preparing students for lives of Torah observance and professional success.',
+  'Dedicated to developing future Jewish leaders through integrated religious and general studies.',
+  'Girls school committed to bnos Yisroel development through Torah, midot, and academic achievement.',
+  'Building strong Jewish identity alongside a college-prep curriculum that opens doors to top universities.',
+];
+
+const YESHIVA_DESCS = [
+  'Advanced Torah learning program for post-high school students in a warm and structured beit midrash environment.',
+  'Kollel dedicated to in-depth Talmud study and halacha with a community outreach component.',
+  'Mesivta combining intensive limudei kodesh with a strong secular program preparing students for higher education.',
+  'Elite yeshiva gedola where serious bochurim can reach their potential in Torah scholarship.',
+];
+
+const SEMINARY_DESCS = [
+  'Year-in-Israel program helping young women deepen their connection to Torah, mitzvot, and Jewish identity.',
+  'Comprehensive seminary experience combining halacha, Jewish philosophy, and practical life skills.',
+  'Inspiring post-high school program for young women through meaningful Torah learning and character development.',
+];
+
+const ORG_DESCS = [
+  'Providing essential social services, food assistance, and community support to Jewish families in need.',
+  'Connecting Jewish youth to their heritage through engaging programming, travel, and leadership development.',
+  'Chesed organization dedicated to supporting the sick, elderly, and vulnerable members of our community.',
+  'Building vibrant Jewish life through educational programs, cultural events, and community advocacy.',
+  'Outreach organization bringing Jews of all backgrounds closer to their heritage with warmth and no judgment.',
+  'Community resource center offering counseling, financial assistance, and social programming year-round.',
+];
+
+const UPCOMING_EVENTS = [
+  { title: 'Shabbaton Weekend', body: 'Join us for a community Shabbaton with special guests, inspiring davening, and delicious meals. All are welcome!' },
+  { title: 'Guest Speaker: Rabbi Yisroel Reisman', body: 'A special shiur on contemporary halacha questions. Light refreshments will be served.' },
+  { title: 'Annual Chesed Drive', body: 'Help us collect food and clothing for families in need. Drop-off locations available throughout the week.' },
+  { title: 'Youth Shabbos Program', body: 'Exciting activities, divrei Torah, and prizes for kids ages 5–12 this Shabbos morning.' },
+  { title: 'Melave Malka & Kumzits', body: 'End Shabbos beautifully with live music, singing, and a warm atmosphere. Motzei Shabbos at 9pm.' },
+  { title: 'Annual Dinner & Gala', body: 'Celebrate our community\'s achievements at our annual fundraising dinner. Formal attire requested.' },
+  { title: 'Learning Together: Siyum HaShas', body: 'Join us as we complete a mesechta together and celebrate Jewish learning with the whole community.' },
+  { title: 'Women\'s Morning Shiur', body: 'Weekly Torah class for women covering parsha, halacha, and Jewish philosophy. Coffee and refreshments provided.' },
+  { title: 'Teen Volunteers Recruitment', body: 'High school students: join our volunteer program and earn community service hours while making a difference.' },
+  { title: 'Summer Camp Fair', body: 'Meet representatives from top Jewish summer camps and find the perfect program for your children.' },
+  { title: 'Purim Carnival & Seudah', body: 'Family-friendly Purim celebration with games, costumes, prizes, and a community seudah.' },
+  { title: 'Sukkos Lulav & Etrog Sale', body: 'Premium species available. Pre-order for the best selection. Delivery options available.' },
+];
+
+const SAMPLE_POSTS = [
+  { title: 'Weekly Bulletin', body: 'This week\'s davening schedule: Shacharis 7:00am & 8:30am | Mincha 1:15pm | Maariv 8:45pm. Shabbos candle lighting at the listed time on your local calendar.' },
+  { title: 'Upcoming Shiur', body: 'Join us Tuesday evenings at 8:30pm for an in-depth halacha shiur. All levels welcome. Light refreshments served.' },
+  { title: 'Community Announcement', body: 'We are pleased to welcome a new family to our kehilla. Please join us in making them feel at home.' },
+  { title: 'Volunteer Opportunity', body: 'We need volunteers for our weekly Bikur Cholim and Tomchei Shabbos programs. Please reach out to the office.' },
+  { title: 'Youth Program Update', body: 'Registration is now open for our youth groups. Spaces are limited — sign up early to secure your child\'s spot.' },
+  { title: 'Mazal Tov!', body: 'Mazal tov to our community members on their simchos! May they share many happy occasions with us.' },
+];
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function makeName(templates, neighborhood) {
+  const tpl = pick(templates);
+  return tpl.replace('{n}', neighborhood);
+}
+
+function futureDate(daysAhead) {
+  const d = new Date();
+  d.setDate(d.getDate() + daysAhead);
+  return d.toISOString().split('T')[0];
+}
+
+// ─── HANDLER ─────────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
     if (user?.role !== 'admin') {
-      return Response.json({ error: 'Forbidden: Admin only' }, { status: 403 });
+      return Response.json({ error: 'Admin only' }, { status: 403 });
     }
 
-    // Check existing
-    const existing = await base44.asServiceRole.entities.Community.list('-created_date', 200);
-    const existingNames = new Set(existing.map(c => c.name));
+    const body = await req.json().catch(() => ({}));
+    const volumeCommunities = body.volumeCommunities || 200;
+    const volumePostsPerCommunity = body.volumePostsPerCommunity || 3;
+    const volumeEventsPerCommunity = body.volumeEventsPerCommunity || 2;
+    const clearSeeded = body.clearSeeded || false;
 
-    let count = 0;
-    for (const entry of FIVE_TOWNS_COMMUNITIES) {
-      if (!existingNames.has(entry.name)) {
-        await base44.asServiceRole.entities.Community.create({
-          ...entry,
-          is_claimed: false,
-          follower_count: 0,
-          is_featured: false
-        });
-        count++;
+    // Optional: clear previous seeded data
+    if (clearSeeded) {
+      const existing = await base44.asServiceRole.entities.Community.list('-created_date', 2000);
+      const seeded = existing.filter(c => c.is_seeded);
+      for (const c of seeded) {
+        await base44.asServiceRole.entities.Community.delete(c.id);
       }
     }
 
-    return Response.json({ ok: true, count, skipped: FIVE_TOWNS_COMMUNITIES.length - count });
-  } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    // Check what already exists to avoid dupes
+    const existingCommunities = await base44.asServiceRole.entities.Community.list('-created_date', 2000);
+    const existingNames = new Set(existingCommunities.map(c => c.name));
+
+    const createdCommunities = [];
+    let commCount = 0;
+
+    // Generate communities across cities
+    for (const { city, neighborhoods } of CITIES) {
+      if (commCount >= volumeCommunities) break;
+
+      for (const neighborhood of neighborhoods) {
+        if (commCount >= volumeCommunities) break;
+
+        // Generate a mix of types per neighborhood
+        const entries = [
+          { names: SHUL_NAMES, type: 'Shul', descs: SHUL_DESCS, count: randInt(2, 5) },
+          { names: SCHOOL_NAMES, type: 'School', descs: SCHOOL_DESCS, count: randInt(1, 2) },
+          { names: YESHIVA_NAMES, type: 'Yeshiva', descs: YESHIVA_DESCS, count: randInt(0, 2) },
+          { names: SEMINARY_NAMES, type: 'Seminary', descs: SEMINARY_DESCS, count: randInt(0, 1) },
+          { names: ORG_NAMES, type: 'Other', descs: ORG_DESCS, count: randInt(1, 3) },
+        ];
+
+        for (const { names, type, descs, count } of entries) {
+          for (let i = 0; i < count; i++) {
+            if (commCount >= volumeCommunities) break;
+            const name = makeName(names, neighborhood);
+            const uniqueName = existingNames.has(name) ? `${name} (${city})` : name;
+            if (existingNames.has(uniqueName)) continue;
+            existingNames.add(uniqueName);
+
+            const community = await base44.asServiceRole.entities.Community.create({
+              name: uniqueName,
+              type,
+              neighborhood,
+              address: `${neighborhood}, ${city}`,
+              description_short: pick(descs),
+              is_claimed: false,
+              is_featured: false,
+              is_seeded: true,
+              follower_count: randInt(40, 1200),
+            });
+
+            createdCommunities.push(community);
+            commCount++;
+          }
+        }
+      }
+    }
+
+    // Seed posts + events per community
+    let postCount = 0;
+    let eventCount = 0;
+
+    for (const community of createdCommunities) {
+      // Posts
+      const numPosts = Math.min(volumePostsPerCommunity, randInt(1, 6));
+      for (let i = 0; i < numPosts; i++) {
+        const post = pick(SAMPLE_POSTS);
+        await base44.asServiceRole.entities.CommunityPost.create({
+          community_id: community.id,
+          author_user_id: 'seeded',
+          author_name: community.name,
+          is_official: true,
+          type: 'announcement',
+          title: post.title,
+          body: post.body,
+          is_seeded: true,
+        });
+        postCount++;
+      }
+
+      // Events
+      const numEvents = Math.min(volumeEventsPerCommunity, randInt(1, 4));
+      for (let i = 0; i < numEvents; i++) {
+        const evt = pick(UPCOMING_EVENTS);
+        await base44.asServiceRole.entities.CommunityPost.create({
+          community_id: community.id,
+          author_user_id: 'seeded',
+          author_name: community.name,
+          is_official: true,
+          type: 'event',
+          title: evt.title,
+          body: evt.body,
+          event_date: futureDate(randInt(3, 90)),
+          event_time: `${randInt(6, 9)}:00 PM`,
+          is_seeded: true,
+        });
+        eventCount++;
+      }
+    }
+
+    return Response.json({
+      ok: true,
+      communities_created: commCount,
+      posts_created: postCount,
+      events_created: eventCount,
+    });
+  } catch (err) {
+    return Response.json({ error: err.message }, { status: 500 });
   }
 });
