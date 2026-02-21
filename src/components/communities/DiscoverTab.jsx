@@ -106,21 +106,21 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
   }, [communities, search, activeFilter]);
 
   const trending = useMemo(() =>
-    [...communities].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0)).slice(0, 8),
-    [communities]
+    [...baseCommunities].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0)).slice(0, 8),
+    [baseCommunities]
   );
 
   const newThisWeek = useMemo(() => {
     const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    return communities
+    return baseCommunities
       .filter(c => c.created_date >= cutoff)
       .sort((a, b) => b.created_date?.localeCompare(a.created_date))
       .slice(0, 6);
-  }, [communities]);
+  }, [baseCommunities]);
 
   const allSorted = useMemo(() =>
-    [...communities].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0)),
-    [communities]
+    [...baseCommunities].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0)),
+    [baseCommunities]
   );
 
   const allVisible = allSorted.slice(0, allPage * PAGE_SIZE);
