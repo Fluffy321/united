@@ -175,6 +175,40 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
           </div>
         )}
 
+        {/* Info Tab */}
+        {tab === 'info' && (
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs font-semibold text-slate-600 mb-1 block">Website</Label>
+              <Input value={infoWebsite} onChange={e => setInfoWebsite(e.target.value)} placeholder="e.g. myshul.org" />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-slate-600 mb-1 block">Phone</Label>
+              <Input value={infoPhone} onChange={e => setInfoPhone(e.target.value)} placeholder="e.g. (516) 555-1234" />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-slate-600 mb-1 block">Address</Label>
+              <Input value={infoAddress} onChange={e => setInfoAddress(e.target.value)} placeholder="e.g. 123 Main St, Cedarhurst, NY 11516" />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-slate-600 mb-1 block">Hours</Label>
+              <Input value={infoHours} onChange={e => setInfoHours(e.target.value)} placeholder="e.g. Mon–Thu 9am–5pm, Fri 9am–1pm" />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-slate-600 mb-1 block">Short Description <span className="text-slate-400 font-normal">(shown in cards, 1–2 sentences)</span></Label>
+              <Textarea value={infoDescShort} onChange={e => setInfoDescShort(e.target.value)} placeholder="Brief overview of your community..." className="resize-none" rows={3} maxLength={280} />
+              <p className="text-[10px] text-slate-400 mt-1 text-right">{infoDescShort.length}/280</p>
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-slate-600 mb-1 block">Full Description <span className="text-slate-400 font-normal">(optional, shown on About tab)</span></Label>
+              <Textarea value={infoDescLong} onChange={e => setInfoDescLong(e.target.value)} placeholder="More detailed info about your community, programs, mission, etc." className="resize-none" rows={5} />
+            </div>
+            <Button className="w-full bg-[#0F5ED7] hover:bg-[#0D4EB8]" onClick={handleSaveInfo} disabled={savingInfo}>
+              {savingInfo ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-1" />Save Info</>}
+            </Button>
+          </div>
+        )}
+
         {/* Logo Tab */}
         {tab === 'logo' && (
           <div className="space-y-4">
