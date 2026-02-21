@@ -74,16 +74,16 @@ export default function CommunityDetailHeader({ community, isFollowing, isAdmin,
         </div>
       </div>
 
-      {/* Contact links — only if present */}
+      {/* Quick contact pills */}
       {(community.address || community.phone || community.website) && (
         <div className="px-4 pb-3 flex flex-wrap gap-2">
           {community.address && (
             <a
               href={`https://maps.google.com/?q=${encodeURIComponent(community.address)}`}
               target="_blank" rel="noreferrer"
-              className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 hover:bg-slate-100"
+              className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 hover:bg-slate-100 max-w-[180px] truncate"
             >
-              <MapPin className="w-3 h-3" />{community.address}
+              <MapPin className="w-3 h-3 flex-shrink-0" /><span className="truncate">{community.address}</span>
             </a>
           )}
           {community.phone && (
@@ -94,7 +94,7 @@ export default function CommunityDetailHeader({ community, isFollowing, isAdmin,
             </a>
           )}
           {community.website && (
-            <a href={community.website} target="_blank" rel="noreferrer"
+            <a href={community.website.startsWith('http') ? community.website : `https://${community.website}`} target="_blank" rel="noreferrer"
               className="flex items-center gap-1 text-xs text-[#0F5ED7] bg-[#E6F0FF] rounded-lg px-2.5 py-1 hover:bg-[#D0E4FF]"
             >
               <Globe className="w-3 h-3" />Website
