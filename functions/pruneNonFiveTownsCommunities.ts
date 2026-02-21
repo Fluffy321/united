@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const FIVE_TOWNS = ['Lawrence', 'Cedarhurst', 'Woodmere', 'Inwood', 'Hewlett'];
+const FIVE_TOWNS = new Set(['Lawrence', 'Cedarhurst', 'Woodmere', 'Inwood', 'Hewlett']);
 
 Deno.serve(async (req) => {
   try {
@@ -10,30 +10,30 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Admin only' }, { status: 403 });
     }
 
-    const all = await base44.asServiceRole.entities.Community.list('-created_date', 5000);
+    // Fetch all communities
+    const all = await base44.asServiceRole.entities.Community.list('-created_date', 3000);
+    console.log(`[pruneFT] Total fetched: ${all.length}`);
 
-    // Only delete seeded + unclaimed communities NOT in Five Towns
-    const toDelete = all.filter(c => {
-      if (!c.is_seeded) return false;
-      if (c.is_claimed) return false;
-      return !FIVE_TOWNS.includes(c.neighborhood);
-    });
+    // Safe delete: seeded + unclaimed + neighborhood NOT in Five Towns
+    const toDelete = all.filter(c =>
+      c.is_seeded === true &&
+      c.is_claimed === false &&
+      !FIVE_TOWNS.has(c.neighborhood)
+    );
 
-    console.log(`[prune] Found ${toDelete.length} non-Five Towns seeded communities to delete`);
+    console.log(`[pruneFT] To delete: ${toDelete.length}`);
 
-    // Delete in parallel batches of 20
-    const BATCH = 20;
-    for (let i = 0; i < toDelete.length; i += BATCH) {
-      await Promise.all(toDelete.slice(i, i + BATCH).map(c =>
+    const CHUNK = 20;
+    for (let i = 0; i < toDelete.length; i += CHUNK) {
+      await Promise.all(toDelete.slice(i, i + CHUNK).map(c =>
         base44.asServiceRole.entities.Community.delete(c.id)
       ));
     }
 
-    console.log(`[prune] Deleted ${toDelete.length} communities.`);
-
+    console.log(`[pruneFT] Done. Deleted ${toDelete.length}`);
     return Response.json({ ok: true, deletedCount: toDelete.length });
   } catch (err) {
-    console.error('[prune] ERROR:', err.message);
+    console.error('[pruneFT] ERROR:', err.message);
     return Response.json({ error: err.message }, { status: 500 });
   }
 });
