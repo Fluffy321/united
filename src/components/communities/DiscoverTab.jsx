@@ -8,7 +8,8 @@ import CommunityLogo from './CommunityLogo';
 
 const FILTERS = ['All', 'Shuls', 'Schools', 'Yeshivas', 'Organizations'];
 const FILTER_MAP = { 'All': null, 'Shuls': 'Shul', 'Schools': 'School', 'Yeshivas': 'Yeshiva', 'Organizations': 'Other' };
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 100;
+const FIVE_TOWNS = ['Lawrence', 'Cedarhurst', 'Woodmere', 'Inwood', 'Hewlett'];
 
 export default function DiscoverTab({ communities, isLoading, currentUser, joinedIds, onJoinChange, onViewCommunity, onSeedDone }) {
   const [search, setSearch] = useState('');
