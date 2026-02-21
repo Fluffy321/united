@@ -124,17 +124,27 @@ Deno.serve(async (req) => {
 
     console.log(`[seedFT] Inserting ${toCreate.length} Five Towns communities in parallel…`);
 
-    // 3. Insert in parallel batches of 20
+    // 4. Insert in parallel batches of 20
     const BATCH = 20;
-    let created = 0;
+    let insertedCount = 0;
     for (let i = 0; i < toCreate.length; i += BATCH) {
       const batch = toCreate.slice(i, i + BATCH);
       await Promise.all(batch.map(c => base44.asServiceRole.entities.Community.create(c)));
-      created += batch.length;
+      insertedCount += batch.length;
     }
 
-    console.log(`[seedFT] Done. Inserted ${created} communities.`);
-    return Response.json({ ok: true, communities_created: created });
+    // 5. Count after
+    const allAfter = await base44.asServiceRole.entities.Community.list('-created_date', 5000);
+    const totalCommunitiesAfter = allAfter.length;
+
+    console.log(`[seedFT] Done. before=${totalCommunitiesBefore} inserted=${insertedCount} after=${totalCommunitiesAfter}`);
+    return Response.json({
+      ok: true,
+      communities_created: insertedCount,
+      totalCommunitiesBefore,
+      insertedCount,
+      totalCommunitiesAfter,
+    });
   } catch (err) {
     console.error('[seedFT] ERROR:', err.message);
     return Response.json({ error: err.message }, { status: 500 });
