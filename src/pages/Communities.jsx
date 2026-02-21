@@ -20,9 +20,9 @@ export default function Communities() {
     base44.auth.me().then(setCurrentUser);
   }, []);
 
-  const { data: communities = [], isLoading: communitiesLoading } = useQuery({
+  const { data: communities = [], isLoading: communitiesLoading, refetch: refetchCommunities } = useQuery({
     queryKey: ['communities-list'],
-    queryFn: () => base44.entities.Community.list('-created_date', 100),
+    queryFn: () => base44.entities.Community.list('-follower_count', 2000),
     enabled: !!currentUser,
     staleTime: 300000,
     refetchOnWindowFocus: false,
@@ -64,6 +64,11 @@ export default function Communities() {
   const handleJoinChange = () => {
     refetchMemberships();
     queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+  };
+
+  const handleSeedDone = () => {
+    refetchCommunities();
+    refetchMemberships();
   };
 
   return (
@@ -120,6 +125,7 @@ export default function Communities() {
                   joinedIds={joinedIds}
                   onJoinChange={handleJoinChange}
                   onViewCommunity={setSelectedCommunityId}
+                  onSeedDone={handleSeedDone}
                 />
               </div>
             </motion.div>
