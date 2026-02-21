@@ -64,10 +64,15 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
   const handleRunSeed = async () => {
     setSeeding(true);
     setSeedResult(null);
+    setSearch('');
+    setActiveFilter('All');
+    setShowAll(false);
+    setAllPage(1);
     try {
       const res = await base44.functions.invoke('seedFiveTownsCommunities', {});
-      setSeedResult(res.data);
-      toast.success(`Inserted ${res.data?.communities_created ?? 0} Five Towns communities`);
+      const d = res.data;
+      setSeedResult(d);
+      toast.success(`Inserted ${d?.insertedCount ?? 0} · Total now ${d?.totalCommunitiesAfter ?? '?'}`);
       queryClient.removeQueries({ queryKey: ['communities-list'] });
       if (onSeedDone) onSeedDone();
     } catch (e) {
