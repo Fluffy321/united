@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Loader2, CheckCircle2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import CommunityLogo from './CommunityLogo';
 
 export default function ClaimModal({ open, onOpenChange, community, currentUser }) {
   const [name, setName]   = useState(currentUser?.display_name || currentUser?.full_name || '');
@@ -16,6 +17,23 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
   const [proof, setProof] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(community?.logo_url || null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const fileRef = useRef(null);
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setLogoUrl(file_url);
+      toast.success('Logo ready!');
+    } catch {
+      toast.error('Upload failed');
+    }
+    setLogoUploading(false);
+  };
 
   const handleSubmit = async () => {
     if (!name.trim() || !email.trim() || !role.trim()) {
@@ -33,6 +51,13 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
       proof_text_or_link: proof.trim() || undefined,
       status: 'PENDING'
     });
+    // If they uploaded a logo, save it immediately
+    if (logoUrl && logoUrl !== community?.logo_url) {
+      await base44.entities.Community.update(community.id, {
+        logo_url: logoUrl,
+        logo_source: 'UPLOADED',
+      });
+    }
     setSubmitting(false);
     setDone(true);
   };
@@ -63,6 +88,22 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Logo upload step */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center gap-3">
+              <CommunityLogo community={{ ...community, logo_url: logoUrl }} size="md" />
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-slate-700 mb-1">Upload your logo <span className="text-slate-400 font-normal">(optional)</span></p>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={logoUploading}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-[#0F5ED7] bg-[#EEF4FF] px-3 py-1.5 rounded-lg"
+                >
+                  {logoUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                  {logoUploading ? 'Uploading…' : logoUrl ? 'Change logo' : 'Upload logo'}
+                </button>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Your Name *</Label>
