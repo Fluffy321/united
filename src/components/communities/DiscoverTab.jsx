@@ -147,23 +147,49 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
     <div className="pt-4 pb-28">
       {/* Admin seed button */}
       {isAdmin && (
-        <div className="px-4 mb-4">
+        <div className="px-4 mb-4 space-y-2">
+          {/* Seed row */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-semibold text-slate-700">Admin: Seed Directory</p>
-              <p className="text-[11px] text-slate-400">Populate 1,500 communities instantly</p>
+              <p className="text-[11px] text-slate-400">Insert 500 Five Towns communities</p>
             </div>
             <button
               onClick={handleRunSeed}
-              disabled={seeding}
+              disabled={seeding || pruning}
               className="flex items-center gap-1.5 text-xs font-semibold bg-[#0F5ED7] text-white px-3 py-1.5 rounded-lg disabled:opacity-60"
             >
               {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               {seeding ? 'Seeding…' : 'Run Seed'}
             </button>
           </div>
+          {/* Prune row */}
+          <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold text-red-700">Prune Non–Five Towns</p>
+              <p className="text-[11px] text-red-400">Delete seeded communities outside Five Towns</p>
+            </div>
+            <button
+              onClick={handlePrune}
+              disabled={pruning || seeding}
+              className="flex items-center gap-1.5 text-xs font-semibold bg-red-600 text-white px-3 py-1.5 rounded-lg disabled:opacity-60"
+            >
+              {pruning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+              {pruning ? 'Pruning…' : 'Prune'}
+            </button>
+          </div>
+          {/* Global toggle */}
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[11px] text-slate-400">Show global communities (admin only)</span>
+            <button
+              onClick={() => setShowGlobal(g => !g)}
+              className={`relative w-9 h-5 rounded-full transition-colors ${showGlobal ? 'bg-[#0F5ED7]' : 'bg-slate-300'}`}
+            >
+              <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${showGlobal ? 'left-4' : 'left-0.5'}`} />
+            </button>
+          </div>
           {seedResult && (
-            <div className="mt-2 flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+            <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
               <CheckCircle2 className="w-3.5 h-3.5" />
               {seedResult.communities_created} communities · {seedResult.posts_created} posts · {seedResult.events_created} events added
             </div>
