@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Loader2, Plus, Sparkles, Bell, Pin, BarChart2, Users, FileText } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Loader2, Plus, Sparkles, Bell, Pin, BarChart2, Users, FileText, Upload, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import CommunityLogo from './CommunityLogo';
 
 const PREMIUM_FEATURES = [
   { icon: Bell, label: 'Push Notifications', desc: 'Notify all followers instantly' },
@@ -17,7 +18,7 @@ const PREMIUM_FEATURES = [
   { icon: Sparkles, label: 'Featured Placement', desc: 'Highlighted in the directory' },
 ];
 
-export default function AdminToolsPanel({ community, org, currentUser, onPostCreated }) {
+export default function AdminToolsPanel({ community, org, currentUser, onPostCreated, onLogoUpdated }) {
   const [tab, setTab] = useState('posts');
   const [postTitle, setPostTitle] = useState('');
   const [postBody, setPostBody] = useState('');
@@ -26,8 +27,30 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
   const [eventTime, setEventTime] = useState('');
   const [eventLocation, setEventLocation] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoPreview, setLogoPreview] = useState(community?.logo_url || null);
+  const fileInputRef = useRef(null);
 
   const isPremium = org?.plan === 'PREMIUM';
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      await base44.entities.Community.update(community.id, {
+        logo_url: file_url,
+        logo_source: 'UPLOADED',
+      });
+      setLogoPreview(file_url);
+      toast.success('Logo updated!');
+      onLogoUpdated?.();
+    } catch {
+      toast.error('Upload failed');
+    }
+    setLogoUploading(false);
+  };
 
   const handleCreatePost = async () => {
     if (!postBody.trim()) { toast.error('Please write something'); return; }
@@ -55,7 +78,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
   return (
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
       <div className="flex border-b border-slate-100">
-        {['posts', 'events', 'premium'].map(t => (
+        {['posts', 'events', 'logo', 'premium'].map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -125,6 +148,36 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Event'}
             </Button>
+          </div>
+        )}
+
+        {/* Logo Tab */}
+        {tab === 'logo' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <CommunityLogo community={{ ...community, logo_url: logoPreview }} size="lg" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-slate-800 mb-1">Community Logo</p>
+                <p className="text-xs text-slate-400 mb-3">
+                  {community.logo_source === 'UPLOADED' ? 'Custom uploaded logo' :
+                   community.logo_source === 'AUTO' ? 'Auto-fetched from website' :
+                   'No logo set'}
+                </p>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                <Button
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={logoUploading}
+                  className="bg-[#0F5ED7] hover:bg-[#0D4EB8] text-xs"
+                >
+                  {logoUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Upload className="w-3.5 h-3.5 mr-1" />}
+                  {logoUploading ? 'Uploading…' : 'Upload Logo'}
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-slate-400 bg-slate-50 rounded-lg px-3 py-2">
+              Uploaded logos override any auto-generated ones. Recommended: square PNG or JPG, at least 200×200px.
+            </p>
           </div>
         )}
 
