@@ -81,11 +81,11 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
 
   const isFiltering = search.trim() || activeFilter !== 'All';
 
-  // Base list: only NY unless admin toggles global view
+  // Base list: only Five Towns unless admin toggles global view
   const baseCommunities = useMemo(() =>
     (isAdmin && showGlobal)
       ? communities
-      : communities.filter(isNY),
+      : communities.filter(c => FIVE_TOWNS.has(c.neighborhood)),
     [communities, isAdmin, showGlobal]
   );
 
