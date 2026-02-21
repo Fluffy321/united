@@ -58,6 +58,25 @@ const ORG_NAMES = [
   'Emunah of {n}', 'Wizo {n}', 'ORT {n}', 'Jewish Outreach Network {n}',
 ];
 
+// Real domains whose Clearbit logos are known to resolve, mapped by community name fragment
+const KNOWN_LOGO_DOMAINS = {
+  'Chabad':    'chabad.org',
+  'Aish':      'aish.com',
+  'NCSY':      'ncsy.org',
+  'JCC':       'jcc.org',
+  'Hatzalah':  'hatzalah.org',
+  'HASC':      'hasc.org',
+  'Bnei Akiva':'bneiakiva.org',
+  'ORT':       'ort.org',
+};
+
+function getClearbitLogo(name) {
+  for (const [key, domain] of Object.entries(KNOWN_LOGO_DOMAINS)) {
+    if (name.includes(key)) return `https://logo.clearbit.com/${domain}`;
+  }
+  return null;
+}
+
 const SHUL_DESCS = [
   'A warm and welcoming Orthodox congregation with daily minyanim and engaging shiurim for all levels.',
   'Vibrant Modern Orthodox shul fostering a strong sense of community through Torah learning and chesed.',
