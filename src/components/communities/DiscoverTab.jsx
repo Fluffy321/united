@@ -50,8 +50,8 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
   const handlePrune = async () => {
     setPruning(true);
     try {
-      const res = await base44.functions.invoke('pruneNonNYCommunities', {});
-      toast.success(`Deleted ${res.data?.deletedCount ?? 0} non-NY seeded communities`);
+      const res = await base44.functions.invoke('pruneNonFiveTownsCommunities', {});
+      toast.success(`Deleted ${res.data?.deletedCount ?? 0} non–Five Towns seeded communities`);
       queryClient.removeQueries({ queryKey: ['communities-list'] });
       if (onSeedDone) onSeedDone();
     } catch (e) {
