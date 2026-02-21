@@ -215,6 +215,7 @@ Deno.serve(async (req) => {
             if (existingNames.has(uniqueName)) continue;
             existingNames.add(uniqueName);
 
+            const logoUrl = getClearbitLogo(uniqueName);
             const community = await base44.asServiceRole.entities.Community.create({
               name: uniqueName,
               type,
@@ -225,6 +226,7 @@ Deno.serve(async (req) => {
               is_featured: false,
               is_seeded: true,
               follower_count: randInt(40, 1200),
+              ...(logoUrl ? { logo_url: logoUrl, logo_source: 'AUTO' } : {}),
             });
 
             createdCommunities.push(community);
