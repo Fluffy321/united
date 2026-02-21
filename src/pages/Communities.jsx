@@ -22,9 +22,9 @@ export default function Communities() {
 
   const { data: communities = [], isLoading: communitiesLoading, refetch: refetchCommunities } = useQuery({
     queryKey: ['communities-list'],
-    queryFn: () => base44.entities.Community.list('-follower_count', 2000),
+    queryFn: () => base44.entities.Community.list('-follower_count', 3000),
     enabled: !!currentUser,
-    staleTime: 300000,
+    staleTime: 0,
     refetchOnWindowFocus: false,
   });
 
