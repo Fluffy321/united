@@ -7,6 +7,7 @@ import CommunityDetailHeader from './CommunityDetailHeader';
 import CommunityPostCard from './CommunityPostCard';
 import ClaimModal from './ClaimModal';
 import AdminToolsPanel from './AdminToolsPanel';
+import BasicInfoSection from './BasicInfoSection';
 
 export default function CommunityDetailView({ communityId, currentUser, onBack }) {
   const [activeTab, setActiveTab] = useState('about');
