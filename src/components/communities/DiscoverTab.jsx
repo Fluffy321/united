@@ -185,8 +185,8 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
           {/* Prune row */}
           <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold text-red-700">Prune Non–Five Towns</p>
-              <p className="text-[11px] text-red-400">Delete seeded communities outside Five Towns</p>
+              <p className="text-xs font-semibold text-red-700">Prune Non‑NY</p>
+              <p className="text-[11px] text-red-400">Delete seeded communities outside New York</p>
             </div>
             <button
               onClick={handlePrune}
