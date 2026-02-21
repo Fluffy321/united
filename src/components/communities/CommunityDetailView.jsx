@@ -140,22 +140,24 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
                 </button>
               </div>
             )}
-            <div className="bg-white rounded-2xl p-4 border border-slate-100">
-              {community.description_short ? (
-                <p className="text-sm text-slate-700 leading-relaxed">{community.description_short}</p>
-              ) : (
-                <p className="text-sm text-slate-400 italic">No description yet.</p>
-              )}
-              {!community.is_claimed && !community.is_seeded && (
-                <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3">
-                  <p className="text-sm font-semibold text-amber-800 mb-1">Is this your organization?</p>
-                  <p className="text-xs text-amber-700 mb-2">Claim this page to update info, post announcements, and more — for free.</p>
-                  <button onClick={() => setShowClaim(true)} className="text-xs font-bold text-[#0F5ED7] underline">
-                    Claim this page →
-                  </button>
-                </div>
-              )}
-            </div>
+
+            <BasicInfoSection community={community} />
+
+            {!community.description_short && !community.description_long && !community.address && !community.phone && !community.website && (
+              <div className="bg-white rounded-2xl p-4 border border-slate-100">
+                <p className="text-sm text-slate-400 italic">No info added yet.</p>
+              </div>
+            )}
+
+            {!community.is_claimed && !community.is_seeded && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                <p className="text-sm font-semibold text-amber-800 mb-1">Is this your organization?</p>
+                <p className="text-xs text-amber-700 mb-2">Claim this page to update info, post announcements, and more — for free.</p>
+                <button onClick={() => setShowClaim(true)} className="text-xs font-bold text-[#0F5ED7] underline">
+                  Claim this page →
+                </button>
+              </div>
+            )}
           </div>
         )}
 
