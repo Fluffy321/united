@@ -418,7 +418,8 @@ export default function Feed() {
           </div>
         ) : isError ? (
           <div
-            className="text-center py-12 bg-white rounded-[14px] border border-[#EAECF0] cursor-pointer"
+            className="text-center py-12 bg-white rounded-[16px] cursor-pointer"
+            style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
             onClick={() => refetchPosts()}
           >
             <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-3">
