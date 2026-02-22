@@ -361,7 +361,7 @@ export default function Feed() {
     <div className="min-h-screen bg-[#F5F7FB]" style={{ scrollBehavior: 'smooth' }}>
 
       {/* Header */}
-      <div className="bg-white sticky top-0 z-20" style={{ borderBottom: '1px solid #EAECF0' }}>
+      <div className="bg-white sticky top-0 z-20" style={{ borderBottom: '1px solid #E8ECF4', boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
         <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
           <span className="font-bold text-[#0F1C2E] text-[16px] tracking-[-0.01em]">
             {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
