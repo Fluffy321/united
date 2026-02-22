@@ -336,8 +336,8 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
           {newThisWeek.length > 0 && (
             <div className="mb-5">
               <div className="flex items-center gap-1.5 mb-3 px-4">
-                <Clock className="w-4 h-4 text-[#0F5ED7]" />
-                <span className="text-sm font-bold text-slate-800">New This Week</span>
+              <Clock className="w-4 h-4 text-[#2563EB]" />
+              <span className="text-[15px] font-bold text-[#0F1C2E]">New This Week</span>
               </div>
               <CardList items={newThisWeek} />
             </div>
