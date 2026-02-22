@@ -429,7 +429,7 @@ export default function Feed() {
             <p className="text-[13px] text-[#2563EB] mt-1 font-semibold">Tap to retry</p>
           </div>
         ) : feedPosts.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-[14px] border border-[#EAECF0]">
+          <div className="text-center py-12 bg-white rounded-[16px]" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
             <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
               <span className="text-2xl">📝</span>
             </div>
