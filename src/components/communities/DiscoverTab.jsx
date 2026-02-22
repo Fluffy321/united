@@ -256,7 +256,7 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
       {isLoading ? (
         <div className="px-4 space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-3.5 flex items-center gap-3" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+            <div key={i} className="bg-white rounded-[16px] p-3.5 flex items-center gap-3" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04)' }}>
               <div className="skeleton w-11 h-11 rounded-xl flex-shrink-0" />
               <div className="flex-1 space-y-2">
                 <div className="skeleton h-3.5 w-36 rounded" />
