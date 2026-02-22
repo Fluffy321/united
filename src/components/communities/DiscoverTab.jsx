@@ -353,7 +353,7 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
               </div>
               <button
                 onClick={() => { setShowAll(true); setAllPage(1); }}
-                className="text-xs font-semibold text-[#0F5ED7]"
+                className="text-[13px] font-semibold text-[#2563EB]"
               >
                 View all →
               </button>
