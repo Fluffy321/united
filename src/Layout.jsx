@@ -66,52 +66,15 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-white">
       <style>{`
-        :root {
-          --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-          --primary-blue: #0F5ED7;
-          --accent-blue: #E6F0FF;
-          --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-          --text-body: #5F6B7A;
-        }
-
-        body {
-          font-family: var(--font-sans);
-          -webkit-font-smoothing: antialiased;
-          background-color: #F8FAFB;
-        }
-
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-
-        .primary-btn {
-          background-color: var(--primary-blue);
-          color: white;
-          font-weight: 600;
-          border-radius: 16px;
-        }
-
-        .primary-btn:hover {
-          background-color: #0D4EB8;
-        }
-
-        .card-modern {
-          background: white;
-          border: none;
-          border-bottom: 1px solid #F0F1F3;
-          border-radius: 0;
-          box-shadow: none;
-        }
-
-        .section-spacing {
-          margin-bottom: 32px;
-        }
-      `}</style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+          body { font-family: 'Inter', system-ui, sans-serif; background: #F7F8FA; -webkit-font-smoothing: antialiased; }
+          .scrollbar-hide::-webkit-scrollbar { display: none; }
+          .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+          @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+          .skeleton { background: linear-gradient(90deg, #F2F4F7 25%, #E9EBF0 50%, #F2F4F7 75%); background-size: 800px 100%; animation: shimmer 1.4s infinite linear; border-radius: 8px; }
+          .tab-fade-in { animation: tabFade 160ms ease both; }
+          @keyframes tabFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        `}</style>
 
       <Toaster position="top-center" richColors />
 

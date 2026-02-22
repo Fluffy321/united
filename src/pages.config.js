@@ -48,6 +48,8 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import AdminModerationQueue from './pages/AdminModerationQueue';
+import AdminSeedControl from './pages/AdminSeedControl';
+import Communities from './pages/Communities';
 import CommunityUpdates from './pages/CommunityUpdates';
 import Feed from './pages/Feed';
 import Messages from './pages/Messages';
@@ -57,13 +59,13 @@ import Organization from './pages/Organization';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import ShulPage from './pages/ShulPage';
-import Communities from './pages/Communities';
-import AdminSeedControl from './pages/AdminSeedControl';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AdminModerationQueue": AdminModerationQueue,
+    "AdminSeedControl": AdminSeedControl,
+    "Communities": Communities,
     "CommunityUpdates": CommunityUpdates,
     "Feed": Feed,
     "Messages": Messages,
@@ -73,8 +75,6 @@ export const PAGES = {
     "Profile": Profile,
     "Settings": Settings,
     "ShulPage": ShulPage,
-    "Communities": Communities,
-    "AdminSeedControl": AdminSeedControl,
 }
 
 export const pagesConfig = {
