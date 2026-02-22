@@ -226,12 +226,13 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
 
       {/* Search */}
       <div className="relative mb-3 px-4">
-        <Search className="absolute left-7 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <Search className="absolute left-7 top-1/2 -translate-y-1/2 w-4 h-4 text-[#98A2B3]" />
         <input
           value={search}
           onChange={e => { setSearch(e.target.value); setShowAll(false); setAllPage(1); }}
-          placeholder="Search by name, city, type…"
-          className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl outline-none focus:border-[#0F5ED7] transition-colors"
+          placeholder="Search communities…"
+          className="w-full pl-9 pr-4 py-2.5 text-[14px] bg-white border border-[#EAECF0] rounded-[12px] outline-none focus:border-[#0F1C2E] transition-colors placeholder:text-[#98A2B3]"
+          style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
         />
       </div>
 
@@ -241,10 +242,10 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
           <button
             key={f}
             onClick={() => { setActiveFilter(f); setShowAll(false); setAllPage(1); }}
-            className={`whitespace-nowrap text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
+            className={`whitespace-nowrap text-[12px] font-semibold px-3.5 py-1.5 rounded-full border transition-all ${
               activeFilter === f
-                ? 'bg-[#0F5ED7] text-white border-[#0F5ED7]'
-                : 'bg-white text-slate-600 border-slate-200'
+                ? 'bg-[#0F1C2E] text-white border-[#0F1C2E]'
+                : 'bg-white text-[#667085] border-[#EAECF0] hover:border-[#D0D5DD]'
             }`}
           >
             {f}
