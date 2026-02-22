@@ -64,7 +64,7 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#F7F8FA]">
       <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
           body { font-family: 'Inter', system-ui, sans-serif; background: #F7F8FA; -webkit-font-smoothing: antialiased; }
