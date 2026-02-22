@@ -341,14 +341,14 @@ export default function MitzvahCircle({ isActive = true }) {
             ))}
           </div>
         ) : requests.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl">
-            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-              <HandHeart className="w-8 h-8 text-slate-400" />
+          <div className="text-center py-14 bg-white rounded-[14px] border border-[#EAECF0]" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+            <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
+              <HandHeart className="w-6 h-6 text-[#98A2B3]" />
             </div>
-            <p className="text-slate-600 font-medium">
+            <p className="text-[15px] font-semibold text-[#0F1C2E]">
               {activeTab === 'open' ? 'No open requests' : 'No completed mitzvahs yet'}
             </p>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-[13px] text-[#98A2B3] mt-1">
               {activeTab === 'open' ? 'Check back soon!' : 'Be the first to help!'}
             </p>
           </div>
