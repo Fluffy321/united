@@ -288,7 +288,7 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
             <div className="px-4 mt-4">
               <button
                 onClick={() => setAllPage(p => p + 1)}
-                className="w-full flex items-center justify-center gap-2 text-[14px] font-semibold text-[#0F1C2E] bg-[#F2F4F7] hover:bg-[#E9EBF0] rounded-full py-2.5 transition-colors"
+                className="w-full flex items-center justify-center gap-2 text-[14px] font-semibold text-[#2563EB] bg-[#E0EDFF] hover:bg-[#cfe0ff] rounded-full py-2.5 transition-colors"
                             >
                               <ChevronDown className="w-4 h-4" /> Load more ({allSorted.length - allVisible.length} remaining)
               </button>
