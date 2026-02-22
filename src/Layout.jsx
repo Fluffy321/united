@@ -109,7 +109,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Bottom Navigation */}
       {!hideNav && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-50" style={{ boxShadow: '0 -1px 3px rgba(0,0,0,0.03)' }}>
+        <nav className="fixed bottom-0 left-0 right-0 bg-white z-50" style={{ boxShadow: '0 -1px 0 #E8ECF4, 0 -4px 16px rgba(15,23,42,0.06)' }}>
           <div className="max-w-2xl mx-auto px-4">
             <div className="flex items-center justify-around">
               {navItems.map((item) => {
