@@ -132,7 +132,7 @@ export default function Layout({ children, currentPageName }) {
                           {isActive && (
                             <motion.div
                               layoutId="navPill"
-                              className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-7 bg-[#0F1C2E]/[0.06] rounded-xl"
+                              className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-7 bg-[#2563EB]/[0.08] rounded-xl"
                               transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                             />
                           )}
