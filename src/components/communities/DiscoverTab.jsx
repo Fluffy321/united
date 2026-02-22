@@ -347,9 +347,9 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
           <div className="mb-5">
             <div className="flex items-center justify-between mb-3 px-4">
               <div className="flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-purple-500" />
-                <span className="text-sm font-bold text-slate-800">All Communities</span>
-                <span className="text-xs text-slate-400">({allSorted.length})</span>
+                <Sparkles className="w-4 h-4 text-violet-500" />
+                <span className="text-[15px] font-bold text-[#0F1C2E]">All Communities</span>
+                <span className="text-[12px] text-[#98A2B3]">({allSorted.length})</span>
               </div>
               <button
                 onClick={() => { setShowAll(true); setAllPage(1); }}
