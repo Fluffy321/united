@@ -111,7 +111,7 @@ export default function Layout({ children, currentPageName }) {
       {!hideNav && (
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-50" style={{ boxShadow: '0 -1px 3px rgba(0,0,0,0.03)' }}>
           <div className="max-w-2xl mx-auto px-4">
-            <div className="flex items-center justify-around gap-2">
+            <div className="flex items-center justify-around">
               {navItems.map((item) => {
                       const isActive = currentPageName === item.page;
                       const Icon = item.icon;
