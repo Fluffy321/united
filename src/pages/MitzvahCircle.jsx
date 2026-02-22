@@ -477,15 +477,16 @@ export default function MitzvahCircle({ isActive = true }) {
           </>
         )}
 
-        {/* Create Button — only visible when Mitzvah tab is active */}
+        {/* Create Button */}
         {isActive && (
-          <Button 
-            size="lg"
-            className="fixed bottom-24 right-6 rounded-full w-14 h-14 shadow-xl bg-indigo-600 hover:bg-indigo-700 z-40"
+          <button
             onClick={() => setShowCreateModal(true)}
+            className="fixed bottom-[80px] right-4 z-30 flex items-center gap-2 bg-[#0F1C2E] text-white text-[14px] font-semibold px-5 py-2.5 rounded-full active:scale-95 transition-all"
+            style={{ boxShadow: '0 4px 14px rgba(15,28,46,0.35)' }}
           >
-            <Plus className="w-6 h-6" />
-          </Button>
+            <Plus className="w-4 h-4" />
+            Request
+          </button>
         )}
       </div>
 
