@@ -15,93 +15,58 @@ const TYPE_COLORS = {
 
 export default function CommunityDetailHeader({ community, isFollowing, isAdmin, onFollow, onClaim, onAdminTools, onBack }) {
   return (
-    <div className="bg-white border-b border-slate-100">
-      {/* Compact top bar: back | logo + name/meta | actions */}
+    <div className="bg-white" style={{ borderBottom: '1px solid #EAECF0' }}>
       <div className="px-4 py-3 flex items-center gap-3">
         <button
           onClick={onBack}
-          className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0"
+          className="w-8 h-8 rounded-full bg-[#F2F4F7] flex items-center justify-center flex-shrink-0 hover:bg-[#E9EBF0] transition-colors"
         >
-          <ArrowLeft className="w-4 h-4 text-slate-700" />
+          <ArrowLeft className="w-4 h-4 text-[#0F1C2E]" />
         </button>
 
-        {/* Logo */}
         <CommunityLogo community={community} size="sm" />
 
-        {/* Name + meta */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1 flex-wrap">
-            <span className="font-bold text-slate-900 text-sm truncate">{community.name}</span>
-            {community.is_claimed && <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />}
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-[#0F1C2E] text-[15px] truncate">{community.name}</span>
+            {community.is_claimed && <CheckCircle2 className="w-3.5 h-3.5 text-[#2563EB] flex-shrink-0" />}
             {community.is_featured && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
-            {community.is_seeded && !community.is_claimed && (
-              <span className="text-[9px] bg-amber-50 text-amber-600 border border-amber-200 px-1 py-0.5 rounded-full font-medium flex-shrink-0">
-                Auto
-              </span>
-            )}
           </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <Badge className={`${TYPE_COLORS[community.type] || TYPE_COLORS.Other} border-0 text-[10px] px-1.5 py-0`}>
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${TYPE_COLORS[community.type] || TYPE_COLORS.Other}`}>
               {community.type}
-            </Badge>
+            </span>
             {community.neighborhood && (
-              <span className="text-[11px] text-slate-400 truncate">{community.neighborhood}</span>
+              <span className="text-[11px] text-[#98A2B3]">{community.neighborhood}</span>
             )}
-            <span className="flex items-center gap-0.5 text-[11px] text-slate-400">
-              <Users className="w-2.5 h-2.5" />{community.follower_count || 0}
+            <span className="flex items-center gap-0.5 text-[11px] text-[#98A2B3]">
+              <Users className="w-2.5 h-2.5" />{(community.follower_count || 0).toLocaleString()}
             </span>
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-1.5 flex-shrink-0">
+        <div className="flex gap-2 flex-shrink-0">
           {isAdmin ? (
-            <Button size="sm" variant="outline" onClick={onAdminTools} className="text-xs h-8 px-2.5">
+            <button onClick={onAdminTools} className="w-8 h-8 flex items-center justify-center rounded-full bg-[#F2F4F7] hover:bg-[#E9EBF0] transition-colors text-sm">
               ⚙️
-            </Button>
+            </button>
           ) : !community.is_claimed ? (
-            <Button size="sm" variant="outline" onClick={onClaim} className="text-xs h-8 px-2.5 border-slate-200 text-slate-600">
+            <button onClick={onClaim} className="h-8 px-3 text-[13px] font-semibold rounded-full bg-[#F2F4F7] text-[#344054] hover:bg-[#E9EBF0] transition-colors">
               Claim
-            </Button>
+            </button>
           ) : null}
-          <Button
-            size="sm"
+          <button
             onClick={onFollow}
-            className={`text-xs h-8 px-3 ${isFollowing ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-[#0F5ED7] text-white hover:bg-[#0D4EB8]'}`}
+            className={`h-8 px-3.5 text-[13px] font-semibold rounded-full transition-colors ${
+              isFollowing
+                ? 'bg-[#F2F4F7] text-[#344054] hover:bg-[#E9EBF0]'
+                : 'bg-[#0F1C2E] text-white hover:bg-[#1e2d42]'
+            }`}
           >
-            {isFollowing ? 'Following' : '+ Follow'}
-          </Button>
+            {isFollowing ? 'Following' : 'Follow'}
+          </button>
         </div>
       </div>
-
-      {/* Quick contact pills */}
-      {(community.address || community.phone || community.website) && (
-        <div className="px-4 pb-3 flex flex-wrap gap-2">
-          {community.address && (
-            <a
-              href={`https://maps.google.com/?q=${encodeURIComponent(community.address)}`}
-              target="_blank" rel="noreferrer"
-              className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 hover:bg-slate-100 max-w-[180px] truncate"
-            >
-              <MapPin className="w-3 h-3 flex-shrink-0" /><span className="truncate">{community.address}</span>
-            </a>
-          )}
-          {community.phone && (
-            <a href={`tel:${community.phone}`}
-              className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 hover:bg-slate-100"
-            >
-              <Phone className="w-3 h-3" />{community.phone}
-            </a>
-          )}
-          {community.website && (
-            <a href={community.website.startsWith('http') ? community.website : `https://${community.website}`} target="_blank" rel="noreferrer"
-              className="flex items-center gap-1 text-xs text-[#0F5ED7] bg-[#E6F0FF] rounded-lg px-2.5 py-1 hover:bg-[#D0E4FF]"
-            >
-              <Globe className="w-3 h-3" />Website
-            </a>
-          )}
-        </div>
-      )}
     </div>
   );
 }
