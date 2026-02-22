@@ -138,11 +138,11 @@ export default function Layout({ children, currentPageName }) {
                           )}
                           <Icon className={`w-5 h-5 relative z-10 transition-all duration-150 ${
                             isActive 
-                              ? 'stroke-[2.5px] text-[#0F1C2E]' 
-                              : 'stroke-[1.75px] text-slate-400'
+                              ? 'stroke-[2.5px] text-[#2563EB]' 
+                              : 'stroke-[1.75px] text-[#6B7280]'
                           }`} />
                           <span className={`text-[10px] mt-1 relative z-10 transition-all duration-150 ${
-                            isActive ? 'font-700 font-bold text-[#0F1C2E]' : 'font-medium text-slate-400'
+                            isActive ? 'font-bold text-[#2563EB]' : 'font-medium text-[#6B7280]'
                           }`}>
                             {item.name}
                           </span>
