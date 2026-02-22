@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Loader2, HandHeart, MapPin, List, Map as MapIcon } from 'lucide-react';
+import { Plus, HandHeart, MapPin, List, Map as MapIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { base44 } from '@/api/base44Client';
