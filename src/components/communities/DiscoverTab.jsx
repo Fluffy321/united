@@ -253,9 +253,17 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center py-12 gap-2">
-          <Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" />
-          <p className="text-xs text-slate-400">Loading {communities.length > 0 ? communities.length : ''} communities…</p>
+        <div className="px-4 space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-3.5 flex items-center gap-3" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+              <div className="skeleton w-11 h-11 rounded-xl flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="skeleton h-3.5 w-36 rounded" />
+                <div className="skeleton h-2.5 w-24 rounded" />
+              </div>
+              <div className="skeleton h-8 w-14 rounded-full flex-shrink-0" />
+            </div>
+          ))}
         </div>
       ) : isFiltering ? (
         /* ── Filtered / search results (all) ── */
