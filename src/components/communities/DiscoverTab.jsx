@@ -316,12 +316,12 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
                       style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
                     >
                       <CommunityLogo community={c} size="md" className="mb-2" />
-                      <p className="font-bold text-xs text-slate-900 line-clamp-2 mb-0.5">{c.name}</p>
-                      <p className="text-[10px] text-slate-400 mb-2">{(c.follower_count || 0).toLocaleString()} members</p>
+                      <p className="font-semibold text-[13px] text-[#0F1C2E] line-clamp-2 mb-0.5">{c.name}</p>
+                      <p className="text-[10px] text-[#98A2B3] mb-2">{(c.follower_count || 0).toLocaleString()} members</p>
                       <button
                         onClick={e => { e.stopPropagation(); handleJoin(e, c); }}
                         disabled={loading}
-                        className={`w-full text-xs h-7 rounded-lg font-semibold transition-colors ${joined ? 'bg-slate-100 text-slate-600' : 'bg-[#0F5ED7] text-white'}`}
+                        className={`w-full text-[12px] h-7 rounded-full font-semibold transition-colors ${joined ? 'bg-[#F2F4F7] text-[#344054]' : 'bg-[#0F1C2E] text-white'}`}
                       >
                         {loading ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : joined ? 'Joined' : 'Join'}
                       </button>
