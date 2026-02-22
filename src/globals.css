@@ -44,7 +44,7 @@ html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--color-bg);
+  background-color: #F5F7FB;
   color: var(--color-text-primary);
   font-size: 15px;
   line-height: 1.5;
