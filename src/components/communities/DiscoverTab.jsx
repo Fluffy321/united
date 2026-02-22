@@ -301,9 +301,9 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
           {trending.length > 0 && (
             <div className="mb-5">
               <div className="flex items-center gap-1.5 mb-3 px-4">
-                <Flame className="w-4 h-4 text-orange-500" />
-                <span className="text-sm font-bold text-slate-800">Trending Near You</span>
-              </div>
+                  <Flame className="w-4 h-4 text-orange-500" />
+                  <span className="text-[15px] font-bold text-[#0F1C2E]">Trending Near You</span>
+                </div>
               <div className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
                 {trending.map(c => {
                   const joined = joinedIds.has(c.id);
