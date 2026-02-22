@@ -59,7 +59,8 @@ export default function FeedCategoryTabs({ activeCategory, onChange }) {
   return (
     <div
       ref={barRef}
-      className="relative flex border-b border-slate-100 bg-white select-none overflow-x-auto scrollbar-hide"
+      className="relative flex bg-white select-none overflow-x-auto scrollbar-hide"
+      style={{ borderBottom: '1px solid #EAECF0' }}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
     >
@@ -69,8 +70,8 @@ export default function FeedCategoryTabs({ activeCategory, onChange }) {
           <button
             key={cat.id}
             onClick={() => onChange(cat.id)}
-            className={`flex-1 py-3 text-sm font-medium transition-colors whitespace-nowrap px-4 ${
-              isActive ? 'text-[#0F5ED7]' : 'text-slate-500'
+            className={`flex-shrink-0 py-2.5 text-[13px] font-semibold transition-colors whitespace-nowrap px-4 ${
+              isActive ? 'text-[#0F1C2E]' : 'text-[#98A2B3]'
             }`}
           >
             <span ref={(el) => { labelRefs.current[cat.id] = el; }}>
@@ -80,10 +81,10 @@ export default function FeedCategoryTabs({ activeCategory, onChange }) {
         );
       })}
 
-      {/* Underline — positioned via transform for smoothness */}
+      {/* Underline indicator */}
       <div
         ref={underlineRef}
-        className="absolute bottom-0 left-0 h-0.5 bg-[#0F5ED7] rounded-full transition-all duration-200 ease-out"
+        className="absolute bottom-0 left-0 h-[2px] bg-[#0F1C2E] rounded-full transition-all duration-180 ease-out"
         style={{ width: 0, transform: 'translateX(0px)' }}
       />
     </div>
