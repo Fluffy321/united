@@ -17,8 +17,8 @@ export default function CommunityListCard({ community, joined, loading, onJoin, 
   return (
     <div
       onClick={() => onView(community.id)}
-      className="bg-white rounded-[14px] border border-[#EAECF0] p-3.5 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
-      style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+      className="bg-white rounded-[16px] p-3.5 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+      style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04)' }}
     >
       <CommunityLogo community={community} size="md" />
 
