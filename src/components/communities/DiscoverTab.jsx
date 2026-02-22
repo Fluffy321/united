@@ -322,7 +322,7 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
                       <button
                         onClick={e => { e.stopPropagation(); handleJoin(e, c); }}
                         disabled={loading}
-                        className={`w-full text-[12px] h-7 rounded-full font-semibold transition-colors ${joined ? 'bg-[#F2F4F7] text-[#344054]' : 'bg-[#0F1C2E] text-white'}`}
+                        className={`w-full text-[12px] h-7 rounded-full font-semibold transition-colors ${joined ? 'bg-[#F0F3F9] text-[#374151]' : 'bg-[#2563EB] text-white hover:bg-[#1d4ed8]'}`}
                       >
                         {loading ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : joined ? 'Joined' : 'Join'}
                       </button>
