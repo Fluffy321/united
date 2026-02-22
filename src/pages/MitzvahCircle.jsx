@@ -326,8 +326,19 @@ export default function MitzvahCircle({ isActive = true }) {
 
         {/* Content */}
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+          <div className="space-y-3 pb-24">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-4" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                <div className="flex items-start gap-3">
+                  <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="skeleton h-3.5 w-40 rounded" />
+                    <div className="skeleton h-3 w-full rounded" />
+                    <div className="skeleton h-3 w-3/4 rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : requests.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl">
