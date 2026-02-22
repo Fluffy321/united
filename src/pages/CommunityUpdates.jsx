@@ -94,199 +94,121 @@ export default function CommunityUpdates() {
     return format(date, 'MMM d');
   };
 
+  const NewsSkeletons = () => (
+    <div className="space-y-3">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-4" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+          <div className="skeleton h-3.5 w-full rounded mb-2" />
+          <div className="skeleton h-3 w-4/5 rounded mb-3" />
+          <div className="skeleton h-2.5 w-28 rounded" />
+        </div>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header Section */}
-      <div className="bg-[#EEF4FF] border-b border-slate-100">
-        <div className="max-w-2xl mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Community Updates</h1>
-          <p className="text-sm" style={{ color: '#5F6B7A' }}>Latest from your community and beyond</p>
+    <div className="min-h-screen bg-[#F7F8FA]">
+      {/* Compact header */}
+      <div className="bg-white sticky top-0 z-10" style={{ borderBottom: '1px solid #EAECF0' }}>
+        <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
+          <span className="font-bold text-[#0F1C2E] text-[16px] tracking-[-0.01em]">Updates</span>
+          <button
+            onClick={handleRefresh}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F2F4F7] transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 text-[#667085] ${fiveTownsLoading || israelLoading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="max-w-2xl mx-auto px-4 pt-4 pb-24">
 
-        {/* Section A: Local Updates */}
-        <div className="mb-8">
-          <h2 className="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Local Updates</h2>
-          
-          {/* Upcoming Events */}
-          {upcomingEvents.length > 0 && (
-            <div className="mb-4">
-              <h3 className="text-xs font-semibold text-slate-600 mb-2">Upcoming Events</h3>
-              <div className="space-y-2">
-                {upcomingEvents.map(event => (
-                  <div 
-                    key={event.id}
-                    className="bg-white rounded-xl p-3 shadow-sm border border-slate-100"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Calendar className="w-5 h-5 text-indigo-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-sm text-slate-900 mb-1">{event.title}</h4>
-                        <div className="flex items-center gap-2 text-xs text-slate-600">
-                          <span className="font-medium">{formatEventDate(event.event_date)}</span>
-                          {event.event_time && (
-                            <>
-                              <span>•</span>
-                              <span>{event.event_time}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+        {/* Upcoming Events */}
+        {upcomingEvents.length > 0 && (
+          <div className="mb-6">
+            <p className="text-[13px] font-bold text-[#98A2B3] uppercase tracking-wider mb-3">Upcoming Events</p>
+            <div className="space-y-2.5">
+              {upcomingEvents.map(event => (
+                <div key={event.id} className="bg-white rounded-[14px] border border-[#EAECF0] p-3.5 flex items-center gap-3" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                  <div className="w-10 h-10 bg-[#EFF6FF] rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-4.5 h-4.5 text-[#2563EB]" />
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Recent Community Posts */}
-          {recentPosts.length > 0 && (
-            <div>
-              <h3 className="text-xs font-semibold text-slate-600 mb-2">Recent Posts</h3>
-              <div className="space-y-2">
-                {recentPosts.slice(0, 3).map(post => (
-                  <div 
-                    key={post.id}
-                    className="bg-white rounded-xl p-3 shadow-sm border border-slate-100"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
-                        <MessageSquare className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-slate-800 line-clamp-2 mb-1">{post.body}</p>
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <span className="font-medium">{post.user_name}</span>
-                          <span>•</span>
-                          <span>{formatDistanceToNow(new Date(post.created_date), { addSuffix: true })}</span>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[14px] text-[#0F1C2E] truncate">{event.title}</p>
+                    <p className="text-[12px] text-[#98A2B3] mt-0.5">
+                      {formatEventDate(event.event_date)}{event.event_time ? ` · ${event.event_time}` : ''}
+                    </p>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-          )}
-        </div>
-
-        {/* Section B: Five Towns Headlines */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">Five Towns News</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => refetchFiveTowns()}
-              disabled={fiveTownsLoading}
-              className="h-7 px-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${fiveTownsLoading ? 'animate-spin' : ''}`} />
-            </Button>
           </div>
+        )}
 
-          {fiveTownsLoading ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7] mb-2" />
-              <p className="text-xs text-slate-500">Loading headlines...</p>
+        {/* Recent Posts */}
+        {recentPosts.length > 0 && (
+          <div className="mb-6">
+            <p className="text-[13px] font-bold text-[#98A2B3] uppercase tracking-wider mb-3">Recent Posts</p>
+            <div className="space-y-2.5">
+              {recentPosts.slice(0, 3).map(post => (
+                <div key={post.id} className="bg-white rounded-[14px] border border-[#EAECF0] p-3.5" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                  <p className="text-[14px] text-[#344054] line-clamp-2 mb-1.5">{post.body}</p>
+                  <p className="text-[12px] text-[#98A2B3]">
+                    <span className="font-medium text-[#667085]">{post.user_name}</span>
+                    {' · '}{formatDistanceToNow(new Date(post.created_date), { addSuffix: true })}
+                  </p>
+                </div>
+              ))}
             </div>
-          ) : fiveTownsError || !fiveTownsData?.ok ? (
-            <RssErrorBlock
-              data={fiveTownsData}
-              onRetry={() => setRetryCount(prev => ({ ...prev, fivetowns: prev.fivetowns + 1 }))}
-            />
+          </div>
+        )}
+
+        {/* Five Towns News */}
+        <div className="mb-6">
+          <p className="text-[13px] font-bold text-[#98A2B3] uppercase tracking-wider mb-3">Five Towns News</p>
+          {fiveTownsLoading ? <NewsSkeletons /> : fiveTownsError || !fiveTownsData?.ok ? (
+            <RssErrorBlock data={fiveTownsData} onRetry={() => setRetryCount(prev => ({ ...prev, fivetowns: prev.fivetowns + 1 }))} />
           ) : !fiveTownsData?.items?.length ? (
-            <div className="text-center py-6 bg-white rounded-xl border border-slate-100">
-              <p className="text-xs text-slate-500">No headlines available</p>
+            <div className="text-center py-6 bg-white rounded-[14px] border border-[#EAECF0]">
+              <p className="text-[13px] text-[#98A2B3]">No headlines available</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {fiveTownsData.items.map((item, index) => (
-                <a
-                  key={index}
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-shadow"
-                >
-                  <h3 className="font-bold text-sm text-slate-900 leading-snug mb-2">
-                    {item.title}
-                  </h3>
-                  
-                  {item.excerpt && (
-                    <p className="text-xs text-slate-600 mb-2 line-clamp-2">
-                      {item.excerpt}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <span className="font-medium">{item.source}</span>
-                    <span>•</span>
-                    <span>{formatDistanceToNow(new Date(item.pubDate), { addSuffix: true })}</span>
-                  </div>
+                <a key={index} href={item.link} target="_blank" rel="noopener noreferrer"
+                  className="block bg-white rounded-[14px] border border-[#EAECF0] p-4 active:scale-[0.99] transition-transform"
+                  style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                  <p className="font-semibold text-[14px] text-[#0F1C2E] leading-snug mb-1.5">{item.title}</p>
+                  {item.excerpt && <p className="text-[13px] text-[#667085] line-clamp-2 mb-2">{item.excerpt}</p>}
+                  <p className="text-[12px] text-[#98A2B3]">
+                    <span className="font-medium">{item.source}</span> · {formatDistanceToNow(new Date(item.pubDate), { addSuffix: true })}
+                  </p>
                 </a>
               ))}
             </div>
           )}
         </div>
 
-        {/* Section C: Israel Headlines */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">Israel News</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => refetchIsrael()}
-              disabled={israelLoading}
-              className="h-7 px-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${israelLoading ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
-
-          {israelLoading ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7] mb-2" />
-              <p className="text-xs text-slate-500">Loading headlines...</p>
-            </div>
-          ) : israelError || !israelData?.ok ? (
-            <RssErrorBlock
-              data={israelData}
-              onRetry={() => setRetryCount(prev => ({ ...prev, israel: prev.israel + 1 }))}
-            />
+        {/* Israel News */}
+        <div className="mb-6">
+          <p className="text-[13px] font-bold text-[#98A2B3] uppercase tracking-wider mb-3">Israel News</p>
+          {israelLoading ? <NewsSkeletons /> : israelError || !israelData?.ok ? (
+            <RssErrorBlock data={israelData} onRetry={() => setRetryCount(prev => ({ ...prev, israel: prev.israel + 1 }))} />
           ) : !israelData?.items?.length ? (
-            <div className="text-center py-6 bg-white rounded-xl border border-slate-100">
-              <p className="text-xs text-slate-500">No headlines available</p>
+            <div className="text-center py-6 bg-white rounded-[14px] border border-[#EAECF0]">
+              <p className="text-[13px] text-[#98A2B3]">No headlines available</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {israelData.items.map((item, index) => (
-                <a
-                  key={index}
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-shadow"
-                >
-                  <h3 className="font-bold text-sm text-slate-900 leading-snug mb-2">
-                    {item.title}
-                  </h3>
-                  
-                  {item.excerpt && (
-                    <p className="text-xs text-slate-600 mb-2 line-clamp-2">
-                      {item.excerpt}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <span className="font-medium">{item.source}</span>
-                    <span>•</span>
-                    <span>{formatDistanceToNow(new Date(item.pubDate), { addSuffix: true })}</span>
-                  </div>
+                <a key={index} href={item.link} target="_blank" rel="noopener noreferrer"
+                  className="block bg-white rounded-[14px] border border-[#EAECF0] p-4 active:scale-[0.99] transition-transform"
+                  style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                  <p className="font-semibold text-[14px] text-[#0F1C2E] leading-snug mb-1.5">{item.title}</p>
+                  {item.excerpt && <p className="text-[13px] text-[#667085] line-clamp-2 mb-2">{item.excerpt}</p>}
+                  <p className="text-[12px] text-[#98A2B3]">
+                    <span className="font-medium">{item.source}</span> · {formatDistanceToNow(new Date(item.pubDate), { addSuffix: true })}
+                  </p>
                 </a>
               ))}
             </div>
