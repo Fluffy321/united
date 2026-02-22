@@ -358,41 +358,36 @@ export default function Feed() {
   })();
 
   return (
-    <div className="min-h-screen bg-[#F8FAFB]" style={{ scrollBehavior: 'smooth' }}>
+    <div className="min-h-screen bg-[#F7F8FA]" style={{ scrollBehavior: 'smooth' }}>
 
-      {/* Minimal Header Bar */}
-      <div className="bg-white border-b border-slate-100 sticky top-0 z-20">
+      {/* Header */}
+      <div className="bg-white sticky top-0 z-20" style={{ borderBottom: '1px solid #EAECF0' }}>
         <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
-          <span className="font-bold text-slate-900 text-base">
-            Today in {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
+          <span className="font-bold text-[#0F1C2E] text-[16px] tracking-[-0.01em]">
+            {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
           </span>
-          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors">
-            <SlidersHorizontal className="w-4 h-4 text-slate-500" />
+          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F2F4F7] transition-colors">
+            <SlidersHorizontal className="w-4 h-4 text-[#667085]" />
           </button>
         </div>
-
-        {/* Sticky Category Tabs — directly below header */}
         <div className="max-w-2xl mx-auto">
           <FeedCategoryTabs activeCategory={activeCategory} onChange={setActiveCategory} />
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 pt-4">
-
-
-
-        {/* Pinned widgets — always at top, only on "All" tab */}
+        {/* Pinned widgets — only on "All" tab */}
         {activeCategory === 'all' && (
-          <div className="space-y-4 mb-4">
+          <div className="space-y-3 mb-4">
             {userStreak && (
-              <div className="bg-[#EEF4FF] rounded-2xl px-4 py-5">
-                <p className="text-xs font-bold text-[#0F5ED7] uppercase tracking-wide mb-3">Your Daily Mitzvah</p>
+              <div className="bg-gradient-to-br from-[#0F1C2E] to-[#1e3a5f] rounded-[14px] px-4 py-4">
+                <p className="text-[11px] font-bold text-white/50 uppercase tracking-widest mb-3">Your Daily Mitzvah</p>
                 <StreakBanner
                   streak={userStreak}
                   todayCount={todayMitzvahCount}
                   onLogMitzvah={() => setShowLogMitzvah(true)}
                 />
-                <div className="mt-2">
+                <div className="mt-2.5">
                   <StreakProgress todayCount={todayMitzvahCount} streak={userStreak} />
                 </div>
               </div>
@@ -404,44 +399,58 @@ export default function Feed() {
         )}
 
         {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-            </div>
-          ) : isError ? (
-            <div
-              className="text-center py-12 bg-white rounded-2xl cursor-pointer"
-              onClick={() => refetchPosts()}
-            >
-              <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">⚠️</span>
+          <div className="space-y-3 pb-24">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-4" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="skeleton w-8 h-8 rounded-full" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="skeleton h-3 w-24 rounded" />
+                    <div className="skeleton h-2.5 w-16 rounded" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="skeleton h-3 w-full rounded" />
+                  <div className="skeleton h-3 w-4/5 rounded" />
+                </div>
               </div>
-              <p className="text-slate-700 font-medium">Feed failed to load</p>
-              <p className="text-sm text-[#0F5ED7] mt-1 font-semibold">Tap to retry</p>
+            ))}
+          </div>
+        ) : isError ? (
+          <div
+            className="text-center py-12 bg-white rounded-[14px] border border-[#EAECF0] cursor-pointer"
+            onClick={() => refetchPosts()}
+          >
+            <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-3">
+              <span className="text-2xl">⚠️</span>
             </div>
-          ) : feedPosts.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-2xl">
-              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">📝</span>
-              </div>
-              <p className="text-slate-600 font-medium">No posts yet</p>
-              <p className="text-sm text-slate-400 mt-1">Be the first to share something!</p>
+            <p className="text-[#0F1C2E] font-semibold text-[15px]">Feed failed to load</p>
+            <p className="text-[13px] text-[#2563EB] mt-1 font-semibold">Tap to retry</p>
+          </div>
+        ) : feedPosts.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-[14px] border border-[#EAECF0]">
+            <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
+              <span className="text-2xl">📝</span>
             </div>
-          ) : (
-            <div className="space-y-3 pb-24">
-              {feedPosts.map((post) => (
-                <UnifiedPostCard
-                  key={post.id}
-                  post={post}
-                  currentUser={currentUser}
-                  liked={userLikes.includes(post.id)}
-                  onLike={handleLike}
-                  onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
-                  onDelete={(id) => deleteMutation.mutate(id)}
-                  onReport={handleReport}
-                />
-              ))}
-            </div>
-          )}
+            <p className="text-[#0F1C2E] font-semibold text-[15px]">No posts yet</p>
+            <p className="text-[13px] text-[#98A2B3] mt-1">Be the first to share something!</p>
+          </div>
+        ) : (
+          <div className="space-y-2.5 pb-24">
+            {feedPosts.map((post) => (
+              <UnifiedPostCard
+                key={post.id}
+                post={post}
+                currentUser={currentUser}
+                liked={userLikes.includes(post.id)}
+                onLike={handleLike}
+                onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
+                onDelete={(id) => deleteMutation.mutate(id)}
+                onReport={handleReport}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <UnifiedPostModal 
