@@ -231,8 +231,8 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
           value={search}
           onChange={e => { setSearch(e.target.value); setShowAll(false); setAllPage(1); }}
           placeholder="Search communities…"
-          className="w-full pl-9 pr-4 py-2.5 text-[14px] bg-white border border-[#EAECF0] rounded-[12px] outline-none focus:border-[#0F1C2E] transition-colors placeholder:text-[#98A2B3]"
-          style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
+          className="w-full pl-9 pr-4 py-2.5 text-[14px] bg-white border border-[#E8ECF4] rounded-[12px] outline-none focus:border-[#2563EB] transition-colors placeholder:text-[#6B7280]"
+          style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}
         />
       </div>
 
