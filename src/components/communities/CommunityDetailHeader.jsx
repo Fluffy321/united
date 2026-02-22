@@ -13,7 +13,7 @@ const TYPE_COLORS = {
 
 export default function CommunityDetailHeader({ community, isFollowing, isAdmin, onFollow, onClaim, onAdminTools, onBack }) {
   return (
-    <div className="bg-white" style={{ borderBottom: '1px solid #EAECF0' }}>
+    <div style={{ background: 'linear-gradient(135deg, #E0EDFF 0%, #F5F7FB 100%)', borderBottom: '1px solid #E0EDFF' }}>
       <div className="px-4 py-3 flex items-center gap-3">
         <button
           onClick={onBack}
