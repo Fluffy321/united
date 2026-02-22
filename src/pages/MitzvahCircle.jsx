@@ -246,100 +246,81 @@ export default function MitzvahCircle({ isActive = true }) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Gradient Header */}
-      <div className="bg-gradient-to-b from-[#E6F0FF] to-white border-b border-slate-100">
-        <div className="max-w-2xl mx-auto px-4 py-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0F5ED7] to-[#0D4EB8] flex items-center justify-center">
-              <HandHeart className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">Mitzvah Circle</h1>
-              <p className="text-sm" style={{ color: '#5F6B7A' }}>Help someone nearby in 5 minutes</p>
-            </div>
+    <div className="min-h-screen bg-[#F7F8FA]">
+      {/* Compact Header */}
+      <div className="bg-white sticky top-0 z-10" style={{ borderBottom: '1px solid #EAECF0' }}>
+        <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
+          <span className="font-bold text-[#0F1C2E] text-[16px] tracking-[-0.01em]">Mitzvah Circle</span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${viewMode === 'list' ? 'bg-[#0F1C2E] text-white' : 'text-[#667085] hover:bg-[#F2F4F7]'}`}
+            >
+              <List className="w-3.5 h-3.5 inline mr-1" />List
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${viewMode === 'map' ? 'bg-[#0F1C2E] text-white' : 'text-[#667085] hover:bg-[#F2F4F7]'}`}
+            >
+              <MapIcon className="w-3.5 h-3.5 inline mr-1" />Map
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="max-w-2xl mx-auto px-4 pt-4">
 
-        {/* View Mode Toggle */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex gap-2">
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className={viewMode === 'list' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
-            >
-              <List className="w-4 h-4 mr-1" />
-              List
-            </Button>
-            <Button
-              variant={viewMode === 'map' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('map')}
-              className={viewMode === 'map' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
-            >
-              <MapIcon className="w-4 h-4 mr-1" />
-              Map
-            </Button>
+        {/* Status + location filter row */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex gap-1.5">
+            {['open', 'completed'].map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`h-8 px-3.5 text-[12px] font-semibold rounded-full border transition-all ${
+                  activeTab === tab
+                    ? 'bg-[#0F1C2E] text-white border-[#0F1C2E]'
+                    : 'bg-white text-[#667085] border-[#EAECF0] hover:border-[#D0D5DD]'
+                }`}
+              >
+                {tab === 'open' ? 'Needs Help' : 'Completed'}
+              </button>
+            ))}
           </div>
 
-          {/* Location Filter */}
           {getUserOrigin(currentUser) && (
-            <div className="flex gap-2">
-              <Button
-                variant={locationFilter === 'near' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setLocationFilter('near')}
-                className={locationFilter === 'near' ? 'bg-green-600 hover:bg-green-700' : ''}
-              >
-                <MapPin className="w-4 h-4 mr-1" />
-                Near Me
-              </Button>
-              <Button
-                variant={locationFilter === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setLocationFilter('all')}
-              >
-                All
-              </Button>
+            <div className="flex gap-1.5">
+              {['near', 'all'].map(loc => (
+                <button
+                  key={loc}
+                  onClick={() => setLocationFilter(loc)}
+                  className={`h-8 px-3 text-[12px] font-semibold rounded-full border transition-all ${
+                    locationFilter === loc
+                      ? 'bg-[#0F1C2E] text-white border-[#0F1C2E]'
+                      : 'bg-white text-[#667085] border-[#EAECF0]'
+                  }`}
+                >
+                  {loc === 'near' ? <><MapPin className="w-3 h-3 inline mr-0.5" />Near Me</> : 'All'}
+                </button>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Tabs */}
-        <Tabs 
-          value={activeTab} 
-          onValueChange={(newTab) => {
-            setActiveTab(newTab);
-          }} 
-          className="mb-4"
-        >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="open">Needs Help</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-          </TabsList>
-        </Tabs>
-
         {/* Category Filters */}
         <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide mb-4">
           {['All', 'Errand', 'Quick Favor', 'Lost & Found', 'Tutoring', 'Shabbat Help', 'Other'].map(cat => (
-            <Button
+            <button
               key={cat}
-              variant={categoryFilter === cat ? "default" : "outline"}
-              size="sm"
-              className={`whitespace-nowrap text-xs h-8 ${
-                categoryFilter === cat 
-                  ? 'bg-indigo-600 hover:bg-indigo-700' 
-                  : 'hover:bg-slate-100'
-              }`}
               onClick={() => setCategoryFilter(cat)}
+              className={`whitespace-nowrap text-[12px] font-semibold h-8 px-3.5 rounded-full border transition-all flex-shrink-0 ${
+                categoryFilter === cat
+                  ? 'bg-[#0F1C2E] text-white border-[#0F1C2E]'
+                  : 'bg-white text-[#667085] border-[#EAECF0] hover:border-[#D0D5DD]'
+              }`}
             >
               {cat}
-            </Button>
+            </button>
           ))}
         </div>
 
