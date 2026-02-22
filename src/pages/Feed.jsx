@@ -401,7 +401,7 @@ export default function Feed() {
         {isLoading ? (
           <div className="space-y-3 pb-24">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-4" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+              <div key={i} className="bg-white rounded-[16px] p-4" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04)' }}>
                 <div className="flex items-center gap-2.5 mb-3">
                   <div className="skeleton w-8 h-8 rounded-full" />
                   <div className="flex-1 space-y-1.5">
