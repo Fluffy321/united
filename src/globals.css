@@ -5,21 +5,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Color System */
-  --color-bg: #F7F8FA;
+  /* Brand Color System */
+  --color-bg: #F5F7FB;
   --color-card: #FFFFFF;
-  --color-border: #EAECF0;
-  --color-border-subtle: #F2F4F7;
+  --color-border: #E8ECF4;
+  --color-border-subtle: #F0F3F9;
 
-  --color-navy: #0F1C2E;
-  --color-navy-80: rgba(15, 28, 46, 0.8);
+  --color-navy: #0F172A;
+  --color-navy-80: rgba(15, 23, 42, 0.8);
   --color-brand: #2563EB;
-  --color-brand-light: #EFF6FF;
+  --color-brand-light: #E0EDFF;
   --color-brand-mid: #BFDBFE;
 
-  --color-text-primary: #0F1C2E;
-  --color-text-secondary: #475467;
-  --color-text-muted: #98A2B3;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #374151;
+  --color-text-muted: #6B7280;
 
   /* Spacing */
   --sp-1: 4px;
