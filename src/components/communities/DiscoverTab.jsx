@@ -244,8 +244,8 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
             onClick={() => { setActiveFilter(f); setShowAll(false); setAllPage(1); }}
             className={`whitespace-nowrap text-[12px] font-semibold px-3.5 py-1.5 rounded-full border transition-all ${
               activeFilter === f
-                ? 'bg-[#0F1C2E] text-white border-[#0F1C2E]'
-                : 'bg-white text-[#667085] border-[#EAECF0] hover:border-[#D0D5DD]'
+                ? 'bg-[#2563EB] text-white border-[#2563EB]'
+                : 'bg-white text-[#6B7280] border-[#E8ECF4] hover:border-[#2563EB] hover:text-[#2563EB]'
             }`}
           >
             {f}
