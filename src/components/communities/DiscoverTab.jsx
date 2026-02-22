@@ -312,7 +312,8 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
                     <div
                       key={c.id}
                       onClick={() => onViewCommunity(c.id)}
-                      className="flex-shrink-0 w-44 bg-white rounded-2xl border border-slate-100 p-3 cursor-pointer active:scale-[0.98] transition-transform"
+                      className="flex-shrink-0 w-44 bg-white rounded-[14px] border border-[#EAECF0] p-3 cursor-pointer active:scale-[0.98] transition-transform"
+                      style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
                     >
                       <CommunityLogo community={c} size="md" className="mb-2" />
                       <p className="font-bold text-xs text-slate-900 line-clamp-2 mb-0.5">{c.name}</p>
