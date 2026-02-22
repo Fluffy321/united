@@ -57,8 +57,8 @@ export default function CommunityDetailHeader({ community, isFollowing, isAdmin,
             onClick={onFollow}
             className={`h-8 px-3.5 text-[13px] font-semibold rounded-full transition-colors ${
               isFollowing
-                ? 'bg-[#F2F4F7] text-[#344054] hover:bg-[#E9EBF0]'
-                : 'bg-[#0F1C2E] text-white hover:bg-[#1e2d42]'
+                ? 'bg-white/80 text-[#374151] border border-[#E0EDFF] hover:bg-[#E0EDFF]'
+                : 'bg-[#2563EB] text-white hover:bg-[#1d4ed8]'
             }`}
           >
             {isFollowing ? 'Following' : 'Follow'}
