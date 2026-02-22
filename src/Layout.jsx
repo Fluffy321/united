@@ -112,43 +112,43 @@ export default function Layout({ children, currentPageName }) {
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-50" style={{ boxShadow: '0 -1px 3px rgba(0,0,0,0.03)' }}>
           <div className="max-w-2xl mx-auto px-4">
             <div className="flex items-center justify-around gap-2">
-              {navItems.map((item, idx) => {
-                const isActive = currentPageName === item.page;
-                const Icon = item.icon;
+              {navItems.map((item) => {
+                      const isActive = currentPageName === item.page;
+                      const Icon = item.icon;
 
-                return (
-                  <button 
-                    key={item.page}
-                    onClick={() => {
-                      const pageIndex = swipeablePages.indexOf(item.page);
-                      if (pageIndex !== -1) {
-                        handleTabChange(pageIndex);
-                      } else {
-                        navigate(createPageUrl(item.page));
-                      }
-                    }}
-                    className="flex flex-col items-center py-3 px-3 transition-all relative"
-                  >
-                    <Icon className={`w-6 h-6 ${
-                      isActive 
-                        ? 'stroke-[2.5px] text-[#0F5ED7]' 
-                        : 'stroke-[2px] text-slate-400'
-                    }`} />
-                    <span className={`text-[10px] mt-1.5 ${
-                      isActive ? 'font-bold text-[#0F5ED7]' : 'font-medium text-slate-500'
-                    }`}>
-                      {item.name}
-                    </span>
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#0F5ED7] rounded-full"
-                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                      />
-                    )}
-                  </button>
-                );
-              })}
+                      return (
+                        <button 
+                          key={item.page}
+                          onClick={() => {
+                            const pageIndex = swipeablePages.indexOf(item.page);
+                            if (pageIndex !== -1) {
+                              handleTabChange(pageIndex);
+                            } else {
+                              navigate(createPageUrl(item.page));
+                            }
+                          }}
+                          className="flex flex-col items-center py-2.5 px-4 transition-all relative flex-1"
+                        >
+                          {isActive && (
+                            <motion.div
+                              layoutId="navPill"
+                              className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-7 bg-[#0F1C2E]/[0.06] rounded-xl"
+                              transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                            />
+                          )}
+                          <Icon className={`w-5 h-5 relative z-10 transition-all duration-150 ${
+                            isActive 
+                              ? 'stroke-[2.5px] text-[#0F1C2E]' 
+                              : 'stroke-[1.75px] text-slate-400'
+                          }`} />
+                          <span className={`text-[10px] mt-1 relative z-10 transition-all duration-150 ${
+                            isActive ? 'font-700 font-bold text-[#0F1C2E]' : 'font-medium text-slate-400'
+                          }`}>
+                            {item.name}
+                          </span>
+                        </button>
+                      );
+                    })}
             </div>
           </div>
 
