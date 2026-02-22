@@ -15,16 +15,16 @@ import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 
 const TYPE_CONFIGS = {
-  feed: { label: 'POST', color: 'bg-slate-100 text-slate-700' },
-  help: { label: 'HELP NEEDED', color: 'bg-amber-100 text-amber-700' },
-  event: { label: 'EVENT', color: 'bg-blue-100 text-blue-700' },
-  job: { label: 'JOB', color: 'bg-green-100 text-green-700' },
-  housing: { label: 'HOUSING', color: 'bg-purple-100 text-purple-700' },
-  dating: { label: 'DATING', color: 'bg-pink-100 text-pink-700' },
-  food: { label: 'FOOD', color: 'bg-orange-100 text-orange-700' },
-  shul: { label: 'SHUL', color: 'bg-indigo-100 text-indigo-700' },
-  news: { label: 'NEWS', color: 'bg-cyan-100 text-cyan-700' },
-  prompt_reply: { label: 'PROMPT REPLY', color: 'bg-indigo-100 text-indigo-700' }
+  feed:         { label: 'Post',         color: 'bg-slate-100 text-slate-600' },
+  help:         { label: 'Help Needed',  color: 'bg-amber-50 text-amber-700 border border-amber-200' },
+  event:        { label: 'Event',        color: 'bg-blue-50 text-blue-700 border border-blue-200' },
+  job:          { label: 'Job',          color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+  housing:      { label: 'Housing',      color: 'bg-violet-50 text-violet-700 border border-violet-200' },
+  dating:       { label: 'Dating',       color: 'bg-rose-50 text-rose-700 border border-rose-200' },
+  food:         { label: 'Food',         color: 'bg-orange-50 text-orange-700 border border-orange-200' },
+  shul:         { label: 'Shul',         color: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+  news:         { label: 'News',         color: 'bg-sky-50 text-sky-700 border border-sky-200' },
+  prompt_reply: { label: 'Prompt',       color: 'bg-purple-50 text-purple-700 border border-purple-200' },
 };
 
 const ACTION_BUTTON = {
