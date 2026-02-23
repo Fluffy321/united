@@ -277,9 +277,9 @@ export default function MitzvahCircle({ isActive = true }) {
         {mainTab === 'chesed' && <ChesedHoursTab currentUser={currentUser} />}
 
         {mainTab === 'circle' && (
-          <div className="flex flex-col flex-1 overflow-hidden max-w-2xl w-full mx-auto">
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', width: '100%' }}>
 
-            {/* Pull-down map */}
+            {/* Map section — full width, no radius, no padding */}
             <PullDownMap
               requests={requests}
               userOrigin={userOrigin}
