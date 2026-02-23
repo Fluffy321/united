@@ -53,16 +53,12 @@ export default function MitzvahCircle({ isActive = true }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [mainTab, setMainTab] = useState('circle'); // 'circle' | 'chesed'
   const [activeTab, setActiveTab] = useState('open');
-  const [categoryFilter, setCategoryFilter] = useState('All');
-  const [locationFilter, setLocationFilter] = useState(() => {
-    // Default to 'near' if user has origin (device location or cityPreset)
-    return 'near';
-  });
-  const [timeFilter, setTimeFilter] = useState('anytime');
+  const [filters, setFilters] = useState({ scope: 'all', category: 'All' });
+  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
-  const [showMapModal, setShowMapModal] = useState(false);
   const [selectedMapRequest, setSelectedMapRequest] = useState(null);
   const [showDetailSheet, setShowDetailSheet] = useState(false);
+  const [liveLocation, setLiveLocation] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
