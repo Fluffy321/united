@@ -417,17 +417,17 @@ export default function MitzvahCircle({ isActive = true }) {
             onClose={() => setSelectedRequest(null)}
             onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
             overlayStyle={{
-              position: 'fixed',
-              left: 0,
-              right: 0,
-              top: mapPanelState === 'EXPANDED' ? listRect.top : 0,
-              height: mapPanelState === 'EXPANDED' ? listRect.height : '100vh',
-              zIndex: 99999,
-              background: '#ffffff',
-              overflowY: 'auto',
-              borderTopLeftRadius: mapPanelState === 'EXPANDED' ? 20 : 0,
-              borderTopRightRadius: mapPanelState === 'EXPANDED' ? 20 : 0,
-            }}
+                position: 'fixed',
+                left: 0,
+                right: 0,
+                top: mapPanelState === 'EXPANDED' && mapToggleBottom != null ? mapToggleBottom : 0,
+                bottom: 0,
+                zIndex: 99999,
+                background: '#ffffff',
+                overflowY: 'auto',
+                borderTopLeftRadius: mapPanelState === 'EXPANDED' ? 20 : 0,
+                borderTopRightRadius: mapPanelState === 'EXPANDED' ? 20 : 0,
+              }}
           />
         )}
 
