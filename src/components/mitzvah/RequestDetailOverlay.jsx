@@ -16,7 +16,7 @@ const CATEGORY_COLORS = {
   'Other': 'bg-slate-100 text-slate-600'
 };
 
-export default function RequestDetailOverlay({ request, currentUser, onClose, onRefresh }) {
+export default function RequestDetailOverlay({ request, currentUser, onClose, onRefresh, overlayStyle }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [signup, setSignup] = useState(null);
   const [showLogModal, setShowLogModal] = useState(false);
