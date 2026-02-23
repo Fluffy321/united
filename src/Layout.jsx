@@ -128,45 +128,54 @@ export default function Layout({ children, currentPageName }) {
       {/* Bottom Navigation */}
       {!hideNav && (
         <nav className="fixed bottom-0 left-0 right-0 bg-white z-50" style={{ boxShadow: '0 -1px 0 #E8ECF4, 0 -4px 16px rgba(15,23,42,0.06)' }}>
-          <div className="max-w-2xl mx-auto px-4">
+          <div className="max-w-2xl mx-auto px-4" ref={navContainerRef}>
+            {/* Sliding pill highlight */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '6px',
+                left: pillStyle.left,
+                width: '40px',
+                height: '28px',
+                transform: 'translateX(-50%)',
+                background: 'rgba(37,99,235,0.08)',
+                borderRadius: '12px',
+                opacity: pillStyle.opacity,
+                transition: 'left 180ms ease, opacity 120ms ease',
+                pointerEvents: 'none',
+              }}
+            />
             <div className="flex items-center justify-around">
               {navItems.map((item) => {
-                      const isActive = currentPageName === item.page;
-                      const Icon = item.icon;
-
-                      return (
-                        <button 
-                          key={item.page}
-                          onClick={() => {
-                            const pageIndex = swipeablePages.indexOf(item.page);
-                            if (pageIndex !== -1) {
-                              handleTabChange(pageIndex);
-                            } else {
-                              navigate(createPageUrl(item.page));
-                            }
-                          }}
-                          className="flex flex-col items-center py-2.5 px-4 transition-all relative flex-1"
-                        >
-                          {isActive && (
-                            <motion.div
-                              layoutId="navPill"
-                              className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-7 bg-[#2563EB]/[0.08] rounded-xl"
-                              transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-                            />
-                          )}
-                          <Icon className={`w-5 h-5 relative z-10 transition-all duration-150 ${
-                            isActive 
-                              ? 'stroke-[2.5px] text-[#2563EB]' 
-                              : 'stroke-[1.75px] text-[#6B7280]'
-                          }`} />
-                          <span className={`text-[10px] mt-1 relative z-10 transition-all duration-150 ${
-                            isActive ? 'font-bold text-[#2563EB]' : 'font-medium text-[#6B7280]'
-                          }`}>
-                            {item.name}
-                          </span>
-                        </button>
-                      );
-                    })}
+                const isActive = currentPageName === item.page;
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.page}
+                    ref={el => { navItemRefs.current[item.page] = el; }}
+                    onClick={() => {
+                      const pageIndex = swipeablePages.indexOf(item.page);
+                      if (pageIndex !== -1) {
+                        handleTabChange(pageIndex);
+                      } else {
+                        navigate(createPageUrl(item.page));
+                      }
+                    }}
+                    className="flex flex-col items-center justify-center py-2.5 px-4 transition-all relative flex-1"
+                  >
+                    <Icon className={`w-5 h-5 relative z-10 transition-all duration-150 ${
+                      isActive
+                        ? 'stroke-[2.5px] text-[#2563EB]'
+                        : 'stroke-[1.75px] text-[#6B7280]'
+                    }`} />
+                    <span className={`text-[10px] mt-1 relative z-10 transition-all duration-150 ${
+                      isActive ? 'font-bold text-[#2563EB]' : 'font-medium text-[#6B7280]'
+                    }`}>
+                      {item.name}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
