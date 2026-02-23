@@ -338,23 +338,11 @@ export default function MitzvahCircle({ isActive = true }) {
                 <HandHeart className="w-3.5 h-3.5 inline mr-1" />Requests
               </button>
               <button
-              onClick={() => setMainTab('chesed')}
-              className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'chesed' ? 'bg-[#2563EB] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}>
+               onClick={() => setMainTab('chesed')}
+               className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'chesed' ? 'bg-[#2563EB] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}>
 
-                <Clock className="w-3.5 h-3.5 inline mr-1" />My Hours
-              </button>
-              {mainTab === 'circle' &&
-            <button
-              onClick={() => setShowFilterDrawer(true)}
-              style={{
-                marginLeft: 4, width: 34, height: 34, borderRadius: 999,
-                background: filters.scope !== 'all' || filters.category !== 'All' ? '#0F172A' : '#F1F5F9',
-                border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-              }}>
-
-                  
-                </button>
-            }
+                 <Clock className="w-3.5 h-3.5 inline mr-1" />My Hours
+               </button>
             </div>
           </div>
         </div>
