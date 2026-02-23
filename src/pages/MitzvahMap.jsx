@@ -22,21 +22,45 @@ const getUserOrigin = (user) => {
   return null;
 };
 
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 3959;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
 export default function MitzvahMap() {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showDetailSheet, setShowDetailSheet] = useState(false);
+  const [scope, setScope] = useState('ALL'); // 'NEAR_ME' | 'ALL'
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser);
+    base44.auth.me().then(u => {
+      setCurrentUser(u);
+      const origin = getUserOrigin(u);
+      if (origin) setScope('NEAR_ME');
+    });
   }, []);
 
   const { data: requests = [], refetch } = useQuery({
     queryKey: ['mitzvah-map-requests'],
-    queryFn: () => base44.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 100),
+    queryFn: () => base44.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 200),
     enabled: !!currentUser
   });
+
+  const userOrigin = currentUser ? getUserOrigin(currentUser) : null;
+
+  // Single filtered dataset used by BOTH list count and map pins
+  const filteredRequests = useMemo(() => {
+    const base = requests.filter(r => r.approxLat && r.approxLng && !r.is_hidden);
+    if (scope === 'NEAR_ME' && userOrigin) {
+      return base.filter(r => calculateDistance(userOrigin.lat, userOrigin.lng, r.approxLat, r.approxLng) <= 10);
+    }
+    return base;
+  }, [requests, scope, userOrigin]);
 
   const handleHelpRequest = async (req) => {
     try {
