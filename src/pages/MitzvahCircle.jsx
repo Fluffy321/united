@@ -89,19 +89,13 @@ export default function MitzvahCircle({ isActive = true }) {
     const user = await base44.auth.me();
     setCurrentUser(user);
 
-    // Check if user has origin (device location or town selection)
-    const hasOrigin = (user.location_lat && user.location_lng) || (user.cityPreset && TOWN_CENTERS[user.cityPreset]);
-    
-    if (!hasOrigin) {
-      // Check if prompt was dismissed
-      const dismissed = localStorage.getItem('locationPromptDismissed');
-      if (!dismissed) {
-        setTimeout(() => setShowLocationPrompt(true), 2000);
-      }
-      // If no origin, default to 'all' instead of 'near'
-      setLocationFilter('all');
-    }
-  };
+    // Check if prompt was dismissed
+        const hasOrigin = (user.location_lat && user.location_lng) || (user.cityPreset && TOWN_CENTERS[user.cityPreset]);
+        if (!hasOrigin) {
+          const dismissed = localStorage.getItem('locationPromptDismissed');
+          if (!dismissed) setTimeout(() => setShowLocationPrompt(true), 2000);
+        }
+      };
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['mitzvah-requests', activeTab, categoryFilter, locationFilter],
