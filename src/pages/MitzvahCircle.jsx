@@ -413,6 +413,7 @@ export default function MitzvahCircle({ isActive = true }) {
                 mapCenter={mapCenter}
                 mapZoom={mapZoom}
                 currentUser={currentUser}
+                selectedRequestId={selectedRequest?.id}
                 onSelectRequest={(req) => setSelectedRequest(req)} />
 
               </div>
