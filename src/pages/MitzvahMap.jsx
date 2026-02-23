@@ -63,14 +63,22 @@ export default function MitzvahMap() {
 
   const userOrigin = currentUser ? getUserOrigin(currentUser) : null;
 
-  // Single filtered dataset used by BOTH list count and map pins
+  // Best available location: live GPS > profile preset
+  const effectiveLocation = liveLocation || userOrigin;
+
+  // Map center: Near Me = user location, All = Five Towns
+  const FIVE_TOWNS = { lat: 40.6369, lng: -73.7142 };
+  const mapCenter = scope === 'NEAR_ME' && effectiveLocation ? effectiveLocation : FIVE_TOWNS;
+  const mapZoom  = scope === 'NEAR_ME' && effectiveLocation ? 14 : 12;
+
+  // Single filtered dataset used by BOTH count and map pins
   const filteredRequests = useMemo(() => {
     const base = requests.filter(r => r.approxLat && r.approxLng && !r.is_hidden);
-    if (scope === 'NEAR_ME' && userOrigin) {
-      return base.filter(r => calculateDistance(userOrigin.lat, userOrigin.lng, r.approxLat, r.approxLng) <= 10);
+    if (scope === 'NEAR_ME' && effectiveLocation) {
+      return base.filter(r => calculateDistance(effectiveLocation.lat, effectiveLocation.lng, r.approxLat, r.approxLng) <= 10);
     }
     return base;
-  }, [requests, scope, userOrigin]);
+  }, [requests, scope, effectiveLocation]);
 
   const handleHelpRequest = async (req) => {
     try {
