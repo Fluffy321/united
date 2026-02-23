@@ -177,17 +177,17 @@ export default function MitzvahMapView({ requests, userOrigin, mapCenter, mapZoo
           )}
 
           {/* Action buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-2" style={{ position: 'relative', zIndex: 10000 }}>
             <button
               onClick={() => { onSelectRequest(selected); setSelected(null); }}
-              className="flex-1 h-10 rounded-full border border-[#E8ECF4] text-[13px] font-semibold text-[#374151] bg-white hover:bg-[#F5F7FB] transition-colors"
+              style={{ cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flex: 1, height: 40, borderRadius: 999, border: '1px solid #E8ECF4', fontSize: 13, fontWeight: 600, color: '#374151', background: 'white' }}
             >
               View Details
             </button>
             {!isRequester && (
               <button
                 onClick={() => { onHelpRequest(selected); setSelected(null); }}
-                className="flex-1 h-10 rounded-full text-[13px] font-semibold text-white bg-[#0F172A] hover:bg-[#1e2d42] transition-colors"
+                style={{ cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flex: 1, height: 40, borderRadius: 999, fontSize: 13, fontWeight: 600, color: 'white', background: '#0F172A' }}
               >
                 I'll Help 💙
               </button>
