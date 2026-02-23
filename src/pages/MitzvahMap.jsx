@@ -80,9 +80,10 @@ export default function MitzvahMap() {
   };
 
   return (
-    <div className="fixed inset-0 bg-white flex flex-col z-50">
+    <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: 'white', zIndex: 50 }}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 h-12 border-b border-[#E8ECF4] flex-shrink-0 bg-white">
+      <div style={{ flexShrink: 0, borderBottom: '1px solid #E8ECF4', background: 'white' }}
+        className="flex items-center gap-3 px-4 h-12">
         <button
           onClick={() => navigate(createPageUrl('MitzvahCircle'))}
           className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F5F7FB] transition-colors"
@@ -91,12 +92,12 @@ export default function MitzvahMap() {
         </button>
         <span className="font-bold text-[#0F172A] text-[15px]">Mitzvah Map</span>
         <span className="ml-auto text-[12px] text-[#98A2B3]">
-          {requests.filter(r => r.status === 'open' || r.status === 'in_progress').length} open nearby
+          {requests.filter(r => r.status === 'open' || r.status === 'in_progress').length} open
         </span>
       </div>
 
-      {/* Map fills remaining space */}
-      <div className="flex-1 overflow-hidden">
+      {/* Map fills remaining space — min-height:0 prevents flex overflow */}
+      <div style={{ flex: 1, minHeight: 0 }}>
         {currentUser ? (
           <MitzvahMapView
             requests={requests.filter(r => r.status === 'open' || r.status === 'in_progress')}
