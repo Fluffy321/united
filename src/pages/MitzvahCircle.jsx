@@ -503,6 +503,7 @@ export default function MitzvahCircle({ isActive = true }) {
                     zIndex: 999,
                     background: '#ffffff',
                     overflowY: 'auto',
+                    pointerEvents: 'auto',
                   }}
                 />
               )}
