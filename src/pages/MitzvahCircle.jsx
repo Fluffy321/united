@@ -401,6 +401,8 @@ export default function MitzvahCircle({ isActive = true }) {
               )}
             </div>
 
+            </div> {/* end list section */}
+
             {/* Create Button */}
             {isActive && (
               <button
@@ -412,8 +414,8 @@ export default function MitzvahCircle({ isActive = true }) {
                 Request
               </button>
             )}
-          </div>
-        )}
+            </div>
+            )}
       <CreateMitzvahModal
           open={showCreateModal}
           onOpenChange={(open) => {
