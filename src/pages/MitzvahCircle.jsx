@@ -408,37 +408,43 @@ export default function MitzvahCircle({ isActive = true }) {
           </div>
         )}
       <CreateMitzvahModal
-        open={showCreateModal}
-        onOpenChange={(open) => {
-          setShowCreateModal(open);
-          if (!open) queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-        }}
-        currentUser={currentUser}
-      />
-
-      <LocationPrompt
-        show={showLocationPrompt}
-        onDismiss={() => setShowLocationPrompt(false)}
-        onLocationSet={() => {
-          setShowLocationPrompt(false);
-          setLocationFilter('near');
-          loadUser();
-          queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-        }}
-      />
-
-      {selectedMapRequest && (
-        <MitzvahDetailSheet
-          request={selectedMapRequest}
-          currentUser={currentUser}
-          open={showDetailSheet}
-          onClose={() => {
-            setShowDetailSheet(false);
-            setSelectedMapRequest(null);
+          open={showCreateModal}
+          onOpenChange={(open) => {
+            setShowCreateModal(open);
+            if (!open) queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
           }}
-          onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
+          currentUser={currentUser}
         />
-      )}
-    </div>
-  );
+
+        <FilterDrawer
+          open={showFilterDrawer}
+          onClose={() => setShowFilterDrawer(false)}
+          initialFilters={filters}
+          onApply={handleFilterApply}
+        />
+
+        <LocationPrompt
+          show={showLocationPrompt}
+          onDismiss={() => setShowLocationPrompt(false)}
+          onLocationSet={() => {
+            setShowLocationPrompt(false);
+            loadUser();
+            queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+          }}
+        />
+
+        {selectedMapRequest && (
+          <MitzvahDetailSheet
+            request={selectedMapRequest}
+            currentUser={currentUser}
+            open={showDetailSheet}
+            onClose={() => {
+              setShowDetailSheet(false);
+              setSelectedMapRequest(null);
+            }}
+            onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
+          />
+        )}
+      </div>
+      );
 }
