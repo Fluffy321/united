@@ -408,7 +408,6 @@ export default function MitzvahCircle({ isActive = true }) {
             pointerEvents: mainTab === 'circle' ? 'auto' : 'none',
             display: 'flex', flexDirection: 'column', overflow: 'hidden',
           }}>
-            <div style={{ position: 'relative', flex: 1, overflow: 'hidden', background: '#F7F8FA' }}>
             {/* Map panel — ALWAYS mounted, height driven by mapH state */}
             <div style={{
               position: 'absolute', top: 0, left: 0, right: 0,
