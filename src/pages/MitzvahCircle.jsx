@@ -326,20 +326,18 @@ export default function MitzvahCircle({ isActive = true }) {
   return (
       <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
         {/* Compact Header */}
-        <div className="bg-white sticky top-0 z-10 flex-shrink-0" style={{ borderBottom: '1px solid #E8ECF4' }}>
-          <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
+        <div className="bg-white sticky top-0 z-20 flex-shrink-0" style={{ borderBottom: '1px solid #E8ECF4' }}>
+          <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between" style={{ pointerEvents: 'auto', zIndex: 20, position: 'relative' }}>
             <span className="font-bold text-[#0F172A] text-[16px] tracking-[-0.01em]">Mitzvah Circle</span>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1" style={{ pointerEvents: 'auto', zIndex: 20, position: 'relative' }}>
               <button
                 onClick={() => setMainTab('circle')}
-                style={{ position: 'relative', zIndex: 5, pointerEvents: 'auto' }}
                 className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'circle' ? 'bg-[#0F172A] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}
               >
                 <HandHeart className="w-3.5 h-3.5 inline mr-1" />Requests
               </button>
               <button
                 onClick={() => setMainTab('chesed')}
-                style={{ position: 'relative', zIndex: 5, pointerEvents: 'auto' }}
                 className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'chesed' ? 'bg-[#2563EB] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}
               >
                 <Clock className="w-3.5 h-3.5 inline mr-1" />My Hours
@@ -348,7 +346,6 @@ export default function MitzvahCircle({ isActive = true }) {
                 <button
                   onClick={() => setShowFilterDrawer(true)}
                   style={{
-                    position: 'relative', zIndex: 5, pointerEvents: 'auto',
                     marginLeft: 4, width: 34, height: 34, borderRadius: 999,
                     background: (filters.scope !== 'all' || filters.category !== 'All') ? '#0F172A' : '#F1F5F9',
                     border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
@@ -361,9 +358,25 @@ export default function MitzvahCircle({ isActive = true }) {
           </div>
         </div>
 
-        {mainTab === 'chesed' && <ChesedHoursTab currentUser={currentUser} />}
+        {/* Tab content with smooth fade transition */}
+        <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            opacity: mainTab === 'chesed' ? 1 : 0,
+            visibility: mainTab === 'chesed' ? 'visible' : 'hidden',
+            transition: 'opacity 200ms ease, visibility 200ms ease',
+            pointerEvents: mainTab === 'chesed' ? 'auto' : 'none',
+          }}>
+            <ChesedHoursTab currentUser={currentUser} />
+          </div>
 
-        {mainTab === 'circle' && (
+          <div style={{
+            position: 'absolute', inset: 0,
+            opacity: mainTab === 'circle' ? 1 : 0,
+            visibility: mainTab === 'circle' ? 'visible' : 'hidden',
+            transition: 'opacity 200ms ease, visibility 200ms ease',
+            pointerEvents: mainTab === 'circle' ? 'auto' : 'none',
+          }}>
           <div style={{ position: 'relative', flex: 1, overflow: 'hidden', background: '#F7F8FA' }}>
             {/* Map panel — ALWAYS mounted, height driven by mapH state */}
             <div style={{
