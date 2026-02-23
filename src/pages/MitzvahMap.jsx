@@ -134,24 +134,23 @@ export default function MitzvahMap() {
         </button>
         <span className="font-bold text-[#0F172A] text-[15px]">Mitzvah Map</span>
 
-        {/* Near Me / All toggle */}
-        {userOrigin && (
-          <div className="ml-3 flex gap-1">
-            {['NEAR_ME', 'ALL'].map(s => (
-              <button
-                key={s}
-                onClick={() => setScope(s)}
-                className={`h-7 px-2.5 text-[11px] font-semibold rounded-full border transition-all ${
-                  scope === s
-                    ? 'bg-[#0F172A] text-white border-[#0F172A]'
-                    : 'bg-white text-[#667085] border-[#EAECF0]'
-                }`}
-              >
-                {s === 'NEAR_ME' ? <><MapPin className="w-3 h-3 inline mr-0.5" />Near Me</> : 'All'}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Near Me / All toggle — always visible */}
+        <div className="ml-3 flex gap-1">
+          {['NEAR_ME', 'ALL'].map(s => (
+            <button
+              key={s}
+              onClick={() => handleScopeChange(s)}
+              style={{ cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}
+              className={`h-7 px-2.5 text-[11px] font-semibold rounded-full border transition-all flex items-center gap-0.5 ${
+                scope === s
+                  ? 'bg-[#0F172A] text-white border-[#0F172A]'
+                  : 'bg-white text-[#667085] border-[#EAECF0]'
+              }`}
+            >
+              {s === 'NEAR_ME' ? <><MapPin className="w-3 h-3" />Near Me</> : 'All'}
+            </button>
+          ))}
+        </div>
 
         <span className="ml-auto text-[12px] text-[#98A2B3]">
           {filteredRequests.length} open
