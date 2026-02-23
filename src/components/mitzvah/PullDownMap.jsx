@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Map as MapIcon, ChevronUp } from 'lucide-react';
 import MitzvahMapView from './MitzvahMapView';
 
@@ -10,15 +10,22 @@ export default function PullDownMap({
   onMapStateChange
 }) {
   const [open, setOpen] = useState(false);
+  const toggleRef = useRef(null);
 
   const toggle = (v) => {
     setOpen(v);
-    onMapStateChange?.(v ? 'EXPANDED' : 'COLLAPSED');
+    // Report the bottom of the toggle button as the start of the list area
+    if (toggleRef.current) {
+      const rect = toggleRef.current.getBoundingClientRect();
+      onMapStateChange?.(v ? 'EXPANDED' : 'COLLAPSED', rect.bottom);
+    } else {
+      onMapStateChange?.(v ? 'EXPANDED' : 'COLLAPSED', null);
+    }
   };
 
   return (
     <>
-      {/* Map section — full-width, no border-radius, no shadow */}
+      {/* Map section */}
       <div
         style={{
           width: '100%',
@@ -49,6 +56,7 @@ export default function PullDownMap({
 
       {/* Toggle button — lives between map and list */}
       <button
+        ref={toggleRef}
         onClick={() => toggle(!open)}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
