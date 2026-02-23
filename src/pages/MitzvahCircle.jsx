@@ -358,25 +358,30 @@ export default function MitzvahCircle({ isActive = true }) {
           </div>
         </div>
 
-        {/* Tab content with smooth fade transition */}
-        <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
+        {/* Tab content container — stable, both tabs share same shell */}
+        <div style={{ position: 'relative', flex: 1, overflow: 'hidden', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
+          {/* ChesedHours tab — mounted always, fades in/out */}
           <div style={{
-            position: 'absolute', inset: 0,
+            position: 'absolute', inset: 0, zIndex: mainTab === 'chesed' ? 10 : 0,
             opacity: mainTab === 'chesed' ? 1 : 0,
             visibility: mainTab === 'chesed' ? 'visible' : 'hidden',
-            transition: 'opacity 200ms ease, visibility 200ms ease',
+            transition: 'opacity 160ms ease, visibility 160ms ease',
             pointerEvents: mainTab === 'chesed' ? 'auto' : 'none',
+            overflow: 'auto',
           }}>
-            <ChesedHoursTab currentUser={currentUser} />
+            <div style={{ position: 'relative' }}>
+              <ChesedHoursTab currentUser={currentUser} />
+            </div>
           </div>
 
+          {/* Mitzvah Circle tab — mounted always, fades in/out */}
           <div style={{
-            position: 'absolute', inset: 0,
+            position: 'absolute', inset: 0, zIndex: mainTab === 'circle' ? 10 : 0,
             opacity: mainTab === 'circle' ? 1 : 0,
             visibility: mainTab === 'circle' ? 'visible' : 'hidden',
-            transition: 'opacity 200ms ease, visibility 200ms ease',
+            transition: 'opacity 160ms ease, visibility 160ms ease',
             pointerEvents: mainTab === 'circle' ? 'auto' : 'none',
-            display: 'flex', flexDirection: 'column',
+            display: 'flex', flexDirection: 'column', overflow: 'hidden',
           }}>
             <div style={{ position: 'relative', flex: 1, overflow: 'hidden', background: '#F7F8FA' }}>
             {/* Map panel — ALWAYS mounted, height driven by mapH state */}
