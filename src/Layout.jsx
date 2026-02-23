@@ -1,9 +1,8 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, User, HandHeart, Newspaper, Users, Loader2 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
 import SwipeableTabs from '@/components/common/SwipeableTabs';
 
 // Lazy load main pages
