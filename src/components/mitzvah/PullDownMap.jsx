@@ -28,6 +28,7 @@ export default function PullDownMap({
           background: '#d1d5db',
           transition: 'height 0.28s cubic-bezier(0.4,0,0.2,1)',
         }}
+        id="map-panel"
       >
         {open && (
           <div style={{ width: '100%', height: MAP_H }}>
