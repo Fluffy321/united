@@ -341,7 +341,7 @@ export default function MitzvahCircle({ isActive = true }) {
             </div>
 
             {/* List */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 112px', WebkitOverflowScrolling: 'touch' }}>
+            <div ref={listContainerRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 112px', WebkitOverflowScrolling: 'touch', position: 'relative' }}>
               {isLoading ? (
                 <div className="space-y-3">
                   {[...Array(4)].map((_, i) => (
