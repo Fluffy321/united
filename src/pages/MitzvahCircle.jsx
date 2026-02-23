@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, HandHeart, MapPin, List, Map as MapIcon, Clock } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Plus, HandHeart, Clock, SlidersHorizontal } from 'lucide-react';
 import ChesedHoursTab from '@/components/chesed/ChesedHoursTab';
-import { Button } from "@/components/ui/button";
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import MitzvahRequestCard from '@/components/mitzvah/MitzvahRequestCard';
 import CreateMitzvahModal from '@/components/mitzvah/CreateMitzvahModal';
 import LocationPrompt from '@/components/mitzvah/LocationPrompt';
-import MitzvahMapView from '@/components/mitzvah/MitzvahMapView';
 import MitzvahDetailSheet from '@/components/mitzvah/MitzvahDetailSheet';
+import PullDownMap from '@/components/mitzvah/PullDownMap';
+import FilterDrawer from '@/components/mitzvah/FilterDrawer';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
