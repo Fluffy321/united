@@ -320,6 +320,13 @@ export default function MitzvahCircle({ isActive = true }) {
               }}
             />
 
+            {/* List section — slides over map */}
+            <div style={{
+              flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+              background: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+              marginTop: -12, boxShadow: '0 -8px 24px rgba(0,0,0,0.06)', zIndex: 2, position: 'relative',
+            }}>
+
             {/* Status tabs */}
             <div className="flex items-center gap-2 px-4 pt-3 pb-2 flex-shrink-0">
               {['open', 'completed'].map(tab => (
