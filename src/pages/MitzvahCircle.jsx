@@ -459,32 +459,7 @@ export default function MitzvahCircle({ isActive = true }) {
                 {mapH > 0 ? 'Hide map' : 'Show map'}
               </div>
 
-              {/* Status tabs + filter pills */}
-              <div className="flex items-center gap-2 px-4 pt-3 pb-2 flex-shrink-0 bg-white" style={{ borderBottom: '1px solid #F0F3F9' }}>
-                {['open', 'completed'].map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`h-8 px-3.5 text-[12px] font-semibold rounded-full border transition-all ${
-                      activeTab === tab
-                        ? 'bg-[#0F1C2E] text-white border-[#0F1C2E]'
-                        : 'bg-white text-[#667085] border-[#EAECF0]'
-                    }`}
-                  >
-                    {tab === 'open' ? 'Needs Help' : 'Completed'}
-                  </button>
-                ))}
-                {filters.scope === 'near' && (
-                  <span style={{ fontSize: 11, fontWeight: 600, background: '#EEF2FF', color: '#4F46E5', borderRadius: 999, padding: '3px 10px' }}>
-                    📍 Near Me
-                  </span>
-                )}
-                {filters.category !== 'All' && (
-                  <span style={{ fontSize: 11, fontWeight: 600, background: '#F1F5F9', color: '#374151', borderRadius: 999, padding: '3px 10px' }}>
-                    {filters.category}
-                  </span>
-                )}
-              </div>
+              {/* Status tabs (moved to shared header above) */}
 
               {/* List */}
               <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 112px', WebkitOverflowScrolling: 'touch', position: 'relative' }}>
