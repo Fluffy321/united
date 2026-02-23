@@ -60,9 +60,6 @@ export default function MitzvahCircle({ isActive = true }) {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [liveLocation, setLiveLocation] = useState(null);
   const [mapPanelState, setMapPanelState] = useState('COLLAPSED');
-  const [mapToggleBottom, setMapToggleBottom] = useState(null);
-  const [listRect, setListRect] = useState(null);
-  const listContainerRef = useRef(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
