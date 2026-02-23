@@ -236,12 +236,13 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
         )}
 
         {/* Actions */}
-        <div className="space-y-3 pt-2">
+        <div className="space-y-3 pt-2" style={{ position: 'relative', zIndex: 10 }}>
           {/* I'll Help — only open requests, not the requester, not already joined */}
           {isOpen && !isRequester && !signup && (
             <button
               onClick={handleIllHelp}
               disabled={isProcessing}
+              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
               className="w-full h-12 rounded-full bg-[#0F172A] text-white font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-60"
             >
               <Hand className="w-5 h-5" />
@@ -253,6 +254,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
           {isInProgress && (isRequester || isHelper) && (
             <button
               onClick={handleOpenChat}
+              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
               className="w-full h-12 rounded-full border border-[#E2E8F0] text-[#0F172A] font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
             >
               <MessageCircle className="w-5 h-5" />
@@ -265,6 +267,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
             <button
               onClick={() => setShowLogModal(true)}
               disabled={isProcessing}
+              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
               className="w-full h-12 rounded-full bg-[#2563EB] text-white font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-60"
             >
               <BookOpen className="w-5 h-5" />
@@ -286,6 +289,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
                 setIsProcessing(false);
               }}
               disabled={isProcessing}
+              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
               className="w-full h-12 rounded-full bg-green-600 text-white font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-60"
             >
               <CheckCircle2 className="w-5 h-5" />
@@ -297,6 +301,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
           {isCompleted && isHelper && !hasLoggedHours && (
             <button
               onClick={() => setShowLogModal(true)}
+              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
               className="w-full h-12 rounded-full bg-[#2563EB] text-white font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
             >
               <BookOpen className="w-5 h-5" />
@@ -309,6 +314,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
             <button
               onClick={handleCancel}
               disabled={isProcessing}
+              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
               className="w-full h-12 rounded-full border border-[#E2E8F0] text-[#6B7280] font-semibold text-[15px] active:scale-[0.98] transition-transform"
             >
               Cancel Request
@@ -318,6 +324,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
           {!isRequester && (
             <button
               onClick={handleReport}
+              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
               className="w-full h-10 flex items-center justify-center gap-2 text-[13px] font-medium text-red-500"
             >
               <Flag className="w-4 h-4" />
