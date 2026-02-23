@@ -73,26 +73,15 @@ function MapController({ center, zoom, selectedRequest }) {
   return null;
 }
 
-export default function MitzvahMapView({ requests, userOrigin, currentUser, onSelectRequest, onHelpRequest, filters }) {
-  const [mapCenter] = useState([40.6223, -73.7159]);
-  const [mapZoom] = useState(13);
+export default function MitzvahMapView({ requests, userOrigin, mapCenter, mapZoom, currentUser, onSelectRequest, onHelpRequest, filters }) {
   const [selected, setSelected] = useState(null);
 
-  const filteredRequests = requests.filter(req => {
-    if (req.status !== 'open') return false;
-    if (filters?.category && filters.category !== 'All' && req.category !== filters.category) return false;
-    if (filters?.time === 'today') {
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      if (new Date(req.created_date) < today) return false;
-    } else if (filters?.time === 'thisweek') {
-      const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
-      if (new Date(req.created_date) < weekAgo) return false;
-    }
-    return req.approxLat && req.approxLng && !req.is_hidden;
-  });
+  // requests are already filtered by the parent; just strip any that lack coordinates
+  const filteredRequests = requests.filter(req => req.approxLat && req.approxLng && !req.is_hidden);
 
-  const effectiveCenter = userOrigin ? [userOrigin.lat, userOrigin.lng] : mapCenter;
-  const effectiveZoom = userOrigin ? 14 : mapZoom;
+  const defaultCenter = mapCenter ? [mapCenter.lat, mapCenter.lng] : [40.6369, -73.7142];
+  const effectiveCenter = defaultCenter;
+  const effectiveZoom = mapZoom ?? 12;
   const isRequester = selected && currentUser?.id === selected.created_by_user_id;
   const distance = selected && userOrigin
     ? calculateDistance(userOrigin.lat, userOrigin.lng, selected.approxLat, selected.approxLng)
