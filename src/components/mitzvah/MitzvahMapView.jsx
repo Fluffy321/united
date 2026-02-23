@@ -73,19 +73,12 @@ function MapController({ center, zoom, selectedRequest }) {
   return null;
 }
 
-export default function MitzvahMapView({ requests, userOrigin, mapCenter, mapZoom, currentUser, onSelectRequest, onHelpRequest, filters }) {
-  const [selected, setSelected] = useState(null);
-
+export default function MitzvahMapView({ requests, userOrigin, mapCenter, mapZoom, currentUser, onSelectRequest }) {
   // requests are already filtered by the parent; just strip any that lack coordinates
   const filteredRequests = requests.filter(req => req.approxLat && req.approxLng && !req.is_hidden);
 
-  const defaultCenter = mapCenter ? [mapCenter.lat, mapCenter.lng] : [40.6369, -73.7142];
-  const effectiveCenter = defaultCenter;
+  const effectiveCenter = mapCenter ? [mapCenter.lat, mapCenter.lng] : [40.6369, -73.7142];
   const effectiveZoom = mapZoom ?? 12;
-  const isRequester = selected && currentUser?.id === selected.created_by_user_id;
-  const distance = selected && userOrigin
-    ? calculateDistance(userOrigin.lat, userOrigin.lng, selected.approxLat, selected.approxLng)
-    : null;
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -96,7 +89,7 @@ export default function MitzvahMapView({ requests, userOrigin, mapCenter, mapZoo
         scrollWheelZoom={true}
         zoomControl={true}
       >
-        <MapController center={effectiveCenter} zoom={effectiveZoom} selectedRequest={selected} />
+        <MapController center={effectiveCenter} zoom={effectiveZoom} selectedRequest={null} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -115,78 +108,16 @@ export default function MitzvahMapView({ requests, userOrigin, mapCenter, mapZoo
           />
         )}
 
-        {/* Request pins */}
+        {/* Request pins — tap goes straight to fullscreen overlay */}
         {filteredRequests.map(req => (
           <Marker
             key={req.id}
             position={[req.approxLat, req.approxLng]}
-            icon={createCustomIcon(CATEGORY_COLORS[req.category] || '#64748b', selected?.id === req.id)}
-            eventHandlers={{ click: () => setSelected(req) }}
+            icon={createCustomIcon(CATEGORY_COLORS[req.category] || '#64748b', false)}
+            eventHandlers={{ click: () => onSelectRequest(req) }}
           />
         ))}
       </MapContainer>
-
-      {/* Bottom Sheet */}
-      {selected && (
-        <div
-          style={{
-            position: 'fixed',
-            left: 0, right: 0, bottom: 0,
-            background: 'white',
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-            boxShadow: '0 -12px 30px rgba(0,0,0,0.12)',
-            zIndex: 9999,
-            maxHeight: '45vh',
-            overflowY: 'auto',
-            padding: '16px 16px 32px',
-          }}
-        >
-          {/* Drag handle */}
-          <div className="flex justify-center mb-3">
-            <div style={{ width: 36, height: 4, borderRadius: 9999, background: '#E2E8F0' }} />
-          </div>
-
-          {/* Close button */}
-          <button
-            onClick={() => setSelected(null)}
-            style={{ position: 'absolute', top: 14, right: 14 }}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
-          {/* Category pill */}
-          <span className={`inline-block text-[11px] font-semibold px-2.5 py-1 rounded-full mb-2 ${CATEGORY_BG[selected.category] || 'bg-slate-100 text-slate-600'}`}>
-            {selected.category}
-          </span>
-
-          {/* Title + description */}
-          <h3 className="font-bold text-[15px] text-[#0F172A] mb-1 pr-8">{selected.title}</h3>
-          <p className="text-[13px] text-[#6B7280] mb-3 line-clamp-3">{selected.description}</p>
-
-          {/* Location */}
-          {selected.locationLabel && (
-            <div className="flex items-center gap-1 text-[12px] text-[#98A2B3] mb-4">
-              <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-              {selected.locationLabel}
-              {distance != null && distance < 50 && (
-                <span className="ml-1 text-green-600 font-medium">· {distance < 0.5 ? 'Nearby' : `${distance.toFixed(1)} mi`}</span>
-              )}
-            </div>
-          )}
-
-          {/* Action buttons */}
-          <div className="flex gap-2" style={{ position: 'relative', zIndex: 10000 }}>
-            <button
-              onClick={() => { onSelectRequest(selected); setSelected(null); }}
-              style={{ cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flex: 1, height: 40, borderRadius: 999, fontSize: 13, fontWeight: 600, color: 'white', background: '#0F172A' }}
-            >
-              View Details →
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
