@@ -14,10 +14,10 @@ export default function PullDownMap({
 
   const toggle = (v) => {
     setOpen(v);
-    // Report the bottom of the toggle button as the start of the list area
+    // Report the bottom of the toggle button (= bottom of map area)
     if (toggleRef.current) {
       const rect = toggleRef.current.getBoundingClientRect();
-      onMapStateChange?.(v ? 'EXPANDED' : 'COLLAPSED', rect.top);
+      onMapStateChange?.(v ? 'EXPANDED' : 'COLLAPSED', rect.bottom);
     } else {
       onMapStateChange?.(v ? 'EXPANDED' : 'COLLAPSED', null);
     }
