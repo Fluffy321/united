@@ -97,51 +97,54 @@ export default function MitzvahCircle({ isActive = true }) {
         }
       };
 
-  const { data: requests = [], isLoading } = useQuery({
-    queryKey: ['mitzvah-requests', activeTab, categoryFilter, locationFilter],
+  // Fetch all open/completed requests; apply filters in-memory so map+list stay in sync
+  const { data: rawRequests = [], isLoading } = useQuery({
+    queryKey: ['mitzvah-requests', activeTab],
     queryFn: async () => {
       const status = activeTab === 'open' ? 'open' : 'completed';
-      let allRequests;
-      
-      if (categoryFilter === 'All') {
-        allRequests = await base44.entities.MitzvahRequest.filter({ status }, '-created_date', 100);
-      } else {
-        allRequests = await base44.entities.MitzvahRequest.filter({ 
-          status, 
-          category: categoryFilter 
-        }, '-created_date', 100);
-      }
-
-      // Calculate distances for all requests if user has an origin
-      const userOrigin = getUserOrigin(currentUser);
-      if (userOrigin) {
-        const requestsWithDistance = allRequests.map(req => {
-          if (req.approxLat && req.approxLng) {
-            const distance = calculateDistance(
-              userOrigin.lat,
-              userOrigin.lng,
-              req.approxLat,
-              req.approxLng
-            );
-            return { ...req, distance };
-          }
-          return { ...req, distance: 999 }; // Put requests without location at the end
-        });
-
-        // If "Near Me" filter is active, filter to within 10 miles
-        if (locationFilter === 'near') {
-          return requestsWithDistance
-            .filter(req => req.distance <= 10)
-            .sort((a, b) => a.distance - b.distance);
-        }
-        
-        return requestsWithDistance.sort((a, b) => a.distance - b.distance);
-      }
-      
-      return allRequests;
+      return base44.entities.MitzvahRequest.filter({ status }, '-created_date', 100);
     },
     enabled: !!currentUser
   });
+
+  const userOrigin = useMemo(() => liveLocation || getUserOrigin(currentUser), [liveLocation, currentUser]);
+
+  const FIVE_TOWNS = { lat: 40.6369, lng: -73.7142 };
+  const mapCenter = filters.scope === 'near' && userOrigin ? userOrigin : FIVE_TOWNS;
+  const mapZoom  = filters.scope === 'near' && userOrigin ? 14 : 12;
+
+  // Single filtered dataset used by both list and map
+  const requests = useMemo(() => {
+    let list = rawRequests;
+    if (filters.category !== 'All') {
+      list = list.filter(r => r.category === filters.category);
+    }
+    if (filters.scope === 'near' && userOrigin) {
+      list = list.filter(r => r.approxLat && r.approxLng &&
+        calculateDistance(userOrigin.lat, userOrigin.lng, r.approxLat, r.approxLng) <= 10);
+    }
+    // Attach distance
+    if (userOrigin) {
+      list = list.map(r => ({
+        ...r,
+        distance: r.approxLat && r.approxLng
+          ? calculateDistance(userOrigin.lat, userOrigin.lng, r.approxLat, r.approxLng)
+          : 999
+      })).sort((a, b) => a.distance - b.distance);
+    }
+    return list;
+  }, [rawRequests, filters, userOrigin]);
+
+  const handleFilterApply = (newFilters) => {
+    // If Near Me requested, try to get GPS
+    if (newFilters.scope === 'near' && !liveLocation) {
+      navigator.geolocation?.getCurrentPosition(
+        pos => setLiveLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => toast.error('Location denied. Showing Five Towns area.')
+      );
+    }
+    setFilters(newFilters);
+  };
 
   const claimMutation = useMutation({
     mutationFn: async (request) => {
