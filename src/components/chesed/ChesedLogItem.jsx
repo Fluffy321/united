@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2, Clock, Edit2, Trash2, MoreVertical } from 'lucide-react';
+import { CheckCircle2, Clock, Edit2, Trash2, MoreVertical, HandHeart } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 

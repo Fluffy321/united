@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { X, MapPin, Clock, Hand, MessageCircle, CheckCircle2, AlertCircle, Flag } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, MapPin, Clock, Hand, MessageCircle, CheckCircle2, AlertCircle, Flag, BookOpen } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import LogHoursFromMitzvahModal from './LogHoursFromMitzvahModal';
 
 const CATEGORY_COLORS = {
   'Errand': 'bg-blue-100 text-blue-700',
@@ -17,30 +18,43 @@ const CATEGORY_COLORS = {
 
 export default function RequestDetailOverlay({ request, currentUser, onClose, onRefresh }) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [signup, setSignup] = useState(null);
+  const [showLogModal, setShowLogModal] = useState(false);
   const navigate = useNavigate();
 
-  if (!request) return null;
+  const isRequester = currentUser?.id === request?.created_by_user_id;
+  const isHelper = currentUser?.id === request?.claimed_by_user_id;
+  const isOpen = request?.status === 'open';
+  const isInProgress = request?.status === 'in_progress';
+  const isCompleted = request?.status === 'completed';
+  const isCancelled = request?.status === 'cancelled';
 
-  const isRequester = currentUser?.id === request.created_by_user_id;
-  const isHelper = currentUser?.id === request.claimed_by_user_id;
-  const isOpen = request.status === 'open';
-  const isInProgress = request.status === 'in_progress';
-  const isCompleted = request.status === 'completed';
-  const isCancelled = request.status === 'cancelled';
+  // Load the current user's signup for this request
+  useEffect(() => {
+    if (!request?.id || !currentUser?.id) return;
+    base44.entities.MitzvahSignup.filter({ request_id: request.id, user_id: currentUser.id })
+      .then(results => setSignup(results[0] || null));
+  }, [request?.id, currentUser?.id]);
+
+  if (!request) return null;
 
   const handleIllHelp = async () => {
     setIsProcessing(true);
     try {
-      const existingOffers = await base44.entities.HelpOffer.filter({
-        request_id: request.id,
-        helper_user_id: currentUser.id
-      });
-      if (existingOffers.length > 0) {
-        toast.error("You've already offered to help with this");
-        setIsProcessing(false);
-        return;
+      // Upsert signup
+      let existingSignup = signup;
+      if (!existingSignup) {
+        existingSignup = await base44.entities.MitzvahSignup.create({
+          request_id: request.id,
+          user_id: currentUser.id,
+          user_name: currentUser.display_name,
+          status: 'JOINED',
+          joined_at: new Date().toISOString(),
+        });
+        setSignup(existingSignup);
       }
 
+      // Set up conversation
       const convs = await base44.entities.Conversation.filter({
         participant_ids: { $all: [currentUser.id, request.created_by_user_id] },
         request_id: request.id
@@ -60,14 +74,6 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
           request_id: request.id
         });
       }
-
-      await base44.entities.HelpOffer.create({
-        request_id: request.id,
-        helper_user_id: currentUser.id,
-        helper_name: currentUser.display_name,
-        status: 'active',
-        conversation_id: conversation.id
-      });
 
       await base44.entities.MitzvahRequest.update(request.id, {
         status: 'in_progress',
@@ -90,12 +96,12 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
         last_message_at: new Date().toISOString()
       });
 
-      toast.success("You've offered to help! Opening chat...");
+      toast.success("You've joined this mitzvah! Opening chat...");
       onRefresh?.();
       onClose();
       navigate(createPageUrl('Messages') + `?conversation=${conversation.id}`);
-    } catch (error) {
-      toast.error('Failed to offer help');
+    } catch {
+      toast.error('Failed to join');
     }
     setIsProcessing(false);
   };
@@ -109,26 +115,11 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
     if (conv) navigate(createPageUrl('Messages') + `?conversation=${conv.id}`);
   };
 
-  const handleMarkComplete = async () => {
-    setIsProcessing(true);
-    try {
-      await base44.entities.MitzvahRequest.update(request.id, {
-        status: 'completed',
-        completed_at: new Date().toISOString()
-      });
-      const [offer] = await base44.entities.HelpOffer.filter({ request_id: request.id });
-      if (offer) await base44.entities.HelpOffer.update(offer.id, { status: 'completed' });
-      toast.success('Mitzvah completed! ✨');
-      onRefresh?.();
-      onClose();
-    } catch { toast.error('Failed to complete'); }
-    setIsProcessing(false);
-  };
-
   const handleCancel = async () => {
     setIsProcessing(true);
     try {
       await base44.entities.MitzvahRequest.update(request.id, { status: 'cancelled' });
+      if (signup) await base44.entities.MitzvahSignup.update(signup.id, { status: 'CANCELED' });
       toast.success('Request cancelled');
       onRefresh?.();
       onClose();
@@ -150,31 +141,23 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
     } catch { toast.error('Failed to report'); }
   };
 
+  const hasLoggedHours = !!signup?.chesed_log_id;
+
   return (
     <div
       style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 99999,
-        background: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        overflowY: 'auto',
+        position: 'fixed', inset: 0, zIndex: 99999,
+        background: 'white', display: 'flex', flexDirection: 'column', overflowY: 'auto',
       }}
     >
       {/* Top bar */}
-      <div
-        style={{
-          position: 'sticky', top: 0, zIndex: 1,
-          background: 'white', borderBottom: '1px solid #F0F3F9',
-          display: 'flex', alignItems: 'center', padding: '0 16px', height: 52,
-        }}
-      >
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 1,
+        background: 'white', borderBottom: '1px solid #F0F3F9',
+        display: 'flex', alignItems: 'center', padding: '0 16px', height: 52,
+      }}>
         <span className="font-bold text-[#0F172A] text-[15px] flex-1">Request Details</span>
-        <button
-          onClick={onClose}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-[#F1F5F9] text-[#6B7280] hover:bg-[#E2E8F0] transition-colors"
-        >
+        <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-[#F1F5F9] text-[#6B7280] hover:bg-[#E2E8F0] transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -200,12 +183,21 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
           <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-green-600" />
             <span className="text-sm font-medium text-green-900">Completed</span>
+            {hasLoggedHours && <span className="ml-auto text-[11px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Hours Logged ✓</span>}
           </div>
         )}
         {isCancelled && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-red-600" />
             <span className="text-sm font-medium text-red-900">Cancelled</span>
+          </div>
+        )}
+
+        {/* Signed-up banner (non-requester who already joined) */}
+        {signup && isInProgress && isHelper && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center gap-2">
+            <Hand className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-900">You're helping with this!</span>
           </div>
         )}
 
@@ -245,7 +237,8 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
 
         {/* Actions */}
         <div className="space-y-3 pt-2">
-          {isOpen && !isRequester && (
+          {/* I'll Help — only open requests, not the requester, not already joined */}
+          {isOpen && !isRequester && !signup && (
             <button
               onClick={handleIllHelp}
               disabled={isProcessing}
@@ -256,6 +249,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
             </button>
           )}
 
+          {/* Open Chat */}
           {isInProgress && (isRequester || isHelper) && (
             <button
               onClick={handleOpenChat}
@@ -266,17 +260,51 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
             </button>
           )}
 
-          {isInProgress && (isRequester || isHelper) && (
+          {/* Mark Complete + Log Hours — helper sees this on in-progress */}
+          {isInProgress && isHelper && (
             <button
-              onClick={handleMarkComplete}
+              onClick={() => setShowLogModal(true)}
+              disabled={isProcessing}
+              className="w-full h-12 rounded-full bg-[#2563EB] text-white font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-60"
+            >
+              <BookOpen className="w-5 h-5" />
+              {hasLoggedHours ? 'Edit Logged Hours' : 'Complete & Log Hours'}
+            </button>
+          )}
+
+          {/* Requester confirm complete */}
+          {isInProgress && isRequester && (
+            <button
+              onClick={async () => {
+                setIsProcessing(true);
+                try {
+                  await base44.entities.MitzvahRequest.update(request.id, { status: 'completed', completed_at: new Date().toISOString() });
+                  toast.success('Mitzvah confirmed completed! ✨');
+                  onRefresh?.();
+                  onClose();
+                } catch { toast.error('Failed'); }
+                setIsProcessing(false);
+              }}
               disabled={isProcessing}
               className="w-full h-12 rounded-full bg-green-600 text-white font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-60"
             >
               <CheckCircle2 className="w-5 h-5" />
-              {isRequester ? 'Confirm Completed' : 'Mark as Completed'}
+              Confirm Completed
             </button>
           )}
 
+          {/* Helper: log hours on completed request if not yet logged */}
+          {isCompleted && isHelper && !hasLoggedHours && (
+            <button
+              onClick={() => setShowLogModal(true)}
+              className="w-full h-12 rounded-full bg-[#2563EB] text-white font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+            >
+              <BookOpen className="w-5 h-5" />
+              Log Your Hours
+            </button>
+          )}
+
+          {/* Cancel */}
           {isRequester && isOpen && (
             <button
               onClick={handleCancel}
@@ -298,6 +326,21 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
           )}
         </div>
       </div>
+
+      {/* Log Hours Modal */}
+      {showLogModal && (
+        <LogHoursFromMitzvahModal
+          open={showLogModal}
+          onOpenChange={setShowLogModal}
+          request={request}
+          signup={signup}
+          currentUser={currentUser}
+          onSuccess={() => {
+            onRefresh?.();
+            onClose();
+          }}
+        />
+      )}
     </div>
   );
 }
