@@ -115,8 +115,28 @@ export default function MitzvahMap() {
           <ArrowLeft className="w-5 h-5 text-[#0F172A]" />
         </button>
         <span className="font-bold text-[#0F172A] text-[15px]">Mitzvah Map</span>
+
+        {/* Near Me / All toggle */}
+        {userOrigin && (
+          <div className="ml-3 flex gap-1">
+            {['NEAR_ME', 'ALL'].map(s => (
+              <button
+                key={s}
+                onClick={() => setScope(s)}
+                className={`h-7 px-2.5 text-[11px] font-semibold rounded-full border transition-all ${
+                  scope === s
+                    ? 'bg-[#0F172A] text-white border-[#0F172A]'
+                    : 'bg-white text-[#667085] border-[#EAECF0]'
+                }`}
+              >
+                {s === 'NEAR_ME' ? <><MapPin className="w-3 h-3 inline mr-0.5" />Near Me</> : 'All'}
+              </button>
+            ))}
+          </div>
+        )}
+
         <span className="ml-auto text-[12px] text-[#98A2B3]">
-          {requests.filter(r => r.status === 'open' || r.status === 'in_progress').length} open
+          {filteredRequests.length} open
         </span>
       </div>
 
@@ -124,12 +144,13 @@ export default function MitzvahMap() {
       <div style={{ flex: 1, minHeight: 0 }}>
         {currentUser ? (
           <MitzvahMapView
-            requests={requests.filter(r => r.status === 'open' || r.status === 'in_progress')}
-            userOrigin={getUserOrigin(currentUser)}
+            key={`${scope}-${filteredRequests.length}`}
+            requests={filteredRequests}
+            userOrigin={userOrigin}
             currentUser={currentUser}
             onSelectRequest={(req) => { setSelectedRequest(req); setShowDetailSheet(true); }}
             onHelpRequest={handleHelpRequest}
-            filters={{ category: 'All', location: 'all', time: 'anytime' }}
+            filters={{ category: 'All', time: 'anytime' }}
           />
         ) : (
           <div className="h-full flex items-center justify-center">
