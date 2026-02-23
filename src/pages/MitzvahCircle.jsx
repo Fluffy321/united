@@ -332,7 +332,7 @@ export default function MitzvahCircle({ isActive = true }) {
 
         {/* Open Map button */}
         <button
-          onClick={() => setShowMapModal(true)}
+          onClick={() => navigate(createPageUrl('MitzvahMap'))}
           className="w-full mb-4 flex items-center justify-center gap-2 h-10 bg-white border border-[#E8ECF4] rounded-[12px] text-[13px] font-semibold text-[#374151] hover:bg-[#F5F7FB] transition-colors"
           style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
         >
