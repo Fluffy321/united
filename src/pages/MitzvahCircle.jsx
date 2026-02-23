@@ -279,6 +279,17 @@ export default function MitzvahCircle({ isActive = true }) {
         {mainTab === 'circle' && (
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#F7F8FA' }}>
 
+            {/* Pull-down map */}
+            <PullDownMap
+              requests={requests}
+              userOrigin={userOrigin}
+              mapCenter={mapCenter}
+              mapZoom={mapZoom}
+              currentUser={currentUser}
+              onSelectRequest={(req) => setSelectedRequest(req)}
+              onHelpRequest={() => {}}
+            />
+
             {/* Status tabs + filter pills */}
             <div className="flex items-center gap-2 px-4 pt-3 pb-2 flex-shrink-0 bg-white" style={{ borderBottom: '1px solid #F0F3F9' }}>
               {['open', 'completed'].map(tab => (
