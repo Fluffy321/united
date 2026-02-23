@@ -146,8 +146,8 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
   return (
     <div
       style={{
-        position: 'fixed', inset: 0, zIndex: 99999,
-        background: 'white', display: 'flex', flexDirection: 'column', overflowY: 'auto',
+        display: 'flex', flexDirection: 'column',
+        ...overlayStyle,
       }}
     >
       {/* Top bar */}
