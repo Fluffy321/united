@@ -330,6 +330,16 @@ export default function MitzvahCircle({ isActive = true }) {
           ))}
         </div>
 
+        {/* Open Map button */}
+        <button
+          onClick={() => setShowMapModal(true)}
+          className="w-full mb-4 flex items-center justify-center gap-2 h-10 bg-white border border-[#E8ECF4] rounded-[12px] text-[13px] font-semibold text-[#374151] hover:bg-[#F5F7FB] transition-colors"
+          style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
+        >
+          <MapIcon className="w-4 h-4 text-[#6B7280]" />
+          Open Map
+        </button>
+
         {/* Content */}
         {isLoading ? (
           <div className="space-y-3 pb-24">
@@ -358,7 +368,7 @@ export default function MitzvahCircle({ isActive = true }) {
               {activeTab === 'open' ? 'Check back soon!' : 'Be the first to help!'}
             </p>
           </div>
-        ) : viewMode === 'list' ? (
+        ) : (
           <div className="space-y-2 pb-24">
             {requests.map(request => (
               <MitzvahRequestCard
@@ -372,79 +382,48 @@ export default function MitzvahCircle({ isActive = true }) {
               />
             ))}
           </div>
-        ) : (
-          <>
-            {/* Map Filters */}
-            <div className="mb-3 space-y-2">
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {['Today', 'This Week', 'Anytime'].map(time => (
-                  <Button
-                    key={time}
-                    variant={timeFilter === time.toLowerCase().replace(' ', '') ? "default" : "outline"}
-                    size="sm"
-                    className={`whitespace-nowrap text-xs h-8 ${
-                      timeFilter === time.toLowerCase().replace(' ', '')
-                        ? 'bg-indigo-600 hover:bg-indigo-700' 
-                        : 'hover:bg-slate-100'
-                    }`}
-                    onClick={() => setTimeFilter(time.toLowerCase().replace(' ', ''))}
-                  >
-                    {time}
-                  </Button>
-                ))}
-              </div>
-            </div>
+        )}
 
-            <div className="pb-24">
-              {currentUser?.role === 'admin' && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mb-3 text-xs text-yellow-900">
-                  <strong>Admin Debug:</strong> Requests with coords: {requests.filter(r => r.approxLat && r.approxLng && r.status === 'open').length}
-                </div>
-              )}
-              
-              {/* Count label */}
-              <div className="mb-3 text-sm font-medium text-slate-700">
-                {locationFilter === 'near' 
-                  ? `${requests.filter(r => r.status === 'open' || r.status === 'in_progress').length} open mitzvahs near you`
-                  : `${requests.filter(r => r.status === 'open' || r.status === 'in_progress').length} open mitzvahs`
-                }
-              </div>
-              
+        {/* Fullscreen Map Modal */}
+        {showMapModal && (
+          <div className="fixed inset-0 z-50 bg-white flex flex-col">
+            <div className="flex items-center justify-between px-4 h-12 border-b border-[#E8ECF4] flex-shrink-0">
+              <span className="font-bold text-[#0F172A] text-[15px]">Map View</span>
+              <button
+                onClick={() => setShowMapModal(false)}
+                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-[#F5F7FB] text-[#6B7280] text-lg font-light"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
               <MitzvahMapView
                 requests={requests.filter(r => r.status === 'open' || r.status === 'in_progress')}
                 userOrigin={getUserOrigin(currentUser)}
                 currentUser={currentUser}
                 onSelectRequest={(req) => {
                   setSelectedMapRequest(req);
+                  setShowMapModal(false);
                   setShowDetailSheet(true);
                 }}
                 onHelpRequest={async (req) => {
                   try {
-                    // Create help offer
                     const helpOffer = await base44.entities.HelpOffer.create({
                       request_id: req.id,
                       helper_user_id: currentUser.id,
                       helper_name: currentUser.display_name,
                       status: 'active'
                     });
-
-                    // Update request status
                     await base44.entities.MitzvahRequest.update(req.id, {
                       status: 'in_progress',
                       claimed_by_user_id: currentUser.id,
                       claimed_by_name: currentUser.display_name
                     });
-
-                    // Create or open conversation
                     const conversations = await base44.entities.Conversation.filter({ 
                       participant_ids: { $all: [currentUser.id, req.created_by_user_id] } 
                     });
-                    
                     if (conversations.length > 0) {
-                      // Update help offer with conversation ID
-                      await base44.entities.HelpOffer.update(helpOffer.id, {
-                        conversation_id: conversations[0].id
-                      });
+                      await base44.entities.HelpOffer.update(helpOffer.id, { conversation_id: conversations[0].id });
                       navigate(createPageUrl('Messages') + `?conversation=${conversations[0].id}`);
                     } else {
                       const otherUser = await base44.entities.User.filter({ id: req.created_by_user_id });
@@ -457,30 +436,20 @@ export default function MitzvahCircle({ isActive = true }) {
                           last_message_at: new Date().toISOString(),
                           request_id: req.id
                         });
-                        
-                        // Update help offer with conversation ID
-                        await base44.entities.HelpOffer.update(helpOffer.id, {
-                          conversation_id: newConversation.id
-                        });
-                        
+                        await base44.entities.HelpOffer.update(helpOffer.id, { conversation_id: newConversation.id });
                         navigate(createPageUrl('Messages') + `?conversation=${newConversation.id}`);
                       }
                     }
-
                     queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
                     toast.success('You\'ve offered to help! 💙');
                   } catch (error) {
                     toast.error('Failed to offer help');
                   }
                 }}
-                filters={{
-                  category: categoryFilter,
-                  location: locationFilter,
-                  time: timeFilter
-                }}
+                filters={{ category: categoryFilter, location: locationFilter, time: timeFilter }}
               />
             </div>
-          </>
+          </div>
         )}
 
         {/* Create Button */}
