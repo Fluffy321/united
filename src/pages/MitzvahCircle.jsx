@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, HandHeart, MapPin, List, Map as MapIcon } from 'lucide-react';
+import { Plus, HandHeart, MapPin, List, Map as MapIcon, Clock } from 'lucide-react';
+import ChesedHoursTab from '@/components/chesed/ChesedHoursTab';
 import { Button } from "@/components/ui/button";
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
