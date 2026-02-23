@@ -425,8 +425,8 @@ export default function MitzvahCircle({ isActive = true }) {
                 zIndex: 99999,
                 background: '#ffffff',
                 overflowY: 'auto',
-                borderTopLeftRadius: mapPanelState === 'EXPANDED' ? 20 : 0,
-                borderTopRightRadius: mapPanelState === 'EXPANDED' ? 20 : 0,
+                borderTopLeftRadius: mapPanelState === 'EXPANDED' ? 16 : 0,
+                borderTopRightRadius: mapPanelState === 'EXPANDED' ? 16 : 0,
               }}
           />
         )}
