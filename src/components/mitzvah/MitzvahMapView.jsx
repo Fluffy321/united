@@ -87,7 +87,7 @@ function MapInner({ center, zoom, requests, userOrigin, onSelectRequest, mapRef,
 
 // forwardRef so parent can call map.invalidateSize(), map.dragging.disable(), etc.
 const MitzvahMapView = forwardRef(function MitzvahMapView(
-  { requests, userOrigin, mapCenter, mapZoom, onSelectRequest },
+  { requests, userOrigin, mapCenter, mapZoom, onSelectRequest, selectedRequestId },
   mapRef
 ) {
   const effectiveCenter = mapCenter ? [mapCenter.lat, mapCenter.lng] : [40.6369, -73.7142];
@@ -109,6 +109,7 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
           userOrigin={userOrigin}
           onSelectRequest={onSelectRequest}
           mapRef={mapRef}
+          selectedRequestId={selectedRequestId}
         />
       </MapContainer>
     </div>
