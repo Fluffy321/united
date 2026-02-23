@@ -136,24 +136,7 @@ export default function MitzvahCircle({ isActive = true }) {
     return list;
   }, [rawRequests, filters, userOrigin]);
 
-  const measureList = useCallback(() => {
-    if (listContainerRef.current) {
-      const rect = listContainerRef.current.getBoundingClientRect();
-      setListRect({ top: rect.top, height: rect.height });
-    }
-  }, []);
 
-  useEffect(() => {
-    measureList();
-    window.addEventListener('resize', measureList);
-    return () => window.removeEventListener('resize', measureList);
-  }, [measureList]);
-
-  // Re-measure after map panel animation (~300ms)
-  useEffect(() => {
-    const t = setTimeout(measureList, 320);
-    return () => clearTimeout(t);
-  }, [mapPanelState, measureList]);
 
   const handleFilterApply = (newFilters) => {
     // If Near Me requested, try to get GPS
