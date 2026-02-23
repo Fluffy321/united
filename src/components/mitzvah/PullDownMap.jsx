@@ -6,9 +6,15 @@ const MAP_H = Math.round(window.innerHeight * 0.42);
 
 export default function PullDownMap({
   requests, userOrigin, mapCenter, mapZoom,
-  currentUser, onSelectRequest, onHelpRequest
+  currentUser, onSelectRequest, onHelpRequest,
+  onMapStateChange
 }) {
   const [open, setOpen] = useState(false);
+
+  const toggle = (v) => {
+    setOpen(v);
+    onMapStateChange?.(v ? 'EXPANDED' : 'COLLAPSED');
+  };
 
   return (
     <>
