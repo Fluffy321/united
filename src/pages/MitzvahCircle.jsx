@@ -31,8 +31,8 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+  Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
@@ -66,10 +66,10 @@ export default function MitzvahCircle({ isActive = true }) {
   const navigate = useNavigate();
 
   // Refs
-  const mapRef = useRef(null);          // Leaflet map instance
-  const dragState = useRef(null);       // tracks pointer drag
-  const rafRef = useRef(null);          // RAF id
-  const listScrollRef = useRef(null);   // scrollable list container
+  const mapRef = useRef(null); // Leaflet map instance
+  const dragState = useRef(null); // tracks pointer drag
+  const rafRef = useRef(null); // RAF id
+  const listScrollRef = useRef(null); // scrollable list container
   const SNAP_EXPANDED = Math.round(window.innerHeight * 0.42);
   const SNAP_COLLAPSED = 0;
 
@@ -79,7 +79,7 @@ export default function MitzvahCircle({ isActive = true }) {
     setMapH(next);
     setMapPanelState(next > 0 ? 'EXPANDED' : 'COLLAPSED');
     // Invalidate after CSS transition (~280ms)
-    setTimeout(() => { mapRef.current?.invalidateSize(); }, 300);
+    setTimeout(() => {mapRef.current?.invalidateSize();}, 300);
   }, [mapH, SNAP_EXPANDED]);
 
   // --- Drag-to-resize handle logic ---
@@ -99,7 +99,7 @@ export default function MitzvahCircle({ isActive = true }) {
 
     dragState.current = {
       startY: e.clientY ?? e.touches?.[0]?.clientY,
-      startH: mapH,
+      startH: mapH
     };
 
     const onMove = (ev) => {
@@ -154,10 +154,10 @@ export default function MitzvahCircle({ isActive = true }) {
     try {
       const user = await base44.auth.me();
       if (user?.role !== 'admin') return;
-      
+
       const hasSeeded = localStorage.getItem('seededLaunchContent');
       if (hasSeeded === 'true') return;
-      
+
       const result = await base44.functions.invoke('seedLaunchContent', {});
       if (result.data?.seeded) {
         localStorage.setItem('seededLaunchContent', 'true');
@@ -173,12 +173,12 @@ export default function MitzvahCircle({ isActive = true }) {
     setCurrentUser(user);
 
     // Check if prompt was dismissed
-        const hasOrigin = (user.location_lat && user.location_lng) || (user.cityPreset && TOWN_CENTERS[user.cityPreset]);
-        if (!hasOrigin) {
-          const dismissed = localStorage.getItem('locationPromptDismissed');
-          if (!dismissed) setTimeout(() => setShowLocationPrompt(true), 2000);
-        }
-      };
+    const hasOrigin = user.location_lat && user.location_lng || user.cityPreset && TOWN_CENTERS[user.cityPreset];
+    if (!hasOrigin) {
+      const dismissed = localStorage.getItem('locationPromptDismissed');
+      if (!dismissed) setTimeout(() => setShowLocationPrompt(true), 2000);
+    }
+  };
 
   // Fetch all open/completed requests; apply filters in-memory so map+list stay in sync
   const { data: rawRequests = [], isLoading } = useQuery({
@@ -194,25 +194,25 @@ export default function MitzvahCircle({ isActive = true }) {
 
   const FIVE_TOWNS = { lat: 40.6369, lng: -73.7142 };
   const mapCenter = filters.scope === 'near' && userOrigin ? userOrigin : FIVE_TOWNS;
-  const mapZoom  = filters.scope === 'near' && userOrigin ? 14 : 12;
+  const mapZoom = filters.scope === 'near' && userOrigin ? 14 : 12;
 
   // Single filtered dataset used by both list and map
   const requests = useMemo(() => {
     let list = rawRequests;
     if (filters.category !== 'All') {
-      list = list.filter(r => r.category === filters.category);
+      list = list.filter((r) => r.category === filters.category);
     }
     if (filters.scope === 'near' && userOrigin) {
-      list = list.filter(r => r.approxLat && r.approxLng &&
-        calculateDistance(userOrigin.lat, userOrigin.lng, r.approxLat, r.approxLng) <= 10);
+      list = list.filter((r) => r.approxLat && r.approxLng &&
+      calculateDistance(userOrigin.lat, userOrigin.lng, r.approxLat, r.approxLng) <= 10);
     }
     // Attach distance
     if (userOrigin) {
-      list = list.map(r => ({
+      list = list.map((r) => ({
         ...r,
-        distance: r.approxLat && r.approxLng
-          ? calculateDistance(userOrigin.lat, userOrigin.lng, r.approxLat, r.approxLng)
-          : 999
+        distance: r.approxLat && r.approxLng ?
+        calculateDistance(userOrigin.lat, userOrigin.lng, r.approxLat, r.approxLng) :
+        999
       })).sort((a, b) => a.distance - b.distance);
     }
     return list;
@@ -224,7 +224,7 @@ export default function MitzvahCircle({ isActive = true }) {
     // If Near Me requested, try to get GPS
     if (newFilters.scope === 'near' && !liveLocation) {
       navigator.geolocation?.getCurrentPosition(
-        pos => setLiveLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (pos) => setLiveLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         () => toast.error('Location denied. Showing Five Towns area.')
       );
     }
@@ -291,10 +291,10 @@ export default function MitzvahCircle({ isActive = true }) {
   };
 
   const handleMessage = async (userId) => {
-    const conversations = await base44.entities.Conversation.filter({ 
-      participant_ids: { $all: [currentUser.id, userId] } 
+    const conversations = await base44.entities.Conversation.filter({
+      participant_ids: { $all: [currentUser.id, userId] }
     });
-    
+
     if (conversations.length > 0) {
       navigate(createPageUrl('Messages') + `?conversation=${conversations[0].id}`);
     } else {
@@ -316,8 +316,8 @@ export default function MitzvahCircle({ isActive = true }) {
     return (
       <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-[#0F1C2E] border-t-transparent animate-spin" />
-      </div>
-    );
+      </div>);
+
   }
 
   if (!currentUser.is_profile_complete) {
@@ -325,36 +325,36 @@ export default function MitzvahCircle({ isActive = true }) {
   }
 
   return (
-      <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
+    <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
         {/* Compact Header */}
         <div className="bg-white sticky top-0 z-20 flex-shrink-0" style={{ borderBottom: '1px solid #E8ECF4' }}>
           <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between" style={{ pointerEvents: 'auto', zIndex: 20, position: 'relative' }}>
             <span className="font-bold text-[#0F172A] text-[16px] tracking-[-0.01em]">Mitzvah Circle</span>
             <div className="flex items-center gap-1" style={{ pointerEvents: 'auto', zIndex: 20, position: 'relative' }}>
               <button
-                onClick={() => setMainTab('circle')}
-                className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'circle' ? 'bg-[#0F172A] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}
-              >
+              onClick={() => setMainTab('circle')}
+              className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'circle' ? 'bg-[#0F172A] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}>
+
                 <HandHeart className="w-3.5 h-3.5 inline mr-1" />Requests
               </button>
               <button
-                onClick={() => setMainTab('chesed')}
-                className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'chesed' ? 'bg-[#2563EB] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}
-              >
+              onClick={() => setMainTab('chesed')}
+              className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'chesed' ? 'bg-[#2563EB] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}>
+
                 <Clock className="w-3.5 h-3.5 inline mr-1" />My Hours
               </button>
-              {mainTab === 'circle' && (
-                <button
-                  onClick={() => setShowFilterDrawer(true)}
-                  style={{
-                    marginLeft: 4, width: 34, height: 34, borderRadius: 999,
-                    background: (filters.scope !== 'all' || filters.category !== 'All') ? '#0F172A' : '#F1F5F9',
-                    border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                  }}
-                >
-                  <SlidersHorizontal size={16} color={(filters.scope !== 'all' || filters.category !== 'All') ? 'white' : '#374151'} />
+              {mainTab === 'circle' &&
+            <button
+              onClick={() => setShowFilterDrawer(true)}
+              style={{
+                marginLeft: 4, width: 34, height: 34, borderRadius: 999,
+                background: filters.scope !== 'all' || filters.category !== 'All' ? '#0F172A' : '#F1F5F9',
+                border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+              }}>
+
+                  
                 </button>
-              )}
+            }
             </div>
           </div>
         </div>
@@ -363,37 +363,37 @@ export default function MitzvahCircle({ isActive = true }) {
         <div style={{ position: 'relative', flex: 1, overflow: 'hidden', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
           {/* Shared header — ALWAYS visible, never changes height, fixed 48px */}
           <MitzvahTabHeader
-            activeTab={mainTab === 'circle' ? activeTab : null}
-            filters={filters}
-            onFilterClick={() => setShowFilterDrawer(true)}
-            rightActionNode={
-              mainTab === 'circle' ? (
-                <button
-                  onClick={() => setShowFilterDrawer(true)}
-                  style={{
-                    width: 34, height: 34, borderRadius: 999,
-                    background: (filters.scope !== 'all' || filters.category !== 'All') ? '#0F172A' : '#F1F5F9',
-                    border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                  }}
-                >
-                  <SlidersHorizontal size={16} color={(filters.scope !== 'all' || filters.category !== 'All') ? 'white' : '#374151'} />
-                </button>
-              ) : (
-                // Invisible placeholder same size as filter button for My Hours tab
-                <div style={{ width: 34, height: 34, visibility: 'hidden' }} />
-              )
-            }
-          />
+          activeTab={mainTab === 'circle' ? activeTab : null}
+          filters={filters}
+          onFilterClick={() => setShowFilterDrawer(true)}
+          rightActionNode={
+          mainTab === 'circle' ?
+          <button
+            onClick={() => setShowFilterDrawer(true)}
+            style={{
+              width: 34, height: 34, borderRadius: 999,
+              background: filters.scope !== 'all' || filters.category !== 'All' ? '#0F172A' : '#F1F5F9',
+              border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+            }}>
+
+                  <SlidersHorizontal size={16} color={filters.scope !== 'all' || filters.category !== 'All' ? 'white' : '#374151'} />
+                </button> :
+
+          // Invisible placeholder same size as filter button for My Hours tab
+          <div style={{ width: 34, height: 34, visibility: 'hidden' }} />
+
+          } />
+
 
           {/* ChesedHours tab — mounted always, fades in/out */}
           <div style={{
-            position: 'absolute', top: 48, left: 0, right: 0, bottom: 0, zIndex: mainTab === 'chesed' ? 10 : 0,
-            opacity: mainTab === 'chesed' ? 1 : 0,
-            visibility: mainTab === 'chesed' ? 'visible' : 'hidden',
-            transition: 'opacity 160ms ease, visibility 160ms ease',
-            pointerEvents: mainTab === 'chesed' ? 'auto' : 'none',
-            overflow: 'auto',
-          }}>
+          position: 'absolute', top: 48, left: 0, right: 0, bottom: 0, zIndex: mainTab === 'chesed' ? 10 : 0,
+          opacity: mainTab === 'chesed' ? 1 : 0,
+          visibility: mainTab === 'chesed' ? 'visible' : 'hidden',
+          transition: 'opacity 160ms ease, visibility 160ms ease',
+          pointerEvents: mainTab === 'chesed' ? 'auto' : 'none',
+          overflow: 'auto'
+        }}>
             <div style={{ position: 'relative' }}>
               <ChesedHoursTab currentUser={currentUser} />
             </div>
@@ -401,59 +401,59 @@ export default function MitzvahCircle({ isActive = true }) {
 
           {/* Mitzvah Circle tab — mounted always, fades in/out */}
           <div style={{
-            position: 'absolute', top: 48, left: 0, right: 0, bottom: 0, zIndex: mainTab === 'circle' ? 10 : 0,
-            opacity: mainTab === 'circle' ? 1 : 0,
-            visibility: mainTab === 'circle' ? 'visible' : 'hidden',
-            transition: 'opacity 160ms ease, visibility 160ms ease',
-            pointerEvents: mainTab === 'circle' ? 'auto' : 'none',
-            display: 'flex', flexDirection: 'column', overflow: 'hidden',
-          }}>
+          position: 'absolute', top: 48, left: 0, right: 0, bottom: 0, zIndex: mainTab === 'circle' ? 10 : 0,
+          opacity: mainTab === 'circle' ? 1 : 0,
+          visibility: mainTab === 'circle' ? 'visible' : 'hidden',
+          transition: 'opacity 160ms ease, visibility 160ms ease',
+          pointerEvents: mainTab === 'circle' ? 'auto' : 'none',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden'
+        }}>
             {/* Map panel — ALWAYS mounted, height driven by mapH state */}
             <div style={{
-              position: 'absolute', top: 0, left: 0, right: 0,
-              height: mapH,
-              overflow: 'hidden',
-              zIndex: 1,
-              background: '#d1d5db',
-              willChange: 'height',
-            }}>
+            position: 'absolute', top: 0, left: 0, right: 0,
+            height: mapH,
+            overflow: 'hidden',
+            zIndex: 1,
+            background: '#d1d5db',
+            willChange: 'height'
+          }}>
               <div style={{ width: '100%', height: SNAP_EXPANDED }}>
                 <MitzvahMapView
-                  ref={mapRef}
-                  requests={requests}
-                  userOrigin={userOrigin}
-                  mapCenter={mapCenter}
-                  mapZoom={mapZoom}
-                  currentUser={currentUser}
-                  onSelectRequest={(req) => setSelectedRequest(req)}
-                />
+                ref={mapRef}
+                requests={requests}
+                userOrigin={userOrigin}
+                mapCenter={mapCenter}
+                mapZoom={mapZoom}
+                currentUser={currentUser}
+                onSelectRequest={(req) => setSelectedRequest(req)} />
+
               </div>
             </div>
 
             {/* Requests panel — sits below map */}
             <div style={{
-              position: 'absolute',
-              top: mapH,
-              left: 0, right: 0, bottom: 0,
-              display: 'flex', flexDirection: 'column',
-              background: 'white',
-              overflow: 'hidden',
-              zIndex: 2,
-              willChange: 'top',
-            }}>
+            position: 'absolute',
+            top: mapH,
+            left: 0, right: 0, bottom: 0,
+            display: 'flex', flexDirection: 'column',
+            background: 'white',
+            overflow: 'hidden',
+            zIndex: 2,
+            willChange: 'top'
+          }}>
               {/* Drag handle — tap to toggle, drag to resize */}
               <div
-                onPointerDown={onHandlePointerDown}
-                onTouchStart={onHandlePointerDown}
-                onClick={toggleMap}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  width: '100%', height: 34, flexShrink: 0,
-                  background: 'white', border: 'none', borderBottom: '1px solid #F0F3F9',
-                  cursor: 'row-resize', fontSize: 12, fontWeight: 600, color: '#6B7280',
-                  WebkitTapHighlightColor: 'transparent', userSelect: 'none', touchAction: 'none',
-                }}
-              >
+              onPointerDown={onHandlePointerDown}
+              onTouchStart={onHandlePointerDown}
+              onClick={toggleMap}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                width: '100%', height: 34, flexShrink: 0,
+                background: 'white', border: 'none', borderBottom: '1px solid #F0F3F9',
+                cursor: 'row-resize', fontSize: 12, fontWeight: 600, color: '#6B7280',
+                WebkitTapHighlightColor: 'transparent', userSelect: 'none', touchAction: 'none'
+              }}>
+
                 {mapH > 0 ? <ChevronUp size={13} /> : <MapIcon size={13} />}
                 {mapH > 0 ? 'Hide map' : 'Show map'}
               </div>
@@ -462,10 +462,10 @@ export default function MitzvahCircle({ isActive = true }) {
 
               {/* List */}
               <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 112px', WebkitOverflowScrolling: 'touch', position: 'relative' }}>
-                {isLoading ? (
-                  <div className="space-y-3">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-4">
+                {isLoading ?
+              <div className="space-y-3">
+                    {[...Array(4)].map((_, i) =>
+                <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-4">
                         <div className="flex items-start gap-3">
                           <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
                           <div className="flex-1 space-y-2">
@@ -475,10 +475,10 @@ export default function MitzvahCircle({ isActive = true }) {
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : requests.length === 0 ? (
-                  <div className="text-center py-14 bg-white rounded-[14px] border border-[#EAECF0]">
+                )}
+                  </div> :
+              requests.length === 0 ?
+              <div className="text-center py-14 bg-white rounded-[14px] border border-[#EAECF0]">
                     <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
                       <HandHeart className="w-6 h-6 text-[#98A2B3]" />
                     </div>
@@ -488,87 +488,87 @@ export default function MitzvahCircle({ isActive = true }) {
                     <p className="text-[13px] text-[#98A2B3] mt-1">
                       {activeTab === 'open' ? 'Check back soon!' : 'Be the first to help!'}
                     </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {requests.map(request => (
-                      <div
-                        key={request.id}
-                        onClick={() => setSelectedRequest(request)}
-                        style={{ cursor: 'pointer' }}
-                      >
+                  </div> :
+
+              <div className="space-y-2">
+                    {requests.map((request) =>
+                <div
+                  key={request.id}
+                  onClick={() => setSelectedRequest(request)}
+                  style={{ cursor: 'pointer' }}>
+
                         <MitzvahRequestCard
-                          request={request}
-                          currentUser={currentUser}
-                          onClaim={handleClaim}
-                          onMessage={handleMessage}
-                          onComplete={handleComplete}
-                          showDistance={!!userOrigin && request.distance !== undefined && request.distance < 999}
-                        />
+                    request={request}
+                    currentUser={currentUser}
+                    onClaim={handleClaim}
+                    onMessage={handleMessage}
+                    onComplete={handleComplete}
+                    showDistance={!!userOrigin && request.distance !== undefined && request.distance < 999} />
+
                       </div>
-                    ))}
-                  </div>
                 )}
+                  </div>
+              }
               </div>
 
               {/* Detail overlay — inside requests panel, never covers map */}
-              {selectedRequest && (
-                <RequestDetailOverlay
-                  request={selectedRequest}
-                  currentUser={currentUser}
-                  onClose={() => setSelectedRequest(null)}
-                  onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
-                  overlayStyle={{
-                    position: 'absolute',
-                    inset: 0,
-                    zIndex: 999,
-                    background: '#ffffff',
-                    overflowY: 'auto',
-                    pointerEvents: 'auto',
-                  }}
-                />
-              )}
+              {selectedRequest &&
+            <RequestDetailOverlay
+              request={selectedRequest}
+              currentUser={currentUser}
+              onClose={() => setSelectedRequest(null)}
+              onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
+              overlayStyle={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 999,
+                background: '#ffffff',
+                overflowY: 'auto',
+                pointerEvents: 'auto'
+              }} />
+
+            }
             </div>
 
             {/* Create Button */}
-            {isActive && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="fixed bottom-[80px] right-4 z-30 flex items-center gap-2 bg-[#0F172A] text-white text-[14px] font-semibold px-5 py-2.5 rounded-full active:scale-95 transition-all"
-                style={{ boxShadow: '0 4px 14px rgba(15,23,42,0.35)' }}
-              >
+            {isActive &&
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="fixed bottom-[80px] right-4 z-30 flex items-center gap-2 bg-[#0F172A] text-white text-[14px] font-semibold px-5 py-2.5 rounded-full active:scale-95 transition-all"
+            style={{ boxShadow: '0 4px 14px rgba(15,23,42,0.35)' }}>
+
                 <Plus className="w-4 h-4" />
                 Request
               </button>
-            )}
+          }
           </div>
         </div>
 
         <CreateMitzvahModal
-          open={showCreateModal}
-          onOpenChange={(open) => {
-            setShowCreateModal(open);
-            if (!open) queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-          }}
-          currentUser={currentUser}
-        />
+        open={showCreateModal}
+        onOpenChange={(open) => {
+          setShowCreateModal(open);
+          if (!open) queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+        }}
+        currentUser={currentUser} />
+
 
         <FilterDrawer
-          open={showFilterDrawer}
-          onClose={() => setShowFilterDrawer(false)}
-          initialFilters={filters}
-          onApply={handleFilterApply}
-        />
+        open={showFilterDrawer}
+        onClose={() => setShowFilterDrawer(false)}
+        initialFilters={filters}
+        onApply={handleFilterApply} />
+
 
         <LocationPrompt
-          show={showLocationPrompt}
-          onDismiss={() => setShowLocationPrompt(false)}
-          onLocationSet={() => {
-            setShowLocationPrompt(false);
-            loadUser();
-            queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-          }}
-        />
-      </div>
-    );
+        show={showLocationPrompt}
+        onDismiss={() => setShowLocationPrompt(false)}
+        onLocationSet={() => {
+          setShowLocationPrompt(false);
+          loadUser();
+          queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+        }} />
+
+      </div>);
+
 }
