@@ -542,7 +542,6 @@ export default function MitzvahCircle({ isActive = true }) {
               </button>
             )}
           </div>
-          </div>
         </div>
 
         <CreateMitzvahModal
