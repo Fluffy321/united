@@ -55,6 +55,12 @@ export default function ChesedLogItem({ log, onDelete, onEdit }) {
             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLORS[log.category] || CATEGORY_COLORS.Other}`}>
               {log.category}
             </span>
+            {log.source === 'MITZVAH_REQUEST' && (
+              <span className="text-[10px] font-semibold flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-100">
+                <HandHeart className="w-3 h-3" />
+                Mitzvah
+              </span>
+            )}
             {status.icon && (
               <span className={`text-[10px] font-semibold flex items-center gap-1 border px-1.5 py-0.5 rounded-full ${status.bg} ${status.color}`}>
                 <status.icon className="w-3 h-3" />
