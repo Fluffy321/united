@@ -542,33 +542,31 @@ export default function MitzvahCircle({ isActive = true }) {
             </div>
             </div>
 
-        <CreateMitzvahModal
-          open={showCreateModal}
-          onOpenChange={(open) => {
-            setShowCreateModal(open);
-            if (!open) queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-          }}
-          currentUser={currentUser}
-        />
+            <CreateMitzvahModal
+              open={showCreateModal}
+              onOpenChange={(open) => {
+                setShowCreateModal(open);
+                if (!open) queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+              }}
+              currentUser={currentUser}
+            />
 
-        <FilterDrawer
-          open={showFilterDrawer}
-          onClose={() => setShowFilterDrawer(false)}
-          initialFilters={filters}
-          onApply={handleFilterApply}
-        />
+            <FilterDrawer
+              open={showFilterDrawer}
+              onClose={() => setShowFilterDrawer(false)}
+              initialFilters={filters}
+              onApply={handleFilterApply}
+            />
 
-        <LocationPrompt
-          show={showLocationPrompt}
-          onDismiss={() => setShowLocationPrompt(false)}
-          onLocationSet={() => {
-            setShowLocationPrompt(false);
-            loadUser();
-            queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-          }}
-        />
-
-
-      </div>
+            <LocationPrompt
+              show={showLocationPrompt}
+              onDismiss={() => setShowLocationPrompt(false)}
+              onLocationSet={() => {
+                setShowLocationPrompt(false);
+                loadUser();
+                queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+              }}
+            />
+            </div>
     );
 }
