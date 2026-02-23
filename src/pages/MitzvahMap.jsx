@@ -161,9 +161,11 @@ export default function MitzvahMap() {
       <div style={{ flex: 1, minHeight: 0 }}>
         {currentUser ? (
           <MitzvahMapView
-            key={`${scope}-${filteredRequests.length}`}
+            key={`${scope}-${mapCenter.lat}-${mapCenter.lng}`}
             requests={filteredRequests}
-            userOrigin={userOrigin}
+            userOrigin={effectiveLocation}
+            mapCenter={mapCenter}
+            mapZoom={mapZoom}
             currentUser={currentUser}
             onSelectRequest={(req) => { setSelectedRequest(req); setShowDetailSheet(true); }}
             onHelpRequest={handleHelpRequest}
