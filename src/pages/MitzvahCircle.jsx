@@ -311,7 +311,10 @@ export default function MitzvahCircle({ isActive = true }) {
               currentUser={currentUser}
               onSelectRequest={(req) => setSelectedRequest(req)}
               onHelpRequest={() => {}}
-              onMapStateChange={setMapPanelState}
+              onMapStateChange={(state, toggleBottom) => {
+                setMapPanelState(state);
+                if (toggleBottom != null) setMapToggleBottom(toggleBottom);
+              }}
             />
 
             {/* Status tabs + filter pills */}
