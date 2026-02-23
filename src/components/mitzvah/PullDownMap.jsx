@@ -49,7 +49,7 @@ export default function PullDownMap({
 
       {/* Toggle button — lives between map and list */}
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={() => toggle(!open)}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
           width: '100%', height: 34, flexShrink: 0,
