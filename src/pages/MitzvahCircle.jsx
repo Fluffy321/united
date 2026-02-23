@@ -265,6 +265,14 @@ export default function MitzvahCircle({ isActive = true }) {
             >
               <Clock className="w-3.5 h-3.5 inline mr-1" />My Hours
             </button>
+            {mainTab === 'circle' && (
+              <button
+                onClick={() => setViewMode(v => v === 'list' ? 'map' : 'list')}
+                className="h-8 w-8 flex items-center justify-center rounded-full text-[#6B7280] hover:bg-[#F5F7FB] transition-colors"
+              >
+                {viewMode === 'list' ? <MapIcon className="w-4 h-4" /> : <List className="w-4 h-4" />}
+              </button>
+            )}
           </div>
         </div>
       </div>
