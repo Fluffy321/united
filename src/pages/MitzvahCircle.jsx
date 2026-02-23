@@ -9,6 +9,7 @@ import LocationPrompt from '@/components/mitzvah/LocationPrompt';
 import MitzvahDetailSheet from '@/components/mitzvah/MitzvahDetailSheet';
 import PullDownMap from '@/components/mitzvah/PullDownMap';
 import FilterDrawer from '@/components/mitzvah/FilterDrawer';
+import RequestDetailOverlay from '@/components/mitzvah/RequestDetailOverlay';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
