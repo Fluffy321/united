@@ -8,7 +8,6 @@ import MitzvahRequestCard from '@/components/mitzvah/MitzvahRequestCard';
 import CreateMitzvahModal from '@/components/mitzvah/CreateMitzvahModal';
 import LocationPrompt from '@/components/mitzvah/LocationPrompt';
 import MitzvahDetailSheet from '@/components/mitzvah/MitzvahDetailSheet';
-import PullDownMap from '@/components/mitzvah/PullDownMap';
 import FilterDrawer from '@/components/mitzvah/FilterDrawer';
 import RequestDetailOverlay from '@/components/mitzvah/RequestDetailOverlay';
 import ProfileSetup from '@/components/profile/ProfileSetup';
