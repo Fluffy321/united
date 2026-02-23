@@ -240,223 +240,173 @@ export default function MitzvahCircle({ isActive = true }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA]">
-      {/* Compact Header */}
-      <div className="bg-white sticky top-0 z-10" style={{ borderBottom: '1px solid #E8ECF4' }}>
-        <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
-          <span className="font-bold text-[#0F172A] text-[16px] tracking-[-0.01em]">Mitzvah Circle</span>
-          <div className="flex gap-1">
-            <button
-              onClick={() => setMainTab('circle')}
-              className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'circle' ? 'bg-[#0F172A] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}
-            >
-              <HandHeart className="w-3.5 h-3.5 inline mr-1" />Requests
-            </button>
-            <button
-              onClick={() => setMainTab('chesed')}
-              className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'chesed' ? 'bg-[#2563EB] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}
-            >
-              <Clock className="w-3.5 h-3.5 inline mr-1" />My Hours
-            </button>
-
+      <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
+        {/* Compact Header */}
+        <div className="bg-white sticky top-0 z-10 flex-shrink-0" style={{ borderBottom: '1px solid #E8ECF4' }}>
+          <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
+            <span className="font-bold text-[#0F172A] text-[16px] tracking-[-0.01em]">Mitzvah Circle</span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setMainTab('circle')}
+                className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'circle' ? 'bg-[#0F172A] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}
+              >
+                <HandHeart className="w-3.5 h-3.5 inline mr-1" />Requests
+              </button>
+              <button
+                onClick={() => setMainTab('chesed')}
+                className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'chesed' ? 'bg-[#2563EB] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}
+              >
+                <Clock className="w-3.5 h-3.5 inline mr-1" />My Hours
+              </button>
+              {mainTab === 'circle' && (
+                <button
+                  onClick={() => setShowFilterDrawer(true)}
+                  style={{
+                    marginLeft: 4, width: 34, height: 34, borderRadius: 999,
+                    background: (filters.scope !== 'all' || filters.category !== 'All') ? '#0F172A' : '#F1F5F9',
+                    border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                  }}
+                >
+                  <SlidersHorizontal size={16} color={(filters.scope !== 'all' || filters.category !== 'All') ? 'white' : '#374151'} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {mainTab === 'chesed' ? (
-        <ChesedHoursTab currentUser={currentUser} />
-      ) : null}
+        {mainTab === 'chesed' && <ChesedHoursTab currentUser={currentUser} />}
 
-      <div className={`max-w-2xl mx-auto px-4 pt-4 ${mainTab !== 'circle' ? 'hidden' : ''}`}>
+        {mainTab === 'circle' && (
+          <div className="flex flex-col flex-1 overflow-hidden max-w-2xl w-full mx-auto">
 
-        {/* Status + location filter row */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex gap-1.5">
-            {['open', 'completed'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`h-8 px-3.5 text-[12px] font-semibold rounded-full border transition-all ${
-                  activeTab === tab
-                    ? 'bg-[#0F1C2E] text-white border-[#0F1C2E]'
-                    : 'bg-white text-[#667085] border-[#EAECF0] hover:border-[#D0D5DD]'
-                }`}
-              >
-                {tab === 'open' ? 'Needs Help' : 'Completed'}
-              </button>
-            ))}
-          </div>
+            {/* Pull-down map */}
+            <PullDownMap
+              requests={requests}
+              userOrigin={userOrigin}
+              mapCenter={mapCenter}
+              mapZoom={mapZoom}
+              currentUser={currentUser}
+              onSelectRequest={(req) => { setSelectedMapRequest(req); setShowDetailSheet(true); }}
+              onHelpRequest={async (req) => {
+                try {
+                  const helpOffer = await base44.entities.HelpOffer.create({
+                    request_id: req.id, helper_user_id: currentUser.id,
+                    helper_name: currentUser.display_name, status: 'active'
+                  });
+                  await base44.entities.MitzvahRequest.update(req.id, {
+                    status: 'in_progress', claimed_by_user_id: currentUser.id,
+                    claimed_by_name: currentUser.display_name
+                  });
+                  const convs = await base44.entities.Conversation.filter({
+                    participant_ids: { $all: [currentUser.id, req.created_by_user_id] }
+                  });
+                  if (convs.length > 0) {
+                    navigate(createPageUrl('Messages') + `?conversation=${convs[0].id}`);
+                  } else {
+                    const others = await base44.entities.User.filter({ id: req.created_by_user_id });
+                    if (others.length > 0) {
+                      const newConv = await base44.entities.Conversation.create({
+                        participant_ids: [currentUser.id, req.created_by_user_id],
+                        participant_names: [currentUser.display_name, others[0].display_name],
+                        participant_ages: [currentUser.age_range, others[0].age_range],
+                        last_message: '', last_message_at: new Date().toISOString(), request_id: req.id
+                      });
+                      navigate(createPageUrl('Messages') + `?conversation=${newConv.id}`);
+                    }
+                  }
+                  queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+                  toast.success("You've offered to help! 💙");
+                } catch { toast.error('Failed to offer help'); }
+              }}
+            />
 
-          {getUserOrigin(currentUser) && (
-            <div className="flex gap-1.5">
-              {['near', 'all'].map(loc => (
+            {/* Status tabs */}
+            <div className="flex items-center gap-2 px-4 pt-3 pb-2 flex-shrink-0">
+              {['open', 'completed'].map(tab => (
                 <button
-                  key={loc}
-                  onClick={() => setLocationFilter(loc)}
-                  className={`h-8 px-3 text-[12px] font-semibold rounded-full border transition-all ${
-                    locationFilter === loc
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`h-8 px-3.5 text-[12px] font-semibold rounded-full border transition-all ${
+                    activeTab === tab
                       ? 'bg-[#0F1C2E] text-white border-[#0F1C2E]'
                       : 'bg-white text-[#667085] border-[#EAECF0]'
                   }`}
                 >
-                  {loc === 'near' ? <><MapPin className="w-3 h-3 inline mr-0.5" />Near Me</> : 'All'}
+                  {tab === 'open' ? 'Needs Help' : 'Completed'}
                 </button>
               ))}
+              {/* Active filter pills */}
+              {filters.scope === 'near' && (
+                <span style={{ fontSize: 11, fontWeight: 600, background: '#EEF2FF', color: '#4F46E5', borderRadius: 999, padding: '3px 10px' }}>
+                  📍 Near Me
+                </span>
+              )}
+              {filters.category !== 'All' && (
+                <span style={{ fontSize: 11, fontWeight: 600, background: '#F1F5F9', color: '#374151', borderRadius: 999, padding: '3px 10px' }}>
+                  {filters.category}
+                </span>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Category Filters */}
-        <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide mb-4">
-          {['All', 'Errand', 'Quick Favor', 'Lost & Found', 'Tutoring', 'Shabbat Help', 'Other'].map(cat => (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(cat)}
-              className={`whitespace-nowrap text-[12px] font-semibold h-8 px-3.5 rounded-full border transition-all flex-shrink-0 ${
-                categoryFilter === cat
-                  ? 'bg-[#0F1C2E] text-white border-[#0F1C2E]'
-                  : 'bg-white text-[#667085] border-[#EAECF0] hover:border-[#D0D5DD]'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Open Map button */}
-        <button
-          onClick={() => navigate(createPageUrl('MitzvahMap'))}
-          className="w-full mb-4 flex items-center justify-center gap-2 h-10 bg-white border border-[#E8ECF4] rounded-[12px] text-[13px] font-semibold text-[#374151] hover:bg-[#F5F7FB] transition-colors"
-          style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
-        >
-          <MapIcon className="w-4 h-4 text-[#6B7280]" />
-          Open Map
-        </button>
-
-        {/* Content */}
-        {isLoading ? (
-          <div className="space-y-3 pb-24">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-4" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-                <div className="flex items-start gap-3">
-                  <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="skeleton h-3.5 w-40 rounded" />
-                    <div className="skeleton h-3 w-full rounded" />
-                    <div className="skeleton h-3 w-3/4 rounded" />
-                  </div>
+            {/* List */}
+            <div className="flex-1 overflow-y-auto px-4 pb-28">
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="skeleton h-3.5 w-40 rounded" />
+                          <div className="skeleton h-3 w-full rounded" />
+                          <div className="skeleton h-3 w-3/4 rounded" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : requests.length === 0 ? (
-          <div className="text-center py-14 bg-white rounded-[14px] border border-[#EAECF0]" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-            <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
-              <HandHeart className="w-6 h-6 text-[#98A2B3]" />
+              ) : requests.length === 0 ? (
+                <div className="text-center py-14 bg-white rounded-[14px] border border-[#EAECF0]">
+                  <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
+                    <HandHeart className="w-6 h-6 text-[#98A2B3]" />
+                  </div>
+                  <p className="text-[15px] font-semibold text-[#0F1C2E]">
+                    {activeTab === 'open' ? 'No open requests' : 'No completed mitzvahs yet'}
+                  </p>
+                  <p className="text-[13px] text-[#98A2B3] mt-1">
+                    {activeTab === 'open' ? 'Check back soon!' : 'Be the first to help!'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {requests.map(request => (
+                    <MitzvahRequestCard
+                      key={request.id}
+                      request={request}
+                      currentUser={currentUser}
+                      onClaim={handleClaim}
+                      onMessage={handleMessage}
+                      onComplete={handleComplete}
+                      showDistance={!!userOrigin && request.distance !== undefined && request.distance < 999}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-            <p className="text-[15px] font-semibold text-[#0F1C2E]">
-              {activeTab === 'open' ? 'No open requests' : 'No completed mitzvahs yet'}
-            </p>
-            <p className="text-[13px] text-[#98A2B3] mt-1">
-              {activeTab === 'open' ? 'Check back soon!' : 'Be the first to help!'}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2 pb-24">
-            {requests.map(request => (
-              <MitzvahRequestCard
-                key={request.id}
-                request={request}
-                currentUser={currentUser}
-                onClaim={handleClaim}
-                onMessage={handleMessage}
-                onComplete={handleComplete}
-                showDistance={!!getUserOrigin(currentUser) && request.distance !== undefined && request.distance < 999}
-              />
-            ))}
-          </div>
-        )}
 
-        {/* Fullscreen Map Modal */}
-        {showMapModal && (
-          <div className="fixed inset-0 z-50 bg-white flex flex-col">
-            <div className="flex items-center justify-between px-4 h-12 border-b border-[#E8ECF4] flex-shrink-0">
-              <span className="font-bold text-[#0F172A] text-[15px]">Map View</span>
+            {/* Create Button */}
+            {isActive && (
               <button
-                onClick={() => setShowMapModal(false)}
-                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-[#F5F7FB] text-[#6B7280] text-lg font-light"
+                onClick={() => setShowCreateModal(true)}
+                className="fixed bottom-[80px] right-4 z-30 flex items-center gap-2 bg-[#0F172A] text-white text-[14px] font-semibold px-5 py-2.5 rounded-full active:scale-95 transition-all"
+                style={{ boxShadow: '0 4px 14px rgba(15,23,42,0.35)' }}
               >
-                ✕
+                <Plus className="w-4 h-4" />
+                Request
               </button>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <MitzvahMapView
-                requests={requests.filter(r => r.status === 'open' || r.status === 'in_progress')}
-                userOrigin={getUserOrigin(currentUser)}
-                currentUser={currentUser}
-                onSelectRequest={(req) => {
-                  setSelectedMapRequest(req);
-                  setShowMapModal(false);
-                  setShowDetailSheet(true);
-                }}
-                onHelpRequest={async (req) => {
-                  try {
-                    const helpOffer = await base44.entities.HelpOffer.create({
-                      request_id: req.id,
-                      helper_user_id: currentUser.id,
-                      helper_name: currentUser.display_name,
-                      status: 'active'
-                    });
-                    await base44.entities.MitzvahRequest.update(req.id, {
-                      status: 'in_progress',
-                      claimed_by_user_id: currentUser.id,
-                      claimed_by_name: currentUser.display_name
-                    });
-                    const conversations = await base44.entities.Conversation.filter({ 
-                      participant_ids: { $all: [currentUser.id, req.created_by_user_id] } 
-                    });
-                    if (conversations.length > 0) {
-                      await base44.entities.HelpOffer.update(helpOffer.id, { conversation_id: conversations[0].id });
-                      navigate(createPageUrl('Messages') + `?conversation=${conversations[0].id}`);
-                    } else {
-                      const otherUser = await base44.entities.User.filter({ id: req.created_by_user_id });
-                      if (otherUser.length > 0) {
-                        const newConversation = await base44.entities.Conversation.create({
-                          participant_ids: [currentUser.id, req.created_by_user_id],
-                          participant_names: [currentUser.display_name, otherUser[0].display_name],
-                          participant_ages: [currentUser.age_range, otherUser[0].age_range],
-                          last_message: '',
-                          last_message_at: new Date().toISOString(),
-                          request_id: req.id
-                        });
-                        await base44.entities.HelpOffer.update(helpOffer.id, { conversation_id: newConversation.id });
-                        navigate(createPageUrl('Messages') + `?conversation=${newConversation.id}`);
-                      }
-                    }
-                    queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-                    toast.success('You\'ve offered to help! 💙');
-                  } catch (error) {
-                    toast.error('Failed to offer help');
-                  }
-                }}
-                filters={{ category: categoryFilter, location: locationFilter, time: timeFilter }}
-              />
-            </div>
+            )}
           </div>
         )}
-
-        {/* Create Button */}
-        {isActive && mainTab === 'circle' && (
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="fixed bottom-[80px] right-4 z-30 flex items-center gap-2 bg-[#0F172A] text-white text-[14px] font-semibold px-5 py-2.5 rounded-full active:scale-95 transition-all"
-            style={{ boxShadow: '0 4px 14px rgba(15,23,42,0.35)' }}
-          >
-            <Plus className="w-4 h-4" />
-            Request
-          </button>
-        )}
-      </div>
       <CreateMitzvahModal
         open={showCreateModal}
         onOpenChange={(open) => {
