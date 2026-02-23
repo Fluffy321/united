@@ -249,27 +249,31 @@ export default function MitzvahCircle({ isActive = true }) {
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
       {/* Compact Header */}
-      <div className="bg-white sticky top-0 z-10" style={{ borderBottom: '1px solid #EAECF0' }}>
+      <div className="bg-white sticky top-0 z-10" style={{ borderBottom: '1px solid #E8ECF4' }}>
         <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
-          <span className="font-bold text-[#0F1C2E] text-[16px] tracking-[-0.01em]">Mitzvah Circle</span>
+          <span className="font-bold text-[#0F172A] text-[16px] tracking-[-0.01em]">Mitzvah Circle</span>
           <div className="flex gap-1">
             <button
-              onClick={() => setViewMode('list')}
-              className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${viewMode === 'list' ? 'bg-[#0F1C2E] text-white' : 'text-[#667085] hover:bg-[#F2F4F7]'}`}
+              onClick={() => setMainTab('circle')}
+              className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'circle' ? 'bg-[#0F172A] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}
             >
-              <List className="w-3.5 h-3.5 inline mr-1" />List
+              <HandHeart className="w-3.5 h-3.5 inline mr-1" />Requests
             </button>
             <button
-              onClick={() => setViewMode('map')}
-              className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${viewMode === 'map' ? 'bg-[#0F1C2E] text-white' : 'text-[#667085] hover:bg-[#F2F4F7]'}`}
+              onClick={() => setMainTab('chesed')}
+              className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'chesed' ? 'bg-[#2563EB] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}
             >
-              <MapIcon className="w-3.5 h-3.5 inline mr-1" />Map
+              <Clock className="w-3.5 h-3.5 inline mr-1" />My Hours
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pt-4">
+      {mainTab === 'chesed' ? (
+        <ChesedHoursTab currentUser={currentUser} />
+      ) : null}
+
+      <div className={`max-w-2xl mx-auto px-4 pt-4 ${mainTab !== 'circle' ? 'hidden' : ''}`}>
 
         {/* Status + location filter row */}
         <div className="flex items-center justify-between mb-3">
