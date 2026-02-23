@@ -36,7 +36,7 @@ const createCustomIcon = (color, selected = false) => L.divIcon({
 });
 
 // Inner component that has access to the Leaflet map instance
-function MapInner({ center, zoom, requests, userOrigin, onSelectRequest, mapRef }) {
+function MapInner({ center, zoom, requests, userOrigin, onSelectRequest, mapRef, selectedRequestId }) {
   const map = useMap();
 
   // Expose map instance to parent via ref
@@ -77,7 +77,7 @@ function MapInner({ center, zoom, requests, userOrigin, onSelectRequest, mapRef 
         <Marker
           key={req.id}
           position={[req.approxLat, req.approxLng]}
-          icon={createCustomIcon(CATEGORY_COLORS[req.category] || '#64748b', false)}
+          icon={createCustomIcon(CATEGORY_COLORS[req.category] || '#64748b', req.id === selectedRequestId)}
           eventHandlers={{ click: () => onSelectRequest(req) }}
         />
       ))}
