@@ -60,7 +60,7 @@ export default function MitzvahCircle({ isActive = true }) {
   });
   const [timeFilter, setTimeFilter] = useState('anytime');
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
-  const [viewMode, setViewMode] = useState('list');
+  const [showMapModal, setShowMapModal] = useState(false);
   const [selectedMapRequest, setSelectedMapRequest] = useState(null);
   const [showDetailSheet, setShowDetailSheet] = useState(false);
   const queryClient = useQueryClient();
