@@ -410,7 +410,7 @@ export default function MitzvahCircle({ isActive = true }) {
         )}
 
         {/* Request Detail Overlay — scoped to list area when map is open, full-screen when collapsed */}
-        {selectedRequest && listRect && (
+        {selectedRequest && (
           <RequestDetailOverlay
             request={selectedRequest}
             currentUser={currentUser}
