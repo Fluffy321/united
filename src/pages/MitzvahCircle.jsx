@@ -361,66 +361,56 @@ export default function MitzvahCircle({ isActive = true }) {
         {mainTab === 'chesed' && <ChesedHoursTab currentUser={currentUser} />}
 
         {mainTab === 'circle' && (
-          <div
-            style={{
-              position: 'relative',
-              flex: 1,
-              overflow: 'hidden',
-              background: '#F7F8FA',
-              '--mapH': mapPanelState === 'EXPANDED' ? '42vh' : '0px',
-            }}
-          >
-            {/* Map panel — pinned to top, height driven by --mapH */}
+          <div style={{ position: 'relative', flex: 1, overflow: 'hidden', background: '#F7F8FA' }}>
+            {/* Map panel — ALWAYS mounted, height driven by mapH state */}
             <div style={{
               position: 'absolute', top: 0, left: 0, right: 0,
-              height: 'var(--mapH)',
+              height: mapH,
               overflow: 'hidden',
               zIndex: 1,
-              transition: 'height 0.28s cubic-bezier(0.4,0,0.2,1)',
               background: '#d1d5db',
+              willChange: 'height',
             }}>
-              {mapPanelState === 'EXPANDED' && (
-                <div style={{ width: '100%', height: '100%' }}>
-                  <MitzvahMapView
-                    key={`${mapCenter?.lat}-${mapCenter?.lng}`}
-                    requests={requests}
-                    userOrigin={userOrigin}
-                    mapCenter={mapCenter}
-                    mapZoom={mapZoom}
-                    currentUser={currentUser}
-                    onSelectRequest={(req) => setSelectedRequest(req)}
-                    onHelpRequest={() => {}}
-                    filters={{}}
-                  />
-                </div>
-              )}
+              <div style={{ width: '100%', height: SNAP_EXPANDED }}>
+                <MitzvahMapView
+                  ref={mapRef}
+                  requests={requests}
+                  userOrigin={userOrigin}
+                  mapCenter={mapCenter}
+                  mapZoom={mapZoom}
+                  currentUser={currentUser}
+                  onSelectRequest={(req) => setSelectedRequest(req)}
+                />
+              </div>
             </div>
 
-            {/* Requests panel — sits below map, never overlaps it */}
+            {/* Requests panel — sits below map */}
             <div style={{
               position: 'absolute',
-              top: 'var(--mapH)',
+              top: mapH,
               left: 0, right: 0, bottom: 0,
               display: 'flex', flexDirection: 'column',
               background: 'white',
               overflow: 'hidden',
-              transition: 'top 0.28s cubic-bezier(0.4,0,0.2,1)',
               zIndex: 2,
+              willChange: 'top',
             }}>
-              {/* Map toggle button */}
-              <button
-                onClick={() => setMapPanelState(s => s === 'EXPANDED' ? 'COLLAPSED' : 'EXPANDED')}
+              {/* Drag handle — tap to toggle, drag to resize */}
+              <div
+                onPointerDown={onHandlePointerDown}
+                onTouchStart={onHandlePointerDown}
+                onClick={toggleMap}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                   width: '100%', height: 34, flexShrink: 0,
                   background: 'white', border: 'none', borderBottom: '1px solid #F0F3F9',
-                  cursor: 'pointer', fontSize: 12, fontWeight: 600, color: '#6B7280',
-                  WebkitTapHighlightColor: 'transparent',
+                  cursor: 'row-resize', fontSize: 12, fontWeight: 600, color: '#6B7280',
+                  WebkitTapHighlightColor: 'transparent', userSelect: 'none', touchAction: 'none',
                 }}
               >
-                {mapPanelState === 'EXPANDED' ? <ChevronUp size={13} /> : <MapIcon size={13} />}
-                {mapPanelState === 'EXPANDED' ? 'Hide map' : 'Show map'}
-              </button>
+                {mapH > 0 ? <ChevronUp size={13} /> : <MapIcon size={13} />}
+                {mapH > 0 ? 'Hide map' : 'Show map'}
+              </div>
 
               {/* Status tabs + filter pills */}
               <div className="flex items-center gap-2 px-4 pt-3 pb-2 flex-shrink-0 bg-white" style={{ borderBottom: '1px solid #F0F3F9' }}>
