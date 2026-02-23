@@ -405,13 +405,25 @@ export default function MitzvahCircle({ isActive = true }) {
           </div>
         )}
 
-        {/* Fullscreen Request Detail Overlay */}
-        {selectedRequest && (
+        {/* Request Detail Overlay — scoped to list area when map is open, full-screen when collapsed */}
+        {selectedRequest && listRect && (
           <RequestDetailOverlay
             request={selectedRequest}
             currentUser={currentUser}
             onClose={() => setSelectedRequest(null)}
             onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
+            overlayStyle={{
+              position: 'fixed',
+              left: 0,
+              right: 0,
+              top: mapPanelState === 'EXPANDED' ? listRect.top : 0,
+              height: mapPanelState === 'EXPANDED' ? listRect.height : '100vh',
+              zIndex: 99999,
+              background: '#ffffff',
+              overflowY: 'auto',
+              borderTopLeftRadius: mapPanelState === 'EXPANDED' ? 20 : 0,
+              borderTopRightRadius: mapPanelState === 'EXPANDED' ? 20 : 0,
+            }}
           />
         )}
 
