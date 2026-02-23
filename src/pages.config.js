@@ -59,6 +59,7 @@ import Organization from './pages/Organization';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import ShulPage from './pages/ShulPage';
+import MitzvahMap from './pages/MitzvahMap';
 import __Layout from './Layout.jsx';
 
 
@@ -75,6 +76,7 @@ export const PAGES = {
     "Profile": Profile,
     "Settings": Settings,
     "ShulPage": ShulPage,
+    "MitzvahMap": MitzvahMap,
 }
 
 export const pagesConfig = {
