@@ -483,11 +483,11 @@ export default function MitzvahCircle({ isActive = true }) {
         )}
 
         {/* Create Button */}
-        {isActive && (
+        {isActive && mainTab === 'circle' && (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="fixed bottom-[80px] right-4 z-30 flex items-center gap-2 bg-[#0F1C2E] text-white text-[14px] font-semibold px-5 py-2.5 rounded-full active:scale-95 transition-all"
-            style={{ boxShadow: '0 4px 14px rgba(15,28,46,0.35)' }}
+            className="fixed bottom-[80px] right-4 z-30 flex items-center gap-2 bg-[#0F172A] text-white text-[14px] font-semibold px-5 py-2.5 rounded-full active:scale-95 transition-all"
+            style={{ boxShadow: '0 4px 14px rgba(15,23,42,0.35)' }}
           >
             <Plus className="w-4 h-4" />
             Request
