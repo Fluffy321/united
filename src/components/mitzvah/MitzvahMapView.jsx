@@ -180,18 +180,10 @@ export default function MitzvahMapView({ requests, userOrigin, mapCenter, mapZoo
           <div className="flex gap-2" style={{ position: 'relative', zIndex: 10000 }}>
             <button
               onClick={() => { onSelectRequest(selected); setSelected(null); }}
-              style={{ cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flex: 1, height: 40, borderRadius: 999, border: '1px solid #E8ECF4', fontSize: 13, fontWeight: 600, color: '#374151', background: 'white' }}
+              style={{ cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flex: 1, height: 40, borderRadius: 999, fontSize: 13, fontWeight: 600, color: 'white', background: '#0F172A' }}
             >
-              View Details
+              View Details →
             </button>
-            {!isRequester && (
-              <button
-                onClick={() => { onHelpRequest(selected); setSelected(null); }}
-                style={{ cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flex: 1, height: 40, borderRadius: 999, fontSize: 13, fontWeight: 600, color: 'white', background: '#0F172A' }}
-              >
-                I'll Help 💙
-              </button>
-            )}
           </div>
         </div>
       )}
