@@ -10,6 +10,7 @@ import LocationPrompt from '@/components/mitzvah/LocationPrompt';
 import MitzvahDetailSheet from '@/components/mitzvah/MitzvahDetailSheet';
 import FilterDrawer from '@/components/mitzvah/FilterDrawer';
 import RequestDetailOverlay from '@/components/mitzvah/RequestDetailOverlay';
+import MitzvahTabHeader from '@/components/mitzvah/MitzvahTabHeader';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
