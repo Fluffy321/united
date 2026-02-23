@@ -277,58 +277,10 @@ export default function MitzvahCircle({ isActive = true }) {
         {mainTab === 'chesed' && <ChesedHoursTab currentUser={currentUser} />}
 
         {mainTab === 'circle' && (
-          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#F7F8FA' }}>
 
-            {/* Map section — full width, no radius, no padding */}
-            <PullDownMap
-              requests={requests}
-              userOrigin={userOrigin}
-              mapCenter={mapCenter}
-              mapZoom={mapZoom}
-              currentUser={currentUser}
-              onSelectRequest={(req) => { setSelectedMapRequest(req); setShowDetailSheet(true); }}
-              onHelpRequest={async (req) => {
-                try {
-                  const helpOffer = await base44.entities.HelpOffer.create({
-                    request_id: req.id, helper_user_id: currentUser.id,
-                    helper_name: currentUser.display_name, status: 'active'
-                  });
-                  await base44.entities.MitzvahRequest.update(req.id, {
-                    status: 'in_progress', claimed_by_user_id: currentUser.id,
-                    claimed_by_name: currentUser.display_name
-                  });
-                  const convs = await base44.entities.Conversation.filter({
-                    participant_ids: { $all: [currentUser.id, req.created_by_user_id] }
-                  });
-                  if (convs.length > 0) {
-                    navigate(createPageUrl('Messages') + `?conversation=${convs[0].id}`);
-                  } else {
-                    const others = await base44.entities.User.filter({ id: req.created_by_user_id });
-                    if (others.length > 0) {
-                      const newConv = await base44.entities.Conversation.create({
-                        participant_ids: [currentUser.id, req.created_by_user_id],
-                        participant_names: [currentUser.display_name, others[0].display_name],
-                        participant_ages: [currentUser.age_range, others[0].age_range],
-                        last_message: '', last_message_at: new Date().toISOString(), request_id: req.id
-                      });
-                      navigate(createPageUrl('Messages') + `?conversation=${newConv.id}`);
-                    }
-                  }
-                  queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-                  toast.success("You've offered to help! 💙");
-                } catch { toast.error('Failed to offer help'); }
-              }}
-            />
-
-            {/* List section — slides over map */}
-            <div style={{
-              flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden',
-              background: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20,
-              marginTop: -12, boxShadow: '0 -8px 24px rgba(0,0,0,0.06)', zIndex: 2, position: 'relative',
-            }}>
-
-            {/* Status tabs */}
-            <div className="flex items-center gap-2 px-4 pt-3 pb-2 flex-shrink-0">
+            {/* Status tabs + filter pills */}
+            <div className="flex items-center gap-2 px-4 pt-3 pb-2 flex-shrink-0 bg-white" style={{ borderBottom: '1px solid #F0F3F9' }}>
               {['open', 'completed'].map(tab => (
                 <button
                   key={tab}
@@ -342,7 +294,6 @@ export default function MitzvahCircle({ isActive = true }) {
                   {tab === 'open' ? 'Needs Help' : 'Completed'}
                 </button>
               ))}
-              {/* Active filter pills */}
               {filters.scope === 'near' && (
                 <span style={{ fontSize: 11, fontWeight: 600, background: '#EEF2FF', color: '#4F46E5', borderRadius: 999, padding: '3px 10px' }}>
                   📍 Near Me
@@ -356,7 +307,7 @@ export default function MitzvahCircle({ isActive = true }) {
             </div>
 
             {/* List */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 112px', WebkitOverflowScrolling: 'touch' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 112px', WebkitOverflowScrolling: 'touch' }}>
               {isLoading ? (
                 <div className="space-y-3">
                   {[...Array(4)].map((_, i) => (
@@ -387,21 +338,24 @@ export default function MitzvahCircle({ isActive = true }) {
               ) : (
                 <div className="space-y-2">
                   {requests.map(request => (
-                    <MitzvahRequestCard
+                    <div
                       key={request.id}
-                      request={request}
-                      currentUser={currentUser}
-                      onClaim={handleClaim}
-                      onMessage={handleMessage}
-                      onComplete={handleComplete}
-                      showDistance={!!userOrigin && request.distance !== undefined && request.distance < 999}
-                    />
+                      onClick={() => setSelectedRequest(request)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <MitzvahRequestCard
+                        request={request}
+                        currentUser={currentUser}
+                        onClaim={handleClaim}
+                        onMessage={handleMessage}
+                        onComplete={handleComplete}
+                        showDistance={!!userOrigin && request.distance !== undefined && request.distance < 999}
+                      />
+                    </div>
                   ))}
                 </div>
               )}
             </div>
-
-            </div> {/* end list section */}
 
             {/* Create Button */}
             {isActive && (
@@ -415,6 +369,16 @@ export default function MitzvahCircle({ isActive = true }) {
               </button>
             )}
           </div>
+        )}
+
+        {/* Fullscreen Request Detail Overlay */}
+        {selectedRequest && (
+          <RequestDetailOverlay
+            request={selectedRequest}
+            currentUser={currentUser}
+            onClose={() => setSelectedRequest(null)}
+            onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
+          />
         )}
 
         <CreateMitzvahModal
