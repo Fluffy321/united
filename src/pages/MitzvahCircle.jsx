@@ -538,8 +538,9 @@ export default function MitzvahCircle({ isActive = true }) {
               </button>
             )}
             </div>
-           </div>
-         </div>
+            </div>
+            </div>
+            </div>
 
         <CreateMitzvahModal
           open={showCreateModal}
