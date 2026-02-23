@@ -17,7 +17,7 @@ export default function PullDownMap({
     // Report the bottom of the toggle button as the start of the list area
     if (toggleRef.current) {
       const rect = toggleRef.current.getBoundingClientRect();
-      onMapStateChange?.(v ? 'EXPANDED' : 'COLLAPSED', rect.bottom);
+      onMapStateChange?.(v ? 'EXPANDED' : 'COLLAPSED', rect.top);
     } else {
       onMapStateChange?.(v ? 'EXPANDED' : 'COLLAPSED', null);
     }
