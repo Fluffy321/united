@@ -7,9 +7,9 @@ const FALLBACK_FEEDS = {
     'https://www.jewishpress.com/feed/'
   ],
   israel: [
-    'https://www.israelnationalnews.com/RSS.aspx',
-    'https://www.jpost.com/rss',
-    'https://www.timesofisrael.com/the-daily-edition/rss-feed/'
+    'https://feeds.arstechnica.com/arstechnica/index',
+    'https://www.bbc.com/news/world/rss.xml',
+    'https://feeds.bloomberg.com/markets/news.rss'
   ]
 };
 
