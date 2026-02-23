@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Plus, HandHeart, Clock, SlidersHorizontal } from 'lucide-react';
 import ChesedHoursTab from '@/components/chesed/ChesedHoursTab';
 import { base44 } from '@/api/base44Client';
