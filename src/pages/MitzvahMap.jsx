@@ -36,14 +36,24 @@ export default function MitzvahMap() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showDetailSheet, setShowDetailSheet] = useState(false);
   const [scope, setScope] = useState('ALL'); // 'NEAR_ME' | 'ALL'
+  const [liveLocation, setLiveLocation] = useState(null); // from device GPS
 
   useEffect(() => {
     base44.auth.me().then(u => {
       setCurrentUser(u);
-      const origin = getUserOrigin(u);
-      if (origin) setScope('NEAR_ME');
     });
   }, []);
+
+  // When Near Me is tapped, try to get live GPS first
+  const handleScopeChange = (s) => {
+    setScope(s);
+    if (s === 'NEAR_ME' && !liveLocation) {
+      navigator.geolocation?.getCurrentPosition(
+        (pos) => setLiveLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => toast('Enable location to use Near Me', { description: 'Showing Five Towns area instead.' })
+      );
+    }
+  };
 
   const { data: requests = [], refetch } = useQuery({
     queryKey: ['mitzvah-map-requests'],

@@ -54,12 +54,12 @@ import CommunityUpdates from './pages/CommunityUpdates';
 import Feed from './pages/Feed';
 import Messages from './pages/Messages';
 import MitzvahCircle from './pages/MitzvahCircle';
+import MitzvahMap from './pages/MitzvahMap';
 import News from './pages/News';
 import Organization from './pages/Organization';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import ShulPage from './pages/ShulPage';
-import MitzvahMap from './pages/MitzvahMap';
 import __Layout from './Layout.jsx';
 
 
@@ -71,12 +71,12 @@ export const PAGES = {
     "Feed": Feed,
     "Messages": Messages,
     "MitzvahCircle": MitzvahCircle,
+    "MitzvahMap": MitzvahMap,
     "News": News,
     "Organization": Organization,
     "Profile": Profile,
     "Settings": Settings,
     "ShulPage": ShulPage,
-    "MitzvahMap": MitzvahMap,
 }
 
 export const pagesConfig = {
