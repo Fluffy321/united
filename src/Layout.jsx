@@ -51,6 +51,25 @@ export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
   const hideNav = ['Settings', 'ShulPage', 'Messages'].includes(currentPageName);
   const hideBottomPadding = ['Messages'].includes(currentPageName);
+  const navContainerRef = useRef(null);
+  const navItemRefs = useRef({});
+  const [pillStyle, setPillStyle] = useState({ left: 0, opacity: 0 });
+
+  useEffect(() => {
+    const recalculate = () => {
+      const activeItem = navItemRefs.current[currentPageName];
+      const container = navContainerRef.current;
+      if (!activeItem || !container) return;
+      const itemRect = activeItem.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const left = itemRect.left - containerRect.left + itemRect.width / 2;
+      setPillStyle({ left, opacity: 1 });
+    };
+
+    recalculate();
+    window.addEventListener('resize', recalculate);
+    return () => window.removeEventListener('resize', recalculate);
+  }, [currentPageName]);
   
   const swipeablePages = ['Feed', 'CommunityUpdates', 'Communities', 'MitzvahCircle', 'Profile'];
   const currentIndex = swipeablePages.indexOf(currentPageName);
