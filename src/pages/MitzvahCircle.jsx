@@ -495,6 +495,8 @@ export default function MitzvahCircle({ isActive = true }) {
         )}
       </div>
 
+      </div>{/* end circle tab max-w wrapper */}
+
       <CreateMitzvahModal
         open={showCreateModal}
         onOpenChange={(open) => {
