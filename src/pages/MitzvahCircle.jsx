@@ -51,6 +51,7 @@ const getUserOrigin = (user) => {
 export default function MitzvahCircle({ isActive = true }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [mainTab, setMainTab] = useState('circle'); // 'circle' | 'chesed'
   const [activeTab, setActiveTab] = useState('open');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [locationFilter, setLocationFilter] = useState(() => {
