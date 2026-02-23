@@ -407,18 +407,7 @@ export default function MitzvahCircle({ isActive = true }) {
           }}
         />
 
-        {selectedMapRequest && (
-          <MitzvahDetailSheet
-            request={selectedMapRequest}
-            currentUser={currentUser}
-            open={showDetailSheet}
-            onClose={() => {
-              setShowDetailSheet(false);
-              setSelectedMapRequest(null);
-            }}
-            onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
-          />
-        )}
+
       </div>
     );
 }
