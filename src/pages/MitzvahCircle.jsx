@@ -494,7 +494,6 @@ export default function MitzvahCircle({ isActive = true }) {
           </button>
         )}
       </div>
-
       <CreateMitzvahModal
         open={showCreateModal}
         onOpenChange={(open) => {
