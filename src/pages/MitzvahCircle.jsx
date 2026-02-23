@@ -300,98 +300,160 @@ export default function MitzvahCircle({ isActive = true }) {
         {mainTab === 'chesed' && <ChesedHoursTab currentUser={currentUser} />}
 
         {mainTab === 'circle' && (
-          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: '#F7F8FA' }}>
-
-            {/* Pull-down map */}
-            <PullDownMap
-              requests={requests}
-              userOrigin={userOrigin}
-              mapCenter={mapCenter}
-              mapZoom={mapZoom}
-              currentUser={currentUser}
-              onSelectRequest={(req) => setSelectedRequest(req)}
-              onHelpRequest={() => {}}
-              onMapStateChange={(state, toggleBottom) => {
-                setMapPanelState(state);
-                if (toggleBottom != null) setMapToggleBottom(toggleBottom);
-              }}
-            />
-
-            {/* Status tabs + filter pills */}
-            <div className="flex items-center gap-2 px-4 pt-3 pb-2 flex-shrink-0 bg-white" style={{ borderBottom: '1px solid #F0F3F9' }}>
-              {['open', 'completed'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`h-8 px-3.5 text-[12px] font-semibold rounded-full border transition-all ${
-                    activeTab === tab
-                      ? 'bg-[#0F1C2E] text-white border-[#0F1C2E]'
-                      : 'bg-white text-[#667085] border-[#EAECF0]'
-                  }`}
-                >
-                  {tab === 'open' ? 'Needs Help' : 'Completed'}
-                </button>
-              ))}
-              {filters.scope === 'near' && (
-                <span style={{ fontSize: 11, fontWeight: 600, background: '#EEF2FF', color: '#4F46E5', borderRadius: 999, padding: '3px 10px' }}>
-                  📍 Near Me
-                </span>
-              )}
-              {filters.category !== 'All' && (
-                <span style={{ fontSize: 11, fontWeight: 600, background: '#F1F5F9', color: '#374151', borderRadius: 999, padding: '3px 10px' }}>
-                  {filters.category}
-                </span>
+          <div
+            style={{
+              position: 'relative',
+              flex: 1,
+              overflow: 'hidden',
+              background: '#F7F8FA',
+              '--mapH': mapPanelState === 'EXPANDED' ? '42vh' : '0px',
+            }}
+          >
+            {/* Map panel — pinned to top, height driven by --mapH */}
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0,
+              height: 'var(--mapH)',
+              overflow: 'hidden',
+              zIndex: 1,
+              transition: 'height 0.28s cubic-bezier(0.4,0,0.2,1)',
+              background: '#d1d5db',
+            }}>
+              {mapPanelState === 'EXPANDED' && (
+                <div style={{ width: '100%', height: '100%' }}>
+                  <MitzvahMapView
+                    key={`${mapCenter?.lat}-${mapCenter?.lng}`}
+                    requests={requests}
+                    userOrigin={userOrigin}
+                    mapCenter={mapCenter}
+                    mapZoom={mapZoom}
+                    currentUser={currentUser}
+                    onSelectRequest={(req) => setSelectedRequest(req)}
+                    onHelpRequest={() => {}}
+                    filters={{}}
+                  />
+                </div>
               )}
             </div>
 
-            {/* List */}
-            <div ref={listContainerRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 112px', WebkitOverflowScrolling: 'touch', position: 'relative' }}>
-              {isLoading ? (
-                <div className="space-y-3">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
-                        <div className="flex-1 space-y-2">
-                          <div className="skeleton h-3.5 w-40 rounded" />
-                          <div className="skeleton h-3 w-full rounded" />
-                          <div className="skeleton h-3 w-3/4 rounded" />
+            {/* Requests panel — sits below map, never overlaps it */}
+            <div style={{
+              position: 'absolute',
+              top: 'var(--mapH)',
+              left: 0, right: 0, bottom: 0,
+              display: 'flex', flexDirection: 'column',
+              background: 'white',
+              overflow: 'hidden',
+              transition: 'top 0.28s cubic-bezier(0.4,0,0.2,1)',
+              zIndex: 2,
+            }}>
+              {/* Map toggle button */}
+              <button
+                onClick={() => setMapPanelState(s => s === 'EXPANDED' ? 'COLLAPSED' : 'EXPANDED')}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  width: '100%', height: 34, flexShrink: 0,
+                  background: 'white', border: 'none', borderBottom: '1px solid #F0F3F9',
+                  cursor: 'pointer', fontSize: 12, fontWeight: 600, color: '#6B7280',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                {mapPanelState === 'EXPANDED' ? <ChevronUp size={13} /> : <MapIcon size={13} />}
+                {mapPanelState === 'EXPANDED' ? 'Hide map' : 'Show map'}
+              </button>
+
+              {/* Status tabs + filter pills */}
+              <div className="flex items-center gap-2 px-4 pt-3 pb-2 flex-shrink-0 bg-white" style={{ borderBottom: '1px solid #F0F3F9' }}>
+                {['open', 'completed'].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`h-8 px-3.5 text-[12px] font-semibold rounded-full border transition-all ${
+                      activeTab === tab
+                        ? 'bg-[#0F1C2E] text-white border-[#0F1C2E]'
+                        : 'bg-white text-[#667085] border-[#EAECF0]'
+                    }`}
+                  >
+                    {tab === 'open' ? 'Needs Help' : 'Completed'}
+                  </button>
+                ))}
+                {filters.scope === 'near' && (
+                  <span style={{ fontSize: 11, fontWeight: 600, background: '#EEF2FF', color: '#4F46E5', borderRadius: 999, padding: '3px 10px' }}>
+                    📍 Near Me
+                  </span>
+                )}
+                {filters.category !== 'All' && (
+                  <span style={{ fontSize: 11, fontWeight: 600, background: '#F1F5F9', color: '#374151', borderRadius: 999, padding: '3px 10px' }}>
+                    {filters.category}
+                  </span>
+                )}
+              </div>
+
+              {/* List */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 112px', WebkitOverflowScrolling: 'touch', position: 'relative' }}>
+                {isLoading ? (
+                  <div className="space-y-3">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
+                          <div className="flex-1 space-y-2">
+                            <div className="skeleton h-3.5 w-40 rounded" />
+                            <div className="skeleton h-3 w-full rounded" />
+                            <div className="skeleton h-3 w-3/4 rounded" />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : requests.length === 0 ? (
-                <div className="text-center py-14 bg-white rounded-[14px] border border-[#EAECF0]">
-                  <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
-                    <HandHeart className="w-6 h-6 text-[#98A2B3]" />
+                    ))}
                   </div>
-                  <p className="text-[15px] font-semibold text-[#0F1C2E]">
-                    {activeTab === 'open' ? 'No open requests' : 'No completed mitzvahs yet'}
-                  </p>
-                  <p className="text-[13px] text-[#98A2B3] mt-1">
-                    {activeTab === 'open' ? 'Check back soon!' : 'Be the first to help!'}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {requests.map(request => (
-                    <div
-                      key={request.id}
-                      onClick={() => setSelectedRequest(request)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <MitzvahRequestCard
-                        request={request}
-                        currentUser={currentUser}
-                        onClaim={handleClaim}
-                        onMessage={handleMessage}
-                        onComplete={handleComplete}
-                        showDistance={!!userOrigin && request.distance !== undefined && request.distance < 999}
-                      />
+                ) : requests.length === 0 ? (
+                  <div className="text-center py-14 bg-white rounded-[14px] border border-[#EAECF0]">
+                    <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
+                      <HandHeart className="w-6 h-6 text-[#98A2B3]" />
                     </div>
-                  ))}
-                </div>
+                    <p className="text-[15px] font-semibold text-[#0F1C2E]">
+                      {activeTab === 'open' ? 'No open requests' : 'No completed mitzvahs yet'}
+                    </p>
+                    <p className="text-[13px] text-[#98A2B3] mt-1">
+                      {activeTab === 'open' ? 'Check back soon!' : 'Be the first to help!'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {requests.map(request => (
+                      <div
+                        key={request.id}
+                        onClick={() => setSelectedRequest(request)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <MitzvahRequestCard
+                          request={request}
+                          currentUser={currentUser}
+                          onClaim={handleClaim}
+                          onMessage={handleMessage}
+                          onComplete={handleComplete}
+                          showDistance={!!userOrigin && request.distance !== undefined && request.distance < 999}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Detail overlay — inside requests panel, never covers map */}
+              {selectedRequest && (
+                <RequestDetailOverlay
+                  request={selectedRequest}
+                  currentUser={currentUser}
+                  onClose={() => setSelectedRequest(null)}
+                  onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
+                  overlayStyle={{
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: 999,
+                    background: '#ffffff',
+                    overflowY: 'auto',
+                  }}
+                />
               )}
             </div>
 
@@ -407,28 +469,6 @@ export default function MitzvahCircle({ isActive = true }) {
               </button>
             )}
           </div>
-        )}
-
-        {/* Request Detail Overlay — scoped to list area when map is open, full-screen when collapsed */}
-        {selectedRequest && (
-          <RequestDetailOverlay
-            request={selectedRequest}
-            currentUser={currentUser}
-            onClose={() => setSelectedRequest(null)}
-            onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
-            overlayStyle={{
-                position: 'fixed',
-                left: 0,
-                right: 0,
-                top: mapPanelState === 'EXPANDED' && mapToggleBottom != null ? mapToggleBottom : 0,
-                bottom: 0,
-                zIndex: 99999,
-                background: '#ffffff',
-                overflowY: 'auto',
-                borderTopLeftRadius: mapPanelState === 'EXPANDED' ? 16 : 0,
-                borderTopRightRadius: mapPanelState === 'EXPANDED' ? 16 : 0,
-              }}
-          />
         )}
 
         <CreateMitzvahModal
