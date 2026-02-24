@@ -1,3 +1,4 @@
+// v2
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // Seeded content per shul (keyed by exact community name)
