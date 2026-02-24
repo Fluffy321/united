@@ -20,6 +20,7 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
   const [seeding, setSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState(null);
   const [pruning, setPruning] = useState(false);
+  const [pruningTen, setPruningTen] = useState(false);
   const [showGlobal, setShowGlobal] = useState(false);
   const [showSeededOnly, setShowSeededOnly] = useState(false);
   const queryClient = useQueryClient();
