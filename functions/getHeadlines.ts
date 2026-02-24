@@ -46,18 +46,42 @@ function extractItems(parsed, sourceUrl) {
   return null;
 }
 
+function extractImageFromRssItem(item, description) {
+  // 1. media:content or media:thumbnail
+  const mediaContent = item['media:content'] || item['media:thumbnail'];
+  if (mediaContent) {
+    const url = mediaContent?.['@_url'] || (Array.isArray(mediaContent) ? mediaContent[0]?.['@_url'] : null);
+    if (url) return url;
+  }
+  // 2. enclosure
+  const enclosure = item.enclosure;
+  if (enclosure) {
+    const url = enclosure?.['@_url'] || (Array.isArray(enclosure) ? enclosure[0]?.['@_url'] : null);
+    const type = enclosure?.['@_type'] || '';
+    if (url && (type.startsWith('image') || !type)) return url;
+  }
+  // 3. Scrape <img> from description HTML
+  if (description) {
+    const imgMatch = description.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch?.[1]) return imgMatch[1];
+  }
+  return null;
+}
+
 function mapRssItem(item, channelTitle) {
   const title = item.title?.['__cdata'] || item.title || '';
   const link = item.link?.['__cdata'] || item.link || item.guid?.['#text'] || item.guid || '';
   const pubDate = item.pubDate || item['dc:date'] || '';
   const description = item.description?.['__cdata'] || item.description || '';
   const plain = description.replace(/<[^>]*>/g, '').trim();
+  const image = extractImageFromRssItem(item, description);
   return {
     title: String(title).trim(),
     link: String(link).trim(),
     pubDate: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
     excerpt: plain.slice(0, 200) + (plain.length > 200 ? '...' : ''),
-    source: String(channelTitle).trim()
+    source: String(channelTitle).trim(),
+    image: image || null
   };
 }
 
