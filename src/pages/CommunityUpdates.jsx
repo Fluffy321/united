@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow, isToday, isTomorrow, format } from 'date-fns';
 import ProfileSetup from '@/components/profile/ProfileSetup';
+import ArticleViewer from '@/components/updates/ArticleViewer';
 import { toast } from 'sonner';
 
 export default function CommunityUpdates() {
