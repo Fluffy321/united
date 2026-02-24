@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 export default function CommunityUpdates() {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedNewsSource, setSelectedNewsSource] = useState('yeshivaworld');
+  const [selectedArticle, setSelectedArticle] = useState(null);
 
   useEffect(() => {
     loadUser();
