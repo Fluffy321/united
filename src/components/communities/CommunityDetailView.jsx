@@ -1,18 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import CommunityDetailHeader from './CommunityDetailHeader';
-import CommunityPostCard from './CommunityPostCard';
 import ClaimModal from './ClaimModal';
-import AdminToolsPanel from './AdminToolsPanel';
 import BasicInfoSection from './BasicInfoSection';
+import CommunityFeedTab from './CommunityFeedTab';
+import CommunityAnnouncementsTab from './CommunityAnnouncementsTab';
+import CommunityEventsTab from './CommunityEventsTab';
+import CommunityMitzvahTab from './CommunityMitzvahTab';
+
+const TABS = [
+  { key: 'about', label: 'About' },
+  { key: 'feed', label: 'Feed' },
+  { key: 'announcements', label: 'Announcements' },
+  { key: 'events', label: 'Events' },
+  { key: 'mitzvah', label: 'Mitzvah' },
+];
 
 export default function CommunityDetailView({ communityId, currentUser, onBack }) {
   const [activeTab, setActiveTab] = useState('about');
   const [showClaim, setShowClaim] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: community, isLoading } = useQuery({
@@ -21,36 +30,39 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
     enabled: !!communityId
   });
 
-  const { data: org } = useQuery({
-    queryKey: ['community-org', community?.claimed_org_id],
-    queryFn: () => base44.entities.CommunityOrg.filter({ id: community.claimed_org_id }).then(r => r[0]),
-    enabled: !!community?.claimed_org_id
-  });
-
   const { data: followRecord = [] } = useQuery({
     queryKey: ['community-follow', communityId, currentUser?.id],
     queryFn: () => base44.entities.CommunityFollow.filter({ community_id: communityId, user_id: currentUser.id }),
     enabled: !!currentUser
   });
 
-  const { data: orgMembership = [] } = useQuery({
-    queryKey: ['org-member', community?.claimed_org_id, currentUser?.id],
-    queryFn: () => base44.entities.OrgMember.filter({ org_id: community.claimed_org_id, user_id: currentUser.id }),
-    enabled: !!community?.claimed_org_id && !!currentUser
+  const { data: posts = [], isLoading: postsLoading } = useQuery({
+    queryKey: ['community-posts', communityId],
+    queryFn: () => base44.entities.CommunityPost.filter({ community_id: communityId }, '-created_date', 50),
+    enabled: !!communityId
   });
 
-  const { data: posts = [], refetch: refetchPosts } = useQuery({
-    queryKey: ['community-posts', communityId],
-    queryFn: () => base44.entities.CommunityPost.filter({ community_id: communityId }, '-created_date', 30),
+  const { data: events = [], isLoading: eventsLoading } = useQuery({
+    queryKey: ['community-events', communityId],
+    queryFn: () => base44.entities.CommunityEvent.filter({ community_id: communityId }, 'start_date', 50),
+    enabled: !!communityId
+  });
+
+  const { data: opportunities = [], isLoading: oppsLoading } = useQuery({
+    queryKey: ['community-opportunities', communityId],
+    queryFn: () => base44.entities.MitzvahOpportunity.filter({ community_id: communityId }, '-created_date', 50),
     enabled: !!communityId
   });
 
   const isFollowing = followRecord.length > 0;
-  const isAdmin = orgMembership.length > 0 || currentUser?.role === 'admin';
+  const isAdmin = currentUser?.role === 'admin';
 
   const handleFollow = async () => {
     if (isFollowing) {
       await base44.entities.CommunityFollow.delete(followRecord[0].id);
+      // Also delete UserCommunity if present
+      const memberships = await base44.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id });
+      for (const m of memberships) await base44.entities.UserCommunity.delete(m.id);
       if (community) {
         await base44.entities.Community.update(communityId, {
           follower_count: Math.max(0, (community.follower_count || 0) - 1)
@@ -59,15 +71,21 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
       toast.success('Unfollowed');
     } else {
       await base44.entities.CommunityFollow.create({ community_id: communityId, user_id: currentUser.id });
+      // Create UserCommunity membership
+      const existing = await base44.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id });
+      if (existing.length === 0) {
+        await base44.entities.UserCommunity.create({ user_id: currentUser.id, community_id: communityId, role: 'Member' });
+      }
       if (community) {
         await base44.entities.Community.update(communityId, {
           follower_count: (community.follower_count || 0) + 1
         });
       }
-      toast.success('Following!');
+      toast.success('Joined!');
     }
     queryClient.invalidateQueries({ queryKey: ['community-follow', communityId] });
     queryClient.invalidateQueries({ queryKey: ['community', communityId] });
+    queryClient.invalidateQueries({ queryKey: ['user-communities', currentUser?.id] });
   };
 
   if (isLoading || !community) {
@@ -78,73 +96,66 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
     );
   }
 
-  const events = posts.filter(p => p.type === 'event');
-  const announcements = posts.filter(p => p.type !== 'event');
+  // Tab badge counts
+  const announcementCount = posts.filter(p => p.type === 'announcement').length;
+  const eventCount = events.length;
+  const mitzvahCount = opportunities.filter(o => o.is_active !== false).length;
+
+  const tabsWithCounts = TABS.map(t => ({
+    ...t,
+    count: t.key === 'announcements' ? announcementCount
+         : t.key === 'events' ? eventCount
+         : t.key === 'mitzvah' ? mitzvahCount
+         : 0
+  }));
 
   return (
-    <div className="min-h-screen bg-[#F8FAFB] pb-24">
+    <div className="min-h-screen bg-[#F8FAFB] flex flex-col">
       <CommunityDetailHeader
         community={community}
         isFollowing={isFollowing}
         isAdmin={isAdmin}
         onFollow={handleFollow}
         onClaim={() => setShowClaim(true)}
-        onAdminTools={() => setShowAdmin(s => !s)}
+        onAdminTools={() => {}}
         onBack={onBack}
       />
 
-      {/* Admin panel */}
-      {showAdmin && isAdmin && (
-        <div className="max-w-2xl mx-auto px-4 pt-4">
-          <AdminToolsPanel
-            community={community}
-            org={org}
-            currentUser={currentUser}
-            onPostCreated={() => {
-              refetchPosts();
-              queryClient.invalidateQueries({ queryKey: ['community-posts', communityId] });
-            }}
-            onLogoUpdated={() => queryClient.invalidateQueries({ queryKey: ['community', communityId] })}
-            onInfoUpdated={() => queryClient.invalidateQueries({ queryKey: ['community', communityId] })}
-          />
-        </div>
-      )}
-
-      {/* Tabs */}
+      {/* Scrollable tabs */}
       <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto flex">
-          {['about', 'posts', 'events'].map(t => (
-            <button
-              key={t}
-              onClick={() => setActiveTab(t)}
-              className={`flex-1 py-3 text-sm font-medium capitalize transition-colors ${
-                activeTab === t ? 'text-[#0F5ED7] border-b-2 border-[#0F5ED7]' : 'text-slate-500'
-              }`}
-            >
-              {t}{t === 'posts' && announcements.length > 0 ? ` (${announcements.length})` : ''}
-              {t === 'events' && events.length > 0 ? ` (${events.length})` : ''}
-            </button>
-          ))}
+        <div className="max-w-2xl mx-auto overflow-x-auto scrollbar-hide">
+          <div className="flex min-w-max">
+            {tabsWithCounts.map(t => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={`px-4 py-3 text-[13px] font-medium whitespace-nowrap transition-colors relative ${
+                  activeTab === t.key ? 'text-[#0F5ED7]' : 'text-slate-500'
+                }`}
+              >
+                {t.label}
+                {t.count > 0 && (
+                  <span className="ml-1 text-[10px] bg-[#E0EDFF] text-[#2563EB] rounded-full px-1.5 py-0.5 font-bold">
+                    {t.count}
+                  </span>
+                )}
+                {activeTab === t.key && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0F5ED7] rounded-full" />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-4 space-y-3">
+      <div className="max-w-2xl mx-auto w-full px-4 pb-28">
         {activeTab === 'about' && (
-          <div className="space-y-3">
-
-
+          <div className="space-y-3 pt-4">
             <BasicInfoSection community={community} />
-
-            {!community.description_short && !community.description_long && !community.address && !community.phone && !community.website && (
-              <div className="bg-white rounded-2xl p-4 border border-slate-100">
-                <p className="text-sm text-slate-400 italic">No info added yet.</p>
-              </div>
-            )}
-
-            {!community.is_claimed && !community.is_seeded && (
+            {!community.is_claimed && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <p className="text-sm font-semibold text-amber-800 mb-1">Is this your organization?</p>
-                <p className="text-xs text-amber-700 mb-2">Claim this page to update info, post announcements, and more — for free.</p>
+                <p className="text-sm font-semibold text-amber-800 mb-1">Is this your shul?</p>
+                <p className="text-xs text-amber-700 mb-2">Claim this page to post announcements, events, and manage your community hub — free.</p>
                 <button onClick={() => setShowClaim(true)} className="text-xs font-bold text-[#0F5ED7] underline">
                   Claim this page →
                 </button>
@@ -153,26 +164,20 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
           </div>
         )}
 
-        {activeTab === 'posts' && (
-          announcements.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-3xl mb-2">📝</p>
-              <p className="text-slate-500 text-sm">No posts yet</p>
-            </div>
-          ) : (
-            announcements.map(p => <CommunityPostCard key={p.id} post={p} />)
-          )
+        {activeTab === 'feed' && (
+          <CommunityFeedTab posts={posts} isLoading={postsLoading} />
+        )}
+
+        {activeTab === 'announcements' && (
+          <CommunityAnnouncementsTab posts={posts} isLoading={postsLoading} />
         )}
 
         {activeTab === 'events' && (
-          events.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-3xl mb-2">📅</p>
-              <p className="text-slate-500 text-sm">No upcoming events</p>
-            </div>
-          ) : (
-            events.map(p => <CommunityPostCard key={p.id} post={p} />)
-          )
+          <CommunityEventsTab events={events} isLoading={eventsLoading} />
+        )}
+
+        {activeTab === 'mitzvah' && (
+          <CommunityMitzvahTab opportunities={opportunities} isLoading={oppsLoading} />
         )}
       </div>
 
