@@ -19,8 +19,12 @@ export default function CommunityUpdates() {
   }, []);
 
   const loadUser = async () => {
-    const user = await base44.auth.me();
-    setCurrentUser(user);
+    try {
+      const user = await base44.auth.me();
+      setCurrentUser(user);
+    } catch (e) {
+      setCurrentUser({ id: 'guest', full_name: 'Guest', display_name: 'Guest', role: 'user', is_profile_complete: true });
+    }
   };
 
   const { data: recentPosts = [] } = useQuery({
