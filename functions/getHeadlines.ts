@@ -226,7 +226,7 @@ Deno.serve(async (req) => {
     }
 
     const { format, channelTitle, rawItems } = extracted;
-    const items = rawItems
+    const mapped = rawItems
       .map(item => {
         try {
           return format === 'atom' ? mapAtomEntry(item, channelTitle) : mapRssItem(item, channelTitle);
@@ -237,6 +237,26 @@ Deno.serve(async (req) => {
       .filter(item => item && item.link && item.title)
       .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
       .slice(0, 10);
+
+    // For items missing images, try to fetch OG image from the article page
+    const items = await Promise.all(mapped.map(async (item) => {
+      if (item.image) return item;
+      try {
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 4000);
+        const res = await fetch(item.link, {
+          signal: controller.signal,
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; MitzvahApp/1.0)' }
+        });
+        clearTimeout(tid);
+        if (!res.ok) return item;
+        const html = await res.text();
+        const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+          || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+        if (ogMatch?.[1]) return { ...item, image: ogMatch[1] };
+      } catch (_) {}
+      return item;
+    }));
 
     if (items.length === 0) {
       return Response.json({
