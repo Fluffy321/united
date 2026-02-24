@@ -20,13 +20,28 @@ export default function Communities() {
     base44.auth.me().then(setCurrentUser);
   }, []);
 
-  const { data: communities = [], isLoading: communitiesLoading, refetch: refetchCommunities } = useQuery({
+const CORE_TEN_NAMES = [
+  'Young Israel of Lawrence-Cedarhurst',
+  'Congregation Beth Sholom',
+  'Congregation Sons of Israel',
+  'Aish Kodesh',
+  'Khal Bnei Torah',
+  'Beis Tefilah of Woodmere',
+  'Chabad of Woodmere',
+  'Ohr Torah of Woodmere',
+  'Shaaray Tefila of Lawrence',
+  'Congregation Bais Tefilah',
+];
+
+  const { data: allCommunities = [], isLoading: communitiesLoading } = useQuery({
     queryKey: ['communities-list'],
     queryFn: () => base44.entities.Community.list('-follower_count', 3000),
     enabled: !!currentUser,
-    staleTime: 0,
+    staleTime: 60000,
     refetchOnWindowFocus: false,
   });
+
+  const communities = allCommunities.filter(c => CORE_TEN_NAMES.includes(c.name));
 
   const { data: userMemberships = [], isLoading: membershipsLoading, refetch: refetchMemberships } = useQuery({
     queryKey: ['user-communities', currentUser?.id],
@@ -64,11 +79,6 @@ export default function Communities() {
   const handleJoinChange = () => {
     refetchMemberships();
     queryClient.invalidateQueries({ queryKey: ['communities-list'] });
-  };
-
-  const handleSeedDone = () => {
-    queryClient.removeQueries({ queryKey: ['communities-list'] });
-    refetchCommunities();
   };
 
   return (
