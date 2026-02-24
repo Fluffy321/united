@@ -87,19 +87,27 @@ export default function Feed() {
   };
 
   const loadPinnedPrompt = async () => {
-    const prompts = await base44.entities.DailyPrompt.filter({ is_pinned: true });
-    if (prompts.length > 0) {
-      setPinnedPrompt(prompts[0]);
-    } else {
-      const newest = await base44.entities.DailyPrompt.list('-created_date', 1);
-      if (newest.length > 0) setPinnedPrompt(newest[0]);
+    try {
+      const prompts = await base44.entities.DailyPrompt.filter({ is_pinned: true });
+      if (prompts.length > 0) {
+        setPinnedPrompt(prompts[0]);
+      } else {
+        const newest = await base44.entities.DailyPrompt.list('-created_date', 1);
+        if (newest.length > 0) setPinnedPrompt(newest[0]);
+      }
+    } catch (e) {
+      console.warn('loadPinnedPrompt failed:', e?.message);
     }
   };
 
   const loadUserLikes = async (user) => {
-    const u = user || await base44.auth.me();
-    const likes = await base44.entities.Like.filter({ user_id: u.id });
-    setUserLikes(likes.map(l => l.post_id));
+    try {
+      const u = user || await base44.auth.me();
+      const likes = await base44.entities.Like.filter({ user_id: u.id });
+      setUserLikes(likes.map(l => l.post_id));
+    } catch (e) {
+      console.warn('loadUserLikes failed:', e?.message);
+    }
   };
 
   const { data: posts = [], isLoading, isError, refetch: refetchPosts } = useQuery({
