@@ -135,8 +135,7 @@ const CORE_TEN_NAMES = [
                   joinedIds={joinedIds}
                   onJoinChange={handleJoinChange}
                   onViewCommunity={setSelectedCommunityId}
-                  onSeedDone={handleSeedDone}
-                />
+                  />
               </div>
             </motion.div>
           ) : (
