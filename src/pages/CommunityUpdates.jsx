@@ -94,6 +94,28 @@ export default function CommunityUpdates() {
     return format(date, 'MMM d');
   };
 
+  const NewsCard = ({ item }) => (
+    <a href={item.link} target="_blank" rel="noopener noreferrer"
+      className="block bg-white rounded-[14px] border border-[#EAECF0] active:scale-[0.99] transition-transform overflow-hidden"
+      style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+      {item.image && (
+        <img
+          src={item.image}
+          alt=""
+          className="w-full h-36 object-cover"
+          onError={e => { e.target.style.display = 'none'; }}
+        />
+      )}
+      <div className="p-4">
+        <p className="font-semibold text-[14px] text-[#0F1C2E] leading-snug mb-1.5">{item.title}</p>
+        {item.excerpt && <p className="text-[13px] text-[#667085] line-clamp-2 mb-2">{item.excerpt}</p>}
+        <p className="text-[12px] text-[#98A2B3]">
+          <span className="font-medium">{item.source}</span> · {formatDistanceToNow(new Date(item.pubDate), { addSuffix: true })}
+        </p>
+      </div>
+    </a>
+  );
+
   const NewsSkeletons = () => (
     <div className="space-y-3">
       {[...Array(4)].map((_, i) => (
