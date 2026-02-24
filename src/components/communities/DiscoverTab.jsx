@@ -13,7 +13,7 @@ const FIVE_TOWNS = new Set(['Lawrence', 'Cedarhurst', 'Woodmere', 'Inwood', 'Hew
 
 export default function DiscoverTab({ communities, isLoading, currentUser, joinedIds, onJoinChange, onViewCommunity, onSeedDone }) {
   const [search, setSearch] = useState('');
-  const [activeFilter, setActiveFilter] = useState('All');
+  const [activeFilter, setActiveFilter] = useState('Shuls');
   const [joiningId, setJoiningId] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const [allPage, setAllPage] = useState(1);
