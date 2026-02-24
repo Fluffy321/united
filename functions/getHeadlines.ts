@@ -93,13 +93,16 @@ function mapAtomEntry(entry, channelTitle) {
     : linkAttr;
   const updated = entry.updated || entry.published || '';
   const summary = entry.summary?.['__cdata'] || entry.summary || entry.content?.['__cdata'] || entry.content || '';
-  const plain = String(summary).replace(/<[^>]*>/g, '').trim();
+  const plainSummary = String(summary);
+  const image = extractImageFromRssItem(entry, plainSummary);
+  const plain = plainSummary.replace(/<[^>]*>/g, '').trim();
   return {
     title: String(title).trim(),
     link: String(altLink).trim(),
     pubDate: updated ? new Date(updated).toISOString() : new Date().toISOString(),
     excerpt: plain.slice(0, 200) + (plain.length > 200 ? '...' : ''),
-    source: String(channelTitle).trim()
+    source: String(channelTitle).trim(),
+    image: image || null
   };
 }
 
