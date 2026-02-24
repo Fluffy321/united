@@ -62,11 +62,29 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
     setPruning(false);
   };
 
+  const handlePruneToTen = async () => {
+    setPruningTen(true);
+    setSearch('');
+    setActiveFilter('Shuls');
+    setShowAll(false);
+    setAllPage(1);
+    try {
+      const res = await base44.functions.invoke('pruneToMainTenShuls', {});
+      const d = res.data;
+      toast.success(`Pruned to main 10 shuls. Deleted ${d?.deletedCount ?? 0}.`);
+      queryClient.removeQueries({ queryKey: ['communities-list'] });
+      if (onSeedDone) onSeedDone();
+    } catch (e) {
+      toast.error(e.message || 'Prune failed');
+    }
+    setPruningTen(false);
+  };
+
   const handleRunSeed = async () => {
     setSeeding(true);
     setSeedResult(null);
     setSearch('');
-    setActiveFilter('All');
+    setActiveFilter('Shuls');
     setShowAll(false);
     setAllPage(1);
     try {
