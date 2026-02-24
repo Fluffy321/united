@@ -185,6 +185,21 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
               {seeding ? 'Seeding…' : 'Run Seed'}
             </button>
           </div>
+          {/* Prune to main 10 */}
+          <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold text-amber-800">⭐ Keep Only Main 10 Shuls</p>
+              <p className="text-[11px] text-amber-600">Delete all seeded except core Five Towns shuls</p>
+            </div>
+            <button
+              onClick={handlePruneToTen}
+              disabled={pruningTen || seeding || pruning}
+              className="flex items-center gap-1.5 text-xs font-semibold bg-amber-600 text-white px-3 py-1.5 rounded-lg disabled:opacity-60"
+            >
+              {pruningTen ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+              {pruningTen ? 'Pruning…' : 'Prune to 10'}
+            </button>
+          </div>
           {/* Prune row */}
           <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center justify-between gap-3">
             <div>
@@ -193,7 +208,7 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
             </div>
             <button
               onClick={handlePrune}
-              disabled={pruning || seeding}
+              disabled={pruning || seeding || pruningTen}
               className="flex items-center gap-1.5 text-xs font-semibold bg-red-600 text-white px-3 py-1.5 rounded-lg disabled:opacity-60"
             >
               {pruning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
