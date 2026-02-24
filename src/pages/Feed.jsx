@@ -46,10 +46,14 @@ export default function Feed() {
 
   useEffect(() => {
     const init = async () => {
-      const user = await base44.auth.me();
-      setCurrentUser(user);
-      // Run these in parallel after we have the user — single auth.me() call
-      await Promise.all([loadPinnedPrompt(), loadUserLikes(user)]);
+      try {
+        const user = await base44.auth.me();
+        setCurrentUser(user);
+        // Run these in parallel, ignore individual failures
+        await Promise.allSettled([loadPinnedPrompt(), loadUserLikes(user)]);
+      } catch (e) {
+        console.warn('Feed init error:', e?.message);
+      }
     };
     init();
   }, []);
