@@ -21,6 +21,9 @@ function parseXml(xmlText) {
     textNodeName: '#text',
     parseTagValue: false,
     trimValues: true,
+    allowBooleanAttributes: true,
+    processEntities: true,
+    ignoreDeclaration: true,
     isArray: (name) => ['item', 'entry'].includes(name)
   });
   return parser.parse(xmlText);
