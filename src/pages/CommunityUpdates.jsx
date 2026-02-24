@@ -97,8 +97,9 @@ export default function CommunityUpdates() {
   };
 
   const NewsCard = ({ item }) => (
-    <a href={item.link} target="_blank" rel="noopener noreferrer"
-      className="block bg-white rounded-[14px] border border-[#EAECF0] active:scale-[0.99] transition-transform overflow-hidden"
+    <button
+      onClick={() => setSelectedArticle(item)}
+      className="block w-full text-left bg-white rounded-[14px] border border-[#EAECF0] active:scale-[0.99] transition-transform overflow-hidden"
       style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
       {item.image && (
         <img
@@ -115,7 +116,7 @@ export default function CommunityUpdates() {
           <span className="font-medium">{item.source}</span> · {formatDistanceToNow(new Date(item.pubDate), { addSuffix: true })}
         </p>
       </div>
-    </a>
+    </button>
   );
 
   const NewsSkeletons = () => (
