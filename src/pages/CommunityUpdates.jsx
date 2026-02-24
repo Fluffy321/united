@@ -133,6 +133,9 @@ export default function CommunityUpdates() {
 
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
+      {selectedArticle && (
+        <ArticleViewer item={selectedArticle} onClose={() => setSelectedArticle(null)} />
+      )}
       {/* Compact header */}
       <div className="bg-white sticky top-0 z-10" style={{ borderBottom: '1px solid #EAECF0' }}>
         <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
