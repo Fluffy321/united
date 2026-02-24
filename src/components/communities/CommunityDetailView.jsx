@@ -131,15 +131,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-3">
         {activeTab === 'about' && (
           <div className="space-y-3">
-            {community.is_seeded && !community.is_claimed && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <p className="text-xs font-semibold text-amber-700 mb-1">⚡ Auto-generated listing</p>
-                <p className="text-xs text-amber-600 mb-2">This page was automatically created. Claim it to add real info, post announcements, and engage your community — free.</p>
-                <button onClick={() => setShowClaim(true)} className="text-xs font-bold text-[#0F5ED7] underline">
-                  Claim this page →
-                </button>
-              </div>
-            )}
+
 
             <BasicInfoSection community={community} />
 
