@@ -193,15 +193,7 @@ export default function CommunityUpdates() {
           ) : (
             <div className="space-y-2.5">
               {israelData.items.map((item, index) => (
-                <a key={index} href={item.link} target="_blank" rel="noopener noreferrer"
-                  className="block bg-white rounded-[14px] border border-[#EAECF0] p-4 active:scale-[0.99] transition-transform"
-                  style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-                  <p className="font-semibold text-[14px] text-[#0F1C2E] leading-snug mb-1.5">{item.title}</p>
-                  {item.excerpt && <p className="text-[13px] text-[#667085] line-clamp-2 mb-2">{item.excerpt}</p>}
-                  <p className="text-[12px] text-[#98A2B3]">
-                    <span className="font-medium">{item.source}</span> · {formatDistanceToNow(new Date(item.pubDate), { addSuffix: true })}
-                  </p>
-                </a>
+                <NewsCard key={index} item={item} />
               ))}
             </div>
           )}
