@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import DiscoverTab from '@/components/communities/DiscoverTab';
 import MyCommunitiesTab from '@/components/communities/MyCommunitiesTab';
-import CommunityDetailView from '@/components/communities/CommunityDetailView';
+import CommunityDetailView from '@/components/communities/CommunityDetailView.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TABS = ['Discover', 'My Communities'];
