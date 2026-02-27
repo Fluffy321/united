@@ -149,6 +149,16 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
       </div>
 
       <div className="max-w-2xl mx-auto w-full px-4 pb-28">
+        {activeTab === 'home' && (
+          <CommunityHomepage
+            community={community}
+            posts={posts}
+            events={events}
+            opportunities={opportunities}
+            onTabChange={setActiveTab}
+          />
+        )}
+
         {activeTab === 'about' && (
           <div className="space-y-3 pt-4">
             <BasicInfoSection community={community} />
