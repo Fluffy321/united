@@ -22,7 +22,7 @@ const TABS = [
 ];
 
 export default function CommunityDetailView({ communityId, currentUser, onBack }) {
-  const [activeTab, setActiveTab] = useState('about');
+  const [activeTab, setActiveTab] = useState('home');
   const [showClaim, setShowClaim] = useState(false);
   const queryClient = useQueryClient();
 
