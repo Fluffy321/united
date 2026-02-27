@@ -19,7 +19,7 @@ export default function CommunityDetailHeader({ community, isFollowing, isAdmin,
           onClick={onBack}
           className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 hover:bg-white/30 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4 text-[#0F1C2E]" />
+          <ArrowLeft className="w-4 h-4 text-white" />
         </button>
 
         <CommunityLogo community={community} size="sm" />
