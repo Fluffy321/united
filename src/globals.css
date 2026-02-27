@@ -143,8 +143,9 @@ html, body {
 }
 
 body {
-  background-color: #f8fafc;
-  -webkit-font-smoothing: antialiased;
+  background-color: #fdfaf6; /* warm off-white */
+  color: #2c2c2c;
+  font-family: "Inter", sans-serif;
 }
 
 button {
