@@ -45,11 +45,11 @@ export default function CommunityDetailHeader({ community, isFollowing, isAdmin,
 
         <div className="flex gap-2 flex-shrink-0">
           {isAdmin ? (
-            <button onClick={onAdminTools} className="w-8 h-8 flex items-center justify-center rounded-full bg-[#F2F4F7] hover:bg-[#E9EBF0] transition-colors text-sm">
+            <button onClick={onAdminTools} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors text-sm">
               ⚙️
             </button>
           ) : !community.is_claimed ? (
-            <button onClick={onClaim} className="h-8 px-3 text-[13px] font-semibold rounded-full bg-[#F2F4F7] text-[#344054] hover:bg-[#E9EBF0] transition-colors">
+            <button onClick={onClaim} className="h-8 px-3 text-[13px] font-semibold rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors">
               Claim
             </button>
           ) : null}
@@ -57,8 +57,8 @@ export default function CommunityDetailHeader({ community, isFollowing, isAdmin,
             onClick={onFollow}
             className={`h-8 px-3.5 text-[13px] font-semibold rounded-full transition-colors ${
               isFollowing
-                ? 'bg-white/80 text-[#374151] border border-[#E0EDFF] hover:bg-[#E0EDFF]'
-                : 'bg-[#2563EB] text-white hover:bg-[#1d4ed8]'
+                ? 'bg-white text-[#2563EB] hover:bg-white/90'
+                : 'bg-white/20 text-white border border-white/40 hover:bg-white/30'
             }`}
           >
             {isFollowing ? 'Following' : 'Follow'}
