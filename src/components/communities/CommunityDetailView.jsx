@@ -110,14 +110,15 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
 
   return (
     <div className="min-h-screen bg-[#F8FAFB] flex flex-col">
-      <CommunityDetailHeader
+      <CommunityHero
         community={community}
         isFollowing={isFollowing}
         isAdmin={isAdmin}
         onFollow={handleFollow}
         onClaim={() => setShowClaim(true)}
-        onAdminTools={() => {}}
         onBack={onBack}
+        eventCount={events.length}
+        mitzvahCount={opportunities.filter(o => o.is_active !== false).length}
       />
 
       {/* Scrollable tabs */}
