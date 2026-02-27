@@ -223,6 +223,21 @@ h1, h2, h3 {
   background: #78350f;
 }
 
+.welcome-strip {
+  background: white;
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.welcome-strip p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #2c2c2c;
+  margin: 0;
+}
+
 /* Typography helpers */
 .u-title { font-size: 22px; font-weight: 700; color: var(--color-text-primary); line-height: 1.25; }
 .u-section-header { font-size: 16px; font-weight: 700; color: var(--color-text-primary); }
