@@ -71,6 +71,18 @@
   font-weight: 600;
 }
 
+.daily-prompt {
+  border-radius: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #7c3aed, #9333ea);
+  box-shadow: 0 10px 25px rgba(124,58,237,0.25);
+  transition: all 0.2s ease;
+}
+
+.daily-prompt:hover {
+  transform: translateY(-2px);
+}
+
 .card {
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.06);
