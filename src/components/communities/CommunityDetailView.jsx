@@ -13,6 +13,7 @@ import CommunityEventsTab from './CommunityEventsTab';
 import CommunityMitzvahTab from './CommunityMitzvahTab';
 
 const TABS = [
+  { key: 'home', label: 'Home' },
   { key: 'about', label: 'About' },
   { key: 'feed', label: 'Feed' },
   { key: 'announcements', label: 'Announcements' },
