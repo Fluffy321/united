@@ -46,6 +46,12 @@
   padding: 0 16px 100px;
 }
 
+.main-feed {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 120px;
+}
+
 .card {
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.06);
