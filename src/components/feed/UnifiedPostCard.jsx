@@ -3,6 +3,7 @@ import { Heart, MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, C
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from '@/components/common/UserAvatar';
+import HelperBadge from '@/components/profile/HelperBadge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,8 +71,11 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             <Link to={createPageUrl('Profile') + `?id=${post.user_id}`} className="flex items-center gap-2.5 min-w-0">
               <UserAvatar user={{...post, display_name: post.user_name}} size="sm" />
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="font-semibold text-[#0F1C2E] text-[14px] truncate">{post.user_name}</span>
+                  {post.helper_badge && post.helper_badge !== 'none' && (
+                    <HelperBadge badge={post.helper_badge} size="sm" />
+                  )}
                 </div>
                 <p className="text-[11px] text-[#98A2B3] mt-0.5">{post.city} · {timeAgo}</p>
               </div>
