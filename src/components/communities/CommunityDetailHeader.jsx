@@ -26,7 +26,7 @@ export default function CommunityDetailHeader({ community, isFollowing, isAdmin,
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="font-bold text-[#0F1C2E] text-[15px] truncate">{community.name}</span>
+            <h1 className="font-bold text-white text-[15px] truncate">{community.name}</h1>
             {community.is_claimed && <CheckCircle2 className="w-3.5 h-3.5 text-[#2563EB] flex-shrink-0" />}
             {community.is_featured && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
           </div>
