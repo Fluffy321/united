@@ -97,7 +97,27 @@ function SectionHeader({ title, count, onViewAll }) {
   );
 }
 
-export default function CommunityHomepage({ community, posts, events, opportunities, onTabChange }) {
+function StatsBar({ stats }) {
+  if (!stats) return null;
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      <div className="bg-white rounded-2xl border border-slate-100 p-3 text-center">
+        <div className="text-[20px] font-bold text-[#2563EB]">{stats.weeklyHours ?? 0}</div>
+        <div className="text-[11px] text-slate-500 font-medium mt-0.5">hrs this week</div>
+      </div>
+      <div className="bg-white rounded-2xl border border-slate-100 p-3 text-center">
+        <div className="text-[20px] font-bold text-emerald-600">+{stats.newMembers ?? 0}</div>
+        <div className="text-[11px] text-slate-500 font-medium mt-0.5">new members</div>
+      </div>
+      <div className="bg-white rounded-2xl border border-slate-100 p-3 text-center">
+        <div className="text-[20px] font-bold text-slate-800">{stats.memberCount ?? 0}</div>
+        <div className="text-[11px] text-slate-500 font-medium mt-0.5">total members</div>
+      </div>
+    </div>
+  );
+}
+
+export default function CommunityHomepage({ community, posts, events, opportunities, onTabChange, stats }) {
   const pinnedAnnouncement = posts.find(p => p.type === 'announcement' && p.is_pinned);
   const secondAnnouncement = posts.find(p => p.type === 'announcement' && !p.is_pinned);
   const feedPosts = posts.filter(p => p.type !== 'announcement').slice(0, 3);
