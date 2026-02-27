@@ -142,10 +142,19 @@ html, body {
   line-height: 1.5;
 }
 
+body {
+  background-color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
+}
+
 button {
   transition: all 0.2s ease;
   border-radius: 12px;
   font-weight: 600;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.3px;
 }
 
 .card-hover:hover {
