@@ -44,10 +44,23 @@ html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #F5F7FB;
+  background-color: #f8fafc;
   color: var(--color-text-primary);
   font-size: 15px;
   line-height: 1.5;
+}
+
+button {
+  transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+}
+
+.count:empty,
+.count[data-value="0"] {
+  display: none;
 }
 
 /* Scrollbar hide utility */
