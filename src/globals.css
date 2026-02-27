@@ -157,6 +157,10 @@ button {
   font-weight: 600;
 }
 
+h1, h2 {
+  font-weight: 700;
+}
+
 h1, h2, h3 {
   letter-spacing: -0.3px;
 }
