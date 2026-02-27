@@ -128,8 +128,11 @@
 }
 
 .card {
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+  margin-bottom: 18px;
 }
 
 html, body {
