@@ -98,6 +98,24 @@
   color: #64748b;
 }
 
+.quick-post-modal {
+  border-radius: 18px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  backdrop-filter: blur(6px);
+}
+
+.quick-post-button {
+  background: #6366f1;
+  border-radius: 12px;
+  font-weight: 600;
+  padding: 10px 18px;
+  transition: background 0.2s ease;
+}
+
+.quick-post-button:hover {
+  background: #4f46e5;
+}
+
 .card {
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.06);
