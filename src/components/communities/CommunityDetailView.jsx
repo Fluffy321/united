@@ -165,7 +165,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
             {!community.is_claimed && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
                 <p className="text-sm font-semibold text-amber-800 mb-1">Is this your shul?</p>
-                <p className="text-xs text-amber-700 mb-2">Claim this page to post announcements, events, and manage your community hub — free.</p>
+                <p className="text-xs text-amber-700 mb-2">This is your official community hub. Manage announcements, events, and mitzvah opportunities — free.</p>
                 <button onClick={() => setShowClaim(true)} className="text-xs font-bold text-[#0F5ED7] underline">
                   Claim this page →
                 </button>
