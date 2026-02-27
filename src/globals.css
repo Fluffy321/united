@@ -53,11 +53,10 @@
 }
 
 .daily-mitzvah {
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-  transition: transform 0.2s ease;
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-radius: 22px;
+  padding: 22px;
+  color: #f8fafc;
 }
 
 .daily-mitzvah:hover {
@@ -65,7 +64,7 @@
 }
 
 .streak-banner {
-  background: linear-gradient(135deg, #f97316, #ef4444);
+  background: linear-gradient(135deg, #c2410c, #9a3412);
   border-radius: 14px;
   padding: 14px;
   font-weight: 600;
