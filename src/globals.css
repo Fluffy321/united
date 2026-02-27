@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -224,18 +225,10 @@ h1, h2, h3 {
 }
 
 .welcome-strip {
-  background: white;
+  background: #fef3c7;
   border-radius: 16px;
-  padding: 18px 20px;
-  margin: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-.welcome-strip p {
-  font-size: 15px;
-  line-height: 1.6;
-  color: #2c2c2c;
-  margin: 0;
+  padding: 14px;
+  font-size: 14px;
 }
 
 /* Typography helpers */
