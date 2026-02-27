@@ -41,7 +41,7 @@ const CORE_TEN_NAMES = [
     refetchOnWindowFocus: false,
   });
 
-  const communities = allCommunities;
+  const communities = allCommunities.filter(c => c.type === 'Shul');
 
   const { data: userMemberships = [], isLoading: membershipsLoading, refetch: refetchMemberships } = useQuery({
     queryKey: ['user-communities', currentUser?.id],

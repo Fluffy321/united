@@ -1,16 +1,8 @@
 import React from 'react';
 import { Users, MapPin, CheckCircle2, Loader2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-const TYPE_COLORS = {
-  Shul:     'bg-blue-100 text-blue-700',
-  School:   'bg-green-100 text-green-700',
-  Yeshiva:  'bg-purple-100 text-purple-700',
-  Seminary: 'bg-pink-100 text-pink-700',
-  Camp:     'bg-orange-100 text-orange-700',
-  Other:    'bg-slate-100 text-slate-600',
-};
+
 
 export default function MyCommunitiesTab({ communities, isLoading, onViewCommunity, onBrowse }) {
   if (isLoading) {
@@ -56,16 +48,11 @@ export default function MyCommunitiesTab({ communities, isLoading, onViewCommuni
               <span className="font-bold text-slate-900 text-sm truncate">{community.name}</span>
               {community.is_claimed && <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />}
             </div>
-            <div className="flex items-center gap-1.5 mb-1">
-              <Badge className={`${TYPE_COLORS[community.type] || TYPE_COLORS.Other} border-0 text-[10px] font-semibold px-1.5 py-0`}>
-                {community.type}
-              </Badge>
-              {community.neighborhood && (
-                <span className="flex items-center gap-0.5 text-xs text-slate-400">
-                  <MapPin className="w-3 h-3" />{community.neighborhood}
-                </span>
-              )}
-            </div>
+            {community.neighborhood && (
+              <div className="flex items-center gap-0.5 text-xs text-slate-400 mb-1">
+                <MapPin className="w-3 h-3" />{community.neighborhood}
+              </div>
+            )}
             {community.follower_count > 0 && (
               <span className="text-xs text-slate-400">{community.follower_count} followers</span>
             )}
