@@ -17,7 +17,7 @@ export default function CommunityDetailHeader({ community, isFollowing, isAdmin,
       <div className="px-4 py-3 flex items-center gap-3">
         <button
           onClick={onBack}
-          className="w-8 h-8 rounded-full bg-[#F2F4F7] flex items-center justify-center flex-shrink-0 hover:bg-[#E9EBF0] transition-colors"
+          className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 hover:bg-white/30 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 text-[#0F1C2E]" />
         </button>
