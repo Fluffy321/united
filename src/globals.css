@@ -116,6 +116,17 @@
   background: #4f46e5;
 }
 
+.bottom-nav {
+  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.9);
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.bottom-nav .active {
+  color: #2563eb;
+  font-weight: 600;
+}
+
 .card {
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.06);
