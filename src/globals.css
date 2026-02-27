@@ -57,6 +57,8 @@ html, body {
 
 button {
   transition: all 0.2s ease;
+  border-radius: 12px;
+  font-weight: 600;
 }
 
 .card-hover:hover {
