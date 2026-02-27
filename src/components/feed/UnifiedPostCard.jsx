@@ -181,11 +181,23 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           </div>
         )}
 
-        {/* Help category */}
-        {post.category && post.type === 'help' && (
-          <span className="inline-block mt-2 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
-            {post.category}
-          </span>
+        {/* Help status and metadata */}
+        {post.type === 'help' && (
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            {post.category && (
+              <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
+                {post.category}
+              </span>
+            )}
+            <span className="text-[11px] font-semibold text-green-700 bg-green-50 border border-green-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="text-xs">✅</span> Open
+            </span>
+            {post.comments_count > 0 && (
+              <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="text-xs">👥</span> {post.comments_count} Volunteers
+              </span>
+            )}
+          </div>
         )}
       </div>
 

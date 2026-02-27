@@ -390,6 +390,28 @@ export default function Feed() {
       </div>
 
       <div className="main-feed">
+        {/* Action Buttons */}
+        <div className="action-bar mb-4">
+          <button
+            onClick={() => {
+              setPostModalType('help');
+              setShowPostModal(true);
+            }}
+            className="primary-action flex-1"
+          >
+            + Request Help
+          </button>
+          <button
+            onClick={() => {
+              setPostModalType('feed');
+              setShowPostModal(true);
+            }}
+            className="secondary-action flex-1"
+          >
+            + Offer Help
+          </button>
+        </div>
+
         {/* Pinned widgets — only on "All" tab */}
         {activeCategory === 'all' && (
           <div className="space-y-3 mb-4">
