@@ -389,7 +389,7 @@ export default function Feed() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pt-4">
+      <div className="feed-container pt-4">
         {/* Pinned widgets — only on "All" tab */}
         {activeCategory === 'all' && (
           <div className="space-y-3 mb-4">
