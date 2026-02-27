@@ -64,6 +64,13 @@
   transform: translateY(-2px);
 }
 
+.streak-banner {
+  background: linear-gradient(135deg, #f97316, #ef4444);
+  border-radius: 14px;
+  padding: 14px;
+  font-weight: 600;
+}
+
 .card {
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.06);
