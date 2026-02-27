@@ -165,6 +165,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
             events={events}
             opportunities={opportunities}
             onTabChange={setActiveTab}
+            stats={communityStats}
           />
         )}
 
