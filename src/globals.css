@@ -211,6 +211,18 @@ h1, h2, h3 {
 }
 .u-btn-secondary:hover { background: var(--color-border-subtle); }
 
+.primary-btn {
+  background: #92400e; /* warm brown-gold */
+  color: white;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-weight: 600;
+}
+
+.primary-btn:hover {
+  background: #78350f;
+}
+
 /* Typography helpers */
 .u-title { font-size: 22px; font-weight: 700; color: var(--color-text-primary); line-height: 1.25; }
 .u-section-header { font-size: 16px; font-weight: 700; color: var(--color-text-primary); }
