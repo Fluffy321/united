@@ -130,6 +130,9 @@ export default function CommunityHomepage({ community, posts, events, opportunit
   return (
     <div className="space-y-6 pt-4 pb-28">
 
+      {/* Stats Bar */}
+      <StatsBar stats={stats} />
+
       {/* Pinned Announcement Banner */}
       {(pinnedAnnouncement || secondAnnouncement) && (() => {
         const ann = pinnedAnnouncement || secondAnnouncement;
