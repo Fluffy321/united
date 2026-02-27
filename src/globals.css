@@ -88,6 +88,16 @@
   opacity: 0.85;
 }
 
+.post-author {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.post-meta {
+  font-size: 12px;
+  color: #64748b;
+}
+
 .card {
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.06);
