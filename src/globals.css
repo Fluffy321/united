@@ -217,6 +217,13 @@ h1, h2, h3 {
 .u-body { font-size: 15px; color: var(--color-text-primary); line-height: 1.55; }
 .u-caption { font-size: 12px; font-weight: 500; color: var(--color-text-muted); }
 
+/* Avatar */
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+
 /* Skeleton loader */
 @keyframes shimmer {
   0% { background-position: -400px 0; }
