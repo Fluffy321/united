@@ -40,6 +40,11 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+.card {
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
 html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
