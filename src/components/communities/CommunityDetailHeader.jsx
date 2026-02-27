@@ -31,13 +31,13 @@ export default function CommunityDetailHeader({ community, isFollowing, isAdmin,
             {community.is_featured && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${TYPE_COLORS[community.type] || TYPE_COLORS.Other}`}>
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white`}>
               {community.type}
             </span>
             {community.neighborhood && (
-              <span className="text-[11px] text-[#98A2B3]">{community.neighborhood}</span>
+              <span className="text-[11px] text-white/80">{community.neighborhood}</span>
             )}
-            <span className="flex items-center gap-0.5 text-[11px] text-[#98A2B3]">
+            <span className="flex items-center gap-0.5 text-[11px] text-white/80">
               <Users className="w-2.5 h-2.5" />{(community.follower_count || 0).toLocaleString()}
             </span>
           </div>
