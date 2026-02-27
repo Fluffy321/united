@@ -13,7 +13,7 @@ const TYPE_COLORS = {
 
 export default function CommunityDetailHeader({ community, isFollowing, isAdmin, onFollow, onClaim, onAdminTools, onBack }) {
   return (
-    <div style={{ background: 'linear-gradient(135deg, #E0EDFF 0%, #F5F7FB 100%)', borderBottom: '1px solid #E0EDFF' }}>
+    <div className="community-hero" style={{ background: 'linear-gradient(135deg, #2563eb, #4f46e5)', color: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', margin: '12px', borderBottom: 'none' }}>
       <div className="px-4 py-3 flex items-center gap-3">
         <button
           onClick={onBack}
