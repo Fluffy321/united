@@ -56,6 +56,15 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
     enabled: !!communityId
   });
 
+  const { data: communityStats } = useQuery({
+    queryKey: ['community-stats', communityId],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getCommunityImpact', { community_id: communityId });
+      return res.data;
+    },
+    enabled: !!communityId
+  });
+
   const isFollowing = followRecord.length > 0;
   const isAdmin = currentUser?.role === 'admin';
 
