@@ -137,10 +137,9 @@ Deno.serve(async (req) => {
     // 1. Generate 6-10 feed posts
     const postCount = randomInt(6, 10);
     const selectedPosts = randomSample(FEED_POSTS, postCount);
-    const selectedUsers = randomSample(SAMPLE_USERS, postCount);
 
     for (let i = 0; i < postCount; i++) {
-      const user = selectedUsers[i];
+      const user = randomChoice(SAMPLE_USERS);
       const hoursAgo = randomInt(1, 72);
       const postDate = new Date();
       postDate.setHours(postDate.getHours() - hoursAgo);
