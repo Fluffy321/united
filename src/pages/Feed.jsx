@@ -380,9 +380,7 @@ export default function Feed() {
           <span className="font-bold text-[#0F1C2E] text-[16px] tracking-[-0.01em]">
             {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
           </span>
-          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F2F4F7] transition-colors">
-            <SlidersHorizontal className="w-4 h-4 text-[#667085]" />
-          </button>
+
         </div>
         <div className="max-w-2xl mx-auto">
           <FeedCategoryTabs activeCategory={activeCategory} onChange={setActiveCategory} />
