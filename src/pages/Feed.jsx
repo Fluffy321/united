@@ -452,6 +452,7 @@ export default function Feed() {
                 </div>
               </div>
             )}
+            <WeeklyImpactCard />
             <CommunityResponseScore />
             {pinnedPrompt && (
               <DailyPromptCard prompt={pinnedPrompt} onReply={handlePromptReply} />
