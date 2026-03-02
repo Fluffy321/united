@@ -425,6 +425,49 @@ export default function Feed() {
           </div>
         )}
 
+        {/* Nearby Help Banner */}
+        {activeCategory === 'all' && (
+          <NearbyHelpBanner currentUser={currentUser} onClaim={handleHelpMitzvah} />
+        )}
+
+        {/* Live Help Board - Scaled down */}
+        {activeCategory === 'all' && openMitzvahRequests.length > 0 && (
+          <div style={{ transform: 'scale(0.9)', transformOrigin: 'top left', marginBottom: '-10%' }}>
+            <LiveHelpBoard requests={openMitzvahRequests} onClaim={handleHelpMitzvah} />
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="action-card">
+          <button
+            onClick={() => {
+              setPostModalType('help');
+              setShowPostModal(true);
+            }}
+            className="primary-btn"
+          >
+            Request Help
+          </button>
+          <button
+            onClick={() => {
+              setPostModalType('feed');
+              setShowPostModal(true);
+            }}
+            className="secondary-btn"
+          >
+            Offer Help
+          </button>
+        </div>
+
+        {/* Alert Button */}
+        <button
+          onClick={() => setShowAlertModal(true)}
+          className="w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold text-[13px] py-3 rounded-xl transition-all mb-4"
+          title="Community Alert"
+        >
+          🚨 Report Community Alert
+        </button>
+
         {isLoading ? (
           <div className="space-y-3 pb-24">
             {[...Array(5)].map((_, i) => (
