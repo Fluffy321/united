@@ -11,6 +11,7 @@ import StreakBadge from '@/components/profile/StreakBadge';
 import HelperBadge from '@/components/profile/HelperBadge';
 import WeeklySummary from '@/components/profile/WeeklySummary';
 import MitzvahTimeline from '@/components/profile/MitzvahTimeline';
+import HelperBadgeShowcase from '@/components/profile/HelperBadgeShowcase';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
