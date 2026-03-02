@@ -389,6 +389,11 @@ export default function Feed() {
       </div>
 
       <div className="main-feed">
+        {/* Nearby Help Banner */}
+        {activeCategory === 'all' && (
+          <NearbyHelpBanner currentUser={currentUser} onClaim={handleHelpMitzvah} />
+        )}
+
         {/* Action Buttons */}
         <div className="action-bar mb-4">
           <button
