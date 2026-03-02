@@ -162,6 +162,26 @@ export default function LiveHelpBoard({ requests = [], onClaim }) {
       <UrgencyRow urgency="urgent" requests={urgent} onClaim={onClaim} />
       <UrgencyRow urgency="soon" requests={soon} onClaim={onClaim} />
       <UrgencyRow urgency="ongoing" requests={ongoing} onClaim={onClaim} />
+
+      {/* Recently Fulfilled Section */}
+      <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/30 overflow-hidden">
+        <div className="px-3 py-2.5 flex items-center gap-2">
+          <span className="text-lg">✔️</span>
+          <span className="text-[11px] font-bold text-emerald-700">RECENTLY FULFILLED</span>
+        </div>
+        <div className="divide-y divide-emerald-100 bg-white/50">
+          {[
+            { emoji: '🚗', title: 'Ride to JFK' },
+            { emoji: '👶', title: 'Babysitting covered' },
+            { emoji: '🍽️', title: 'Meal delivered' }
+          ].map((item, idx) => (
+            <div key={idx} className="flex items-center gap-2.5 px-3 py-2">
+              <span className="text-lg flex-shrink-0">{item.emoji}</span>
+              <p className="text-[13px] text-emerald-700 font-medium">{item.title}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
