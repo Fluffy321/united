@@ -158,7 +158,7 @@ export default function ShulPage() {
               { value: 'chesed', label: '🤝 Chesed' },
               { value: 'members', label: '👥 Members' },
               { value: 'media', label: '📄 Media' }
-            ].map(tab => (
+            ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
