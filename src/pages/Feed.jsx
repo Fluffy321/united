@@ -426,6 +426,13 @@ export default function Feed() {
           >
             + Offer Help
           </button>
+          <button
+            onClick={() => setShowAlertModal(true)}
+            className="flex items-center justify-center gap-1 flex-shrink-0 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold text-[13px] px-3 py-3 rounded-xl transition-all"
+            title="Community Alert"
+          >
+            🚨
+          </button>
         </div>
 
         {/* Pinned widgets — only on "All" tab */}
