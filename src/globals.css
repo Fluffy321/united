@@ -53,8 +53,9 @@
 }
 
 .daily-mitzvah {
-  background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
-  color: white;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
   border-radius: 18px;
   padding: 20px;
 }
