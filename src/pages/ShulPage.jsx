@@ -238,6 +238,24 @@ export default function ShulPage() {
             </motion.div>
           </TabsContent>
 
+          {/* HELP FEED */}
+          <TabsContent value="help">
+            <motion.div
+              key="help"
+              initial={{ x: tabDirection > 0 ? 60 : -60, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.22 }}
+              className="space-y-4"
+            >
+              <ShulHelpFeed
+                shulId={shulId}
+                shulName={shul.name}
+                currentUser={currentUser}
+                isAdmin={isAdmin}
+              />
+            </motion.div>
+          </TabsContent>
+
           {/* EVENTS */}
           <TabsContent value="events">
             <motion.div
