@@ -166,6 +166,10 @@ h1, h2, h3 {
   letter-spacing: -0.3px;
 }
 
+.section {
+  margin-bottom: 24px;
+}
+
 .card-hover:hover {
   transform: translateY(-2px);
 }
