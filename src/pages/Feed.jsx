@@ -25,6 +25,7 @@ import CommunityResponseScore from '@/components/feed/CommunityResponseScore';
 import LiveHelpBoard from '@/components/feed/LiveHelpBoard';
 import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import CommunityAlertBanner from '@/components/feed/CommunityAlertBanner';
+import WeeklyImpactCard from '@/components/feed/WeeklyImpactCard';
 import { toast } from 'sonner';
 import { format, isToday, parseISO } from 'date-fns';
 
