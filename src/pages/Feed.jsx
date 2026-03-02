@@ -401,47 +401,6 @@ export default function Feed() {
         {/* Community Alert Banner */}
         <CommunityAlertBanner currentUser={currentUser} />
 
-        {/* Nearby Help Banner */}
-        {activeCategory === 'all' && (
-          <NearbyHelpBanner currentUser={currentUser} onClaim={handleHelpMitzvah} />
-        )}
-
-        {/* Live Help Board */}
-        {activeCategory === 'all' && openMitzvahRequests.length > 0 && (
-          <LiveHelpBoard requests={openMitzvahRequests} onClaim={handleHelpMitzvah} />
-        )}
-
-        {/* Action Buttons */}
-        <div className="action-card">
-          <button
-            onClick={() => {
-              setPostModalType('help');
-              setShowPostModal(true);
-            }}
-            className="primary-btn"
-          >
-            Request Help
-          </button>
-          <button
-            onClick={() => {
-              setPostModalType('feed');
-              setShowPostModal(true);
-            }}
-            className="secondary-btn"
-          >
-            Offer Help
-          </button>
-        </div>
-
-        {/* Alert Button */}
-        <button
-          onClick={() => setShowAlertModal(true)}
-          className="w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold text-[13px] py-3 rounded-xl transition-all mb-4"
-          title="Community Alert"
-        >
-          🚨 Report Community Alert
-        </button>
-
         {/* Pinned widgets — only on "All" tab */}
         {activeCategory === 'all' && (
           <div className="space-y-3 mb-4">
