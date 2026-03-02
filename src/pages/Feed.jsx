@@ -20,6 +20,7 @@ import QuickPostPrompt from '@/components/feed/QuickPostPrompt';
 import QuickPostModal from '@/components/feed/QuickPostModal';
 import PostTypeSelector from '@/components/feed/PostTypeSelector';
 import FeedCategoryTabs from '@/components/feed/FeedCategoryTabs';
+import NearbyHelpBanner from '@/components/feed/NearbyHelpBanner';
 import { toast } from 'sonner';
 import { format, isToday, parseISO } from 'date-fns';
 
