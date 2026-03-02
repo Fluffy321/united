@@ -137,7 +137,7 @@ export default function LiveHelpBoard({ requests = [], onClaim }) {
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5">
             <Radio className="w-3.5 h-3.5 text-red-500 animate-pulse" />
-            <span className="font-bold text-[20px] text-[#0F1C2E]">Live Help Board</span>
+            <span className="font-bold text-[20px] text-[#0F1C2E]">Community Help Center</span>
           </div>
           {urgentCount > 0 && (
             <span className="text-[11px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full border border-red-200 animate-pulse">
