@@ -128,7 +128,7 @@ export default function NearbyHelpBanner({ currentUser, onClaim }) {
     return (
       <div className="bg-white border border-emerald-200 rounded-[14px] overflow-hidden mb-3" style={{ boxShadow: '0 2px 8px rgba(16,185,129,0.10)' }}>
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3 flex items-center justify-between">
+        <div className="bg-emerald-50 border-b border-emerald-100 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Navigation className="w-4 h-4 text-white" />
             <span className="font-bold text-[13px] text-white">
