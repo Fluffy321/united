@@ -393,6 +393,9 @@ export default function Feed() {
       </div>
 
       <div className="main-feed">
+        {/* Community Alert Banner */}
+        <CommunityAlertBanner currentUser={currentUser} />
+
         {/* Nearby Help Banner */}
         {activeCategory === 'all' && (
           <NearbyHelpBanner currentUser={currentUser} onClaim={handleHelpMitzvah} />
