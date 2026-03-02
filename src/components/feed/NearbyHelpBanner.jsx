@@ -90,7 +90,7 @@ export default function NearbyHelpBanner({ currentUser, onClaim }) {
         </div>
         <button
           onClick={requestLocation}
-          className="w-full bg-white text-emerald-700 font-bold text-[13px] py-2 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+          className="w-full bg-emerald-600 text-white font-bold text-[13px] py-2 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-all mt-3"
         >
           <MapPin className="w-3.5 h-3.5" />
           Enable Location
