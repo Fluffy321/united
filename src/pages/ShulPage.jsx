@@ -40,7 +40,7 @@ export default function ShulPage() {
   const params = new URLSearchParams(location.search);
   const shulId = params.get('shulId');
 
-  const TABS = ['dashboard', 'events', 'chesed', 'members', 'media'];
+  const TABS = ['dashboard', 'help', 'events', 'chesed', 'members', 'media'];
 
   useEffect(() => {
     loadData();
