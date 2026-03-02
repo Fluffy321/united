@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from 'date-fns';
 import { base44 } from '@/api/base44Client';
+import StatusPipeline from './StatusPipeline';
+import ThankYouBanner from './ThankYouBanner';
 
 const CATEGORY_COLORS = {
   'Errand': 'bg-blue-600 text-white font-bold',

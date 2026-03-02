@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, MapPin, Clock, Hand, MessageCircle, CheckCircle2, AlertCircle, Flag, BookOpen } from 'lucide-react';
+import StatusPipeline from './StatusPipeline';
+import ThankYouBanner from './ThankYouBanner';
 import { formatDistanceToNow } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
