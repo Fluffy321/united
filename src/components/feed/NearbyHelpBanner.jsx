@@ -80,12 +80,12 @@ export default function NearbyHelpBanner({ currentUser, onClaim }) {
           <X className="w-3.5 h-3.5 text-slate-500" />
         </button>
         <div className="flex items-center gap-2.5 mb-2">
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-            <Navigation className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+            <Navigation className="w-4 h-4 text-emerald-600" />
           </div>
           <div>
-            <p className="font-bold text-[14px]">Help Within 5 Miles</p>
-            <p className="text-[12px] text-white/80">See who needs help near you right now</p>
+            <p className="font-bold text-[14px] text-[#0F1C2E]">Help Within 5 Miles</p>
+            <p className="text-[12px] text-slate-500">See who needs help near you right now</p>
           </div>
         </div>
         <button
