@@ -75,9 +75,9 @@ export default function NearbyHelpBanner({ currentUser, onClaim }) {
       <div className="bg-white border border-emerald-200 rounded-[14px] p-4 mb-3 relative">
         <button
           onClick={() => setDismissed(true)}
-          className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30"
+          className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-3.5 h-3.5 text-slate-500" />
         </button>
         <div className="flex items-center gap-2.5 mb-2">
           <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
