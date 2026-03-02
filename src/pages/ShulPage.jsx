@@ -21,6 +21,8 @@ import VolunteerBoard from '@/components/shul/VolunteerBoard';
 import AdminBroadcastModal from '@/components/shul/AdminBroadcastModal';
 import MembersTab from '@/components/shul/MembersTab';
 import MediaTab from '@/components/shul/MediaTab';
+import ShulHelpFeed from '@/components/shul/ShulHelpFeed';
+import ShulQRCode from '@/components/shul/ShulQRCode';
 
 export default function ShulPage() {
   const location = useLocation();
