@@ -22,6 +22,15 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
   const isHelper = currentUser?.id === request.claimed_by_user_id;
   const timeAgo = formatDistanceToNow(new Date(request.created_date), { addSuffix: true });
 
+  // Track view
+  useEffect(() => {
+    if (!isRequester && isOpen) {
+      base44.entities.MitzvahRequest.update(request.id, {
+        views_count: (request.views_count || 0) + 1
+      }).catch(() => {});
+    }
+  }, [request.id]);
+
   const formatDistance = (distance) => {
     if (!distance || distance >= 999) return null;
     if (distance < 0.5) return 'Nearby';
