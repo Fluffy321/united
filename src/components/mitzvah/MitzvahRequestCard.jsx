@@ -65,6 +65,25 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
 
       <p className="text-black text-sm mb-2 leading-relaxed font-bold">{request.description}</p>
 
+      {/* Social proof signals */}
+      {isOpen && (request.views_count > 0 || request.offers_count > 0) && (
+        <div className="flex items-center gap-3 mb-2">
+          {request.views_count > 0 && (
+            <span className="flex items-center gap-1 text-[11px] text-slate-400">
+              <Eye className="w-3 h-3" />{request.views_count} viewed
+            </span>
+          )}
+          {request.offers_count > 0 && (
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
+              <Users className="w-3 h-3" />{request.offers_count} offered help
+            </span>
+          )}
+          {request.bump_count > 0 && (
+            <span className="text-[11px] text-orange-500 font-semibold">🔔 Re-surfaced</span>
+          )}
+        </div>
+      )}
+
       <div className="flex items-center justify-between pt-2 border-t border-slate-100">
         <div className="text-sm text-slate-500">
           {request.is_anonymous ? (
