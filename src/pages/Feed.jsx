@@ -143,8 +143,7 @@ export default function Feed() {
   const { data: openMitzvahRequests = [] } = useQuery({
     queryKey: ['open-mitzvah'],
     queryFn: async () => {
-      const requests = await base44.entities.MitzvahRequest.filter({ status: 'Open' }, '-created_date', 10);
-      return requests.filter(r => isToday(parseISO(r.created_date)));
+      return base44.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 50);
     },
     staleTime: 600000,
     gcTime: 600000,
