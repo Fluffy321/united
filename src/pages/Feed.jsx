@@ -395,6 +395,9 @@ export default function Feed() {
       </div>
 
       <div className="main-feed">
+        {/* Weekly Activity Bar */}
+        <WeeklyActivityBar />
+
         {/* Community Alert Banner */}
         <CommunityAlertBanner currentUser={currentUser} />
 
