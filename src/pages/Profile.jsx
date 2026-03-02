@@ -8,6 +8,7 @@ import PostCard from '@/components/feed/PostCard';
 import ReportModal from '@/components/common/ReportModal';
 import UserAvatar from '@/components/common/UserAvatar';
 import StreakBadge from '@/components/profile/StreakBadge';
+import HelperBadge from '@/components/profile/HelperBadge';
 import WeeklySummary from '@/components/profile/WeeklySummary';
 import MitzvahTimeline from '@/components/profile/MitzvahTimeline';
 import { Link, useNavigate } from 'react-router-dom';
