@@ -39,15 +39,18 @@ Deno.serve(async (req) => {
 
   const rideVolunteers = volunteers.filter(v =>
     Array.isArray(v.categories) && v.categories.includes('RIDES') &&
-    (v.helps_this_week ?? 0) < (v.weekly_limit ?? 2)
+    (v.helps_this_week ?? 0) < (v.weekly_limit ?? 2) &&
+    distanceInMiles(v.location_lat, v.location_lng, pickupLat, pickupLng) < 10
   );
+
+  const timeLabel = time ? new Date(time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : 'soon';
 
   await Promise.allSettled(
     rideVolunteers.map(v =>
       base44.asServiceRole.entities.Notification.create({
         user_id: v.user_id,
         type: 'ride_request',
-        message: `New ride request to ${destination}`,
+        message: `Ride needed near you at ${timeLabel}`,
         link: `/MitzvahCircle?request=${request.id}`,
         read: false,
       })
