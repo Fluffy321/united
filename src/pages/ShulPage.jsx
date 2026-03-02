@@ -185,6 +185,11 @@ export default function ShulPage() {
                 <WeeklyScheduleWidget shulId={shulId} />
               </div>
 
+              {/* QR Code — admin only */}
+              {isAdmin && (
+                <ShulQRCode shul={shul} />
+              )}
+
               {/* Pinned Announcements */}
               {pinnedAnnouncements.length > 0 && (
                 <div>
