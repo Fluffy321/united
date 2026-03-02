@@ -140,16 +140,16 @@ html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8fafc !important;
   color: var(--color-text-primary);
   font-size: 15px;
   line-height: 1.5;
 }
 
 body {
-  background-color: #fdfaf6; /* warm off-white */
+  background-color: #f9fafb;
   color: #2c2c2c;
   font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 button {
