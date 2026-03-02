@@ -72,7 +72,7 @@ export default function NearbyHelpBanner({ currentUser, onClaim }) {
   // Prompt to enable location
   if (status === 'idle') {
     return (
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-[14px] p-4 text-white mb-3 relative">
+      <div className="bg-white border border-emerald-200 rounded-[14px] p-4 mb-3 relative">
         <button
           onClick={() => setDismissed(true)}
           className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30"
