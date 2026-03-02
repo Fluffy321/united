@@ -39,8 +39,24 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
     return `${distance.toFixed(1)} mi`;
   };
 
+  // Normalize status
+  const normalizedStatus = request.status === 'Claimed' ? 'in_progress'
+    : request.status === 'Completed' ? 'completed'
+    : request.status;
+
   return (
     <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+      {/* Status pipeline — always visible */}
+      <StatusPipeline status={normalizedStatus} />
+
+      {/* Thank-you banner on fulfilled */}
+      {(normalizedStatus === 'completed') && request.claimed_by_name && (
+        <ThankYouBanner
+          helperName={request.claimed_by_name}
+          requesterName={!request.is_anonymous ? request.created_by_name : null}
+        />
+      )}
+
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1.5">
