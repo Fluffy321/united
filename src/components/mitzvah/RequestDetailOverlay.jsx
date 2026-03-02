@@ -174,24 +174,29 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
           <h1 className="text-[20px] font-bold text-[#0F172A] leading-tight">{request.title}</h1>
         </div>
 
-        {/* Status banners */}
-        {isInProgress && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-amber-600" />
-            <span className="text-sm font-medium text-amber-900">In Progress</span>
-          </div>
+        {/* Visual status pipeline */}
+        <StatusPipeline status={request.status} />
+
+        {/* Thank-you banner */}
+        {isCompleted && request.claimed_by_name && (
+          <ThankYouBanner
+            helperName={request.claimed_by_name}
+            requesterName={!request.is_anonymous ? request.created_by_name : null}
+          />
         )}
-        {isCompleted && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-green-600" />
-            <span className="text-sm font-medium text-green-900">Completed</span>
-            {hasLoggedHours && <span className="ml-auto text-[11px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Hours Logged ✓</span>}
-          </div>
-        )}
+
+        {/* Cancelled */}
         {isCancelled && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-red-600" />
             <span className="text-sm font-medium text-red-900">Cancelled</span>
+          </div>
+        )}
+        {/* Logged hours badge on completed */}
+        {isCompleted && hasLoggedHours && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-green-600" />
+            <span className="text-sm font-medium text-green-900">Hours Logged ✓</span>
           </div>
         )}
 
