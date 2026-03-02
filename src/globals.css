@@ -170,6 +170,29 @@ h1, h2, h3 {
   margin-bottom: 24px;
 }
 
+.status-pill {
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-pill.fulfilled {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill.active {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.in-progress {
+  background: #dbeafe;
+  color: #0c4a6e;
+}
+
 .card-hover:hover {
   transform: translateY(-2px);
 }
