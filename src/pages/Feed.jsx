@@ -47,6 +47,7 @@ export default function Feed() {
   const [scrollStartTime, setScrollStartTime] = useState(null);
   const [showFABTypeSelector, setShowFABTypeSelector] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
+  const [showAlertModal, setShowAlertModal] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
