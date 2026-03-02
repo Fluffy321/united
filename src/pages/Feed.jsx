@@ -412,33 +412,35 @@ export default function Feed() {
         )}
 
         {/* Action Buttons */}
-        <div className="action-bar mb-4">
+        <div className="action-card">
           <button
             onClick={() => {
               setPostModalType('help');
               setShowPostModal(true);
             }}
-            className="primary-action flex-1"
+            className="primary-btn"
           >
-            + Request Help
+            Request Help
           </button>
           <button
             onClick={() => {
               setPostModalType('feed');
               setShowPostModal(true);
             }}
-            className="secondary-action flex-1"
+            className="secondary-btn"
           >
-            + Offer Help
-          </button>
-          <button
-            onClick={() => setShowAlertModal(true)}
-            className="flex items-center justify-center gap-1 flex-shrink-0 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold text-[13px] px-3 py-3 rounded-xl transition-all"
-            title="Community Alert"
-          >
-            🚨
+            Offer Help
           </button>
         </div>
+
+        {/* Alert Button */}
+        <button
+          onClick={() => setShowAlertModal(true)}
+          className="w-full bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold text-[13px] py-3 rounded-xl transition-all mb-4"
+          title="Community Alert"
+        >
+          🚨 Report Community Alert
+        </button>
 
         {/* Pinned widgets — only on "All" tab */}
         {activeCategory === 'all' && (
