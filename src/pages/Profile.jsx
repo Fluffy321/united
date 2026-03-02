@@ -206,6 +206,13 @@ export default function Profile() {
             </div>
 
             <div className="space-y-3 mb-4">
+              {/* Helper badge — prominent recognition */}
+              {profileUser.helper_badge && profileUser.helper_badge !== 'none' && (
+                <div className="flex justify-center">
+                  <HelperBadge badge={profileUser.helper_badge} size="lg" />
+                </div>
+              )}
+
               {mitzvahPoints > 0 && (
                 <div className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-full px-4 py-2 border border-indigo-200">
                   <span className="text-xl">✨</span>
