@@ -236,7 +236,8 @@ export default function MitzvahCircle({ isActive = true }) {
       await base44.entities.MitzvahRequest.update(request.id, {
         status: 'Claimed',
         claimed_by_user_id: currentUser.id,
-        claimed_by_name: currentUser.display_name
+        claimed_by_name: currentUser.display_name,
+        offers_count: (request.offers_count || 0) + 1,
       });
     },
     onSuccess: () => {
