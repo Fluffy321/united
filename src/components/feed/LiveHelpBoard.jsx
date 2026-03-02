@@ -63,11 +63,8 @@ function UrgencyRow({ urgency, requests, onClaim }) {
         className="w-full flex items-center gap-2.5 px-3 py-2.5 bg-white hover:bg-slate-50 transition-colors"
       >
         <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${cfg.dot} ${cfg.pulse ? 'animate-pulse' : ''}`} />
-        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${cfg.badge}`}>
-          {cfg.label}
-        </span>
-        <span className="text-[12px] font-semibold text-[#667085] ml-0.5">
-          {requests.length} {requests.length === 1 ? 'request' : 'requests'}
+        <span className={`status-pill ${urgency === 'urgent' ? 'active' : urgency === 'soon' ? 'active' : 'fulfilled'}`}>
+          {cfg.label} — {requests.length} {requests.length === 1 ? 'request' : 'requests'}
         </span>
         <span className="ml-auto text-[#98A2B3]">
           {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
