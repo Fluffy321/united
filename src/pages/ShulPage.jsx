@@ -153,7 +153,8 @@ export default function ShulPage() {
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="flex w-full mb-6 bg-white border border-slate-100 rounded-2xl p-1 overflow-x-auto scrollbar-hide">
             {[
-              { value: 'dashboard', label: '🏠 Dashboard' },
+              { value: 'dashboard', label: '🏠 Home' },
+              { value: 'help', label: '🙏 Help' },
               { value: 'events', label: '📅 Events' },
               { value: 'chesed', label: '🤝 Chesed' },
               { value: 'members', label: '👥 Members' },
