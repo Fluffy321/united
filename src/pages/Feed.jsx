@@ -394,6 +394,11 @@ export default function Feed() {
           <NearbyHelpBanner currentUser={currentUser} onClaim={handleHelpMitzvah} />
         )}
 
+        {/* Live Help Board */}
+        {activeCategory === 'all' && openMitzvahRequests.length > 0 && (
+          <LiveHelpBoard requests={openMitzvahRequests} onClaim={handleHelpMitzvah} />
+        )}
+
         {/* Action Buttons */}
         <div className="action-bar mb-4">
           <button
