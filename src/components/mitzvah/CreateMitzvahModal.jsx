@@ -55,7 +55,12 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
 
       const newRequest = await base44.entities.MitzvahRequest.create(requestData);
 
-      // Notify nearby users if location is available
+      // Instant community-wide notification
+      try {
+        await base44.functions.invoke('notifyNewHelpRequest', { requestId: newRequest.id });
+      } catch (e) { console.warn('notify failed', e); }
+
+      // Also notify nearby users if location available
       if (requestData.approxLat && requestData.approxLng) {
         try {
           await base44.functions.invoke('notifyNearbyUsers', {
@@ -65,12 +70,10 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
             lat: requestData.approxLat,
             lng: requestData.approxLng
           });
-        } catch (error) {
-          console.error('Failed to notify nearby users:', error);
-        }
+        } catch (e) { console.warn('nearby notify failed', e); }
       }
 
-      toast.success('Mitzvah request posted!');
+      toast.success('Mitzvah request posted! Community notified instantly ✅');
       onOpenChange(false);
       
       // Reset form

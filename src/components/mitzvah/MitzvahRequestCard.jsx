@@ -1,8 +1,9 @@
-import React from 'react';
-import { Hand, MessageCircle, CheckCircle2, Clock, MapPin } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Hand, MessageCircle, CheckCircle2, Clock, MapPin, Eye, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from 'date-fns';
+import { base44 } from '@/api/base44Client';
 
 const CATEGORY_COLORS = {
   'Errand': 'bg-blue-600 text-white font-bold',
