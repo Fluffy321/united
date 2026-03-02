@@ -36,22 +36,19 @@ export default function WeeklyActivityBar() {
 
   return (
     <div
-      className="rounded-2xl px-4 py-3 mb-3 flex items-center gap-1"
-      style={{
-        background: 'linear-gradient(135deg, #0F1C2E 0%, #1e3a5f 100%)',
-        boxShadow: '0 4px 14px rgba(15,28,46,0.2)',
-      }}
+      className="rounded-2xl px-4 py-3 mb-3 flex items-center gap-1 bg-white"
+      style={{ border: '1px solid #E8ECF4', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
     >
-      <span className="text-[11px] font-bold text-white/40 uppercase tracking-widest mr-2 whitespace-nowrap">This week</span>
+      <span className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-widest mr-2 whitespace-nowrap">This week</span>
       <div className="flex items-center gap-0 flex-1">
         {items.map((item, i) => (
           <React.Fragment key={i}>
             <div className="flex flex-col items-center flex-1 min-w-0">
-              <span className="text-white font-extrabold text-[20px] leading-none">{item.value}</span>
-              <span className="text-white/55 text-[10px] font-semibold mt-0.5 text-center leading-tight">{item.label}</span>
+              <span className="text-[#0F1C2E] font-extrabold text-[20px] leading-none">{item.value}</span>
+              <span className="text-[#94a3b8] text-[10px] font-semibold mt-0.5 text-center leading-tight">{item.label}</span>
             </div>
             {i < items.length - 1 && (
-              <div className="w-px h-8 bg-white/15 flex-shrink-0 mx-1" />
+              <div className="w-px h-8 bg-[#E8ECF4] flex-shrink-0 mx-1" />
             )}
           </React.Fragment>
         ))}
