@@ -87,14 +87,25 @@ function UrgencyRow({ urgency, requests, onClaim }) {
             <div className="divide-y divide-slate-100 bg-white">
               {requests.map(req => (
                 <div key={req.id} className="flex items-center gap-3 px-3 py-2.5">
-                  <span className="text-lg flex-shrink-0">{CATEGORY_EMOJI[req.category] || '💡'}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-[13px] text-[#0F1C2E] truncate">{req.title}</p>
-                    <p className="text-[11px] text-[#98A2B3] mt-0.5">
-                      {req.is_anonymous ? 'Anonymous' : req.created_by_name} · {formatDistanceToNow(parseISO(req.created_date), { addSuffix: true })}
-                      {req.distance != null && req.distance < 99 ? ` · ${req.distance < 0.2 ? 'Nearby' : `${req.distance.toFixed(1)} mi`}` : ''}
-                    </p>
-                  </div>
+                 <span className="text-lg flex-shrink-0">{CATEGORY_EMOJI[req.category] || '💡'}</span>
+                 <div className="flex-1 min-w-0">
+                   <p className="font-semibold text-[13px] text-[#0F1C2E] truncate">{req.title}</p>
+                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                     <p className="text-[11px] text-[#98A2B3]">
+                       {req.is_anonymous ? 'Anonymous' : req.created_by_name} · {formatDistanceToNow(parseISO(req.created_date), { addSuffix: true })}
+                       {req.distance != null && req.distance < 99 ? ` · ${req.distance < 0.2 ? 'Nearby' : `${req.distance.toFixed(1)} mi`}` : ''}
+                     </p>
+                     {req.views_count > 0 && (
+                       <span className="text-[10px] text-[#98A2B3]">👁 {req.views_count}</span>
+                     )}
+                     {req.offers_count > 0 && (
+                       <span className="text-[10px] font-bold text-emerald-600">✋ {req.offers_count} helping</span>
+                     )}
+                     {req.bump_count > 0 && (
+                       <span className="text-[10px] text-orange-500 font-semibold">🔔 bumped</span>
+                     )}
+                   </div>
+                 </div>
                   <button
                     onClick={() => onClaim(req)}
                     className="flex-shrink-0 bg-[#0F1C2E] text-white text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 active:scale-95 transition-all"
