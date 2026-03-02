@@ -584,6 +584,12 @@ export default function Feed() {
         currentUser={currentUser}
       />
 
+      <CommunityAlertModal
+        open={showAlertModal}
+        onOpenChange={setShowAlertModal}
+        currentUser={currentUser}
+      />
+
       <PostTypeSelector 
         open={showFABTypeSelector}
         onOpenChange={setShowFABTypeSelector}
