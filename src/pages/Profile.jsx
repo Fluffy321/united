@@ -272,6 +272,16 @@ export default function Profile() {
           </div>
         )}
 
+        {/* Helper Badge Showcase */}
+        {isOwnProfile && (
+          <div className="mb-4">
+            <HelperBadgeShowcase
+              currentBadge={profileUser.helper_badge || 'none'}
+              actionCount={profileUser.helper_actions_count || 0}
+            />
+          </div>
+        )}
+
         {/* Mitzvah Timeline - Own Profile Only */}
         {isOwnProfile && mitzvahLogs.length > 0 && (
           <div className="mb-6">
