@@ -130,13 +130,13 @@ export default function NearbyHelpBanner({ currentUser, onClaim }) {
         {/* Header */}
         <div className="bg-emerald-50 border-b border-emerald-100 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Navigation className="w-4 h-4 text-white" />
-            <span className="font-bold text-[13px] text-white">
+            <Navigation className="w-4 h-4 text-emerald-600" />
+            <span className="font-bold text-[13px] text-emerald-800">
               {nearbyRequests.length} {nearbyRequests.length === 1 ? 'request' : 'requests'} within 5 miles
             </span>
           </div>
-          <button onClick={() => setDismissed(true)} className="w-6 h-6 flex items-center justify-center rounded-full bg-white/20">
-            <X className="w-3.5 h-3.5 text-white" />
+          <button onClick={() => setDismissed(true)} className="w-6 h-6 flex items-center justify-center rounded-full bg-emerald-100">
+            <X className="w-3.5 h-3.5 text-emerald-600" />
           </button>
         </div>
 
