@@ -444,8 +444,8 @@ export default function Feed() {
         {activeCategory === 'all' && (
           <div className="space-y-3 mb-4">
             {userStreak && (
-              <div className="bg-gradient-to-br from-[#0F1C2E] to-[#1e3a5f] rounded-[14px] px-4 py-4">
-                <p className="text-[11px] font-bold text-white/50 uppercase tracking-widest mb-3">Your Daily Mitzvah</p>
+              <div className="rounded-[14px] px-4 py-4" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                <p className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-widest mb-3">Your Daily Mitzvah</p>
                 <StreakBanner
                   streak={userStreak}
                   todayCount={todayMitzvahCount}
