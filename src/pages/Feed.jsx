@@ -29,6 +29,7 @@ import WeeklyActivityBar from '@/components/feed/WeeklyActivityBar';
 import WeeklyImpactCard from '@/components/feed/WeeklyImpactCard';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import RequestHelpModal from '@/components/feed/RequestHelpModal';
+import CommunityUpdatesSection from '@/components/feed/CommunityUpdatesSection';
 import { toast } from 'sonner';
 import { format, isToday, parseISO } from 'date-fns';
 
@@ -551,6 +552,11 @@ export default function Feed() {
             Offer Help
           </button>
         </div>
+
+        {/* Community Updates Section */}
+        {activeCategory === 'all' && (
+          <CommunityUpdatesSection />
+        )}
 
         {/* Alert Button */}
         <button
