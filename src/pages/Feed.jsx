@@ -390,7 +390,7 @@ export default function Feed() {
   })();
 
   return (
-    <div className="min-h-screen bg-[#F5F7FB]" style={{ scrollBehavior: 'smooth' }}>
+    <div className="min-h-screen" style={{ background: 'var(--background)', scrollBehavior: 'smooth' }}>
 
       {/* Header */}
       <div className="bg-white sticky top-0 z-20" style={{ borderBottom: '1px solid #E8ECF4', boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
