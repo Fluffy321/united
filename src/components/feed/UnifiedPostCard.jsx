@@ -241,7 +241,19 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           <span>{post.comments_count || 0}</span>
         </button>
 
-        {ACTION_BUTTON[post.type] && (
+        {/* Fulfilled button — only for owner of open help posts */}
+        {post.type === 'help' && isOwner && helpStatus === 'open' && (
+          <button
+            onClick={handleFulfilled}
+            disabled={fulfilling}
+            className="ml-auto h-8 px-3.5 rounded-full text-[13px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors flex items-center gap-1.5"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            {fulfilling ? 'Saving…' : 'Mark Fulfilled'}
+          </button>
+        )}
+
+        {ACTION_BUTTON[post.type] && post.type !== 'help' && (
           <button
             onClick={() => onComment(post)}
             className="ml-auto h-8 px-3.5 rounded-full text-[13px] font-semibold text-[#0F1C2E] bg-[#F2F4F7] hover:bg-[#E9EBF0] transition-colors"
