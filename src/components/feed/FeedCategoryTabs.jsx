@@ -82,8 +82,7 @@ export default function FeedCategoryTabs({ activeCategory, onChange }) {
       <div
         ref={underlineRef}
         className="absolute bottom-0 left-0 h-[2px] rounded-full transition-all duration-180 ease-out"
-        style={{ background: 'var(--accent)' }}
-        style={{ width: 0, transform: 'translateX(0px)' }}
+        style={{ background: 'var(--accent)', width: 0, transform: 'translateX(0px)' }}
       />
     </div>
   );
