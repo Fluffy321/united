@@ -233,16 +233,56 @@ export default function MitzvahCircle({ isActive = true }) {
 
   const claimMutation = useMutation({
     mutationFn: async (request) => {
+      // Update the request
       await base44.entities.MitzvahRequest.update(request.id, {
-        status: 'Claimed',
+        status: 'in_progress',
         claimed_by_user_id: currentUser.id,
-        claimed_by_name: currentUser.display_name,
+        claimed_by_name: currentUser.display_name || currentUser.full_name,
         offers_count: (request.offers_count || 0) + 1,
       });
+
+      // Create signup record
+      await base44.entities.MitzvahSignup.create({
+        request_id: request.id,
+        user_id: currentUser.id,
+        user_name: currentUser.display_name || currentUser.full_name,
+        status: 'JOINED',
+        joined_at: new Date().toISOString(),
+      });
+
+      // Find or create a conversation for coordination
+      const existingConvs = await base44.entities.Conversation.filter({ request_id: request.id });
+      const existingLinked = existingConvs.find(c => c.participant_ids?.includes(currentUser.id));
+      let conversation = existingLinked;
+
+      if (!conversation) {
+        const [requester] = await base44.entities.User.filter({ id: request.created_by_user_id });
+        conversation = await base44.entities.Conversation.create({
+          participant_ids: [currentUser.id, request.created_by_user_id],
+          participant_names: [currentUser.display_name || currentUser.full_name, requester?.display_name || requester?.full_name],
+          participant_ages: [currentUser.age_range || '18+', requester?.age_range || '18+'],
+          last_message: `Hi! I can help with "${request.title}".`,
+          last_message_at: new Date().toISOString(),
+          request_id: request.id
+        });
+
+        // Send intro message
+        await base44.entities.Message.create({
+          conversation_id: conversation.id,
+          sender_id: currentUser.id,
+          sender_name: currentUser.display_name || currentUser.full_name,
+          sender_age_range: currentUser.age_range || '18+',
+          recipient_id: request.created_by_user_id,
+          content: `Hi! I'm available to help with "${request.title}". What details do you need from me?`
+        });
+      }
+
+      return conversation;
     },
-    onSuccess: () => {
+    onSuccess: (conversation) => {
       queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-      toast.success('You\'ve claimed this mitzvah! 💙');
+      toast.success("You've claimed this mitzvah! Opening chat... 💙");
+      navigate(createPageUrl('Messages') + `?conversation=${conversation.id}`);
     }
   });
 
