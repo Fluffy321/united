@@ -15,7 +15,7 @@ const Profile = lazy(() => import('@/pages/Profile'));
 const navItems = [
   { name: 'Feed', icon: Home, page: 'Feed', color: 'blue' },
   { name: 'Updates', icon: Newspaper, page: 'CommunityUpdates', color: 'cyan' },
-  { name: 'Groups', icon: UsersRound, page: 'Groups', color: 'teal' },
+  { name: 'Communities', icon: Users, page: 'Communities', color: 'teal' },
   { name: 'Mitzvah', icon: HandHeart, page: 'MitzvahCircle', color: 'purple' },
   { name: 'Profile', icon: User, page: 'Profile', color: 'slate' }
 ];
