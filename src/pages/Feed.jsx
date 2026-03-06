@@ -431,10 +431,17 @@ export default function Feed() {
                 <p className="text-white/70 text-[10px] font-semibold">open</p>
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
-              <p className="text-white/60 text-[12px]">Tap to offer help or post a request</p>
-              <span className="text-white/60 text-[12px]">→</span>
-            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setPostModalType('help');
+                setShowPostModal(true);
+              }}
+              className="mt-3 w-full py-3.5 rounded-xl font-bold text-[15px] tracking-wide active:scale-[0.98] transition-all"
+              style={{ background: '#16a34a', color: '#fff', boxShadow: '0 4px 12px rgba(22,163,74,0.35)' }}
+            >
+              🙋 REQUEST HELP
+            </button>
           </div>
         )}
 
