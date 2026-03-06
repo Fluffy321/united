@@ -1,14 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Loader2, Plus, Search } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import DiscoverTab from '@/components/communities/DiscoverTab';
 import MyCommunitiesTab from '@/components/communities/MyCommunitiesTab';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
+import GroupCard from '@/components/groups/GroupCard';
+import GroupDetailSheet from '@/components/groups/GroupDetailSheet';
+import CreateGroupModal from '@/components/groups/CreateGroupModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
-const TABS = ['Discover', 'My Communities'];
+const TABS = ['Shuls', 'Groups', 'My Communities'];
+const GROUP_CATEGORIES = ['All', 'Torah Learning', 'Shabbat', 'Chesed', 'Events', 'Youth', 'Families', 'Seniors', 'General'];
 
 export default function Communities() {
   const [currentUser, setCurrentUser] = useState(null);
