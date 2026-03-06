@@ -49,10 +49,19 @@ export default function Messages() {
       const allUserIds = [...new Set(userConvs.flatMap(c => c.participant_ids))];
       const users = await base44.entities.User.list();
       const userMap = Object.fromEntries(users.map(u => [u.id, u.avatar_url]));
+
+      // Fetch linked request titles
+      const requestIds = [...new Set(userConvs.map(c => c.request_id).filter(Boolean))];
+      const requestTitleMap = {};
+      await Promise.all(requestIds.map(async (rid) => {
+        const [req] = await base44.entities.MitzvahRequest.filter({ id: rid });
+        if (req) requestTitleMap[rid] = req.title;
+      }));
       
       return userConvs.map(conv => ({
         ...conv,
-        participant_avatars: conv.participant_ids?.map(id => userMap[id] || null)
+        participant_avatars: conv.participant_ids?.map(id => userMap[id] || null),
+        request_title: conv.request_id ? requestTitleMap[conv.request_id] : null
       }));
     },
     enabled: !!currentUser
