@@ -543,10 +543,7 @@ export default function Feed() {
         {/* Action Buttons */}
         <div className="action-card">
           <button
-            onClick={() => {
-              setPostModalType('help');
-              setShowPostModal(true);
-            }}
+            onClick={() => setShowRequestHelpModal(true)}
             className="primary-btn"
           >
             Request Help
