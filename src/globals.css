@@ -317,6 +317,14 @@ h1, h2, h3 {
   transform: scale(0.98);
 }
 
+.join-btn {
+  background: #16A34A;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
 .community-progress {
   display: flex;
   gap: 16px;
