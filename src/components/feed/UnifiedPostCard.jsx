@@ -54,17 +54,25 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
   useEffect(() => {
     if (post.type === 'event' && currentUser) {
-      checkRSVPStatus();
+      const timer = setTimeout(() => {
+        checkRSVPStatus();
+      }, 100); // Debounce to reduce simultaneous requests
+      return () => clearTimeout(timer);
     }
   }, [post.id, currentUser?.id]);
 
   const helpCat = HELP_REQUEST_CATEGORIES.find(c => c.value === post.category);
 
   const checkRSVPStatus = async () => {
-    const rsvps = await base44.entities.RSVP.filter({ post_id: post.id, user_id: currentUser.id });
-    setIsRSVPed(rsvps.length > 0);
-    const allRsvps = await base44.entities.RSVP.filter({ post_id: post.id });
-    setRsvpCount(allRsvps.length);
+    try {
+      const rsvps = await base44.entities.RSVP.filter({ post_id: post.id, user_id: currentUser.id });
+      setIsRSVPed(rsvps.length > 0);
+      const allRsvps = await base44.entities.RSVP.filter({ post_id: post.id });
+      setRsvpCount(allRsvps.length);
+    } catch (error) {
+      console.warn('Failed to check RSVP status:', error?.message);
+      // Silently fail to avoid blocking UI
+    }
   };
 
   const handleRSVP = async () => {
