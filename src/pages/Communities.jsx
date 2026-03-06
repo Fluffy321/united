@@ -133,8 +133,18 @@ const CORE_TEN_NAMES = [
     <div className="flex flex-col h-full bg-[#F8FAFB]">
       {/* Header */}
       <div className="bg-white border-b border-slate-100 flex-shrink-0">
-        <div className="max-w-2xl mx-auto px-4 h-12 flex items-center">
+        <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
           <span className="font-bold text-slate-900 text-base">Communities</span>
+          {activeTab === 1 && (
+            <button
+              onClick={() => setShowCreateGroup(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-[13px] font-bold active:scale-95 transition-all"
+              style={{ background: 'var(--primary)' }}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Group
+            </button>
+          )}
         </div>
 
         {/* Tabs */}
@@ -148,7 +158,7 @@ const CORE_TEN_NAMES = [
               }`}
             >
               {tab}
-              {idx === 1 && joinedIds.size > 0 && (
+              {idx === 2 && joinedIds.size > 0 && (
                 <span className="ml-1.5 text-[10px] bg-[#0F5ED7] text-white rounded-full px-1.5 py-0.5">
                   {joinedIds.size}
                 </span>
@@ -158,23 +168,16 @@ const CORE_TEN_NAMES = [
           {/* Underline */}
           <div
             className="absolute bottom-0 h-0.5 bg-[#0F5ED7] rounded-full transition-all duration-200"
-            style={{ width: '50%', left: `${activeTab * 50}%` }}
+            style={{ width: '33.33%', left: `${activeTab * 33.33}%` }}
           />
         </div>
       </div>
 
-      {/* Swipeable content */}
+      {/* Content */}
       <div className="flex-1 overflow-hidden relative">
         <AnimatePresence initial={false} mode="wait">
-          {activeTab === 0 ? (
-            <motion.div
-              key="discover"
-              initial={{ x: -30, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -30, opacity: 0 }}
-              transition={{ duration: 0.18 }}
-              className="absolute inset-0 overflow-y-auto"
-            >
+          {activeTab === 0 && (
+            <motion.div key="discover" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 overflow-y-auto">
               <div className="max-w-2xl mx-auto">
                 <DiscoverTab
                   communities={communities}
@@ -183,18 +186,69 @@ const CORE_TEN_NAMES = [
                   joinedIds={joinedIds}
                   onJoinChange={handleJoinChange}
                   onViewCommunity={setSelectedCommunityId}
-                  />
+                />
               </div>
             </motion.div>
-          ) : (
-            <motion.div
-              key="mine"
-              initial={{ x: 30, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 30, opacity: 0 }}
-              transition={{ duration: 0.18 }}
-              className="absolute inset-0 overflow-y-auto"
-            >
+          )}
+
+          {activeTab === 1 && (
+            <motion.div key="groups" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 overflow-y-auto">
+              <div className="max-w-2xl mx-auto px-4 pt-4 pb-28">
+                {/* Search */}
+                <div className="flex items-center gap-2 bg-white border border-[#E8ECF4] rounded-xl px-3 py-2 mb-3" style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
+                  <Search className="w-4 h-4 text-[#94a3b8]" />
+                  <input
+                    className="flex-1 bg-transparent text-[14px] outline-none placeholder:text-[#94a3b8]"
+                    placeholder="Search groups…"
+                    value={groupSearch}
+                    onChange={e => setGroupSearch(e.target.value)}
+                  />
+                </div>
+                {/* Category filter */}
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-4">
+                  {GROUP_CATEGORIES.map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setGroupCategory(cat)}
+                      className="flex-shrink-0 px-3 py-1 rounded-full text-[12px] font-semibold transition-all"
+                      style={groupCategory === cat ? { background: 'var(--accent)', color: 'white' } : { background: '#f1f5f9', color: '#64748b' }}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+                {myGroups.length > 0 && (
+                  <section className="mb-5">
+                    <p className="text-[12px] font-bold uppercase tracking-widest text-[#94a3b8] mb-3">My Groups</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {myGroups.map(g => (
+                        <GroupCard key={g.id} group={g} isMember={true} onJoin={handleGroupJoin} onLeave={handleGroupLeave} onClick={() => { setSelectedGroup(g); setShowGroupDetail(true); }} />
+                      ))}
+                    </div>
+                  </section>
+                )}
+                <section>
+                  <p className="text-[12px] font-bold uppercase tracking-widest text-[#94a3b8] mb-3">
+                    {myGroups.length > 0 ? 'Discover More' : 'All Groups'}
+                  </p>
+                  {discoverGroups.length === 0 ? (
+                    <div className="text-center py-12 text-[#94a3b8] text-[13px]">
+                      {groupSearch ? 'No groups match your search.' : 'No groups yet. Create the first one!'}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      {discoverGroups.map(g => (
+                        <GroupCard key={g.id} group={g} isMember={false} onJoin={handleGroupJoin} onLeave={handleGroupLeave} onClick={() => { setSelectedGroup(g); setShowGroupDetail(true); }} />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 2 && (
+            <motion.div key="mine" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 overflow-y-auto">
               <div className="max-w-2xl mx-auto">
                 <MyCommunitiesTab
                   communities={joinedCommunities}
@@ -207,6 +261,23 @@ const CORE_TEN_NAMES = [
           )}
         </AnimatePresence>
       </div>
+
+      <GroupDetailSheet
+        group={selectedGroup}
+        open={showGroupDetail}
+        onOpenChange={setShowGroupDetail}
+        currentUser={currentUser}
+        isMember={selectedGroup ? membershipSet.has(selectedGroup.id) : false}
+        onJoin={handleGroupJoin}
+        onLeave={handleGroupLeave}
+      />
+
+      <CreateGroupModal
+        open={showCreateGroup}
+        onOpenChange={setShowCreateGroup}
+        currentUser={currentUser}
+        onCreated={refetchGroups}
+      />
     </div>
   );
 }
