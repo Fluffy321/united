@@ -45,6 +45,18 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const typeConfig = TYPE_CONFIGS[post.type] || TYPE_CONFIGS.feed;
   const [expanded, setExpanded] = useState(false);
   const [imgExpanded, setImgExpanded] = useState(false);
+  const [helpStatus, setHelpStatus] = useState(post.help_status || 'open');
+  const [fulfilling, setFulfilling] = useState(false);
+
+  const helpCat = HELP_REQUEST_CATEGORIES.find(c => c.value === post.category);
+
+  const handleFulfilled = async () => {
+    setFulfilling(true);
+    await base44.entities.UnifiedPost.update(post.id, { help_status: 'fulfilled' });
+    setHelpStatus('fulfilled');
+    setFulfilling(false);
+    toast.success('Marked as fulfilled! 🎉');
+  };
 
   const BODY_LIMIT = 120;
   const bodyLong = post.body && post.body.length > BODY_LIMIT;
