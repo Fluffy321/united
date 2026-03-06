@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Heart, MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Heart, MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import UserAvatar from '@/components/common/UserAvatar';
 import HelperBadge from '@/components/profile/HelperBadge';
@@ -47,8 +47,44 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const [imgExpanded, setImgExpanded] = useState(false);
   const [helpStatus, setHelpStatus] = useState(post.help_status || 'open');
   const [fulfilling, setFulfilling] = useState(false);
+  const [isRSVPed, setIsRSVPed] = useState(false);
+  const [rsvpCount, setRsvpCount] = useState(0);
+  const [loadingRSVP, setLoadingRSVP] = useState(false);
+
+  useEffect(() => {
+    if (post.type === 'event' && currentUser) {
+      checkRSVPStatus();
+    }
+  }, [post.id, currentUser?.id]);
 
   const helpCat = HELP_REQUEST_CATEGORIES.find(c => c.value === post.category);
+
+  const checkRSVPStatus = async () => {
+    const rsvps = await base44.entities.RSVP.filter({ post_id: post.id, user_id: currentUser.id });
+    setIsRSVPed(rsvps.length > 0);
+    const allRsvps = await base44.entities.RSVP.filter({ post_id: post.id });
+    setRsvpCount(allRsvps.length);
+  };
+
+  const handleRSVP = async () => {
+    setLoadingRSVP(true);
+    try {
+      await base44.entities.RSVP.create({
+        post_id: post.id,
+        user_id: currentUser.id,
+        user_name: currentUser.display_name || currentUser.full_name,
+        user_avatar_url: currentUser.avatar_url,
+        status: 'going'
+      });
+      setIsRSVPed(true);
+      setRsvpCount(c => c + 1);
+      toast.success('You\'re going! 🎉');
+    } catch (error) {
+      toast.error('Failed to RSVP');
+    } finally {
+      setLoadingRSVP(false);
+    }
+  };
 
   const handleFulfilled = async () => {
     setFulfilling(true);
@@ -253,7 +289,22 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           </button>
         )}
 
-        {ACTION_BUTTON[post.type] && post.type !== 'help' && (
+        {post.type === 'event' && (
+          <button
+            onClick={handleRSVP}
+            disabled={isRSVPed || loadingRSVP}
+            className={`ml-auto h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 transition-colors ${
+              isRSVPed
+                ? 'text-blue-700 bg-blue-50 border border-blue-200'
+                : 'text-[#0F1C2E] bg-[#F2F4F7] hover:bg-[#E9EBF0]'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            {loadingRSVP ? 'Saving...' : isRSVPed ? `Going (${rsvpCount})` : 'Going'}
+          </button>
+        )}
+
+        {ACTION_BUTTON[post.type] && post.type !== 'help' && post.type !== 'event' && (
           <button
             onClick={() => onComment(post)}
             className="ml-auto h-8 px-3.5 rounded-full text-[13px] font-semibold text-[#0F1C2E] bg-[#F2F4F7] hover:bg-[#E9EBF0] transition-colors"
