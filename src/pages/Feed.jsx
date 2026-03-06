@@ -410,7 +410,7 @@ export default function Feed() {
         {activeCategory === 'all' && (
           <div
             className="rounded-2xl mb-4 p-4 cursor-pointer active:scale-[0.99] transition-all"
-            style={{ background: 'linear-gradient(135deg, #0F1C2E 0%, #1e3a5f 100%)', boxShadow: '0 8px 24px rgba(15,28,46,0.25)' }}
+            style={{ background: 'linear-gradient(135deg, var(--accent) 0%, #152d6e 100%)', boxShadow: '0 8px 24px rgba(30,58,138,0.25)' }}
             onClick={() => {
               setPostModalType('help');
               setShowPostModal(true);
