@@ -60,6 +60,7 @@ import Organization from './pages/Organization';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import ShulPage from './pages/ShulPage';
+import Groups from './pages/Groups';
 import __Layout from './Layout.jsx';
 
 
@@ -77,6 +78,7 @@ export const PAGES = {
     "Profile": Profile,
     "Settings": Settings,
     "ShulPage": ShulPage,
+    "Groups": Groups,
 }
 
 export const pagesConfig = {
