@@ -9,16 +9,14 @@ import { useQuery } from '@tanstack/react-query';
 
 // Lazy load main pages
 const Feed = lazy(() => import('@/pages/Feed'));
-const CommunityUpdates = lazy(() => import('@/pages/CommunityUpdates'));
 const Communities = lazy(() => import('@/pages/Communities'));
 const MitzvahCircle = lazy(() => import('@/pages/MitzvahCircle'));
 const Profile = lazy(() => import('@/pages/Profile'));
 
 const navItems = [
   { name: 'Feed', icon: Home, page: 'Feed', color: 'blue' },
-  { name: 'Updates', icon: Newspaper, page: 'CommunityUpdates', color: 'cyan' },
-  { name: 'Communities', icon: Users, page: 'Communities', color: 'teal' },
   { name: 'Mitzvah', icon: HandHeart, page: 'MitzvahCircle', color: 'purple' },
+  { name: 'Communities', icon: Users, page: 'Communities', color: 'teal' },
   { name: 'Profile', icon: User, page: 'Profile', color: 'slate' }
 ];
 
@@ -90,7 +88,7 @@ export default function Layout({ children, currentPageName }) {
     return () => window.removeEventListener('resize', recalculate);
   }, [currentPageName]);
   
-  const swipeablePages = ['Feed', 'CommunityUpdates', 'Communities', 'MitzvahCircle', 'Profile'];
+  const swipeablePages = ['Feed', 'MitzvahCircle', 'Communities', 'Profile'];
   const currentIndex = swipeablePages.indexOf(currentPageName);
   const isSwipeable = currentIndex !== -1;
 
@@ -119,7 +117,7 @@ export default function Layout({ children, currentPageName }) {
       <main className={!hideBottomPadding ? 'h-screen' : 'h-screen'}>
         {isSwipeable ? (
           <SwipeableTabs 
-            tabs={['Feed', 'Updates', 'Communities', 'Mitzvah', 'Profile']}
+            tabs={['Feed', 'Mitzvah', 'Communities', 'Profile']}
             activeIndex={currentIndex}
             onIndexChange={handleTabChange}
           >
@@ -127,13 +125,10 @@ export default function Layout({ children, currentPageName }) {
               <Feed />
             </Suspense>
             <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <CommunityUpdates />
+              <MitzvahCircle isActive={currentIndex === 1} />
             </Suspense>
             <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
               <Communities />
-            </Suspense>
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <MitzvahCircle isActive={currentIndex === 3} />
             </Suspense>
             <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
               <Profile />
