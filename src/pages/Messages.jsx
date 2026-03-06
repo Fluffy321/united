@@ -83,7 +83,7 @@ export default function Messages() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-4xl mx-auto h-screen flex">
+      <div className="max-w-4xl mx-auto flex" style={{ height: 'calc(100vh - 64px)' }}>
         {/* Conversation List - Desktop always visible, Mobile only when no chat selected */}
         <div className={`w-full lg:w-96 lg:border-r border-slate-200 ${
           selectedConversation ? 'hidden lg:block' : 'block'
