@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, User, HandHeart, Newspaper, Users, UsersRound, Loader2 } from 'lucide-react';
+import { Home, User, HandHeart, Newspaper, Users, Loader2 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
 import SwipeableTabs from '@/components/common/SwipeableTabs';
@@ -9,7 +9,6 @@ import SwipeableTabs from '@/components/common/SwipeableTabs';
 const Feed = lazy(() => import('@/pages/Feed'));
 const CommunityUpdates = lazy(() => import('@/pages/CommunityUpdates'));
 const Groups = lazy(() => import('@/pages/Groups'));
-const Communities = lazy(() => import('@/pages/Communities'));
 const MitzvahCircle = lazy(() => import('@/pages/MitzvahCircle'));
 const Profile = lazy(() => import('@/pages/Profile'));
 
@@ -17,7 +16,6 @@ const navItems = [
   { name: 'Feed', icon: Home, page: 'Feed', color: 'blue' },
   { name: 'Updates', icon: Newspaper, page: 'CommunityUpdates', color: 'cyan' },
   { name: 'Groups', icon: UsersRound, page: 'Groups', color: 'teal' },
-  { name: 'Community', icon: Users, page: 'Communities', color: 'blue' },
   { name: 'Mitzvah', icon: HandHeart, page: 'MitzvahCircle', color: 'purple' },
   { name: 'Profile', icon: User, page: 'Profile', color: 'slate' }
 ];
@@ -73,7 +71,7 @@ export default function Layout({ children, currentPageName }) {
     return () => window.removeEventListener('resize', recalculate);
   }, [currentPageName]);
   
-  const swipeablePages = ['Feed', 'CommunityUpdates', 'Groups', 'Communities', 'MitzvahCircle', 'Profile'];
+  const swipeablePages = ['Feed', 'CommunityUpdates', 'Groups', 'MitzvahCircle', 'Profile'];
   const currentIndex = swipeablePages.indexOf(currentPageName);
   const isSwipeable = currentIndex !== -1;
 
@@ -102,7 +100,7 @@ export default function Layout({ children, currentPageName }) {
       <main className={!hideBottomPadding ? 'h-screen' : 'h-screen'}>
         {isSwipeable ? (
           <SwipeableTabs 
-            tabs={['Feed', 'Updates', 'Groups', 'Community', 'Mitzvah', 'Profile']}
+            tabs={['Feed', 'Updates', 'Groups', 'Mitzvah', 'Profile']}
             activeIndex={currentIndex}
             onIndexChange={handleTabChange}
           >
@@ -116,10 +114,7 @@ export default function Layout({ children, currentPageName }) {
               <Groups />
             </Suspense>
             <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <Communities />
-            </Suspense>
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <MitzvahCircle isActive={currentIndex === 4} />
+              <MitzvahCircle isActive={currentIndex === 3} />
             </Suspense>
             <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
               <Profile />
