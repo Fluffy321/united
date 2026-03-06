@@ -291,26 +291,44 @@ export default function MitzvahCircle({ isActive = true }) {
     completeMutation.mutate(request);
   };
 
-  const handleMessage = async (userId) => {
-    const conversations = await base44.entities.Conversation.filter({
-      participant_ids: { $all: [currentUser.id, userId] }
-    });
+  const handleMessage = async (request) => {
+    const otherUserId = currentUser.id === request.created_by_user_id
+      ? request.claimed_by_user_id
+      : request.created_by_user_id;
 
-    if (conversations.length > 0) {
-      navigate(createPageUrl('Messages') + `?conversation=${conversations[0].id}`);
-    } else {
-      const otherUser = await base44.entities.User.filter({ id: userId });
-      if (otherUser.length > 0) {
-        const newConversation = await base44.entities.Conversation.create({
-          participant_ids: [currentUser.id, userId],
-          participant_names: [currentUser.display_name, otherUser[0].display_name],
-          participant_ages: [currentUser.age_range, otherUser[0].age_range],
-          last_message: '',
-          last_message_at: new Date().toISOString()
-        });
-        navigate(createPageUrl('Messages') + `?conversation=${newConversation.id}`);
-      }
+    // First try to find a conversation linked to this specific request
+    const linkedConvs = await base44.entities.Conversation.filter({ request_id: request.id });
+    const linked = linkedConvs.find(c => c.participant_ids?.includes(currentUser.id));
+
+    if (linked) {
+      navigate(createPageUrl('Messages') + `?conversation=${linked.id}`);
+      return;
     }
+
+    // Fallback: find or create a general conversation between participants
+    const allConvs = await base44.entities.Conversation.filter({});
+    const existing = allConvs.find(c =>
+      c.participant_ids?.includes(currentUser.id) &&
+      c.participant_ids?.includes(otherUserId) &&
+      c.request_id === request.id
+    );
+
+    if (existing) {
+      navigate(createPageUrl('Messages') + `?conversation=${existing.id}`);
+      return;
+    }
+
+    // Create new conversation linked to this request
+    const [otherUser] = await base44.entities.User.filter({ id: otherUserId });
+    const newConv = await base44.entities.Conversation.create({
+      participant_ids: [currentUser.id, otherUserId],
+      participant_names: [currentUser.display_name || currentUser.full_name, otherUser?.display_name || otherUser?.full_name],
+      participant_ages: [currentUser.age_range || '18+', otherUser?.age_range || '18+'],
+      last_message: '',
+      last_message_at: new Date().toISOString(),
+      request_id: request.id
+    });
+    navigate(createPageUrl('Messages') + `?conversation=${newConv.id}`);
   };
 
   if (!currentUser) {
