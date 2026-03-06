@@ -449,7 +449,7 @@ export default function Feed() {
                 setShowPostModal(true);
               }}
               className="mt-3 w-full py-3.5 rounded-xl font-bold text-[15px] tracking-wide active:scale-[0.98] transition-all"
-              style={{ background: '#16a34a', color: '#fff', boxShadow: '0 4px 12px rgba(22,163,74,0.35)' }}
+              style={{ background: 'var(--primary)', color: '#fff', boxShadow: '0 4px 12px rgba(22,163,74,0.35)' }}
             >
               🙋 REQUEST HELP
             </button>
