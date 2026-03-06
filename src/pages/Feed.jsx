@@ -248,6 +248,15 @@ export default function Feed() {
       await base44.entities.Like.create({ post_id: postId, user_id: currentUser.id });
       await base44.entities.UnifiedPost.update(postId, { likes_count: (post.likes_count || 0) + 1 });
       setUserLikes(prev => [...prev, postId]);
+      // Notify post owner (not self)
+      if (post.user_id && post.user_id !== currentUser.id) {
+        base44.entities.Notification.create({
+          user_id: post.user_id,
+          type: 'like',
+          message: `${currentUser.display_name || currentUser.full_name} liked your post`,
+          read: false
+        });
+      }
     }
     queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
   };
