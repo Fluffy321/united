@@ -395,6 +395,49 @@ export default function Feed() {
       </div>
 
       <div className="main-feed">
+        {/* Community Help Center Hero */}
+        {activeCategory === 'all' && (
+          <div
+            className="rounded-2xl mb-4 p-4 cursor-pointer active:scale-[0.99] transition-all"
+            style={{ background: 'linear-gradient(135deg, #0F1C2E 0%, #1e3a5f 100%)', boxShadow: '0 8px 24px rgba(15,28,46,0.25)' }}
+            onClick={() => {
+              setPostModalType('help');
+              setShowPostModal(true);
+            }}
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-white/60 text-[11px] font-semibold uppercase tracking-widest mb-1">Live Now</p>
+                <h2 className="text-white font-bold text-[22px] leading-tight">Community Help Center</h2>
+                <div className="flex items-center gap-3 mt-2.5">
+                  {openMitzvahRequests.filter(r => r.urgency === 'HIGH').length > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+                      <span className="text-white font-bold text-[14px]">
+                        {openMitzvahRequests.filter(r => r.urgency === 'HIGH').length} urgent
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span className="text-white/80 font-semibold text-[14px]">
+                      {openMitzvahRequests.length} active requests
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white/15 rounded-xl px-3.5 py-2 text-center mt-1">
+                <p className="text-white font-bold text-[22px] leading-tight">{openMitzvahRequests.length}</p>
+                <p className="text-white/70 text-[10px] font-semibold">open</p>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
+              <p className="text-white/60 text-[12px]">Tap to offer help or post a request</p>
+              <span className="text-white/60 text-[12px]">→</span>
+            </div>
+          </div>
+        )}
+
         {/* Weekly Activity Bar */}
         <WeeklyActivityBar />
 
