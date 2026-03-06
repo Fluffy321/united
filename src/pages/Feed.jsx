@@ -526,9 +526,9 @@ export default function Feed() {
           <NearbyHelpBanner currentUser={currentUser} onClaim={handleHelpMitzvah} />
         )}
 
-        {/* Live Help Board - Scaled down */}
+        {/* Live Help Board */}
         {activeCategory === 'all' && openMitzvahRequests.length > 0 && (
-          <div style={{ transform: 'scale(0.9)', transformOrigin: 'top left', marginBottom: '-10%' }}>
+          <div className="mb-2">
             <LiveHelpBoard requests={openMitzvahRequests} onClaim={handleHelpMitzvah} />
           </div>
         )}
