@@ -278,7 +278,7 @@ h1, h2, h3 {
 
 .primary-btn {
   flex: 1;
-  background: #16a34a;
+  background: var(--primary);
   color: white;
   padding: 14px;
   border-radius: 12px;
@@ -289,7 +289,7 @@ h1, h2, h3 {
 }
 
 .primary-btn:hover {
-  background: #15803d;
+  background: var(--primary-hover);
 }
 
 .primary-btn:active {
@@ -298,8 +298,8 @@ h1, h2, h3 {
 
 .secondary-btn {
   flex: 1;
-  background: #e2e8f0;
-  color: #0f172a;
+  background: var(--secondary);
+  color: var(--text-main);
   padding: 14px;
   border-radius: 12px;
   font-weight: 600;
