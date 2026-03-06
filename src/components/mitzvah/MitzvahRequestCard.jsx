@@ -126,7 +126,7 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
           {isClaimed && (isRequester || isHelper) && (
             <>
               <Button 
-                onClick={() => onMessage(isRequester ? request.claimed_by_user_id : request.created_by_user_id)}
+                onClick={(e) => { e.stopPropagation(); onMessage(request); }}
                 variant="outline"
                 size="sm"
               >
