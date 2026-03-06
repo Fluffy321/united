@@ -114,7 +114,7 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
         <div className="flex gap-2">
           {isOpen && !isRequester && (
             <Button 
-              onClick={() => onClaim(request)}
+              onClick={(e) => { e.stopPropagation(); onClaim(e, request); }}
               className="bg-indigo-600 hover:bg-indigo-700"
               size="sm"
             >
