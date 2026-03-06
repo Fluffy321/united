@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Heart, MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, Briefcase, Home, ExternalLink } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import UserAvatar from '@/components/common/UserAvatar';
 import HelperBadge from '@/components/profile/HelperBadge';
 import {
@@ -14,6 +13,9 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
+import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
+import { HELP_REQUEST_CATEGORIES } from '@/components/feed/RequestHelpModal';
 
 const TYPE_CONFIGS = {
   feed:         { label: 'Post',         color: 'bg-slate-100 text-slate-600' },
