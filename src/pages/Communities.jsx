@@ -59,6 +59,13 @@ const CORE_TEN_NAMES = [
 
   const communities = allCommunities.filter(c => c.type === 'Shul');
 
+  const { data: groups = [], refetch: refetchGroups } = useQuery({
+    queryKey: ['community-groups'],
+    queryFn: () => base44.entities.CommunityGroup.list('-created_date', 100),
+    staleTime: 60000,
+    enabled: !!currentUser
+  });
+
   const { data: userMemberships = [], isLoading: membershipsLoading, refetch: refetchMemberships } = useQuery({
     queryKey: ['user-communities', currentUser?.id],
     queryFn: () => base44.entities.UserCommunity.filter({ user_id: currentUser.id }),
