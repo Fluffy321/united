@@ -3,6 +3,7 @@ import { Heart, MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, C
 import { Button } from "@/components/ui/button";
 import UserAvatar from '@/components/common/UserAvatar';
 import HelperBadge from '@/components/profile/HelperBadge';
+import MessageButton from '@/components/common/MessageButton';
 import {
   DropdownMenu,
   DropdownMenuContent,
