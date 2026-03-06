@@ -395,7 +395,7 @@ export default function Feed() {
       {/* Header */}
       <div className="sticky top-0 z-20" style={{ background: 'var(--card)', borderBottom: '1px solid var(--border)', boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
         <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
-          <span className="font-bold text-[#0F1C2E] text-[16px] tracking-[-0.01em]">
+          <span className="font-bold text-[16px] tracking-[-0.01em]" style={{ color: 'var(--text-main)' }}>
             {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
           </span>
 
