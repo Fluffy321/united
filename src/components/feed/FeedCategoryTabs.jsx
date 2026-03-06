@@ -56,8 +56,8 @@ export default function FeedCategoryTabs({ activeCategory, onChange }) {
   return (
     <div
       ref={barRef}
-      className="relative flex bg-white select-none overflow-x-auto scrollbar-hide"
-      style={{ borderBottom: '1px solid #EAECF0' }}
+      className="relative flex select-none overflow-x-auto scrollbar-hide"
+      style={{ background: '#ffffff', borderBottom: '1px solid #EAECF0' }}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
     >
