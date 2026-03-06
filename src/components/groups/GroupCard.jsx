@@ -66,7 +66,7 @@ export default function GroupCard({ group, isMember, onJoin, onLeave, onClick })
               : { background: 'var(--primary)', color: 'white' }
           }
         >
-          {isMember ? '✓ Joined' : '+ Join Group'}
+          {isMember ? '✓ Joined' : 'Join Community'}
         </button>
       </div>
     </div>
