@@ -456,6 +456,27 @@ export default function Feed() {
           </div>
         )}
 
+        {/* Recently Completed */}
+        {activeCategory === 'all' && recentlyCompleted.length > 0 && (
+          <div className="rounded-2xl overflow-hidden mb-4" style={{ border: '1px solid #bbf7d0', background: '#f0fdf4' }}>
+            <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid #bbf7d0' }}>
+              <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Recently Completed</span>
+              <span className="ml-auto text-[11px] text-emerald-600 font-semibold">✔ Your community shows up</span>
+            </div>
+            <div className="divide-y divide-emerald-100">
+              {recentlyCompleted.map(req => (
+                <div key={req.id} className="flex items-center gap-3 px-4 py-2.5">
+                  <span className="text-emerald-500 font-bold text-[15px]">✔</span>
+                  <p className="text-[13px] font-semibold text-emerald-800">{req.title}</p>
+                  {req.claimed_by_name && (
+                    <span className="ml-auto text-[11px] text-emerald-600 font-medium flex-shrink-0">by {req.claimed_by_name}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Weekly Activity Bar */}
         <WeeklyActivityBar />
 
