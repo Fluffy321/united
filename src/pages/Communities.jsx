@@ -19,10 +19,21 @@ export default function Communities() {
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [selectedCommunityId, setSelectedCommunityId] = useState(null);
+  const [membershipSet, setMembershipSet] = useState(new Set());
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [showGroupDetail, setShowGroupDetail] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [groupSearch, setGroupSearch] = useState('');
+  const [groupCategory, setGroupCategory] = useState('All');
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser);
+    base44.auth.me().then(user => {
+      setCurrentUser(user);
+      base44.entities.GroupMember.filter({ user_id: user.id }).then(memberships => {
+        setMembershipSet(new Set(memberships.map(m => m.group_id)));
+      });
+    });
   }, []);
 
 const CORE_TEN_NAMES = [
