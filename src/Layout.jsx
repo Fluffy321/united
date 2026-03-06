@@ -102,7 +102,7 @@ export default function Layout({ children, currentPageName }) {
       <main className={!hideBottomPadding ? 'h-screen' : 'h-screen'}>
         {isSwipeable ? (
           <SwipeableTabs 
-            tabs={['Feed', 'Updates', 'Groups', 'Mitzvah', 'Profile']}
+            tabs={['Feed', 'Updates', 'Groups', 'Community', 'Mitzvah', 'Profile']}
             activeIndex={currentIndex}
             onIndexChange={handleTabChange}
           >
@@ -116,7 +116,10 @@ export default function Layout({ children, currentPageName }) {
               <Groups />
             </Suspense>
             <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <MitzvahCircle isActive={currentIndex === 3} />
+              <Communities />
+            </Suspense>
+            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+              <MitzvahCircle isActive={currentIndex === 4} />
             </Suspense>
             <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
               <Profile />
