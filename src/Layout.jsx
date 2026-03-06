@@ -100,7 +100,7 @@ export default function Layout({ children, currentPageName }) {
       <main className={!hideBottomPadding ? 'h-screen' : 'h-screen'}>
         {isSwipeable ? (
           <SwipeableTabs 
-            tabs={['Feed', 'Updates', 'Communities', 'Mitzvah', 'Profile']}
+            tabs={['Feed', 'Updates', 'Groups', 'Mitzvah', 'Profile']}
             activeIndex={currentIndex}
             onIndexChange={handleTabChange}
           >
