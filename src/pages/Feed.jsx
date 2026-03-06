@@ -27,6 +27,7 @@ import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import CommunityAlertBanner from '@/components/feed/CommunityAlertBanner';
 import WeeklyActivityBar from '@/components/feed/WeeklyActivityBar';
 import WeeklyImpactCard from '@/components/feed/WeeklyImpactCard';
+import NotificationBell from '@/components/notifications/NotificationBell';
 import { toast } from 'sonner';
 import { format, isToday, parseISO } from 'date-fns';
 
