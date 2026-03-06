@@ -9,6 +9,7 @@ import SwipeableTabs from '@/components/common/SwipeableTabs';
 const Feed = lazy(() => import('@/pages/Feed'));
 const CommunityUpdates = lazy(() => import('@/pages/CommunityUpdates'));
 const Groups = lazy(() => import('@/pages/Groups'));
+const Communities = lazy(() => import('@/pages/Communities'));
 const MitzvahCircle = lazy(() => import('@/pages/MitzvahCircle'));
 const Profile = lazy(() => import('@/pages/Profile'));
 
@@ -16,6 +17,7 @@ const navItems = [
   { name: 'Feed', icon: Home, page: 'Feed', color: 'blue' },
   { name: 'Updates', icon: Newspaper, page: 'CommunityUpdates', color: 'cyan' },
   { name: 'Groups', icon: UsersRound, page: 'Groups', color: 'teal' },
+  { name: 'Community', icon: Users, page: 'Communities', color: 'blue' },
   { name: 'Mitzvah', icon: HandHeart, page: 'MitzvahCircle', color: 'purple' },
   { name: 'Profile', icon: User, page: 'Profile', color: 'slate' }
 ];
