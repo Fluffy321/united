@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, User, HandHeart, Newspaper, Users, Loader2 } from 'lucide-react';
+import { Home, User, HandHeart, Newspaper, Users, UsersRound, Loader2 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
 import SwipeableTabs from '@/components/common/SwipeableTabs';
