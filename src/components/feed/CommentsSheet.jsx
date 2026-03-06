@@ -59,6 +59,16 @@ export default function CommentsSheet({ open, onOpenChange, post, currentUser, o
     await base44.entities.Post.update(post.id, { 
       comments_count: (post.comments_count || 0) + 1 
     });
+
+    // Notify post owner (not self)
+    if (post.user_id && post.user_id !== currentUser.id) {
+      base44.entities.Notification.create({
+        user_id: post.user_id,
+        type: 'comment',
+        message: `${currentUser.display_name || currentUser.full_name} commented on your post`,
+        read: false
+      });
+    }
     
     setNewComment('');
     setIsSubmitting(false);
