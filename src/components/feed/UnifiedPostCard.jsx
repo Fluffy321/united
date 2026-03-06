@@ -103,7 +103,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           </span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="w-7 h-7 flex items-center justify-center rounded-full text-[#98A2B3] hover:bg-slate-100 transition-colors">
+              <button className="w-7 h-7 flex items-center justify-center rounded-full text-[#64748B] hover:bg-slate-100 transition-colors">
                 <MoreHorizontal className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
@@ -227,15 +227,15 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       <div className="flex items-center px-3 py-2 mt-1 border-t border-[#F2F4F7] bg-white rounded-b-[14px]">
         <button
           onClick={() => onLike(post.id)}
-          className={`flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium transition-colors ${liked ? 'text-red-500 bg-red-50' : 'text-[#667085] hover:bg-slate-50'}`}
+          className={`flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium transition-colors ${liked ? 'text-red-600 bg-red-50' : 'text-[#64748B] hover:bg-slate-100'}`}
         >
           <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
           <span>{post.likes_count || 0}</span>
         </button>
-        
+
         <button
           onClick={() => onComment(post)}
-          className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-[#667085] hover:bg-slate-50 transition-colors"
+          className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-[#64748B] hover:bg-slate-100 transition-colors"
         >
           <MessageCircle className="w-4 h-4" />
           <span>{post.comments_count || 0}</span>
