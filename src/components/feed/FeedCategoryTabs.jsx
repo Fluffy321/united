@@ -68,7 +68,7 @@ export default function FeedCategoryTabs({ activeCategory, onChange }) {
             key={cat.id}
             onClick={() => onChange(cat.id)}
             className={`flex-shrink-0 py-2.5 text-[13px] font-semibold transition-colors whitespace-nowrap px-4 ${
-              isActive ? 'text-[#0F1C2E]' : 'text-[#98A2B3]'
+              isActive ? 'text-[#1E3A8A]' : 'text-[#64748B]'
             }`}
           >
             <span ref={(el) => { labelRefs.current[cat.id] = el; }}>
