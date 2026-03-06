@@ -81,7 +81,8 @@ export default function FeedCategoryTabs({ activeCategory, onChange }) {
       {/* Underline indicator */}
       <div
         ref={underlineRef}
-        className="absolute bottom-0 left-0 h-[2px] bg-[#0F1C2E] rounded-full transition-all duration-180 ease-out"
+        className="absolute bottom-0 left-0 h-[2px] rounded-full transition-all duration-180 ease-out"
+        style={{ background: 'var(--accent)' }}
         style={{ width: 0, transform: 'translateX(0px)' }}
       />
     </div>
