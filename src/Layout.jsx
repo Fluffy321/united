@@ -182,11 +182,19 @@ export default function Layout({ children, currentPageName }) {
                     }}
                     className="flex flex-col items-center justify-center py-2.5 px-4 transition-all relative flex-1"
                   >
-                    <Icon className={`w-5 h-5 relative z-10 transition-all duration-150 ${
-                      isActive
-                        ? 'stroke-[2.5px] text-[#2563EB]'
-                        : 'stroke-[1.75px] text-[#6B7280]'
-                    }`} />
+                    <div className="relative">
+                      <Icon className={`w-5 h-5 relative z-10 transition-all duration-150 ${
+                        isActive
+                          ? 'stroke-[2.5px] text-[#2563EB]'
+                          : 'stroke-[1.75px] text-[#6B7280]'
+                      }`} />
+                      {/* Show unread message badge on Mitzvah tab */}
+                      {item.page === 'MitzvahCircle' && unreadMessages > 0 && (
+                        <span className="absolute -top-1 -right-2 min-w-[14px] h-3.5 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                          {unreadMessages > 9 ? '9+' : unreadMessages}
+                        </span>
+                      )}
+                    </div>
                     <span className={`text-[10px] mt-1 relative z-10 transition-all duration-150 ${
                       isActive ? 'font-bold text-[#2563EB]' : 'font-medium text-[#6B7280]'
                     }`}>
@@ -195,6 +203,30 @@ export default function Layout({ children, currentPageName }) {
                   </button>
                 );
               })}
+
+              {/* Messages shortcut */}
+              <button
+                onClick={() => navigate(createPageUrl('Messages'))}
+                className="flex flex-col items-center justify-center py-2.5 px-4 transition-all relative flex-1"
+              >
+                <div className="relative">
+                  <MessageCircle className={`w-5 h-5 transition-all duration-150 ${
+                    currentPageName === 'Messages'
+                      ? 'stroke-[2.5px] text-[#2563EB]'
+                      : 'stroke-[1.75px] text-[#6B7280]'
+                  }`} />
+                  {unreadMessages > 0 && (
+                    <span className="absolute -top-1 -right-2 min-w-[14px] h-3.5 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                      {unreadMessages > 9 ? '9+' : unreadMessages}
+                    </span>
+                  )}
+                </div>
+                <span className={`text-[10px] mt-1 transition-all duration-150 ${
+                  currentPageName === 'Messages' ? 'font-bold text-[#2563EB]' : 'font-medium text-[#6B7280]'
+                }`}>
+                  Messages
+                </span>
+              </button>
             </div>
           </div>
 
