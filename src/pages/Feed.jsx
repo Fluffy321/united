@@ -432,10 +432,7 @@ export default function Feed() {
           <div
             className="rounded-2xl mb-4 p-4 cursor-pointer active:scale-[0.99] transition-all"
             style={{ background: 'linear-gradient(135deg, var(--accent) 0%, #152d6e 100%)', boxShadow: '0 8px 24px rgba(30,58,138,0.25)' }}
-            onClick={() => {
-              setPostModalType('help');
-              setShowPostModal(true);
-            }}
+            onClick={() => setShowRequestHelpModal(true)}
           >
             <div className="flex items-start justify-between">
               <div>
