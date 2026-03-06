@@ -67,8 +67,8 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-      className="bg-white rounded-[14px] border border-[#EAECF0] overflow-hidden"
-      style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)', contain: 'content' }}
+      className="rounded-[14px] border border-[#EAECF0] overflow-visible"
+      style={{ background: '#ffffff', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3.5 pb-0">
