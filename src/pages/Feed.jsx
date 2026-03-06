@@ -310,6 +310,15 @@ export default function Feed() {
       }
 
       await updateStreak();
+      // Notify the requester their help was claimed
+      if (request.created_by_user_id && request.created_by_user_id !== currentUser.id) {
+        base44.entities.Notification.create({
+          user_id: request.created_by_user_id,
+          type: 'request_fulfilled',
+          message: `${currentUser.display_name || currentUser.full_name} offered to help with "${request.title}"`,
+          read: false
+        });
+      }
       queryClient.invalidateQueries(['open-mitzvah']);
       queryClient.invalidateQueries(['today-actions']);
       queryClient.invalidateQueries(['top-helpers-week']);
