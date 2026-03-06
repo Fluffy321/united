@@ -40,6 +40,15 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     loadMessages();
     markAsRead();
     loadMitzvahContext();
+
+    // Subscribe to new messages in this conversation
+    const unsubscribe = base44.entities.Message.subscribe((event) => {
+      if (event.type === 'create' && event.data.conversation_id === conversation.id) {
+        loadMessages();
+      }
+    });
+
+    return unsubscribe;
   }, [conversation.id]);
 
   useEffect(() => {
