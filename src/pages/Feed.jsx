@@ -399,7 +399,7 @@ export default function Feed() {
           <span className="font-bold text-[16px] tracking-[-0.01em]" style={{ color: 'var(--text-main)' }}>
             {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
           </span>
-
+          <NotificationBell userId={currentUser?.id} />
         </div>
         <div className="max-w-2xl mx-auto">
           <FeedCategoryTabs activeCategory={activeCategory} onChange={setActiveCategory} />
