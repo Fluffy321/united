@@ -696,8 +696,8 @@ export default function Feed() {
       <div className="fixed bottom-[80px] left-4 z-30">
         <button
           onClick={() => setShowFABTypeSelector(true)}
-          className="flex items-center gap-2 bg-[#0F1C2E] text-white text-[14px] font-semibold px-5 py-2.5 rounded-full active:scale-95 transition-all"
-          style={{ boxShadow: '0 4px 14px rgba(15,28,46,0.35)' }}
+          className="flex items-center gap-2 text-white text-[14px] font-semibold px-5 py-2.5 rounded-full active:scale-95 transition-all"
+          style={{ background: 'var(--primary)', boxShadow: '0 4px 14px rgba(22,163,74,0.35)' }}
         >
           <span className="text-[18px] leading-none font-light">+</span>
           Post
