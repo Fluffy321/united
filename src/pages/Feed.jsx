@@ -415,7 +415,7 @@ export default function Feed() {
     <div className="min-h-screen" style={{ background: 'var(--background)', scrollBehavior: 'smooth' }}>
 
       {/* Header */}
-      <div className="sticky top-0 z-20" style={{ background: 'var(--card)', borderBottom: '1px solid var(--border)', boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
+      <div className="sticky top-0 z-20 bg-white" style={{ borderBottom: '1px solid var(--border)', boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
         <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
           <span className="font-bold text-[16px] tracking-[-0.01em]" style={{ color: 'var(--text-main)' }}>
             {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
@@ -432,7 +432,7 @@ export default function Feed() {
         {activeCategory === 'all' && (
           <div
             className="rounded-2xl mb-4 p-4 cursor-pointer active:scale-[0.99] transition-all"
-            style={{ background: 'linear-gradient(135deg, var(--accent) 0%, #152d6e 100%)', boxShadow: '0 8px 24px rgba(30,58,138,0.25)' }}
+            style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #152d6e 100%)', boxShadow: '0 8px 24px rgba(30,58,138,0.25)' }}
             onClick={() => setShowRequestHelpModal(true)}
           >
             <div className="flex items-start justify-between">
@@ -722,8 +722,8 @@ export default function Feed() {
       <div className="fixed bottom-[80px] left-4 z-30">
         <button
           onClick={() => setShowFABTypeSelector(true)}
-          className="flex items-center gap-2 text-white text-[14px] font-semibold px-5 py-2.5 rounded-full active:scale-95 transition-all"
-          style={{ background: 'var(--primary)', boxShadow: '0 4px 14px rgba(22,163,74,0.35)' }}
+          className="flex items-center gap-2 text-white text-[14px] font-semibold px-5 py-2.5 rounded-full active:scale-95 transition-all bg-green-600 hover:bg-green-700"
+          style={{ boxShadow: '0 4px 14px rgba(22,163,74,0.35)' }}
         >
           <span className="text-[18px] leading-none font-light">+</span>
           Post
