@@ -149,7 +149,7 @@ export default function LiveHelpBoard({ requests = [], onClaim }) {
       </div>
 
       {/* Summary pill */}
-      <div className="bg-[#0F1C2E] text-white rounded-[12px] px-3.5 py-2.5 flex items-center gap-2 mb-3">
+      <div className="text-white rounded-[12px] px-3.5 py-2.5 flex items-center gap-2 mb-3" style={{ background: 'var(--accent)' }}>
         <span className="text-[18px]">🙋</span>
         <p className="text-[13px] font-semibold leading-snug">
           {urgentCount > 0
