@@ -164,7 +164,7 @@ export default function Layout({ children, currentPageName }) {
                 pointerEvents: 'none',
               }}
             />
-            <div className="flex items-center justify-around">
+            <div className="flex items-center justify-center gap-2 px-2">
               {navItems.map((item) => {
                 const isActive = currentPageName === item.page;
                 const Icon = item.icon;
@@ -180,7 +180,7 @@ export default function Layout({ children, currentPageName }) {
                         navigate(createPageUrl(item.page));
                       }
                     }}
-                    className="flex flex-col items-center justify-center py-2.5 px-4 transition-all relative flex-1"
+                    className="flex flex-col items-center justify-center py-2.5 px-3 transition-all relative"
                   >
                     <div className="relative">
                       <Icon className={`w-5 h-5 relative z-10 transition-all duration-150 ${
@@ -207,7 +207,7 @@ export default function Layout({ children, currentPageName }) {
               {/* Messages shortcut */}
               <button
                 onClick={() => navigate(createPageUrl('Messages'))}
-                className="flex flex-col items-center justify-center py-2.5 px-4 transition-all relative flex-1"
+                className="flex flex-col items-center justify-center py-2.5 px-3 transition-all relative"
               >
                 <div className="relative">
                   <MessageCircle className={`w-5 h-5 transition-all duration-150 ${
