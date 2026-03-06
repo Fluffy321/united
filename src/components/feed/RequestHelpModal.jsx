@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import FileUploadZone from '@/components/common/FileUploadZone';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
@@ -33,6 +34,7 @@ export default function RequestHelpModal({ open, onOpenChange, currentUser }) {
   const [location, setLocation] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState([]);
 
   const selectedCat = HELP_REQUEST_CATEGORIES.find(c => c.value === category);
 
@@ -52,12 +54,13 @@ export default function RequestHelpModal({ open, onOpenChange, currentUser }) {
       location_text: location.trim() || undefined,
       is_anonymous: isAnonymous,
       city: currentUser.city || 'Five Towns',
-      // store fulfillment status
+      image_url: attachedFiles[0]?.url || undefined,
+      attachment_urls: attachedFiles.map(f => f.url),
       help_status: 'open',
     });
 
     toast.success('Help request posted!');
-    setBody(''); setCategory(''); setLocation(''); setIsAnonymous(false);
+    setBody(''); setCategory(''); setLocation(''); setIsAnonymous(false); setAttachedFiles([]);
     setIsSubmitting(false);
     onOpenChange(false);
   };
@@ -126,6 +129,15 @@ export default function RequestHelpModal({ open, onOpenChange, currentUser }) {
                 className="pl-9"
               />
             </div>
+          </div>
+
+          {/* File upload */}
+          <div>
+            <Label className="mb-2 block">Attachments <span className="text-slate-400 font-normal">(optional)</span></Label>
+            <FileUploadZone 
+              onFilesUpload={setAttachedFiles}
+              maxFiles={3}
+            />
           </div>
 
           {/* Anonymous toggle */}
