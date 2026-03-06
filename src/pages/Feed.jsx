@@ -146,6 +146,17 @@ export default function Feed() {
     enabled: !!currentUser
   });
 
+  const { data: recentlyCompleted = [] } = useQuery({
+    queryKey: ['recently-completed'],
+    queryFn: () => base44.entities.MitzvahRequest.filter({ status: 'completed' }, '-updated_date', 3),
+    staleTime: 600000,
+    gcTime: 600000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1,
+    enabled: !!currentUser
+  });
+
   const { data: openMitzvahRequests = [] } = useQuery({
     queryKey: ['open-mitzvah'],
     queryFn: async () => {
