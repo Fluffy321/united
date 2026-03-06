@@ -52,6 +52,7 @@ export default function Feed() {
   const [showFABTypeSelector, setShowFABTypeSelector] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
   const [showAlertModal, setShowAlertModal] = useState(false);
+  const [showRequestHelpModal, setShowRequestHelpModal] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
