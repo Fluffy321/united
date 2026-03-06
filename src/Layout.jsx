@@ -56,6 +56,23 @@ export default function Layout({ children, currentPageName }) {
   const navContainerRef = useRef(null);
   const navItemRefs = useRef({});
   const [pillStyle, setPillStyle] = useState({ left: 0, opacity: 0 });
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
+  }, []);
+
+  const { data: unreadMessages = 0 } = useQuery({
+    queryKey: ['unread-messages', currentUser?.id],
+    queryFn: async () => {
+      const convs = await base44.entities.Conversation.list('-updated_date', 50);
+      const userConvs = convs.filter(c => c.participant_ids?.includes(currentUser.id));
+      return userConvs.reduce((sum, c) => sum + (c.unread_count?.[currentUser.id] || 0), 0);
+    },
+    enabled: !!currentUser,
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
 
   useEffect(() => {
     const recalculate = () => {
