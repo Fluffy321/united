@@ -104,6 +104,31 @@ const CORE_TEN_NAMES = [
     queryClient.invalidateQueries({ queryKey: ['communities-list'] });
   };
 
+  const handleGroupJoin = async (group) => {
+    await base44.entities.GroupMember.create({ group_id: group.id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
+    await base44.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
+    setMembershipSet(prev => new Set([...prev, group.id]));
+    queryClient.invalidateQueries({ queryKey: ['community-groups'] });
+    toast.success(`Joined ${group.name}!`);
+  };
+
+  const handleGroupLeave = async (group) => {
+    const memberships = await base44.entities.GroupMember.filter({ group_id: group.id, user_id: currentUser.id });
+    if (memberships[0]) await base44.entities.GroupMember.delete(memberships[0].id);
+    await base44.entities.CommunityGroup.update(group.id, { member_count: Math.max(0, (group.member_count || 1) - 1) });
+    setMembershipSet(prev => { const s = new Set(prev); s.delete(group.id); return s; });
+    queryClient.invalidateQueries({ queryKey: ['community-groups'] });
+    toast.success(`Left ${group.name}`);
+  };
+
+  const filteredGroups = groups.filter(g => {
+    const matchCat = groupCategory === 'All' || g.category === groupCategory;
+    const matchSearch = !groupSearch || g.name.toLowerCase().includes(groupSearch.toLowerCase()) || g.description?.toLowerCase().includes(groupSearch.toLowerCase());
+    return matchCat && matchSearch;
+  });
+  const myGroups = filteredGroups.filter(g => membershipSet.has(g.id));
+  const discoverGroups = filteredGroups.filter(g => !membershipSet.has(g.id));
+
   return (
     <div className="flex flex-col h-full bg-[#F8FAFB]">
       {/* Header */}
