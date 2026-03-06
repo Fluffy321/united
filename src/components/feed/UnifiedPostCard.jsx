@@ -224,7 +224,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       </div>
 
       {/* Actions footer */}
-      <div className="flex items-center px-3 py-2 mt-1 border-t border-[#F2F4F7]">
+      <div className="flex items-center px-3 py-2 mt-1 border-t border-[#F2F4F7] bg-white rounded-b-[14px]">
         <button
           onClick={() => onLike(post.id)}
           className={`flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium transition-colors ${liked ? 'text-red-500 bg-red-50' : 'text-[#667085] hover:bg-slate-50'}`}
