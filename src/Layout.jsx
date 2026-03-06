@@ -73,7 +73,7 @@ export default function Layout({ children, currentPageName }) {
     return () => window.removeEventListener('resize', recalculate);
   }, [currentPageName]);
   
-  const swipeablePages = ['Feed', 'CommunityUpdates', 'Groups', 'MitzvahCircle', 'Profile'];
+  const swipeablePages = ['Feed', 'CommunityUpdates', 'Groups', 'Communities', 'MitzvahCircle', 'Profile'];
   const currentIndex = swipeablePages.indexOf(currentPageName);
   const isSwipeable = currentIndex !== -1;
 
