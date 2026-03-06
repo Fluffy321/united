@@ -5,21 +5,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Brand Color System */
-  --color-bg: #F5F7FB;
+  /* Design Tokens */
+  --primary: #16A34A;
+  --primary-hover: #15803D;
+  --secondary: #E2E8F0;
+  --background: #F8FAFC;
+  --card: #FFFFFF;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --accent: #1E3A8A;
+  --success: #22C55E;
+  --border: #E5E7EB;
+
+  /* Legacy aliases (kept for compatibility) */
+  --color-bg: #F8FAFC;
   --color-card: #FFFFFF;
-  --color-border: #E8ECF4;
+  --color-border: #E5E7EB;
   --color-border-subtle: #F0F3F9;
 
   --color-navy: #0F172A;
   --color-navy-80: rgba(15, 23, 42, 0.8);
-  --color-brand: #2563EB;
-  --color-brand-light: #E0EDFF;
+  --color-brand: #1E3A8A;
+  --color-brand-light: #EFF6FF;
   --color-brand-mid: #BFDBFE;
 
   --color-text-primary: #0F172A;
   --color-text-secondary: #374151;
-  --color-text-muted: #6B7280;
+  --color-text-muted: #64748B;
 
   /* Spacing */
   --sp-1: 4px;
