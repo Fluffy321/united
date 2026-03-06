@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import FileUploadZone from '@/components/common/FileUploadZone';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
@@ -100,6 +101,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
   const [eventTime, setEventTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [placeholder, setPlaceholder] = useState('');
+  const [attachedFiles, setAttachedFiles] = useState([]);
 
   useEffect(() => {
     if (open) {
@@ -169,7 +171,9 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
         event_date: eventDate || undefined,
         event_time: eventTime || undefined,
         prompt_id: promptId || undefined,
-        prompt_text: promptText || undefined
+        prompt_text: promptText || undefined,
+        image_url: attachedFiles[0]?.url || undefined,
+        attachment_urls: attachedFiles.map(f => f.url)
       };
 
       await base44.entities.UnifiedPost.create(postData);
@@ -195,6 +199,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
       setCategory('');
       setEventDate('');
       setEventTime('');
+      setAttachedFiles([]);
     } catch (error) {
       toast.error('Failed to post');
     } finally {
@@ -321,7 +326,16 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
               </div>
             </div>
           )}
-        </div>
+
+          {/* File upload */}
+          <div>
+            <Label className="mb-2 block">Attachments <span className="text-slate-400 font-normal">(optional)</span></Label>
+            <FileUploadZone 
+              onFilesUpload={setAttachedFiles}
+              maxFiles={3}
+            />
+          </div>
+          </div>
 
         <div className="flex justify-end gap-3 pt-4">
           <Button 
