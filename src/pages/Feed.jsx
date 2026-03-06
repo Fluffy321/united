@@ -545,7 +545,7 @@ export default function Feed() {
         <button
           onClick={() => setShowAlertModal(true)}
           className="w-full active:scale-95 text-[#0F1C2E] font-semibold text-[13px] py-3 rounded-xl transition-all mb-4"
-          style={{ background: '#F0F3F9', border: '1px solid #E8ECF4' }}
+          style={{ background: 'var(--secondary)', border: '1px solid var(--border)' }}
           title="Community Alert"
         >
           🚨 Report Community Alert
