@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Calendar } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { Button } from "@/components/ui/button";
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -35,6 +37,7 @@ import { format, isToday, parseISO } from 'date-fns';
 
 
 export default function Feed() {
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
   const [showPostModal, setShowPostModal] = useState(false);
   const [postModalType, setPostModalType] = useState('feed');
@@ -420,7 +423,16 @@ export default function Feed() {
           <span className="font-bold text-[16px] tracking-[-0.01em]" style={{ color: 'var(--text-main)' }}>
             {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
           </span>
-          <NotificationBell userId={currentUser?.id} />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(createPageUrl('MyEvents'))}
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              title="My Events"
+            >
+              <Calendar className="w-5 h-5 text-[#64748B]" />
+            </button>
+            <NotificationBell userId={currentUser?.id} />
+          </div>
         </div>
         <div className="max-w-2xl mx-auto">
           <FeedCategoryTabs activeCategory={activeCategory} onChange={setActiveCategory} />

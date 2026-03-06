@@ -199,25 +199,6 @@ export default function Layout({ children, currentPageName }) {
                 );
               })}
 
-              {/* My Events */}
-              <button
-                onClick={() => navigate(createPageUrl('MyEvents'))}
-                className="flex flex-col items-center justify-center py-2.5 px-3 transition-all relative"
-              >
-                <div className="relative">
-                  <Calendar className={`w-5 h-5 transition-all duration-150 ${
-                    currentPageName === 'MyEvents'
-                      ? 'stroke-[2.5px] text-[#2563EB]'
-                      : 'stroke-[1.75px] text-[#6B7280]'
-                  }`} />
-                </div>
-                <span className={`text-[10px] mt-1 transition-all duration-150 ${
-                  currentPageName === 'MyEvents' ? 'font-bold text-[#2563EB]' : 'font-medium text-[#6B7280]'
-                }`}>
-                  Events
-                </span>
-              </button>
-
               {/* Messages shortcut */}
               <button
                 onClick={() => navigate(createPageUrl('Messages'))}
