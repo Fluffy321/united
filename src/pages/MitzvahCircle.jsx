@@ -323,7 +323,8 @@ export default function MitzvahCircle({ isActive = true }) {
     }
   });
 
-  const handleClaim = (request) => {
+  const handleClaim = (e, request) => {
+    if (e?.stopPropagation) e.stopPropagation();
     claimMutation.mutate(request);
   };
 
