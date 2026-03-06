@@ -2,11 +2,8 @@ import React, { useRef, useEffect, useCallback } from 'react';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
-  { id: 'discussion', label: 'Discussion' },
-  { id: 'event', label: 'Events' },
-  { id: 'job', label: 'Jobs' },
   { id: 'help', label: 'Help' },
-  { id: 'news', label: 'News' },
+  { id: 'event', label: 'Events' },
 ];
 
 export default function FeedCategoryTabs({ activeCategory, onChange }) {
