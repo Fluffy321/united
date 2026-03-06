@@ -140,7 +140,7 @@ export default function LiveHelpBoard({ requests = [], onClaim }) {
             <span className="font-bold text-[20px] text-[#0F1C2E]">Community Help Center</span>
           </div>
           {urgentCount > 0 && (
-            <span className="text-[11px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full border border-red-200 animate-pulse">
+            <span className="text-[11px] font-bold bg-[#F0F3F9] text-[#0F1C2E] px-2 py-0.5 rounded-full border border-[#E8ECF4]">
               {urgentCount} urgent
             </span>
           )}
