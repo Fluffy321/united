@@ -29,23 +29,23 @@ function getUrgency(request) {
 const URGENCY_CONFIG = {
   urgent: {
     label: 'Urgent',
-    dot: 'bg-red-500',
-    badge: 'bg-red-50 border-red-200 text-red-700',
-    ring: 'border-red-200',
+    dot: 'bg-[#0F1C2E]',
+    badge: 'bg-[#F0F3F9] border-[#E8ECF4] text-[#0F1C2E]',
+    ring: 'border-[#E8ECF4]',
     pulse: true,
   },
   soon: {
     label: 'This Week',
-    dot: 'bg-orange-400',
-    badge: 'bg-orange-50 border-orange-200 text-orange-700',
-    ring: 'border-orange-200',
+    dot: 'bg-[#6B7280]',
+    badge: 'bg-[#F0F3F9] border-[#E8ECF4] text-[#374151]',
+    ring: 'border-[#E8ECF4]',
     pulse: false,
   },
   ongoing: {
     label: 'Ongoing',
-    dot: 'bg-emerald-500',
-    badge: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-    ring: 'border-emerald-100',
+    dot: 'bg-[#9CA3AF]',
+    badge: 'bg-[#F0F3F9] border-[#E8ECF4] text-[#6B7280]',
+    ring: 'border-[#E8ECF4]',
     pulse: false,
   }
 };
