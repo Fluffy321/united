@@ -105,7 +105,8 @@ function UrgencyRow({ urgency, requests, onClaim }) {
                  </div>
                   <button
                     onClick={() => onClaim(req)}
-                    className="flex-shrink-0 bg-[#0F1C2E] text-white text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 active:scale-95 transition-all"
+                    className="flex-shrink-0 text-white text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 active:scale-95 transition-all"
+                    style={{ background: 'var(--primary)' }}
                   >
                     <Hand className="w-3 h-3" />
                     Help
