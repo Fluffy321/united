@@ -67,6 +67,11 @@ export default function ConversationList({ conversations, currentUser, selectedI
                     </span>
                   )}
                 </div>
+                {conv.request_title && (
+                  <p className="text-[10px] font-semibold text-indigo-600 truncate flex items-center gap-1">
+                    <span>🤝</span> {conv.request_title}
+                  </p>
+                )}
                 <p className="text-sm text-slate-500 truncate mt-0.5">{conv.last_message || 'No messages yet'}</p>
                 {conv.last_message_at && (
                   <p className="text-xs text-slate-400 mt-1">
