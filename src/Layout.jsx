@@ -51,8 +51,8 @@ const colorStyles = {
 
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
-  const hideNav = ['Settings', 'ShulPage', 'Messages'].includes(currentPageName);
-  const hideBottomPadding = ['Messages'].includes(currentPageName);
+  const hideNav = ['Settings', 'ShulPage'].includes(currentPageName);
+  const hideBottomPadding = false;
   const navContainerRef = useRef(null);
   const navItemRefs = useRef({});
   const [pillStyle, setPillStyle] = useState({ left: 0, opacity: 0 });
