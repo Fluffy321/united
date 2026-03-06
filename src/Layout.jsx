@@ -8,7 +8,7 @@ import SwipeableTabs from '@/components/common/SwipeableTabs';
 // Lazy load main pages
 const Feed = lazy(() => import('@/pages/Feed'));
 const CommunityUpdates = lazy(() => import('@/pages/CommunityUpdates'));
-const Groups = lazy(() => import('@/pages/Groups'));
+const Communities = lazy(() => import('@/pages/Communities'));
 const MitzvahCircle = lazy(() => import('@/pages/MitzvahCircle'));
 const Profile = lazy(() => import('@/pages/Profile'));
 
