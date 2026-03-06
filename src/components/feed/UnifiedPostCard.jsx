@@ -289,11 +289,24 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           </button>
         )}
 
+        {/* Message button for coordination */}
+        {post.user_id !== currentUser?.id && (
+          <MessageButton
+            recipientId={post.user_id}
+            recipientName={post.user_name}
+            postId={post.id}
+            postTitle={post.title || post.body?.substring(0, 50)}
+            postType={post.type}
+            currentUser={currentUser}
+            variant="compact"
+          />
+        )}
+
         {post.type === 'event' && (
           <button
             onClick={handleRSVP}
             disabled={isRSVPed || loadingRSVP}
-            className={`ml-auto h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 transition-colors ${
+            className={`h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 transition-colors ${
               isRSVPed
                 ? 'text-blue-700 bg-blue-50 border border-blue-200'
                 : 'text-[#0F1C2E] bg-[#F2F4F7] hover:bg-[#E9EBF0]'
