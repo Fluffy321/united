@@ -78,7 +78,7 @@ export default function Groups() {
             style={{ background: 'var(--primary)' }}
           >
             <Plus className="w-3.5 h-3.5" />
-            New Group
+            Create Community
           </button>
         </div>
 

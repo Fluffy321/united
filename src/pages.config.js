@@ -52,6 +52,7 @@ import AdminSeedControl from './pages/AdminSeedControl';
 import Communities from './pages/Communities';
 import CommunityUpdates from './pages/CommunityUpdates';
 import Feed from './pages/Feed';
+import Groups from './pages/Groups';
 import Messages from './pages/Messages';
 import MitzvahCircle from './pages/MitzvahCircle';
 import MitzvahMap from './pages/MitzvahMap';
@@ -60,7 +61,6 @@ import Organization from './pages/Organization';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import ShulPage from './pages/ShulPage';
-import Groups from './pages/Groups';
 import __Layout from './Layout.jsx';
 
 
@@ -70,6 +70,7 @@ export const PAGES = {
     "Communities": Communities,
     "CommunityUpdates": CommunityUpdates,
     "Feed": Feed,
+    "Groups": Groups,
     "Messages": Messages,
     "MitzvahCircle": MitzvahCircle,
     "MitzvahMap": MitzvahMap,
@@ -78,7 +79,6 @@ export const PAGES = {
     "Profile": Profile,
     "Settings": Settings,
     "ShulPage": ShulPage,
-    "Groups": Groups,
 }
 
 export const pagesConfig = {
