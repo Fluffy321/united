@@ -10,6 +10,8 @@ import GroupDetailSheet from '@/components/groups/GroupDetailSheet';
 import CreateGroupModal from '@/components/groups/CreateGroupModal';
 import { toast } from 'sonner';
 
+const TABS = ['My Communities', 'Discover', 'Create'];
+
 export default function Communities() {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedCommunityId, setSelectedCommunityId] = useState(null);
