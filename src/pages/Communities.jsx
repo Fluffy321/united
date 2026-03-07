@@ -369,7 +369,7 @@ export default function Communities() {
                 type="submit"
                 disabled={creating}
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-[14px] text-white text-[14px] font-bold active:scale-[0.98] transition-all disabled:opacity-60"
-                style={{ background: 'var(--primary)', boxShadow: '0 4px 12px rgba(22,163,74,0.25)' }}
+                style={{ background: '#16A34A', boxShadow: '0 4px 12px rgba(22,163,74,0.25)' }}
               >
                 {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                 {creating ? 'Creating…' : 'Create Community'}
