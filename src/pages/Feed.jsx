@@ -536,22 +536,27 @@ export default function Feed() {
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="action-card">
+        {/* Quick Actions */}
+        <div className="flex gap-2 mb-4">
           <button
             onClick={() => setShowRequestHelpModal(true)}
-            className="primary-btn"
+            className="flex-1 py-2.5 text-[13px] font-semibold text-white rounded-xl active:scale-[0.98] transition-all"
+            style={{ background: 'var(--primary)' }}
           >
-            Request Help
+            🙋 Request Help
           </button>
           <button
-            onClick={() => {
-              setPostModalType('feed');
-              setShowPostModal(true);
-            }}
-            className="secondary-btn"
+            onClick={() => { setPostModalType('feed'); setShowPostModal(true); }}
+            className="flex-1 py-2.5 text-[13px] font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 active:scale-[0.98] transition-all"
           >
-            Offer Help
+            🤝 Offer Help
+          </button>
+          <button
+            onClick={() => setShowFABTypeSelector(true)}
+            className="flex-1 py-2.5 text-[13px] font-semibold rounded-xl active:scale-[0.98] transition-all text-white"
+            style={{ background: '#1E3A8A' }}
+          >
+            ✏️ Create Post
           </button>
         </div>
 
