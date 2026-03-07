@@ -184,8 +184,7 @@ export default function Layout({ children, currentPageName }) {
                           ? 'stroke-[2.5px] text-[#2563EB]'
                           : 'stroke-[1.75px] text-[#6B7280]'
                       }`} />
-                      {/* Show unread message badge on Mitzvah tab */}
-                      {item.page === 'MitzvahCircle' && unreadMessages > 0 && (
+                      {item.page === 'Messages' && unreadMessages > 0 && (
                         <span className="absolute -top-1 -right-2 min-w-[14px] h-3.5 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
                           {unreadMessages > 9 ? '9+' : unreadMessages}
                         </span>
