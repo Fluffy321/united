@@ -322,15 +322,15 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         {post.type === 'event' && (
           <button
             onClick={handleRSVP}
-            disabled={isRSVPed || loadingRSVP}
+            disabled={loadingRSVP}
             className={`h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 transition-colors ${
               isRSVPed
-                ? 'bg-slate-100 text-slate-700 border border-slate-200'
+                ? 'bg-green-50 text-green-700 border border-green-200'
                 : 'btn-primary !rounded-full !h-8 !px-3.5 !py-0 text-[13px]'
             }`}
           >
             <Users className="w-3.5 h-3.5" />
-            {loadingRSVP ? 'Saving...' : isRSVPed ? `Going (${rsvpCount})` : 'Going'}
+            {loadingRSVP ? 'Saving...' : isRSVPed ? `Going (${rsvpCount}) ✕` : 'RSVP'}
           </button>
         )}
 
