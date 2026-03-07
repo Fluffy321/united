@@ -214,21 +214,21 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
         {/* Event details */}
         {post.type === 'event' && (
-          <div className="bg-blue-50 rounded-xl px-3 py-2 mt-2.5 flex flex-wrap gap-x-4 gap-y-1 border border-blue-100">
+          <div className="bg-slate-50 rounded-xl px-3 py-2 mt-2.5 flex flex-wrap gap-x-4 gap-y-1 border border-slate-200">
             {post.event_date && (
-              <div className="flex items-center gap-1.5 text-[12px] text-blue-800 font-medium">
+              <div className="flex items-center gap-1.5 text-[12px] text-slate-700 font-medium">
                 <Calendar className="w-3.5 h-3.5" />
                 <span>{new Date(post.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
               </div>
             )}
             {post.event_time && (
-              <div className="flex items-center gap-1.5 text-[12px] text-blue-800 font-medium">
+              <div className="flex items-center gap-1.5 text-[12px] text-slate-700 font-medium">
                 <Clock className="w-3.5 h-3.5" />
                 <span>{post.event_time}</span>
               </div>
             )}
             {post.location_text && (
-              <div className="flex items-center gap-1.5 text-[12px] text-blue-800 font-medium">
+              <div className="flex items-center gap-1.5 text-[12px] text-slate-700 font-medium">
                 <MapPin className="w-3.5 h-3.5" />
                 <span>{post.location_text}</span>
               </div>
