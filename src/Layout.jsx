@@ -17,7 +17,8 @@ const navItems = [
   { name: 'Feed', icon: Home, page: 'Feed', color: 'blue' },
   { name: 'Mitzvah', icon: HandHeart, page: 'MitzvahCircle', color: 'purple' },
   { name: 'Communities', icon: Users, page: 'Communities', color: 'teal' },
-  { name: 'Profile', icon: User, page: 'Profile', color: 'slate' }
+  { name: 'Messages', icon: MessageCircle, page: 'Messages', color: 'blue' },
+  { name: 'Profile', icon: User, page: 'Profile', color: 'slate' },
 ];
 
 const colorStyles = {
