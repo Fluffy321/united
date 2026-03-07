@@ -56,6 +56,23 @@ export default function Communities() {
     refetchOnWindowFocus: false,
   });
 
+  const joinedIds = useMemo(() => new Set(userMemberships.map(m => m.community_id)), [userMemberships]);
+  const joinedCommunities = useMemo(() => communities.filter(c => joinedIds.has(c.id)), [communities, joinedIds]);
+
+  const filteredCommunities = useMemo(() => {
+    if (!search.trim()) return communities;
+    const q = search.toLowerCase();
+    return communities.filter(c =>
+      c.name?.toLowerCase().includes(q) ||
+      c.neighborhood?.toLowerCase().includes(q) ||
+      c.address?.toLowerCase().includes(q)
+    );
+  }, [communities, search]);
+
+  const suggestedCommunities = useMemo(() => filteredCommunities.filter(c => !joinedIds.has(c.id)).slice(0, 10), [filteredCommunities, joinedIds]);
+  const myGroups = useMemo(() => groups.filter(g => membershipSet.has(g.id)), [groups, membershipSet]);
+  const suggestedGroups = useMemo(() => groups.filter(g => !membershipSet.has(g.id)).slice(0, 6), [groups, membershipSet]);
+
   if (!currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -77,9 +94,6 @@ export default function Communities() {
       />
     );
   }
-
-  const joinedIds = new Set(userMemberships.map(m => m.community_id));
-  const joinedCommunities = communities.filter(c => joinedIds.has(c.id));
 
   const handleJoinChange = () => {
     refetchMemberships();
