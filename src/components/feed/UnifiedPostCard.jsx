@@ -329,7 +329,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         {ACTION_BUTTON[post.type] && post.type !== 'help' && post.type !== 'event' && (
           <button
             onClick={() => onComment(post)}
-            className="ml-auto h-8 px-3.5 rounded-full text-[13px] font-semibold text-[#0F1C2E] bg-[#F2F4F7] hover:bg-[#E9EBF0] transition-colors"
+            className="ml-auto h-8 px-3.5 rounded-full text-[13px] font-semibold btn-secondary !rounded-full !h-8 !px-3.5 !py-0"
           >
             {ACTION_BUTTON[post.type].label}
           </button>
