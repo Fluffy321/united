@@ -291,7 +291,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           <button
             onClick={handleFulfilled}
             disabled={fulfilling}
-            className="ml-auto h-8 px-3.5 rounded-full text-[13px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors flex items-center gap-1.5"
+            className="ml-auto h-8 px-3.5 rounded-full text-[13px] font-semibold btn-primary !rounded-full !h-8 !px-3.5 !py-0 flex items-center gap-1.5"
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
             {fulfilling ? 'Saving…' : 'Mark Fulfilled'}
