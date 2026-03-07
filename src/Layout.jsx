@@ -176,6 +176,7 @@ export default function Layout({ children, currentPageName }) {
                         navigate(createPageUrl(item.page));
                       }
                     }}
+
                     className="flex flex-col items-center justify-center py-2.5 px-3 transition-all relative"
                   >
                     <div className="relative">
