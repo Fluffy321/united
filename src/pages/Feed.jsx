@@ -216,14 +216,11 @@ export default function Feed() {
     queryKey: ['today-mitzvah-count', currentUser?.id],
     queryFn: async () => {
       const today = format(new Date(), 'yyyy-MM-dd');
-      const [actions, logs] = await Promise.all([
-        base44.entities.MitzvahAction.filter({ user_id: currentUser.id }),
-        base44.entities.MitzvahLog.filter({ user_id: currentUser.id, date: today })
-      ]);
-      const todayActionCount = actions.filter(a => format(parseISO(a.created_date), 'yyyy-MM-dd') === today).length;
-      return todayActionCount + logs.length;
+      const logs = await base44.entities.MitzvahLog.filter({ user_id: currentUser.id, date: today });
+      const actions = todayActions.filter(a => format(parseISO(a.created_date), 'yyyy-MM-dd') === today && a.user_id === currentUser.id);
+      return actions.length + logs.length;
     },
-    enabled: !!currentUser,
+    enabled: !!currentUser && todayActions.length >= 0,
     staleTime: 600000,
     gcTime: 600000,
     refetchOnWindowFocus: false,
