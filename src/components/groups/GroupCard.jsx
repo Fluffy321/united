@@ -59,12 +59,9 @@ export default function GroupCard({ group, isMember, onJoin, onLeave, onClick })
             e.stopPropagation();
             isMember ? onLeave(group) : onJoin(group);
           }}
-          className="mt-3 w-full py-2 rounded-xl text-[13px] font-bold transition-all active:scale-95"
-          style={
-            isMember
-              ? { background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0' }
-              : { background: 'var(--primary)', color: 'white' }
-          }
+          className={`mt-3 w-full py-2 rounded-xl text-[13px] font-bold transition-all active:scale-95 ${
+            isMember ? 'btn-secondary' : 'btn-primary'
+          }`}
         >
           {isMember ? '✓ Joined' : 'Join Community'}
         </button>
