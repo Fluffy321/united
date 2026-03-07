@@ -437,45 +437,38 @@ export default function Feed() {
       </div>
 
       <div className="main-feed">
-        {/* Community Help Center Hero */}
+        {/* Community Help Center Hero — compact */}
         {activeCategory === 'all' && (
           <div
-            className="rounded-2xl mb-4 p-4 cursor-pointer active:scale-[0.99] transition-all"
-            style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #152d6e 100%)', boxShadow: '0 8px 24px rgba(30,58,138,0.25)' }}
+            className="rounded-2xl mb-4 px-4 py-3 cursor-pointer active:scale-[0.99] transition-all flex items-center justify-between gap-3"
+            style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #152d6e 100%)', boxShadow: '0 4px 16px rgba(30,58,138,0.2)' }}
             onClick={() => setShowRequestHelpModal(true)}
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-white/60 text-[11px] font-semibold uppercase tracking-widest mb-1">Live Now</p>
-                <h2 className="text-white font-bold text-[22px] leading-tight">Community Help Center</h2>
-                <div className="flex items-center gap-3 mt-2.5">
-                  {openMitzvahRequests.filter(r => r.urgency === 'HIGH').length > 0 && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-                      <span className="text-white font-bold text-[14px]">
-                        {openMitzvahRequests.filter(r => r.urgency === 'HIGH').length} urgent
-                      </span>
-                    </div>
-                  )}
+            <div className="flex-1 min-w-0">
+              <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-0.5">Community Help Center</p>
+              <div className="flex items-center gap-3">
+                {openMitzvahRequests.filter(r => r.urgency === 'HIGH').length > 0 && (
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    <span className="text-white/80 font-semibold text-[14px]">
-                      {openMitzvahRequests.length} active requests
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                    <span className="text-white font-semibold text-[13px]">
+                      {openMitzvahRequests.filter(r => r.urgency === 'HIGH').length} urgent
                     </span>
                   </div>
+                )}
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span className="text-white/80 font-medium text-[13px]">
+                    {openMitzvahRequests.length} open requests
+                  </span>
                 </div>
-              </div>
-              <div className="bg-white/15 rounded-xl px-3.5 py-2 text-center mt-1">
-                <p className="text-white font-bold text-[22px] leading-tight">{openMitzvahRequests.length}</p>
-                <p className="text-white/70 text-[10px] font-semibold">open</p>
               </div>
             </div>
             <button
               onClick={(e) => { e.stopPropagation(); setShowRequestHelpModal(true); }}
-              className="mt-3 w-full py-3.5 rounded-xl font-bold text-[15px] tracking-wide active:scale-[0.98] transition-all"
-              style={{ background: 'var(--primary)', color: '#fff', boxShadow: '0 4px 12px rgba(22,163,74,0.35)' }}
+              className="flex-shrink-0 px-4 py-2 rounded-xl font-bold text-[13px] active:scale-[0.98] transition-all"
+              style={{ background: 'var(--primary)', color: '#fff' }}
             >
-              🙋 REQUEST HELP
+              Request Help
             </button>
           </div>
         )}
