@@ -14,6 +14,7 @@ const TABS = ['My Communities', 'Discover', 'Create'];
 
 export default function Communities() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('My Communities');
   const [selectedCommunityId, setSelectedCommunityId] = useState(null);
   const [membershipSet, setMembershipSet] = useState(new Set());
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -21,6 +22,9 @@ export default function Communities() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [search, setSearch] = useState('');
   const [joiningId, setJoiningId] = useState(null);
+  // Create form state
+  const [createForm, setCreateForm] = useState({ name: '', description: '', category: 'General', location: '' });
+  const [creating, setCreating] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
