@@ -146,6 +146,30 @@ export default function Communities() {
 
 
 
+  const handleCreateSubmit = async (e) => {
+    e.preventDefault();
+    if (!createForm.name.trim()) return toast.error('Community name is required');
+    setCreating(true);
+    try {
+      await base44.entities.CommunityGroup.create({
+        name: createForm.name.trim(),
+        description: createForm.description.trim(),
+        category: createForm.category,
+        location: createForm.location.trim() || undefined,
+        created_by_user_id: currentUser.id,
+        created_by_name: currentUser.full_name,
+        member_count: 1,
+      });
+      toast.success('Community created!');
+      setCreateForm({ name: '', description: '', category: 'General', location: '' });
+      refetchGroups();
+      setActiveTab('My Communities');
+    } catch {
+      toast.error('Something went wrong');
+    }
+    setCreating(false);
+  };
+
   return (
     <div className="flex flex-col h-full bg-[#F8FAFB]">
       {/* Header */}
@@ -153,43 +177,34 @@ export default function Communities() {
         <div className="max-w-2xl mx-auto px-4 h-12 flex items-center">
           <span className="font-bold text-slate-900 text-base">Communities</span>
         </div>
+        {/* Tab Bar */}
+        <div className="max-w-2xl mx-auto px-4 flex gap-1 pb-0">
+          {TABS.map(tab => (
+            <button
+              key={tab}
+              onClick={() => { setActiveTab(tab); setSearch(''); }}
+              className={`flex-1 py-2.5 text-[13px] font-semibold transition-all border-b-2 ${
+                activeTab === tab
+                  ? 'text-[#2563EB] border-[#2563EB]'
+                  : 'text-slate-500 border-transparent'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto pb-28">
-        <div className="max-w-2xl mx-auto px-4 pt-4 space-y-5">
+        <div className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
 
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search communities…"
-              className="w-full pl-10 pr-4 py-3 text-[14px] bg-white border border-slate-200 rounded-[14px] outline-none focus:border-[#2563EB] transition-colors placeholder:text-slate-400"
-              style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}
-            />
-          </div>
-
-          {/* Create Community Button */}
-          {!search && (
-            <button
-              onClick={() => setShowCreateGroup(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-[14px] text-white text-[14px] font-bold active:scale-[0.98] transition-all"
-              style={{ background: 'var(--primary)', boxShadow: '0 4px 12px rgba(22,163,74,0.25)' }}
-            >
-              <Plus className="w-4 h-4" />
-              Create Community
-            </button>
-          )}
-
-          {/* My Communities — always shown (with empty state) */}
-          {!search && (
-            <section>
-              <h2 className="text-[15px] font-bold text-slate-900 mb-3">My Communities</h2>
+          {/* ── Tab 1: My Communities ── */}
+          {activeTab === 'My Communities' && (
+            <>
               {communitiesLoading ? (
                 <div className="space-y-2">
-                  {[...Array(2)].map((_, i) => (
+                  {[...Array(3)].map((_, i) => (
                     <div key={i} className="bg-white rounded-2xl border border-slate-100 p-3.5 flex items-center gap-3">
                       <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
                       <div className="flex-1 space-y-1.5">
@@ -200,10 +215,17 @@ export default function Communities() {
                   ))}
                 </div>
               ) : joinedCommunities.length === 0 && myGroups.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-slate-100 p-5 text-center" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                  <p className="text-2xl mb-2">🏘️</p>
-                  <p className="text-[13px] font-semibold text-slate-600">You haven't joined any communities yet</p>
-                  <p className="text-[12px] text-slate-400 mt-1">Browse suggested communities below to get started</p>
+                <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                  <p className="text-3xl mb-3">🏘️</p>
+                  <p className="text-[14px] font-semibold text-slate-700">No communities yet</p>
+                  <p className="text-[12px] text-slate-400 mt-1 mb-4">Switch to Discover to find communities to join</p>
+                  <button
+                    onClick={() => setActiveTab('Discover')}
+                    className="text-[13px] font-semibold text-white px-5 py-2 rounded-full"
+                    style={{ background: 'var(--primary)' }}
+                  >
+                    Discover Communities
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -223,65 +245,136 @@ export default function Communities() {
                   ))}
                 </div>
               )}
-            </section>
+            </>
           )}
 
-          {/* Suggested Communities */}
-          <section>
-            <h2 className="text-[15px] font-bold text-slate-900 mb-3">
-              {search ? 'Search Results' : 'Suggested Communities'}
-            </h2>
+          {/* ── Tab 2: Discover ── */}
+          {activeTab === 'Discover' && (
+            <>
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search communities…"
+                  className="w-full pl-10 pr-4 py-3 text-[14px] bg-white border border-slate-200 rounded-[14px] outline-none focus:border-[#2563EB] transition-colors placeholder:text-slate-400"
+                  style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}
+                />
+              </div>
 
-            {communitiesLoading ? (
-              <div className="space-y-3">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3">
-                    <div className="skeleton w-12 h-12 rounded-xl flex-shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <div className="skeleton h-3.5 w-40 rounded" />
-                      <div className="skeleton h-2.5 w-24 rounded" />
-                    </div>
-                    <div className="skeleton h-8 w-14 rounded-full flex-shrink-0" />
+              <section>
+                <h2 className="text-[15px] font-bold text-slate-900 mb-3">
+                  {search ? 'Search Results' : 'Suggested Communities'}
+                </h2>
+                {communitiesLoading ? (
+                  <div className="space-y-3">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3">
+                        <div className="skeleton w-12 h-12 rounded-xl flex-shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="skeleton h-3.5 w-40 rounded" />
+                          <div className="skeleton h-2.5 w-24 rounded" />
+                        </div>
+                        <div className="skeleton h-8 w-14 rounded-full flex-shrink-0" />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : suggestedCommunities.length === 0 && !search ? (
-              <p className="text-sm text-slate-400 text-center py-6">You've joined all available communities!</p>
-            ) : filteredCommunities.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-6">No communities found for "{search}"</p>
-            ) : (
-              <div className="space-y-3">
-                {suggestedCommunities.map(community => (
-                  <SuggestedCommunityCard
-                    key={community.id}
-                    community={community}
-                    joined={joinedIds.has(community.id)}
-                    loading={joiningId === community.id}
-                    onJoin={handleJoin}
-                    onView={setSelectedCommunityId}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
+                ) : filteredCommunities.length === 0 ? (
+                  <p className="text-sm text-slate-400 text-center py-6">No communities found for "{search}"</p>
+                ) : suggestedCommunities.length === 0 && !search ? (
+                  <p className="text-sm text-slate-400 text-center py-6">You've joined all available communities!</p>
+                ) : (
+                  <div className="space-y-3">
+                    {suggestedCommunities.map(community => (
+                      <SuggestedCommunityCard
+                        key={community.id}
+                        community={community}
+                        joined={joinedIds.has(community.id)}
+                        loading={joiningId === community.id}
+                        onJoin={handleJoin}
+                        onView={setSelectedCommunityId}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
 
-          {/* Suggested Groups */}
-          {!search && suggestedGroups.length > 0 && (
-            <section>
-              <h2 className="text-[15px] font-bold text-slate-900 mb-3">Groups You May Like</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {suggestedGroups.map(g => (
-                  <GroupCard
-                    key={g.id}
-                    group={g}
-                    isMember={false}
-                    onJoin={handleGroupJoin}
-                    onLeave={handleGroupLeave}
-                    onClick={() => { setSelectedGroup(g); setShowGroupDetail(true); }}
+              {!search && suggestedGroups.length > 0 && (
+                <section>
+                  <h2 className="text-[15px] font-bold text-slate-900 mb-3">Groups You May Like</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    {suggestedGroups.map(g => (
+                      <GroupCard
+                        key={g.id}
+                        group={g}
+                        isMember={false}
+                        onJoin={handleGroupJoin}
+                        onLeave={handleGroupLeave}
+                        onClick={() => { setSelectedGroup(g); setShowGroupDetail(true); }}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
+          )}
+
+          {/* ── Tab 3: Create ── */}
+          {activeTab === 'Create' && (
+            <form onSubmit={handleCreateSubmit} className="space-y-4">
+              <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                <div>
+                  <label className="text-[13px] font-semibold text-slate-700 block mb-1.5">Community Name *</label>
+                  <input
+                    value={createForm.name}
+                    onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="e.g. Daf Yomi Study Group"
+                    className="w-full px-4 py-3 text-[14px] bg-slate-50 border border-slate-200 rounded-[12px] outline-none focus:border-[#2563EB] transition-colors placeholder:text-slate-400"
                   />
-                ))}
+                </div>
+                <div>
+                  <label className="text-[13px] font-semibold text-slate-700 block mb-1.5">Description</label>
+                  <textarea
+                    value={createForm.description}
+                    onChange={e => setCreateForm(f => ({ ...f, description: e.target.value }))}
+                    placeholder="What is this community about?"
+                    rows={3}
+                    className="w-full px-4 py-3 text-[14px] bg-slate-50 border border-slate-200 rounded-[12px] outline-none focus:border-[#2563EB] transition-colors placeholder:text-slate-400 resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[13px] font-semibold text-slate-700 block mb-1.5">Category</label>
+                  <select
+                    value={createForm.category}
+                    onChange={e => setCreateForm(f => ({ ...f, category: e.target.value }))}
+                    className="w-full px-4 py-3 text-[14px] bg-slate-50 border border-slate-200 rounded-[12px] outline-none focus:border-[#2563EB] transition-colors text-slate-700"
+                  >
+                    {['Torah Learning','Shabbat','Chesed','Events','Youth','Families','Seniors','General'].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[13px] font-semibold text-slate-700 block mb-1.5">Location <span className="font-normal text-slate-400">(optional)</span></label>
+                  <input
+                    value={createForm.location}
+                    onChange={e => setCreateForm(f => ({ ...f, location: e.target.value }))}
+                    placeholder="e.g. Cedarhurst, Five Towns"
+                    className="w-full px-4 py-3 text-[14px] bg-slate-50 border border-slate-200 rounded-[12px] outline-none focus:border-[#2563EB] transition-colors placeholder:text-slate-400"
+                  />
+                </div>
               </div>
-            </section>
+
+              <button
+                type="submit"
+                disabled={creating}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-[14px] text-white text-[14px] font-bold active:scale-[0.98] transition-all disabled:opacity-60"
+                style={{ background: 'var(--primary)', boxShadow: '0 4px 12px rgba(22,163,74,0.25)' }}
+              >
+                {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                {creating ? 'Creating…' : 'Create Community'}
+              </button>
+            </form>
           )}
 
         </div>
