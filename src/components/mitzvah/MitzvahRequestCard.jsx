@@ -148,7 +148,7 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
           )}
 
           {isCompleted && (
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            <Badge variant="outline" className="bg-slate-100 text-slate-600 border-slate-200">
               Completed
             </Badge>
           )}
