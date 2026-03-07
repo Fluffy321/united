@@ -236,8 +236,8 @@ h1, h2, h3 {
   color: white;
   font-weight: 600;
   border-radius: 12px;
-  padding: 10px 18px;
   transition: background 0.2s ease;
+  border: none;
 }
 .btn-primary:hover { background: var(--primary-hover); }
 .btn-primary:active { transform: scale(0.98); }
@@ -247,11 +247,29 @@ h1, h2, h3 {
   color: var(--text-main);
   font-weight: 600;
   border-radius: 12px;
-  padding: 10px 18px;
   transition: background 0.2s ease;
+  border: none;
 }
 .btn-secondary:hover { background: #CBD5E1; }
 .btn-secondary:active { transform: scale(0.98); }
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  font-weight: 600;
+  border-radius: 12px;
+  transition: background 0.2s ease;
+}
+.btn-outline:hover { background: var(--secondary); }
+.btn-outline:active { transform: scale(0.98); }
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
 
 /* Button system */
 .u-btn-primary {
