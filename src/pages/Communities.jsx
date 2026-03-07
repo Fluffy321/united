@@ -139,19 +139,7 @@ export default function Communities() {
     toast.success(`Left ${group.name}`);
   };
 
-  const filteredCommunities = useMemo(() => {
-    if (!search.trim()) return communities;
-    const q = search.toLowerCase();
-    return communities.filter(c =>
-      c.name?.toLowerCase().includes(q) ||
-      c.neighborhood?.toLowerCase().includes(q) ||
-      c.address?.toLowerCase().includes(q)
-    );
-  }, [communities, search]);
 
-  const suggestedCommunities = filteredCommunities.filter(c => !joinedIds.has(c.id)).slice(0, 10);
-  const myGroups = groups.filter(g => membershipSet.has(g.id));
-  const suggestedGroups = groups.filter(g => !membershipSet.has(g.id)).slice(0, 6);
 
   return (
     <div className="flex flex-col h-full bg-[#F8FAFB]">
