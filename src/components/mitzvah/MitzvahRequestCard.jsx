@@ -106,12 +106,8 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
       )}
 
       <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-        <div className="text-sm text-slate-500">
-          {request.is_anonymous ? (
-            <span>Anonymous • {timeAgo}</span>
-          ) : (
-            <span>{request.created_by_name} • {timeAgo}</span>
-          )}
+        <div className="text-[12px] text-slate-400">
+          {request.is_anonymous ? 'Anonymous' : request.created_by_name}
         </div>
 
         <div className="flex gap-2">
