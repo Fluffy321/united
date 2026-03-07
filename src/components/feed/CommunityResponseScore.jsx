@@ -20,15 +20,15 @@ function AnimatedCount({ target }) {
 }
 
 export default function CommunityResponseScore() {
-  const [stats, setStats] = useState(null);
+  const monthStart = format(startOfMonth(new Date()), 'yyyy-MM-dd');
 
-  useEffect(() => {
-    const load = async () => {
-      const monthStart = format(startOfMonth(new Date()), 'yyyy-MM-dd');
+  const { data: stats } = useQuery({
+    queryKey: ['community-response-score', monthStart],
+    queryFn: async () => {
       const [fulfilled, actions, logs] = await Promise.allSettled([
-        base44.entities.MitzvahRequest.filter({ status: 'completed' }, '-created_date', 200),
-        base44.entities.MitzvahAction.list('-created_date', 500),
-        base44.entities.ChesedLog.list('-created_date', 500),
+        base44.entities.MitzvahRequest.filter({ status: 'completed' }, '-created_date', 100),
+        base44.entities.MitzvahAction.list('-created_date', 200),
+        base44.entities.ChesedLog.list('-created_date', 200),
       ]);
 
       const fulfilledThisMonth = (fulfilled.value || []).filter(r =>
@@ -43,14 +43,17 @@ export default function CommunityResponseScore() {
         .filter(l => l.date && l.date >= monthStart)
         .reduce((sum, l) => sum + (l.hours || 0), 0);
 
-      setStats({
+      return {
         fulfilled: fulfilledThisMonth,
         actions: actionsThisMonth,
         hours: Math.round(hoursThisMonth),
-      });
-    };
-    load();
-  }, []);
+      };
+    },
+    staleTime: 1800000, // 30 minutes
+    gcTime: 3600000,    // 1 hour
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
 
   if (!stats) return null;
   if (stats.fulfilled === 0 && stats.actions === 0 && stats.hours === 0) return null;
