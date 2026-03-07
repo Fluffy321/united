@@ -252,7 +252,7 @@ const CORE_TEN_NAMES = [
               <div className="max-w-2xl mx-auto">
                 <MyCommunitiesTab
                   communities={joinedCommunities}
-                  isLoading={membershipsLoading}
+                  isLoading={membershipsLoading || communitiesLoading}
                   onViewCommunity={setSelectedCommunityId}
                   onBrowse={() => setActiveTab(0)}
                 />
