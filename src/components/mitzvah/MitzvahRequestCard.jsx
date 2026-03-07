@@ -8,12 +8,21 @@ import StatusPipeline from './StatusPipeline';
 import ThankYouBanner from './ThankYouBanner';
 
 const CATEGORY_COLORS = {
-  'Errand': 'bg-slate-700 text-white font-bold',
-  'Lost & Found': 'bg-slate-600 text-white font-bold',
-  'Quick Favor': 'bg-slate-700 text-white font-bold',
-  'Tutoring': 'bg-slate-600 text-white font-bold',
-  'Shabbat Help': 'bg-slate-700 text-white font-bold',
-  'Other': 'bg-slate-600 text-white font-bold'
+  'Errand':       'bg-blue-100 text-blue-700',
+  'Lost & Found': 'bg-amber-100 text-amber-700',
+  'Quick Favor':  'bg-purple-100 text-purple-700',
+  'Tutoring':     'bg-green-100 text-green-700',
+  'Shabbat Help': 'bg-indigo-100 text-indigo-700',
+  'Ride':         'bg-sky-100 text-sky-700',
+  'Meal':         'bg-orange-100 text-orange-700',
+  'Moving':       'bg-rose-100 text-rose-700',
+  'Other':        'bg-slate-100 text-slate-600',
+};
+
+const CATEGORY_EMOJI = {
+  'Errand': '🛒', 'Lost & Found': '🔍', 'Quick Favor': '⚡',
+  'Tutoring': '📚', 'Shabbat Help': '🕯️', 'Ride': '🚗',
+  'Meal': '🍲', 'Moving': '📦', 'Other': '🤝',
 };
 
 export default function MitzvahRequestCard({ request, currentUser, onClaim, onMessage, onComplete, showDistance }) {
