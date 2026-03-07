@@ -110,36 +110,38 @@ export default function Messages() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-4xl mx-auto flex" style={{ height: 'calc(100vh - 64px)' }}>
-        {/* Conversation List - Desktop always visible, Mobile only when no chat selected */}
-        <div className={`w-full lg:w-96 lg:border-r border-slate-200 ${
-          selectedConversation ? 'hidden lg:block' : 'block'
+    <div className="flex flex-col bg-white" style={{ height: '100dvh' }}>
+      {/* Mobile: show list OR chat. Desktop: side-by-side */}
+      <div className="flex flex-1 min-h-0">
+        {/* Conversation List */}
+        <div className={`flex flex-col w-full lg:w-96 lg:border-r border-slate-200 ${
+          selectedConversation ? 'hidden lg:flex' : 'flex'
         }`}>
-          <div className="p-4 border-b border-slate-100">
-            <h1 className="text-xl font-bold text-slate-900">Messages</h1>
+          <div className="px-4 py-3 border-b border-slate-100 flex-shrink-0">
+            <h1 className="text-[17px] font-bold text-slate-900">Messages</h1>
           </div>
-          
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-            </div>
-          ) : (
-            <ConversationList 
-              conversations={conversations}
-              currentUser={currentUser}
-              selectedId={selectedConversation?.id}
-              onSelect={setSelectedConversation}
-            />
-          )}
+          <div className="flex-1 overflow-y-auto">
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7]" />
+              </div>
+            ) : (
+              <ConversationList
+                conversations={conversations}
+                currentUser={currentUser}
+                selectedId={selectedConversation?.id}
+                onSelect={setSelectedConversation}
+              />
+            )}
+          </div>
         </div>
 
         {/* Chat View */}
-        <div className={`flex-1 ${
-          selectedConversation ? 'block' : 'hidden lg:flex lg:items-center lg:justify-center'
+        <div className={`flex-1 flex flex-col min-h-0 ${
+          selectedConversation ? 'flex' : 'hidden lg:flex lg:items-center lg:justify-center'
         }`}>
           {selectedConversation ? (
-            <ChatView 
+            <ChatView
               conversation={selectedConversation}
               currentUser={currentUser}
               onBack={() => setSelectedConversation(null)}
@@ -147,7 +149,7 @@ export default function Messages() {
               onBlock={handleBlock}
             />
           ) : (
-            <div className="text-center p-8 hidden lg:block">
+            <div className="text-center p-8">
               <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">💬</span>
               </div>
@@ -158,7 +160,7 @@ export default function Messages() {
         </div>
       </div>
 
-      <ReportModal 
+      <ReportModal
         open={showReport}
         onOpenChange={setShowReport}
         contentId={reportTarget.id}
