@@ -20,15 +20,15 @@ import { HELP_REQUEST_CATEGORIES } from '@/components/feed/RequestHelpModal';
 
 const TYPE_CONFIGS = {
   feed:         { label: 'Post',         color: 'bg-slate-100 text-slate-600' },
-  help:         { label: 'Help Needed',  color: 'bg-amber-50 text-amber-700 border border-amber-200' },
-  event:        { label: 'Event',        color: 'bg-blue-50 text-blue-700 border border-blue-200' },
-  job:          { label: 'Job',          color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-  housing:      { label: 'Housing',      color: 'bg-violet-50 text-violet-700 border border-violet-200' },
-  dating:       { label: 'Dating',       color: 'bg-rose-50 text-rose-700 border border-rose-200' },
-  food:         { label: 'Food',         color: 'bg-orange-50 text-orange-700 border border-orange-200' },
-  shul:         { label: 'Shul',         color: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
-  news:         { label: 'News',         color: 'bg-sky-50 text-sky-700 border border-sky-200' },
-  prompt_reply: { label: 'Prompt',       color: 'bg-purple-50 text-purple-700 border border-purple-200' },
+  help:         { label: 'Help Needed',  color: 'bg-slate-100 text-slate-700 border border-slate-200' },
+  event:        { label: 'Event',        color: 'bg-slate-100 text-slate-700 border border-slate-200' },
+  job:          { label: 'Job',          color: 'bg-slate-100 text-slate-700 border border-slate-200' },
+  housing:      { label: 'Housing',      color: 'bg-slate-100 text-slate-700 border border-slate-200' },
+  dating:       { label: 'Dating',       color: 'bg-slate-100 text-slate-700 border border-slate-200' },
+  food:         { label: 'Food',         color: 'bg-slate-100 text-slate-700 border border-slate-200' },
+  shul:         { label: 'Shul',         color: 'bg-slate-100 text-slate-700 border border-slate-200' },
+  news:         { label: 'News',         color: 'bg-slate-100 text-slate-700 border border-slate-200' },
+  prompt_reply: { label: 'Prompt',       color: 'bg-slate-100 text-slate-700 border border-slate-200' },
 };
 
 const ACTION_BUTTON = {
