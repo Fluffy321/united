@@ -317,8 +317,8 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             disabled={isRSVPed || loadingRSVP}
             className={`h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 transition-colors ${
               isRSVPed
-                ? 'text-blue-700 bg-blue-50 border border-blue-200'
-                : 'text-[#0F1C2E] bg-[#F2F4F7] hover:bg-[#E9EBF0]'
+                ? 'bg-slate-100 text-slate-700 border border-slate-200'
+                : 'btn-primary !rounded-full !h-8 !px-3.5 !py-0 text-[13px]'
             }`}
           >
             <Users className="w-3.5 h-3.5" />
