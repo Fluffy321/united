@@ -137,7 +137,7 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
               {isRequester && (
                 <Button 
                   onClick={() => onComplete(request)}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="btn-primary !px-3 !py-1.5 !rounded-lg text-sm"
                   size="sm"
                 >
                   <CheckCircle2 className="w-4 h-4 mr-2" />
