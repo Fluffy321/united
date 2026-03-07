@@ -115,7 +115,7 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
           {isOpen && !isRequester && (
             <Button 
               onClick={(e) => { e.stopPropagation(); onClaim(e, request); }}
-              className="bg-indigo-600 hover:bg-indigo-700"
+              className="btn-primary !px-3 !py-1.5 !rounded-lg text-sm"
               size="sm"
             >
               <Hand className="w-4 h-4 mr-2" />
