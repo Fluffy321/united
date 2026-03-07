@@ -183,8 +183,8 @@ export default function Feed() {
       const actions = await base44.entities.MitzvahAction.list('-created_date', 100);
       return actions.filter(a => isToday(parseISO(a.created_date)));
     },
-    staleTime: 600000,
-    gcTime: 600000,
+    staleTime: 1800000,
+    gcTime: 3600000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: 1,
