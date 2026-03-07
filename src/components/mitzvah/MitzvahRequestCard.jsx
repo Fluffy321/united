@@ -54,7 +54,7 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
     : request.status;
 
   return (
-    <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-2xl p-4 border border-slate-100 hover:shadow-md transition-shadow" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
       {/* Status pipeline — always visible */}
       <StatusPipeline status={normalizedStatus} />
 
@@ -66,31 +66,25 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
         />
       )}
 
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1.5">
-            <Badge className={`${CATEGORY_COLORS[request.category]} border-0 text-xs`}>
-              {request.category}
-            </Badge>
-            {showDistance && formatDistance(request.distance) && (
-              <Badge variant="outline" className="text-xs bg-slate-50 text-slate-600 border-slate-200">
-                <MapPin className="w-3 h-3 mr-1" />
-                {formatDistance(request.distance)}
-              </Badge>
-            )}
-          </div>
-          <h3 className="font-bold text-[15px] text-black">{request.title}</h3>
-        </div>
-        
-        {isCompleted && (
-          <CheckCircle2 className="w-6 h-6 text-green-600" />
+      {/* Category + metadata row */}
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
+        <span className={`inline-flex items-center gap-1 text-[12px] font-semibold px-2.5 py-0.5 rounded-full ${CATEGORY_COLORS[request.category] || CATEGORY_COLORS['Other']}`}>
+          {CATEGORY_EMOJI[request.category] || '🤝'} {request.category}
+        </span>
+        <span className="text-[11px] text-slate-400 flex items-center gap-1">
+          <Clock className="w-3 h-3" />{timeAgo}
+        </span>
+        {showDistance && formatDistance(request.distance) && (
+          <span className="text-[11px] text-slate-400 flex items-center gap-1">
+            <MapPin className="w-3 h-3" />{formatDistance(request.distance)}
+          </span>
         )}
-        {isClaimed && (
-          <Clock className="w-6 h-6 text-amber-600" />
-        )}
+        {isCompleted && <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />}
+        {isClaimed && <Clock className="w-4 h-4 text-amber-500 ml-auto" />}
       </div>
 
-      <p className="text-black text-sm mb-2 leading-relaxed font-bold">{request.description}</p>
+      <h3 className="font-bold text-[15px] text-slate-900 mb-1 leading-snug">{request.title}</h3>
+      <p className="text-slate-600 text-[13px] mb-2 leading-relaxed">{request.description}</p>
 
       {/* Social proof signals */}
       {isOpen && (request.views_count > 0 || request.offers_count > 0) && (
