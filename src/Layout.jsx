@@ -99,7 +99,7 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA]">
+    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
       <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
           body { font-family: 'Inter', system-ui, sans-serif; background: #F5F7FB; -webkit-font-smoothing: antialiased; }
