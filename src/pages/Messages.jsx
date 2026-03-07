@@ -17,24 +17,23 @@ export default function Messages() {
   useEffect(() => {
     loadUser();
     checkUrlParams();
+  }, []);
 
-    // Subscribe to message events for notifications
+  useEffect(() => {
+    if (!currentUser) return;
+    // Subscribe to message events for real-time notifications
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type === 'create') {
         const newMsg = event.data;
-        // Only show toast for messages not from current user
-        if (newMsg.sender_id !== currentUser?.id) {
+        if (newMsg.sender_id !== currentUser.id) {
+          queryClient.invalidateQueries({ queryKey: ['conversations', currentUser.id] });
           toast.success(`📨 ${newMsg.sender_name}: ${newMsg.content.substring(0, 50)}${newMsg.content.length > 50 ? '...' : ''}`, {
             duration: 5000,
-            action: {
-              label: 'View',
-              onClick: () => loadConversation(newMsg.conversation_id)
-            }
+            action: { label: 'View', onClick: () => loadConversation(newMsg.conversation_id) }
           });
         }
       }
     });
-
     return unsubscribe;
   }, [currentUser?.id]);
 
