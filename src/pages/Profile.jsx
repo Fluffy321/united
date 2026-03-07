@@ -152,176 +152,173 @@ export default function Profile() {
   const displayName = profileUser.display_name || profileUser.full_name?.split(' ')[0] || 'User';
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="bg-gradient-to-b from-[#E6F0FF] to-white pt-8 pb-20 px-4">
-        <div className="max-w-2xl mx-auto flex justify-between items-start">
-          <div></div>
+    <div className="min-h-screen bg-[#F8FAFB]">
+      {/* Header band */}
+      <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
+          <span className="font-bold text-slate-900 text-base">Profile</span>
           {isOwnProfile ? (
             <Link to={createPageUrl('Settings')}>
-              <Button variant="ghost" size="icon" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+              <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-900">
                 <Settings className="w-5 h-5" />
               </Button>
             </Link>
           ) : (
-            <div className="flex gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                onClick={() => setShowReport(true)}
-              >
-                <Flag className="w-5 h-5" />
+            <div className="flex gap-1">
+              <Button variant="ghost" size="icon" className="text-slate-500" onClick={() => setShowReport(true)}>
+                <Flag className="w-4 h-4" />
               </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                onClick={handleBlock}
-              >
-                <Ban className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="text-slate-500" onClick={handleBlock}>
+                <Ban className="w-4 h-4" />
               </Button>
             </div>
           )}
         </div>
-        </div>
+      </div>
 
-        <div className="max-w-2xl mx-auto px-4 -mt-16">
+      <div className="max-w-2xl mx-auto px-4 pb-28 space-y-4 pt-4">
         {/* Profile Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
-          <div className="flex flex-col items-center -mt-16 mb-4">
-            <div className="border-4 border-white shadow-lg">
+        <div className="bg-white rounded-2xl border border-slate-100 p-5" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="flex-shrink-0">
               <UserAvatar user={{...profileUser, display_name: displayName}} size="xl" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <h1 className="text-xl font-bold text-slate-900 truncate">{displayName}</h1>
+                <Badge variant="outline" className="text-xs flex-shrink-0">{profileUser.age_range || '18+'}</Badge>
+              </div>
+              <div className="flex items-center gap-1 text-slate-400 text-[13px] mb-2">
+                <MapPin className="w-3.5 h-3.5" />
+                <span>{profileUser.city || 'Five Towns'}</span>
+              </div>
+              {profileUser.helper_badge && profileUser.helper_badge !== 'none' && (
+                <HelperBadge badge={profileUser.helper_badge} size="sm" />
+              )}
             </div>
           </div>
 
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <h1 className="text-2xl font-bold text-slate-900">{displayName}</h1>
-              <Badge variant="outline" className="text-sm">{profileUser.age_range || '18+'}</Badge>
+          {profileUser.bio && (
+            <p className="text-slate-600 text-[14px] leading-relaxed mb-3">{profileUser.bio}</p>
+          )}
+
+          {mitzvahPoints > 0 && (
+            <div className="inline-flex items-center gap-2 bg-amber-50 rounded-full px-3 py-1.5 border border-amber-200 mb-3">
+              <span>✨</span>
+              <span className="font-semibold text-amber-700 text-[13px]">{mitzvahPoints} Mitzvah Points</span>
             </div>
-            
-            <div className="flex items-center justify-center gap-1 text-slate-500 mb-4">
-              <MapPin className="w-4 h-4" />
-              <span>{profileUser.city || 'Five Towns'}</span>
+          )}
+
+          {userStreak && userStreak.current_streak > 0 && (
+            <div className="mb-3">
+              <StreakBadge streak={userStreak} />
             </div>
+          )}
 
-            <div className="space-y-3 mb-4">
-              {/* Helper badge — prominent recognition */}
-              {profileUser.helper_badge && profileUser.helper_badge !== 'none' && (
-                <div className="flex justify-center">
-                  <HelperBadge badge={profileUser.helper_badge} size="lg" />
-                </div>
-              )}
-
-              {mitzvahPoints > 0 && (
-                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-full px-4 py-2 border border-indigo-200">
-                  <span className="text-xl">✨</span>
-                  <span className="font-semibold text-indigo-700">
-                    {mitzvahPoints} Mitzvah Points
-                  </span>
-                </div>
-              )}
-
-              {userStreak && userStreak.current_streak > 0 && (
-                <div className="flex justify-center">
-                  <StreakBadge streak={userStreak} />
-                </div>
-              )}
+          {profileUser.interests && profileUser.interests.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {profileUser.interests.map((interest, i) => (
+                <span key={i} className="text-[12px] font-medium bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full">
+                  {interest}
+                </span>
+              ))}
             </div>
+          )}
 
-            {profileUser.bio && (
-              <p className="text-slate-600 mb-4 max-w-sm mx-auto">{profileUser.bio}</p>
-            )}
-
-            {profileUser.interests && profileUser.interests.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-2 mb-4">
-                {profileUser.interests.map((interest, i) => (
-                  <Badge key={i} variant="secondary" className="bg-slate-100 text-slate-600">
-                    {interest}
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            {!isOwnProfile && (
-              <Button 
+          <div className="flex gap-2 pt-1">
+            {!isOwnProfile ? (
+              <button
                 onClick={handleMessage}
-                className="bg-indigo-600 hover:bg-indigo-700 gap-2"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 text-[13px] font-semibold text-white rounded-xl active:scale-[0.98] transition-all"
+                style={{ background: 'var(--primary)' }}
               >
                 <MessageCircle className="w-4 h-4" />
                 Message
-              </Button>
-            )}
-
-            {isOwnProfile && (
-              <Link to={createPageUrl('Settings')}>
-                <Button variant="outline" className="gap-2">
+              </button>
+            ) : (
+              <Link to={createPageUrl('Settings')} className="flex-1">
+                <button className="w-full flex items-center justify-center gap-2 py-2.5 text-[13px] font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 active:scale-[0.98] transition-all">
                   <Edit2 className="w-4 h-4" />
                   Edit Profile
-                </Button>
+                </button>
               </Link>
             )}
           </div>
         </div>
 
-        {/* Weekly Summary - Own Profile Only */}
+        {/* Impact Stats */}
         {isOwnProfile && (
-          <div className="mb-4">
-            <WeeklySummary mitzvahCount={weeklyMitzvahCount} />
+          <div className="bg-white rounded-2xl border border-slate-100 p-4" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <h2 className="text-[14px] font-bold text-slate-900 mb-3">Impact</h2>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-3 bg-slate-50 rounded-xl">
+                <p className="text-xl font-bold text-slate-900">{mitzvahPoints}</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">Points</p>
+              </div>
+              <div className="text-center p-3 bg-slate-50 rounded-xl">
+                <p className="text-xl font-bold text-slate-900">{weeklyMitzvahCount}</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">This Week</p>
+              </div>
+              <div className="text-center p-3 bg-slate-50 rounded-xl">
+                <p className="text-xl font-bold text-slate-900">{userStreak?.current_streak || 0}</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">Day Streak</p>
+              </div>
+            </div>
           </div>
+        )}
+
+        {/* Weekly Summary */}
+        {isOwnProfile && (
+          <WeeklySummary mitzvahCount={weeklyMitzvahCount} />
         )}
 
         {/* Helper Badge Showcase */}
         {isOwnProfile && (
-          <div className="mb-4">
-            <HelperBadgeShowcase
-              currentBadge={profileUser.helper_badge || 'none'}
-              actionCount={profileUser.helper_actions_count || 0}
-            />
-          </div>
+          <HelperBadgeShowcase
+            currentBadge={profileUser.helper_badge || 'none'}
+            actionCount={profileUser.helper_actions_count || 0}
+          />
         )}
 
-        {/* Mitzvah Timeline - Own Profile Only */}
+        {/* Mitzvah Timeline */}
         {isOwnProfile && mitzvahLogs.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Your Mitzvah Journey</h2>
+          <div className="bg-white rounded-2xl border border-slate-100 p-4" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <h2 className="text-[14px] font-bold text-slate-900 mb-3">Mitzvah Journey</h2>
             <MitzvahTimeline logs={mitzvahLogs} />
           </div>
         )}
 
-        {/* Posts */}
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-slate-900">Recent Posts</h2>
+        {/* Recent Posts */}
+        <div>
+          <h2 className="text-[14px] font-bold text-slate-900 mb-3">Recent Posts</h2>
+          {postsLoading ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="text-center py-10 bg-white rounded-2xl border border-slate-100">
+              <p className="text-slate-400 text-[14px]">No posts yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {posts.map(post => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  currentUser={currentUser}
+                  onLike={() => {}}
+                  onComment={() => {}}
+                  onRepost={() => {}}
+                  onDelete={() => {}}
+                  onReport={() => {}}
+                />
+              ))}
+            </div>
+          )}
         </div>
-
-        {postsLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-          </div>
-        ) : posts.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl">
-            <p className="text-slate-500">No posts yet</p>
-          </div>
-        ) : (
-          <div className="space-y-4 pb-24">
-            {posts.map(post => (
-              <PostCard 
-                key={post.id}
-                post={post}
-                currentUser={currentUser}
-                onLike={() => {}}
-                onComment={() => {}}
-                onRepost={() => {}}
-                onDelete={() => {}}
-                onReport={() => {}}
-              />
-            ))}
-          </div>
-        )}
       </div>
 
-      <ReportModal 
+      <ReportModal
         open={showReport}
         onOpenChange={setShowReport}
         contentId={profileUser.id}
