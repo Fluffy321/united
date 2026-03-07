@@ -64,7 +64,7 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
               {request.category}
             </Badge>
             {showDistance && formatDistance(request.distance) && (
-              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+              <Badge variant="outline" className="text-xs bg-slate-50 text-slate-600 border-slate-200">
                 <MapPin className="w-3 h-3 mr-1" />
                 {formatDistance(request.distance)}
               </Badge>
