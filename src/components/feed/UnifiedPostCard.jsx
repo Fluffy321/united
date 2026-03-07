@@ -78,18 +78,26 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const handleRSVP = async () => {
     setLoadingRSVP(true);
     try {
-      await base44.entities.RSVP.create({
-        post_id: post.id,
-        user_id: currentUser.id,
-        user_name: currentUser.display_name || currentUser.full_name,
-        user_avatar_url: currentUser.avatar_url,
-        status: 'going'
-      });
-      setIsRSVPed(true);
-      setRsvpCount(c => c + 1);
-      toast.success('You\'re going! 🎉');
+      if (isRSVPed) {
+        const rsvps = await base44.entities.RSVP.filter({ post_id: post.id, user_id: currentUser.id });
+        if (rsvps[0]) await base44.entities.RSVP.delete(rsvps[0].id);
+        setIsRSVPed(false);
+        setRsvpCount(c => Math.max(0, c - 1));
+        toast.success('RSVP removed');
+      } else {
+        await base44.entities.RSVP.create({
+          post_id: post.id,
+          user_id: currentUser.id,
+          user_name: currentUser.display_name || currentUser.full_name,
+          user_avatar_url: currentUser.avatar_url,
+          status: 'going'
+        });
+        setIsRSVPed(true);
+        setRsvpCount(c => c + 1);
+        toast.success('You\'re going! 🎉');
+      }
     } catch (error) {
-      toast.error('Failed to RSVP');
+      toast.error('Failed to update RSVP');
     } finally {
       setLoadingRSVP(false);
     }
