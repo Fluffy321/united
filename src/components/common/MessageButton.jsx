@@ -31,22 +31,24 @@ export default function MessageButton({
 
     setLoading(true);
     try {
-      // Check if conversation already exists
-      const existingConvs = await base44.entities.Conversation.filter({
-        participant_ids: [currentUser.id, recipientId]
-      });
+      // Find existing direct conversation between these two users
+      const allConvs = await base44.entities.Conversation.list('-updated_date', 100);
+      const existing = allConvs.find(c =>
+        c.participant_ids?.includes(currentUser.id) &&
+        c.participant_ids?.includes(recipientId) &&
+        c.participant_ids?.length === 2
+      );
 
       let conversationId;
-      if (existingConvs.length > 0) {
-        conversationId = existingConvs[0].id;
+      if (existing) {
+        conversationId = existing.id;
       } else {
-        // Create new conversation
         const conv = await base44.entities.Conversation.create({
           participant_ids: [currentUser.id, recipientId],
           participant_names: [currentUser.full_name || currentUser.display_name, recipientName],
-          participant_ages: [currentUser.age_range, null],
-          request_id: postId,
-          request_title: postTitle,
+          participant_ages: [currentUser.age_range || '18+', null],
+          request_id: postId || null,
+          request_title: postTitle || null,
           request_type: postType,
           unread_count: { [recipientId]: 0 }
         });
