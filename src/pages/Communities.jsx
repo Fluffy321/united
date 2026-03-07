@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Loader2, Plus, Search, Users, ChevronRight, CheckCircle2, MapPin } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Loader2, Plus, Search, ChevronRight, CheckCircle2, MapPin } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ProfileSetup from '@/components/profile/ProfileSetup';
@@ -9,7 +9,6 @@ import GroupCard from '@/components/groups/GroupCard';
 import GroupDetailSheet from '@/components/groups/GroupDetailSheet';
 import CreateGroupModal from '@/components/groups/CreateGroupModal';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
 
 export default function Communities() {
   const [currentUser, setCurrentUser] = useState(null);
