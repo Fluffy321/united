@@ -53,8 +53,8 @@ export default function CommunityListCard({ community, joined, loading, onJoin, 
           disabled={loading}
           className={`text-[13px] font-semibold h-8 px-3.5 rounded-full transition-colors ${
             joined
-              ? 'bg-[#F0F3F9] text-[#374151] hover:bg-[#E0EDFF]'
-              : 'bg-[#2563EB] text-white hover:bg-[#1d4ed8]'
+              ? 'btn-secondary !rounded-full !px-3.5 !py-0'
+              : 'btn-primary !rounded-full !px-3.5 !py-0'
           }`}
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : joined ? 'Joined' : 'Join'}
