@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import CommunityLogo from './CommunityLogo';
 
 const TYPE_COLORS = {
-  Shul:     'bg-blue-50 text-blue-700',
-  School:   'bg-emerald-50 text-emerald-700',
-  Yeshiva:  'bg-violet-50 text-violet-700',
-  Seminary: 'bg-pink-50 text-pink-700',
-  Camp:     'bg-orange-50 text-orange-700',
+  Shul:     'bg-slate-100 text-slate-700',
+  School:   'bg-slate-100 text-slate-700',
+  Yeshiva:  'bg-slate-100 text-slate-700',
+  Seminary: 'bg-slate-100 text-slate-700',
+  Camp:     'bg-slate-100 text-slate-700',
   Other:    'bg-slate-100 text-slate-600',
 };
 
