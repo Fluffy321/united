@@ -8,11 +8,11 @@ import StatusPipeline from './StatusPipeline';
 import ThankYouBanner from './ThankYouBanner';
 
 const CATEGORY_COLORS = {
-  'Errand': 'bg-blue-600 text-white font-bold',
-  'Lost & Found': 'bg-purple-600 text-white font-bold',
-  'Quick Favor': 'bg-green-600 text-white font-bold',
-  'Tutoring': 'bg-yellow-500 text-white font-bold',
-  'Shabbat Help': 'bg-indigo-600 text-white font-bold',
+  'Errand': 'bg-slate-700 text-white font-bold',
+  'Lost & Found': 'bg-slate-600 text-white font-bold',
+  'Quick Favor': 'bg-slate-700 text-white font-bold',
+  'Tutoring': 'bg-slate-600 text-white font-bold',
+  'Shabbat Help': 'bg-slate-700 text-white font-bold',
   'Other': 'bg-slate-600 text-white font-bold'
 };
 
