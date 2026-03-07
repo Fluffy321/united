@@ -9,10 +9,9 @@ export default function WeeklyActivityBar() {
   const { data } = useQuery({
     queryKey: ['weekly-activity-bar'],
     queryFn: async () => {
-      const [requests, signups, actions] = await Promise.all([
+      const [requests, actions] = await Promise.all([
         base44.entities.MitzvahRequest.list('-created_date', 200),
-        base44.entities.MitzvahSignup.list('-created_date', 500),
-        base44.entities.MitzvahAction.list('-created_date', 500),
+        base44.entities.MitzvahAction.list('-created_date', 200),
       ]);
       const thisWeek = (arr) => arr.filter(r => r.created_date >= weekStart);
       const weekRequests = thisWeek(requests);
@@ -22,8 +21,10 @@ export default function WeeklyActivityBar() {
         volunteerActions: thisWeek(actions).length,
       };
     },
-    staleTime: 300000,
+    staleTime: 600000,
+    gcTime: 1800000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const stats = data ?? { helpRequests: 0, fulfilled: 0, volunteerActions: 0 };
