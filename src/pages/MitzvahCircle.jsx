@@ -411,33 +411,7 @@ export default function MitzvahCircle({ isActive = true }) {
           </div>
         </div>
 
-        {/* Alert Category Quick-Filter Pills */}
-        <div className="bg-white flex-shrink-0" style={{ borderBottom: '1px solid #F0F3F9' }}>
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-2.5">
-            {[
-              { label: 'Power Outage', emoji: '⚡', color: '#FEF3C7', text: '#92400E' },
-              { label: 'Shiva Info', emoji: '🕯️', color: '#F3E8FF', text: '#6B21A8' },
-              { label: 'Missing Item', emoji: '🔍', color: '#DBEAFE', text: '#1E40AF' },
-              { label: 'Urgent Ride', emoji: '🚗', color: '#FEE2E2', text: '#991B1B' },
-              { label: 'Medical', emoji: '🏥', color: '#DCFCE7', text: '#166534' },
-              { label: 'Other', emoji: '📢', color: '#F1F5F9', text: '#374151' },
-            ].map((cat) => (
-              <button
-                key={cat.label}
-                onClick={() => setFilters(f => ({ ...f, alertCategory: f.alertCategory === cat.label ? null : cat.label }))}
-                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all active:scale-95"
-                style={{
-                  background: filters.alertCategory === cat.label ? cat.text : cat.color,
-                  color: filters.alertCategory === cat.label ? 'white' : cat.text,
-                  border: `1.5px solid ${cat.color}`,
-                }}
-              >
-                <span>{cat.emoji}</span>
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        </div>
+
 
         {/* Tab content container — stable, both tabs share same shell + header */}
         <div style={{ position: 'relative', flex: 1, overflow: 'hidden', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
