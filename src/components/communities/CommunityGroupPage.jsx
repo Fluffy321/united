@@ -15,10 +15,10 @@ const CATEGORY_EMOJIS = {
 };
 
 const TABS = [
-  { id: 'posts', label: 'Posts', icon: Send },
   { id: 'events', label: 'Events', icon: Calendar },
-  { id: 'help', label: 'Help', icon: HandHeart },
-  { id: 'members', label: 'Members', icon: UserCheck },
+  { id: 'posts', label: 'Posts', icon: Send },
+  { id: 'members', label: 'Members', icon: UserPlus },
+  { id: 'announcements', label: 'Announce', icon: Megaphone },
 ];
 
 export default function CommunityGroupPage({ group, currentUser, isMember, isPendingRequest, onJoin, onLeave, onBack, onMemberApproved }) {
