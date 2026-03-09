@@ -445,6 +445,42 @@ function FilteredCommunitiesTab({ search, setSearch, communities, typeFilter, jo
   );
 }
 
+/* ─── Interest Group Card (Discover) ─── */
+function InterestGroupCard({ group, isMember, onJoin, onLeave, onView }) {
+  const cfg = CATEGORY_CONFIG[group.category] || CATEGORY_CONFIG['General'];
+  return (
+    <div
+      onClick={() => onView(group)}
+      className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3.5 cursor-pointer active:scale-[0.99] transition-transform"
+      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+    >
+      <div className="w-12 h-12 rounded-xl flex-shrink-0 bg-slate-50 flex items-center justify-center border border-slate-100 text-2xl flex-none">
+        {cfg.emoji}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-bold text-slate-900 text-[15px] truncate mb-0.5">{group.name}</p>
+        {group.description && (
+          <p className="text-[12px] text-slate-500 line-clamp-2 leading-relaxed mb-1.5">{group.description}</p>
+        )}
+        <span className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+          <Users className="w-3 h-3" />
+          {group.member_count || 0} members
+        </span>
+      </div>
+      <div className="flex-shrink-0" onClick={e => { e.stopPropagation(); isMember ? onLeave(group) : onJoin(group); }}>
+        <button
+          className={`text-[13px] font-semibold h-8 px-4 rounded-full transition-colors ${
+            isMember ? 'bg-slate-100 text-slate-600' : 'text-white'
+          }`}
+          style={!isMember ? { background: '#16A34A' } : {}}
+        >
+          {isMember ? 'Joined' : 'Join'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Discover Tab ─── */
 function DiscoverTab({ search, setSearch, groups, membershipSet, loading, onJoin, onLeave, onView }) {
   const filtered = useMemo(() => {
