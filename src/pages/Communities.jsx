@@ -1127,19 +1127,16 @@ function ShulCard({ community, joined, loading, onJoin, onView }) {
         }
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <p className="font-bold text-slate-900 text-[15px] truncate">{community.name}</p>
-          {community.is_claimed && <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" title="Verified Shul" />}
-        </div>
+        <p className="font-bold text-slate-900 text-[15px] truncate mb-1">{community.name}</p>
         <div className="flex items-center gap-3 flex-wrap">
           {(community.neighborhood || community.address) && (
-            <span className="flex items-center gap-0.5 text-[12px] text-slate-500 font-medium">
-              <MapPin className="w-3.5 h-3.5 text-slate-400" />
+            <span className="flex items-center gap-0.5 text-[13px] text-slate-500 font-medium">
+              <MapPin className="w-4 h-4" />
               {community.neighborhood || community.address?.split(',')[0]}
             </span>
           )}
-          <span className="flex items-center gap-1 text-[12px] text-slate-400">
-            <Users className="w-3.5 h-3.5" />
+          <span className="flex items-center gap-1 text-[13px] text-slate-500 font-medium">
+            <Users className="w-4 h-4" />
             {community.follower_count || 0} members
           </span>
         </div>
