@@ -26,7 +26,8 @@ export default function CommunityListCard({ community, joined, loading, onJoin, 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="font-semibold text-[#0F1C2E] text-[14px] truncate">{community.name}</span>
-          {community.is_claimed && <CheckCircle2 className="w-3.5 h-3.5 text-[#2563EB] flex-shrink-0" />}
+          {community.is_verified && <VerifiedBadge community={community} />}
+          {community.is_claimed && !community.is_verified && <CheckCircle2 className="w-3.5 h-3.5 text-[#2563EB] flex-shrink-0" />}
           {community.is_featured && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
         </div>
         <div className="flex items-center gap-2 flex-wrap">

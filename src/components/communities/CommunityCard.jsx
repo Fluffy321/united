@@ -33,7 +33,8 @@ export default function CommunityCard({ community, onView, onClaim }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
             <span className="font-bold text-slate-900 text-sm truncate">{community.name}</span>
-            {community.is_claimed && (
+            {community.is_verified && <VerifiedBadge community={community} />}
+            {community.is_claimed && !community.is_verified && (
               <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
             )}
             {community.is_featured && (
