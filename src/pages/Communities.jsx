@@ -114,6 +114,19 @@ export default function Communities() {
     );
   }
 
+  if (selectedGroup) {
+    return (
+      <CommunityGroupPage
+        group={selectedGroup}
+        currentUser={currentUser}
+        isMember={membershipSet.has(selectedGroup.id)}
+        onJoin={handleGroupJoin}
+        onLeave={handleGroupLeave}
+        onBack={() => setSelectedGroup(null)}
+      />
+    );
+  }
+
   const handleJoinChange = () => {
     refetchMemberships();
     queryClient.invalidateQueries({ queryKey: ['communities-list'] });
