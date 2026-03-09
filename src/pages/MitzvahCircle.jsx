@@ -53,7 +53,8 @@ const getUserOrigin = (user) => {
 export default function MitzvahCircle({ isActive = true }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [mainTab, setMainTab] = useState('circle'); // 'circle' | 'chesed'
+  const [helpSection, setHelpSection] = useState('open'); // 'open' | 'offer' | 'request'
+  const [streakSection, setStreakSection] = useState('completed'); // 'completed' | 'ongoing'
   const [activeTab, setActiveTab] = useState('open');
   const [filters, setFilters] = useState({ scope: 'all', category: 'All' });
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
@@ -61,7 +62,7 @@ export default function MitzvahCircle({ isActive = true }) {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [liveLocation, setLiveLocation] = useState(null);
   const [mapPanelState, setMapPanelState] = useState('COLLAPSED');
-  const [mapH, setMapH] = useState(0); // actual px height (driven by drag or toggle)
+  const [mapH, setMapH] = useState(0);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
