@@ -635,88 +635,92 @@ function DiscoverTab({ search, setSearch, groups, allCommunities, membershipSet,
           )}
         </div>
       ) : (
-        /* Category Cards */
-        <div className="space-y-3">
+        /* Category Sections - always open, show 3 then "see more" */
+        <div className="space-y-6">
           {DISCOVER_CATEGORIES.map(cat => {
-            const items = getCategoryItems(cat.id);
-            const isOpen = openCategory === cat.id;
+            const allItems = getCategoryItems(cat.id);
+            if (allItems.length === 0) return null;
+            const isExpanded = expandedCategories[cat.id];
+            const items = isExpanded ? allItems : allItems.slice(0, PREVIEW_COUNT);
             const useCommunity = isCommunity(cat.id);
             return (
-              <div key={cat.id} className={`rounded-2xl border overflow-hidden ${cat.color}`} style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                {/* Category Header */}
-                <button
-                  onClick={() => setOpenCategory(isOpen ? null : cat.id)}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 text-left"
-                >
-                  <span className="text-2xl">{cat.emoji}</span>
-                  <div className="flex-1">
-                    <p className="font-bold text-[15px] text-slate-900">{cat.label}</p>
-                    <p className="text-[11px] text-slate-500">{items.length} communities</p>
-                  </div>
-                  <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
-                </button>
+              <section key={cat.id}>
+                {/* Section Header */}
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className="text-xl">{cat.emoji}</span>
+                  <h2 className="text-[16px] font-bold text-slate-900 flex-1">{cat.label}</h2>
+                  <span className="text-[12px] text-slate-400 font-medium">{allItems.length}</span>
+                </div>
 
-                {/* Expanded List */}
-                {isOpen && (
-                  <div className="px-3 pb-3 space-y-2 bg-white/60">
-                    {items.length === 0 ? (
-                      <p className="text-[13px] text-slate-400 text-center py-4">No communities yet</p>
-                    ) : useCommunity ? (
-                      items.map(c => (
+                {/* Items */}
+                <div className="space-y-2">
+                  {useCommunity ? (
+                    items.map(c => (
+                      <div
+                        key={c.id}
+                        onClick={() => onViewCommunity(c.id)}
+                        className="bg-white rounded-2xl border border-slate-100 p-3.5 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+                        style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}
+                      >
+                        <div className="w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border border-slate-100" style={{ background: cat.accent + '15' }}>
+                          {c.logo_url ? <img src={c.logo_url} alt="" className="w-full h-full object-cover" /> : <span className="font-bold text-lg" style={{ color: cat.accent }}>{c.name?.charAt(0)}</span>}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-[14px] text-slate-900 truncate">{c.name}</p>
+                          <p className="text-[11px] text-slate-400">{c.neighborhood || c.address?.split(',')[0] || c.type}</p>
+                        </div>
+                        <div onClick={e => { e.stopPropagation(); onJoinCommunity(e, c); }}>
+                          <button
+                            className={`text-[12px] font-semibold h-7 px-3.5 rounded-full ${joinedIds.has(c.id) ? 'bg-slate-100 text-slate-600' : 'text-white'}`}
+                            style={!joinedIds.has(c.id) ? { background: cat.accent } : {}}
+                          >
+                            {joiningId === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : joinedIds.has(c.id) ? '✓ Joined' : 'Join'}
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    items.map(g => {
+                      const isMem = membershipSet.has(g.id);
+                      const isPending = pendingRequestSet?.has(g.id);
+                      return (
                         <div
-                          key={c.id}
-                          onClick={() => onViewCommunity(c.id)}
-                          className="bg-white rounded-xl border border-slate-100 p-3 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+                          key={g.id}
+                          onClick={() => onViewGroup(g)}
+                          className="bg-white rounded-2xl border border-slate-100 p-3.5 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+                          style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}
                         >
-                          <div className="w-10 h-10 rounded-xl flex-shrink-0 bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-100">
-                            {c.logo_url ? <img src={c.logo_url} alt="" className="w-full h-full object-cover" /> : <span className="font-bold text-slate-600">{c.name?.charAt(0)}</span>}
+                          <div className="w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center text-xl border border-slate-100" style={{ background: cat.accent + '15' }}>
+                            {CATEGORY_CONFIG[g.category]?.emoji || '💬'}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-[14px] text-slate-900 truncate">{c.name}</p>
-                            <p className="text-[11px] text-slate-400">{c.neighborhood || c.address?.split(',')[0] || c.type}</p>
+                            <p className="font-semibold text-[14px] text-slate-900 truncate">{g.name}</p>
+                            <p className="text-[11px] text-slate-400 line-clamp-1">{g.description || `${g.member_count || 0} members`}</p>
                           </div>
-                          <div onClick={e => { e.stopPropagation(); onJoinCommunity(e, c); }}>
+                          <div onClick={e => { e.stopPropagation(); if (!isPending) { isMem ? onLeaveGroup(g) : onJoinGroup(g); } }}>
                             <button
-                              className={`text-[12px] font-semibold h-7 px-3 rounded-full ${joinedIds.has(c.id) ? 'bg-slate-100 text-slate-600' : 'text-white'}`}
-                              style={!joinedIds.has(c.id) ? { background: cat.accent } : {}}
+                              className={`text-[12px] font-semibold h-7 px-3.5 rounded-full ${isMem ? 'bg-slate-100 text-slate-600' : isPending ? 'bg-amber-50 text-amber-700' : 'text-white'}`}
+                              style={!isMem && !isPending ? { background: cat.accent } : {}}
                             >
-                              {joiningId === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : joinedIds.has(c.id) ? 'Joined' : 'Join'}
+                              {isMem ? '✓ Joined' : isPending ? 'Pending' : 'Join'}
                             </button>
                           </div>
                         </div>
-                      ))
-                    ) : (
-                      items.map(g => {
-                        const isMember = membershipSet.has(g.id);
-                        const isPending = pendingRequestSet?.has(g.id);
-                        return (
-                          <div
-                            key={g.id}
-                            onClick={() => onViewGroup(g)}
-                            className="bg-white rounded-xl border border-slate-100 p-3 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
-                          >
-                            <div className="w-10 h-10 rounded-xl flex-shrink-0 bg-slate-50 flex items-center justify-center text-xl border border-slate-100">
-                              {CATEGORY_CONFIG[g.category]?.emoji || '💬'}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-[14px] text-slate-900 truncate">{g.name}</p>
-                              <p className="text-[11px] text-slate-400 truncate">{g.description || `${g.member_count || 0} members`}</p>
-                            </div>
-                            <div onClick={e => { e.stopPropagation(); if (!isPending) { isMember ? onLeaveGroup(g) : onJoinGroup(g); } }}>
-                              <button
-                                className={`text-[12px] font-semibold h-7 px-3 rounded-full ${isMember ? 'bg-slate-100 text-slate-600' : isPending ? 'bg-amber-50 text-amber-700' : 'text-white'}`}
-                                style={!isMember && !isPending ? { background: cat.accent } : {}}
-                              >
-                                {isMember ? 'Joined' : isPending ? 'Pending' : 'Join'}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Show more / less */}
+                {allItems.length > PREVIEW_COUNT && (
+                  <button
+                    onClick={() => toggleExpand(cat.id)}
+                    className="mt-2 w-full py-2.5 text-[13px] font-semibold rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-colors"
+                  >
+                    {isExpanded ? 'Show less' : `See all ${allItems.length} →`}
+                  </button>
                 )}
-              </div>
+              </section>
             );
           })}
         </div>
