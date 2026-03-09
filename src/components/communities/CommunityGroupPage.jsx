@@ -35,12 +35,15 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
   useEffect(() => {
     if (!group) return;
     setLoading(true);
+    const isAdmin = group.created_by_user_id === currentUser?.id;
     Promise.all([
       base44.entities.GroupPost.filter({ group_id: group.id, post_type: 'post' }, '-created_date', 30),
       base44.entities.GroupMember.filter({ group_id: group.id }, '-created_date', 100),
-    ]).then(([p, m]) => {
+      isAdmin ? base44.entities.GroupJoinRequest.filter({ group_id: group.id, status: 'pending' }) : Promise.resolve([]),
+    ]).then(([p, m, r]) => {
       setPosts(p);
       setMembers(m);
+      setJoinRequests(r);
       setLoading(false);
     });
   }, [group]);
