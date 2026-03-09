@@ -6,6 +6,7 @@ import HelperBadge from '@/components/profile/HelperBadge';
 import MessageButton from '@/components/common/MessageButton';
 import CommentsSheet from './CommentsSheet';
 import EventRSVPSection from '@/components/events/EventRSVPSection';
+import ReactionBar from './ReactionBar';
 import {
   DropdownMenu,
   DropdownMenuContent,
