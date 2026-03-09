@@ -621,6 +621,8 @@ const DISCOVER_CATEGORIES = [
   { id: 'help',       label: 'Help Networks',         emoji: '🤝', color: 'bg-green-50 border-green-100',     accent: '#16A34A' },
 ];
 
+const FEATURED_SHULS = ['Young Israel of Woodmere', 'Young Israel of Lawrence Cedarhurst', 'Congregation Bnei Sholom', 'Beis Medrash of Woodmere', 'Kehilas Bais Yehuda', 'Sephardic Congregation of Cedarhurst', 'Chabad of the Five Towns', 'Aish Kodesh Woodmere', 'Bais Tefila of Woodmere'];
+
 const LOCATION_KEYWORDS = ['nyc', 'new york', 'miami', 'israel', 'france', 'brooklyn', 'manhattan', 'queens', 'bronx', 'jersey', 'chicago', 'los angeles', 'london', 'toronto', 'five towns', 'cedarhurst', 'lawrence', 'woodmere', 'hewlett', 'inwood', 'city', 'neighborhood', 'community', 'city guide'];
 const TRAVELERS_KEYWORDS = ['travel', 'trip', 'backpack', 'hostel', 'digital nomad', 'abroad', 'expat', 'diaspora', 'aliyah', 'visitor', 'tourist'];
 const HELP_KEYWORDS = ['help', 'chesed', 'bikur', 'charity', 'tzedakah', 'volunteer', 'meal', 'ride', 'errand'];
