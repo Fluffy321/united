@@ -537,15 +537,17 @@ const DISCOVER_CATEGORIES = [
   { id: 'help',       label: 'Help Networks',         emoji: '🤝', color: 'bg-green-50 border-green-100',     accent: '#16A34A' },
 ];
 
-const LOCATION_KEYWORDS = ['nyc', 'new york', 'miami', 'israel', 'france', 'brooklyn', 'manhattan', 'queens', 'bronx', 'jersey', 'chicago', 'los angeles', 'london', 'toronto', 'five towns', 'cedarhurst', 'lawrence', 'woodmere', 'hewlett', 'inwood'];
+const LOCATION_KEYWORDS = ['nyc', 'new york', 'miami', 'israel', 'france', 'brooklyn', 'manhattan', 'queens', 'bronx', 'jersey', 'chicago', 'los angeles', 'london', 'toronto', 'five towns', 'cedarhurst', 'lawrence', 'woodmere', 'hewlett', 'inwood', 'city', 'neighborhood', 'community', 'city guide'];
+const TRAVELERS_KEYWORDS = ['travel', 'trip', 'backpack', 'hostel', 'digital nomad', 'abroad', 'expat', 'diaspora', 'aliyah', 'visitor', 'tourist'];
 const HELP_KEYWORDS = ['help', 'chesed', 'bikur', 'charity', 'tzedakah', 'volunteer', 'meal', 'ride', 'errand'];
-const EVENT_KEYWORDS = ['event', 'social', 'party', 'gathering', 'meetup', 'wedding', 'shabbat', 'holiday', 'yom tov'];
+const INTEREST_KEYWORDS = ['hobby', 'sports', 'games', 'music', 'art', 'tech', 'book', 'career', 'business', 'dating', 'parents', 'singles', 'alumni'];
 
 function categorizeGroup(group) {
   const text = `${group.name} ${group.description || ''} ${group.category || ''} ${group.location || ''}`.toLowerCase();
-  if (LOCATION_KEYWORDS.some(k => text.includes(k))) return 'location';
+  if (TRAVELERS_KEYWORDS.some(k => text.includes(k))) return 'travelers';
+  if (LOCATION_KEYWORDS.some(k => text.includes(k))) return 'cities';
   if (HELP_KEYWORDS.some(k => text.includes(k))) return 'help';
-  if (EVENT_KEYWORDS.some(k => text.includes(k))) return 'events';
+  if (INTEREST_KEYWORDS.some(k => text.includes(k))) return 'interest';
   return 'interest';
 }
 
