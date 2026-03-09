@@ -88,8 +88,10 @@ export default function Communities() {
     queryKey: ['user-communities', currentUser?.id],
     queryFn: () => base44.entities.UserCommunity.filter({ user_id: currentUser.id }),
     enabled: !!currentUser,
-    staleTime: 60000,
+    staleTime: 1800000,
+    gcTime: 2400000,
     refetchOnWindowFocus: false,
+    retry: 0,
   });
 
   const joinedIds = useMemo(() => new Set(userMemberships.map(m => m.community_id)), [userMemberships]);
