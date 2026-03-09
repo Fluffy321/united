@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Plus, HandHeart, Clock, SlidersHorizontal, ChevronUp, Map as MapIcon, GripHorizontal } from 'lucide-react';
+import { Plus, HandHeart, SlidersHorizontal, Bell, AlertCircle } from 'lucide-react';
+import { format } from 'date-fns';
+import LogMitzvahModal from '@/components/feed/LogMitzvahModal';
+import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import MitzvahMapView from '@/components/mitzvah/MitzvahMapView';
 import ChesedHoursTab from '@/components/chesed/ChesedHoursTab';
 import { base44 } from '@/api/base44Client';
