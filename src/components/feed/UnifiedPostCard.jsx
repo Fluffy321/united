@@ -186,23 +186,39 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
         {/* Event details */}
         {post.type === 'event' && (
-          <div className="bg-slate-50 rounded-xl px-3 py-2 mt-2.5 flex flex-wrap gap-x-4 gap-y-1 border border-slate-200">
-            {post.event_date && (
-              <div className="flex items-center gap-1.5 text-[12px] text-slate-700 font-medium">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>{new Date(post.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-              </div>
-            )}
-            {post.event_time && (
-              <div className="flex items-center gap-1.5 text-[12px] text-slate-700 font-medium">
-                <Clock className="w-3.5 h-3.5" />
-                <span>{post.event_time}</span>
-              </div>
-            )}
-            {post.location_text && (
-              <div className="flex items-center gap-1.5 text-[12px] text-slate-700 font-medium">
-                <MapPin className="w-3.5 h-3.5" />
-                <span>{post.location_text}</span>
+          <div className="space-y-3 mt-3">
+            <button
+              onClick={() => setShowEventDetails(!showEventDetails)}
+              className="w-full bg-slate-50 rounded-xl px-3 py-2 flex flex-wrap gap-x-4 gap-y-1 border border-slate-200 hover:bg-slate-100 transition-colors text-left"
+            >
+              {post.event_date && (
+                <div className="flex items-center gap-1.5 text-[12px] text-slate-700 font-medium">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{new Date(post.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                </div>
+              )}
+              {post.event_time && (
+                <div className="flex items-center gap-1.5 text-[12px] text-slate-700 font-medium">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{post.event_time}</span>
+                </div>
+              )}
+              {post.location_text && (
+                <div className="flex items-center gap-1.5 text-[12px] text-slate-700 font-medium">
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>{post.location_text}</span>
+                </div>
+              )}
+            </button>
+            
+            {/* RSVP Section */}
+            {showEventDetails && (
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                <EventRSVPSection 
+                  postId={post.id}
+                  currentUser={currentUser}
+                  eventDate={post.event_date}
+                />
               </div>
             )}
           </div>
