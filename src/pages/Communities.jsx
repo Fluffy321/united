@@ -315,7 +315,7 @@ export default function Communities() {
 
           {/* ══ Tab 1: My Communities ══ */}
           {activeTab === 'My Communities' && (
-            <MyCommunititiesTab
+            <MyCommunitiesTab
               joinedCommunities={joinedCommunities}
               myGroups={myGroups}
               loading={communitiesLoading || membershipsLoading}
