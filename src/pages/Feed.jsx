@@ -383,67 +383,7 @@ export default function Feed() {
 
 
 
-        {/* Community Posts Section - organized by type */}
-        {activeCategory === 'all' && userCommunities.length > 0 && (
-          <div className="mb-4">
-            <h3 className="text-[15px] font-bold text-slate-900 mb-3">Posts from your communities</h3>
-            {communityPosts.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-slate-100 p-6 text-center">
-                <p className="text-[13px] text-slate-400">No posts yet from your communities</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Posts */}
-                {communityPosts.filter(p => p.type === 'general' || !p.type).length > 0 && (
-                  <div>
-                    <h4 className="text-[13px] font-semibold text-slate-700 mb-2">Posts</h4>
-                    <div className="space-y-2.5">
-                      {communityPosts.filter(p => p.type === 'general' || !p.type).map(post => (
-                        <CommunityPostItemPreview key={post.id} post={post} currentUser={currentUser} />
-                      ))}
-                    </div>
-                  </div>
-                )}
 
-                {/* Events */}
-                {communityPosts.filter(p => p.type === 'event').length > 0 && (
-                  <div>
-                    <h4 className="text-[13px] font-semibold text-slate-700 mb-2">Events</h4>
-                    <div className="space-y-2.5">
-                      {communityPosts.filter(p => p.type === 'event').map(post => (
-                        <CommunityPostItemPreview key={post.id} post={post} currentUser={currentUser} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Announcements */}
-                {communityPosts.filter(p => p.type === 'announcement').length > 0 && (
-                  <div>
-                    <h4 className="text-[13px] font-semibold text-slate-700 mb-2">Announcements</h4>
-                    <div className="space-y-2.5">
-                      {communityPosts.filter(p => p.type === 'announcement').map(post => (
-                        <CommunityPostItemPreview key={post.id} post={post} currentUser={currentUser} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Discussions */}
-                {communityPosts.filter(p => p.type === 'discussion').length > 0 && (
-                  <div>
-                    <h4 className="text-[13px] font-semibold text-slate-700 mb-2">Discussions</h4>
-                    <div className="space-y-2.5">
-                      {communityPosts.filter(p => p.type === 'discussion').map(post => (
-                        <CommunityPostItemPreview key={post.id} post={post} currentUser={currentUser} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
 
 
 
