@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, MapPin, Send, Calendar, HandHeart, UserCheck, Loader2, Check, X, Clock, Megaphone, UserPlus } from 'lucide-react';
+import { ArrowLeft, Users, MapPin, Send, Calendar, UserCheck, Loader2, Check, X, Clock, Megaphone, UserPlus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import InviteLinkButton from './InviteLinkButton';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import GroupEventsTab from '@/components/groups/GroupEventsTab';
-import GroupHelpTab from '@/components/groups/GroupHelpTab';
 
 const CATEGORY_EMOJIS = {
   'Torah Learning': '📚', Shabbat: '🕯️', Chesed: '🤝', Events: '🎉',
@@ -69,18 +68,6 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
     toast.success('Posted!');
   };
 
-  const handleApprove = async (req) => {
-    setProcessingRequest(req.id);
-    await base44.entities.GroupMember.create({ group_id: group.id, user_id: req.user_id, user_name: req.user_name, role: 'member' });
-    await base44.entities.GroupJoinRequest.update(req.id, { status: 'approved' });
-    await base44.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
-    setJoinRequests(prev => prev.filter(r => r.id !== req.id));
-    setMembers(prev => [...prev, { id: req.id, user_id: req.user_id, user_name: req.user_name, role: 'member' }]);
-    onMemberApproved?.(group.id);
-    setProcessingRequest(null);
-    toast.success(`${req.user_name} approved!`);
-  };
-
   const handleAnnouncement = async () => {
     if (!newAnnouncement.trim()) return;
     setPostingAnnouncement(true);
@@ -97,6 +84,18 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
     toast.success('Announcement posted!');
   };
 
+  const handleApprove = async (req) => {
+    setProcessingRequest(req.id);
+    await base44.entities.GroupMember.create({ group_id: group.id, user_id: req.user_id, user_name: req.user_name, role: 'member' });
+    await base44.entities.GroupJoinRequest.update(req.id, { status: 'approved' });
+    await base44.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
+    setJoinRequests(prev => prev.filter(r => r.id !== req.id));
+    setMembers(prev => [...prev, { id: req.id, user_id: req.user_id, user_name: req.user_name, role: 'member' }]);
+    onMemberApproved?.(group.id);
+    setProcessingRequest(null);
+    toast.success(`${req.user_name} approved!`);
+  };
+
   const handleDeny = async (req) => {
     setProcessingRequest(req.id);
     await base44.entities.GroupJoinRequest.update(req.id, { status: 'denied' });
@@ -108,11 +107,12 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
   if (!group) return null;
 
   const emoji = CATEGORY_EMOJIS[group.category] || '🌍';
+  const isAdmin = group.created_by_user_id === currentUser?.id;
 
   return (
     <div className="flex flex-col h-full bg-[#F5F7FB]">
 
-      {/* ── Hero Header ── */}
+      {/* Hero Header */}
       <div className="flex-shrink-0 relative" style={{ background: 'linear-gradient(135deg, #1e3a8a, #2563eb)' }}>
         {group.cover_image_url && (
           <img src={group.cover_image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
@@ -146,23 +146,25 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
                 </div>
               </div>
             </div>
-            <InviteLinkButton type="group" id={group.id} name={group.name} className="!border-white/30 !text-white !bg-white/10 hover:!bg-white/20" />
-            {isPendingRequest && !isMember ? (
-              <div className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px] font-bold" style={{ background: 'rgba(251,191,36,0.2)', color: '#FCD34D', border: '1px solid rgba(251,191,36,0.3)' }}>
-                <Clock className="w-3.5 h-3.5" /> Pending
-              </div>
-            ) : (
-              <button
-                onClick={() => isMember ? onLeave(group) : onJoin(group)}
-                className="flex-shrink-0 px-4 py-2 rounded-full font-bold text-[13px] transition-all active:scale-95"
-                style={isMember
-                  ? { background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.4)' }
-                  : { background: 'white', color: '#2563EB' }
-                }
-              >
-                {isMember ? '✓ Joined' : group.is_private ? '🔒 Request' : '+ Join'}
-              </button>
-            )}
+            <div className="flex flex-col items-end gap-2">
+              <InviteLinkButton type="group" id={group.id} name={group.name} className="!border-white/30 !text-white !bg-white/10 hover:!bg-white/20" />
+              {isPendingRequest && !isMember ? (
+                <div className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px] font-bold" style={{ background: 'rgba(251,191,36,0.2)', color: '#FCD34D', border: '1px solid rgba(251,191,36,0.3)' }}>
+                  <Clock className="w-3.5 h-3.5" /> Pending
+                </div>
+              ) : (
+                <button
+                  onClick={() => isMember ? onLeave(group) : onJoin(group)}
+                  className="flex-shrink-0 px-4 py-2 rounded-full font-bold text-[13px] transition-all active:scale-95"
+                  style={isMember
+                    ? { background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.4)' }
+                    : { background: 'white', color: '#2563EB' }
+                  }
+                >
+                  {isMember ? '✓ Joined' : group.is_private ? '🔒 Request' : '+ Join'}
+                </button>
+              )}
+            </div>
           </div>
 
           {group.description && (
@@ -171,7 +173,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
         </div>
       </div>
 
-      {/* ── Tabs ── */}
+      {/* Tabs */}
       <div className="flex-shrink-0 bg-white border-b border-slate-100">
         <div className="flex">
           {TABS.map(t => (
@@ -188,14 +190,14 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
         </div>
       </div>
 
-      {/* ── Tab Content ── */}
+      {/* Tab Content */}
       <div className="flex-1 overflow-y-auto pb-28 scrollbar-hide">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-[#2563EB]" />
           </div>
         ) : (
-          <>
+          <div>
             {/* Events Tab */}
             {tab === 'events' && (
               <GroupEventsTab group={group} currentUser={currentUser} isMember={isMember} />
@@ -228,7 +230,6 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
                     </div>
                   </div>
                 )}
-
                 {posts.length === 0 ? (
                   <EmptyState emoji="💬" text="No posts yet" sub={isMember ? "Be the first to post!" : "Join to start posting"} />
                 ) : (
@@ -255,11 +256,10 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
             {/* Members Tab */}
             {tab === 'members' && (
               <div className="p-4 space-y-2">
-                {/* Admin: Pending Requests */}
-                {group.created_by_user_id === currentUser?.id && joinRequests.length > 0 && (
+                {isAdmin && joinRequests.length > 0 && (
                   <div className="mb-4">
                     <p className="text-[12px] font-bold text-amber-600 uppercase tracking-wide mb-2">
-                      ⏳ Join Requests ({joinRequests.length})
+                      Pending Join Requests ({joinRequests.length})
                     </p>
                     {joinRequests.map(req => (
                       <div key={req.id} className="bg-amber-50 border border-amber-100 rounded-2xl p-3.5 flex items-center gap-3 mb-2">
@@ -287,7 +287,6 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
                     ))}
                   </div>
                 )}
-
                 <p className="text-[12px] font-semibold text-slate-400 mb-3">{members.length} member{members.length !== 1 ? 's' : ''}</p>
                 {members.map(m => (
                   <div key={m.id} className="bg-white rounded-2xl border border-slate-100 p-3.5 flex items-center gap-3" style={{ boxShadow: '0 2px 4px rgba(0,0,0,0.03)' }}>
@@ -306,7 +305,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
             {/* Announcements Tab */}
             {tab === 'announcements' && (
               <div className="p-4 space-y-3">
-                {group.created_by_user_id === currentUser?.id && (
+                {isAdmin && (
                   <div className="bg-white rounded-2xl border border-slate-100 p-3.5 flex gap-3" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                     <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
                       <Megaphone className="w-4 h-4 text-amber-600" />
@@ -353,7 +352,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
                 )}
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
