@@ -302,6 +302,57 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
                 ))}
               </div>
             )}
+
+            {/* Announcements Tab */}
+            {tab === 'announcements' && (
+              <div className="p-4 space-y-3">
+                {group.created_by_user_id === currentUser?.id && (
+                  <div className="bg-white rounded-2xl border border-slate-100 p-3.5 flex gap-3" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                      <Megaphone className="w-4 h-4 text-amber-600" />
+                    </div>
+                    <div className="flex-1 flex gap-2">
+                      <textarea
+                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[14px] resize-none outline-none focus:border-amber-400 transition-colors placeholder:text-slate-400"
+                        rows={2}
+                        placeholder="Post an announcement to the group…"
+                        value={newAnnouncement}
+                        onChange={e => setNewAnnouncement(e.target.value)}
+                      />
+                      <button
+                        onClick={handleAnnouncement}
+                        disabled={postingAnnouncement || !newAnnouncement.trim()}
+                        className="self-end w-9 h-9 rounded-xl flex items-center justify-center text-white disabled:opacity-40 transition-all active:scale-95"
+                        style={{ background: '#F59E0B' }}
+                      >
+                        {postingAnnouncement ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {announcements.length === 0 ? (
+                  <EmptyState emoji="📢" text="No announcements yet" sub="Admins can post announcements here" />
+                ) : (
+                  announcements.map(ann => (
+                    <div key={ann.id} className="bg-amber-50 rounded-2xl border border-amber-100 p-4" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                      <div className="flex items-center gap-2.5 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center">
+                          <Megaphone className="w-3.5 h-3.5 text-amber-700" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-[13px] text-slate-900">{ann.user_name}</p>
+                          <p className="text-[11px] text-slate-400">
+                            {formatDistanceToNow(parseISO(ann.created_date), { addSuffix: true })}
+                          </p>
+                        </div>
+                        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-800">📢 Announcement</span>
+                      </div>
+                      <p className="text-[14px] text-slate-700 leading-relaxed">{ann.body}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -309,7 +360,6 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
   );
 }
 
-            {/* Announcements Tab */}
 function EmptyState({ emoji, text, sub }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
