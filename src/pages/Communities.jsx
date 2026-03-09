@@ -381,7 +381,6 @@ export default function Communities() {
           )}
 
           </div>
-          </div>
 
           <CreateGroupModal
         open={showCreateGroup}
