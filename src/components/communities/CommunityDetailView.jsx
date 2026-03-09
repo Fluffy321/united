@@ -15,6 +15,7 @@ import CommunityMitzvahTab from './CommunityMitzvahTab';
 const TABS = [
   { key: 'home', label: 'Home' },
   { key: 'about', label: 'About' },
+  { key: 'members', label: 'Members' },
   { key: 'feed', label: 'Feed' },
   { key: 'announcements', label: 'Announcements' },
   { key: 'events', label: 'Events' },
