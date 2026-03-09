@@ -39,6 +39,7 @@ export default function Communities() {
   const [typeFilter, setTypeFilter] = useState('All');
   const [createForm, setCreateForm] = useState({ name: '', description: '', category: 'General', location: '' });
   const [creating, setCreating] = useState(false);
+  const [pendingRequestSet, setPendingRequestSet] = useState(new Set());
   const queryClient = useQueryClient();
 
   useEffect(() => {
