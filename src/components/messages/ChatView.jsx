@@ -321,23 +321,30 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       )}
 
       {/* Input */}
-      <div className="p-4 border-t border-slate-100 bg-white">
-        <div className="flex gap-2">
-          <Input 
-            placeholder="Type a message..."
+      <div className="p-3 border-t border-slate-100 bg-white">
+        <div className="flex gap-2 items-end">
+          <textarea
+            rows={1}
+            placeholder="Type a message…"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            className="flex-1"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            className="flex-1 resize-none bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-[14px] outline-none focus:border-[#2563EB] transition-colors placeholder:text-slate-400 max-h-28 overflow-y-auto"
+            style={{ lineHeight: '1.5' }}
           />
-          <Button 
-            size="icon" 
-            onClick={handleSend} 
+          <button
+            onClick={handleSend}
             disabled={!newMessage.trim() || isSending}
-            className="bg-indigo-600 hover:bg-indigo-700"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 disabled:opacity-40 active:scale-95 transition-all"
+            style={{ background: '#2563EB' }}
           >
             {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-          </Button>
+          </button>
         </div>
       </div>
     </div>
