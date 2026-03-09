@@ -533,7 +533,7 @@ export default function Feed() {
         onOpenChange={setShowSearch}
         posts={visiblePosts}
         helpRequests={communityHelpRequests}
-        communities={userCommunities.length > 0 ? communityPosts.map(p => ({ id: p.community_id, name: p.community_name })).filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i) : []}
+        communities={[]}
       />
 
       {/* FAB */}
