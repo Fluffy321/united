@@ -703,22 +703,30 @@ function CommunityRow({ community, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-2xl border border-slate-100 p-3.5 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+      className="bg-white rounded-2xl border border-slate-100 p-4 flex items-start gap-3.5 cursor-pointer active:scale-[0.99] transition-transform"
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
     >
-      <div className="w-11 h-11 rounded-xl flex-shrink-0 bg-blue-50 flex items-center justify-center overflow-hidden border border-slate-100">
+      <div className="w-12 h-12 rounded-xl flex-shrink-0 bg-blue-50 flex items-center justify-center overflow-hidden border border-slate-100">
         {community.logo_url
           ? <img src={community.logo_url} alt="" className="w-full h-full object-cover" />
-          : <span className="text-blue-600 font-bold text-base">{community.name?.charAt(0)}</span>
+          : <span className="text-blue-600 font-bold text-lg">{community.name?.charAt(0)}</span>
         }
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <p className="font-semibold text-slate-900 text-[14px] truncate">{community.name}</p>
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <p className="font-bold text-slate-900 text-[15px] truncate">{community.name}</p>
           {community.is_claimed && <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />}
         </div>
-        <div className="flex items-center gap-2 mt-0.5">
-          {community.type && <span className="text-[11px] text-slate-400">{community.type}</span>}
+        {(community.description_short || community.description_long) && (
+          <p className="text-[12px] text-slate-500 line-clamp-2 mb-1.5 leading-relaxed">
+            {community.description_short || community.description_long}
+          </p>
+        )}
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+            <Users className="w-3 h-3" />
+            {community.follower_count || 0} members
+          </span>
           {(community.neighborhood || community.address) && (
             <span className="flex items-center gap-0.5 text-[11px] text-slate-400">
               <MapPin className="w-3 h-3" />
@@ -727,10 +735,7 @@ function CommunityRow({ community, onClick }) {
           )}
         </div>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <span className="text-[11px] bg-green-50 text-green-700 font-semibold px-2 py-0.5 rounded-full">Member</span>
-        <ChevronRight className="w-4 h-4 text-slate-300" />
-      </div>
+      <ChevronRight className="w-4 h-4 text-slate-300 flex-shrink-0 mt-1" />
     </div>
   );
 }
