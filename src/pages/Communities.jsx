@@ -124,9 +124,14 @@ export default function Communities() {
         group={selectedGroup}
         currentUser={currentUser}
         isMember={membershipSet.has(selectedGroup.id)}
+        isPendingRequest={pendingRequestSet.has(selectedGroup.id)}
         onJoin={handleGroupJoin}
         onLeave={handleGroupLeave}
         onBack={() => setSelectedGroup(null)}
+        onMemberApproved={(groupId) => {
+          setMembershipSet(prev => new Set([...prev, groupId]));
+          queryClient.invalidateQueries({ queryKey: ['community-groups'] });
+        }}
       />
     );
   }
