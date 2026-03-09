@@ -505,24 +505,7 @@ export default function Feed() {
               </div>
             ) : null}
 
-            {trendingCommunities.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-[15px] font-bold text-slate-900 mb-2.5">Trending Communities</h3>
-                <div className="space-y-2">
-                  {trendingCommunities.slice(0, 3).map(c => (
-                    <div key={c.id} className="bg-white rounded-2xl border border-slate-100 p-3 flex items-center gap-3 cursor-pointer" onClick={() => navigate(createPageUrl('Communities'))}>
-                      <div className="w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-blue-600">
-                        {c.name?.charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-900 text-[13px] truncate">{c.name}</p>
-                        <p className="text-[11px] text-slate-400">{c.follower_count || 0} members</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+
           </>
         )}
 
