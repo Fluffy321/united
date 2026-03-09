@@ -53,16 +53,13 @@ const getUserOrigin = (user) => {
 export default function MitzvahCircle({ isActive = true }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [helpSection, setHelpSection] = useState('open'); // 'open' | 'offer' | 'request'
-  const [streakSection, setStreakSection] = useState('completed'); // 'completed' | 'ongoing'
-  const [activeTab, setActiveTab] = useState('open');
   const [filters, setFilters] = useState({ scope: 'all', category: 'All' });
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [liveLocation, setLiveLocation] = useState(null);
-  const [mapPanelState, setMapPanelState] = useState('COLLAPSED');
-  const [mapH, setMapH] = useState(0);
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [showLogMitzvah, setShowLogMitzvah] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
