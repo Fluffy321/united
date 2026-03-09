@@ -155,9 +155,11 @@ export default function Feed() {
       return memberships.map(m => m.community_id);
     },
     enabled: !!currentUser && currentUser.id !== 'guest',
-    staleTime: 1800000,
-    gcTime: 2400000,
-    retry: 0
+    staleTime: 3600000,
+    gcTime: 3600000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
   });
 
   const { data: communityPosts = [] } = useQuery({
