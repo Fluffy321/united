@@ -452,6 +452,17 @@ export default function Feed() {
       </div>
 
       <div className="main-feed">
+        {/* New-user: join communities nudge */}
+        {activeCategory === 'all' && !hideCommunityBanner && userGroupCount === 0 && (
+          <JoinCommunitiesBanner
+            onJoin={() => navigate(createPageUrl('Communities'))}
+            onDismiss={() => {
+              setHideCommunityBanner(true);
+              localStorage.setItem('joinCommunitiesBannerDismissed', '1');
+            }}
+          />
+        )}
+
         {/* Community Help Center Hero — compact */}
         {activeCategory === 'all' && (
           <div
