@@ -328,8 +328,6 @@ export default function MitzvahCircle({ isActive = true }) {
   }
 
   return (
-    <>
-    <>
     <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
       {/* Header */}
       <div className="bg-white sticky top-0 z-20 flex-shrink-0" style={{ borderBottom: '1px solid #E8ECF4' }}>
