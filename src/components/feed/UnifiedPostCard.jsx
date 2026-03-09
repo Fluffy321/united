@@ -300,11 +300,11 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           </button>
 
           <button
-            onClick={() => onComment(post)}
+            onClick={() => setCommentsOpen(true)}
             className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-[#64748B] hover:bg-slate-100 transition-colors"
           >
             <MessageCircle className="w-4 h-4" />
-            <span>{post.comments_count || 0}</span>
+            <span>{commentCount}</span>
           </button>
         </div>
 
