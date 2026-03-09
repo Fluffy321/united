@@ -18,6 +18,7 @@ import PostTypeSelector from '@/components/feed/PostTypeSelector';
 import FeedCategoryTabs from '@/components/feed/FeedCategoryTabs';
 import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import SearchModal from '@/components/feed/SearchModal';
 import { toast } from 'sonner';
 
 function CommunityPostItemPreview({ post, currentUser }) {
