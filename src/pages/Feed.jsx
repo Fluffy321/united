@@ -199,10 +199,10 @@ export default function Feed() {
       const allRequests = await base44.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 20);
       return allRequests.filter(r => r.community_id && userCommunities.includes(r.community_id));
     },
-    enabled: !!currentUser && userCommunities.length > 0,
-    staleTime: 900000,
-    gcTime: 1200000,
-    retry: 1,
+    enabled: !!currentUser && userCommunities.length > 0 && userCommunities !== undefined,
+    staleTime: 1800000,
+    gcTime: 1800000,
+    retry: 0,
     refetchOnWindowFocus: false,
     refetchOnMount: false
   });
