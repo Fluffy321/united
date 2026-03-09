@@ -575,26 +575,7 @@ export default function Feed() {
           </div>
         )}
 
-        {/* Recently Completed */}
-        {activeCategory === 'all' && recentlyCompleted.length > 0 && (
-          <div className="rounded-2xl overflow-hidden mb-4" style={{ border: '1px solid var(--border)', background: 'var(--card)' }}>
-            <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border)' }}>
-              <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Recently Completed</span>
-              <span className="ml-auto text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>Your community shows up</span>
-            </div>
-            <div style={{ borderTop: 'none' }}>
-              {recentlyCompleted.map((req, i) => (
-                <div key={req.id} className="flex items-center gap-3 px-4 py-2.5" style={{ borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
-                  <span className="font-bold text-[13px]" style={{ color: 'var(--success)' }}>✔</span>
-                  <p className="text-[13px] font-semibold" style={{ color: 'var(--text-main)' }}>{req.title}</p>
-                  {req.claimed_by_name && (
-                    <span className="ml-auto text-[11px] font-medium flex-shrink-0" style={{ color: 'var(--text-muted)' }}>by {req.claimed_by_name}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+
 
 
 
