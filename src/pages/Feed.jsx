@@ -232,11 +232,11 @@ export default function Feed() {
   const { data: todayActions = [] } = useQuery({
     queryKey: ['today-actions'],
     queryFn: async () => {
-      const actions = await base44.entities.MitzvahAction.list('-created_date', 50);
+      const actions = await base44.entities.MitzvahAction.list('-created_date', 30);
       return actions.filter(a => isToday(parseISO(a.created_date)));
     },
-    staleTime: 1800000,
-    gcTime: 3600000,
+    staleTime: 3600000,
+    gcTime: 5400000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: 0,
@@ -257,8 +257,8 @@ export default function Feed() {
       });
     },
     enabled: !!currentUser,
-    staleTime: 900000,
-    gcTime: 1200000,
+    staleTime: 1800000,
+    gcTime: 2400000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: 0
