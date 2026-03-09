@@ -193,12 +193,12 @@ export default function Feed() {
   const { data: todayEvents = [] } = useQuery({
     queryKey: ['today-events'],
     queryFn: async () => {
-      const events = await base44.entities.UnifiedPost.filter({ type: 'event' }, '-created_date', 20);
+      const events = await base44.entities.UnifiedPost.filter({ type: 'event' }, '-created_date', 10);
       const today = format(new Date(), 'yyyy-MM-dd');
       return events.filter(e => e.event_date === today);
     },
-    staleTime: 900000,
-    gcTime: 1200000,
+    staleTime: 1800000,
+    gcTime: 2400000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: 0,
@@ -208,8 +208,8 @@ export default function Feed() {
   const { data: recentlyCompleted = [] } = useQuery({
     queryKey: ['recently-completed'],
     queryFn: () => base44.entities.MitzvahRequest.filter({ status: 'completed' }, '-updated_date', 3),
-    staleTime: 900000,
-    gcTime: 1200000,
+    staleTime: 1800000,
+    gcTime: 2400000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: 0,
@@ -219,10 +219,10 @@ export default function Feed() {
   const { data: openMitzvahRequests = [] } = useQuery({
     queryKey: ['open-mitzvah'],
     queryFn: async () => {
-      return base44.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 30);
+      return base44.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 20);
     },
-    staleTime: 900000,
-    gcTime: 1200000,
+    staleTime: 1800000,
+    gcTime: 2400000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: 0,
