@@ -252,16 +252,6 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
               </div>
             )}
 
-            {/* Events Tab */}
-            {tab === 'events' && (
-              <GroupEventsTab group={group} currentUser={currentUser} isMember={isMember} />
-            )}
-
-            {/* Help Tab */}
-            {tab === 'help' && (
-              <GroupHelpTab group={group} currentUser={currentUser} isMember={isMember} />
-            )}
-
             {/* Members Tab */}
             {tab === 'members' && (
               <div className="p-4 space-y-2">
