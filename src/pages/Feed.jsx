@@ -470,13 +470,13 @@ export default function Feed() {
       <div className="sticky top-0 z-20 bg-white" style={{ borderBottom: '1px solid var(--border)', boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
         <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
           <span className="font-bold text-[16px] tracking-[-0.01em]" style={{ color: 'var(--text-main)' }}>
-            {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
+            Welcome to {currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'}
           </span>
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(createPageUrl('MyEvents'))}
               className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-              title="My Events"
+              title="Events"
             >
               <Calendar className="w-5 h-5 text-[#64748B]" />
             </button>
@@ -487,6 +487,32 @@ export default function Feed() {
           <FeedCategoryTabs activeCategory={activeCategory} onChange={setActiveCategory} />
         </div>
       </div>
+
+      {/* Optional: Find Your Community Banner */}
+      {!hideCommunityBanner && userCommunities.length === 0 && activeCategory === 'all' && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div>
+              <p className="text-[13px] font-semibold text-slate-900">Find your community</p>
+              <p className="text-[12px] text-slate-600">Join groups to see posts, events & announcements</p>
+            </div>
+            <div className="flex gap-2 flex-shrink-0">
+              <button
+                onClick={() => navigate(createPageUrl('Communities'))}
+                className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold transition-colors"
+              >
+                Browse
+              </button>
+              <button
+                onClick={() => setHideCommunityBanner(true) || localStorage.setItem('joinCommunitiesBannerDismissed', '1')}
+                className="px-3 py-1.5 text-slate-600 text-[12px] font-medium hover:text-slate-900"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="main-feed">
         {/* Welcome Section - Show when no communities joined */}
