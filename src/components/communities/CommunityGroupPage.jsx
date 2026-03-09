@@ -20,7 +20,7 @@ const TABS = [
   { id: 'members', label: 'Members', icon: UserCheck },
 ];
 
-export default function CommunityGroupPage({ group, currentUser, isMember, onJoin, onLeave, onBack }) {
+export default function CommunityGroupPage({ group, currentUser, isMember, isPendingRequest, onJoin, onLeave, onBack, onMemberApproved }) {
   const [tab, setTab] = useState('posts');
   const [posts, setPosts] = useState([]);
   const [members, setMembers] = useState([]);
@@ -29,6 +29,8 @@ export default function CommunityGroupPage({ group, currentUser, isMember, onJoi
   const [loading, setLoading] = useState(true);
   const [newPost, setNewPost] = useState('');
   const [posting, setPosting] = useState(false);
+  const [joinRequests, setJoinRequests] = useState([]);
+  const [processingRequest, setProcessingRequest] = useState(null);
 
   useEffect(() => {
     if (!group) return;
