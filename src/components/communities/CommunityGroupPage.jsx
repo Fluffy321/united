@@ -127,6 +127,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
                 </div>
               </div>
             </div>
+            <InviteLinkButton type="group" id={group.id} name={group.name} className="!border-white/30 !text-white !bg-white/10 hover:!bg-white/20" />
             {isPendingRequest && !isMember ? (
               <div className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px] font-bold" style={{ background: 'rgba(251,191,36,0.2)', color: '#FCD34D', border: '1px solid rgba(251,191,36,0.3)' }}>
                 <Clock className="w-3.5 h-3.5" /> Pending
