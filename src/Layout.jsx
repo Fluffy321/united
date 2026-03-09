@@ -64,14 +64,15 @@ export default function Layout({ children, currentPageName }) {
   const { data: unreadMessages = 0 } = useQuery({
     queryKey: ['unread-messages', currentUser?.id],
     queryFn: async () => {
-      const convs = await base44.entities.Conversation.list('-updated_date', 50);
+      const convs = await base44.entities.Conversation.list('-updated_date', 30);
       const userConvs = convs.filter(c => c.participant_ids?.includes(currentUser.id));
       return userConvs.reduce((sum, c) => sum + (c.unread_count?.[currentUser.id] || 0), 0);
     },
     enabled: !!currentUser,
-    refetchInterval: 30000,
-    staleTime: 15000,
-    retry: 0
+    refetchInterval: 120000,
+    staleTime: 60000,
+    retry: 0,
+    refetchOnWindowFocus: false
   });
 
   useEffect(() => {
