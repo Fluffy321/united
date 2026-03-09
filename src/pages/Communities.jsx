@@ -314,12 +314,17 @@ export default function Communities() {
               search={search}
               setSearch={setSearch}
               groups={groups}
+              allCommunities={allCommunities}
               membershipSet={membershipSet}
               pendingRequestSet={pendingRequestSet}
-              loading={communitiesLoading}
-              onJoin={handleGroupJoin}
-              onLeave={handleGroupLeave}
-              onView={setSelectedGroup}
+              joinedIds={joinedIds}
+              joiningId={joiningId}
+              loading={communitiesLoading || membershipsLoading}
+              onJoinGroup={handleGroupJoin}
+              onLeaveGroup={handleGroupLeave}
+              onViewGroup={setSelectedGroup}
+              onJoinCommunity={handleJoin}
+              onViewCommunity={setSelectedCommunityId}
             />
           )}
 
