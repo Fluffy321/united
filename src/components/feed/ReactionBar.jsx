@@ -1,0 +1,91 @@
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
+const REACTIONS = [
+  { type: 'like', emoji: '👍', label: 'Like' },
+  { type: 'helpful', emoji: '❤️', label: 'Helpful' },
+  { type: 'thanks', emoji: '🙏', label: 'Thanks' },
+];
+
+export default function ReactionBar({ postId, currentUser }) {
+  const queryClient = useQueryClient();
+  const [showCounts, setShowCounts] = useState(true);
+
+  // Fetch all reactions for this post
+  const { data: reactions = [] } = useQuery({
+    queryKey: ['post-reactions', postId],
+    queryFn: () => base44.entities.Reaction.filter({ post_id: postId }, '-created_date', 100),
+    enabled: !!postId,
+  });
+
+  // Fetch user's own reactions
+  const { data: userReactions = [] } = useQuery({
+    queryKey: ['user-reactions', postId, currentUser?.id],
+    queryFn: () =>
+      base44.entities.Reaction.filter(
+        { post_id: postId, user_id: currentUser.id },
+        undefined,
+        100
+      ),
+    enabled: !!postId && !!currentUser,
+  });
+
+  const toggleReactionMutation = useMutation({
+    mutationFn: async (reactionType) => {
+      const existing = userReactions.find(r => r.reaction_type === reactionType);
+      if (existing) {
+        await base44.entities.Reaction.delete(existing.id);
+      } else {
+        await base44.entities.Reaction.create({
+          post_id: postId,
+          user_id: currentUser.id,
+          reaction_type: reactionType,
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['post-reactions', postId] });
+      queryClient.invalidateQueries({ queryKey: ['user-reactions', postId, currentUser?.id] });
+    },
+    onError: () => {
+      toast.error('Failed to update reaction');
+    },
+  });
+
+  // Count reactions by type
+  const reactionCounts = REACTIONS.reduce((acc, r) => {
+    acc[r.type] = reactions.filter(react => react.reaction_type === r.type).length;
+    return acc;
+  }, {});
+
+  // Check which reactions user has
+  const userReactionTypes = new Set(userReactions.map(r => r.reaction_type));
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      {REACTIONS.map((reaction) => {
+        const count = reactionCounts[reaction.type];
+        const isActive = userReactionTypes.has(reaction.type);
+
+        return (
+          <button
+            key={reaction.type}
+            onClick={() => toggleReactionMutation.mutate(reaction.type)}
+            disabled={toggleReactionMutation.isPending}
+            className={`flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium transition-all ${
+              isActive
+                ? 'bg-blue-100 text-blue-700 scale-105'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+            title={reaction.label}
+          >
+            <span className="text-[15px]">{reaction.emoji}</span>
+            {count > 0 && <span className="font-semibold">{count}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
