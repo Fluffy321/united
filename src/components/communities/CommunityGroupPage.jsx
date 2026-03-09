@@ -95,6 +95,9 @@ export default function CommunityGroupPage({ group, currentUser, isMember, onJoi
                       {group.location}
                     </span>
                   )}
+                  <span className="text-white/70 text-[12px]">
+                    {group.is_private ? '🔒 Private' : '🌍 Public'}
+                  </span>
                 </div>
               </div>
             </div>
