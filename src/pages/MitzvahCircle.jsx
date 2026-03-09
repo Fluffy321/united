@@ -337,6 +337,9 @@ export default function MitzvahCircle({ isActive = true }) {
         </div>
       </div>
 
+      {/* Tab Navigation */}
+      <MitzvahTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
       {/* Main Content */}
       <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 100px', WebkitOverflowScrolling: 'touch' }}>
         <div className="max-w-2xl mx-auto space-y-5">
