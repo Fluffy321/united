@@ -164,21 +164,7 @@ export default function Feed() {
     refetchOnReconnect: false
   });
 
-  const { data: communityPosts = [] } = useQuery({
-    queryKey: ['community-posts', userCommunities],
-    queryFn: async () => {
-      if (userCommunities.length === 0) return [];
-      const allPosts = await base44.entities.CommunityPost.list('-created_date', 30);
-      return allPosts.filter(p => userCommunities.includes(p.community_id));
-    },
-    enabled: !!currentUser && userCommunities.length > 0 && userCommunities !== undefined,
-    staleTime: 10800000,
-    gcTime: 14400000,
-    retry: 0,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false
-  });
+
 
   const { data: todayEvents = [] } = useQuery({
     queryKey: ['today-events'],
