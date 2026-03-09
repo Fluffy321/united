@@ -295,7 +295,7 @@ export default function Communities() {
               loading={communitiesLoading}
               onJoin={handleGroupJoin}
               onLeave={handleGroupLeave}
-              onView={(g) => { setSelectedGroup(g); setShowGroupDetail(true); }}
+              onView={setSelectedGroup}
             />
           )}
 
