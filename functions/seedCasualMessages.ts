@@ -156,16 +156,23 @@ const CASUAL_MESSAGES = [
 ];
 
 const LOCAL_NAMES = [
-  'Sarah', 'Rachel', 'Miriam', 'Leah', 'Hannah',
-  'David', 'Michael', 'Joshua', 'Ethan', 'Aaron',
-  'Yael', 'Talia', 'Naomi', 'Ruth', 'Noa',
-  'Jacob', 'Benjamin', 'Isaac', 'Levi', 'Dan',
+  'Sarah', 'Rachel', 'Miriam', 'Leah', 'Hannah', 'Esther', 'Ruth', 'Naomi',
+  'David', 'Michael', 'Joshua', 'Ethan', 'Aaron', 'Jacob', 'Benjamin', 'Isaac',
+  'Yael', 'Talia', 'Noa', 'Shira', 'Ellie', 'Mira', 'Dina', 'Rena',
+  'Levi', 'Dan', 'Yuri', 'Moshe', 'Yosef', 'Yosef', 'Menachem', 'Shmuel',
+  'Bracha', 'Chana', 'Rivka', 'Malka', 'Malka', 'Baila', 'Gittel', 'Freida',
+  'Yaakov', 'Yitzchak', 'Eliyahu', 'Noach', 'Avrohom', 'Avram', 'Shlomo', 'Dovid',
 ];
 
 const LAST_NAMES = [
-  'Cohen', 'Levy', 'Shapiro', 'Friedman', 'Goldstein',
-  'Kaufman', 'Hoffman', 'Blumstein', 'Rosenberg', 'Feldman',
-  'Mendelsohn', 'Finerman', 'Hochberg', 'Stark', 'Scharf',
+  'Cohen', 'Levy', 'Shapiro', 'Friedman', 'Goldstein', 'Kaufman', 'Hoffman',
+  'Blumstein', 'Rosenberg', 'Feldman', 'Mendelsohn', 'Finerman', 'Hochberg',
+  'Stark', 'Scharf', 'Steinberg', 'Rothstein', 'Morgenstern', 'Silverman',
+  'Berkowitz', 'Glanz', 'Glick', 'Greene', 'Greenberg', 'Grüner', 'Grodsky',
+  'Grossman', 'Grunfeld', 'Grumet', 'Günzberg', 'Güntzel', 'Guss', 'Guth',
+  'Hackenberg', 'Hacker', 'Haffner', 'Hafner', 'Hagen', 'Hahn', 'Hais',
+  'Halbert', 'Halle', 'Hallenbeck', 'Hallowell', 'Halm', 'Halmy', 'Halpern',
+  'Halper', 'Halsey', 'Halstead', 'Haltom', 'Haltzman', 'Halvey', 'Halzman',
 ];
 
 function getRandomElement(arr) {
@@ -174,6 +181,13 @@ function getRandomElement(arr) {
 
 function generateRandomUser() {
   return `${getRandomElement(LOCAL_NAMES)} ${getRandomElement(LAST_NAMES)}`;
+}
+
+function getRandomTimestamp(daysAgo = 3) {
+  const now = new Date();
+  const past = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+  const randomTime = new Date(past.getTime() + Math.random() * (now.getTime() - past.getTime()));
+  return randomTime.toISOString();
 }
 
 Deno.serve(async (req) => {
@@ -185,32 +199,44 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Create casual messages as UnifiedPost entities
-    const postsToCreate = CASUAL_MESSAGES.map(msg => ({
-      user_id: `seed_user_${Math.random().toString(36).substr(2, 9)}`,
-      user_name: generateRandomUser(),
-      user_age_range: Math.random() > 0.5 ? '18+' : '13-17',
-      type: 'feed',
-      board: 'feed',
-      body: msg,
-      city: 'Five Towns',
-      likes_count: Math.floor(Math.random() * 15),
-      comments_count: Math.floor(Math.random() * 8),
-      is_seeded: true,
-    }));
+    // Generate posts by duplicating messages and varying them slightly
+    const postsToCreate = [];
+    
+    // Create multiple variations of each message
+    for (let i = 0; i < 2; i++) {
+      for (const msg of CASUAL_MESSAGES) {
+        postsToCreate.push({
+          user_id: `seed_user_${Math.random().toString(36).substr(2, 9)}`,
+          user_name: generateRandomUser(),
+          user_age_range: Math.random() > 0.5 ? '18+' : '13-17',
+          type: 'feed',
+          board: 'feed',
+          body: msg,
+          city: 'Five Towns',
+          likes_count: Math.floor(Math.random() * 20),
+          comments_count: Math.floor(Math.random() * 10),
+          is_seeded: true,
+          created_date: getRandomTimestamp(3), // Spread across last 3 days
+        });
+      }
+    }
 
-    // Batch create (up to 100 at a time to avoid overwhelming the API)
+    // Shuffle array for better randomization
+    postsToCreate.sort(() => Math.random() - 0.5);
+
+    // Batch create (50 at a time)
     const batchSize = 50;
     let created = 0;
     for (let i = 0; i < postsToCreate.length; i += batchSize) {
       const batch = postsToCreate.slice(i, i + batchSize);
       await base44.asServiceRole.entities.UnifiedPost.bulkCreate(batch);
       created += batch.length;
+      console.log(`Created batch: ${created}/${postsToCreate.length}`);
     }
 
     return Response.json({ 
       success: true, 
-      message: `Created ${created} casual feed messages`,
+      message: `Created ${created} casual feed posts`,
       count: created 
     });
   } catch (error) {
