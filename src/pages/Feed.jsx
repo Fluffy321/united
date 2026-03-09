@@ -489,25 +489,27 @@ export default function Feed() {
       </div>
 
       <div className="main-feed">
-        {/* Community Section - Welcome & Trending */}
-        {activeCategory === 'all' && (
+        {/* Welcome Section - Show when no communities joined */}
+        {activeCategory === 'all' && userCommunities.length === 0 && (
           <>
-            {userCommunities.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-slate-100 p-6 mb-4 text-center">
-                <div className="text-4xl mb-3">👋</div>
-                <h2 className="text-[18px] font-bold text-slate-900 mb-2">Welcome to Communities</h2>
-                <p className="text-[14px] text-slate-500 mb-4">Join communities to see their posts, events, announcements, and discussions.</p>
-                <button
-                  onClick={() => navigate(createPageUrl('Communities'))}
-                  className="px-6 py-2.5 rounded-full text-white text-[14px] font-semibold"
-                  style={{ background: '#2563EB' }}
-                >
-                  Find Your Community
-                </button>
-              </div>
-            ) : null}
+            <div className="bg-white rounded-2xl border border-slate-100 p-6 mb-4 text-center">
+              <div className="text-4xl mb-3">👋</div>
+              <h2 className="text-[18px] font-bold text-slate-900 mb-2">Welcome</h2>
+              <p className="text-[14px] text-slate-500 mb-4">Find your community</p>
+              <button
+                onClick={() => navigate(createPageUrl('Communities'))}
+                className="px-6 py-2.5 rounded-full text-white text-[14px] font-semibold"
+                style={{ background: '#2563EB' }}
+              >
+                Join communities to see their posts
+              </button>
+            </div>
 
-
+            {/* Trending Communities (optional) - placeholder */}
+            <div className="mb-4 text-center">
+              <h3 className="text-[15px] font-bold text-slate-900 mb-3">Trending communities (optional)</h3>
+              <p className="text-[13px] text-slate-400">Explore communities that match your interests</p>
+            </div>
           </>
         )}
 
