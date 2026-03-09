@@ -609,12 +609,22 @@ export default function Feed() {
           </div>
         )}
 
-        {/* Community Feed — posts from joined groups (primary content) */}
-        {activeCategory === 'all' && (
-          <CommunityActivitySection
-            currentUser={currentUser}
-            onNavigateToCommunities={() => navigate(createPageUrl('Communities'))}
-          />
+        {/* Community Posts Section - Posts, Events, Announcements, Discussions */}
+        {activeCategory === 'all' && userCommunities.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-[15px] font-bold text-slate-900 mb-3">Posts from Your Communities</h3>
+            {communityPosts.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-100 p-6 text-center">
+                <p className="text-[13px] text-slate-400">No posts yet from your communities</p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {communityPosts.map(post => (
+                  <CommunityPostItemPreview key={post.id} post={post} currentUser={currentUser} />
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Nearby Help Banner */}
