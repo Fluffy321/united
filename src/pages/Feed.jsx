@@ -281,6 +281,20 @@ export default function Feed() {
     return visiblePosts.slice(0, 50);
   })();
 
+  // Convert community help requests to post-like format for display
+  const communityHelpAsUnifiedPosts = communityHelpRequests.map(req => ({
+    id: req.id,
+    type: 'help',
+    title: req.title,
+    body: req.description,
+    user_id: req.created_by_user_id,
+    user_name: req.created_by_name || 'Community Request',
+    created_date: req.created_date,
+    community_name: req.community_name,
+    category: req.category,
+    likes_count: req.offers_count || 0
+  }));
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--background)', scrollBehavior: 'smooth' }}>
 
