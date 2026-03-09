@@ -298,6 +298,27 @@ export default function Communities() {
       <div className="flex-1 overflow-y-auto pb-28 scrollbar-hide">
         <div className="max-w-2xl mx-auto px-4 pt-4 space-y-5">
 
+          {/* ══ Global Search Results ══ */}
+          {globalSearch.trim() && (
+            <GlobalSearchResults
+              search={globalSearch}
+              communities={globalSearchResults.communities}
+              groups={globalSearchResults.groups}
+              joinedIds={joinedIds}
+              membershipSet={membershipSet}
+              pendingRequestSet={pendingRequestSet}
+              joiningId={joiningId}
+              loading={communitiesLoading || membershipsLoading}
+              onJoinCommunity={handleJoin}
+              onViewCommunity={setSelectedCommunityId}
+              onJoinGroup={handleGroupJoin}
+              onLeaveGroup={handleGroupLeave}
+              onViewGroup={setSelectedGroup}
+            />
+          )}
+
+          {!globalSearch.trim() && (
+            <>
           {/* ══ Tab 1: My Communities ══ */}
           {activeTab === 'My Communities' && (
             <MyCommunititiesTab
