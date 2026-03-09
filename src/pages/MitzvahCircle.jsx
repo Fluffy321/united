@@ -328,47 +328,48 @@ export default function MitzvahCircle({ isActive = true }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
-      {/* Header */}
-      <div className="bg-white sticky top-0 z-20 flex-shrink-0" style={{ borderBottom: '1px solid #E8ECF4' }}>
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <h1 className="text-[20px] font-bold text-slate-900">Mitzvah Circle</h1>
-          <p className="text-[13px] text-slate-500 mt-1">Helping the community together</p>
-        </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <MitzvahTabs activeTab={activeTab} onTabChange={setActiveTab} />
-
-      {/* Main Content */}
-      <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 100px', WebkitOverflowScrolling: 'touch' }}>
-        {/* Tab: Help Requests */}
-        {activeTab === 'requests' && (
-          <div className="max-w-2xl mx-auto space-y-5">
-            {/* Quick Actions */}
-            <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
-            >
-              <Plus className="w-5 h-5 text-slate-700" />
-              <span className="text-[12px] font-semibold text-slate-700 text-center">Request Help</span>
-            </button>
-            <button
-              onClick={() => setShowFilterDrawer(true)}
-              className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
-            >
-              <HandHeart className="w-5 h-5 text-slate-700" />
-              <span className="text-[12px] font-semibold text-slate-700 text-center">Offer Help</span>
-            </button>
-            <button
-              onClick={() => setShowAlertModal(true)}
-              className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
-            >
-              <AlertCircle className="w-5 h-5 text-slate-700" />
-              <span className="text-[12px] font-semibold text-slate-700 text-center">Alert</span>
-            </button>
+    <>
+      <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
+        {/* Header */}
+        <div className="bg-white sticky top-0 z-20 flex-shrink-0" style={{ borderBottom: '1px solid #E8ECF4' }}>
+          <div className="max-w-2xl mx-auto px-4 py-4">
+            <h1 className="text-[20px] font-bold text-slate-900">Mitzvah Circle</h1>
+            <p className="text-[13px] text-slate-500 mt-1">Helping the community together</p>
           </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <MitzvahTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
+        {/* Main Content */}
+        <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 100px', WebkitOverflowScrolling: 'touch' }}>
+          {/* Tab: Help Requests */}
+          {activeTab === 'requests' && (
+            <div className="max-w-2xl mx-auto space-y-5">
+              {/* Quick Actions */}
+              <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+              >
+                <Plus className="w-5 h-5 text-slate-700" />
+                <span className="text-[12px] font-semibold text-slate-700 text-center">Request Help</span>
+              </button>
+              <button
+                onClick={() => setShowFilterDrawer(true)}
+                className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+              >
+                <HandHeart className="w-5 h-5 text-slate-700" />
+                <span className="text-[12px] font-semibold text-slate-700 text-center">Offer Help</span>
+              </button>
+              <button
+                onClick={() => setShowAlertModal(true)}
+                className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+              >
+                <AlertCircle className="w-5 h-5 text-slate-700" />
+                <span className="text-[12px] font-semibold text-slate-700 text-center">Alert</span>
+              </button>
+            </div>
 
           {/* Your Daily Mitzvah Section */}
           <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-[16px] border border-purple-200 p-4">
