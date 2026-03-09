@@ -342,9 +342,11 @@ export default function MitzvahCircle({ isActive = true }) {
 
       {/* Main Content */}
       <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 100px', WebkitOverflowScrolling: 'touch' }}>
-        <div className="max-w-2xl mx-auto space-y-5">
-          {/* Quick Actions */}
-          <div className="grid grid-cols-3 gap-2">
+        {/* Tab: Help Requests */}
+        {activeTab === 'requests' && (
+          <div className="max-w-2xl mx-auto space-y-5">
+            {/* Quick Actions */}
+            <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => setShowCreateModal(true)}
               className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
