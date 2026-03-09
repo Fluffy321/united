@@ -24,22 +24,26 @@ export default function Profile() {
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadProfile();
-    loadMitzvahPoints();
-  }, []);
-
   const [mitzvahPoints, setMitzvahPoints] = useState(0);
 
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
   const loadMitzvahPoints = async () => {
-    const params = new URLSearchParams(window.location.search);
-    const profileId = params.get('id');
-    const user = await base44.auth.me();
-    const targetUserId = profileId || user.id;
-    
-    const points = await base44.entities.MitzvahPoints.filter({ user_id: targetUserId });
-    if (points.length > 0) {
-      setMitzvahPoints(points[0].total_points);
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const profileId = params.get('id');
+      const user = await base44.auth.me();
+      const targetUserId = profileId || user.id;
+      
+      const points = await base44.entities.MitzvahPoints.filter({ user_id: targetUserId });
+      if (points.length > 0) {
+        setMitzvahPoints(points[0].total_points);
+      }
+    } catch (error) {
+      console.warn('Failed to load mitzvah points:', error?.message);
+      // Silently fail - use default value of 0
     }
   };
 
