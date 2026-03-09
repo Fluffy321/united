@@ -701,8 +701,7 @@ function DiscoverTab({ search, setSearch, groups, allCommunities, trendingCommun
           )}
         </div>
       ) : (
-         /* Category Sections - always open, show 3 then "see more" */
-         <div className="space-y-6">
+        <div className="space-y-6">
            {/* Featured Shuls - Five Towns */}
            {featuredShuls.length > 0 && (
              <section>
