@@ -306,6 +306,13 @@ export default function Communities() {
         currentUser={currentUser}
         onCreated={refetchGroups}
       />
+
+      <CreateCommunityModal
+        open={showCreateCommunity}
+        onOpenChange={setShowCreateCommunity}
+        currentUser={currentUser}
+        onCreated={refetchGroups}
+      />
     </div>
   );
 }
