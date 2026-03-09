@@ -428,9 +428,10 @@ function FilteredCommunitiesTab({ search, setSearch, communities, typeFilter, jo
           </div>
         ) : (
           <div className="space-y-2.5">
-            {filtered.map(c => (
-              typeFilter === 'School' ? (
-                <SchoolCard
+            {filtered.map(c => {
+              const CardComponent = typeFilter === 'School' ? SchoolCard : typeFilter === 'Shul' ? ShulCard : DiscoverCommunityCard;
+              return (
+                <CardComponent
                   key={c.id}
                   community={c}
                   joined={joinedIds.has(c.id)}
@@ -438,17 +439,8 @@ function FilteredCommunitiesTab({ search, setSearch, communities, typeFilter, jo
                   onJoin={onJoin}
                   onView={onView}
                 />
-              ) : (
-                <DiscoverCommunityCard
-                  key={c.id}
-                  community={c}
-                  joined={joinedIds.has(c.id)}
-                  loading={joiningId === c.id}
-                  onJoin={onJoin}
-                  onView={onView}
-                />
-              )
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
