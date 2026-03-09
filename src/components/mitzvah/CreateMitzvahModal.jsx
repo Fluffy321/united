@@ -160,6 +160,23 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
           </div>
 
           <div>
+            <Label>Post to Community (optional)</Label>
+            <Select value={communityId} onValueChange={setCommunityId}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select a community" />
+              </SelectTrigger>
+              <SelectContent>
+                {userCommunities.map(community => (
+                  <SelectItem key={community.id} value={community.id}>
+                    {community.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-slate-500 mt-1">Request will be visible to members of this community</p>
+          </div>
+
+          <div>
             <Label>Approximate Location</Label>
             <Input
               value={locationLabel}
