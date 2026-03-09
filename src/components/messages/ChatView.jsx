@@ -55,11 +55,11 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const loadMessages = async () => {
-    setIsLoading(true);
+  const loadMessages = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     const data = await base44.entities.Message.filter({ conversation_id: conversation.id }, 'created_date');
     setMessages(data);
-    setIsLoading(false);
+    if (!silent) setIsLoading(false);
   };
 
   const markAsRead = async () => {
