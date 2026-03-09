@@ -491,6 +491,18 @@ export default function MitzvahCircle({ isActive = true }) {
           }}
         />
 
+        <LogMitzvahModal
+          open={showLogMitzvah}
+          onOpenChange={setShowLogMitzvah}
+          onSubmit={handleLogMitzvah}
+        />
+
+        <CommunityAlertModal
+          open={showAlertModal}
+          onOpenChange={setShowAlertModal}
+          currentUser={currentUser}
+        />
+
         {/* Detail overlay */}
         {selectedRequest && (
           <RequestDetailOverlay
