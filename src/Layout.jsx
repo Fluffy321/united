@@ -71,6 +71,7 @@ export default function Layout({ children, currentPageName }) {
     enabled: !!currentUser,
     refetchInterval: 30000,
     staleTime: 15000,
+    retry: 0
   });
 
   useEffect(() => {
