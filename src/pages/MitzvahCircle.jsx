@@ -477,63 +477,65 @@ export default function MitzvahCircle({ isActive = true }) {
 
         {/* Tab: Completed Mitzvahs */}
         {activeTab === 'completed' && <CompletedMitzvahs currentUser={currentUser} />}
+        </div>
 
+        {/* Modals rendered at root level */}
         <CreateMitzvahModal
-        open={showCreateModal}
-        onOpenChange={(open) => {
-          setShowCreateModal(open);
-          if (!open) queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-        }}
-        currentUser={currentUser}
-      />
+         open={showCreateModal}
+         onOpenChange={(open) => {
+           setShowCreateModal(open);
+           if (!open) queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+         }}
+         currentUser={currentUser}
+        />
 
-      <FilterDrawer
-        open={showFilterDrawer}
-        onClose={() => setShowFilterDrawer(false)}
-        initialFilters={filters}
-        onApply={handleFilterApply}
-      />
+        <FilterDrawer
+         open={showFilterDrawer}
+         onClose={() => setShowFilterDrawer(false)}
+         initialFilters={filters}
+         onApply={handleFilterApply}
+        />
 
-      <LocationPrompt
-        show={showLocationPrompt}
-        onDismiss={() => setShowLocationPrompt(false)}
-        onLocationSet={() => {
-          setShowLocationPrompt(false);
-          loadUser();
-          queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-        }}
-      />
+        <LocationPrompt
+         show={showLocationPrompt}
+         onDismiss={() => setShowLocationPrompt(false)}
+         onLocationSet={() => {
+           setShowLocationPrompt(false);
+           loadUser();
+           queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+         }}
+        />
 
-      <LogMitzvahModal
-        open={showLogMitzvah}
-        onOpenChange={setShowLogMitzvah}
-        onSubmit={handleLogMitzvah}
-      />
+        <LogMitzvahModal
+         open={showLogMitzvah}
+         onOpenChange={setShowLogMitzvah}
+         onSubmit={handleLogMitzvah}
+        />
 
-      <CommunityAlertModal
-        open={showAlertModal}
-        onOpenChange={setShowAlertModal}
-        currentUser={currentUser}
-      />
+        <CommunityAlertModal
+         open={showAlertModal}
+         onOpenChange={setShowAlertModal}
+         currentUser={currentUser}
+        />
 
         {selectedRequest && (
-          <RequestDetailOverlay
-            request={selectedRequest}
-            currentUser={currentUser}
-            onClose={() => setSelectedRequest(null)}
-            onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
-            overlayStyle={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 999,
-              background: '#ffffff',
-              overflowY: 'auto',
-              pointerEvents: 'auto'
-            }}
-          />
+         <RequestDetailOverlay
+           request={selectedRequest}
+           currentUser={currentUser}
+           onClose={() => setSelectedRequest(null)}
+           onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
+           overlayStyle={{
+             position: 'fixed',
+             inset: 0,
+             zIndex: 999,
+             background: '#ffffff',
+             overflowY: 'auto',
+             pointerEvents: 'auto'
+           }}
+         />
         )}
-      </div>
-      </div>
+        </div>
+        </div>
     </>
   );
 }
