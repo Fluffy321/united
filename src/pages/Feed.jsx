@@ -156,9 +156,9 @@ export default function Feed() {
 
   const { data: posts = [], isLoading, isError, refetch: refetchPosts } = useQuery({
     queryKey: ['unified-posts'],
-    queryFn: () => base44.entities.UnifiedPost.list('-created_date', 50),
-    staleTime: 600000,
-    gcTime: 900000,
+    queryFn: () => base44.entities.UnifiedPost.list('-created_date', 30),
+    staleTime: 1800000,
+    gcTime: 2400000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: 0,
