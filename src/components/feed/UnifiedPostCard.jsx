@@ -364,6 +364,15 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           )}
         </div>
       </div>
+
+      {/* Comments Sheet */}
+      <CommentsSheet 
+        postId={post.id}
+        postAuthorId={post.user_id}
+        isOpen={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        currentUser={currentUser}
+      />
     </motion.div>
   );
 }
