@@ -55,57 +55,9 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const [loadingRSVP, setLoadingRSVP] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments_count || 0);
-
-  useEffect(() => {
-    if (post.type === 'event' && currentUser) {
-      const timer = setTimeout(() => {
-        checkRSVPStatus();
-      }, 100); // Debounce to reduce simultaneous requests
-      return () => clearTimeout(timer);
-    }
-  }, [post.id, currentUser?.id]);
+  const [showEventDetails, setShowEventDetails] = useState(false);
 
   const helpCat = HELP_REQUEST_CATEGORIES.find(c => c.value === post.category);
-
-  const checkRSVPStatus = async () => {
-    try {
-      const rsvps = await base44.entities.RSVP.filter({ post_id: post.id, user_id: currentUser.id });
-      setIsRSVPed(rsvps.length > 0);
-      const allRsvps = await base44.entities.RSVP.filter({ post_id: post.id });
-      setRsvpCount(allRsvps.length);
-    } catch (error) {
-      console.warn('Failed to check RSVP status:', error?.message);
-      // Silently fail to avoid blocking UI
-    }
-  };
-
-  const handleRSVP = async () => {
-    setLoadingRSVP(true);
-    try {
-      if (isRSVPed) {
-        const rsvps = await base44.entities.RSVP.filter({ post_id: post.id, user_id: currentUser.id });
-        if (rsvps[0]) await base44.entities.RSVP.delete(rsvps[0].id);
-        setIsRSVPed(false);
-        setRsvpCount(c => Math.max(0, c - 1));
-        toast.success('RSVP removed');
-      } else {
-        await base44.entities.RSVP.create({
-          post_id: post.id,
-          user_id: currentUser.id,
-          user_name: currentUser.display_name || currentUser.full_name,
-          user_avatar_url: currentUser.avatar_url,
-          status: 'going'
-        });
-        setIsRSVPed(true);
-        setRsvpCount(c => c + 1);
-        toast.success('You\'re going! 🎉');
-      }
-    } catch (error) {
-      toast.error('Failed to update RSVP');
-    } finally {
-      setLoadingRSVP(false);
-    }
-  };
 
   const handleFulfilled = async () => {
     setFulfilling(true);
