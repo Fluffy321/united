@@ -607,51 +607,7 @@ export default function Feed() {
           </div>
         )}
 
-        {/* Nearby Help Banner */}
-        {activeCategory === 'all' && (
-          <NearbyHelpBanner currentUser={currentUser} onClaim={handleHelpMitzvah} />
-        )}
 
-        {/* Live Help Board */}
-        {activeCategory === 'all' && openMitzvahRequests.length > 0 && (
-          <div className="mb-2">
-            <LiveHelpBoard requests={openMitzvahRequests} onClaim={handleHelpMitzvah} />
-          </div>
-        )}
-
-        {/* Quick Actions */}
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setShowRequestHelpModal(true)}
-            className="flex-1 py-2.5 text-[13px] font-semibold text-white rounded-xl active:scale-[0.98] transition-all"
-            style={{ background: 'var(--primary)' }}
-          >
-            🙋 Request Help
-          </button>
-          <button
-            onClick={() => { setPostModalType('feed'); setShowPostModal(true); }}
-            className="flex-1 py-2.5 text-[13px] font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 active:scale-[0.98] transition-all"
-          >
-            🤝 Offer Help
-          </button>
-          <button
-            onClick={() => setShowFABTypeSelector(true)}
-            className="flex-1 py-2.5 text-[13px] font-semibold rounded-xl active:scale-[0.98] transition-all text-white"
-            style={{ background: '#1E3A8A' }}
-          >
-            ✏️ Create Post
-          </button>
-        </div>
-
-        {/* Alert Button */}
-        <button
-          onClick={() => setShowAlertModal(true)}
-          className="w-full active:scale-95 text-[#0F1C2E] font-semibold text-[13px] py-3 rounded-xl transition-all mb-4"
-          style={{ background: 'var(--secondary)', border: '1px solid var(--border)' }}
-          title="Community Alert"
-        >
-          🚨 Report Community Alert
-        </button>
 
         {isLoading ? (
           <div className="space-y-3 pb-24">
