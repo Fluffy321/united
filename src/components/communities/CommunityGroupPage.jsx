@@ -34,7 +34,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, onJoi
     if (!group) return;
     setLoading(true);
     Promise.all([
-      base44.entities.GroupPost.filter({ group_id: group.id }, '-created_date', 30),
+      base44.entities.GroupPost.filter({ group_id: group.id, post_type: 'post' }, '-created_date', 30),
       base44.entities.GroupMember.filter({ group_id: group.id }, '-created_date', 100),
     ]).then(([p, m]) => {
       setPosts(p);
