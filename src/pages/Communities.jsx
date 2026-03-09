@@ -302,16 +302,6 @@ export default function Communities() {
         </div>
       </div>
 
-      <GroupDetailSheet
-        group={selectedGroup}
-        open={showGroupDetail}
-        onOpenChange={setShowGroupDetail}
-        currentUser={currentUser}
-        isMember={selectedGroup ? membershipSet.has(selectedGroup.id) : false}
-        onJoin={handleGroupJoin}
-        onLeave={handleGroupLeave}
-      />
-
       <CreateGroupModal
         open={showCreateGroup}
         onOpenChange={setShowCreateGroup}
