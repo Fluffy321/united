@@ -308,6 +308,13 @@ export default function Feed() {
           </span>
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setShowSearch(true)}
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              title="Search"
+            >
+              <Search className="w-5 h-5 text-[#64748B]" />
+            </button>
+            <button
               onClick={() => navigate(createPageUrl('MyEvents'))}
               className="p-2 hover:bg-slate-100 rounded-full transition-colors"
               title="Events"
