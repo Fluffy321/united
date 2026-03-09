@@ -51,6 +51,8 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const [isRSVPed, setIsRSVPed] = useState(false);
   const [rsvpCount, setRsvpCount] = useState(0);
   const [loadingRSVP, setLoadingRSVP] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentCount, setCommentCount] = useState(post.comments_count || 0);
 
   useEffect(() => {
     if (post.type === 'event' && currentUser) {
