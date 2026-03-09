@@ -596,35 +596,7 @@ export default function Feed() {
           </div>
         )}
 
-        {/* Weekly Activity Bar */}
-        <WeeklyActivityBar />
 
-        {/* Community Alert Banner */}
-        <CommunityAlertBanner currentUser={currentUser} />
-
-        {/* Pinned widgets — only on "All" tab */}
-        {activeCategory === 'all' && (
-          <div className="space-y-3 mb-4">
-            {userStreak && (
-              <div className="rounded-[14px] px-4 py-4" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                <p className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-widest mb-3">Your Daily Mitzvah</p>
-                <StreakBanner
-                  streak={userStreak}
-                  todayCount={todayMitzvahCount}
-                  onLogMitzvah={() => setShowLogMitzvah(true)}
-                />
-                <div className="mt-2.5">
-                  <StreakProgress todayCount={todayMitzvahCount} streak={userStreak} />
-                </div>
-              </div>
-            )}
-            <WeeklyImpactCard />
-            <CommunityResponseScore />
-            {pinnedPrompt && (
-              <DailyPromptCard prompt={pinnedPrompt} onReply={handlePromptReply} />
-            )}
-          </div>
-        )}
 
         {/* Community Posts Section - organized by type */}
         {activeCategory === 'all' && userCommunities.length > 0 && (
