@@ -535,7 +535,8 @@ export default function MitzvahCircle({ isActive = true }) {
             pointerEvents: 'auto'
           }}
         />
-      )}
-    </>
-    );
-}
+        )}
+        </>
+        </>
+        );
+        }
