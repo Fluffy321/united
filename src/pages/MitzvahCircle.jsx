@@ -517,17 +517,35 @@ export default function MitzvahCircle({ isActive = true }) {
               </div>
             </div>
 
-            {/* Create Button */}
-            {isActive &&
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="fixed bottom-[80px] right-4 z-30 flex items-center gap-2 bg-[#0F172A] text-white text-[14px] font-semibold px-5 py-2.5 rounded-full active:scale-95 transition-all"
-            style={{ boxShadow: '0 4px 14px rgba(15,23,42,0.35)' }}>
+          </div>
 
-                <Plus className="w-4 h-4" />
-                Request
-              </button>
-          }
+          {/* Your Mitzvah Streak Section */}
+          <div className="bg-white border-t border-slate-100 flex-shrink-0">
+            <div className="max-w-2xl mx-auto px-4 py-4">
+              <h2 className="text-[15px] font-bold text-slate-900 mb-3">Your Mitzvah Streak</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setStreakSection('completed')}
+                  className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition-colors ${
+                    streakSection === 'completed'
+                      ? 'bg-[#16A34A] text-white'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  Recently Completed
+                </button>
+                <button
+                  onClick={() => setStreakSection('ongoing')}
+                  className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition-colors ${
+                    streakSection === 'ongoing'
+                      ? 'bg-[#2563EB] text-white'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  Ongoing
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
