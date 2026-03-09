@@ -41,7 +41,6 @@ export default function Communities() {
   const [createForm, setCreateForm] = useState({ name: '', description: '', category: 'General', location: '' });
   const [creating, setCreating] = useState(false);
   const [pendingRequestSet, setPendingRequestSet] = useState(new Set());
-  const [globalSearch, setGlobalSearch] = useState('');
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -108,24 +107,7 @@ export default function Communities() {
     );
   }, [allCommunities, search, typeFilter]);
 
-  const globalSearchResults = useMemo(() => {
-    if (!globalSearch.trim()) return { communities: [], groups: [] };
-    const q = globalSearch.toLowerCase();
-    return {
-      communities: allCommunities.filter(c =>
-        c.name?.toLowerCase().includes(q) ||
-        c.neighborhood?.toLowerCase().includes(q) ||
-        c.address?.toLowerCase().includes(q) ||
-        c.type?.toLowerCase().includes(q)
-      ),
-      groups: groups.filter(g =>
-        g.name?.toLowerCase().includes(q) ||
-        g.description?.toLowerCase().includes(q) ||
-        g.category?.toLowerCase().includes(q) ||
-        g.location?.toLowerCase().includes(q)
-      ),
-    };
-  }, [allCommunities, groups, globalSearch]);
+
 
   const featuredCommunities = useMemo(() => allCommunities.filter(c => c.is_featured).slice(0, 5), [allCommunities]);
   const suggestedCommunities = useMemo(() => filteredCommunities.filter(c => !joinedIds.has(c.id)).slice(0, 20), [filteredCommunities, joinedIds]);
@@ -290,22 +272,6 @@ export default function Communities() {
   return (
     <div className="flex flex-col h-full bg-[#F5F7FB]">
 
-      {/* ── Global Search Bar ── */}
-      <div className="bg-white border-b border-slate-100 flex-shrink-0 sticky top-0 z-50">
-        <div className="max-w-2xl mx-auto px-4 py-3">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              value={globalSearch}
-              onChange={e => setGlobalSearch(e.target.value)}
-              placeholder="Search communities by name, city, or topic…"
-              className="w-full pl-10 pr-4 py-2.5 text-[13px] bg-slate-50 border border-slate-200 rounded-[12px] outline-none focus:border-[#2563EB] transition-colors placeholder:text-slate-400"
-              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
-            />
-          </div>
-        </div>
-      </div>
-
       {/* ── Header ── */}
       <div className="bg-white border-b border-slate-100 flex-shrink-0">
         <div className="max-w-2xl mx-auto px-4 pt-4 pb-0">
@@ -329,7 +295,7 @@ export default function Communities() {
             {TABS.map(tab => (
               <button
                 key={tab}
-                onClick={() => { setActiveTab(tab); setSearch(''); setTypeFilter('All'); setGlobalSearch(''); }}
+                onClick={() => { setActiveTab(tab); setSearch(''); setTypeFilter('All'); }}
                 className={`flex-1 py-2.5 text-[12px] font-semibold transition-all border-b-2 ${
                   activeTab === tab
                     ? 'text-[#2563EB] border-[#2563EB]'
@@ -347,27 +313,6 @@ export default function Communities() {
       <div className="flex-1 overflow-y-auto pb-28 scrollbar-hide">
         <div className="max-w-2xl mx-auto px-4 pt-4 space-y-5">
 
-          {/* ══ Global Search Results ══ */}
-          {globalSearch.trim() && (
-            <GlobalSearchResults
-              search={globalSearch}
-              communities={globalSearchResults.communities}
-              groups={globalSearchResults.groups}
-              joinedIds={joinedIds}
-              membershipSet={membershipSet}
-              pendingRequestSet={pendingRequestSet}
-              joiningId={joiningId}
-              loading={communitiesLoading || membershipsLoading}
-              onJoinCommunity={handleJoin}
-              onViewCommunity={setSelectedCommunityId}
-              onJoinGroup={handleGroupJoin}
-              onLeaveGroup={handleGroupLeave}
-              onViewGroup={setSelectedGroup}
-            />
-          )}
-
-          {!globalSearch.trim() && (
-            <>
           {/* ══ Tab 1: My Communities ══ */}
           {activeTab === 'My Communities' && (
             <MyCommunititiesTab
