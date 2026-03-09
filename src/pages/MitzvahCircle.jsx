@@ -517,22 +517,24 @@ export default function MitzvahCircle({ isActive = true }) {
         currentUser={currentUser}
       />
 
-      {selectedRequest && (
-        <RequestDetailOverlay
-          request={selectedRequest}
-          currentUser={currentUser}
-          onClose={() => setSelectedRequest(null)}
-          onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
-          overlayStyle={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 999,
-            background: '#ffffff',
-            overflowY: 'auto',
-            pointerEvents: 'auto'
-          }}
-        />
-      )}
+        {selectedRequest && (
+          <RequestDetailOverlay
+            request={selectedRequest}
+            currentUser={currentUser}
+            onClose={() => setSelectedRequest(null)}
+            onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
+            overlayStyle={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 999,
+              background: '#ffffff',
+              overflowY: 'auto',
+              pointerEvents: 'auto'
+            }}
+          />
+        )}
+      </div>
+    </div>
     </>
   );
 }
