@@ -12,28 +12,12 @@ import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 import ReportModal from '@/components/common/ReportModal';
 import ProfileSetup from '@/components/profile/ProfileSetup';
-import HappeningTodayCard from '@/components/feed/HappeningTodayCard';
-import MitzvahNowCard from '@/components/feed/MitzvahNowCard';
-import MitzvahSharePrompt from '@/components/feed/MitzvahSharePrompt';
-import StreakBanner from '@/components/feed/StreakBanner';
-import StreakProgress from '@/components/feed/StreakProgress';
-import LogMitzvahModal from '@/components/feed/LogMitzvahModal';
 import QuickPostPrompt from '@/components/feed/QuickPostPrompt';
 import QuickPostModal from '@/components/feed/QuickPostModal';
 import PostTypeSelector from '@/components/feed/PostTypeSelector';
 import FeedCategoryTabs from '@/components/feed/FeedCategoryTabs';
-import NearbyHelpBanner from '@/components/feed/NearbyHelpBanner';
-import CommunityResponseScore from '@/components/feed/CommunityResponseScore';
-import LiveHelpBoard from '@/components/feed/LiveHelpBoard';
 import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
-import CommunityAlertBanner from '@/components/feed/CommunityAlertBanner';
-import WeeklyActivityBar from '@/components/feed/WeeklyActivityBar';
-import WeeklyImpactCard from '@/components/feed/WeeklyImpactCard';
 import NotificationBell from '@/components/notifications/NotificationBell';
-import RequestHelpModal from '@/components/feed/RequestHelpModal';
-import CommunityUpdatesSection from '@/components/feed/CommunityUpdatesSection';
-import CommunityActivitySection from '@/components/feed/CommunityActivitySection';
-import JoinCommunitiesBanner from '@/components/feed/JoinCommunitiesBanner';
 import { toast } from 'sonner';
 
 function CommunityPostItemPreview({ post, currentUser }) {
