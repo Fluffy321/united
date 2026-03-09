@@ -395,6 +395,7 @@ export default function Communities() {
               setSearch={setSearch}
               groups={groups}
               allCommunities={allCommunities}
+              trendingCommunities={trendingCommunities}
               membershipSet={membershipSet}
               pendingRequestSet={pendingRequestSet}
               joinedIds={joinedIds}
