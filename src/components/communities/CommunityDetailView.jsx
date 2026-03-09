@@ -192,6 +192,10 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
           </div>
         )}
 
+        {activeTab === 'members' && (
+          <MembersListTab communityId={communityId} />
+        )}
+
         {activeTab === 'feed' && (
           <CommunityFeedTab posts={posts} isLoading={postsLoading} />
         )}
