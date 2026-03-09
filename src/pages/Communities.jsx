@@ -720,9 +720,45 @@ function DiscoverTab({ search, setSearch, groups, allCommunities, trendingCommun
           )}
         </div>
       ) : (
-        /* Category Sections - always open, show 3 then "see more" */
-        <div className="space-y-6">
-          {DISCOVER_CATEGORIES.map(cat => {
+         /* Category Sections - always open, show 3 then "see more" */
+         <div className="space-y-6">
+           {/* Trending Communities */}
+           {trendingCommunities.length > 0 && (
+             <section>
+               <div className="flex items-center gap-2 mb-3">
+                 <span className="text-xl">🔥</span>
+                 <h2 className="text-[16px] font-bold text-slate-900 flex-1">Trending Communities</h2>
+               </div>
+               <div className="space-y-2.5">
+                 {trendingCommunities.map((c, idx) => (
+                   <div
+                     key={c.id}
+                     onClick={() => onViewCommunity(c.id)}
+                     className="bg-white rounded-2xl border border-slate-100 p-3.5 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+                     style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}
+                   >
+                     <div className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0" style={{ background: '#FF6B6B15', color: '#FF6B6B' }}>
+                       #{idx + 1}
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <p className="font-semibold text-[14px] text-slate-900 truncate">{c.name}</p>
+                       <p className="text-[12px] text-slate-400">{c.follower_count || 0} members</p>
+                     </div>
+                     <div className="flex-shrink-0" onClick={e => { e.stopPropagation(); onJoinCommunity(e, c); }}>
+                       <button
+                         className={`text-[12px] font-semibold h-7 px-3.5 rounded-full ${joinedIds.has(c.id) ? 'bg-slate-100 text-slate-600' : 'text-white'}`}
+                         style={!joinedIds.has(c.id) ? { background: '#2563EB' } : {}}
+                       >
+                         {joiningId === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : joinedIds.has(c.id) ? '✓ Joined' : 'Join'}
+                       </button>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </section>
+           )}
+
+           {DISCOVER_CATEGORIES.map(cat => {
             const allItems = getCategoryItems(cat.id);
             if (allItems.length === 0) return null;
             const isExpanded = expandedCategories[cat.id];
