@@ -187,10 +187,11 @@ export default function Feed() {
       const today = format(new Date(), 'yyyy-MM-dd');
       return events.filter(e => e.event_date === today);
     },
-    staleTime: 1800000,
-    gcTime: 2400000,
+    staleTime: 3600000,
+    gcTime: 5400000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    refetchOnReconnect: false,
     retry: 0,
     enabled: !!currentUser
   });
