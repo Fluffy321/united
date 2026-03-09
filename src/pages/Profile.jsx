@@ -81,7 +81,9 @@ export default function Profile() {
       const existing = await base44.entities.UserStreak.filter({ user_id: profileUser.id });
       return existing[0] || null;
     },
-    enabled: !!profileUser
+    enabled: !!profileUser,
+    staleTime: 300000,
+    retry: 1
   });
 
   const { data: mitzvahLogs = [] } = useQuery({
