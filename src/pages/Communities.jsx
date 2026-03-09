@@ -378,6 +378,73 @@ function MyCommunititiesTab({ joinedCommunities, myGroups, loading, onViewCommun
   );
 }
 
+/* ─── Filtered Communities Tab (Schools / Shuls) ─── */
+function FilteredCommunitiesTab({ search, setSearch, communities, typeFilter, joinedIds, joiningId, loading, onJoin, onView, emptyEmoji, emptyLabel }) {
+  const filtered = useMemo(() => {
+    let list = communities.filter(c => c.type === typeFilter);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(c =>
+        c.name?.toLowerCase().includes(q) ||
+        c.neighborhood?.toLowerCase().includes(q) ||
+        c.address?.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [communities, typeFilter, search]);
+
+  return (
+    <>
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder={`Search ${typeFilter.toLowerCase()}s…`}
+          className="w-full pl-10 pr-4 py-3 text-[14px] bg-white border border-slate-200 rounded-[14px] outline-none focus:border-[#2563EB] transition-colors placeholder:text-slate-400"
+          style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}
+        />
+      </div>
+
+      <section>
+        <SectionHeader title={search ? `Results for "${search}"` : `All ${typeFilter}s`} count={filtered.length} />
+        {loading ? (
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3">
+                <div className="skeleton w-12 h-12 rounded-xl flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="skeleton h-3.5 w-40 rounded" />
+                  <div className="skeleton h-2.5 w-24 rounded" />
+                </div>
+                <div className="skeleton h-8 w-14 rounded-full flex-shrink-0" />
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-14 text-center">
+            <div className="text-4xl mb-3">{emptyEmoji}</div>
+            <p className="text-[13px] text-slate-400">{search ? `No results for "${search}"` : emptyLabel}</p>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {filtered.map(c => (
+              <DiscoverCommunityCard
+                key={c.id}
+                community={c}
+                joined={joinedIds.has(c.id)}
+                loading={joiningId === c.id}
+                onJoin={onJoin}
+                onView={onView}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    </>
+  );
+}
+
 /* ─── Discover Tab ─── */
 function DiscoverTab({ search, setSearch, typeFilter, setTypeFilter, featuredCommunities, suggestedCommunities, joinedIds, joiningId, loading, onJoin, onView }) {
   return (
