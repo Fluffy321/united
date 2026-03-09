@@ -24,12 +24,13 @@ const TABS = [
 export default function CommunityGroupPage({ group, currentUser, isMember, isPendingRequest, onJoin, onLeave, onBack, onMemberApproved }) {
   const [tab, setTab] = useState('events');
   const [posts, setPosts] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [members, setMembers] = useState([]);
-  const [helpRequests, setHelpRequests] = useState([]);
-  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newPost, setNewPost] = useState('');
+  const [newAnnouncement, setNewAnnouncement] = useState('');
   const [posting, setPosting] = useState(false);
+  const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const [joinRequests, setJoinRequests] = useState([]);
   const [processingRequest, setProcessingRequest] = useState(null);
 
