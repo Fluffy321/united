@@ -575,6 +575,7 @@ function DiscoverTab({ search, setSearch, groups, membershipSet, pendingRequestS
                 key={g.id}
                 group={g}
                 isMember={membershipSet.has(g.id)}
+                isPending={pendingRequestSet?.has(g.id)}
                 onJoin={onJoin}
                 onLeave={onLeave}
                 onView={onView}
