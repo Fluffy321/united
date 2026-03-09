@@ -274,7 +274,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         </div>
 
         {/* Right: context-aware action */}
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 ml-auto">
           {/* Message button (not for own posts) */}
           {post.user_id !== currentUser?.id && post.type !== 'event' && (
             <MessageButton
