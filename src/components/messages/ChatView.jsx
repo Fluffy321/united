@@ -197,10 +197,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         </div>
         
         <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-900">{other.name}</span>
-            <Badge variant="outline" className="text-xs font-normal">{other.age}</Badge>
-          </div>
+          <span className="font-semibold text-slate-900 text-[16px]">{other.name}</span>
         </div>
 
         <DropdownMenu>
