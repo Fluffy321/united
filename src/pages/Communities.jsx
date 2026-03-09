@@ -70,6 +70,13 @@ export default function Communities() {
     enabled: !!currentUser,
   });
 
+  const { data: posts = [] } = useQuery({
+    queryKey: ['community-posts'],
+    queryFn: () => base44.entities.CommunityPost.list('-created_date', 1000),
+    staleTime: 60000,
+    enabled: !!currentUser,
+  });
+
   const { data: userMemberships = [], isLoading: membershipsLoading, refetch: refetchMemberships } = useQuery({
     queryKey: ['user-communities', currentUser?.id],
     queryFn: () => base44.entities.UserCommunity.filter({ user_id: currentUser.id }),
