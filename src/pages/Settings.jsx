@@ -25,6 +25,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 import CitySelector from '@/components/common/CitySelector';
+import NotificationSettings from '@/components/settings/NotificationSettings';
 
 const INTERESTS = [
   "Torah & Learning", "Sports", "Music", "Art", "Tech", 
