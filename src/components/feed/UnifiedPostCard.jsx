@@ -305,20 +305,14 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             </button>
           )}
 
-          {/* Event: RSVP */}
+          {/* Event: Show details */}
           {post.type === 'event' && (
             <button
-              onClick={handleRSVP}
-              disabled={loadingRSVP}
-              className={`h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 transition-colors ${
-                isRSVPed
-                  ? 'bg-green-50 text-green-700 border border-green-200'
-                  : 'text-white'
-              }`}
-              style={!isRSVPed ? { background: '#2563EB' } : {}}
+              onClick={() => setShowEventDetails(!showEventDetails)}
+              className="h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
             >
               <Users className="w-3.5 h-3.5" />
-              {loadingRSVP ? '…' : isRSVPed ? `Going (${rsvpCount})` : 'RSVP'}
+              {showEventDetails ? 'Hide' : 'RSVP'}
             </button>
           )}
 
