@@ -523,7 +523,7 @@ function InterestGroupCard({ group, isMember, isPending, onJoin, onLeave, onView
 }
 
 /* ─── Discover Tab ─── */
-function DiscoverTab({ search, setSearch, groups, membershipSet, loading, onJoin, onLeave, onView }) {
+function DiscoverTab({ search, setSearch, groups, membershipSet, pendingRequestSet, loading, onJoin, onLeave, onView }) {
   const filtered = useMemo(() => {
     if (!search.trim()) return groups;
     const q = search.toLowerCase();
