@@ -390,7 +390,7 @@ export default function Communities() {
           </div>
           </div>
 
-      <CreateGroupModal
+          <CreateGroupModal
         open={showCreateGroup}
         onOpenChange={setShowCreateGroup}
         currentUser={currentUser}
