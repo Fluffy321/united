@@ -515,7 +515,6 @@ export default function MitzvahCircle({ isActive = true }) {
                 )}
               </div>
             </div>
-
           </div>
 
           {/* Your Mitzvah Streak Section */}
