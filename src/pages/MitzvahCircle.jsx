@@ -469,7 +469,14 @@ export default function MitzvahCircle({ isActive = true }) {
               Post a Request
             </button>
           </div>
-        </div>
+          </div>
+        )}
+
+        {/* Tab: My Mitzvah Log */}
+        {activeTab === 'log' && <MyMitzvahLogTab currentUser={currentUser} />}
+
+        {/* Tab: Completed Mitzvahs */}
+        {activeTab === 'completed' && <CompletedMitzvahs currentUser={currentUser} />}
       </div>
 
         {/* Modals */}
