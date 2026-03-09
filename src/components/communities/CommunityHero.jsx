@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, CheckCircle2, Star, Users, Calendar, HandHeart } from 'lucide-react';
 import CommunityLogo from './CommunityLogo';
+import InviteLinkButton from './InviteLinkButton';
 
 export default function CommunityHero({ community, isFollowing, isAdmin, onBack, onFollow, onClaim, eventCount, mitzvahCount }) {
   const memberCount = community.follower_count || 0;
