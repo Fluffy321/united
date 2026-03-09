@@ -573,6 +573,8 @@ function DiscoverTab({ search, setSearch, groups, allCommunities, membershipSet,
   };
 
   const isCommunity = (id) => id === 'schools' || id === 'shuls';
+  const PREVIEW_COUNT = 3;
+  const toggleExpand = (id) => setExpandedCategories(prev => ({ ...prev, [id]: !prev[id] }));
 
   // Search mode
   const searchResults = useMemo(() => {
