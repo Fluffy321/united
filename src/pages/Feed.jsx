@@ -22,6 +22,7 @@ import QuickPostPrompt from '@/components/feed/QuickPostPrompt';
 import QuickPostModal from '@/components/feed/QuickPostModal';
 import PostTypeSelector from '@/components/feed/PostTypeSelector';
 import FeedCategoryTabs from '@/components/feed/FeedCategoryTabs';
+import { useQueryClient } from '@tanstack/react-query';
 import NearbyHelpBanner from '@/components/feed/NearbyHelpBanner';
 import CommunityResponseScore from '@/components/feed/CommunityResponseScore';
 import LiveHelpBoard from '@/components/feed/LiveHelpBoard';
