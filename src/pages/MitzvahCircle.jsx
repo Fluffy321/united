@@ -348,128 +348,129 @@ export default function MitzvahCircle({ isActive = true }) {
             <div className="max-w-2xl mx-auto space-y-5">
               {/* Quick Actions */}
               <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
-              >
-                <Plus className="w-5 h-5 text-slate-700" />
-                <span className="text-[12px] font-semibold text-slate-700 text-center">Request Help</span>
-              </button>
-              <button
-                onClick={() => setShowFilterDrawer(true)}
-                className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
-              >
-                <HandHeart className="w-5 h-5 text-slate-700" />
-                <span className="text-[12px] font-semibold text-slate-700 text-center">Offer Help</span>
-              </button>
-              <button
-                onClick={() => setShowAlertModal(true)}
-                className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
-              >
-                <AlertCircle className="w-5 h-5 text-slate-700" />
-                <span className="text-[12px] font-semibold text-slate-700 text-center">Alert</span>
-              </button>
-            </div>
-
-          {/* Your Daily Mitzvah Section */}
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-[16px] border border-purple-200 p-4">
-            <h3 className="text-[14px] font-bold text-slate-900 mb-3">Your Daily Mitzvah</h3>
-            
-            <div className="bg-white rounded-[12px] p-3.5 mb-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[12px] font-semibold text-slate-700">Current Streak</span>
-                <span className="text-[20px] font-bold text-purple-600">{userStreak?.current_streak || 0}</span>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                >
+                  <Plus className="w-5 h-5 text-slate-700" />
+                  <span className="text-[12px] font-semibold text-slate-700 text-center">Request Help</span>
+                </button>
+                <button
+                  onClick={() => setShowFilterDrawer(true)}
+                  className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                >
+                  <HandHeart className="w-5 h-5 text-slate-700" />
+                  <span className="text-[12px] font-semibold text-slate-700 text-center">Offer Help</span>
+                </button>
+                <button
+                  onClick={() => setShowAlertModal(true)}
+                  className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                >
+                  <AlertCircle className="w-5 h-5 text-slate-700" />
+                  <span className="text-[12px] font-semibold text-slate-700 text-center">Alert</span>
+                </button>
               </div>
-              <p className="text-[11px] text-slate-500">
-                {Math.max(0, 2 - (todayMitzvahCount || 0))} more mitzvah{Math.max(0, 2 - (todayMitzvahCount || 0)) !== 1 ? 's' : ''} to keep streak
-              </p>
-            </div>
 
-            <button
-              onClick={() => setShowLogMitzvah(true)}
-              className="w-full py-2.5 px-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-[12px] font-semibold transition-colors"
-            >
-              Log Mitzvah
-            </button>
-          </div>
-
-          {/* Help Requests Section */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h2 className="text-[16px] font-bold text-slate-900">Help Requests</h2>
-                <p className="text-[12px] text-slate-500 mt-0.5">{requests.length} {requests.length === 1 ? 'person needs' : 'people need'} help</p>
-              </div>
-              <button
-                onClick={() => setShowFilterDrawer(true)}
-                className={`p-2 rounded-full transition-colors ${
-                  filters.scope !== 'all' || filters.category !== 'All'
-                    ? 'bg-[#0F172A] text-white'
-                    : 'bg-slate-100 text-slate-600'
-                }`}
-              >
-                <SlidersHorizontal size={16} />
-              </button>
-            </div>
-
-            {isLoading ? (
-              <div className="space-y-3">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-[16px] border border-[#EAECF0] p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
-                      <div className="flex-1 space-y-2">
-                        <div className="skeleton h-3.5 w-40 rounded" />
-                        <div className="skeleton h-3 w-full rounded" />
-                      </div>
-                    </div>
+              {/* Your Daily Mitzvah Section */}
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-[16px] border border-purple-200 p-4">
+                <h3 className="text-[14px] font-bold text-slate-900 mb-3">Your Daily Mitzvah</h3>
+                
+                <div className="bg-white rounded-[12px] p-3.5 mb-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[12px] font-semibold text-slate-700">Current Streak</span>
+                    <span className="text-[20px] font-bold text-purple-600">{userStreak?.current_streak || 0}</span>
                   </div>
-                ))}
-              </div>
-            ) : requests.length === 0 ? (
-              <div className="text-center py-10 bg-white rounded-[16px] border border-[#EAECF0]">
-                <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
-                  <HandHeart className="w-6 h-6 text-[#98A2B3]" />
+                  <p className="text-[11px] text-slate-500">
+                    {Math.max(0, 2 - (todayMitzvahCount || 0))} more mitzvah{Math.max(0, 2 - (todayMitzvahCount || 0)) !== 1 ? 's' : ''} to keep streak
+                  </p>
                 </div>
-                <p className="text-[14px] font-semibold text-[#0F1C2E]">No open requests</p>
-                <p className="text-[12px] text-[#98A2B3] mt-1">Check back soon</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {requests.map((request) => (
-                  <div key={request.id} className="bg-white rounded-[16px] border border-[#EAECF0] p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedRequest(request)}>
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <div className="flex-1">
-                        <p className="text-[14px] font-semibold text-slate-900">{request.title}</p>
-                        <p className="text-[12px] text-slate-500 mt-1 line-clamp-2">{request.description}</p>
-                      </div>
-                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 flex-shrink-0">
-                        {request.category}
-                      </span>
-                    </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleClaim(e, request); }}
-                      disabled={claimMutation.isPending}
-                      className="w-full mt-3 py-2 px-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-[12px] font-semibold transition-colors disabled:opacity-50"
-                    >
-                      {claimMutation.isPending ? 'Joining...' : "I'll Help"}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
-          {/* Request Help CTA */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-[16px] border border-blue-200 p-4 text-center">
-            <p className="text-[13px] text-slate-700 mb-3">Need help with something?</p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="w-full py-2.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold transition-colors"
-            >
-              Post a Request
-            </button>
-          </div>
+                <button
+                  onClick={() => setShowLogMitzvah(true)}
+                  className="w-full py-2.5 px-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-[12px] font-semibold transition-colors"
+                >
+                  Log Mitzvah
+                </button>
+              </div>
+
+              {/* Help Requests Section */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h2 className="text-[16px] font-bold text-slate-900">Help Requests</h2>
+                    <p className="text-[12px] text-slate-500 mt-0.5">{requests.length} {requests.length === 1 ? 'person needs' : 'people need'} help</p>
+                  </div>
+                  <button
+                    onClick={() => setShowFilterDrawer(true)}
+                    className={`p-2 rounded-full transition-colors ${
+                      filters.scope !== 'all' || filters.category !== 'All'
+                        ? 'bg-[#0F172A] text-white'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    <SlidersHorizontal size={16} />
+                  </button>
+                </div>
+
+                {isLoading ? (
+                  <div className="space-y-3">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="bg-white rounded-[16px] border border-[#EAECF0] p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
+                          <div className="flex-1 space-y-2">
+                            <div className="skeleton h-3.5 w-40 rounded" />
+                            <div className="skeleton h-3 w-full rounded" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : requests.length === 0 ? (
+                  <div className="text-center py-10 bg-white rounded-[16px] border border-[#EAECF0]">
+                    <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
+                      <HandHeart className="w-6 h-6 text-[#98A2B3]" />
+                    </div>
+                    <p className="text-[14px] font-semibold text-[#0F1C2E]">No open requests</p>
+                    <p className="text-[12px] text-[#98A2B3] mt-1">Check back soon</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {requests.map((request) => (
+                      <div key={request.id} className="bg-white rounded-[16px] border border-[#EAECF0] p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedRequest(request)}>
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div className="flex-1">
+                            <p className="text-[14px] font-semibold text-slate-900">{request.title}</p>
+                            <p className="text-[12px] text-slate-500 mt-1 line-clamp-2">{request.description}</p>
+                          </div>
+                          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 flex-shrink-0">
+                            {request.category}
+                          </span>
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleClaim(e, request); }}
+                          disabled={claimMutation.isPending}
+                          className="w-full mt-3 py-2 px-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-[12px] font-semibold transition-colors disabled:opacity-50"
+                        >
+                          {claimMutation.isPending ? 'Joining...' : "I'll Help"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Request Help CTA */}
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-[16px] border border-blue-200 p-4 text-center">
+                <p className="text-[13px] text-slate-700 mb-3">Need help with something?</p>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="w-full py-2.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold transition-colors"
+                >
+                  Post a Request
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Tab: My Mitzvah Log */}
@@ -477,7 +478,7 @@ export default function MitzvahCircle({ isActive = true }) {
 
           {/* Tab: Completed Mitzvahs */}
           {activeTab === 'completed' && <CompletedMitzvahs currentUser={currentUser} />}
-          </div>
+        </div>
 
           {/* Modals rendered at root level */}
           <CreateMitzvahModal
