@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock, MapPin, HandHeart, Users, ChevronRight, Megaphone, Pin } from 'lucide-react';
+import { Calendar, Clock, MapPin, HandHeart, Users, ChevronRight, Megaphone, Pin, UserPlus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const CATEGORY_COLORS = {
