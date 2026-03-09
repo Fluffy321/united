@@ -80,15 +80,33 @@ export default function CreateGroupModal({ open, onOpenChange, currentUser, onCr
               onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
             />
           </div>
-          <label className="flex items-center gap-2 text-[13px] text-[#374151] cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.is_private}
-              onChange={e => setForm(f => ({ ...f, is_private: e.target.checked }))}
-              className="rounded"
-            />
-            Private group (invite only)
-          </label>
+          <div className="space-y-1">
+            <label className="text-[12px] font-semibold text-[#64748b] uppercase tracking-wide">Privacy</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, is_private: false }))}
+                className={`flex flex-col items-start p-3 rounded-xl border-2 text-left transition-all ${
+                  !form.is_private ? 'border-[#2563EB] bg-blue-50' : 'border-[#e2e8f0] bg-white'
+                }`}
+              >
+                <span className="text-[18px] mb-1">🌍</span>
+                <span className="text-[13px] font-bold text-slate-800">Public</span>
+                <span className="text-[11px] text-slate-500 mt-0.5">Anyone can join instantly</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, is_private: true }))}
+                className={`flex flex-col items-start p-3 rounded-xl border-2 text-left transition-all ${
+                  form.is_private ? 'border-[#2563EB] bg-blue-50' : 'border-[#e2e8f0] bg-white'
+                }`}
+              >
+                <span className="text-[18px] mb-1">🔒</span>
+                <span className="text-[13px] font-bold text-slate-800">Private</span>
+                <span className="text-[11px] text-slate-500 mt-0.5">Requires approval to join</span>
+              </button>
+            </div>
+          </div>
           <button
             type="submit"
             disabled={loading}
