@@ -67,6 +67,12 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
     enabled: !!communityId
   });
 
+  const { data: members = [] } = useQuery({
+    queryKey: ['community-members', communityId],
+    queryFn: () => base44.entities.UserCommunity.filter({ community_id: communityId }, '-created_date', 100),
+    enabled: !!communityId
+  });
+
   const isFollowing = followRecord.length > 0;
   const isAdmin = currentUser?.role === 'admin';
 
