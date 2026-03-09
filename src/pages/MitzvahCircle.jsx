@@ -387,23 +387,26 @@ export default function MitzvahCircle({ isActive = true }) {
 
   return (
     <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
-        {/* Compact Header */}
+        {/* Header */}
         <div className="bg-white sticky top-0 z-20 flex-shrink-0" style={{ borderBottom: '1px solid #E8ECF4' }}>
-          <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between" style={{ pointerEvents: 'auto', zIndex: 20, position: 'relative' }}>
-            <span className="font-bold text-[#0F172A] text-[16px] tracking-[-0.01em]">Mitzvah Circle</span>
-            <div className="flex items-center gap-1" style={{ pointerEvents: 'auto', zIndex: 20, position: 'relative' }}>
-              <button
-              onClick={() => setMainTab('circle')}
-              className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'circle' ? 'bg-[#0F172A] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}>
+          <div className="max-w-2xl mx-auto px-4 pt-4 pb-0">
+            <h1 className="text-[20px] font-bold text-slate-900 mb-3">Mitzvah Circle</h1>
 
-                <HandHeart className="w-3.5 h-3.5 inline mr-1" />Requests
-              </button>
-              <button
-               onClick={() => setMainTab('chesed')}
-               className={`h-8 px-3 text-[12px] font-semibold rounded-full transition-colors ${mainTab === 'chesed' ? 'bg-[#2563EB] text-white' : 'text-[#6B7280] hover:bg-[#F5F7FB]'}`}>
-
-                 <Clock className="w-3.5 h-3.5 inline mr-1" />My Hours
-               </button>
+            {/* Help Requests Section Nav */}
+            <div className="flex gap-0 mb-4 border-b border-slate-100">
+              {['open', 'offer', 'request'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setHelpSection(tab)}
+                  className={`py-2.5 text-[13px] font-semibold transition-colors border-b-2 ${
+                    helpSection === tab
+                      ? 'text-[#2563EB] border-[#2563EB]'
+                      : 'text-slate-500 border-transparent'
+                  }`}
+                >
+                  {tab === 'open' ? 'Open Requests' : tab === 'offer' ? 'Offer Help' : 'Request Help'}
+                </button>
+              ))}
             </div>
           </div>
         </div>
