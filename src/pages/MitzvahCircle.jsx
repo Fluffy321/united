@@ -207,41 +207,40 @@ export default function MitzvahCircle({ isActive = true }) {
     }
   });
 
-  const completeMutation = useMutation({
-    mutationFn: async (request) => {
-      // Update request status
-      await base44.entities.MitzvahRequest.update(request.id, {
-        status: 'Completed',
-        completed_at: new Date().toISOString()
+  const { data: userStreak, refetch: refetchStreak } = useQuery({
+    queryKey: ['user-streak', currentUser?.id],
+    queryFn: async () => {
+      const existing = await base44.entities.UserStreak.filter({ user_id: currentUser.id });
+      if (existing.length > 0) return existing[0];
+      return base44.entities.UserStreak.create({
+        user_id: currentUser.id,
+        current_streak: 0,
+        longest_streak: 0,
+        last_activity_date: format(new Date(), 'yyyy-MM-dd'),
+        badge_level: 'none'
       });
-
-      // Award points to helper
-      await base44.entities.MitzvahAction.create({
-        user_id: request.claimed_by_user_id,
-        user_name: request.claimed_by_name,
-        request_id: request.id,
-        request_title: request.title,
-        points_awarded: 10
-      });
-
-      // Update total points
-      const existingPoints = await base44.entities.MitzvahPoints.filter({ user_id: request.claimed_by_user_id });
-      if (existingPoints.length > 0) {
-        await base44.entities.MitzvahPoints.update(existingPoints[0].id, {
-          total_points: existingPoints[0].total_points + 10
-        });
-      } else {
-        await base44.entities.MitzvahPoints.create({
-          user_id: request.claimed_by_user_id,
-          user_name: request.claimed_by_name,
-          total_points: 10
-        });
-      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-      toast.success('Mitzvah completed! ✨');
-    }
+    enabled: !!currentUser,
+    staleTime: 1800000,
+    gcTime: 2400000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 0
+  });
+
+  const { data: todayMitzvahCount = 0 } = useQuery({
+    queryKey: ['today-mitzvah-count', currentUser?.id],
+    queryFn: async () => {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const logs = await base44.entities.MitzvahLog.filter({ user_id: currentUser.id, date: today });
+      return logs.length;
+    },
+    enabled: !!currentUser,
+    staleTime: 600000,
+    gcTime: 600000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1
   });
 
   const handleClaim = (e, request) => {
@@ -249,8 +248,25 @@ export default function MitzvahCircle({ isActive = true }) {
     claimMutation.mutate(request);
   };
 
-  const handleComplete = (request) => {
-    completeMutation.mutate(request);
+  const handleLogMitzvah = async ({ description, category, reflection }) => {
+    try {
+      await base44.entities.MitzvahLog.create({
+        user_id: currentUser.id,
+        user_name: currentUser.display_name || currentUser.full_name,
+        description,
+        category,
+        reflection,
+        date: format(new Date(), 'yyyy-MM-dd')
+      });
+
+      await refetchStreak();
+      queryClient.invalidateQueries({ queryKey: ['today-mitzvah-count'] });
+      queryClient.invalidateQueries({ queryKey: ['user-streak'] });
+      toast.success('Mitzvah logged! 💜');
+      setShowLogMitzvah(false);
+    } catch (error) {
+      toast.error('Failed to log mitzvah');
+    }
   };
 
   const handleMessage = async (request) => {
