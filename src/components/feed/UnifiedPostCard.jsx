@@ -258,17 +258,12 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       </div>
 
       {/* Actions footer */}
-      <div className="flex items-center px-3 py-2 mt-1 border-t border-[#F2F4F7] bg-white rounded-b-[14px]">
-        {/* Left: Like + Comment */}
-        <div className="flex items-center gap-0.5">
-          <button
-            onClick={() => onLike(post.id)}
-            className={`flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium transition-colors ${liked ? 'text-red-500 bg-red-50' : 'text-[#64748B] hover:bg-slate-100'}`}
-          >
-            <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
-            <span>{post.likes_count || 0}</span>
-          </button>
+      <div className="px-3 py-2 mt-1 border-t border-[#F2F4F7] bg-white rounded-b-[14px] space-y-2">
+        {/* Reaction bar */}
+        <ReactionBar postId={post.id} currentUser={currentUser} />
 
+        {/* Comment button */}
+        <div className="flex items-center gap-0.5">
           <button
             onClick={() => setCommentsOpen(true)}
             className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-[#64748B] hover:bg-slate-100 transition-colors"
