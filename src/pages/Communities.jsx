@@ -6,9 +6,9 @@ import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
 import CommunityLogo from '@/components/communities/CommunityLogo';
 import GroupCard from '@/components/groups/GroupCard';
-import GroupDetailSheet from '@/components/groups/GroupDetailSheet';
 import CreateGroupModal from '@/components/groups/CreateGroupModal';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
+import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import { toast } from 'sonner';
 
 const TABS = ['My Communities', 'Schools', 'Shuls', 'Discover'];
