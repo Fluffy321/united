@@ -48,6 +48,9 @@ export default function Communities() {
       base44.entities.GroupMember.filter({ user_id: user.id }).then(memberships => {
         setMembershipSet(new Set(memberships.map(m => m.group_id)));
       });
+      base44.entities.GroupJoinRequest.filter({ user_id: user.id, status: 'pending' }).then(reqs => {
+        setPendingRequestSet(new Set(reqs.map(r => r.group_id)));
+      });
     });
   }, []);
 
