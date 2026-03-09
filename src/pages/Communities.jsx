@@ -9,6 +9,7 @@ import GroupCard from '@/components/groups/GroupCard';
 import CreateGroupModal from '@/components/groups/CreateGroupModal';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
 import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
+import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import { toast } from 'sonner';
 
 const TABS = ['My Communities', 'Schools', 'Shuls', 'Discover'];
