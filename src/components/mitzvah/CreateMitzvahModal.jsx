@@ -50,6 +50,7 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
     setIsSubmitting(true);
 
     try {
+      const selectedCommunity = userCommunities.find(c => c.id === communityId);
       const requestData = {
         title: title.trim(),
         description: description.trim(),
@@ -58,6 +59,8 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
         created_by_user_id: currentUser.id,
         created_by_name: isAnonymous ? 'Anonymous' : currentUser.display_name,
         is_anonymous: isAnonymous,
+        community_id: communityId || null,
+        community_name: selectedCommunity?.name || null,
         locationLabel: locationLabel || currentUser.cityPreset || currentUser.cityCustom || 'Five Towns'
       };
 
