@@ -550,6 +550,14 @@ export default function Feed() {
           </div>
         )}
 
+        {/* Community Feed — posts from joined groups (primary content) */}
+        {activeCategory === 'all' && (
+          <CommunityActivitySection
+            currentUser={currentUser}
+            onNavigateToCommunities={() => navigate(createPageUrl('Communities'))}
+          />
+        )}
+
         {/* Nearby Help Banner */}
         {activeCategory === 'all' && (
           <NearbyHelpBanner currentUser={currentUser} onClaim={handleHelpMitzvah} />
