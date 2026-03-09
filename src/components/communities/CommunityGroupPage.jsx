@@ -22,7 +22,7 @@ const TABS = [
 ];
 
 export default function CommunityGroupPage({ group, currentUser, isMember, isPendingRequest, onJoin, onLeave, onBack, onMemberApproved }) {
-  const [tab, setTab] = useState('posts');
+  const [tab, setTab] = useState('events');
   const [posts, setPosts] = useState([]);
   const [members, setMembers] = useState([]);
   const [helpRequests, setHelpRequests] = useState([]);
