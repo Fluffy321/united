@@ -174,7 +174,7 @@ export default function Communities() {
       toast.success('Community created!');
       setCreateForm({ name: '', description: '', category: 'General', location: '' });
       refetchGroups();
-      setActiveTab('Groups');
+      setActiveTab('Discover');
     } catch {
       toast.error('Something went wrong');
     }
