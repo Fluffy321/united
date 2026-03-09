@@ -539,41 +539,7 @@ export default function Feed() {
           </>
         )}
 
-        {/* Community Help Center Hero — compact */}
-        {activeCategory === 'all' && (
-          <div
-            className="rounded-2xl mb-4 px-4 py-3 cursor-pointer active:scale-[0.99] transition-all flex items-center justify-between gap-3"
-            style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #152d6e 100%)', boxShadow: '0 4px 16px rgba(30,58,138,0.2)' }}
-            onClick={() => setShowRequestHelpModal(true)}
-          >
-            <div className="flex-1 min-w-0">
-              <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-0.5">Community Help Center</p>
-              <div className="flex items-center gap-3">
-                {openMitzvahRequests.filter(r => r.urgency === 'HIGH').length > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
-                    <span className="text-white font-semibold text-[13px]">
-                      {openMitzvahRequests.filter(r => r.urgency === 'HIGH').length} urgent
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span className="text-white/80 font-medium text-[13px]">
-                    {openMitzvahRequests.length} open requests
-                  </span>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowRequestHelpModal(true); }}
-              className="flex-shrink-0 px-4 py-2 rounded-xl font-bold text-[13px] active:scale-[0.98] transition-all"
-              style={{ background: 'var(--primary)', color: '#fff' }}
-            >
-              Request Help
-            </button>
-          </div>
-        )}
+
 
 
 
