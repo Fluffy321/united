@@ -279,15 +279,12 @@ export default function Communities() {
             <DiscoverTab
               search={search}
               setSearch={setSearch}
-              typeFilter={typeFilter}
-              setTypeFilter={setTypeFilter}
-              featuredCommunities={featuredCommunities}
-              suggestedCommunities={suggestedCommunities}
-              joinedIds={joinedIds}
-              joiningId={joiningId}
+              groups={groups}
+              membershipSet={membershipSet}
               loading={communitiesLoading}
-              onJoin={handleJoin}
-              onView={setSelectedCommunityId}
+              onJoin={handleGroupJoin}
+              onLeave={handleGroupLeave}
+              onView={(g) => { setSelectedGroup(g); setShowGroupDetail(true); }}
             />
           )}
 
