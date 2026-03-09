@@ -34,6 +34,7 @@ export default function Communities() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [showGroupDetail, setShowGroupDetail] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showCreateCommunity, setShowCreateCommunity] = useState(false);
   const [search, setSearch] = useState('');
   const [joiningId, setJoiningId] = useState(null);
   const [typeFilter, setTypeFilter] = useState('All');
