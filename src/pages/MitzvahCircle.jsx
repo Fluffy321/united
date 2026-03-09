@@ -413,55 +413,14 @@ export default function MitzvahCircle({ isActive = true }) {
 
 
 
-        {/* Tab content container — stable, both tabs share same shell + header */}
+        {/* Content Container */}
         <div style={{ position: 'relative', flex: 1, overflow: 'hidden', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
-          {/* Shared header — ALWAYS visible, never changes height, fixed 48px */}
-          <MitzvahTabHeader
-          activeTab={mainTab === 'circle' ? activeTab : null}
-          filters={filters}
-          onFilterClick={() => setShowFilterDrawer(true)}
-          rightActionNode={
-          mainTab === 'circle' ?
-          <button
-            onClick={() => setShowFilterDrawer(true)}
-            style={{
-              width: 34, height: 34, borderRadius: 999,
-              background: filters.scope !== 'all' || filters.category !== 'All' ? '#0F172A' : '#F1F5F9',
-              border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-            }}>
-
-                  <SlidersHorizontal size={16} color={filters.scope !== 'all' || filters.category !== 'All' ? 'white' : '#374151'} />
-                </button> :
-
-          // Invisible placeholder same size as filter button for My Hours tab
-          <div style={{ width: 34, height: 34, visibility: 'hidden' }} />
-
-          } />
-
-
-          {/* ChesedHours tab — mounted always, fades in/out */}
+          {/* Help Requests Content */}
           <div style={{
-          position: 'absolute', top: 48, left: 0, right: 0, bottom: 0, zIndex: mainTab === 'chesed' ? 10 : 0,
-          opacity: mainTab === 'chesed' ? 1 : 0,
-          visibility: mainTab === 'chesed' ? 'visible' : 'hidden',
-          transition: 'opacity 160ms ease, visibility 160ms ease',
-          pointerEvents: mainTab === 'chesed' ? 'auto' : 'none',
-          overflow: 'auto'
-        }}>
-            <div style={{ position: 'relative' }}>
-              <ChesedHoursTab currentUser={currentUser} />
-            </div>
-          </div>
-
-          {/* Mitzvah Circle tab — mounted always, fades in/out */}
-          <div style={{
-          position: 'absolute', top: 48, left: 0, right: 0, bottom: 0, zIndex: mainTab === 'circle' ? 10 : 0,
-          opacity: mainTab === 'circle' ? 1 : 0,
-          visibility: mainTab === 'circle' ? 'visible' : 'hidden',
-          transition: 'opacity 160ms ease, visibility 160ms ease',
-          pointerEvents: mainTab === 'circle' ? 'auto' : 'none',
-          display: 'flex', flexDirection: 'column', overflow: 'hidden'
-        }}>
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            opacity: 1, visibility: 'visible', pointerEvents: 'auto',
+            display: 'flex', flexDirection: 'column', overflow: 'hidden'
+          }}>
             {/* Map panel — ALWAYS mounted, height driven by mapH state */}
             <div style={{
             position: 'absolute', top: 0, left: 0, right: 0,
