@@ -126,16 +126,22 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
                 </div>
               </div>
             </div>
-            <button
-              onClick={() => isMember ? onLeave(group) : onJoin(group)}
-              className="flex-shrink-0 px-4 py-2 rounded-full font-bold text-[13px] transition-all active:scale-95"
-              style={isMember
-                ? { background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.4)' }
-                : { background: 'white', color: '#2563EB' }
-              }
-            >
-              {isMember ? '✓ Joined' : group.is_private ? '🔒 Request' : '+ Join'}
-            </button>
+            {isPendingRequest && !isMember ? (
+              <div className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px] font-bold" style={{ background: 'rgba(251,191,36,0.2)', color: '#FCD34D', border: '1px solid rgba(251,191,36,0.3)' }}>
+                <Clock className="w-3.5 h-3.5" /> Pending
+              </div>
+            ) : (
+              <button
+                onClick={() => isMember ? onLeave(group) : onJoin(group)}
+                className="flex-shrink-0 px-4 py-2 rounded-full font-bold text-[13px] transition-all active:scale-95"
+                style={isMember
+                  ? { background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.4)' }
+                  : { background: 'white', color: '#2563EB' }
+                }
+              >
+                {isMember ? '✓ Joined' : group.is_private ? '🔒 Request' : '+ Join'}
+              </button>
+            )}
           </div>
 
           {group.description && (
