@@ -735,6 +735,29 @@ function DiscoverTab({ search, setSearch, groups, allCommunities, trendingCommun
       ) : (
          /* Category Sections - always open, show 3 then "see more" */
          <div className="space-y-6">
+           {/* Featured Shuls - Five Towns */}
+           {featuredShuls.length > 0 && (
+             <section>
+               <div className="flex items-center gap-2 mb-3">
+                 <span className="text-xl">⭐</span>
+                 <h2 className="text-[16px] font-bold text-slate-900 flex-1">Featured Shuls</h2>
+                 <span className="text-[12px] text-slate-400 font-medium">{featuredShuls.length}</span>
+               </div>
+               <div className="space-y-2.5">
+                 {featuredShuls.map(c => (
+                   <ShulCard
+                     key={c.id}
+                     community={c}
+                     joined={joinedIds.has(c.id)}
+                     loading={joiningId === c.id}
+                     onJoin={onJoinCommunity}
+                     onView={onViewCommunity}
+                   />
+                 ))}
+               </div>
+             </section>
+           )}
+
            {/* Trending Communities */}
            {trendingCommunities.length > 0 && (
              <section>
