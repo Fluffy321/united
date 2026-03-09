@@ -1173,22 +1173,11 @@ function SchoolCard({ community, joined, loading, onJoin, onView }) {
         }
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <p className="font-bold text-slate-900 text-[15px] truncate">{community.name}</p>
-          <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" title="Verified School" />
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 text-[12px] text-slate-500 font-medium">
-            <Users className="w-3.5 h-3.5" />
-            {community.follower_count || 0} student members
-          </span>
-          {community.neighborhood && (
-            <span className="flex items-center gap-0.5 text-[11px] text-slate-400">
-              <MapPin className="w-3 h-3" />
-              {community.neighborhood}
-            </span>
-          )}
-        </div>
+        <p className="font-bold text-slate-900 text-[15px] truncate mb-1">{community.name}</p>
+        <span className="flex items-center gap-1 text-[13px] text-slate-500 font-medium">
+          <Users className="w-4 h-4" />
+          {community.follower_count || 0} student members
+        </span>
       </div>
       <div className="flex-shrink-0" onClick={e => { e.stopPropagation(); onJoin(e, community); }}>
         <button
