@@ -33,6 +33,7 @@ import NotificationBell from '@/components/notifications/NotificationBell';
 import RequestHelpModal from '@/components/feed/RequestHelpModal';
 import CommunityUpdatesSection from '@/components/feed/CommunityUpdatesSection';
 import CommunityActivitySection from '@/components/feed/CommunityActivitySection';
+import JoinCommunitiesBanner from '@/components/feed/JoinCommunitiesBanner';
 import { toast } from 'sonner';
 import { format, isToday, parseISO } from 'date-fns';
 
