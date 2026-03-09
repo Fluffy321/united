@@ -165,16 +165,6 @@ export default function Feed() {
     enabled: !!currentUser
   });
 
-  const { data: userGroupCount = 0 } = useQuery({
-    queryKey: ['user-group-count', currentUser?.id],
-    queryFn: async () => {
-      const memberships = await base44.entities.GroupMember.filter({ user_id: currentUser.id });
-      return memberships.length;
-    },
-    enabled: !!currentUser && currentUser.id !== 'guest',
-    staleTime: 300000,
-  });
-
   const { data: userCommunities = [] } = useQuery({
     queryKey: ['user-communities', currentUser?.id],
     queryFn: async () => {
@@ -182,27 +172,20 @@ export default function Feed() {
       return memberships.map(m => m.community_id);
     },
     enabled: !!currentUser && currentUser.id !== 'guest',
-    staleTime: 300000,
-  });
-
-  const { data: trendingCommunities = [] } = useQuery({
-    queryKey: ['trending-communities'],
-    queryFn: async () => {
-      const communities = await base44.entities.Community.list('-follower_count', 6);
-      return communities;
-    },
     staleTime: 600000,
+    retry: 0
   });
 
   const { data: communityPosts = [] } = useQuery({
     queryKey: ['community-posts', userCommunities],
     queryFn: async () => {
       if (userCommunities.length === 0) return [];
-      const allPosts = await base44.entities.CommunityPost.list('-created_date', 100);
+      const allPosts = await base44.entities.CommunityPost.list('-created_date', 50);
       return allPosts.filter(p => userCommunities.includes(p.community_id));
     },
     enabled: !!currentUser && userCommunities.length > 0,
-    staleTime: 300000,
+    staleTime: 600000,
+    retry: 0
   });
 
   const { data: todayEvents = [] } = useQuery({
