@@ -557,19 +557,19 @@ function DiscoverTab({ search, setSearch, groups, allCommunities, membershipSet,
 
   const schools = useMemo(() => allCommunities.filter(c => c.type === 'School' || c.type === 'Yeshiva' || c.type === 'Seminary'), [allCommunities]);
   const shuls = useMemo(() => allCommunities.filter(c => c.type === 'Shul'), [allCommunities]);
-  const locationGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'location'), [groups]);
+  const citiesGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'cities'), [groups]);
+  const travelersGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'travelers'), [groups]);
+  const interestGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'interest'), [groups]);
   const helpGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'help'), [groups]);
-  const eventGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'events'), [groups]);
-  const interestGroups = useMemo(() => groups.filter(g => !['location','help','events'].includes(categorizeGroup(g))), [groups]);
 
   const getCategoryItems = (id) => {
     switch(id) {
-      case 'schools':  return schools;
-      case 'shuls':    return shuls;
-      case 'location': return locationGroups;
-      case 'interest': return interestGroups;
-      case 'help':     return helpGroups;
-      case 'events':   return eventGroups;
+      case 'schools':    return schools;
+      case 'shuls':      return shuls;
+      case 'cities':     return citiesGroups;
+      case 'travelers':  return travelersGroups;
+      case 'interest':   return interestGroups;
+      case 'help':       return helpGroups;
       default: return [];
     }
   };
