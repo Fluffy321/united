@@ -422,7 +422,7 @@ export default function MitzvahCircle({ isActive = true }) {
             display: 'flex', flexDirection: 'column', overflow: 'hidden'
           }}>
             {/* Help section content */}
-            <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 120px', WebkitOverflowScrolling: 'touch' }}>
+            <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 180px', WebkitOverflowScrolling: 'touch' }}>
               <div className="max-w-2xl mx-auto space-y-4">
                 {/* Open Requests Tab */}
                 {helpSection === 'open' && (
