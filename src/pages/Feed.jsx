@@ -195,35 +195,35 @@ export default function Feed() {
       const today = format(new Date(), 'yyyy-MM-dd');
       return events.filter(e => e.event_date === today);
     },
-    staleTime: 600000,
-    gcTime: 600000,
+    staleTime: 900000,
+    gcTime: 1200000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    retry: 1,
+    retry: 0,
     enabled: !!currentUser
   });
 
   const { data: recentlyCompleted = [] } = useQuery({
     queryKey: ['recently-completed'],
     queryFn: () => base44.entities.MitzvahRequest.filter({ status: 'completed' }, '-updated_date', 3),
-    staleTime: 600000,
-    gcTime: 600000,
+    staleTime: 900000,
+    gcTime: 1200000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    retry: 1,
+    retry: 0,
     enabled: !!currentUser
   });
 
   const { data: openMitzvahRequests = [] } = useQuery({
     queryKey: ['open-mitzvah'],
     queryFn: async () => {
-      return base44.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 50);
+      return base44.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 30);
     },
-    staleTime: 600000,
-    gcTime: 600000,
+    staleTime: 900000,
+    gcTime: 1200000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    retry: 1,
+    retry: 0,
     enabled: !!currentUser
   });
 
