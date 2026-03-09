@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Users, MapPin, Send, Calendar, HandHeart, UserCheck, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import GroupEventsTab from '@/components/communities/GroupEventsTab';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
-import GroupEventsTab from '@/components/groups/GroupEventsTab';
 
 const CATEGORY_EMOJIS = {
   'Torah Learning': '📚', Shabbat: '🕯️', Chesed: '🤝', Events: '🎉',
@@ -192,9 +192,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, onJoi
 
             {/* Events Tab */}
             {tab === 'events' && (
-              <div className="p-4">
-                <EmptyState emoji="📅" text="No events yet" sub="Events for this community will appear here" />
-              </div>
+              <GroupEventsTab group={group} currentUser={currentUser} isMember={isMember} />
             )}
 
             {/* Help Tab */}
