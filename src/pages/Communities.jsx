@@ -635,7 +635,7 @@ function categorizeGroup(group) {
 }
 
 /* ─── Discover Tab ─── */
-function DiscoverTab({ search, setSearch, groups, allCommunities, membershipSet, pendingRequestSet, joinedIds, joiningId, loading, onJoinGroup, onLeaveGroup, onViewGroup, onJoinCommunity, onViewCommunity }) {
+function DiscoverTab({ search, setSearch, groups, allCommunities, trendingCommunities, membershipSet, pendingRequestSet, joinedIds, joiningId, loading, onJoinGroup, onLeaveGroup, onViewGroup, onJoinCommunity, onViewCommunity }) {
   const [expandedCategories, setExpandedCategories] = useState({});
 
   const schools = useMemo(() => allCommunities.filter(c => c.type === 'School' || c.type === 'Yeshiva' || c.type === 'Seminary'), [allCommunities]);
