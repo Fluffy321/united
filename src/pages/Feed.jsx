@@ -21,27 +21,6 @@ import NotificationBell from '@/components/notifications/NotificationBell';
 import SearchModal from '@/components/feed/SearchModal';
 import { toast } from 'sonner';
 
-function CommunityPostItemPreview({ post, currentUser }) {
-  const typeEmoji = {
-    post: '💬',
-    announcement: '📢',
-    event: '🎉',
-    discussion: '💭'
-  };
-
-  return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-3.5 active:scale-[0.99] transition-transform">
-      <div className="flex items-start gap-3">
-        <div className="text-lg flex-shrink-0">{typeEmoji[post.type] || '📝'}</div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-slate-900 text-[13px]">{post.title || 'Post'}</p>
-          <p className="text-[12px] text-slate-500 line-clamp-1 mt-0.5">{post.body}</p>
-          <p className="text-[11px] text-slate-400 mt-1.5">{post.author_name}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
 import { format, isToday, parseISO } from 'date-fns';
 
 
