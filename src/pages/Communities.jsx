@@ -379,7 +379,6 @@ export default function Communities() {
               onViewCommunity={setSelectedCommunityId}
             />
           )}
-
           </div>
 
           <CreateGroupModal
