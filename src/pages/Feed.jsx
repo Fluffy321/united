@@ -186,6 +186,19 @@ export default function Feed() {
     enabled: !!currentUser
   });
 
+  const { data: communityHelpRequests = [] } = useQuery({
+    queryKey: ['community-help-requests', userCommunities],
+    queryFn: async () => {
+      if (userCommunities.length === 0) return [];
+      const allRequests = await base44.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 20);
+      return allRequests.filter(r => r.community_id && userCommunities.includes(r.community_id));
+    },
+    enabled: !!currentUser && userCommunities.length > 0,
+    staleTime: 600000,
+    gcTime: 900000,
+    retry: 0
+  });
+
 
 
 
