@@ -10,7 +10,7 @@ import GroupDetailSheet from '@/components/groups/GroupDetailSheet';
 import CreateGroupModal from '@/components/groups/CreateGroupModal';
 import { toast } from 'sonner';
 
-const TABS = ['My Communities', 'Discover', 'Groups', 'Create'];
+const TABS = ['My Communities', 'Schools', 'Shuls', 'Discover'];
 
 const CATEGORY_CONFIG = {
   'Torah Learning': { emoji: '📚', color: 'bg-amber-50 text-amber-700 border-amber-200' },
