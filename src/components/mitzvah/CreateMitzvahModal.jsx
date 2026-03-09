@@ -98,6 +98,7 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
       setDescription('');
       setCategory('');
       setLocationLabel('');
+      setCommunityId('');
       setIsAnonymous(false);
     } catch (error) {
       toast.error('Failed to post request');
