@@ -241,6 +241,22 @@ export default function Communities() {
   return (
     <div className="flex flex-col h-full bg-[#F5F7FB]">
 
+      {/* ── Global Search Bar ── */}
+      <div className="bg-white border-b border-slate-100 flex-shrink-0 sticky top-0 z-50">
+        <div className="max-w-2xl mx-auto px-4 py-3">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              value={globalSearch}
+              onChange={e => setGlobalSearch(e.target.value)}
+              placeholder="Search communities by name, city, or topic…"
+              className="w-full pl-10 pr-4 py-2.5 text-[13px] bg-slate-50 border border-slate-200 rounded-[12px] outline-none focus:border-[#2563EB] transition-colors placeholder:text-slate-400"
+              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* ── Header ── */}
       <div className="bg-white border-b border-slate-100 flex-shrink-0">
         <div className="max-w-2xl mx-auto px-4 pt-4 pb-0">
@@ -264,7 +280,7 @@ export default function Communities() {
             {TABS.map(tab => (
               <button
                 key={tab}
-                onClick={() => { setActiveTab(tab); setSearch(''); setTypeFilter('All'); }}
+                onClick={() => { setActiveTab(tab); setSearch(''); setTypeFilter('All'); setGlobalSearch(''); }}
                 className={`flex-1 py-2.5 text-[12px] font-semibold transition-all border-b-2 ${
                   activeTab === tab
                     ? 'text-[#2563EB] border-[#2563EB]'
