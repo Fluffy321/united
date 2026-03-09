@@ -556,14 +556,7 @@ export default function Feed() {
         currentUser={currentUser}
       />
 
-      <RequestHelpModal
-        open={showRequestHelpModal}
-        onOpenChange={(open) => {
-          setShowRequestHelpModal(open);
-          if (!open) queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
-        }}
-        currentUser={currentUser}
-      />
+
 
       <PostTypeSelector 
         open={showFABTypeSelector}
