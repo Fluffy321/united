@@ -81,6 +81,22 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
     toast.success(`${req.user_name} approved!`);
   };
 
+  const handleAnnouncement = async () => {
+    if (!newAnnouncement.trim()) return;
+    setPostingAnnouncement(true);
+    const ann = await base44.entities.GroupPost.create({
+      group_id: group.id,
+      user_id: currentUser.id,
+      user_name: currentUser.full_name,
+      body: newAnnouncement.trim(),
+      post_type: 'announcement',
+    });
+    setAnnouncements(prev => [ann, ...prev]);
+    setNewAnnouncement('');
+    setPostingAnnouncement(false);
+    toast.success('Announcement posted!');
+  };
+
   const handleDeny = async (req) => {
     setProcessingRequest(req.id);
     await base44.entities.GroupJoinRequest.update(req.id, { status: 'denied' });
