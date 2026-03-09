@@ -143,6 +143,16 @@ export default function Feed() {
     enabled: !!currentUser
   });
 
+  const { data: userGroupCount = 0 } = useQuery({
+    queryKey: ['user-group-count', currentUser?.id],
+    queryFn: async () => {
+      const memberships = await base44.entities.GroupMember.filter({ user_id: currentUser.id });
+      return memberships.length;
+    },
+    enabled: !!currentUser && currentUser.id !== 'guest',
+    staleTime: 300000,
+  });
+
   const { data: todayEvents = [] } = useQuery({
     queryKey: ['today-events'],
     queryFn: async () => {
