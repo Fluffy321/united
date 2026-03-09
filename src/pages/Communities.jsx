@@ -159,11 +159,25 @@ export default function Communities() {
   };
 
   const handleGroupJoin = async (group) => {
-    await base44.entities.GroupMember.create({ group_id: group.id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
-    await base44.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
-    setMembershipSet(prev => new Set([...prev, group.id]));
-    queryClient.invalidateQueries({ queryKey: ['community-groups'] });
-    toast.success(`Joined ${group.name}!`);
+    if (group.is_private) {
+      // Check if already requested
+      if (pendingRequestSet.has(group.id)) return;
+      await base44.entities.GroupJoinRequest.create({
+        group_id: group.id,
+        group_name: group.name,
+        user_id: currentUser.id,
+        user_name: currentUser.full_name,
+        status: 'pending',
+      });
+      setPendingRequestSet(prev => new Set([...prev, group.id]));
+      toast.success('Request sent! Waiting for admin approval.');
+    } else {
+      await base44.entities.GroupMember.create({ group_id: group.id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
+      await base44.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
+      setMembershipSet(prev => new Set([...prev, group.id]));
+      queryClient.invalidateQueries({ queryKey: ['community-groups'] });
+      toast.success(`Joined ${group.name}!`);
+    }
   };
 
   const handleGroupLeave = async (group) => {
