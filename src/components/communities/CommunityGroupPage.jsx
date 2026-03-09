@@ -65,6 +65,26 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
     toast.success('Posted!');
   };
 
+  const handleApprove = async (req) => {
+    setProcessingRequest(req.id);
+    await base44.entities.GroupMember.create({ group_id: group.id, user_id: req.user_id, user_name: req.user_name, role: 'member' });
+    await base44.entities.GroupJoinRequest.update(req.id, { status: 'approved' });
+    await base44.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
+    setJoinRequests(prev => prev.filter(r => r.id !== req.id));
+    setMembers(prev => [...prev, { id: req.id, user_id: req.user_id, user_name: req.user_name, role: 'member' }]);
+    onMemberApproved?.(group.id);
+    setProcessingRequest(null);
+    toast.success(`${req.user_name} approved!`);
+  };
+
+  const handleDeny = async (req) => {
+    setProcessingRequest(req.id);
+    await base44.entities.GroupJoinRequest.update(req.id, { status: 'denied' });
+    setJoinRequests(prev => prev.filter(r => r.id !== req.id));
+    setProcessingRequest(null);
+    toast.success('Request denied');
+  };
+
   if (!group) return null;
 
   const emoji = CATEGORY_EMOJIS[group.category] || '🌍';
