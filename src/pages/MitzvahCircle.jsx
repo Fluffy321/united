@@ -319,8 +319,8 @@ export default function MitzvahCircle({ isActive = true }) {
     return (
       <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-[#0F1C2E] border-t-transparent animate-spin" />
-      </div>);
-
+      </div>
+    );
   }
 
   if (!currentUser.is_profile_complete) {
