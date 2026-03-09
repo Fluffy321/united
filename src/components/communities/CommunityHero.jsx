@@ -63,6 +63,7 @@ export default function CommunityHero({ community, isFollowing, isAdmin, onBack,
           >
             {isFollowing ? '✓ Following' : '+ Join Community'}
           </button>
+          <InviteLinkButton type="community" id={community.id} name={community.name} />
           {!community.is_claimed && !isAdmin && (
             <button
               onClick={onClaim}
