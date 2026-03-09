@@ -90,14 +90,16 @@ export default function Profile() {
       const logs = await base44.entities.MitzvahLog.filter({ user_id: profileUser.id }, '-created_date', 50);
       return logs;
     },
-    enabled: !!profileUser && isOwnProfile
+    enabled: !!profileUser && isOwnProfile,
+    staleTime: 300000,
+    retry: 1
   });
 
   const { data: weeklyMitzvahCount = 0 } = useQuery({
     queryKey: ['weekly-mitzvah-count', profileUser?.id],
     queryFn: async () => {
-      const actions = await base44.entities.MitzvahAction.filter({ user_id: profileUser.id });
-      const logs = await base44.entities.MitzvahLog.filter({ user_id: profileUser.id });
+      const actions = await base44.entities.MitzvahAction.filter({ user_id: profileUser.id }, '-created_date', 100);
+      const logs = await base44.entities.MitzvahLog.filter({ user_id: profileUser.id }, '-created_date', 100);
       
       const weekActions = actions.filter(a => {
         const date = parseISO(a.created_date);
@@ -111,7 +113,9 @@ export default function Profile() {
       
       return weekActions.length + weekLogs.length;
     },
-    enabled: !!profileUser && isOwnProfile
+    enabled: !!profileUser && isOwnProfile,
+    staleTime: 300000,
+    retry: 1
   });
 
   const handleMessage = async () => {
