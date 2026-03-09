@@ -63,6 +63,7 @@ export default function Feed() {
   const [showFABTypeSelector, setShowFABTypeSelector] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
   const [showAlertModal, setShowAlertModal] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [hideCommunityBanner, setHideCommunityBanner] = useState(
     () => localStorage.getItem('joinCommunitiesBannerDismissed') === '1'
   );
