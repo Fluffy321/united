@@ -478,9 +478,8 @@ export default function MitzvahCircle({ isActive = true }) {
         {/* Tab: Completed Mitzvahs */}
         {activeTab === 'completed' && <CompletedMitzvahs currentUser={currentUser} />}
         </div>
-      </div>
 
-      <CreateMitzvahModal
+        <CreateMitzvahModal
         open={showCreateModal}
         onOpenChange={(open) => {
           setShowCreateModal(open);
