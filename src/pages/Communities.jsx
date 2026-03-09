@@ -478,8 +478,16 @@ function FilteredCommunitiesTab({ search, setSearch, communities, typeFilter, jo
 }
 
 /* ─── Interest Group Card (Discover) ─── */
-function InterestGroupCard({ group, isMember, onJoin, onLeave, onView }) {
+function InterestGroupCard({ group, isMember, isPending, onJoin, onLeave, onView }) {
   const cfg = CATEGORY_CONFIG[group.category] || CATEGORY_CONFIG['General'];
+
+  const btnLabel = isMember ? 'Joined' : isPending ? '⏳ Pending' : group.is_private ? '🔒 Request' : 'Join';
+  const btnStyle = isMember
+    ? 'bg-slate-100 text-slate-600'
+    : isPending
+    ? 'bg-amber-50 text-amber-700'
+    : 'text-white';
+
   return (
     <div
       onClick={() => onView(group)}
@@ -490,7 +498,10 @@ function InterestGroupCard({ group, isMember, onJoin, onLeave, onView }) {
         {cfg.emoji}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-slate-900 text-[15px] truncate mb-0.5">{group.name}</p>
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <p className="font-bold text-slate-900 text-[15px] truncate">{group.name}</p>
+          {group.is_private && <span className="text-[10px] text-slate-400">🔒</span>}
+        </div>
         {group.description && (
           <p className="text-[12px] text-slate-500 line-clamp-2 leading-relaxed mb-1.5">{group.description}</p>
         )}
@@ -499,14 +510,12 @@ function InterestGroupCard({ group, isMember, onJoin, onLeave, onView }) {
           {group.member_count || 0} members
         </span>
       </div>
-      <div className="flex-shrink-0" onClick={e => { e.stopPropagation(); isMember ? onLeave(group) : onJoin(group); }}>
+      <div className="flex-shrink-0" onClick={e => { e.stopPropagation(); if (!isPending) { isMember ? onLeave(group) : onJoin(group); } }}>
         <button
-          className={`text-[13px] font-semibold h-8 px-4 rounded-full transition-colors ${
-            isMember ? 'bg-slate-100 text-slate-600' : 'text-white'
-          }`}
-          style={!isMember ? { background: '#16A34A' } : {}}
+          className={`text-[13px] font-semibold h-8 px-3 rounded-full transition-colors ${btnStyle}`}
+          style={!isMember && !isPending ? { background: '#16A34A' } : {}}
         >
-          {isMember ? 'Joined' : 'Join'}
+          {btnLabel}
         </button>
       </div>
     </div>
