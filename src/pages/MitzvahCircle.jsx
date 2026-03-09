@@ -480,42 +480,42 @@ export default function MitzvahCircle({ isActive = true }) {
 
       {/* Modals */}
       <CreateMitzvahModal
-          open={showCreateModal}
-          onOpenChange={(open) => {
-            setShowCreateModal(open);
-            if (!open) queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-          }}
-          currentUser={currentUser}
-        />
+        open={showCreateModal}
+        onOpenChange={(open) => {
+          setShowCreateModal(open);
+          if (!open) queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+        }}
+        currentUser={currentUser}
+      />
 
-        <FilterDrawer
-          open={showFilterDrawer}
-          onClose={() => setShowFilterDrawer(false)}
-          initialFilters={filters}
-          onApply={handleFilterApply}
-        />
+      <FilterDrawer
+        open={showFilterDrawer}
+        onClose={() => setShowFilterDrawer(false)}
+        initialFilters={filters}
+        onApply={handleFilterApply}
+      />
 
-        <LocationPrompt
-          show={showLocationPrompt}
-          onDismiss={() => setShowLocationPrompt(false)}
-          onLocationSet={() => {
-            setShowLocationPrompt(false);
-            loadUser();
-            queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
-          }}
-        />
+      <LocationPrompt
+        show={showLocationPrompt}
+        onDismiss={() => setShowLocationPrompt(false)}
+        onLocationSet={() => {
+          setShowLocationPrompt(false);
+          loadUser();
+          queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+        }}
+      />
 
-        <LogMitzvahModal
-          open={showLogMitzvah}
-          onOpenChange={setShowLogMitzvah}
-          onSubmit={handleLogMitzvah}
-        />
+      <LogMitzvahModal
+        open={showLogMitzvah}
+        onOpenChange={setShowLogMitzvah}
+        onSubmit={handleLogMitzvah}
+      />
 
-        <CommunityAlertModal
-          open={showAlertModal}
-          onOpenChange={setShowAlertModal}
-          currentUser={currentUser}
-        />
+      <CommunityAlertModal
+        open={showAlertModal}
+        onOpenChange={setShowAlertModal}
+        currentUser={currentUser}
+      />
 
       {/* Detail overlay */}
       {selectedRequest && (
