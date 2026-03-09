@@ -201,9 +201,11 @@ export default function Feed() {
       return allRequests.filter(r => r.community_id && userCommunities.includes(r.community_id));
     },
     enabled: !!currentUser && userCommunities.length > 0,
-    staleTime: 600000,
-    gcTime: 900000,
-    retry: 0
+    staleTime: 900000,
+    gcTime: 1200000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
   });
 
 
