@@ -414,15 +414,14 @@ export default function MitzvahCircle({ isActive = true }) {
 
 
         {/* Content Container */}
-        <div style={{ position: 'relative', flex: 1, overflow: 'hidden', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'hidden', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
           {/* Help Requests Content */}
           <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            opacity: 1, visibility: 'visible', pointerEvents: 'auto',
+            flex: 1,
             display: 'flex', flexDirection: 'column', overflow: 'hidden'
           }}>
             {/* Help section content */}
-            <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 180px', WebkitOverflowScrolling: 'touch' }}>
+            <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 16px', WebkitOverflowScrolling: 'touch' }}>
               <div className="max-w-2xl mx-auto space-y-4">
                 {/* Open Requests Tab */}
                 {helpSection === 'open' && (
