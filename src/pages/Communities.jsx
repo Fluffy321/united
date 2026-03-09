@@ -92,6 +92,25 @@ export default function Communities() {
     );
   }, [allCommunities, search, typeFilter]);
 
+  const globalSearchResults = useMemo(() => {
+    if (!globalSearch.trim()) return { communities: [], groups: [] };
+    const q = globalSearch.toLowerCase();
+    return {
+      communities: allCommunities.filter(c =>
+        c.name?.toLowerCase().includes(q) ||
+        c.neighborhood?.toLowerCase().includes(q) ||
+        c.address?.toLowerCase().includes(q) ||
+        c.type?.toLowerCase().includes(q)
+      ),
+      groups: groups.filter(g =>
+        g.name?.toLowerCase().includes(q) ||
+        g.description?.toLowerCase().includes(q) ||
+        g.category?.toLowerCase().includes(q) ||
+        g.location?.toLowerCase().includes(q)
+      ),
+    };
+  }, [allCommunities, groups, globalSearch]);
+
   const featuredCommunities = useMemo(() => allCommunities.filter(c => c.is_featured).slice(0, 5), [allCommunities]);
   const suggestedCommunities = useMemo(() => filteredCommunities.filter(c => !joinedIds.has(c.id)).slice(0, 20), [filteredCommunities, joinedIds]);
   const myGroups = useMemo(() => groups.filter(g => membershipSet.has(g.id)), [groups, membershipSet]);
