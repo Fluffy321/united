@@ -297,32 +297,8 @@ export default function Settings() {
           </TabsContent>
 
           <TabsContent value="notifications">
-            <div className="bg-white rounded-xl p-6 space-y-4">
-              {[
-                { key: 'messages', label: 'New messages', desc: 'Get notified when someone sends you a message' },
-                { key: 'comments', label: 'Comments', desc: 'Get notified when someone comments on your posts' },
-                { key: 'likes', label: 'Likes', desc: 'Get notified when someone likes your posts' },
-                { key: 'prompts', label: 'Daily prompts', desc: 'Get notified about new community prompts' }
-              ].map(item => (
-                <div key={item.key} className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="font-medium text-slate-900">{item.label}</p>
-                    <p className="text-sm text-slate-500">{item.desc}</p>
-                  </div>
-                  <Switch 
-                    checked={notifications[item.key]}
-                    onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, [item.key]: checked }))}
-                  />
-                </div>
-              ))}
-
-              <Button 
-                onClick={handleSaveNotifications}
-                disabled={isSaving}
-                className="w-full bg-indigo-600 hover:bg-indigo-700"
-              >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Settings'}
-              </Button>
+            <div className="bg-white rounded-xl p-6">
+              <NotificationSettings userId={currentUser.id} />
             </div>
           </TabsContent>
 
