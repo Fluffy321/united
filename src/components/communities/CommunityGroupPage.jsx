@@ -199,9 +199,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, onJoi
 
             {/* Help Tab */}
             {tab === 'help' && (
-              <div className="p-4">
-                <EmptyState emoji="🤝" text="No help requests" sub="Community members can post help requests here" />
-              </div>
+              <GroupHelpTab group={group} currentUser={currentUser} isMember={isMember} />
             )}
 
             {/* Members Tab */}
