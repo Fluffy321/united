@@ -53,6 +53,7 @@ import Communities from './pages/Communities';
 import CommunityUpdates from './pages/CommunityUpdates';
 import Feed from './pages/Feed';
 import Groups from './pages/Groups';
+import InviteJoin from './pages/InviteJoin';
 import Messages from './pages/Messages';
 import MitzvahCircle from './pages/MitzvahCircle';
 import MitzvahMap from './pages/MitzvahMap';
@@ -62,7 +63,6 @@ import Organization from './pages/Organization';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import ShulPage from './pages/ShulPage';
-import InviteJoin from './pages/InviteJoin';
 import __Layout from './Layout.jsx';
 
 
@@ -73,6 +73,7 @@ export const PAGES = {
     "CommunityUpdates": CommunityUpdates,
     "Feed": Feed,
     "Groups": Groups,
+    "InviteJoin": InviteJoin,
     "Messages": Messages,
     "MitzvahCircle": MitzvahCircle,
     "MitzvahMap": MitzvahMap,
@@ -82,7 +83,6 @@ export const PAGES = {
     "Profile": Profile,
     "Settings": Settings,
     "ShulPage": ShulPage,
-    "InviteJoin": InviteJoin,
 }
 
 export const pagesConfig = {
