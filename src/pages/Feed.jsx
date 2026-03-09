@@ -172,7 +172,8 @@ export default function Feed() {
       return memberships.map(m => m.community_id);
     },
     enabled: !!currentUser && currentUser.id !== 'guest',
-    staleTime: 600000,
+    staleTime: 1800000,
+    gcTime: 2400000,
     retry: 0
   });
 
@@ -180,11 +181,12 @@ export default function Feed() {
     queryKey: ['community-posts', userCommunities],
     queryFn: async () => {
       if (userCommunities.length === 0) return [];
-      const allPosts = await base44.entities.CommunityPost.list('-created_date', 50);
+      const allPosts = await base44.entities.CommunityPost.list('-created_date', 30);
       return allPosts.filter(p => userCommunities.includes(p.community_id));
     },
     enabled: !!currentUser && userCommunities.length > 0,
-    staleTime: 600000,
+    staleTime: 1800000,
+    gcTime: 2400000,
     retry: 0
   });
 
