@@ -153,14 +153,20 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     
     setIsSending(true);
     
-    await base44.entities.Message.create({
+    const text = newMessage.trim();
+    setNewMessage('');
+
+    const msg = await base44.entities.Message.create({
       conversation_id: conversation.id,
       sender_id: currentUser.id,
       sender_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],
       sender_age_range: currentUser.age_range || '18+',
       recipient_id: other.id,
-      content: newMessage.trim()
+      content: text
     });
+
+    // Optimistically append
+    setMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg]);
 
     const unreadCount = { 
       ...conversation.unread_count, 
@@ -168,14 +174,12 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     };
 
     await base44.entities.Conversation.update(conversation.id, {
-      last_message: newMessage.trim(),
+      last_message: text,
       last_message_at: new Date().toISOString(),
       unread_count: unreadCount
     });
 
-    setNewMessage('');
     setIsSending(false);
-    loadMessages();
   };
 
   return (
