@@ -804,6 +804,52 @@ function FeaturedCard({ community, joined, loading, onJoin, onView }) {
   );
 }
 
+function SchoolCard({ community, joined, loading, onJoin, onView }) {
+  return (
+    <div
+      onClick={() => onView(community.id)}
+      className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3.5 cursor-pointer active:scale-[0.99] transition-transform"
+      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+    >
+      <div className="w-13 h-13 rounded-xl flex-shrink-0 bg-indigo-50 flex items-center justify-center overflow-hidden border border-indigo-100" style={{width:52,height:52}}>
+        {community.logo_url
+          ? <img src={community.logo_url} alt="" className="w-full h-full object-cover" />
+          : <span className="text-indigo-600 font-bold text-xl">{community.name?.charAt(0)}</span>
+        }
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <p className="font-bold text-slate-900 text-[15px] truncate">{community.name}</p>
+          <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" title="Verified School" />
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1 text-[12px] text-slate-500 font-medium">
+            <Users className="w-3.5 h-3.5" />
+            {community.follower_count || 0} student members
+          </span>
+          {community.neighborhood && (
+            <span className="flex items-center gap-0.5 text-[11px] text-slate-400">
+              <MapPin className="w-3 h-3" />
+              {community.neighborhood}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex-shrink-0" onClick={e => { e.stopPropagation(); onJoin(e, community); }}>
+        <button
+          disabled={loading}
+          className={`text-[13px] font-semibold h-8 px-4 rounded-full transition-colors ${
+            joined ? 'bg-slate-100 text-slate-600' : 'text-white'
+          }`}
+          style={!joined ? { background: '#2563EB' } : {}}
+        >
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : joined ? 'Joined' : 'Join'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function DiscoverCommunityCard({ community, joined, loading, onJoin, onView }) {
   return (
     <div
