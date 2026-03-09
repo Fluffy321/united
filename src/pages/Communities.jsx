@@ -400,7 +400,7 @@ export default function Communities() {
 }
 
 /* ─── My Communities Tab ─── */
-function MyCommunititiesTab({ joinedCommunities, myGroups, loading, onViewCommunity, onViewGroup, onDiscover }) {
+function MyCommunitiesTab({ joinedCommunities, myGroups, loading, onViewCommunity, onViewGroup, onDiscover }) {
   if (loading) {
     return (
       <div className="space-y-3">
