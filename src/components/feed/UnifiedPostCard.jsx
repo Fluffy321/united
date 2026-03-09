@@ -286,70 +286,80 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
       {/* Actions footer */}
       <div className="flex items-center px-3 py-2 mt-1 border-t border-[#F2F4F7] bg-white rounded-b-[14px]">
-        <button
-          onClick={() => onLike(post.id)}
-          className={`flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium transition-colors ${liked ? 'text-red-600 bg-red-50' : 'text-[#64748B] hover:bg-slate-100'}`}
-        >
-          <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
-          <span>{post.likes_count || 0}</span>
-        </button>
-
-        <button
-          onClick={() => onComment(post)}
-          className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-[#64748B] hover:bg-slate-100 transition-colors"
-        >
-          <MessageCircle className="w-4 h-4" />
-          <span>{post.comments_count || 0}</span>
-        </button>
-
-        {/* Fulfilled button — only for owner of open help posts */}
-        {post.type === 'help' && isOwner && helpStatus === 'open' && (
+        {/* Left: Like + Comment */}
+        <div className="flex items-center gap-0.5">
           <button
-            onClick={handleFulfilled}
-            disabled={fulfilling}
-            className="ml-auto h-8 px-3.5 rounded-full text-[13px] font-semibold btn-primary !rounded-full !h-8 !px-3.5 !py-0 flex items-center gap-1.5"
+            onClick={() => onLike(post.id)}
+            className={`flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium transition-colors ${liked ? 'text-red-500 bg-red-50' : 'text-[#64748B] hover:bg-slate-100'}`}
           >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            {fulfilling ? 'Saving…' : 'Mark Fulfilled'}
+            <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
+            <span>{post.likes_count || 0}</span>
           </button>
-        )}
 
-        {/* Message button for coordination */}
-        {post.user_id !== currentUser?.id && (
-          <MessageButton
-            recipientId={post.user_id}
-            recipientName={post.user_name}
-            postId={post.id}
-            postTitle={post.title || post.body?.substring(0, 50)}
-            postType={post.type}
-            currentUser={currentUser}
-            variant="compact"
-          />
-        )}
-
-        {post.type === 'event' && (
-          <button
-            onClick={handleRSVP}
-            disabled={loadingRSVP}
-            className={`h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 transition-colors ${
-              isRSVPed
-                ? 'bg-green-50 text-green-700 border border-green-200'
-                : 'btn-primary !rounded-full !h-8 !px-3.5 !py-0 text-[13px]'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            {loadingRSVP ? 'Saving...' : isRSVPed ? `Going (${rsvpCount}) ✕` : 'RSVP'}
-          </button>
-        )}
-
-        {ACTION_BUTTON[post.type] && post.type !== 'help' && post.type !== 'event' && (
           <button
             onClick={() => onComment(post)}
-            className="ml-auto h-8 px-3.5 rounded-full text-[13px] font-semibold btn-secondary !rounded-full !h-8 !px-3.5 !py-0"
+            className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-[#64748B] hover:bg-slate-100 transition-colors"
           >
-            {ACTION_BUTTON[post.type].label}
+            <MessageCircle className="w-4 h-4" />
+            <span>{post.comments_count || 0}</span>
           </button>
-        )}
+        </div>
+
+        {/* Right: context-aware action */}
+        <div className="ml-auto flex items-center gap-1.5">
+          {/* Message button (not for own posts) */}
+          {post.user_id !== currentUser?.id && post.type !== 'event' && (
+            <MessageButton
+              recipientId={post.user_id}
+              recipientName={post.user_name}
+              postId={post.id}
+              postTitle={post.title || post.body?.substring(0, 50)}
+              postType={post.type}
+              currentUser={currentUser}
+              variant="compact"
+            />
+          )}
+
+          {/* Help: mark fulfilled (owner) */}
+          {post.type === 'help' && isOwner && helpStatus === 'open' && (
+            <button
+              onClick={handleFulfilled}
+              disabled={fulfilling}
+              className="h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 text-white disabled:opacity-50"
+              style={{ background: '#16A34A' }}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {fulfilling ? 'Saving…' : 'Fulfilled'}
+            </button>
+          )}
+
+          {/* Event: RSVP */}
+          {post.type === 'event' && (
+            <button
+              onClick={handleRSVP}
+              disabled={loadingRSVP}
+              className={`h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 transition-colors ${
+                isRSVPed
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'text-white'
+              }`}
+              style={!isRSVPed ? { background: '#2563EB' } : {}}
+            >
+              <Users className="w-3.5 h-3.5" />
+              {loadingRSVP ? '…' : isRSVPed ? `Going (${rsvpCount})` : 'RSVP'}
+            </button>
+          )}
+
+          {/* Other types: secondary action */}
+          {ACTION_BUTTON[post.type] && post.type !== 'help' && post.type !== 'event' && (
+            <button
+              onClick={() => onComment(post)}
+              className="h-8 px-3.5 rounded-full text-[13px] font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+            >
+              {ACTION_BUTTON[post.type].label}
+            </button>
+          )}
+        </div>
       </div>
     </motion.div>
   );
