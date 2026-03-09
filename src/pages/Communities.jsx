@@ -527,69 +527,199 @@ function InterestGroupCard({ group, isMember, isPending, onJoin, onLeave, onView
   );
 }
 
+/* ─── Category config for discover ─── */
+const DISCOVER_CATEGORIES = [
+  { id: 'schools',   label: 'Schools',              emoji: '🏫', color: 'bg-indigo-50 border-indigo-100', accent: '#4F46E5' },
+  { id: 'shuls',     label: 'Shuls',                emoji: '🕍', color: 'bg-amber-50 border-amber-100',   accent: '#D97706' },
+  { id: 'location',  label: 'Location Communities', emoji: '📍', color: 'bg-teal-50 border-teal-100',     accent: '#0D9488' },
+  { id: 'interest',  label: 'Interest Communities', emoji: '✨', color: 'bg-purple-50 border-purple-100', accent: '#7C3AED' },
+  { id: 'help',      label: 'Help Networks',         emoji: '🤝', color: 'bg-green-50 border-green-100',   accent: '#16A34A' },
+  { id: 'events',    label: 'Events & Social',       emoji: '🎉', color: 'bg-rose-50 border-rose-100',     accent: '#E11D48' },
+];
+
+const LOCATION_KEYWORDS = ['nyc', 'new york', 'miami', 'israel', 'france', 'brooklyn', 'manhattan', 'queens', 'bronx', 'jersey', 'chicago', 'los angeles', 'london', 'toronto', 'five towns', 'cedarhurst', 'lawrence', 'woodmere', 'hewlett', 'inwood'];
+const HELP_KEYWORDS = ['help', 'chesed', 'bikur', 'charity', 'tzedakah', 'volunteer', 'meal', 'ride', 'errand'];
+const EVENT_KEYWORDS = ['event', 'social', 'party', 'gathering', 'meetup', 'wedding', 'shabbat', 'holiday', 'yom tov'];
+
+function categorizeGroup(group) {
+  const text = `${group.name} ${group.description || ''} ${group.category || ''} ${group.location || ''}`.toLowerCase();
+  if (LOCATION_KEYWORDS.some(k => text.includes(k))) return 'location';
+  if (HELP_KEYWORDS.some(k => text.includes(k))) return 'help';
+  if (EVENT_KEYWORDS.some(k => text.includes(k))) return 'events';
+  return 'interest';
+}
+
 /* ─── Discover Tab ─── */
-function DiscoverTab({ search, setSearch, groups, membershipSet, pendingRequestSet, loading, onJoin, onLeave, onView }) {
-  const filtered = useMemo(() => {
-    if (!search.trim()) return groups;
+function DiscoverTab({ search, setSearch, groups, allCommunities, membershipSet, pendingRequestSet, joinedIds, joiningId, loading, onJoinGroup, onLeaveGroup, onViewGroup, onJoinCommunity, onViewCommunity }) {
+  const [openCategory, setOpenCategory] = useState(null);
+
+  const schools = useMemo(() => allCommunities.filter(c => c.type === 'School' || c.type === 'Yeshiva' || c.type === 'Seminary'), [allCommunities]);
+  const shuls = useMemo(() => allCommunities.filter(c => c.type === 'Shul'), [allCommunities]);
+  const locationGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'location'), [groups]);
+  const helpGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'help'), [groups]);
+  const eventGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'events'), [groups]);
+  const interestGroups = useMemo(() => groups.filter(g => !['location','help','events'].includes(categorizeGroup(g))), [groups]);
+
+  const getCategoryItems = (id) => {
+    switch(id) {
+      case 'schools':  return schools;
+      case 'shuls':    return shuls;
+      case 'location': return locationGroups;
+      case 'interest': return interestGroups;
+      case 'help':     return helpGroups;
+      case 'events':   return eventGroups;
+      default: return [];
+    }
+  };
+
+  const isCommunity = (id) => id === 'schools' || id === 'shuls';
+
+  // Search mode
+  const searchResults = useMemo(() => {
+    if (!search.trim()) return null;
     const q = search.toLowerCase();
-    return groups.filter(g =>
-      g.name?.toLowerCase().includes(q) ||
-      g.description?.toLowerCase().includes(q) ||
-      g.category?.toLowerCase().includes(q)
+    const matchedGroups = groups.filter(g => g.name?.toLowerCase().includes(q) || g.description?.toLowerCase().includes(q));
+    const matchedCommunities = allCommunities.filter(c => c.name?.toLowerCase().includes(q) || c.neighborhood?.toLowerCase().includes(q));
+    return { groups: matchedGroups, communities: matchedCommunities };
+  }, [search, groups, allCommunities]);
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3">
+            <div className="skeleton w-12 h-12 rounded-xl flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="skeleton h-3.5 w-40 rounded" />
+              <div className="skeleton h-2.5 w-56 rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
     );
-  }, [groups, search]);
+  }
 
   return (
-    <>
+    <div className="space-y-4">
+      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Search communities…"
+          placeholder="Search all communities…"
           className="w-full pl-10 pr-4 py-3 text-[14px] bg-white border border-slate-200 rounded-[14px] outline-none focus:border-[#2563EB] transition-colors placeholder:text-slate-400"
           style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}
         />
       </div>
 
-      <section>
-        <SectionHeader title={search ? `Results for "${search}"` : 'All Communities'} count={filtered.length} />
-        {loading ? (
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3">
-                <div className="skeleton w-12 h-12 rounded-xl flex-shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="skeleton h-3.5 w-40 rounded" />
-                  <div className="skeleton h-2.5 w-56 rounded" />
-                  <div className="skeleton h-2.5 w-20 rounded" />
-                </div>
-                <div className="skeleton h-8 w-14 rounded-full flex-shrink-0" />
+      {/* Search Results */}
+      {searchResults ? (
+        <div className="space-y-2.5">
+          {searchResults.communities.length === 0 && searchResults.groups.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-14 text-center">
+              <div className="text-4xl mb-3">🔍</div>
+              <p className="text-[13px] text-slate-400">No communities match "{search}"</p>
+            </div>
+          ) : (
+            <>
+              {searchResults.communities.map(c => (
+                <ShulCard key={c.id} community={c} joined={joinedIds.has(c.id)} loading={joiningId === c.id} onJoin={onJoinCommunity} onView={onViewCommunity} />
+              ))}
+              {searchResults.groups.map(g => (
+                <InterestGroupCard key={g.id} group={g} isMember={membershipSet.has(g.id)} isPending={pendingRequestSet?.has(g.id)} onJoin={onJoinGroup} onLeave={onLeaveGroup} onView={onViewGroup} />
+              ))}
+            </>
+          )}
+        </div>
+      ) : (
+        /* Category Cards */
+        <div className="space-y-3">
+          {DISCOVER_CATEGORIES.map(cat => {
+            const items = getCategoryItems(cat.id);
+            const isOpen = openCategory === cat.id;
+            const useCommunity = isCommunity(cat.id);
+            return (
+              <div key={cat.id} className={`rounded-2xl border overflow-hidden ${cat.color}`} style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                {/* Category Header */}
+                <button
+                  onClick={() => setOpenCategory(isOpen ? null : cat.id)}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 text-left"
+                >
+                  <span className="text-2xl">{cat.emoji}</span>
+                  <div className="flex-1">
+                    <p className="font-bold text-[15px] text-slate-900">{cat.label}</p>
+                    <p className="text-[11px] text-slate-500">{items.length} communities</p>
+                  </div>
+                  <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+                </button>
+
+                {/* Expanded List */}
+                {isOpen && (
+                  <div className="px-3 pb-3 space-y-2 bg-white/60">
+                    {items.length === 0 ? (
+                      <p className="text-[13px] text-slate-400 text-center py-4">No communities yet</p>
+                    ) : useCommunity ? (
+                      items.map(c => (
+                        <div
+                          key={c.id}
+                          onClick={() => onViewCommunity(c.id)}
+                          className="bg-white rounded-xl border border-slate-100 p-3 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+                        >
+                          <div className="w-10 h-10 rounded-xl flex-shrink-0 bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-100">
+                            {c.logo_url ? <img src={c.logo_url} alt="" className="w-full h-full object-cover" /> : <span className="font-bold text-slate-600">{c.name?.charAt(0)}</span>}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-[14px] text-slate-900 truncate">{c.name}</p>
+                            <p className="text-[11px] text-slate-400">{c.neighborhood || c.address?.split(',')[0] || c.type}</p>
+                          </div>
+                          <div onClick={e => { e.stopPropagation(); onJoinCommunity(e, c); }}>
+                            <button
+                              className={`text-[12px] font-semibold h-7 px-3 rounded-full ${joinedIds.has(c.id) ? 'bg-slate-100 text-slate-600' : 'text-white'}`}
+                              style={!joinedIds.has(c.id) ? { background: cat.accent } : {}}
+                            >
+                              {joiningId === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : joinedIds.has(c.id) ? 'Joined' : 'Join'}
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      items.map(g => {
+                        const isMember = membershipSet.has(g.id);
+                        const isPending = pendingRequestSet?.has(g.id);
+                        return (
+                          <div
+                            key={g.id}
+                            onClick={() => onViewGroup(g)}
+                            className="bg-white rounded-xl border border-slate-100 p-3 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+                          >
+                            <div className="w-10 h-10 rounded-xl flex-shrink-0 bg-slate-50 flex items-center justify-center text-xl border border-slate-100">
+                              {CATEGORY_CONFIG[g.category]?.emoji || '💬'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-[14px] text-slate-900 truncate">{g.name}</p>
+                              <p className="text-[11px] text-slate-400 truncate">{g.description || `${g.member_count || 0} members`}</p>
+                            </div>
+                            <div onClick={e => { e.stopPropagation(); if (!isPending) { isMember ? onLeaveGroup(g) : onJoinGroup(g); } }}>
+                              <button
+                                className={`text-[12px] font-semibold h-7 px-3 rounded-full ${isMember ? 'bg-slate-100 text-slate-600' : isPending ? 'bg-amber-50 text-amber-700' : 'text-white'}`}
+                                style={!isMember && !isPending ? { background: cat.accent } : {}}
+                              >
+                                {isMember ? 'Joined' : isPending ? 'Pending' : 'Join'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-14 text-center">
-            <div className="text-4xl mb-3">🌍</div>
-            <p className="text-[13px] text-slate-400">{search ? `No communities match "${search}"` : 'No communities yet — be the first to create one!'}</p>
-          </div>
-        ) : (
-          <div className="space-y-2.5">
-            {filtered.map(g => (
-              <InterestGroupCard
-                key={g.id}
-                group={g}
-                isMember={membershipSet.has(g.id)}
-                isPending={pendingRequestSet?.has(g.id)}
-                onJoin={onJoin}
-                onLeave={onLeave}
-                onView={onView}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-    </>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
