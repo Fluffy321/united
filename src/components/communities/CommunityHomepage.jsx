@@ -134,6 +134,41 @@ export default function CommunityHomepage({ community, posts, events, opportunit
       {/* Stats Bar */}
       <StatsBar stats={stats} />
 
+      {/* Members Preview */}
+      {recentMembers.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-[16px] font-bold text-slate-900">👥 Members</h2>
+              <span className="text-[12px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                {stats?.memberCount || 0}
+              </span>
+            </div>
+            {recentMembers.length > 0 && (
+              <button onClick={() => onTabChange('members')} className="flex items-center gap-0.5 text-[13px] font-semibold text-[#0F5ED7]">
+                View all <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <div className="space-y-2">
+            {recentMembers.map(member => (
+              <div
+                key={member.id}
+                className="bg-white rounded-xl border border-slate-100 p-3 flex items-center gap-3 hover:bg-slate-50 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[11px] font-bold text-blue-600 flex-shrink-0">
+                  {member.user_id?.[0]?.toUpperCase() || '?'}
+                </div>
+                <span className="text-[13px] font-medium text-slate-900 truncate flex-1">{member.user_id}</span>
+                {member.role === 'Admin' && (
+                  <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full flex-shrink-0">👑 Admin</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Pinned Announcement Banner */}
       {(pinnedAnnouncement || secondAnnouncement) && (() => {
         const ann = pinnedAnnouncement || secondAnnouncement;
