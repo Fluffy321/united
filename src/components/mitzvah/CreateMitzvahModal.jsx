@@ -24,8 +24,22 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [locationLabel, setLocationLabel] = useState('');
+  const [communityId, setCommunityId] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userCommunities, setUserCommunities] = useState([]);
+
+  useEffect(() => {
+    if (open && currentUser?.id) {
+      base44.entities.UserCommunity.filter({ user_id: currentUser.id }).then(memberships => {
+        const communityIds = memberships.map(m => m.community_id);
+        Promise.all(communityIds.map(id => base44.entities.Community.filter({ id }))).then(results => {
+          const communities = results.filter(r => r.length > 0).map(r => r[0]);
+          setUserCommunities(communities);
+        });
+      });
+    }
+  }, [open, currentUser?.id]);
 
   const handleSubmit = async () => {
     if (!title.trim() || !description.trim() || !category) {
