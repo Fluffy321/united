@@ -533,7 +533,7 @@ export default function MitzvahCircle({ isActive = true }) {
           />
         )}
       </div>
-    </div>
+      </div>
     </>
   );
 }
