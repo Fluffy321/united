@@ -745,20 +745,26 @@ function GroupRow({ group, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-2xl border border-slate-100 p-3.5 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+      className="bg-white rounded-2xl border border-slate-100 p-4 flex items-start gap-3.5 cursor-pointer active:scale-[0.99] transition-transform"
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
     >
-      <div className="w-11 h-11 rounded-xl flex-shrink-0 bg-slate-50 flex items-center justify-center border border-slate-100 text-xl">
+      <div className="w-12 h-12 rounded-xl flex-shrink-0 bg-slate-50 flex items-center justify-center border border-slate-100 text-2xl">
         {cfg.emoji}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-slate-900 text-[14px] truncate">{group.name}</p>
-        <p className="text-[11px] text-slate-400 mt-0.5">{group.member_count || 0} members · {group.category}</p>
+        <p className="font-bold text-slate-900 text-[15px] truncate mb-0.5">{group.name}</p>
+        {group.description && (
+          <p className="text-[12px] text-slate-500 line-clamp-2 mb-1.5 leading-relaxed">{group.description}</p>
+        )}
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+            <Users className="w-3 h-3" />
+            {group.member_count || 0} members
+          </span>
+          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${cfg.color}`}>{group.category}</span>
+        </div>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <span className="text-[11px] bg-green-50 text-green-700 font-semibold px-2 py-0.5 rounded-full">Member</span>
-        <ChevronRight className="w-4 h-4 text-slate-300" />
-      </div>
+      <ChevronRight className="w-4 h-4 text-slate-300 flex-shrink-0 mt-1" />
     </div>
   );
 }
