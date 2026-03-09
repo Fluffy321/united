@@ -117,7 +117,7 @@ function StatsBar({ stats }) {
   );
 }
 
-export default function CommunityHomepage({ community, posts, events, opportunities, onTabChange, stats }) {
+export default function CommunityHomepage({ community, posts, events, opportunities, onTabChange, stats, members = [] }) {
   const pinnedAnnouncement = posts.find(p => p.type === 'announcement' && p.is_pinned);
   const secondAnnouncement = posts.find(p => p.type === 'announcement' && !p.is_pinned);
   const feedPosts = posts.filter(p => p.type !== 'announcement').slice(0, 3);
@@ -126,6 +126,7 @@ export default function CommunityHomepage({ community, posts, events, opportunit
     .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
     .slice(0, 3);
   const activeOpps = opportunities.filter(o => o.is_active !== false).slice(0, 3);
+  const recentMembers = members.slice(0, 5);
 
   return (
     <div className="space-y-6 pt-4 pb-28">
