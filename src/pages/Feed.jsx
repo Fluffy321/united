@@ -531,13 +531,7 @@ export default function Feed() {
         currentUser={currentUser}
       />
 
-      {showSharePrompt && <MitzvahSharePrompt onClose={() => setShowSharePrompt(false)} />}
-      
-      <LogMitzvahModal 
-        open={showLogMitzvah}
-        onOpenChange={setShowLogMitzvah}
-        onSubmit={handleLogMitzvah}
-      />
+
 
       <QuickPostPrompt 
         show={showQuickPostPrompt}
