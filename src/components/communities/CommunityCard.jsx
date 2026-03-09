@@ -2,6 +2,7 @@ import React from 'react';
 import { MapPin, Phone, Globe, CheckCircle2, Star, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import VerifiedBadge from './VerifiedBadge';
 
 const TYPE_COLORS = {
   Shul:     'bg-blue-100 text-blue-700',
