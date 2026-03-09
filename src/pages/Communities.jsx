@@ -641,6 +641,13 @@ function DiscoverTab({ search, setSearch, groups, allCommunities, trendingCommun
 
   const schools = useMemo(() => allCommunities.filter(c => c.type === 'School' || c.type === 'Yeshiva' || c.type === 'Seminary'), [allCommunities]);
   const shuls = useMemo(() => allCommunities.filter(c => c.type === 'Shul'), [allCommunities]);
+  const interestCommunities = useMemo(() => {
+    const keywords = ['basketball', 'kosher', 'entrepreneur', 'gamer', 'fitness', 'music', 'torah learning', 'sports', 'hobby', 'art', 'tech', 'book', 'career', 'business'];
+    return allCommunities.filter(c => {
+      const text = `${c.name} ${c.description_short || ''} ${c.description_long || ''}`.toLowerCase();
+      return keywords.some(k => text.includes(k));
+    });
+  }, [allCommunities]);
   const citiesGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'cities'), [groups]);
   const travelersGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'travelers'), [groups]);
   const interestGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'interest'), [groups]);
@@ -650,6 +657,7 @@ function DiscoverTab({ search, setSearch, groups, allCommunities, trendingCommun
     switch(id) {
       case 'schools':    return schools;
       case 'shuls':      return shuls;
+      case 'interests':  return interestCommunities;
       case 'cities':     return citiesGroups;
       case 'travelers':  return travelersGroups;
       case 'interest':   return interestGroups;
@@ -658,7 +666,7 @@ function DiscoverTab({ search, setSearch, groups, allCommunities, trendingCommun
     }
   };
 
-  const isCommunity = (id) => id === 'schools' || id === 'shuls';
+  const isCommunity = (id) => id === 'schools' || id === 'shuls' || id === 'interests';
   const PREVIEW_COUNT = 3;
   const toggleExpand = (id) => setExpandedCategories(prev => ({ ...prev, [id]: !prev[id] }));
 
