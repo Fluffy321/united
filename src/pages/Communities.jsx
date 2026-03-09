@@ -1189,3 +1189,67 @@ function DiscoverCommunityCard({ community, joined, loading, onJoin, onView }) {
     </div>
   );
 }
+
+/* ─── Global Search Results ─── */
+function GlobalSearchResults({ search, communities, groups, joinedIds, membershipSet, pendingRequestSet, joiningId, loading, onJoinCommunity, onViewCommunity, onJoinGroup, onLeaveGroup, onViewGroup }) {
+  const hasResults = communities.length > 0 || groups.length > 0;
+
+  if (!hasResults) {
+    return (
+      <div className="flex flex-col items-center justify-center py-14 text-center">
+        <div className="text-4xl mb-3">🔍</div>
+        <p className="text-[13px] text-slate-400">No communities found for "{search}"</p>
+        <p className="text-[11px] text-slate-300 mt-1">Try searching by name, city, or topic</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      {communities.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">🏢</span>
+            <h2 className="text-[15px] font-bold text-slate-900">Communities</h2>
+            <span className="text-[12px] text-slate-400 font-medium ml-auto">{communities.length}</span>
+          </div>
+          <div className="space-y-2.5">
+            {communities.map(c => (
+              <DiscoverCommunityCard
+                key={c.id}
+                community={c}
+                joined={joinedIds.has(c.id)}
+                loading={joiningId === c.id}
+                onJoin={onJoinCommunity}
+                onView={onViewCommunity}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {groups.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">✨</span>
+            <h2 className="text-[15px] font-bold text-slate-900">Groups</h2>
+            <span className="text-[12px] text-slate-400 font-medium ml-auto">{groups.length}</span>
+          </div>
+          <div className="space-y-2.5">
+            {groups.map(g => (
+              <InterestGroupCard
+                key={g.id}
+                group={g}
+                isMember={membershipSet.has(g.id)}
+                isPending={pendingRequestSet?.has(g.id)}
+                onJoin={onJoinGroup}
+                onLeave={onLeaveGroup}
+                onView={onViewGroup}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
