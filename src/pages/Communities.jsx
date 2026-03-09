@@ -384,9 +384,11 @@ export default function Communities() {
               onViewCommunity={setSelectedCommunityId}
             />
           )}
+           </>
+          )}
 
-        </div>
-      </div>
+          </div>
+          </div>
 
       <CreateGroupModal
         open={showCreateGroup}
