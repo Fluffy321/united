@@ -144,7 +144,15 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
                     <HelperBadge badge={post.helper_badge} size="sm" />
                   )}
                 </div>
-                <p className="text-[11px] text-[#98A2B3] mt-0.5">{post.city} · {timeAgo}</p>
+                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                  <span className="text-[11px] text-[#98A2B3]">{timeAgo}</span>
+                  {post.city && (
+                    <>
+                      <span className="text-[#C8D0DC] text-[10px]">·</span>
+                      <span className="text-[11px] text-[#2563EB] font-medium">{post.city}</span>
+                    </>
+                  )}
+                </div>
               </div>
             </Link>
           )}
