@@ -337,6 +337,53 @@ export default function MitzvahCircle({ isActive = true }) {
       {/* Main Content */}
       <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 100px', WebkitOverflowScrolling: 'touch' }}>
         <div className="max-w-2xl mx-auto space-y-5">
+          {/* Quick Actions */}
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+            >
+              <Plus className="w-5 h-5 text-slate-700" />
+              <span className="text-[12px] font-semibold text-slate-700 text-center">Request Help</span>
+            </button>
+            <button
+              onClick={() => setShowFilterDrawer(true)}
+              className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+            >
+              <HandHeart className="w-5 h-5 text-slate-700" />
+              <span className="text-[12px] font-semibold text-slate-700 text-center">Offer Help</span>
+            </button>
+            <button
+              onClick={() => setShowAlertModal(true)}
+              className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+            >
+              <AlertCircle className="w-5 h-5 text-slate-700" />
+              <span className="text-[12px] font-semibold text-slate-700 text-center">Alert</span>
+            </button>
+          </div>
+
+          {/* Your Daily Mitzvah Section */}
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-[16px] border border-purple-200 p-4">
+            <h3 className="text-[14px] font-bold text-slate-900 mb-3">Your Daily Mitzvah</h3>
+            
+            <div className="bg-white rounded-[12px] p-3.5 mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[12px] font-semibold text-slate-700">Current Streak</span>
+                <span className="text-[20px] font-bold text-purple-600">{userStreak?.current_streak || 0}</span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                {Math.max(0, 2 - (todayMitzvahCount || 0))} more mitzvah{Math.max(0, 2 - (todayMitzvahCount || 0)) !== 1 ? 's' : ''} to keep streak
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowLogMitzvah(true)}
+              className="w-full py-2.5 px-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-[12px] font-semibold transition-colors"
+            >
+              Log Mitzvah
+            </button>
+          </div>
+
           {/* Help Requests Section */}
           <div>
             <div className="flex items-center justify-between mb-3">
