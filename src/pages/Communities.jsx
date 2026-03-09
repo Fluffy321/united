@@ -32,7 +32,6 @@ export default function Communities() {
   const [selectedCommunityId, setSelectedCommunityId] = useState(null);
   const [membershipSet, setMembershipSet] = useState(new Set());
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [showGroupDetail, setShowGroupDetail] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showCreateCommunity, setShowCreateCommunity] = useState(false);
   const [search, setSearch] = useState('');
