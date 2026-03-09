@@ -122,6 +122,22 @@ export default function Communities() {
   const suggestedCommunities = useMemo(() => filteredCommunities.filter(c => !joinedIds.has(c.id)).slice(0, 20), [filteredCommunities, joinedIds]);
   const myGroups = useMemo(() => groups.filter(g => membershipSet.has(g.id)), [groups, membershipSet]);
   const suggestedGroups = useMemo(() => groups.filter(g => !membershipSet.has(g.id)).slice(0, 12), [groups, membershipSet]);
+  
+  const trendingCommunities = useMemo(() => {
+    const postCounts = {};
+    posts.forEach(p => {
+      postCounts[p.community_id] = (postCounts[p.community_id] || 0) + 1;
+    });
+    
+    return [...allCommunities]
+      .map(c => ({
+        ...c,
+        postCount: postCounts[c.id] || 0,
+        activityScore: (postCounts[c.id] || 0) * 3 + (c.follower_count || 0),
+      }))
+      .sort((a, b) => b.activityScore - a.activityScore)
+      .slice(0, 6);
+  }, [allCommunities, posts]);
 
   if (!currentUser) {
     return (
