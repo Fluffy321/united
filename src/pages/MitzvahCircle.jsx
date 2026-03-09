@@ -66,6 +66,7 @@ export default function MitzvahCircle({ isActive = true }) {
   const [liveLocation, setLiveLocation] = useState(null);
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [showLogMitzvah, setShowLogMitzvah] = useState(false);
+  const [activeTab, setActiveTab] = useState('requests');
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
