@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2, Users } from 'lucide-react';
+import { MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import UserAvatar from '@/components/common/UserAvatar';
 import HelperBadge from '@/components/profile/HelperBadge';
