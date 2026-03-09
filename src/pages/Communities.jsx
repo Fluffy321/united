@@ -310,6 +310,7 @@ export default function Communities() {
               setSearch={setSearch}
               groups={groups}
               membershipSet={membershipSet}
+              pendingRequestSet={pendingRequestSet}
               loading={communitiesLoading}
               onJoin={handleGroupJoin}
               onLeave={handleGroupLeave}
