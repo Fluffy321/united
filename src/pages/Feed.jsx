@@ -441,8 +441,33 @@ export default function Feed() {
 
 
 
+        {/* Community Help Requests Section */}
+        {activeCategory === 'help' && communityHelpRequests.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-[15px] font-bold text-slate-900 mb-3">Help Requests from Your Communities</h3>
+            <div className="space-y-2.5 pb-4">
+              {communityHelpAsUnifiedPosts.map((post) => (
+                <div key={post.id} className="bg-white rounded-[16px] p-4 border border-slate-200">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-[14px] font-semibold text-slate-900">{post.title}</p>
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-800">{post.category}</span>
+                      </div>
+                      {post.community_name && (
+                        <p className="text-[12px] text-slate-500 mb-1">in {post.community_name}</p>
+                      )}
+                      <p className="text-[13px] text-slate-700 line-clamp-2">{post.body}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {isLoading ? (
-          <div className="space-y-3 pb-24">
+           <div className="space-y-3 pb-24">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="bg-white rounded-[16px] p-4" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04)' }}>
                 <div className="flex items-center gap-2.5 mb-3">
