@@ -483,15 +483,43 @@ export default function Feed() {
       </div>
 
       <div className="main-feed">
-        {/* New-user: join communities nudge */}
-        {activeCategory === 'all' && !hideCommunityBanner && userGroupCount === 0 && (
-          <JoinCommunitiesBanner
-            onJoin={() => navigate(createPageUrl('Communities'))}
-            onDismiss={() => {
-              setHideCommunityBanner(true);
-              localStorage.setItem('joinCommunitiesBannerDismissed', '1');
-            }}
-          />
+        {/* Community Section - Welcome & Trending */}
+        {activeCategory === 'all' && (
+          <>
+            {userCommunities.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-100 p-6 mb-4 text-center">
+                <div className="text-4xl mb-3">👋</div>
+                <h2 className="text-[18px] font-bold text-slate-900 mb-2">Welcome to Communities</h2>
+                <p className="text-[14px] text-slate-500 mb-4">Join communities to see their posts, events, announcements, and discussions.</p>
+                <button
+                  onClick={() => navigate(createPageUrl('Communities'))}
+                  className="px-6 py-2.5 rounded-full text-white text-[14px] font-semibold"
+                  style={{ background: '#2563EB' }}
+                >
+                  Find Your Community
+                </button>
+              </div>
+            ) : null}
+
+            {trendingCommunities.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-[15px] font-bold text-slate-900 mb-2.5">Trending Communities</h3>
+                <div className="space-y-2">
+                  {trendingCommunities.slice(0, 3).map(c => (
+                    <div key={c.id} className="bg-white rounded-2xl border border-slate-100 p-3 flex items-center gap-3 cursor-pointer" onClick={() => navigate(createPageUrl('Communities'))}>
+                      <div className="w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-blue-600">
+                        {c.name?.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-slate-900 text-[13px] truncate">{c.name}</p>
+                        <p className="text-[11px] text-slate-400">{c.follower_count || 0} members</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Community Help Center Hero — compact */}
