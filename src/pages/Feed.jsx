@@ -204,11 +204,12 @@ export default function Feed() {
       return allRequests.filter(r => r.community_id && userCommunities.includes(r.community_id));
     },
     enabled: !!currentUser && userCommunities.length > 0 && userCommunities !== undefined,
-    staleTime: 1800000,
-    gcTime: 1800000,
+    staleTime: 3600000,
+    gcTime: 5400000,
     retry: 0,
     refetchOnWindowFocus: false,
-    refetchOnMount: false
+    refetchOnMount: false,
+    refetchOnReconnect: false
   });
 
 
