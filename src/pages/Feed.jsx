@@ -154,6 +154,36 @@ export default function Feed() {
     staleTime: 300000,
   });
 
+  const { data: userCommunities = [] } = useQuery({
+    queryKey: ['user-communities', currentUser?.id],
+    queryFn: async () => {
+      const memberships = await base44.entities.UserCommunity.filter({ user_id: currentUser.id });
+      return memberships.map(m => m.community_id);
+    },
+    enabled: !!currentUser && currentUser.id !== 'guest',
+    staleTime: 300000,
+  });
+
+  const { data: trendingCommunities = [] } = useQuery({
+    queryKey: ['trending-communities'],
+    queryFn: async () => {
+      const communities = await base44.entities.Community.list('-follower_count', 6);
+      return communities;
+    },
+    staleTime: 600000,
+  });
+
+  const { data: communityPosts = [] } = useQuery({
+    queryKey: ['community-posts', userCommunities],
+    queryFn: async () => {
+      if (userCommunities.length === 0) return [];
+      const allPosts = await base44.entities.CommunityPost.list('-created_date', 100);
+      return allPosts.filter(p => userCommunities.includes(p.community_id));
+    },
+    enabled: !!currentUser && userCommunities.length > 0,
+    staleTime: 300000,
+  });
+
   const { data: todayEvents = [] } = useQuery({
     queryKey: ['today-events'],
     queryFn: async () => {
