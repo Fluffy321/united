@@ -561,6 +561,14 @@ export default function Feed() {
           </button>
         </div>
 
+        {/* Community Activity Section — posts from joined groups */}
+        {activeCategory === 'all' && (
+          <CommunityActivitySection
+            currentUser={currentUser}
+            onNavigateToCommunities={() => navigate(createPageUrl('Communities'))}
+          />
+        )}
+
         {/* Community Updates Section */}
         {activeCategory === 'all' && (
           <CommunityUpdatesSection />
