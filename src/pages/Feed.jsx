@@ -512,13 +512,13 @@ export default function Feed() {
             <p className="text-[13px] text-[#2563EB] mt-1 font-semibold">Tap to retry</p>
           </div>
         ) : feedPosts.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-[16px]" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
-              <span className="text-2xl">📝</span>
-            </div>
-            <p className="text-[#0F1C2E] font-semibold text-[15px]">No posts yet</p>
-            <p className="text-[13px] text-[#98A2B3] mt-1">Be the first to share something!</p>
-          </div>
+           <div className="text-center py-12 bg-white rounded-[16px]" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+             <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
+               <span className="text-2xl">📝</span>
+             </div>
+             <p className="text-[#0F1C2E] font-semibold text-[15px]">No posts yet</p>
+             <p className="text-[13px] text-[#98A2B3] mt-1">Join a community or create the first post</p>
+           </div>
         ) : (
           <div className="space-y-2.5 pb-24">
             {feedPosts.map((post) => (
