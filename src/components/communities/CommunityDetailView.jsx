@@ -11,6 +11,7 @@ import CommunityFeedTab from './CommunityFeedTab';
 import CommunityAnnouncementsTab from './CommunityAnnouncementsTab';
 import CommunityEventsTab from './CommunityEventsTab';
 import CommunityMitzvahTab from './CommunityMitzvahTab';
+import MembersListTab from './MembersListTab';
 
 const TABS = [
   { key: 'home', label: 'Home' },
