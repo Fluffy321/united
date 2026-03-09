@@ -72,15 +72,12 @@ export default function Feed() {
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [pinnedPrompt, setPinnedPrompt] = useState(null);
   const [userLikes, setUserLikes] = useState([]);
-  const [showSharePrompt, setShowSharePrompt] = useState(false);
-  const [showLogMitzvah, setShowLogMitzvah] = useState(false);
   const [showQuickPostPrompt, setShowQuickPostPrompt] = useState(false);
   const [showQuickPostModal, setShowQuickPostModal] = useState(false);
   const [scrollStartTime, setScrollStartTime] = useState(null);
   const [showFABTypeSelector, setShowFABTypeSelector] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
   const [showAlertModal, setShowAlertModal] = useState(false);
-  const [showRequestHelpModal, setShowRequestHelpModal] = useState(false);
   const [hideCommunityBanner, setHideCommunityBanner] = useState(
     () => localStorage.getItem('joinCommunitiesBannerDismissed') === '1'
   );
