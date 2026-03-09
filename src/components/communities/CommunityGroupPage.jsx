@@ -51,6 +51,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, onJoi
       user_id: currentUser.id,
       user_name: currentUser.full_name,
       body: newPost.trim(),
+      post_type: 'post',
     });
     await base44.entities.CommunityGroup.update(group.id, { post_count: (group.post_count || 0) + 1 });
     setPosts(prev => [post, ...prev]);
