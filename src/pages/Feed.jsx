@@ -172,11 +172,12 @@ export default function Feed() {
       return allPosts.filter(p => userCommunities.includes(p.community_id));
     },
     enabled: !!currentUser && userCommunities.length > 0 && userCommunities !== undefined,
-    staleTime: 7200000,
-    gcTime: 7200000,
+    staleTime: 10800000,
+    gcTime: 14400000,
     retry: 0,
     refetchOnWindowFocus: false,
-    refetchOnMount: false
+    refetchOnMount: false,
+    refetchOnReconnect: false
   });
 
   const { data: todayEvents = [] } = useQuery({
