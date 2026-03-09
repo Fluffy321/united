@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import GroupEventsTab from '@/components/groups/GroupEventsTab';
+import GroupHelpTab from '@/components/groups/GroupHelpTab';
 
 const CATEGORY_EMOJIS = {
   'Torah Learning': '📚', Shabbat: '🕯️', Chesed: '🤝', Events: '🎉',
