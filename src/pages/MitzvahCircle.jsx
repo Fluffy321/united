@@ -393,15 +393,15 @@ export default function MitzvahCircle({ isActive = true }) {
             <h1 className="text-[20px] font-bold text-slate-900 mb-3">Mitzvah Circle</h1>
 
             {/* Help Requests Section Nav */}
-            <div className="flex gap-0 mb-4 border-b border-slate-100">
+            <div className="flex gap-4 mb-4">
               {['open', 'offer', 'request'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setHelpSection(tab)}
-                  className={`py-2.5 text-[13px] font-semibold transition-colors border-b-2 ${
+                  className={`py-2.5 text-[13px] font-semibold transition-colors ${
                     helpSection === tab
-                      ? 'text-[#2563EB] border-[#2563EB]'
-                      : 'text-slate-500 border-transparent'
+                      ? 'text-[#0F172A]'
+                      : 'text-slate-500'
                   }`}
                 >
                   {tab === 'open' ? 'Open Requests' : tab === 'offer' ? 'Offer Help' : 'Request Help'}
