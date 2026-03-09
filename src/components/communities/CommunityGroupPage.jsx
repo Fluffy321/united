@@ -239,6 +239,39 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
             {/* Members Tab */}
             {tab === 'members' && (
               <div className="p-4 space-y-2">
+                {/* Admin: Pending Requests */}
+                {group.created_by_user_id === currentUser?.id && joinRequests.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-[12px] font-bold text-amber-600 uppercase tracking-wide mb-2">
+                      ⏳ Join Requests ({joinRequests.length})
+                    </p>
+                    {joinRequests.map(req => (
+                      <div key={req.id} className="bg-amber-50 border border-amber-100 rounded-2xl p-3.5 flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-[14px] font-bold text-amber-700 flex-shrink-0">
+                          {req.user_name?.[0] || '?'}
+                        </div>
+                        <p className="flex-1 text-[14px] font-semibold text-slate-900">{req.user_name}</p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleApprove(req)}
+                            disabled={processingRequest === req.id}
+                            className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white active:scale-95 transition-all"
+                          >
+                            {processingRequest === req.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                          </button>
+                          <button
+                            onClick={() => handleDeny(req)}
+                            disabled={processingRequest === req.id}
+                            className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500 active:scale-95 transition-all"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <p className="text-[12px] font-semibold text-slate-400 mb-3">{members.length} member{members.length !== 1 ? 's' : ''}</p>
                 {members.map(m => (
                   <div key={m.id} className="bg-white rounded-2xl border border-slate-100 p-3.5 flex items-center gap-3" style={{ boxShadow: '0 2px 4px rgba(0,0,0,0.03)' }}>
