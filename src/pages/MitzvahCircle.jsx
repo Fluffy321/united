@@ -479,6 +479,7 @@ export default function MitzvahCircle({ isActive = true }) {
         {activeTab === 'completed' && <CompletedMitzvahs currentUser={currentUser} />}
       </div>
 
+      <>
       {/* Modals */}
       <CreateMitzvahModal
         open={showCreateModal}
