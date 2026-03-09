@@ -246,7 +246,7 @@ export default function Communities() {
               myGroups={myGroups}
               loading={communitiesLoading || membershipsLoading}
               onViewCommunity={setSelectedCommunityId}
-              onViewGroup={(g) => { setSelectedGroup(g); setShowGroupDetail(true); }}
+              onViewGroup={setSelectedGroup}
               onDiscover={() => setActiveTab('Discover')}
             />
           )}
