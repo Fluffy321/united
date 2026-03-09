@@ -59,6 +59,9 @@ export default function Feed() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [showRequestHelpModal, setShowRequestHelpModal] = useState(false);
+  const [hideCommunityBanner, setHideCommunityBanner] = useState(
+    () => localStorage.getItem('joinCommunitiesBannerDismissed') === '1'
+  );
   const queryClient = useQueryClient();
 
   useEffect(() => {
