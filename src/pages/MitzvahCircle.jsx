@@ -421,127 +421,100 @@ export default function MitzvahCircle({ isActive = true }) {
             opacity: 1, visibility: 'visible', pointerEvents: 'auto',
             display: 'flex', flexDirection: 'column', overflow: 'hidden'
           }}>
-            {/* Map panel — ALWAYS mounted, height driven by mapH state */}
-            <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0,
-            height: mapH,
-            overflow: 'hidden',
-            zIndex: 1,
-            background: '#d1d5db',
-            willChange: 'height'
-          }}>
-              <div style={{ width: '100%', height: SNAP_EXPANDED }}>
-                <MitzvahMapView
-                ref={mapRef}
-                requests={requests}
-                userOrigin={userOrigin}
-                mapCenter={mapCenter}
-                mapZoom={mapZoom}
-                currentUser={currentUser}
-                selectedRequestId={selectedRequest?.id}
-                onSelectRequest={(req) => setSelectedRequest(req)} />
-
-              </div>
-            </div>
-
-            {/* Requests panel — sits below map */}
-            <div style={{
-            position: 'absolute',
-            top: mapH,
-            left: 0, right: 0, bottom: 0,
-            display: 'flex', flexDirection: 'column',
-            background: 'white',
-            overflow: 'hidden',
-            zIndex: 2,
-            willChange: 'top'
-          }}>
-              {/* Drag handle — tap to toggle, drag to resize */}
-              <div
-              onPointerDown={onHandlePointerDown}
-              onTouchStart={onHandlePointerDown}
-              onClick={toggleMap}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                width: '100%', height: 34, flexShrink: 0,
-                background: 'white', border: 'none', borderBottom: '1px solid #F0F3F9',
-                cursor: 'row-resize', fontSize: 12, fontWeight: 600, color: '#6B7280',
-                WebkitTapHighlightColor: 'transparent', userSelect: 'none', touchAction: 'none'
-              }}>
-
-                {mapH > 0 ? <ChevronUp size={13} /> : <MapIcon size={13} />}
-                {mapH > 0 ? 'Hide map' : 'Show map'}
-              </div>
-
-              {/* Status tabs (moved to shared header above) */}
-
-              {/* List */}
-              <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 112px', WebkitOverflowScrolling: 'touch', position: 'relative' }}>
-                {isLoading ?
-              <div className="space-y-3">
-                    {[...Array(4)].map((_, i) =>
-                <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
-                          <div className="flex-1 space-y-2">
-                            <div className="skeleton h-3.5 w-40 rounded" />
-                            <div className="skeleton h-3 w-full rounded" />
-                            <div className="skeleton h-3 w-3/4 rounded" />
-                          </div>
-                        </div>
-                      </div>
-                )}
-                  </div> :
-              requests.length === 0 ?
-              <div className="text-center py-14 bg-white rounded-[14px] border border-[#EAECF0]">
-                    <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
-                      <HandHeart className="w-6 h-6 text-[#98A2B3]" />
+            {/* Help section content */}
+            <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 120px', WebkitOverflowScrolling: 'touch' }}>
+              <div className="max-w-2xl mx-auto space-y-4">
+                {/* Open Requests Tab */}
+                {helpSection === 'open' && (
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="text-[15px] font-bold text-slate-900">Requests Available</h2>
+                      <button
+                        onClick={() => setShowFilterDrawer(true)}
+                        className={`p-2 rounded-full transition-colors ${
+                          filters.scope !== 'all' || filters.category !== 'All'
+                            ? 'bg-[#0F172A] text-white'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        <SlidersHorizontal size={16} />
+                      </button>
                     </div>
-                    <p className="text-[15px] font-semibold text-[#0F1C2E]">
-                      {activeTab === 'open' ? 'No open requests' : 'No completed mitzvahs yet'}
-                    </p>
-                    <p className="text-[13px] text-[#98A2B3] mt-1">
-                      {activeTab === 'open' ? 'Check back soon!' : 'Be the first to help!'}
-                    </p>
-                  </div> :
-
-              <div className="space-y-2">
-                    {requests.map((request) =>
-                <div
-                  key={request.id}
-                  onClick={() => setSelectedRequest(request)}
-                  style={{ cursor: 'pointer' }}>
-
-                        <MitzvahRequestCard
-                    request={request}
-                    currentUser={currentUser}
-                    onClaim={handleClaim}
-                    onMessage={handleMessage}
-                    onComplete={handleComplete}
-                    showDistance={!!userOrigin && request.distance !== undefined && request.distance < 999} />
-
+                    
+                    {isLoading ? (
+                      <div className="space-y-3">
+                        {[...Array(4)].map((_, i) => (
+                          <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
+                              <div className="flex-1 space-y-2">
+                                <div className="skeleton h-3.5 w-40 rounded" />
+                                <div className="skeleton h-3 w-full rounded" />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
+                    ) : requests.length === 0 ? (
+                      <div className="text-center py-10 bg-white rounded-[14px] border border-[#EAECF0]">
+                        <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
+                          <HandHeart className="w-6 h-6 text-[#98A2B3]" />
+                        </div>
+                        <p className="text-[14px] font-semibold text-[#0F1C2E]">No open requests</p>
+                        <p className="text-[12px] text-[#98A2B3] mt-1">Check back soon or request help!</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {requests.map((request) => (
+                          <div key={request.id} onClick={() => setSelectedRequest(request)} style={{ cursor: 'pointer' }}>
+                            <MitzvahRequestCard
+                              request={request}
+                              currentUser={currentUser}
+                              onClaim={handleClaim}
+                              onMessage={handleMessage}
+                              onComplete={handleComplete}
+                              showDistance={!!userOrigin && request.distance !== undefined && request.distance < 999}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
+
+                {/* Offer Help Tab */}
+                {helpSection === 'offer' && (
+                  <div className="text-center py-14">
+                    <div className="text-5xl mb-4">🤝</div>
+                    <p className="text-[15px] font-semibold text-slate-900 mb-2">Ready to Help?</p>
+                    <p className="text-[13px] text-slate-500 mb-4">Browse open requests above and claim one to get started!</p>
+                    <button
+                      onClick={() => setHelpSection('open')}
+                      className="px-6 py-2.5 rounded-full text-white text-[13px] font-semibold"
+                      style={{ background: '#2563EB' }}
+                    >
+                      View Open Requests
+                    </button>
                   </div>
-              }
+                )}
+
+                {/* Request Help Tab */}
+                {helpSection === 'request' && (
+                  <div className="text-center py-14">
+                    <div className="text-5xl mb-4">🙏</div>
+                    <p className="text-[15px] font-semibold text-slate-900 mb-2">Need Help?</p>
+                    <p className="text-[13px] text-slate-500 mb-4">Create a request for help and community members will offer assistance.</p>
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="px-6 py-2.5 rounded-full text-white text-[13px] font-semibold flex items-center gap-2 mx-auto"
+                      style={{ background: '#16A34A' }}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Request Help
+                    </button>
+                  </div>
+                )}
               </div>
-
-              {/* Detail overlay — inside requests panel, never covers map */}
-              {selectedRequest &&
-            <RequestDetailOverlay
-              request={selectedRequest}
-              currentUser={currentUser}
-              onClose={() => setSelectedRequest(null)}
-              onRefresh={() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] })}
-              overlayStyle={{
-                position: 'absolute',
-                inset: 0,
-                zIndex: 999,
-                background: '#ffffff',
-                overflowY: 'auto',
-                pointerEvents: 'auto'
-              }} />
-
-            }
             </div>
 
             {/* Create Button */}
