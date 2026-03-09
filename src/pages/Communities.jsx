@@ -379,8 +379,6 @@ export default function Communities() {
               onViewCommunity={setSelectedCommunityId}
             />
           )}
-           </>
-          )}
 
           </div>
           </div>
