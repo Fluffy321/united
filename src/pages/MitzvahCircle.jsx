@@ -104,12 +104,11 @@ export default function MitzvahCircle({ isActive = true }) {
     }
   };
 
-  // Fetch all open/completed requests; apply filters in-memory so map+list stay in sync
+  // Fetch all open requests
   const { data: rawRequests = [], isLoading } = useQuery({
-    queryKey: ['mitzvah-requests', activeTab],
+    queryKey: ['mitzvah-requests'],
     queryFn: async () => {
-      const status = activeTab === 'open' ? 'open' : 'completed';
-      return base44.entities.MitzvahRequest.filter({ status }, '-created_date', 100);
+      return base44.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 100);
     },
     enabled: !!currentUser
   });
