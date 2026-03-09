@@ -169,10 +169,10 @@ export default function Feed() {
       const allPosts = await base44.entities.CommunityPost.list('-created_date', 30);
       return allPosts.filter(p => userCommunities.includes(p.community_id));
     },
-    enabled: !!currentUser && userCommunities.length > 0,
-    staleTime: 3600000,
-    gcTime: 3600000,
-    retry: 1,
+    enabled: !!currentUser && userCommunities.length > 0 && userCommunities !== undefined,
+    staleTime: 7200000,
+    gcTime: 7200000,
+    retry: 0,
     refetchOnWindowFocus: false,
     refetchOnMount: false
   });
