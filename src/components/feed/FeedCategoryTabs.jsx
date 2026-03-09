@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useCallback } from 'react';
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
-  { id: 'help', label: 'Help' },
   { id: 'event', label: 'Events' },
 ];
 
