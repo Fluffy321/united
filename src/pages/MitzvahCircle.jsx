@@ -387,165 +387,96 @@ export default function MitzvahCircle({ isActive = true }) {
 
   return (
     <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
-        {/* Header */}
-        <div className="bg-white sticky top-0 z-20 flex-shrink-0" style={{ borderBottom: '1px solid #E8ECF4' }}>
-          <div className="max-w-2xl mx-auto px-4 pt-4 pb-0">
-            <h1 className="text-[20px] font-bold text-slate-900 mb-3">Mitzvah Circle</h1>
-
-            {/* Help Requests Section Nav */}
-            <div className="flex gap-4 mb-4">
-              {['open', 'offer', 'request'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setHelpSection(tab)}
-                  className={`py-2.5 text-[13px] font-semibold transition-colors ${
-                    helpSection === tab
-                      ? 'text-[#0F172A]'
-                      : 'text-slate-500'
-                  }`}
-                >
-                  {tab === 'open' ? 'Open Requests' : tab === 'offer' ? 'Offer Help' : 'Request Help'}
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* Header */}
+      <div className="bg-white sticky top-0 z-20 flex-shrink-0" style={{ borderBottom: '1px solid #E8ECF4' }}>
+        <div className="max-w-2xl mx-auto px-4 py-4">
+          <h1 className="text-[20px] font-bold text-slate-900">Mitzvah Circle</h1>
+          <p className="text-[13px] text-slate-500 mt-1">Helping the community together</p>
         </div>
+      </div>
 
+      {/* Main Content */}
+      <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 100px', WebkitOverflowScrolling: 'touch' }}>
+        <div className="max-w-2xl mx-auto space-y-5">
+          {/* Help Requests Section */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h2 className="text-[16px] font-bold text-slate-900">Help Requests</h2>
+                <p className="text-[12px] text-slate-500 mt-0.5">{requests.length} {requests.length === 1 ? 'person needs' : 'people need'} help</p>
+              </div>
+              <button
+                onClick={() => setShowFilterDrawer(true)}
+                className={`p-2 rounded-full transition-colors ${
+                  filters.scope !== 'all' || filters.category !== 'All'
+                    ? 'bg-[#0F172A] text-white'
+                    : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                <SlidersHorizontal size={16} />
+              </button>
+            </div>
 
-
-        {/* Content Container */}
-        <div style={{ flex: 1, overflow: 'hidden', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
-          {/* Help Requests Content */}
-          <div style={{
-            flex: 1,
-            display: 'flex', flexDirection: 'column', overflow: 'hidden'
-          }}>
-            {/* Help section content */}
-            <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 16px', WebkitOverflowScrolling: 'touch' }}>
-              <div className="max-w-2xl mx-auto space-y-4">
-                {/* Open Requests Tab */}
-                {helpSection === 'open' && (
-                  <>
-                    <div className="flex items-center justify-between mb-3">
-                      <h2 className="text-[15px] font-bold text-slate-900">Requests Available</h2>
-                      <button
-                        onClick={() => setShowFilterDrawer(true)}
-                        className={`p-2 rounded-full transition-colors ${
-                          filters.scope !== 'all' || filters.category !== 'All'
-                            ? 'bg-[#0F172A] text-white'
-                            : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        <SlidersHorizontal size={16} />
-                      </button>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-[16px] border border-[#EAECF0] p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <div className="skeleton h-3.5 w-40 rounded" />
+                        <div className="skeleton h-3 w-full rounded" />
+                      </div>
                     </div>
-                    
-                    {isLoading ? (
-                      <div className="space-y-3">
-                        {[...Array(4)].map((_, i) => (
-                          <div key={i} className="bg-white rounded-[14px] border border-[#EAECF0] p-4">
-                            <div className="flex items-start gap-3">
-                              <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
-                              <div className="flex-1 space-y-2">
-                                <div className="skeleton h-3.5 w-40 rounded" />
-                                <div className="skeleton h-3 w-full rounded" />
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : requests.length === 0 ? (
-                      <div className="text-center py-10 bg-white rounded-[14px] border border-[#EAECF0]">
-                        <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
-                          <HandHeart className="w-6 h-6 text-[#98A2B3]" />
-                        </div>
-                        <p className="text-[14px] font-semibold text-[#0F1C2E]">No open requests</p>
-                        <p className="text-[12px] text-[#98A2B3] mt-1">Check back soon or request help!</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {requests.map((request) => (
-                          <div key={request.id} onClick={() => setSelectedRequest(request)} style={{ cursor: 'pointer' }}>
-                            <MitzvahRequestCard
-                              request={request}
-                              currentUser={currentUser}
-                              onClaim={handleClaim}
-                              onMessage={handleMessage}
-                              onComplete={handleComplete}
-                              showDistance={!!userOrigin && request.distance !== undefined && request.distance < 999}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Offer Help Tab */}
-                {helpSection === 'offer' && (
-                  <div className="text-center py-14">
-                    <div className="text-5xl mb-4">🤝</div>
-                    <p className="text-[15px] font-semibold text-slate-900 mb-2">Ready to Help?</p>
-                    <p className="text-[13px] text-slate-500 mb-4">Browse open requests above and claim one to get started!</p>
-                    <button
-                      onClick={() => setHelpSection('open')}
-                      className="px-6 py-2.5 rounded-full text-white text-[13px] font-semibold"
-                      style={{ background: '#2563EB' }}
-                    >
-                      View Open Requests
-                    </button>
                   </div>
-                )}
-
-                {/* Request Help Tab */}
-                {helpSection === 'request' && (
-                  <div className="text-center py-14">
-                    <div className="text-5xl mb-4">🙏</div>
-                    <p className="text-[15px] font-semibold text-slate-900 mb-2">Need Help?</p>
-                    <p className="text-[13px] text-slate-500 mb-4">Create a request for help and community members will offer assistance.</p>
-                    <button
-                      onClick={() => setShowCreateModal(true)}
-                      className="px-6 py-2.5 rounded-full text-white text-[13px] font-semibold flex items-center gap-2 mx-auto"
-                      style={{ background: '#16A34A' }}
-                    >
-                      <Plus className="w-4 h-4" />
-                      Request Help
-                    </button>
-                  </div>
-                )}
+                ))}
               </div>
-            </div>
+            ) : requests.length === 0 ? (
+              <div className="text-center py-10 bg-white rounded-[16px] border border-[#EAECF0]">
+                <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
+                  <HandHeart className="w-6 h-6 text-[#98A2B3]" />
+                </div>
+                <p className="text-[14px] font-semibold text-[#0F1C2E]">No open requests</p>
+                <p className="text-[12px] text-[#98A2B3] mt-1">Check back soon</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {requests.map((request) => (
+                  <div key={request.id} className="bg-white rounded-[16px] border border-[#EAECF0] p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedRequest(request)}>
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex-1">
+                        <p className="text-[14px] font-semibold text-slate-900">{request.title}</p>
+                        <p className="text-[12px] text-slate-500 mt-1 line-clamp-2">{request.description}</p>
+                      </div>
+                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 flex-shrink-0">
+                        {request.category}
+                      </span>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleClaim(e, request); }}
+                      disabled={claimMutation.isPending}
+                      className="w-full mt-3 py-2 px-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-[12px] font-semibold transition-colors disabled:opacity-50"
+                    >
+                      {claimMutation.isPending ? 'Joining...' : "I'll Help"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Your Mitzvah Streak Section */}
-          <div className="bg-white border-t border-slate-100 flex-shrink-0">
-            <div className="max-w-2xl mx-auto px-4 py-4">
-              <h2 className="text-[15px] font-bold text-slate-900 mb-3">Your Mitzvah Streak</h2>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setStreakSection('completed')}
-                  className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition-colors ${
-                    streakSection === 'completed'
-                      ? 'bg-[#16A34A] text-white'
-                      : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  Recently Completed
-                </button>
-                <button
-                  onClick={() => setStreakSection('ongoing')}
-                  className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition-colors ${
-                    streakSection === 'ongoing'
-                      ? 'bg-[#2563EB] text-white'
-                      : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  Ongoing
-                </button>
-              </div>
-            </div>
+          {/* Request Help CTA */}
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-[16px] border border-blue-200 p-4 text-center">
+            <p className="text-[13px] text-slate-700 mb-3">Need help with something?</p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="w-full py-2.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold transition-colors"
+            >
+              Post a Request
+            </button>
           </div>
         </div>
+      </div>
 
         {/* Modals */}
         <CreateMitzvahModal
