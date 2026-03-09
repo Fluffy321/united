@@ -153,6 +153,23 @@ export default function Communities() {
   }
 
   if (selectedCommunityId) {
+    const selectedCommunity = allCommunities.find(c => c.id === selectedCommunityId);
+    
+    // Check if it's a shul (featured shul)
+    const isFeaturedShul = selectedCommunity && FEATURED_SHULS.some(name => 
+      selectedCommunity.name?.toLowerCase().includes(name.toLowerCase())
+    );
+    
+    if (isFeaturedShul && selectedCommunity.type === 'Shul') {
+      return (
+        <ShulCommunityPage
+          community={selectedCommunity}
+          currentUser={currentUser}
+          onBack={() => setSelectedCommunityId(null)}
+        />
+      );
+    }
+    
     return (
       <CommunityDetailView
         communityId={selectedCommunityId}
