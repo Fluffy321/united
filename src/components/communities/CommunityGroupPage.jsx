@@ -109,7 +109,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, onJoi
                 : { background: 'white', color: '#2563EB' }
               }
             >
-              {isMember ? '✓ Joined' : '+ Join'}
+              {isMember ? '✓ Joined' : group.is_private ? '🔒 Request' : '+ Join'}
             </button>
           </div>
 
