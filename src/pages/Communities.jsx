@@ -87,8 +87,8 @@ export default function Communities() {
     queryKey: ['user-communities', currentUser?.id],
     queryFn: () => base44.entities.UserCommunity.filter({ user_id: currentUser.id }),
     enabled: !!currentUser,
-    staleTime: 1800000,
-    gcTime: 2400000,
+    staleTime: 3600000,
+    gcTime: 7200000,
     refetchOnWindowFocus: false,
     retry: 0,
   });
