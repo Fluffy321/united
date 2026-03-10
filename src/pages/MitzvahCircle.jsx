@@ -100,16 +100,15 @@ export default function MitzvahCircle({ isActive = true }) {
     try {
       const user = await base44.auth.me();
       setCurrentUser(user);
+
+      // Check if prompt was dismissed
+      const hasOrigin = user?.location_lat && user?.location_lng || user?.cityPreset && TOWN_CENTERS[user?.cityPreset];
+      if (!hasOrigin) {
+        const dismissed = localStorage.getItem('locationPromptDismissed');
+        if (!dismissed) setTimeout(() => setShowLocationPrompt(true), 2000);
+      }
     } catch (e) {
       console.warn('MitzvahCircle: not authenticated', e?.message);
-      return;
-    }
-
-    // Check if prompt was dismissed
-    const hasOrigin = user?.location_lat && user?.location_lng || user?.cityPreset && TOWN_CENTERS[user?.cityPreset];
-    if (!hasOrigin) {
-      const dismissed = localStorage.getItem('locationPromptDismissed');
-      if (!dismissed) setTimeout(() => setShowLocationPrompt(true), 2000);
     }
   };
 
