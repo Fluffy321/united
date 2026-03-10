@@ -258,69 +258,69 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       </div>
 
       {/* Actions footer */}
-      <div className="px-3 py-2 mt-1 border-t border-[#F2F4F7] bg-white rounded-b-[14px] space-y-2">
-        {/* Reaction bar */}
-        <ReactionBar postId={post.id} currentUser={currentUser} />
-
-        {/* Comment button */}
-        <div className="flex items-center gap-0.5">
-          <button
-            onClick={() => setCommentsOpen(true)}
-            className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-[#64748B] hover:bg-slate-100 transition-colors"
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span>{commentCount}</span>
-          </button>
-        </div>
-
-        {/* Right: context-aware action */}
-        <div className="flex items-center gap-1.5 ml-auto">
-          {/* Message button (not for own posts) */}
-          {post.user_id !== currentUser?.id && post.type !== 'event' && (
-            <MessageButton
-              recipientId={post.user_id}
-              recipientName={post.user_name}
-              postId={post.id}
-              postTitle={post.title || post.body?.substring(0, 50)}
-              postType={post.type}
-              currentUser={currentUser}
-              variant="compact"
-            />
-          )}
-
-          {/* Help: mark fulfilled (owner) */}
-          {post.type === 'help' && isOwner && helpStatus === 'open' && (
+      <div className="px-3 py-2 mt-1 border-t border-[#F2F4F7] bg-white rounded-b-[14px]">
+        <div className="flex items-center justify-between">
+          {/* Left: Likes + Comments */}
+          <div className="flex items-center gap-1">
+            <ReactionBar postId={post.id} currentUser={currentUser} />
             <button
-              onClick={handleFulfilled}
-              disabled={fulfilling}
-              className="h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 text-white disabled:opacity-50"
-              style={{ background: '#16A34A' }}
+              onClick={() => setCommentsOpen(true)}
+              className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-[#64748B] hover:bg-slate-100 transition-colors"
             >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              {fulfilling ? 'Saving…' : 'Fulfilled'}
+              <MessageCircle className="w-4 h-4" />
+              {commentCount > 0 && <span>{commentCount}</span>}
             </button>
-          )}
+          </div>
 
-          {/* Event: Show details */}
-          {post.type === 'event' && (
-            <button
-              onClick={() => setShowEventDetails(!showEventDetails)}
-              className="h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-            >
-              <Users className="w-3.5 h-3.5" />
-              {showEventDetails ? 'Hide' : 'RSVP'}
-            </button>
-          )}
+          {/* Right: context-aware action */}
+          <div className="flex items-center gap-1.5">
+            {/* Message button (not for own posts) */}
+            {post.user_id !== currentUser?.id && post.type !== 'event' && (
+              <MessageButton
+                recipientId={post.user_id}
+                recipientName={post.user_name}
+                postId={post.id}
+                postTitle={post.title || post.body?.substring(0, 50)}
+                postType={post.type}
+                currentUser={currentUser}
+                variant="compact"
+              />
+            )}
 
-          {/* Other types: secondary action */}
-          {ACTION_BUTTON[post.type] && post.type !== 'help' && post.type !== 'event' && (
-            <button
-              onClick={() => onComment(post)}
-              className="h-8 px-3.5 rounded-full text-[13px] font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
-            >
-              {ACTION_BUTTON[post.type].label}
-            </button>
-          )}
+            {/* Help: mark fulfilled (owner) */}
+            {post.type === 'help' && isOwner && helpStatus === 'open' && (
+              <button
+                onClick={handleFulfilled}
+                disabled={fulfilling}
+                className="h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 text-white disabled:opacity-50"
+                style={{ background: '#16A34A' }}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {fulfilling ? 'Saving…' : 'Fulfilled'}
+              </button>
+            )}
+
+            {/* Event: RSVP */}
+            {post.type === 'event' && (
+              <button
+                onClick={() => setShowEventDetails(!showEventDetails)}
+                className="h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+              >
+                <Users className="w-3.5 h-3.5" />
+                {showEventDetails ? 'Hide' : 'RSVP'}
+              </button>
+            )}
+
+            {/* Other types: secondary action */}
+            {ACTION_BUTTON[post.type] && post.type !== 'help' && post.type !== 'event' && (
+              <button
+                onClick={() => onComment(post)}
+                className="h-8 px-3.5 rounded-full text-[13px] font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+              >
+                {ACTION_BUTTON[post.type].label}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
