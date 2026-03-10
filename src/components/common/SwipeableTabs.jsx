@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Lazy-render tabs: only mount a tab when first visited, then keep in DOM hidden.
 // This prevents all pages from mounting simultaneously and firing all queries at once.
