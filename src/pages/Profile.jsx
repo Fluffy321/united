@@ -48,24 +48,34 @@ export default function Profile() {
   };
 
   const loadProfile = async () => {
-    const user = await base44.auth.me();
-    setCurrentUser(user);
-    
-    const params = new URLSearchParams(window.location.search);
-    const profileId = params.get('id');
-    
-    if (profileId && profileId !== user.id) {
-      const users = await base44.entities.User.filter({ id: profileId });
-      if (users[0]) {
-        setProfileUser(users[0]);
-        setIsOwnProfile(false);
+    try {
+      const user = await base44.auth.me();
+      setCurrentUser(user);
+      
+      const params = new URLSearchParams(window.location.search);
+      const profileId = params.get('id');
+      
+      if (profileId && profileId !== user.id) {
+        try {
+          const users = await base44.entities.User.filter({ id: profileId });
+          if (users[0]) {
+            setProfileUser(users[0]);
+            setIsOwnProfile(false);
+          } else {
+            setProfileUser(user);
+            setIsOwnProfile(true);
+          }
+        } catch {
+          setProfileUser(user);
+          setIsOwnProfile(true);
+        }
       } else {
         setProfileUser(user);
         setIsOwnProfile(true);
       }
-    } else {
-      setProfileUser(user);
-      setIsOwnProfile(true);
+    } catch (e) {
+      console.warn('Profile: not authenticated', e?.message);
+      base44.auth.redirectToLogin();
     }
   };
 
