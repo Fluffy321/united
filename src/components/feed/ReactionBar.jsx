@@ -18,9 +18,14 @@ export default function ReactionBar({ postId, currentUser }) {
     queryKey: ['post-reactions', postId],
     queryFn: () => base44.entities.Reaction.filter({ post_id: postId }, '-created_date', 100),
     enabled: !!postId,
+    staleTime: 300000,
+    gcTime: 600000,
+    refetchOnWindowFocus: false,
+    retry: 0,
   });
 
-  // Fetch user's own reactions
+  // Fetch user's own reactions — only for real authenticated users
+  const isRealUser = !!currentUser && currentUser.id !== 'guest';
   const { data: userReactions = [] } = useQuery({
     queryKey: ['user-reactions', postId, currentUser?.id],
     queryFn: () =>
@@ -29,7 +34,11 @@ export default function ReactionBar({ postId, currentUser }) {
         undefined,
         100
       ),
-    enabled: !!postId && !!currentUser,
+    enabled: !!postId && isRealUser,
+    staleTime: 300000,
+    gcTime: 600000,
+    refetchOnWindowFocus: false,
+    retry: 0,
   });
 
   const toggleReactionMutation = useMutation({
