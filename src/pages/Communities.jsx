@@ -57,10 +57,10 @@ export default function Communities() {
 
   const { data: allCommunities = [], isLoading: communitiesLoading } = useQuery({
     queryKey: ['communities-list'],
-    queryFn: () => base44.entities.Community.list('-follower_count', 500),
+    queryFn: () => base44.entities.Community.list('-follower_count', 100),
     enabled: !!currentUser,
-    staleTime: 1800000,
-    gcTime: 2400000,
+    staleTime: 3600000,
+    gcTime: 7200000,
     refetchOnWindowFocus: false,
     retry: 0,
   });
@@ -68,18 +68,18 @@ export default function Communities() {
   const { data: groups = [], refetch: refetchGroups } = useQuery({
     queryKey: ['community-groups'],
     queryFn: () => base44.entities.CommunityGroup.list('-created_date', 50),
-    staleTime: 1800000,
-    gcTime: 2400000,
+    staleTime: 3600000,
+    gcTime: 7200000,
     enabled: !!currentUser,
     retry: 0,
   });
 
   const { data: posts = [] } = useQuery({
     queryKey: ['community-posts'],
-    queryFn: () => base44.entities.CommunityPost.list('-created_date', 200),
-    staleTime: 1800000,
-    gcTime: 2400000,
-    enabled: !!currentUser,
+    queryFn: () => base44.entities.CommunityPost.list('-created_date', 50),
+    staleTime: 3600000,
+    gcTime: 7200000,
+    enabled: !!currentUser && activeTab === 'Discover',
     retry: 0,
   });
 
