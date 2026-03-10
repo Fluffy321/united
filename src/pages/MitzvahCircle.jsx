@@ -106,7 +106,7 @@ export default function MitzvahCircle({ isActive = true }) {
     }
 
     // Check if prompt was dismissed
-    const hasOrigin = user.location_lat && user.location_lng || user.cityPreset && TOWN_CENTERS[user.cityPreset];
+    const hasOrigin = user?.location_lat && user?.location_lng || user?.cityPreset && TOWN_CENTERS[user?.cityPreset];
     if (!hasOrigin) {
       const dismissed = localStorage.getItem('locationPromptDismissed');
       if (!dismissed) setTimeout(() => setShowLocationPrompt(true), 2000);
