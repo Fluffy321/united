@@ -53,7 +53,18 @@ const ACTION_BUTTON = {
 export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, liked }) {
   const isOwner = currentUser?.id === post.user_id;
   const isAnonymous = post.is_anonymous;
-  const timeAgo = formatDistanceToNow(new Date(post.created_date), { addSuffix: true });
+
+  // For seeded posts, generate a deterministic spread-out timestamp from post ID
+  const getDisplayDate = () => {
+    if (post.is_seeded) {
+      const hash = post.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+      const maxMs = 4 * 24 * 60 * 60 * 1000; // 4 days
+      return new Date(Date.now() - (hash % maxMs));
+    }
+    return new Date(post.created_date);
+  };
+
+  const timeAgo = formatDistanceToNow(getDisplayDate(), { addSuffix: true });
   const typeConfig = TYPE_CONFIGS[post.type] || TYPE_CONFIGS.feed;
   const [expanded, setExpanded] = useState(false);
   const [imgExpanded, setImgExpanded] = useState(false);
