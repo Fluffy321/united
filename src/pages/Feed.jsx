@@ -468,13 +468,32 @@ export default function Feed() {
             <p className="text-[13px] text-[#2563EB] mt-1 font-semibold">Tap to retry</p>
           </div>
         ) : feedPosts.length === 0 ? (
-           <div className="text-center py-12 bg-white rounded-[16px]" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-             <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
-               <span className="text-2xl">📝</span>
-             </div>
-             <p className="text-[#0F1C2E] font-semibold text-[15px]">No posts yet</p>
-             <p className="text-[13px] text-[#98A2B3] mt-1">Join a community or create the first post</p>
-           </div>
+          <div className="bg-white rounded-[16px] p-6" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+            <div className="text-center mb-5">
+              <div className="text-3xl mb-2">💬</div>
+              <p className="text-[16px] font-bold text-slate-900">Start the conversation</p>
+              <p className="text-[13px] text-slate-500 mt-1">Be the first to post something for the community</p>
+            </div>
+            <div className="space-y-2.5">
+              {[
+                { emoji: '❓', label: 'Ask a question', sub: 'About the community, local events, or anything on your mind', type: 'feed', subtype: 'question' },
+                { emoji: '⭐', label: 'Share a recommendation', sub: 'A restaurant, service, or local gem worth knowing', type: 'feed', subtype: 'recommendation' },
+                { emoji: '📣', label: 'Post a local update', sub: 'Something happening nearby that neighbors should know', type: 'feed', subtype: 'discussion' },
+              ].map(({ emoji, label, sub, type }) => (
+                <button
+                  key={label}
+                  onClick={() => { setPostModalType(type); setShowPostModal(true); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-100 hover:border-blue-200 transition-all text-left"
+                >
+                  <span className="text-xl flex-shrink-0">{emoji}</span>
+                  <div>
+                    <p className="text-[13px] font-semibold text-slate-800">{label}</p>
+                    <p className="text-[12px] text-slate-400">{sub}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         ) : (
           <div className="space-y-2.5 pb-24">
             {feedPosts.map((post, index) => (
