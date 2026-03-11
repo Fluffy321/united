@@ -124,9 +124,15 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         </div>
         
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${typeConfig.color}`}>
-            {typeConfig.label}
-          </span>
+          {post.post_subtype && SUBTYPE_CONFIGS[post.post_subtype] ? (
+            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${SUBTYPE_CONFIGS[post.post_subtype].color}`}>
+              {SUBTYPE_CONFIGS[post.post_subtype].label}
+            </span>
+          ) : (
+            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${typeConfig.color}`}>
+              {typeConfig.label}
+            </span>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="w-7 h-7 flex items-center justify-center rounded-full text-[#64748B] hover:bg-slate-100 transition-colors">
