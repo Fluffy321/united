@@ -165,6 +165,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
     setIsSubmitting(true);
 
     try {
+      const isFeedPost = !isPromptReply && postType === 'feed';
       const postData = {
         user_id: currentUser.id,
         user_name: isAnonymous ? 'Anonymous' : currentUser.display_name,
@@ -182,7 +183,8 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
         prompt_id: promptId || undefined,
         prompt_text: promptText || undefined,
         image_url: attachedFiles[0]?.url || undefined,
-        attachment_urls: attachedFiles.map(f => f.url)
+        attachment_urls: attachedFiles.map(f => f.url),
+        post_subtype: isFeedPost ? postSubtype : undefined,
       };
 
       await base44.entities.UnifiedPost.create(postData);
