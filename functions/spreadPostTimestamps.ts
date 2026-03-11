@@ -13,15 +13,14 @@ Deno.serve(async (req) => {
   const now = Date.now();
   const fourDaysMs = 4 * 24 * 60 * 60 * 1000;
 
-  let updated = 0;
-  for (let i = 0; i < posts.length; i++) {
-    // Distribute evenly across last 4 days, with some jitter
+  const updates = posts.map((post, i) => {
     const fraction = i / Math.max(posts.length - 1, 1);
-    const jitter = (Math.random() - 0.5) * 30 * 60 * 1000; // ±30 min jitter
+    const jitter = (Math.random() - 0.5) * 30 * 60 * 1000;
     const ts = new Date(now - fraction * fourDaysMs + jitter).toISOString();
-    await base44.asServiceRole.entities.UnifiedPost.update(posts[i].id, { created_date: ts });
-    updated++;
-  }
+    return base44.asServiceRole.entities.UnifiedPost.update(post.id, { created_date: ts });
+  });
 
-  return Response.json({ updated, total: posts.length });
+  await Promise.all(updates);
+
+  return Response.json({ updated: posts.length, total: posts.length });
 });
