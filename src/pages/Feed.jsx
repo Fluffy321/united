@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DailyPromptCard from '@/components/feed/DailyPromptCard';
+import InlineFeedPrompt from '@/components/feed/InlineFeedPrompt';
 import QuickActions from '@/components/feed/QuickActions';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
