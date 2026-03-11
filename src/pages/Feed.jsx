@@ -262,14 +262,23 @@ export default function Feed() {
   }
 
   const visiblePosts = posts.filter(p => p.type !== 'dating');
+
+  const trendingScore = (p) => (p.likes_count || 0) + (p.comments_count || 0) * 2;
+
   const feedPosts = (() => {
-    if (activeCategory === 'all') return visiblePosts.slice(0, 50);
-    if (activeCategory === 'discussion') return visiblePosts.filter(p => p.type === 'feed' || p.type === 'prompt_reply');
-    if (activeCategory === 'event') return visiblePosts.filter(p => p.type === 'event');
-    if (activeCategory === 'job') return visiblePosts.filter(p => p.type === 'job');
-    if (activeCategory === 'help') return visiblePosts.filter(p => p.type === 'help' || p.board === 'help');
-    if (activeCategory === 'news') return visiblePosts.filter(p => p.type === 'news');
-    return visiblePosts.slice(0, 50);
+    let filtered;
+    if (activeCategory === 'all') filtered = visiblePosts.slice(0, 50);
+    else if (activeCategory === 'discussion') filtered = visiblePosts.filter(p => p.type === 'feed' || p.type === 'prompt_reply');
+    else if (activeCategory === 'event') filtered = visiblePosts.filter(p => p.type === 'event');
+    else if (activeCategory === 'job') filtered = visiblePosts.filter(p => p.type === 'job');
+    else if (activeCategory === 'help') filtered = visiblePosts.filter(p => p.type === 'help' || p.board === 'help');
+    else if (activeCategory === 'news') filtered = visiblePosts.filter(p => p.type === 'news');
+    else filtered = visiblePosts.slice(0, 50);
+
+    if (sortMode === 'trending') {
+      return [...filtered].sort((a, b) => trendingScore(b) - trendingScore(a));
+    }
+    return filtered;
   })();
 
   // Convert community help requests to post-like format for display
