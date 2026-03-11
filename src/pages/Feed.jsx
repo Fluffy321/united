@@ -54,7 +54,7 @@ export default function Feed() {
         const user = await base44.auth.me();
         setCurrentUser(user);
         // Run these in parallel, ignore individual failures
-        await Promise.allSettled([loadPinnedPrompt(), loadUserLikes(user)]);
+        await Promise.allSettled([loadPinnedPrompt(), loadUserLikes(user), loadFeedPrompts()]);
       } catch (e) {
         console.warn('Feed init error:', e?.message);
         // Bypass auth — allow guest access temporarily
