@@ -388,6 +388,30 @@ export default function Feed() {
 
 
 
+        {/* Sort Toggle */}
+        <div className="flex items-center gap-1.5 mb-3">
+          <button
+            onClick={() => setSortMode('recent')}
+            className={`px-3 py-1 rounded-full text-[12px] font-semibold transition-all ${
+              sortMode === 'recent'
+                ? 'bg-slate-900 text-white'
+                : 'bg-white text-slate-500 border border-slate-200'
+            }`}
+          >
+            Recent
+          </button>
+          <button
+            onClick={() => setSortMode('trending')}
+            className={`px-3 py-1 rounded-full text-[12px] font-semibold transition-all flex items-center gap-1 ${
+              sortMode === 'trending'
+                ? 'bg-orange-500 text-white'
+                : 'bg-white text-slate-500 border border-slate-200'
+            }`}
+          >
+            🔥 Trending
+          </button>
+        </div>
+
         {/* Community Help Requests Section */}
         {activeCategory === 'help' && communityHelpRequests.length > 0 && (
           <div className="mb-6">
