@@ -91,12 +91,21 @@ const HELP_CATEGORIES = [
   }
 ];
 
+const FEED_SUBTYPES = [
+  { value: 'discussion',     label: 'Discussion',     emoji: '💬', color: 'bg-slate-100 text-slate-700 border-slate-300' },
+  { value: 'question',       label: 'Question',       emoji: '❓', color: 'bg-yellow-50 text-yellow-700 border-yellow-300' },
+  { value: 'alert',          label: 'Alert',          emoji: '🚨', color: 'bg-red-50 text-red-700 border-red-300' },
+  { value: 'recommendation', label: 'Recommendation', emoji: '⭐', color: 'bg-emerald-50 text-emerald-700 border-emerald-300' },
+  { value: 'lost_found',     label: 'Lost & Found',   emoji: '🔍', color: 'bg-blue-50 text-blue-700 border-blue-300' },
+];
+
 export default function UnifiedPostModal({ open, onOpenChange, currentUser, postType = 'feed', promptId = null, promptText = null }) {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [location, setLocation] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [category, setCategory] = useState('');
+  const [postSubtype, setPostSubtype] = useState('discussion');
   const [eventDate, setEventDate] = useState('');
   const [eventTime, setEventTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
