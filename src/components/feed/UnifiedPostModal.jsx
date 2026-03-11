@@ -245,6 +245,26 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
             </div>
           )}
 
+          {/* Post subtype selector — only for regular feed posts */}
+          {!isPromptReply && postType === 'feed' && (
+            <div>
+              <Label className="mb-2 block text-sm font-medium text-slate-700">Post type</Label>
+              <div className="flex flex-wrap gap-2">
+                {FEED_SUBTYPES.map(st => (
+                  <button
+                    key={st.value}
+                    type="button"
+                    onClick={() => setPostSubtype(st.value)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold border transition-all ${st.color} ${postSubtype === st.value ? 'ring-2 ring-offset-1 ring-current opacity-100' : 'opacity-60 hover:opacity-90'}`}
+                  >
+                    <span>{st.emoji}</span>
+                    {st.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <Label>{requiresTitle ? 'Details' : 'What\'s on your mind?'}</Label>
             <Textarea
