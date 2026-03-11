@@ -208,6 +208,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
       setLocation('');
       setIsAnonymous(false);
       setCategory('');
+      setPostSubtype('discussion');
       setEventDate('');
       setEventTime('');
       setAttachedFiles([]);
