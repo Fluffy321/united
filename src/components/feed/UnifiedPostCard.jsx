@@ -23,15 +23,23 @@ import { HELP_REQUEST_CATEGORIES } from '@/components/feed/RequestHelpModal';
 
 const TYPE_CONFIGS = {
   feed:         { label: 'Post',         color: 'bg-slate-100 text-slate-600' },
-  help:         { label: 'Help Needed',  color: 'bg-slate-100 text-slate-700 border border-slate-200' },
-  event:        { label: 'Event',        color: 'bg-slate-100 text-slate-700 border border-slate-200' },
-  job:          { label: 'Job',          color: 'bg-slate-100 text-slate-700 border border-slate-200' },
-  housing:      { label: 'Housing',      color: 'bg-slate-100 text-slate-700 border border-slate-200' },
-  dating:       { label: 'Dating',       color: 'bg-slate-100 text-slate-700 border border-slate-200' },
-  food:         { label: 'Food',         color: 'bg-slate-100 text-slate-700 border border-slate-200' },
-  shul:         { label: 'Shul',         color: 'bg-slate-100 text-slate-700 border border-slate-200' },
+  help:         { label: 'Help Needed',  color: 'bg-orange-50 text-orange-700 border border-orange-200' },
+  event:        { label: 'Event',        color: 'bg-blue-50 text-blue-700 border border-blue-200' },
+  job:          { label: 'Job',          color: 'bg-green-50 text-green-700 border border-green-200' },
+  housing:      { label: 'Housing',      color: 'bg-purple-50 text-purple-700 border border-purple-200' },
+  dating:       { label: 'Dating',       color: 'bg-pink-50 text-pink-700 border border-pink-200' },
+  food:         { label: 'Food',         color: 'bg-amber-50 text-amber-700 border border-amber-200' },
+  shul:         { label: 'Shul',         color: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
   news:         { label: 'News',         color: 'bg-slate-100 text-slate-700 border border-slate-200' },
-  prompt_reply: { label: 'Prompt',       color: 'bg-slate-100 text-slate-700 border border-slate-200' },
+  prompt_reply: { label: 'Prompt',       color: 'bg-violet-50 text-violet-700 border border-violet-200' },
+};
+
+const SUBTYPE_CONFIGS = {
+  discussion:     { label: '💬 Discussion',     color: 'bg-slate-100 text-slate-600' },
+  question:       { label: '❓ Question',        color: 'bg-yellow-50 text-yellow-700 border border-yellow-200' },
+  alert:          { label: '🚨 Alert',           color: 'bg-red-50 text-red-700 border border-red-200' },
+  recommendation: { label: '⭐ Recommendation', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+  lost_found:     { label: '🔍 Lost & Found',   color: 'bg-blue-50 text-blue-700 border border-blue-200' },
 };
 
 const ACTION_BUTTON = {
