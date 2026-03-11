@@ -7,7 +7,11 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Admin only' }, { status: 403 });
   }
 
-  const posts = await base44.asServiceRole.entities.UnifiedPost.filter({ is_seeded: true });
+  const allPosts = await base44.asServiceRole.entities.UnifiedPost.filter({ is_seeded: true });
+  // Process in batches of 20 to avoid timeout
+  const body = await req.json().catch(() => ({}));
+  const offset = body.offset || 0;
+  const posts = allPosts.slice(offset, offset + 20);
 
   // Spread timestamps: most recent = 2 min ago, oldest = 4 days ago
   const now = Date.now();
