@@ -344,20 +344,38 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
             </>
           )}
 
-          {(isEvent || postType === 'housing' || postType === 'job') && (
-            <div>
-              <Label>Location</Label>
-              <div className="relative mt-1">
+          {/* Location tag — available for all post types */}
+          <div>
+            <Label className="mb-2 block">Neighborhood <span className="text-slate-400 font-normal">(optional)</span></Label>
+            <div className="flex flex-wrap gap-2">
+              {['Cedarhurst', 'Woodmere', 'Lawrence', 'Inwood', 'Hewlett', 'Far Rockaway'].map(n => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setLocation(location === n ? '' : n)}
+                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-[12px] font-semibold border transition-all ${
+                    location === n
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-blue-400'
+                  }`}
+                >
+                  <MapPin className="w-3 h-3" />
+                  {n}
+                </button>
+              ))}
+            </div>
+            {(isEvent || postType === 'housing' || postType === 'job') && (
+              <div className="relative mt-2">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Enter location..."
+                  placeholder="Or type a specific address..."
                   className="pl-9"
                 />
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* File upload */}
           <div>
