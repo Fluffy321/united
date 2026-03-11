@@ -442,17 +442,28 @@ export default function Feed() {
            </div>
         ) : (
           <div className="space-y-2.5 pb-24">
-            {feedPosts.map((post) => (
-              <UnifiedPostCard
-                key={post.id}
-                post={post}
-                currentUser={currentUser}
-                liked={userLikes.includes(post.id)}
-                onLike={handleLike}
-                onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
-                onDelete={(id) => deleteMutation.mutate(id)}
-                onReport={handleReport}
-              />
+            {feedPosts.map((post, index) => (
+              <React.Fragment key={post.id}>
+                <UnifiedPostCard
+                  post={post}
+                  currentUser={currentUser}
+                  liked={userLikes.includes(post.id)}
+                  onLike={handleLike}
+                  onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
+                  onDelete={(id) => deleteMutation.mutate(id)}
+                  onReport={handleReport}
+                />
+                {/* Inject a prompt card every 6 posts */}
+                {(index + 1) % 6 === 0 && feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length] && (
+                  <InlineFeedPrompt
+                    prompt={feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length]}
+                    onReply={(p) => {
+                      setPinnedPrompt(p);
+                      setShowPromptReply(true);
+                    }}
+                  />
+                )}
+              </React.Fragment>
             ))}
           </div>
         )}
