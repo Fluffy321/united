@@ -44,6 +44,7 @@ export default function Feed() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [sortMode, setSortMode] = useState('recent'); // 'recent' | 'trending'
   const [hideCommunityBanner, setHideCommunityBanner] = useState(
     () => localStorage.getItem('joinCommunitiesBannerDismissed') === '1'
   );
