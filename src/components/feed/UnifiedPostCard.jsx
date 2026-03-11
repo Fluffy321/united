@@ -250,11 +250,13 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           </div>
         )}
 
-        {/* Location (non-event) */}
+        {/* Location tag */}
         {post.location_text && post.type !== 'event' && (
-          <div className="flex items-center gap-1 text-[12px] text-[#98A2B3] mt-2">
-            <MapPin className="w-3.5 h-3.5" />
-            <span>{post.location_text}</span>
+          <div className="mt-2">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 text-[11px] font-semibold">
+              <MapPin className="w-3 h-3" />
+              {post.location_text}
+            </span>
           </div>
         )}
 
