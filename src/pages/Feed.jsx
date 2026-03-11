@@ -106,6 +106,17 @@ export default function Feed() {
     }
   };
 
+  const [feedPrompts, setFeedPrompts] = useState([]);
+
+  const loadFeedPrompts = async () => {
+    try {
+      const prompts = await base44.entities.DailyPrompt.list('-created_date', 5);
+      setFeedPrompts(prompts);
+    } catch (e) {
+      console.warn('loadFeedPrompts failed:', e?.message);
+    }
+  };
+
   const loadUserLikes = async (user) => {
     try {
       const u = user || await base44.auth.me();
