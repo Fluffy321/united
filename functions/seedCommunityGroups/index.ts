@@ -217,20 +217,23 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Insert posts in batches of 30
+    // Insert posts in small batches with delays to avoid rate limits
     const createdPosts = [];
-    const BATCH = 30;
+    const BATCH = 10;
+    const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
     for (let i = 0; i < postBatch.length; i += BATCH) {
       const batch = postBatch.slice(i, i + BATCH);
       const created = await Promise.all(batch.map(p => db.entities.CommunityPost.create(p)));
       createdPosts.push(...created);
+      if (i + BATCH < postBatch.length) await delay(300);
     }
     results.posts_created = createdPosts.length;
 
-    // 4. Create comments (4 per post)
+    // 4. Create comments (2 per post, batched with delays)
     const commentBatch = [];
     for (const post of createdPosts) {
-      for (let c = 0; c < 4; c++) {
+      for (let c = 0; c < 2; c++) {
         const author = pickRandom(MOCK_AUTHORS);
         commentBatch.push({
           post_id: post.id,
@@ -243,6 +246,7 @@ Deno.serve(async (req) => {
     for (let i = 0; i < commentBatch.length; i += BATCH) {
       const batch = commentBatch.slice(i, i + BATCH);
       await Promise.all(batch.map(c => db.entities.Comment.create(c)));
+      if (i + BATCH < commentBatch.length) await delay(300);
     }
     results.comments_created = commentBatch.length;
 
