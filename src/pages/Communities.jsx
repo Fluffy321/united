@@ -50,7 +50,7 @@ export default function Communities() {
   const [pendingRequestSet, setPendingRequestSet] = useState(new Set());
   const queryClient = useQueryClient();
 
-  const AUTO_JOIN_NAMES = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Pickup Basketball', 'Young Adults Hangouts', 'HAFTR Community'];
+  const AUTO_JOIN_NAMES = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Young Israel Woodmere Members', 'Pickup Basketball', 'Young Adults Hangouts', 'Daf Yomi Chat'];
 
   useEffect(() => {
     base44.auth.me().then(async user => {
