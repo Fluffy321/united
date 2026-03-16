@@ -297,7 +297,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
 
         {/* Messages */}
         <div className="p-4 space-y-4 bg-slate-50">
-        {isLoading ? (
+          {isLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
           </div>
