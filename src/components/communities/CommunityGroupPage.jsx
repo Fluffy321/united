@@ -5,6 +5,8 @@ import InviteLinkButton from './InviteLinkButton';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import GroupEventsTab from '@/components/groups/GroupEventsTab';
+import FileAttachmentButton from '@/components/common/FileAttachmentButton';
+import { AttachmentPreview, PendingAttachmentChip } from '@/components/common/FileAttachmentPreview';
 
 const CATEGORY_EMOJIS = {
   'Torah Learning': '📚', Shabbat: '🕯️', Chesed: '🤝', Events: '🎉',
