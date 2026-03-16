@@ -400,7 +400,19 @@ export default function Communities() {
 }
 
 /* ─── My Communities Tab ─── */
-function MyCommunitiesTab({ joinedCommunities, myGroups, loading, onViewCommunity, onViewGroup, onDiscover }) {
+function MyCommunitiesTab({ joinedCommunities, myGroups, loading, onViewCommunity, onViewGroup, onDiscover, allGroups }) {
+  const EXPLORE_CATEGORIES = [
+    { label: 'Local',    emoji: '📍', filter: g => g.category === 'Local Life' || g.category === 'Local' },
+    { label: 'Chessed',  emoji: '❤️', filter: g => g.category === 'Chessed' },
+    { label: 'Social',   emoji: '🏀', filter: g => g.category === 'Social' },
+    { label: 'Learning', emoji: '📚', filter: g => g.category === 'Learning' },
+    { label: 'Schools',  emoji: '🏫', filter: g => g.subcategory === 'School' || g.category === 'Institutional' },
+    { label: 'Shuls',    emoji: '🕍', filter: g => g.subcategory === 'Shul' },
+  ];
+
+  // Trending: sort by member_count desc
+  const trending = useMemo(() => [...(allGroups || [])].sort((a, b) => (b.member_count || 0) - (a.member_count || 0)).slice(0, 5), [allGroups]);
+
   if (loading) {
     return (
       <div className="space-y-3">
@@ -417,49 +429,126 @@ function MyCommunitiesTab({ joinedCommunities, myGroups, loading, onViewCommunit
     );
   }
 
-  if (joinedCommunities.length === 0 && myGroups.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-        <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-5">
-          <Globe className="w-9 h-9 text-[#2563EB]" />
-        </div>
-        <h3 className="text-[16px] font-bold text-slate-800 mb-1.5">No communities yet</h3>
-        <p className="text-[13px] text-slate-400 mb-6 max-w-xs">Find shuls, schools, and groups to be part of the Jewish community network.</p>
-        <button
-          onClick={onDiscover}
-          className="text-[14px] font-semibold text-white px-6 py-2.5 rounded-full"
-          style={{ background: '#2563EB' }}
-        >
-          Explore Communities
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <>
-      {joinedCommunities.length > 0 && (
+    <div className="space-y-5">
+
+      {/* 🔥 Trending Now — horizontal scroll */}
+      {trending.length > 0 && (
         <section>
-          <SectionHeader title="My Shuls & Organizations" count={joinedCommunities.length} />
+          <SectionHeader title="🔥 Trending Now" />
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
+            {trending.map(g => (
+              <TrendingGroupCard key={g.id} group={g} onClick={() => onViewGroup(g)} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Your Communities */}
+      {(joinedCommunities.length > 0 || myGroups.length > 0) ? (
+        <section>
+          <SectionHeader title="Your Communities" count={joinedCommunities.length + myGroups.length} />
           <div className="space-y-2.5">
             {joinedCommunities.map(c => (
               <CommunityRow key={c.id} community={c} onClick={() => onViewCommunity(c.id)} />
             ))}
-          </div>
-        </section>
-      )}
-
-      {myGroups.length > 0 && (
-        <section>
-          <SectionHeader title="My Groups" count={myGroups.length} />
-          <div className="space-y-2.5">
             {myGroups.map(g => (
-              <GroupRow key={g.id} group={g} onClick={() => onViewGroup(g)} />
+              <GroupRowRich key={g.id} group={g} onClick={() => onViewGroup(g)} />
             ))}
           </div>
         </section>
+      ) : (
+        <div className="bg-blue-50 rounded-2xl p-5 text-center border border-blue-100">
+          <Globe className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+          <p className="font-semibold text-slate-800 text-[14px] mb-1">No communities yet</p>
+          <p className="text-[12px] text-slate-500 mb-3">Join groups below to get started</p>
+          <button onClick={onDiscover} className="text-[13px] font-semibold text-white px-5 py-2 rounded-full" style={{ background: '#2563EB' }}>
+            Discover
+          </button>
+        </div>
       )}
-    </>
+
+      {/* Explore Categories grid */}
+      <section>
+        <SectionHeader title="Explore Communities" />
+        <div className="grid grid-cols-3 gap-2.5">
+          {EXPLORE_CATEGORIES.map(cat => {
+            const count = (allGroups || []).filter(cat.filter).length;
+            return (
+              <button
+                key={cat.label}
+                onClick={onDiscover}
+                className="bg-white rounded-2xl border border-slate-100 p-3.5 flex flex-col items-center gap-1.5 active:scale-[0.97] transition-transform"
+                style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}
+              >
+                <span className="text-2xl">{cat.emoji}</span>
+                <span className="text-[12px] font-bold text-slate-800">{cat.label}</span>
+                {count > 0 && <span className="text-[10px] text-slate-400">{count} groups</span>}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+    </div>
+  );
+}
+
+/* ─── Trending group card (horizontal) ─── */
+function TrendingGroupCard({ group, onClick }) {
+  const cfg = CATEGORY_CONFIG[group.category] || CATEGORY_CONFIG['General'];
+  const isHot = (group.member_count || 0) >= 80;
+  return (
+    <div
+      onClick={onClick}
+      className="flex-shrink-0 w-36 bg-white rounded-2xl border border-slate-100 overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+    >
+      <div className="h-16 flex items-center justify-center text-3xl" style={{ background: 'linear-gradient(135deg, #EEF2FF, #E0E7FF)' }}>
+        {cfg.emoji}
+      </div>
+      <div className="p-2.5">
+        <p className="font-bold text-slate-900 text-[12px] leading-tight line-clamp-2 mb-1">{group.name}</p>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-slate-400">{group.member_count || 0} members</span>
+          {isHot && <span className="text-[10px] font-bold text-orange-500">🔥</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Rich group row for My Communities ─── */
+function GroupRowRich({ group, onClick }) {
+  const cfg = CATEGORY_CONFIG[group.category] || CATEGORY_CONFIG['General'];
+  const isNew = group.post_count > 0;
+  const isActive = (group.member_count || 0) >= 60;
+  return (
+    <div
+      onClick={onClick}
+      className="bg-white rounded-2xl border border-slate-100 p-4 flex items-start gap-3.5 cursor-pointer active:scale-[0.99] transition-transform"
+      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+    >
+      <div className="w-12 h-12 rounded-xl flex-shrink-0 bg-slate-50 flex items-center justify-center border border-slate-100 text-2xl">
+        {cfg.emoji}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+          <p className="font-bold text-slate-900 text-[14px] truncate">{group.name}</p>
+          {isActive && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-500 border border-orange-200">🔥 Active</span>}
+          {isNew && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-200">🟢 New posts</span>}
+          {group.category === 'Chessed' && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-200">❤️ Chessed</span>}
+        </div>
+        {group.description && (
+          <p className="text-[11px] text-slate-500 line-clamp-1 mb-1">{group.description}</p>
+        )}
+        <span className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+          <Users className="w-3 h-3" />
+          {group.member_count || 0} members
+        </span>
+      </div>
+      <ChevronRight className="w-4 h-4 text-slate-300 flex-shrink-0 mt-1" />
+    </div>
   );
 }
 
