@@ -301,7 +301,24 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-slate-500">Start the conversation!</p>
+            {isAI ? (
+              <div className="space-y-3">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto">
+                  <Bot className="w-8 h-8 text-white" />
+                </div>
+                <p className="font-semibold text-slate-800">United AI Assistant</p>
+                <p className="text-sm text-slate-500 max-w-xs mx-auto">Ask me about local events, shuls, schools, chesed opportunities, or anything about the Five Towns community!</p>
+                <div className="flex flex-wrap gap-2 justify-center mt-4">
+                  {["What's happening this Shabbat?", "Find local chesed opportunities", "Recommend a shul near me"].map(s => (
+                    <button key={s} onClick={() => setNewMessage(s)} className="text-[12px] px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 transition-colors">
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-slate-500">Start the conversation!</p>
+            )}
           </div>
         ) : (
           messages.map(msg => {
