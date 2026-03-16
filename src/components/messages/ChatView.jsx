@@ -41,6 +41,14 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const other = getOtherParticipant();
 
   useEffect(() => {
+    if (isAI) {
+      // Load from localStorage for AI chats
+      const saved = loadAIMessages(currentUser.id);
+      setMessages(saved);
+      setIsLoading(false);
+      return;
+    }
+
     loadMessages();
     markAsRead();
     loadMitzvahContext();
