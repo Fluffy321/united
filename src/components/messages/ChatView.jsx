@@ -368,7 +368,8 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Completion Actions */}
