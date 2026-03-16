@@ -59,42 +59,34 @@ export default function Communities() {
     base44.auth.me().then(async user => {
       setCurrentUser(user);
 
-      const [memberships, reqs, allGroups] = await Promise.all([
-        base44.entities.GroupMember.filter({ user_id: user.id }),
-        base44.entities.GroupJoinRequest.filter({ user_id: user.id, status: 'pending' }),
-        base44.entities.CommunityGroup.list(),
-      ]);
+      // Fetch memberships and pending requests sequentially to avoid rate limits
+      const memberships = await base44.entities.GroupMember.filter({ user_id: user.id });
+      const reqs = await base44.entities.GroupJoinRequest.filter({ user_id: user.id, status: 'pending' });
 
       const joinedGroupIds = new Set(memberships.map(m => m.group_id));
       setMembershipSet(joinedGroupIds);
       setPendingRequestSet(new Set(reqs.map(r => r.group_id)));
 
-      // Helper: join a single group (sequential to avoid rate limits)
-      const joinGroup = async (g) => {
-        await base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: user.full_name, role: 'member' });
-        await base44.entities.CommunityGroup.update(g.id, { member_count: (g.member_count || 0) + 1 });
-      };
+      // Only run auto-join once per session to avoid hammering the API
+      const autoJoinKey = `auto_joined_${user.id}`;
+      if (sessionStorage.getItem(autoJoinKey)) return;
+      sessionStorage.setItem(autoJoinKey, '1');
 
-      // Force-join existing users into core groups they haven't joined yet
-      const coreGroups = allGroups.filter(g => AUTO_JOIN_NAMES.includes(g.name) && !joinedGroupIds.has(g.id));
-      for (const g of coreGroups) {
-        await joinGroup(g);
+      // Only auto-join if user has fewer than MIN_COMMUNITIES
+      if (joinedGroupIds.size >= MIN_COMMUNITIES) return;
+
+      const allGroups = await base44.entities.CommunityGroup.list();
+      const groupsToJoin = allGroups.filter(g =>
+        (AUTO_JOIN_NAMES.includes(g.name) || FALLBACK_AUTO_JOIN.includes(g.name)) &&
+        !joinedGroupIds.has(g.id)
+      ).slice(0, 6);
+
+      for (const g of groupsToJoin) {
+        await base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: user.full_name, role: 'member' });
         joinedGroupIds.add(g.id);
       }
-      if (coreGroups.length > 0) {
+      if (groupsToJoin.length > 0) {
         setMembershipSet(new Set(joinedGroupIds));
-      }
-
-      // Safety lock: if still below min communities, auto-join fallback groups
-      if (joinedGroupIds.size < MIN_COMMUNITIES) {
-        const fallbackGroups = allGroups.filter(g => FALLBACK_AUTO_JOIN.includes(g.name) && !joinedGroupIds.has(g.id));
-        for (const g of fallbackGroups) {
-          await joinGroup(g);
-          joinedGroupIds.add(g.id);
-        }
-        if (fallbackGroups.length > 0) {
-          setMembershipSet(new Set(joinedGroupIds));
-        }
       }
     });
   }, []);
