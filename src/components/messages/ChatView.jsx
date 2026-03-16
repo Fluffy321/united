@@ -162,13 +162,50 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
 
   const handleSend = async () => {
     if (!newMessage.trim() && !pendingAttachment) return;
-    
-    setIsSending(true);
-    
+
     const text = newMessage.trim();
     const attachment = pendingAttachment;
     setNewMessage('');
     setPendingAttachment(null);
+
+    // AI conversation — local messages + InvokeLLM
+    if (isAI) {
+      const userMsg = {
+        id: `user-${Date.now()}`,
+        conversation_id: conversation.id,
+        sender_id: currentUser.id,
+        sender_name: currentUser.display_name || currentUser.full_name,
+        recipient_id: AI_AGENT.id,
+        content: text,
+        created_date: new Date().toISOString(),
+      };
+      const updated = [...messages, userMsg];
+      setMessages(updated);
+      saveAIMessages(currentUser.id, updated);
+
+      setAiThinking(true);
+      try {
+        const reply = await getAIReply(text, currentUser, updated);
+        const aiMsg = {
+          id: `ai-${Date.now()}`,
+          conversation_id: conversation.id,
+          sender_id: AI_AGENT.id,
+          sender_name: AI_AGENT.full_name,
+          recipient_id: currentUser.id,
+          content: reply,
+          created_date: new Date().toISOString(),
+        };
+        const withReply = [...updated, aiMsg];
+        setMessages(withReply);
+        saveAIMessages(currentUser.id, withReply);
+      } catch {
+        toast.error('AI failed to respond, try again.');
+      }
+      setAiThinking(false);
+      return;
+    }
+
+    setIsSending(true);
 
     const msg = await base44.entities.Message.create({
       conversation_id: conversation.id,
