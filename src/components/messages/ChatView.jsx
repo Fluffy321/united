@@ -23,7 +23,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const [mitzvahRequest, setMitzvahRequest] = useState(null);
   const [helpOffer, setHelpOffer] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [aiThinking, setAiThinking] = useState(false);
   const messagesEndRef = useRef(null);
+  const isAI = isAIConversation(conversation);
 
   const getOtherParticipant = () => {
     const idx = conversation.participant_ids?.indexOf(currentUser.id);
