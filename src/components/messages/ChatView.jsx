@@ -371,7 +371,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
 
       {/* Completion Actions */}
       {mitzvahRequest && mitzvahRequest.status === 'InProgress' && (
-        <div className="px-4 py-3 bg-white border-t border-slate-100">
+        <div className="px-4 py-3 bg-white border-t border-slate-100 flex-shrink-0">
           {currentUser.id === mitzvahRequest.claimed_by_user_id && !helpOffer?.completed_by_helper && (
             <Button
               onClick={handleMarkCompleted}
