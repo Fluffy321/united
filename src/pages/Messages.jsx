@@ -7,6 +7,7 @@ import ChatView from '@/components/messages/ChatView';
 import ReportModal from '@/components/common/ReportModal';
 import MessageRequestsTab from '@/components/messages/MessageRequestsTab';
 import UserSearchPanel from '@/components/messages/UserSearchPanel';
+import { buildAIConversation } from '@/lib/aiAgent';
 import { toast } from 'sonner';
 
 export default function Messages() {
