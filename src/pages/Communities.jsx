@@ -350,6 +350,7 @@ export default function Communities() {
               onViewCommunity={setSelectedCommunityId}
               onViewGroup={setSelectedGroup}
               onDiscover={() => setActiveTab('Discover')}
+              onAutoJoin={handleGroupJoin}
             />
           )}
 
