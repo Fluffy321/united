@@ -394,7 +394,7 @@ export default function Communities() {
 }
 
 /* ─── My Communities Tab ─── */
-function MyCommunitiesTab({ joinedCommunities, myGroups, loading, onViewCommunity, onViewGroup, onDiscover, allGroups }) {
+function MyCommunitiesTab({ joinedCommunities, myGroups, loading, onViewCommunity, onViewGroup, onDiscover, allGroups, onAutoJoin }) {
   const EXPLORE_CATEGORIES = [
     { label: 'Local',        emoji: '📍', filter: g => g.category === 'Local Life' || g.category === 'Local' },
     { label: 'Chessed',      emoji: '❤️', filter: g => g.category === 'Chessed' },
