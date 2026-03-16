@@ -80,11 +80,15 @@ export default function Messages() {
         if (req) requestTitleMap[rid] = req.title;
       }));
       
-      return userConvs.map(conv => ({
+      const mapped = userConvs.map(conv => ({
         ...conv,
         participant_avatars: conv.participant_ids?.map(id => userMap[id] || null),
         request_title: conv.request_id ? requestTitleMap[conv.request_id] : null
       }));
+
+      // Pin AI conversation at top
+      const aiConv = buildAIConversation(currentUser);
+      return [aiConv, ...mapped];
     },
     enabled: !!currentUser
   });
