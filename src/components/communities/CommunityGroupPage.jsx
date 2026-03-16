@@ -30,6 +30,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
   const [loading, setLoading] = useState(true);
   const [newPost, setNewPost] = useState('');
   const [newAnnouncement, setNewAnnouncement] = useState('');
+  const [postAttachment, setPostAttachment] = useState(null);
   const [posting, setPosting] = useState(false);
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const [joinRequests, setJoinRequests] = useState([]);
