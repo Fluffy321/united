@@ -298,9 +298,9 @@ Deno.serve(async (req) => {
           user_name: name,
           role: 'member',
         }));
-        for (let i = 0; i < memberBatch.length; i += 20) {
-          await Promise.all(memberBatch.slice(i, i + 20).map(m => db.entities.GroupMember.create(m)));
-          await delay(200);
+        for (let i = 0; i < memberBatch.length; i += 10) {
+          await Promise.all(memberBatch.slice(i, i + 10).map(m => db.entities.GroupMember.create(m)));
+          await delay(400);
         }
         membersCreated += memberBatch.length;
 
