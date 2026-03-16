@@ -124,9 +124,18 @@ export default function ProfileSetup({ user, onComplete }) {
       const AUTO_JOIN_GROUPS = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Pickup Basketball', 'Young Adults Hangouts', 'HAFTR Community'];
       const groups = await base44.entities.CommunityGroup.list();
       const autoGroups = groups.filter(g => AUTO_JOIN_GROUPS.includes(g.name));
-      await Promise.allSettled(autoGroups.map(g =>
-        base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: displayName.trim(), role: 'member' })
-      ));
+      // Check which ones user isn't already in
+      const existingMemberships = await base44.entities.GroupMember.filter({ user_id: user.id });
+      const existingGroupIds = new Set(existingMemberships.map(m => m.group_id));
+      const groupsToJoin = autoGroups.filter(g => !existingGroupIds.has(g.id));
+      await Promise.allSettled([
+        ...groupsToJoin.map(g =>
+          base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: displayName.trim(), role: 'member' })
+        ),
+        ...groupsToJoin.map(g =>
+          base44.entities.CommunityGroup.update(g.id, { member_count: (g.member_count || 0) + 1 })
+        ),
+      ]);
 
       setIsSubmitting(false);
       onComplete?.();
