@@ -358,9 +358,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
               </div>
             );
           })
-        )}
-        {/* AI thinking indicator */}
-        {aiThinking && (
+          )}
+          {/* AI thinking indicator */}
+          {aiThinking && (
           <div className="flex justify-start">
             <div className="bg-white text-slate-800 rounded-2xl rounded-bl-md shadow-sm border border-slate-100 px-4 py-3 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
