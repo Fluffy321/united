@@ -34,20 +34,23 @@ export default function ConversationList({ conversations, currentUser, selectedI
         const other = getOther(conv);
         const unread = conv.unread_count?.[currentUser.id] || 0;
         const isSelected = selectedId === conv.id;
+        const isAIChat = other.id === AI_AGENT.id;
 
         return (
           <div
             key={conv.id}
             onClick={() => onSelect(conv)}
             className={`px-4 py-3.5 cursor-pointer transition-colors flex items-center gap-3 ${
-              isSelected ? 'bg-blue-50' : 'hover:bg-slate-50 active:bg-slate-100'
+              isSelected ? 'bg-blue-50' : isAIChat ? 'bg-indigo-50/60 hover:bg-indigo-50' : 'hover:bg-slate-50 active:bg-slate-100'
             }`}
           >
             {/* Avatar */}
             <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-lg text-white"
               style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}
             >
-              {other.avatar
+              {isAIChat
+                ? <Bot className="w-6 h-6 text-white" />
+                : other.avatar
                 ? <img src={other.avatar} alt="" className="w-full h-full object-cover" />
                 : other.name?.charAt(0)?.toUpperCase()
               }
