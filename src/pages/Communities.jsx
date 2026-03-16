@@ -52,6 +52,9 @@ export default function Communities() {
 
   const AUTO_JOIN_NAMES = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Young Israel Woodmere Members', 'Pickup Basketball', 'Young Adults Hangouts', 'Daf Yomi Chat'];
 
+  const FALLBACK_AUTO_JOIN = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Young Israel Woodmere Members', 'Pickup Basketball', 'Daf Yomi Chat'];
+  const MIN_COMMUNITIES = 3;
+
   useEffect(() => {
     base44.auth.me().then(async user => {
       setCurrentUser(user);
@@ -77,7 +80,25 @@ export default function Communities() {
             base44.entities.CommunityGroup.update(g.id, { member_count: (g.member_count || 0) + 1 })
           ),
         ]);
-        setMembershipSet(prev => new Set([...prev, ...coreGroups.map(g => g.id)]));
+        const newIds = coreGroups.map(g => g.id);
+        setMembershipSet(prev => new Set([...prev, ...newIds]));
+        joinedGroupIds.add(...newIds);
+      }
+
+      // Safety lock: if still below min communities, auto-join fallback groups
+      if (joinedGroupIds.size < MIN_COMMUNITIES) {
+        const fallbackGroups = allGroups.filter(g => FALLBACK_AUTO_JOIN.includes(g.name) && !joinedGroupIds.has(g.id));
+        if (fallbackGroups.length > 0) {
+          await Promise.allSettled([
+            ...fallbackGroups.map(g =>
+              base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: user.full_name, role: 'member' })
+            ),
+            ...fallbackGroups.map(g =>
+              base44.entities.CommunityGroup.update(g.id, { member_count: (g.member_count || 0) + 1 })
+            ),
+          ]);
+          setMembershipSet(prev => new Set([...prev, ...fallbackGroups.map(g => g.id)]));
+        }
       }
     });
   }, []);
