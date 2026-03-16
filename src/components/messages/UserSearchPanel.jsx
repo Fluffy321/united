@@ -164,9 +164,10 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
 
 function UserResultRow({ user, currentUserGroups, loading, onClick }) {
   const [mutualCount, setMutualCount] = useState(null);
+  const isAI = user.id === AI_AGENT.id;
 
   React.useEffect(() => {
-    if (!currentUserGroups) return;
+    if (isAI || !currentUserGroups) return;
     base44.entities.GroupMember.filter({ user_id: user.id }).then(memberships => {
       const theirGroups = new Set(memberships.map(m => m.group_id));
       const count = [...currentUserGroups].filter(id => theirGroups.has(id)).length;
@@ -178,26 +179,31 @@ function UserResultRow({ user, currentUserGroups, loading, onClick }) {
     <button
       onClick={onClick}
       disabled={loading}
-      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-left disabled:opacity-50"
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-left disabled:opacity-50 ${isAI ? 'bg-indigo-50 border border-indigo-100' : ''}`}
     >
-      <div className="w-9 h-9 rounded-full bg-blue-100 flex-shrink-0 overflow-hidden flex items-center justify-center">
-        {user.avatar_url
+      <div className={`w-9 h-9 rounded-full flex-shrink-0 overflow-hidden flex items-center justify-center ${isAI ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-blue-100'}`}>
+        {isAI
+          ? <Bot className="w-5 h-5 text-white" />
+          : user.avatar_url
           ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
           : <span className="text-blue-600 font-bold text-[14px]">{user.full_name?.charAt(0)}</span>
         }
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[14px] font-semibold text-slate-900 truncate">{user.full_name}</p>
-        {mutualCount !== null && mutualCount > 0 && (
-          <p className="text-[11px] text-slate-400 flex items-center gap-1">
-            <Users className="w-3 h-3" />
-            {mutualCount} mutual communit{mutualCount === 1 ? 'y' : 'ies'}
-          </p>
-        )}
+        {isAI
+          ? <p className="text-[11px] text-indigo-500 font-medium">AI • Ask anything about the community</p>
+          : mutualCount !== null && mutualCount > 0 && (
+            <p className="text-[11px] text-slate-400 flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              {mutualCount} mutual communit{mutualCount === 1 ? 'y' : 'ies'}
+            </p>
+          )
+        }
       </div>
       {loading
         ? <Loader2 className="w-4 h-4 animate-spin text-slate-400 flex-shrink-0" />
-        : <MessageCircle className="w-4 h-4 text-slate-300 flex-shrink-0" />
+        : <MessageCircle className={`w-4 h-4 flex-shrink-0 ${isAI ? 'text-indigo-400' : 'text-slate-300'}`} />
       }
     </button>
   );
