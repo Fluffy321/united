@@ -160,6 +160,8 @@ function recentDate(daysAgo) {
   return d.toISOString();
 }
 
+const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -168,106 +170,78 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Admin only' }, { status: 403 });
     }
 
+    const { phase = 'groups' } = await req.json().catch(() => ({}));
     const db = base44.asServiceRole;
-    const results = { groups_created: 0, posts_created: 0, comments_created: 0, memberships_created: 0 };
 
-    // 1. Delete old seeded groups
-    const existingGroups = await db.entities.CommunityGroup.list('-created_date', 500);
-    const seededOld = existingGroups.filter(g => g.is_seeded);
-    console.log(`[seedCG] Removing ${seededOld.length} old seeded groups…`);
-    await Promise.all(seededOld.map(g => db.entities.CommunityGroup.delete(g.id)));
-
-    // 2. Create all 50 groups
-    console.log('[seedCG] Creating groups…');
-    const createdGroups = await Promise.all(
-      GROUPS.map(g => db.entities.CommunityGroup.create({
-        ...g,
-        is_seeded: true,
-        is_private: false,
-        post_count: 6,
-      }))
-    );
-    results.groups_created = createdGroups.length;
-
-    // Build lookup map
-    const groupMap = {};
-    for (const g of createdGroups) {
-      groupMap[g.name] = g;
-    }
-
-    // 3. Create GroupPost records (6 per group) and comments
-    console.log('[seedCG] Creating posts and comments…');
-    const postBatch = [];
-    for (const group of createdGroups) {
-      const templatePosts = MOCK_POSTS[group.category] || MOCK_POSTS['Local Life'];
-      for (let i = 0; i < 6; i++) {
-        const template = templatePosts[i % templatePosts.length];
-        const author = pickRandom(MOCK_AUTHORS);
-        postBatch.push({
-          community_id: group.id,
-          author_user_id: author.user_id,
-          author_name: author.user_name,
-          title: template.title,
-          body: template.body,
-          type: 'general',
-          is_seeded: true,
-          is_official: false,
-          is_pinned: false,
-        });
+    // ── PHASE 1: Create groups + memberships ────────────────────────────────
+    if (phase === 'groups') {
+      // Delete old seeded groups
+      const existingGroups = await db.entities.CommunityGroup.list('-created_date', 500);
+      const seededOld = existingGroups.filter(g => g.is_seeded);
+      console.log(`[seedCG] Removing ${seededOld.length} old seeded groups…`);
+      for (let i = 0; i < seededOld.length; i += 10) {
+        await Promise.all(seededOld.slice(i, i + 10).map(g => db.entities.CommunityGroup.delete(g.id)));
+        await delay(200);
       }
-    }
 
-    // Insert posts in small batches with delays to avoid rate limits
-    const createdPosts = [];
-    const BATCH = 10;
-    const delay = (ms) => new Promise(r => setTimeout(r, ms));
-
-    for (let i = 0; i < postBatch.length; i += BATCH) {
-      const batch = postBatch.slice(i, i + BATCH);
-      const created = await Promise.all(batch.map(p => db.entities.CommunityPost.create(p)));
-      createdPosts.push(...created);
-      if (i + BATCH < postBatch.length) await delay(300);
-    }
-    results.posts_created = createdPosts.length;
-
-    // 4. Create comments (2 per post, batched with delays)
-    const commentBatch = [];
-    for (const post of createdPosts) {
-      for (let c = 0; c < 2; c++) {
-        const author = pickRandom(MOCK_AUTHORS);
-        commentBatch.push({
-          post_id: post.id,
-          author_id: author.user_id,
-          author_name: author.user_name,
-          body: pickRandom(MOCK_COMMENTS),
-        });
+      // Create all groups
+      console.log('[seedCG] Creating groups…');
+      const createdGroups = [];
+      for (let i = 0; i < GROUPS.length; i += 10) {
+        const batch = GROUPS.slice(i, i + 10);
+        const created = await Promise.all(batch.map(g => db.entities.CommunityGroup.create({
+          ...g, is_seeded: true, is_private: false, post_count: 6,
+        })));
+        createdGroups.push(...created);
+        await delay(300);
       }
+
+      // Auto-join user into core groups
+      const autoGroups = createdGroups.filter(g => AUTO_JOIN_NAMES.has(g.name));
+      const existingMemberships = await db.entities.GroupMember.filter({ user_id: user.id });
+      const alreadyJoined = new Set(existingMemberships.map(m => m.group_id));
+      const toJoin = autoGroups.filter(g => !alreadyJoined.has(g.id));
+      await Promise.all(toJoin.map(g => db.entities.GroupMember.create({
+        group_id: g.id, user_id: user.id, user_name: user.full_name, role: 'member',
+      })));
+
+      console.log(`[seedCG] Groups done: ${createdGroups.length}, memberships: ${toJoin.length}`);
+      return Response.json({ ok: true, phase: 'groups', groups_created: createdGroups.length, memberships_created: toJoin.length });
     }
-    for (let i = 0; i < commentBatch.length; i += BATCH) {
-      const batch = commentBatch.slice(i, i + BATCH);
-      await Promise.all(batch.map(c => db.entities.Comment.create(c)));
-      if (i + BATCH < commentBatch.length) await delay(300);
+
+    // ── PHASE 2: Seed posts for first N groups ──────────────────────────────
+    if (phase === 'posts') {
+      const { offset = 0, limit = 10 } = await req.json().catch(() => ({}));
+      const allGroups = await db.entities.CommunityGroup.filter({ is_seeded: true });
+      const slice = allGroups.slice(offset, offset + limit);
+      console.log(`[seedCG] Seeding posts for groups ${offset}–${offset + slice.length}`);
+
+      let postsCreated = 0;
+      for (const group of slice) {
+        const templates = MOCK_POSTS[group.category] || MOCK_POSTS['Local Life'];
+        for (let i = 0; i < 6; i++) {
+          const template = templates[i % templates.length];
+          const author = pickRandom(MOCK_AUTHORS);
+          await db.entities.CommunityPost.create({
+            community_id: group.id,
+            author_user_id: author.user_id,
+            author_name: author.user_name,
+            title: template.title,
+            body: template.body,
+            type: 'general',
+            is_seeded: true,
+            is_official: false,
+            is_pinned: false,
+          });
+          postsCreated++;
+          await delay(150);
+        }
+      }
+
+      return Response.json({ ok: true, phase: 'posts', posts_created: postsCreated, offset, limit });
     }
-    results.comments_created = commentBatch.length;
 
-    // 5. Auto-join requesting user into the 5 core groups
-    const autoGroups = createdGroups.filter(g => AUTO_JOIN_NAMES.has(g.name));
-    const existingMemberships = await db.entities.GroupMember.filter({ user_id: user.id });
-    const alreadyJoined = new Set(existingMemberships.map(m => m.group_id));
-
-    const newMemberships = autoGroups.filter(g => !alreadyJoined.has(g.id));
-    await Promise.all(newMemberships.map(g =>
-      db.entities.GroupMember.create({
-        group_id: g.id,
-        user_id: user.id,
-        user_name: user.full_name,
-        role: 'member',
-      })
-    ));
-    results.memberships_created = newMemberships.length;
-
-    console.log('[seedCG] Done:', results);
-    return Response.json({ ok: true, ...results });
+    return Response.json({ error: 'Unknown phase. Use phase=groups or phase=posts' }, { status: 400 });
   } catch (err) {
     console.error('[seedCG] ERROR:', err.message);
     return Response.json({ error: err.message }, { status: 500 });
