@@ -121,7 +121,7 @@ export default function ProfileSetup({ user, onComplete }) {
       });
 
       // Auto-join default community groups
-      const AUTO_JOIN_GROUPS = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Pickup Basketball', 'Young Adults Hangouts', 'HAFTR Community'];
+      const AUTO_JOIN_GROUPS = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Young Israel Woodmere Members', 'Pickup Basketball', 'Young Adults Hangouts', 'Daf Yomi Chat'];
       const groups = await base44.entities.CommunityGroup.list();
       const autoGroups = groups.filter(g => AUTO_JOIN_GROUPS.includes(g.name));
       // Check which ones user isn't already in
