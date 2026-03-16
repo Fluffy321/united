@@ -323,8 +323,14 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         ) : (
           messages.map(msg => {
             const isOwn = msg.sender_id === currentUser.id;
+            const isAIMsg = msg.sender_id === AI_AGENT.id;
             return (
-              <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+              <div key={msg.id} className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                {isAIMsg && (
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 text-white" />
+                  </div>
+                )}
                 <div className={`max-w-[75%] ${isOwn ? 'order-2' : ''}`}>
                   <div className={`px-4 py-2.5 rounded-2xl ${
                     isOwn 
