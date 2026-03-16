@@ -242,7 +242,118 @@ Deno.serve(async (req) => {
       return Response.json({ ok: true, phase: 'posts', posts_created: postsCreated, offset, limit });
     }
 
-    return Response.json({ error: 'Unknown phase. Use phase=groups or phase=posts' }, { status: 400 });
+    // ── PHASE 3: Seed network (members + posts + comments + likes) ─────────
+    if (phase === 'network') {
+      const allGroups = await db.entities.CommunityGroup.list('-created_date', 500);
+      const seededGroups = allGroups.filter(g => g.is_seeded);
+      const slice = seededGroups.slice(offset, offset + limit);
+      console.log(`[seedCG] Seeding network for groups ${offset}–${offset + slice.length}`);
+
+      const MEMBER_NAMES = [
+        'Tova Hersch','Dovid Rosen','Leah Feldman','Noam Berger','Shira Weiss',
+        'Ari Blum','Malka Green','Zev Katz','Esther Silver','Yaakov Stern',
+        'Batya Cohen','Moshe Wein','Dina Levy','Shmuel Gold','Ruti Klein',
+        'Yitzchak Adler','Nechama Rubin','Binyamin Lang','Chavi Marks','Eliezer Fox',
+        'Adina Shapiro','Gershon Fried','Bracha Horowitz','Pinhas Korn','Tzippy Mann',
+        'Levi Stone','Hadassah Berg','Nachman Roth','Fruma Schwartz','Amos Hirsch',
+        'Nava Gross','Yehuda Fink','Rivky Lerner','Akiva Strauss','Penina Siegel',
+        'Shraga Bloom','Chana Teich','Uri Mandel','Shoshana Karr','Barak Vogel',
+        'Leora Fisher','Eli Sacks','Menucha Baum','Tuvia Press','Aliza Kohn',
+        'Chaim Mayer','Zahava Perl','Eitan Licht','Ora Glick','Reuven Becker',
+        'Yaffa Nadel','Dov Stern','Tzipora Segal','Ilan Marks','Gila Weiss',
+        'Asher Bloch','Basya Rosen','Tzvi Leib','Nechami Gold','Avigail Fox',
+      ];
+
+      const POST_TEMPLATES = [
+        { title: 'Anyone available to help tonight?', body: 'Looking for someone who can lend a hand this evening. Please message me.' },
+        { title: 'Game happening at 7pm — who\'s in?', body: 'We have a game set for 7pm. Need a few more people. Reply here or DM.' },
+        { title: 'New shiur starting this week', body: 'Excited to announce a new weekly shiur starting this week. All are welcome!' },
+        { title: 'Lost item near Central Ave', body: 'Lost something near Central Ave yesterday. If found please reach out, sentimental value.' },
+        { title: 'Looking for babysitter recommendations', body: 'Need a reliable babysitter for Friday nights. Any recommendations in the area?' },
+        { title: 'Job opportunity posted', body: 'A local business is hiring. Great opportunity for someone in the community. Details in comments.' },
+        { title: 'Community event this Sunday', body: 'Don\'t miss the community event this Sunday! Great time for families and singles alike.' },
+        { title: 'Housing available for summer', body: 'We have a rental available for the summer months. Fully furnished, great location. Message for details.' },
+      ];
+
+      const COMMENT_TEMPLATES = [
+        'Count me in!',
+        'Thanks for posting this 🙏',
+        'Can you share more details?',
+        'Shared this with my family!',
+        'Yasher koach for stepping up.',
+        'This is so needed in our community.',
+        'I\'ll reach out privately.',
+        'Great idea — let\'s make it happen.',
+        'Following for updates.',
+        'Incredible community we have here!',
+      ];
+
+      let membersCreated = 0, postsCreated = 0, commentsCreated = 0, likesCreated = 0;
+
+      for (const group of slice) {
+        // Create 60 fake members
+        const memberBatch = MEMBER_NAMES.slice(0, 60).map((name, i) => ({
+          group_id: group.id,
+          user_id: `seed_member_${group.id}_${i}`,
+          user_name: name,
+          role: 'member',
+        }));
+        for (let i = 0; i < memberBatch.length; i += 20) {
+          await Promise.all(memberBatch.slice(i, i + 20).map(m => db.entities.GroupMember.create(m)));
+          await delay(200);
+        }
+        membersCreated += memberBatch.length;
+
+        // Create 8 posts with comments + likes
+        for (let p = 0; p < 8; p++) {
+          const template = POST_TEMPLATES[p % POST_TEMPLATES.length];
+          const authorIdx = p % MEMBER_NAMES.length;
+          const post = await db.entities.CommunityPost.create({
+            community_id: group.id,
+            author_user_id: `seed_member_${group.id}_${authorIdx}`,
+            author_name: MEMBER_NAMES[authorIdx],
+            title: template.title,
+            body: template.body,
+            type: 'general',
+            is_seeded: true,
+            is_official: false,
+            is_pinned: false,
+          });
+          postsCreated++;
+          await delay(100);
+
+          // 5 comments per post
+          for (let c = 0; c < 5; c++) {
+            const commenterIdx = (p * 5 + c + 10) % MEMBER_NAMES.length;
+            await db.entities.Comment.create({
+              post_id: post.id,
+              author_id: `seed_member_${group.id}_${commenterIdx}`,
+              author_name: MEMBER_NAMES[commenterIdx],
+              body: COMMENT_TEMPLATES[(p + c) % COMMENT_TEMPLATES.length],
+            });
+            commentsCreated++;
+          }
+
+          // 4–32 likes per post
+          const likeCount = rand(4, 32);
+          for (let l = 0; l < Math.min(likeCount, 20); l++) {
+            const likerIdx = (p * 3 + l + 5) % MEMBER_NAMES.length;
+            await db.entities.Like.create({
+              post_id: post.id,
+              user_id: `seed_liker_${group.id}_${l}`,
+              is_seeded: true,
+            });
+            likesCreated++;
+          }
+          await delay(150);
+        }
+      }
+
+      console.log(`[seedCG] Network done: ${membersCreated} members, ${postsCreated} posts, ${commentsCreated} comments, ${likesCreated} likes`);
+      return Response.json({ ok: true, phase: 'network', membersCreated, postsCreated, commentsCreated, likesCreated, offset, limit });
+    }
+
+    return Response.json({ error: 'Unknown phase. Use phase=groups, phase=posts, or phase=network' }, { status: 400 });
   } catch (err) {
     console.error('[seedCG] ERROR:', err.message);
     return Response.json({ error: err.message }, { status: 500 });
