@@ -452,14 +452,7 @@ function MyCommunitiesTab({ joinedCommunities, myGroups, loading, onViewCommunit
           </div>
         </section>
       ) : (
-        <div className="bg-blue-50 rounded-2xl p-5 text-center border border-blue-100">
-          <Globe className="w-8 h-8 text-blue-400 mx-auto mb-2" />
-          <p className="font-semibold text-slate-800 text-[14px] mb-1">No communities yet</p>
-          <p className="text-[12px] text-slate-500 mb-3">Join groups below to get started</p>
-          <button onClick={onDiscover} className="text-[13px] font-semibold text-white px-5 py-2 rounded-full" style={{ background: '#2563EB' }}>
-            Discover
-          </button>
-        </div>
+        <EmptyMyCommunitiesState allGroups={allGroups} onAutoJoin={onAutoJoin} onDiscover={onDiscover} />
       )}
 
       {/* Explore Categories grid */}
