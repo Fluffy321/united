@@ -278,8 +278,8 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         )}
       </div>
 
-      {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Scrollable Messages Area */}
+      <div className="flex-1 overflow-y-auto min-h-0">
         {/* Mitzvah Context Banner */}
         {mitzvahRequest && (
           <div className="bg-indigo-50 border-b border-indigo-100 p-3">
