@@ -59,8 +59,9 @@ export default function ConversationList({ conversations, currentUser, selectedI
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-0.5">
-                <span className={`font-semibold text-[14px] truncate ${unread > 0 ? 'text-slate-900' : 'text-slate-800'}`}>
+                <span className={`font-semibold text-[14px] truncate flex items-center gap-1.5 ${unread > 0 ? 'text-slate-900' : 'text-slate-800'}`}>
                   {other.name}
+                  {isAIChat && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-600">AI</span>}
                 </span>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {conv.last_message_at && (
