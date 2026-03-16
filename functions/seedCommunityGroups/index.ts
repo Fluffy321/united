@@ -322,8 +322,8 @@ Deno.serve(async (req) => {
           postsCreated++;
           await delay(100);
 
-          // 5 comments per post (sequential with delay)
-          for (let c = 0; c < 5; c++) {
+          // 3 comments per post (sequential with delay)
+          for (let c = 0; c < 3; c++) {
             const commenterIdx = (p * 5 + c + 10) % MEMBER_NAMES.length;
             await db.entities.Comment.create({
               post_id: post.id,
