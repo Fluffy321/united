@@ -21,6 +21,7 @@ export function isAIConversation(conversation) {
 }
 
 export function buildAIConversation(currentUser) {
+  if (!currentUser?.id) return null;
   return {
     id: getAIConversationId(currentUser.id),
     participant_ids: [currentUser.id, AI_AGENT.id],
