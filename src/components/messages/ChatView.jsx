@@ -262,7 +262,15 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
                       : 'bg-white text-slate-800 rounded-bl-md shadow-sm border border-slate-100'
                   }`}
                   style={isOwn ? { background: '#2563EB' } : {}}>
-                    <p className="text-[15px] leading-relaxed">{msg.content}</p>
+                    {msg.content && !msg.attachment && <p className="text-[15px] leading-relaxed">{msg.content}</p>}
+                   {msg.attachment && (
+                     <div className={msg.content && msg.content !== `📎 ${msg.attachment.name}` ? 'mt-2' : ''}>
+                       {msg.content && msg.content !== `📎 ${msg.attachment.name}` && (
+                         <p className="text-[15px] leading-relaxed mb-2">{msg.content}</p>
+                       )}
+                       <AttachmentPreview attachment={msg.attachment} compact />
+                     </div>
+                   )}
                   </div>
                   <p className={`text-xs text-slate-400 mt-1 ${isOwn ? 'text-right' : ''}`}>
                     {formatDistanceToNow(new Date(msg.created_date), { addSuffix: true })}
