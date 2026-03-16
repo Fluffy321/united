@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, ArrowLeft, MoreVertical, Flag, Ban, CheckCircle2, HandHeart } from 'lucide-react';
+import { Send, Loader2, ArrowLeft, MoreVertical, Flag, Ban, CheckCircle2, HandHeart, Bot, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import FileAttachmentButton from '@/components/common/FileAttachmentButton';
 import { AttachmentPreview, PendingAttachmentChip } from '@/components/common/FileAttachmentPreview';
+import { AI_AGENT, isAIConversation, loadAIMessages, saveAIMessages, getAIReply } from '@/lib/aiAgent';
 
 export default function ChatView({ conversation, currentUser, onBack, onReport, onBlock }) {
   const [messages, setMessages] = useState([]);
