@@ -1,12 +1,12 @@
 import React from 'react';
-import { HandHeart, Bell, Calendar, Zap } from 'lucide-react';
+import { HandHeart, Bell, Calendar, MapPin } from 'lucide-react';
 import UserAvatar from '@/components/common/UserAvatar';
 
 const QUICK_ACTIONS = [
-  { label: 'Ask Help', icon: HandHeart, type: 'help', color: 'text-orange-600 bg-orange-50 border-orange-200' },
-  { label: 'Alert', icon: Bell, type: 'alert', color: 'text-red-600 bg-red-50 border-red-200' },
-  { label: 'Event', icon: Calendar, type: 'event', color: 'text-blue-600 bg-blue-50 border-blue-200' },
-  { label: 'Mitzvah', icon: Zap, type: 'mitzvah', color: 'text-green-600 bg-green-50 border-green-200' },
+  { label: 'Post Alert', icon: Bell, type: 'alert', color: 'text-red-600 bg-red-50 border-red-200' },
+  { label: 'Ask for Help', icon: HandHeart, type: 'help', color: 'text-orange-600 bg-orange-50 border-orange-200' },
+  { label: 'Create Event', icon: Calendar, type: 'event', color: 'text-blue-600 bg-blue-50 border-blue-200' },
+  { label: 'Log Mitzvah', icon: MapPin, type: 'mitzvah', color: 'text-green-600 bg-green-50 border-green-200' },
 ];
 
 export default function PostBox({ currentUser, onPostClick, onQuickAction }) {
