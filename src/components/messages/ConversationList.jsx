@@ -1,6 +1,7 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { HandHeart } from 'lucide-react';
+import { HandHeart, Bot } from 'lucide-react';
+import { AI_AGENT } from '@/lib/aiAgent';
 
 export default function ConversationList({ conversations, currentUser, selectedId, onSelect }) {
   const getOther = (conv) => {
