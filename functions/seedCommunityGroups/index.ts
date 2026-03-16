@@ -335,8 +335,8 @@ Deno.serve(async (req) => {
             await delay(200);
           }
 
-          // 4–12 likes per post
-          const likeCount = rand(4, 12);
+          // 3–8 likes per post
+          const likeCount = rand(3, 8);
           for (let l = 0; l < likeCount; l++) {
             await db.entities.Like.create({
               post_id: post.id,
