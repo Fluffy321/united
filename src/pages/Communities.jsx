@@ -841,14 +841,15 @@ function DiscoverTab({ search, setSearch, groups, allCommunities, trendingCommun
                </div>
                <div className="space-y-2.5">
                  {featuredShuls.map(c => (
-                   <ShulCard
-                     key={c.id}
-                     community={c}
-                     joined={joinedIds.has(c.id)}
-                     loading={joiningId === c.id}
-                     onJoin={onJoinCommunity}
-                     onView={onViewCommunity}
-                   />
+                   <div key={c.id} onClick={() => onViewCommunity(c.id)} className="cursor-pointer">
+                     <ShulCard
+                       community={c}
+                       joined={joinedIds.has(c.id)}
+                       loading={joiningId === c.id}
+                       onJoin={onJoinCommunity}
+                       onView={onViewCommunity}
+                     />
+                   </div>
                  ))}
                </div>
              </section>
