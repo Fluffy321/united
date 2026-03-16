@@ -118,12 +118,29 @@ export default function Messages() {
         <div className={`flex flex-col w-full lg:w-96 lg:border-r border-slate-200 ${
           selectedConversation ? 'hidden lg:flex' : 'flex'
         }`}>
-          <div className="px-4 pt-4 pb-3 border-b border-slate-100 flex-shrink-0">
+          <div className="px-4 pt-4 pb-0 border-b border-slate-100 flex-shrink-0">
             <h1 className="text-[20px] font-bold text-slate-900">Messages</h1>
-            <p className="text-[12px] text-slate-400 mt-0.5">Your conversations</p>
+            <div className="flex mt-3">
+              {['inbox', 'requests'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 py-2.5 text-[13px] font-semibold border-b-2 transition-colors capitalize ${
+                    activeTab === tab ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-400 border-transparent'
+                  }`}
+                >
+                  {tab === 'inbox' ? 'Inbox' : 'Requests'}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {isLoading ? (
+            {activeTab === 'requests' ? (
+              <MessageRequestsTab
+                currentUser={currentUser}
+                onAccepted={(conv) => { setSelectedConversation(conv); setActiveTab('inbox'); }}
+              />
+            ) : isLoading ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7]" />
               </div>
