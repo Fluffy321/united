@@ -848,7 +848,7 @@ function DiscoverTab({ search, setSearch, groups, allCommunities, trendingCommun
             if (allItems.length === 0) return null;
             const isExpanded = expandedCategories[cat.id];
             const items = isExpanded ? allItems : allItems.slice(0, PREVIEW_COUNT);
-            const useCommunity = isCommunity(cat.id);
+            const useCommunity = cat.isCommunity;
             return (
               <section key={cat.id}>
                 {/* Section Header */}
