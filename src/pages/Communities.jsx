@@ -701,34 +701,23 @@ function categorizeGroup(group) {
 function DiscoverTab({ search, setSearch, groups, allCommunities, trendingCommunities, membershipSet, pendingRequestSet, joinedIds, joiningId, loading, onJoinGroup, onLeaveGroup, onViewGroup, onJoinCommunity, onViewCommunity }) {
   const [expandedCategories, setExpandedCategories] = useState({});
 
-  const schools = useMemo(() => allCommunities.filter(c => c.type === 'School' || c.type === 'Yeshiva' || c.type === 'Seminary'), [allCommunities]);
-  const shuls = useMemo(() => allCommunities.filter(c => c.type === 'Shul'), [allCommunities]);
-  const interestCommunities = useMemo(() => {
-    const keywords = ['basketball', 'kosher', 'entrepreneur', 'gamer', 'fitness', 'music', 'torah learning', 'sports', 'hobby', 'art', 'tech', 'book', 'career', 'business'];
-    return allCommunities.filter(c => {
-      const text = `${c.name} ${c.description_short || ''} ${c.description_long || ''}`.toLowerCase();
-      return keywords.some(k => text.includes(k));
-    });
-  }, [allCommunities]);
-  const citiesGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'cities'), [groups]);
-  const travelersGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'travelers'), [groups]);
-  const interestGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'interest'), [groups]);
-  const helpGroups = useMemo(() => groups.filter(g => categorizeGroup(g) === 'help'), [groups]);
+  const institutions = useMemo(() => allCommunities.filter(c => ['School', 'Yeshiva', 'Seminary', 'Camp', 'Shul', 'Other'].includes(c.type)), [allCommunities]);
+  const localGroups    = useMemo(() => groups.filter(g => g.category === 'Local Life' || g.category === 'Local'), [groups]);
+  const chessedGroups  = useMemo(() => groups.filter(g => g.category === 'Chessed'), [groups]);
+  const socialGroups   = useMemo(() => groups.filter(g => g.category === 'Social'), [groups]);
+  const learningGroups = useMemo(() => groups.filter(g => g.category === 'Learning'), [groups]);
 
   const getCategoryItems = (id) => {
     switch(id) {
-      case 'schools':    return schools;
-      case 'shuls':      return shuls;
-      case 'interests':  return interestCommunities;
-      case 'cities':     return citiesGroups;
-      case 'travelers':  return travelersGroups;
-      case 'interest':   return interestGroups;
-      case 'help':       return helpGroups;
+      case 'local':        return localGroups;
+      case 'chessed':      return chessedGroups;
+      case 'social':       return socialGroups;
+      case 'learning':     return learningGroups;
+      case 'institutions': return institutions;
       default: return [];
     }
   };
 
-  const isCommunity = (id) => id === 'schools' || id === 'shuls' || id === 'interests';
   const PREVIEW_COUNT = 3;
   const toggleExpand = (id) => setExpandedCategories(prev => ({ ...prev, [id]: !prev[id] }));
 
