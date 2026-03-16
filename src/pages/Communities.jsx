@@ -318,6 +318,7 @@ export default function Communities() {
             <MyCommunitiesTab
               joinedCommunities={joinedCommunities}
               myGroups={myGroups}
+              allGroups={groups}
               loading={communitiesLoading || membershipsLoading}
               onViewCommunity={setSelectedCommunityId}
               onViewGroup={setSelectedGroup}
