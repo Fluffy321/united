@@ -120,6 +120,14 @@ export default function ProfileSetup({ user, onComplete }) {
         followed_boards: ['help_needed', 'events', 'kosher_food']
       });
 
+      // Auto-join default community groups
+      const AUTO_JOIN_GROUPS = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Pickup Basketball', 'Young Adults Hangouts', 'HAFTR Community'];
+      const groups = await base44.entities.CommunityGroup.list();
+      const autoGroups = groups.filter(g => AUTO_JOIN_GROUPS.includes(g.name));
+      await Promise.allSettled(autoGroups.map(g =>
+        base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: displayName.trim(), role: 'member' })
+      ));
+
       setIsSubmitting(false);
       onComplete?.();
     } catch (error) {

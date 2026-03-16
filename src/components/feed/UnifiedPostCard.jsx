@@ -135,6 +135,20 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         </div>
         
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Activity labels */}
+          {(() => {
+            const score = (post.likes_count || 0) + (post.comments_count || 0) * 2;
+            const isNew = !post.is_seeded && (Date.now() - new Date(post.created_date).getTime()) < 2 * 60 * 60 * 1000;
+            const isHot = score >= 20;
+            const isChessed = post.type === 'help';
+            return (
+              <>
+                {isHot && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">🔥 Active</span>}
+                {isNew && !isHot && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">🟢 New</span>}
+                {isChessed && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">❤️ Chessed</span>}
+              </>
+            );
+          })()}
           {post.post_subtype && SUBTYPE_CONFIGS[post.post_subtype] ? (
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${SUBTYPE_CONFIGS[post.post_subtype].color}`}>
               {SUBTYPE_CONFIGS[post.post_subtype].label}

@@ -150,12 +150,13 @@ export default function Feed() {
   const trendingScore = (p) => (p.likes_count || 0) + (p.comments_count || 0) * 2;
 
   const feedPosts = (() => {
-    if (activeTab === 'trending') return [...visiblePosts].sort((a, b) => trendingScore(b) - trendingScore(a)).slice(0, 40);
-    if (activeTab === 'chessed') return visiblePosts.filter(p => p.type === 'help' || p.board === 'help');
-    if (activeTab === 'learning') return visiblePosts.filter(p => p.type === 'news' || /torah|parsha|daf|halacha|shiur/i.test(p.body || ''));
-    if (activeTab === 'social') return visiblePosts.filter(p => p.type === 'event' || p.type === 'feed');
-    if (activeTab === 'nearby') return visiblePosts.filter(p => p.city);
-    return visiblePosts.slice(0, 40);
+    const sorted = [...visiblePosts].sort((a, b) => trendingScore(b) - trendingScore(a));
+    if (activeTab === 'trending') return sorted.slice(0, 40);
+    if (activeTab === 'chessed') return sorted.filter(p => p.type === 'help' || p.board === 'help');
+    if (activeTab === 'learning') return sorted.filter(p => p.type === 'news' || /torah|parsha|daf|halacha|shiur/i.test(p.body || ''));
+    if (activeTab === 'social') return sorted.filter(p => p.type === 'event' || p.type === 'feed');
+    if (activeTab === 'nearby') return sorted.filter(p => p.city);
+    return sorted.slice(0, 40);
   })();
 
   return (
