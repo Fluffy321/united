@@ -235,7 +235,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   };
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 h-full overflow-hidden">
+    <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b border-slate-100 bg-white flex-shrink-0">
         <Button variant="ghost" size="icon" onClick={onBack} className="lg:hidden">
@@ -278,23 +278,25 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         )}
       </div>
 
-      {/* Mitzvah Context Banner */}
-      {mitzvahRequest && (
-        <div className="bg-indigo-50 border-b border-indigo-100 p-3">
-          <div className="flex items-start gap-2">
-            <HandHeart className="w-5 h-5 text-indigo-600 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-indigo-900">{mitzvahRequest.title}</p>
-              <p className="text-xs text-indigo-700 mt-0.5">
-                Status: {mitzvahRequest.status === 'InProgress' ? 'In Progress' : mitzvahRequest.status}
-              </p>
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Mitzvah Context Banner */}
+        {mitzvahRequest && (
+          <div className="bg-indigo-50 border-b border-indigo-100 p-3">
+            <div className="flex items-start gap-2">
+              <HandHeart className="w-5 h-5 text-indigo-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-indigo-900">{mitzvahRequest.title}</p>
+                <p className="text-xs text-indigo-700 mt-0.5">
+                  Status: {mitzvahRequest.status === 'InProgress' ? 'In Progress' : mitzvahRequest.status}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+        {/* Messages */}
+        <div className="p-4 space-y-4 bg-slate-50">
         {isLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
