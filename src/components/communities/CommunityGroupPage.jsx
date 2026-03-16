@@ -55,7 +55,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
   }, [group]);
 
   const handlePost = async () => {
-    if (!newPost.trim()) return;
+    if (!newPost.trim() && !postAttachment) return;
     setPosting(true);
     const post = await base44.entities.GroupPost.create({
       group_id: group.id,
@@ -63,10 +63,12 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
       user_name: currentUser.full_name,
       body: newPost.trim(),
       post_type: 'post',
+      attachment: postAttachment || null,
     });
     await base44.entities.CommunityGroup.update(group.id, { post_count: (group.post_count || 0) + 1 });
     setPosts(prev => [post, ...prev]);
     setNewPost('');
+    setPostAttachment(null);
     setPosting(false);
     toast.success('Posted!');
   };
