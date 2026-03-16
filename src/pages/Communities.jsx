@@ -69,35 +69,31 @@ export default function Communities() {
       setMembershipSet(joinedGroupIds);
       setPendingRequestSet(new Set(reqs.map(r => r.group_id)));
 
+      // Helper: join a single group (sequential to avoid rate limits)
+      const joinGroup = async (g) => {
+        await base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: user.full_name, role: 'member' });
+        await base44.entities.CommunityGroup.update(g.id, { member_count: (g.member_count || 0) + 1 });
+      };
+
       // Force-join existing users into core groups they haven't joined yet
       const coreGroups = allGroups.filter(g => AUTO_JOIN_NAMES.includes(g.name) && !joinedGroupIds.has(g.id));
+      for (const g of coreGroups) {
+        await joinGroup(g);
+        joinedGroupIds.add(g.id);
+      }
       if (coreGroups.length > 0) {
-        await Promise.allSettled([
-          ...coreGroups.map(g =>
-            base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: user.full_name, role: 'member' })
-          ),
-          ...coreGroups.map(g =>
-            base44.entities.CommunityGroup.update(g.id, { member_count: (g.member_count || 0) + 1 })
-          ),
-        ]);
-        const newIds = coreGroups.map(g => g.id);
-        setMembershipSet(prev => new Set([...prev, ...newIds]));
-        joinedGroupIds.add(...newIds);
+        setMembershipSet(new Set(joinedGroupIds));
       }
 
       // Safety lock: if still below min communities, auto-join fallback groups
       if (joinedGroupIds.size < MIN_COMMUNITIES) {
         const fallbackGroups = allGroups.filter(g => FALLBACK_AUTO_JOIN.includes(g.name) && !joinedGroupIds.has(g.id));
+        for (const g of fallbackGroups) {
+          await joinGroup(g);
+          joinedGroupIds.add(g.id);
+        }
         if (fallbackGroups.length > 0) {
-          await Promise.allSettled([
-            ...fallbackGroups.map(g =>
-              base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: user.full_name, role: 'member' })
-            ),
-            ...fallbackGroups.map(g =>
-              base44.entities.CommunityGroup.update(g.id, { member_count: (g.member_count || 0) + 1 })
-            ),
-          ]);
-          setMembershipSet(prev => new Set([...prev, ...fallbackGroups.map(g => g.id)]));
+          setMembershipSet(new Set(joinedGroupIds));
         }
       }
     });
