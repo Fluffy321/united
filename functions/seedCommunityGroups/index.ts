@@ -214,7 +214,7 @@ Deno.serve(async (req) => {
     if (phase === 'posts') {
       const allGroups = await db.entities.CommunityGroup.list('-created_date', 500);
       const seededGroups = allGroups.filter(g => g.is_seeded);
-      const slice = allGroups.slice(offset, offset + limit);
+      const slice = seededGroups.slice(offset, offset + limit);
       console.log(`[seedCG] Seeding posts for groups ${offset}–${offset + slice.length}`);
 
       let postsCreated = 0;
