@@ -62,10 +62,14 @@ export default function Communities() {
       // Force-join existing users into core groups they haven't joined yet
       const coreGroups = allGroups.filter(g => AUTO_JOIN_NAMES.includes(g.name) && !joinedGroupIds.has(g.id));
       if (coreGroups.length > 0) {
-        await Promise.allSettled(coreGroups.map(g =>
-          base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: user.full_name, role: 'member' })
-        ));
-        // Update membershipSet with newly joined groups
+        await Promise.allSettled([
+          ...coreGroups.map(g =>
+            base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: user.full_name, role: 'member' })
+          ),
+          ...coreGroups.map(g =>
+            base44.entities.CommunityGroup.update(g.id, { member_count: (g.member_count || 0) + 1 })
+          ),
+        ]);
         setMembershipSet(prev => new Set([...prev, ...coreGroups.map(g => g.id)]));
       }
     });
