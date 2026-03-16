@@ -298,76 +298,76 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         {/* Messages */}
         <div className="p-4 space-y-4 bg-slate-50">
           {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="text-center py-8">
-            {isAI ? (
-              <div className="space-y-3">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto">
-                  <Bot className="w-8 h-8 text-white" />
-                </div>
-                <p className="font-semibold text-slate-800">United AI Assistant</p>
-                <p className="text-sm text-slate-500 max-w-xs mx-auto">Ask me about local events, shuls, schools, chesed opportunities, or anything about the Five Towns community!</p>
-                <div className="flex flex-wrap gap-2 justify-center mt-4 mb-4">
-                  {["What's happening this Shabbat?", "Find local chesed opportunities", "Recommend a shul near me"].map(s => (
-                    <button key={s} onClick={() => setNewMessage(s)} className="text-[12px] px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 transition-colors">
-                      {s}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-slate-400 mt-3">Or type your own question below ↓</p>
-              </div>
-            ) : (
-              <p className="text-slate-500">Start the conversation!</p>
-            )}
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
             </div>
-            ) : (
-              messages.map(msg => {
-            const isOwn = msg.sender_id === currentUser.id;
-            const isAIMsg = msg.sender_id === AI_AGENT.id;
-            return (
-              <div key={msg.id} className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                {isAIMsg && (
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4 text-white" />
+          ) : messages.length === 0 ? (
+            <div className="text-center py-8">
+              {isAI ? (
+                <div className="space-y-3">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto">
+                    <Bot className="w-8 h-8 text-white" />
                   </div>
-                )}
-                <div className={`max-w-[75%] ${isOwn ? 'order-2' : ''}`}>
-                  <div className={`px-4 py-2.5 rounded-2xl ${
-                    isOwn 
-                      ? 'text-white rounded-br-md' 
-                      : 'bg-white text-slate-800 rounded-bl-md shadow-sm border border-slate-100'
-                  }`}
-                  style={isOwn ? { background: '#2563EB' } : {}}>
-                    {msg.content && !msg.attachment && <p className="text-[15px] leading-relaxed">{msg.content}</p>}
-                   {msg.attachment && (
-                     <div className={msg.content && msg.content !== `📎 ${msg.attachment.name}` ? 'mt-2' : ''}>
-                       {msg.content && msg.content !== `📎 ${msg.attachment.name}` && (
-                         <p className="text-[15px] leading-relaxed mb-2">{msg.content}</p>
-                       )}
-                       <AttachmentPreview attachment={msg.attachment} compact />
-                     </div>
-                   )}
+                  <p className="font-semibold text-slate-800">United AI Assistant</p>
+                  <p className="text-sm text-slate-500 max-w-xs mx-auto">Ask me about local events, shuls, schools, chesed opportunities, or anything about the Five Towns community!</p>
+                  <div className="flex flex-wrap gap-2 justify-center mt-4 mb-4">
+                    {["What's happening this Shabbat?", "Find local chesed opportunities", "Recommend a shul near me"].map(s => (
+                      <button key={s} onClick={() => setNewMessage(s)} className="text-[12px] px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 transition-colors">
+                        {s}
+                      </button>
+                    ))}
                   </div>
-                  <p className={`text-xs text-slate-400 mt-1 ${isOwn ? 'text-right' : ''}`}>
-                    {formatDistanceToNow(new Date(msg.created_date), { addSuffix: true })}
-                  </p>
+                  <p className="text-xs text-slate-400 mt-3">Or type your own question below ↓</p>
                 </div>
-              </div>
-            );
-          })
+              ) : (
+                <p className="text-slate-500">Start the conversation!</p>
+              )}
+            </div>
+          ) : (
+            messages.map(msg => {
+              const isOwn = msg.sender_id === currentUser.id;
+              const isAIMsg = msg.sender_id === AI_AGENT.id;
+              return (
+                <div key={msg.id} className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                  {isAIMsg && (
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                  <div className={`max-w-[75%] ${isOwn ? 'order-2' : ''}`}>
+                    <div className={`px-4 py-2.5 rounded-2xl ${
+                      isOwn 
+                        ? 'text-white rounded-br-md' 
+                        : 'bg-white text-slate-800 rounded-bl-md shadow-sm border border-slate-100'
+                    }`}
+                    style={isOwn ? { background: '#2563EB' } : {}}>
+                      {msg.content && !msg.attachment && <p className="text-[15px] leading-relaxed">{msg.content}</p>}
+                      {msg.attachment && (
+                        <div className={msg.content && msg.content !== `📎 ${msg.attachment.name}` ? 'mt-2' : ''}>
+                          {msg.content && msg.content !== `📎 ${msg.attachment.name}` && (
+                            <p className="text-[15px] leading-relaxed mb-2">{msg.content}</p>
+                          )}
+                          <AttachmentPreview attachment={msg.attachment} compact />
+                        </div>
+                      )}
+                    </div>
+                    <p className={`text-xs text-slate-400 mt-1 ${isOwn ? 'text-right' : ''}`}>
+                      {formatDistanceToNow(new Date(msg.created_date), { addSuffix: true })}
+                    </p>
+                  </div>
+                </div>
+              );
+            })
           )}
           {/* AI thinking indicator */}
           {aiThinking && (
-          <div className="flex justify-start">
-            <div className="bg-white text-slate-800 rounded-2xl rounded-bl-md shadow-sm border border-slate-100 px-4 py-3 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
-              <span className="text-[14px] text-slate-500 italic">United AI is thinking…</span>
+            <div className="flex justify-start">
+              <div className="bg-white text-slate-800 rounded-2xl rounded-bl-md shadow-sm border border-slate-100 px-4 py-3 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
+                <span className="text-[14px] text-slate-500 italic">United AI is thinking…</span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
           <div ref={messagesEndRef} />
         </div>
       </div>
