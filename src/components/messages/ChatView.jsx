@@ -10,12 +10,15 @@ import {
 import { base44 } from '@/api/base44Client';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import FileAttachmentButton from '@/components/common/FileAttachmentButton';
+import { AttachmentPreview, PendingAttachmentChip } from '@/components/common/FileAttachmentPreview';
 
 export default function ChatView({ conversation, currentUser, onBack, onReport, onBlock }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [pendingAttachment, setPendingAttachment] = useState(null);
   const [mitzvahRequest, setMitzvahRequest] = useState(null);
   const [helpOffer, setHelpOffer] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
