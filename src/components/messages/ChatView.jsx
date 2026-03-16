@@ -372,8 +372,8 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         </div>
       </div>
 
-      {/* Input Bar - sticky at bottom */}
-      <div className="sticky bottom-0 border-t border-slate-100 bg-white p-3 flex-shrink-0 z-10">
+      {/* Input Bar - fixed at bottom above nav */}
+      <div className="absolute bottom-20 left-0 right-0 border-t border-slate-100 bg-white p-3 z-10">
         {pendingAttachment && (
           <div className="mb-2">
             <PendingAttachmentChip attachment={pendingAttachment} onRemove={() => setPendingAttachment(null)} />
