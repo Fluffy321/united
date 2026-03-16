@@ -481,6 +481,62 @@ function MyCommunitiesTab({ joinedCommunities, myGroups, loading, onViewCommunit
   );
 }
 
+/* ─── Empty My Communities state with auto-join suggestions ─── */
+function EmptyMyCommunitiesState({ allGroups, onAutoJoin, onDiscover }) {
+  const AUTO_JOIN_NAMES = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Young Israel Woodmere Members', 'Pickup Basketball', 'Young Adults Hangouts', 'Daf Yomi Chat'];
+  const suggested = (allGroups || []).filter(g => AUTO_JOIN_NAMES.includes(g.name)).slice(0, 4);
+  const [joining, setJoining] = useState(false);
+  const [joined, setJoined] = useState(false);
+
+  const handleJoinAll = async () => {
+    setJoining(true);
+    await Promise.allSettled(suggested.map(g => onAutoJoin(g)));
+    setJoining(false);
+    setJoined(true);
+  };
+
+  return (
+    <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100">
+      <div className="text-center mb-4">
+        <Globe className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+        <p className="font-semibold text-slate-800 text-[14px] mb-1">No communities yet</p>
+        <p className="text-[12px] text-slate-500">Join some popular groups to get started</p>
+      </div>
+      {suggested.length > 0 && !joined && (
+        <div className="space-y-2 mb-3">
+          {suggested.map(g => {
+            const cfg = CATEGORY_CONFIG[g.category] || CATEGORY_CONFIG['General'];
+            return (
+              <div key={g.id} className="bg-white rounded-xl px-3 py-2.5 flex items-center gap-2.5 border border-slate-100">
+                <span className="text-lg">{cfg.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-[13px] text-slate-800 truncate">{g.name}</p>
+                  <p className="text-[11px] text-slate-400">{g.member_count || 0} members</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {joined ? (
+        <p className="text-center text-[13px] font-semibold text-green-600 mb-2">✓ Joined! Scroll up to see your communities.</p>
+      ) : (
+        <button
+          onClick={handleJoinAll}
+          disabled={joining || suggested.length === 0}
+          className="w-full py-2.5 rounded-full text-[13px] font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60"
+          style={{ background: '#2563EB' }}
+        >
+          {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : `Join ${suggested.length} suggested groups`}
+        </button>
+      )}
+      <button onClick={onDiscover} className="w-full mt-2 py-2 text-[12px] font-semibold text-slate-500">
+        Browse all communities →
+      </button>
+    </div>
+  );
+}
+
 /* ─── Trending group card (horizontal) ─── */
 function TrendingGroupCard({ group, onClick }) {
   const cfg = CATEGORY_CONFIG[group.category] || CATEGORY_CONFIG['General'];
