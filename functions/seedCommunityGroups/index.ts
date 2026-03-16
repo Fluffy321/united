@@ -170,7 +170,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Admin only' }, { status: 403 });
     }
 
-    const { phase = 'groups' } = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => ({}));
+    const { phase = 'groups', offset = 0, limit = 10 } = body;
     const db = base44.asServiceRole;
 
     // ── PHASE 1: Create groups + memberships ────────────────────────────────
