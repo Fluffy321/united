@@ -27,7 +27,12 @@ const CATEGORY_CONFIG = {
 
 const COMMUNITY_TYPE_FILTERS = ['All', 'Shul', 'School', 'Yeshiva', 'Seminary', 'Camp'];
 
-const FEATURED_SHULS = ['Young Israel of Woodmere', 'Young Israel of Lawrence Cedarhurst', 'Congregation Bnei Sholom', 'Beis Medrash of Woodmere', 'Kehilas Bais Yehuda', 'Sephardic Congregation of Cedarhurst', 'Chabad of the Five Towns', 'Aish Kodesh Woodmere', 'Bais Tefila of Woodmere'];
+const FEATURED_SHULS = [
+  "Young Israel Woodmere",
+  "Chabad of Woodmere",
+  "Beth Shalom",
+  "Shaaray Tefila"
+];
 
 export default function Communities() {
   const [currentUser, setCurrentUser] = useState(null);
