@@ -23,7 +23,12 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
         u.message_settings?.searchable !== false &&
         u.full_name?.toLowerCase().includes(q.toLowerCase())
       );
-      setResults(filtered.slice(0, 20));
+
+      // Inject AI agent if query matches
+      const lq = q.toLowerCase();
+      const showAI = ['ai', 'assistant', 'united', 'bot', 'help'].some(kw => kw.includes(lq) || lq.includes(kw));
+      const results = showAI ? [AI_AGENT, ...filtered.slice(0, 19)] : filtered.slice(0, 20);
+      setResults(results);
 
       // Lazily load current user's groups for mutual count
       if (!userGroups) {
