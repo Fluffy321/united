@@ -212,27 +212,37 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
             {tab === 'posts' && (
               <div className="p-4 space-y-3">
                 {isMember && (
-                  <div className="bg-white rounded-2xl border border-slate-100 p-3.5 flex gap-3" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[13px] font-bold text-blue-600 flex-shrink-0">
-                      {currentUser.full_name?.[0]}
+                  <div className="bg-white rounded-2xl border border-slate-100 p-3.5" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[13px] font-bold text-blue-600 flex-shrink-0">
+                        {currentUser.full_name?.[0]}
+                      </div>
+                      <div className="flex-1 flex gap-2">
+                        <textarea
+                          className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[14px] resize-none outline-none focus:border-[#2563EB] transition-colors placeholder:text-slate-400"
+                          rows={2}
+                          placeholder="Share something with the community…"
+                          value={newPost}
+                          onChange={e => setNewPost(e.target.value)}
+                        />
+                        <div className="flex flex-col gap-1 self-end">
+                          <FileAttachmentButton onAttached={setPostAttachment} />
+                          <button
+                            onClick={handlePost}
+                            disabled={posting || (!newPost.trim() && !postAttachment)}
+                            className="w-9 h-9 rounded-xl flex items-center justify-center text-white disabled:opacity-40 transition-all active:scale-95"
+                            style={{ background: '#2563EB' }}
+                          >
+                            {posting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1 flex gap-2">
-                      <textarea
-                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[14px] resize-none outline-none focus:border-[#2563EB] transition-colors placeholder:text-slate-400"
-                        rows={2}
-                        placeholder="Share something with the community…"
-                        value={newPost}
-                        onChange={e => setNewPost(e.target.value)}
-                      />
-                      <button
-                        onClick={handlePost}
-                        disabled={posting || !newPost.trim()}
-                        className="self-end w-9 h-9 rounded-xl flex items-center justify-center text-white disabled:opacity-40 transition-all active:scale-95"
-                        style={{ background: '#2563EB' }}
-                      >
-                        {posting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                      </button>
-                    </div>
+                    {postAttachment && (
+                      <div className="mt-2 ml-11">
+                        <PendingAttachmentChip attachment={postAttachment} onRemove={() => setPostAttachment(null)} />
+                      </div>
+                    )}
                   </div>
                 )}
                 {posts.length === 0 ? (
