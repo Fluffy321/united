@@ -52,6 +52,15 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
     if (actionLoading) return;
     setActionLoading(recipient.id);
     try {
+      // AI agent — open directly without DB conversation
+      if (recipient.id === AI_AGENT.id) {
+        onConversationOpened(buildAIConversation(currentUser));
+        setQuery('');
+        setResults([]);
+        setActionLoading(null);
+        return;
+      }
+
       // Check for existing conversation
       const allConvs = await base44.entities.Conversation.list('-updated_date', 100);
       const existing = allConvs.find(c =>
