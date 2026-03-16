@@ -235,7 +235,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-screen">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b border-slate-100 bg-white flex-shrink-0">
         <Button variant="ghost" size="icon" onClick={onBack} className="lg:hidden">
