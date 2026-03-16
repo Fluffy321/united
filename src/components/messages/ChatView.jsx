@@ -350,6 +350,15 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
             );
           })
         )}
+        {/* AI thinking indicator */}
+        {aiThinking && (
+          <div className="flex justify-start">
+            <div className="bg-white text-slate-800 rounded-2xl rounded-bl-md shadow-sm border border-slate-100 px-4 py-3 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
+              <span className="text-[14px] text-slate-500 italic">United AI is thinking…</span>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
