@@ -308,13 +308,14 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
                 </div>
                 <p className="font-semibold text-slate-800">United AI Assistant</p>
                 <p className="text-sm text-slate-500 max-w-xs mx-auto">Ask me about local events, shuls, schools, chesed opportunities, or anything about the Five Towns community!</p>
-                <div className="flex flex-wrap gap-2 justify-center mt-4">
+                <div className="flex flex-wrap gap-2 justify-center mt-4 mb-4">
                   {["What's happening this Shabbat?", "Find local chesed opportunities", "Recommend a shul near me"].map(s => (
                     <button key={s} onClick={() => setNewMessage(s)} className="text-[12px] px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 transition-colors">
                       {s}
                     </button>
                   ))}
                 </div>
+                <p className="text-xs text-slate-400 mt-3">Or type your own question below ↓</p>
               </div>
             ) : (
               <p className="text-slate-500">Start the conversation!</p>
