@@ -13,6 +13,7 @@ export default function Messages() {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
+  const [activeTab, setActiveTab] = useState('inbox');
   const queryClient = useQueryClient();
 
   useEffect(() => {
