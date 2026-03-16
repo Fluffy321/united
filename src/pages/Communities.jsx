@@ -43,15 +43,31 @@ export default function Communities() {
   const [pendingRequestSet, setPendingRequestSet] = useState(new Set());
   const queryClient = useQueryClient();
 
+  const AUTO_JOIN_NAMES = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Pickup Basketball', 'Young Adults Hangouts', 'HAFTR Community'];
+
   useEffect(() => {
-    base44.auth.me().then(user => {
+    base44.auth.me().then(async user => {
       setCurrentUser(user);
-      base44.entities.GroupMember.filter({ user_id: user.id }).then(memberships => {
-        setMembershipSet(new Set(memberships.map(m => m.group_id)));
-      });
-      base44.entities.GroupJoinRequest.filter({ user_id: user.id, status: 'pending' }).then(reqs => {
-        setPendingRequestSet(new Set(reqs.map(r => r.group_id)));
-      });
+
+      const [memberships, reqs, allGroups] = await Promise.all([
+        base44.entities.GroupMember.filter({ user_id: user.id }),
+        base44.entities.GroupJoinRequest.filter({ user_id: user.id, status: 'pending' }),
+        base44.entities.CommunityGroup.list(),
+      ]);
+
+      const joinedGroupIds = new Set(memberships.map(m => m.group_id));
+      setMembershipSet(joinedGroupIds);
+      setPendingRequestSet(new Set(reqs.map(r => r.group_id)));
+
+      // Force-join existing users into core groups they haven't joined yet
+      const coreGroups = allGroups.filter(g => AUTO_JOIN_NAMES.includes(g.name) && !joinedGroupIds.has(g.id));
+      if (coreGroups.length > 0) {
+        await Promise.allSettled(coreGroups.map(g =>
+          base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: user.full_name, role: 'member' })
+        ));
+        // Update membershipSet with newly joined groups
+        setMembershipSet(prev => new Set([...prev, ...coreGroups.map(g => g.id)]));
+      }
     });
   }, []);
 
