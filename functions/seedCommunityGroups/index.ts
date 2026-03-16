@@ -322,7 +322,7 @@ Deno.serve(async (req) => {
           postsCreated++;
           await delay(100);
 
-          // 5 comments per post
+          // 5 comments per post (sequential with delay)
           for (let c = 0; c < 5; c++) {
             const commenterIdx = (p * 5 + c + 10) % MEMBER_NAMES.length;
             await db.entities.Comment.create({
@@ -332,20 +332,20 @@ Deno.serve(async (req) => {
               body: COMMENT_TEMPLATES[(p + c) % COMMENT_TEMPLATES.length],
             });
             commentsCreated++;
+            await delay(200);
           }
 
-          // 4–32 likes per post
-          const likeCount = rand(4, 32);
-          for (let l = 0; l < Math.min(likeCount, 20); l++) {
-            const likerIdx = (p * 3 + l + 5) % MEMBER_NAMES.length;
+          // 4–12 likes per post
+          const likeCount = rand(4, 12);
+          for (let l = 0; l < likeCount; l++) {
             await db.entities.Like.create({
               post_id: post.id,
-              user_id: `seed_liker_${group.id}_${l}`,
+              user_id: `seed_liker_${group.id}_${p}_${l}`,
               is_seeded: true,
             });
             likesCreated++;
+            await delay(150);
           }
-          await delay(150);
         }
       }
 
