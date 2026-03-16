@@ -421,7 +421,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       )}
 
       {/* Input */}
-      <div className="p-3 border-t border-slate-100 bg-white">
+      <div className="p-3 border-t border-slate-100 bg-white flex-shrink-0">
         {pendingAttachment && (
           <div className="mb-2">
             <PendingAttachmentChip attachment={pendingAttachment} onRemove={() => setPendingAttachment(null)} />
