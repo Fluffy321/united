@@ -290,22 +290,36 @@ Deno.serve(async (req) => {
 
       let membersCreated = 0, postsCreated = 0, commentsCreated = 0, likesCreated = 0;
 
+      // Spread timestamps over 72 hours
+      const SPREAD_MS = 72 * 60 * 60 * 1000;
+      const spreadDate = (offsetFraction) => {
+        return new Date(Date.now() - SPREAD_MS * offsetFraction).toISOString();
+      };
+
       for (const group of slice) {
-        // Create 20 fake members
-        const memberBatch = MEMBER_NAMES.slice(0, 20).map((name, i) => ({
+        // Add current user as member too
+        if (body.createMembershipForCurrentUser) {
+          const existing = await db.entities.GroupMember.filter({ group_id: group.id, user_id: user.id });
+          if (existing.length === 0) {
+            await db.entities.GroupMember.create({ group_id: group.id, user_id: user.id, user_name: user.full_name, role: 'member' });
+          }
+        }
+
+        // Create 75 fake members in batches of 10
+        const memberBatch = MEMBER_NAMES.slice(0, 75).map((name, i) => ({
           group_id: group.id,
           user_id: `seed_member_${group.id}_${i}`,
           user_name: name,
           role: 'member',
         }));
-        for (let i = 0; i < memberBatch.length; i += 5) {
-          await Promise.all(memberBatch.slice(i, i + 5).map(m => db.entities.GroupMember.create(m)));
-          await delay(500);
+        for (let i = 0; i < memberBatch.length; i += 10) {
+          await Promise.all(memberBatch.slice(i, i + 10).map(m => db.entities.GroupMember.create(m)));
+          await delay(400);
         }
         membersCreated += memberBatch.length;
 
-        // Create 4 posts with comments + likes
-        for (let p = 0; p < 4; p++) {
+        // Create 10 posts with comments + likes
+        for (let p = 0; p < 10; p++) {
           const template = POST_TEMPLATES[p % POST_TEMPLATES.length];
           const authorIdx = p % MEMBER_NAMES.length;
           const post = await db.entities.CommunityPost.create({
@@ -322,9 +336,9 @@ Deno.serve(async (req) => {
           postsCreated++;
           await delay(100);
 
-          // 3 comments per post (sequential with delay)
-          for (let c = 0; c < 3; c++) {
-            const commenterIdx = (p * 5 + c + 10) % MEMBER_NAMES.length;
+          // 6 comments per post
+          for (let c = 0; c < 6; c++) {
+            const commenterIdx = (p * 7 + c + 10) % MEMBER_NAMES.length;
             await db.entities.Comment.create({
               post_id: post.id,
               author_id: `seed_member_${group.id}_${commenterIdx}`,
@@ -332,11 +346,11 @@ Deno.serve(async (req) => {
               body: COMMENT_TEMPLATES[(p + c) % COMMENT_TEMPLATES.length],
             });
             commentsCreated++;
-            await delay(200);
+            await delay(150);
           }
 
-          // 3–8 likes per post
-          const likeCount = rand(3, 8);
+          // 5–40 likes per post
+          const likeCount = rand(5, 40);
           for (let l = 0; l < likeCount; l++) {
             await db.entities.Like.create({
               post_id: post.id,
@@ -344,7 +358,7 @@ Deno.serve(async (req) => {
               is_seeded: true,
             });
             likesCreated++;
-            await delay(150);
+            await delay(80);
           }
         }
       }
