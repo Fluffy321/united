@@ -243,7 +243,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         </Button>
         
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold overflow-hidden">
-          {other.avatar ? (
+          {isAI ? (
+            <Bot className="w-5 h-5 text-white" />
+          ) : other.avatar ? (
             <img src={other.avatar} alt="" className="w-full h-full object-cover" />
           ) : (
             other.name?.charAt(0)?.toUpperCase()
@@ -252,25 +254,28 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         
         <div className="flex-1">
           <span className="font-semibold text-slate-900 text-[16px]">{other.name}</span>
+          {isAI && <p className="text-[11px] text-indigo-500 font-medium">AI Assistant • Always available</p>}
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="w-5 h-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onReport(other.id, 'user')}>
-              <Flag className="w-4 h-4 mr-2" />
-              Report User
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onBlock(other.id)} className="text-red-600">
-              <Ban className="w-4 h-4 mr-2" />
-              Block User
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {!isAI && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onReport(other.id, 'user')}>
+                <Flag className="w-4 h-4 mr-2" />
+                Report User
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onBlock(other.id)} className="text-red-600">
+                <Ban className="w-4 h-4 mr-2" />
+                Block User
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Mitzvah Context Banner */}
