@@ -261,7 +261,14 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
                           </p>
                         </div>
                       </div>
-                      <p className="text-[14px] text-slate-700 leading-relaxed">{post.body}</p>
+                      {post.body && <p className="text-[14px] text-slate-700 leading-relaxed">{post.body}</p>}
+                      {post.attachment && (
+                        <div className={post.body ? 'mt-2' : ''}>
+                          <div className="[&_a]:bg-slate-50 [&_a]:border-slate-200 [&_a]:text-slate-700 [&_a:hover]:bg-slate-100">
+                            <AttachmentPreview attachment={post.attachment} />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
