@@ -51,16 +51,29 @@ export function saveAIMessages(userId, messages) {
   localStorage.setItem(AI_MESSAGES_KEY(userId), JSON.stringify(messages.slice(-100)));
 }
 
+let lastAIRequestTime = 0;
+const AI_REQUEST_COOLDOWN_MS = 2000; // 2 second minimum between requests
+
 export async function getAIReply(userMessage, currentUser, messageHistory = []) {
   const historyContext = messageHistory.slice(-6).map(m =>
     `${m.sender_id === AI_AGENT.id ? 'Assistant' : 'User'}: ${m.content}`
   ).join('\n');
+
+  // Enforce rate limiting with cooldown
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastAIRequestTime;
+  if (timeSinceLastRequest < AI_REQUEST_COOLDOWN_MS) {
+    await new Promise(resolve => 
+      setTimeout(resolve, AI_REQUEST_COOLDOWN_MS - timeSinceLastRequest)
+    );
+  }
 
   const maxRetries = 3;
   let lastError;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
+      lastAIRequestTime = Date.now();
       const reply = await base44.integrations.Core.InvokeLLM({
         prompt: `You are the United AI Assistant — a friendly, knowledgeable helper embedded in the "United" app, a Jewish community platform for the Five Towns area (Cedarhurst, Lawrence, Woodmere, Hewlett, Inwood, NY).
 
