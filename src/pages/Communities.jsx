@@ -746,7 +746,7 @@ function DiscoverTab({ search, setSearch, groups, allCommunities, trendingCommun
     );
   }
 
-  const featuredShuls = useMemo(() => shuls.filter(s => FEATURED_SHULS.some(name => s.name?.toLowerCase().includes(name.toLowerCase()))), [shuls]);
+  const featuredShuls = useMemo(() => institutions.filter(s => s.type === 'Shul' && FEATURED_SHULS.some(name => s.name?.toLowerCase().includes(name.toLowerCase()))), [institutions]);
 
   return (
     <div className="space-y-4">
