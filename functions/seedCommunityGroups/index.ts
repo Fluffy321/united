@@ -306,7 +306,8 @@ Deno.serve(async (req) => {
         }
 
         // Create 75 fake members in batches of 10
-        const memberBatch = MEMBER_NAMES.slice(0, 75).map((name, i) => ({
+        const allNames = [...MEMBER_NAMES, ...MEMBER_NAMES.map(n => n + ' Jr.')];
+        const memberBatch = allNames.slice(0, 75).map((name, i) => ({
           group_id: group.id,
           user_id: `seed_member_${group.id}_${i}`,
           user_name: name,
