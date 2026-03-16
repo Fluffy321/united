@@ -135,6 +135,10 @@ export default function Messages() {
               ))}
             </div>
           </div>
+          <UserSearchPanel
+            currentUser={currentUser}
+            onConversationOpened={(conv) => { setSelectedConversation(conv); setActiveTab('inbox'); }}
+          />
           <div className="flex-1 overflow-y-auto">
             {activeTab === 'requests' ? (
               <MessageRequestsTab
