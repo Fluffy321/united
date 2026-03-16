@@ -150,12 +150,14 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   };
 
   const handleSend = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() && !pendingAttachment) return;
     
     setIsSending(true);
     
     const text = newMessage.trim();
+    const attachment = pendingAttachment;
     setNewMessage('');
+    setPendingAttachment(null);
 
     const msg = await base44.entities.Message.create({
       conversation_id: conversation.id,
@@ -163,7 +165,8 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       sender_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],
       sender_age_range: currentUser.age_range || '18+',
       recipient_id: other.id,
-      content: text
+      content: text || (attachment ? `📎 ${attachment.name}` : ''),
+      attachment: attachment || null,
     });
 
     // Optimistically append
