@@ -87,8 +87,8 @@ export default function Messages() {
       }));
 
       // Pin AI conversation at top
-      const aiConv = buildAIConversation(currentUser || {});
-      return [aiConv, ...mapped];
+      const aiConv = buildAIConversation(currentUser);
+      return aiConv ? [aiConv, ...mapped] : mapped;
     },
     enabled: !!currentUser,
     staleTime: 60000,
