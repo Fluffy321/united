@@ -412,7 +412,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       )}
 
       {mitzvahRequest && mitzvahRequest.status === 'Completed' && (
-        <div className="px-4 py-3 bg-green-50 border-t border-green-100">
+        <div className="px-4 py-3 bg-green-50 border-t border-green-100 flex-shrink-0">
           <div className="flex items-center gap-2 justify-center text-green-900">
             <CheckCircle2 className="w-5 h-5" />
             <span className="text-sm font-semibold">Mitzvah Completed!</span>
