@@ -21,7 +21,7 @@ export function checkSpamLimits(senderId) {
   const key = chatCountKey(senderId);
   const count = parseInt(sessionStorage.getItem(key) || '0', 10);
   if (count >= MAX_NEW_CHATS_PER_DAY) {
-    return { allowed: false, reason: 'You've reached the daily limit for new conversations.' };
+    return { allowed: false, reason: "You've reached the daily limit for new conversations." };
   }
 
   return { allowed: true };
