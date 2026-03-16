@@ -372,59 +372,8 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         </div>
       </div>
 
-      {/* Completion Actions */}
-      {mitzvahRequest && mitzvahRequest.status === 'InProgress' && (
-        <div className="px-4 py-3 bg-white border-t border-slate-100 flex-shrink-0">
-          {currentUser.id === mitzvahRequest.claimed_by_user_id && !helpOffer?.completed_by_helper && (
-            <Button
-              onClick={handleMarkCompleted}
-              disabled={isProcessing}
-              className="w-full bg-green-600 hover:bg-green-700"
-            >
-              <CheckCircle2 className="w-4 h-4 mr-2" />
-              {isProcessing ? 'Processing...' : 'Mark as Completed'}
-            </Button>
-          )}
-          
-          {currentUser.id === mitzvahRequest.created_by_user_id && helpOffer?.completed_by_helper && (
-            <div className="space-y-2">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-2">
-                <p className="text-xs text-green-900">
-                  <strong>{mitzvahRequest.claimed_by_name}</strong> marked this as completed. Please confirm!
-                </p>
-              </div>
-              <Button
-                onClick={handleConfirmCompleted}
-                disabled={isProcessing}
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                {isProcessing ? 'Processing...' : 'Confirm Completed'}
-              </Button>
-            </div>
-          )}
-
-          {currentUser.id === mitzvahRequest.created_by_user_id && !helpOffer?.completed_by_helper && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <p className="text-xs text-amber-900">
-                Waiting for helper to mark this as completed.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {mitzvahRequest && mitzvahRequest.status === 'Completed' && (
-        <div className="px-4 py-3 bg-green-50 border-t border-green-100 flex-shrink-0">
-          <div className="flex items-center gap-2 justify-center text-green-900">
-            <CheckCircle2 className="w-5 h-5" />
-            <span className="text-sm font-semibold">Mitzvah Completed!</span>
-          </div>
-        </div>
-      )}
-
-      {/* Input */}
-      <div className="p-3 border-t border-slate-100 bg-white flex-shrink-0">
+      {/* Input Bar - sticky at bottom */}
+      <div className="sticky bottom-0 border-t border-slate-100 bg-white p-3 flex-shrink-0 z-10">
         {pendingAttachment && (
           <div className="mb-2">
             <PendingAttachmentChip attachment={pendingAttachment} onRemove={() => setPendingAttachment(null)} />
