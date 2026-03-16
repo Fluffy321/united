@@ -322,9 +322,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
             ) : (
               <p className="text-slate-500">Start the conversation!</p>
             )}
-          </div>
-        ) : (
-          messages.map(msg => {
+            </div>
+            ) : (
+              messages.map(msg => {
             const isOwn = msg.sender_id === currentUser.id;
             const isAIMsg = msg.sender_id === AI_AGENT.id;
             return (
