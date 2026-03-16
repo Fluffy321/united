@@ -38,13 +38,9 @@ export default function Feed() {
   const [showQuickPostModal, setShowQuickPostModal] = useState(false);
   const [scrollStartTime, setScrollStartTime] = useState(null);
   const [showFABTypeSelector, setShowFABTypeSelector] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [activeTab, setActiveTab] = useState('trending');
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [sortMode, setSortMode] = useState('recent'); // 'recent' | 'trending'
-  const [hideCommunityBanner, setHideCommunityBanner] = useState(
-    () => localStorage.getItem('joinCommunitiesBannerDismissed') === '1'
-  );
   const queryClient = useQueryClient();
 
   useEffect(() => {
