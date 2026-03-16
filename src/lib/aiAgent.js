@@ -56,8 +56,13 @@ export async function getAIReply(userMessage, currentUser, messageHistory = []) 
     `${m.sender_id === AI_AGENT.id ? 'Assistant' : 'User'}: ${m.content}`
   ).join('\n');
 
-  const reply = await base44.integrations.Core.InvokeLLM({
-    prompt: `You are the United AI Assistant — a friendly, knowledgeable helper embedded in the "United" app, a Jewish community platform for the Five Towns area (Cedarhurst, Lawrence, Woodmere, Hewlett, Inwood, NY).
+  const maxRetries = 3;
+  let lastError;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const reply = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are the United AI Assistant — a friendly, knowledgeable helper embedded in the "United" app, a Jewish community platform for the Five Towns area (Cedarhurst, Lawrence, Woodmere, Hewlett, Inwood, NY).
 
 You help community members with:
 - Finding local events, shuls, schools, and resources
@@ -69,7 +74,20 @@ You help community members with:
 Be warm, concise, and helpful. Keep responses conversational (1-3 short paragraphs max).
 ${historyContext ? `\nRecent conversation:\n${historyContext}\n` : ''}
 User: ${userMessage}`,
-  });
+      });
+      return reply;
+    } catch (error) {
+      lastError = error;
+      // Rate limit (429) — exponential backoff
+      if (error?.status === 429 && attempt < maxRetries - 1) {
+        const delayMs = Math.min(1000 * Math.pow(2, attempt), 8000);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        continue;
+      }
+      // Other errors — don't retry
+      throw error;
+    }
+  }
 
-  return reply;
+  throw lastError;
 }
