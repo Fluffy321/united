@@ -87,10 +87,12 @@ export default function Messages() {
       }));
 
       // Pin AI conversation at top
-      const aiConv = buildAIConversation(currentUser);
+      const aiConv = buildAIConversation(currentUser || {});
       return [aiConv, ...mapped];
     },
-    enabled: !!currentUser
+    enabled: !!currentUser,
+    staleTime: 60000,
+    gcTime: 120000,
   });
 
   const handleReport = (id, type) => {
