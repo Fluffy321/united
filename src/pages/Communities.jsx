@@ -674,13 +674,11 @@ function InterestGroupCard({ group, isMember, isPending, onJoin, onLeave, onView
 
 /* ─── Category config for discover ─── */
 const DISCOVER_CATEGORIES = [
-  { id: 'schools',    label: 'Schools',               emoji: '🏫', color: 'bg-indigo-50 border-indigo-100',   accent: '#4F46E5' },
-  { id: 'shuls',      label: 'Shuls',                 emoji: '🕍', color: 'bg-amber-50 border-amber-100',     accent: '#D97706' },
-  { id: 'interests',  label: 'Interest Communities',  emoji: '🎯', color: 'bg-rose-50 border-rose-100',       accent: '#E11D48' },
-  { id: 'cities',     label: 'Cities',                emoji: '🌆', color: 'bg-cyan-50 border-cyan-100',       accent: '#0891B2' },
-  { id: 'travelers',  label: 'Travelers',             emoji: '✈️', color: 'bg-sky-50 border-sky-100',        accent: '#0284C7' },
-  { id: 'interest',   label: 'Interest Groups',       emoji: '✨', color: 'bg-purple-50 border-purple-100',   accent: '#7C3AED' },
-  { id: 'help',       label: 'Help Networks',         emoji: '🤝', color: 'bg-green-50 border-green-100',     accent: '#16A34A' },
+  { id: 'local',        label: 'Local',        emoji: '📍', accent: '#2563EB',  isCommunity: false },
+  { id: 'chessed',      label: 'Chessed',      emoji: '❤️', accent: '#16A34A',  isCommunity: false },
+  { id: 'social',       label: 'Social',       emoji: '🏀', accent: '#7C3AED',  isCommunity: false },
+  { id: 'learning',     label: 'Learning',     emoji: '📚', accent: '#D97706',  isCommunity: false },
+  { id: 'institutions', label: 'Institutions', emoji: '🏛️', accent: '#4F46E5', isCommunity: true  },
 ];
 
 
