@@ -336,7 +336,13 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
 
       {/* Input */}
       <div className="p-3 border-t border-slate-100 bg-white">
+        {pendingAttachment && (
+          <div className="mb-2">
+            <PendingAttachmentChip attachment={pendingAttachment} onRemove={() => setPendingAttachment(null)} />
+          </div>
+        )}
         <div className="flex gap-2 items-end">
+          <FileAttachmentButton onAttached={setPendingAttachment} />
           <textarea
             rows={1}
             placeholder="Type a message…"
@@ -353,7 +359,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           />
           <button
             onClick={handleSend}
-            disabled={!newMessage.trim() || isSending}
+            disabled={(!newMessage.trim() && !pendingAttachment) || isSending}
             className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 disabled:opacity-40 active:scale-95 transition-all"
             style={{ background: '#2563EB' }}
           >
