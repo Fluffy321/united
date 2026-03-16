@@ -353,41 +353,7 @@ export default function Communities() {
             />
           )}
 
-          {/* ══ Tab 2: Schools ══ */}
-          {activeTab === 'Schools' && (
-            <FilteredCommunitiesTab
-              search={search}
-              setSearch={setSearch}
-              communities={allCommunities}
-              typeFilter="School"
-              joinedIds={joinedIds}
-              joiningId={joiningId}
-              loading={communitiesLoading}
-              onJoin={handleJoin}
-              onView={setSelectedCommunityId}
-              emptyEmoji="🏫"
-              emptyLabel="No schools listed yet"
-            />
-          )}
-
-          {/* ══ Tab 3: Shuls ══ */}
-          {activeTab === 'Shuls' && (
-            <FilteredCommunitiesTab
-              search={search}
-              setSearch={setSearch}
-              communities={allCommunities}
-              typeFilter="Shul"
-              joinedIds={joinedIds}
-              joiningId={joiningId}
-              loading={communitiesLoading}
-              onJoin={handleJoin}
-              onView={setSelectedCommunityId}
-              emptyEmoji="🕍"
-              emptyLabel="No shuls listed yet"
-            />
-          )}
-
-          {/* ══ Tab 4: Discover ══ */}
+          {/* ══ Tab 2: Discover ══ */}
           {activeTab === 'Discover' && (
             <DiscoverTab
               search={search}
