@@ -411,8 +411,9 @@ function MyCommunitiesTab({ joinedCommunities, myGroups, loading, onViewCommunit
     { label: 'Shuls',    emoji: '🕍', filter: g => g.subcategory === 'Shul' },
   ];
 
-  // Trending: sort by member_count desc
-  const trending = useMemo(() => [...(allGroups || [])].sort((a, b) => (b.member_count || 0) - (a.member_count || 0)).slice(0, 5), [allGroups]);
+  // Trending: sort by activityScore = likes + comments * 2 (using post_count + member_count as proxy)
+  const activityScore = (g) => (g.post_count || 0) + (g.member_count || 0) * 2;
+  const trending = useMemo(() => [...(allGroups || [])].sort((a, b) => activityScore(b) - activityScore(a)).slice(0, 5), [allGroups]);
 
   if (loading) {
     return (
@@ -498,21 +499,29 @@ function MyCommunitiesTab({ joinedCommunities, myGroups, loading, onViewCommunit
 /* ─── Trending group card (horizontal) ─── */
 function TrendingGroupCard({ group, onClick }) {
   const cfg = CATEGORY_CONFIG[group.category] || CATEGORY_CONFIG['General'];
-  const isHot = (group.member_count || 0) >= 80;
+  const score = (group.post_count || 0) + (group.member_count || 0) * 2;
+  const isTrending = score > 20;
+  const isChessed = group.category === 'Chessed';
+  const isRecentlyActive = group.post_count > 0;
+
   return (
     <div
       onClick={onClick}
       className="flex-shrink-0 w-36 bg-white rounded-2xl border border-slate-100 overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
     >
-      <div className="h-16 flex items-center justify-center text-3xl" style={{ background: 'linear-gradient(135deg, #EEF2FF, #E0E7FF)' }}>
+      <div className="h-16 flex items-center justify-center text-3xl relative" style={{ background: 'linear-gradient(135deg, #EEF2FF, #E0E7FF)' }}>
         {cfg.emoji}
+        {isTrending && (
+          <span className="absolute top-1 right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-500 text-white">🔥</span>
+        )}
       </div>
       <div className="p-2.5">
         <p className="font-bold text-slate-900 text-[12px] leading-tight line-clamp-2 mb-1">{group.name}</p>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1 flex-wrap">
           <span className="text-[10px] text-slate-400">{group.member_count || 0} members</span>
-          {isHot && <span className="text-[10px] font-bold text-orange-500">🔥</span>}
+          {isChessed && <span className="text-[10px] font-bold text-red-400">❤️</span>}
+          {isRecentlyActive && !isTrending && <span className="text-[10px] font-bold text-green-500">🟢</span>}
         </div>
       </div>
     </div>
@@ -522,8 +531,11 @@ function TrendingGroupCard({ group, onClick }) {
 /* ─── Rich group row for My Communities ─── */
 function GroupRowRich({ group, onClick }) {
   const cfg = CATEGORY_CONFIG[group.category] || CATEGORY_CONFIG['General'];
-  const isNew = group.post_count > 0;
-  const isActive = (group.member_count || 0) >= 60;
+  const score = (group.post_count || 0) + (group.member_count || 0) * 2;
+  const isTrending = score > 20;
+  const isChessed = group.category === 'Chessed';
+  const hasRecentPosts = group.post_count > 0;
+
   return (
     <div
       onClick={onClick}
@@ -536,9 +548,9 @@ function GroupRowRich({ group, onClick }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
           <p className="font-bold text-slate-900 text-[14px] truncate">{group.name}</p>
-          {isActive && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-500 border border-orange-200">🔥 Active</span>}
-          {isNew && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-200">🟢 New posts</span>}
-          {group.category === 'Chessed' && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-200">❤️ Chessed</span>}
+          {isTrending && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-500 border border-orange-200">🔥 Trending</span>}
+          {hasRecentPosts && !isTrending && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-200">🟢 Active</span>}
+          {isChessed && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-200">❤️ Help Needed</span>}
         </div>
         {group.description && (
           <p className="text-[11px] text-slate-500 line-clamp-1 mb-1">{group.description}</p>
