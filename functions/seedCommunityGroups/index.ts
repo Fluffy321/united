@@ -69,8 +69,8 @@ const AUTO_JOIN_NAMES = new Set([
   'Five Towns Alerts',
   'Mitzvah Map Volunteers',
   'Pickup Basketball',
+  'Young Adults Hangouts',
   'Daf Yomi Chat',
-  'Young Israel Woodmere Members',
 ]);
 
 // ─── Mock post content by category ───────────────────────────────────────────
