@@ -12,7 +12,7 @@ import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import { toast } from 'sonner';
 
-const TABS = ['My Communities', 'Schools', 'Shuls', 'Discover'];
+const TABS = ['My Communities', 'Discover'];
 
 const CATEGORY_CONFIG = {
   'Torah Learning': { emoji: '📚', color: 'bg-amber-50 text-amber-700 border-amber-200' },
