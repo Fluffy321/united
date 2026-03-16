@@ -59,33 +59,7 @@ export default function Feed() {
     init();
   }, []);
 
-  useEffect(() => {
-    // Check if dismissed in last 24 hours
-    const dismissedTime = localStorage.getItem('quickPostPromptDismissed');
-    if (dismissedTime) {
-      const hoursSinceDismiss = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60);
-      if (hoursSinceDismiss < 24) return;
-    }
 
-    // Start tracking scroll time
-    setScrollStartTime(Date.now());
-
-    const timer = setTimeout(() => {
-      setShowQuickPostPrompt(true);
-    }, 17000); // 17 seconds
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleDismissQuickPost = () => {
-    setShowQuickPostPrompt(false);
-    localStorage.setItem('quickPostPromptDismissed', Date.now().toString());
-  };
-
-  const handleOpenQuickPost = () => {
-    setShowQuickPostPrompt(false);
-    setShowQuickPostModal(true);
-  };
 
   const loadPinnedPrompt = async () => {
     try {
