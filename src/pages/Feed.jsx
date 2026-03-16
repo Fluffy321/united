@@ -1,28 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Calendar, Search } from 'lucide-react';
+import { Loader2, Calendar, Search, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Button } from "@/components/ui/button";
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import DailyPromptCard from '@/components/feed/DailyPromptCard';
 import InlineFeedPrompt from '@/components/feed/InlineFeedPrompt';
-import QuickActions from '@/components/feed/QuickActions';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 import ReportModal from '@/components/common/ReportModal';
 import ProfileSetup from '@/components/profile/ProfileSetup';
-import QuickPostPrompt from '@/components/feed/QuickPostPrompt';
 import QuickPostModal from '@/components/feed/QuickPostModal';
 import PostTypeSelector from '@/components/feed/PostTypeSelector';
-import FeedCategoryTabs from '@/components/feed/FeedCategoryTabs';
 import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import SearchModal from '@/components/feed/SearchModal';
+import PostBox from '@/components/feed/PostBox';
+import HomeFeedTabs from '@/components/feed/HomeFeedTabs';
+import CommunityActivityStrip from '@/components/feed/CommunityActivityStrip';
 import { toast } from 'sonner';
-
-import { format, isToday, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 
 
 export default function Feed() {
