@@ -305,16 +305,63 @@ export default function Settings() {
           <TabsContent value="privacy">
             <div className="bg-white rounded-xl p-6 space-y-6">
               <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Your Information</h3>
-                <p className="text-sm text-slate-500">
-                  Your age range ({currentUser.age_range || '18+'}) is visible on your profile and messages for safety purposes.
-                </p>
+                <h3 className="font-semibold text-slate-900 mb-1">Who can message you?</h3>
+                <p className="text-sm text-slate-400 mb-3">Others will need to send a request if they don't meet this criteria.</p>
+                <div className="space-y-2">
+                  {[
+                    { value: 'everyone', label: 'Anyone', desc: 'Anyone on the app can message you' },
+                    { value: 'communities', label: 'People in my communities', desc: 'Only members of shared groups' },
+                    { value: 'connections', label: 'Only connections', desc: 'Only people you\'re connected with' },
+                    { value: 'nobody', label: 'Nobody', desc: 'No one can message you' },
+                  ].map(opt => {
+                    const current = (currentUser.message_settings?.allowMessagesFrom) || 'communities';
+                    const isSelected = current === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={async () => {
+                          const updated = { ...(currentUser.message_settings || {}), allowMessagesFrom: opt.value };
+                          await base44.auth.updateMe({ message_settings: updated });
+                          loadUser();
+                          toast.success('Messaging preference updated');
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
+                          isSelected ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${isSelected ? 'border-indigo-500 bg-indigo-500' : 'border-slate-300'}`} />
+                          <div>
+                            <p className={`text-sm font-semibold ${isSelected ? 'text-indigo-700' : 'text-slate-800'}`}>{opt.label}</p>
+                            <p className="text-xs text-slate-400">{opt.desc}</p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between py-3 border-t border-slate-100">
+                <div>
+                  <p className="font-semibold text-slate-900 text-sm">Show my profile in search</p>
+                  <p className="text-xs text-slate-400">Allow others to find you by searching</p>
+                </div>
+                <Switch
+                  checked={currentUser.message_settings?.searchable !== false}
+                  onCheckedChange={async (val) => {
+                    const updated = { ...(currentUser.message_settings || {}), searchable: val };
+                    await base44.auth.updateMe({ message_settings: updated });
+                    loadUser();
+                    toast.success(val ? 'Profile visible in search' : 'Profile hidden from search');
+                  }}
+                />
               </div>
 
               <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Blocked Users</h3>
+                <h3 className="font-semibold text-slate-900 mb-2">Your Information</h3>
                 <p className="text-sm text-slate-500">
-                  Users you block won't be able to see your posts or send you messages.
+                  Your age range ({currentUser.age_range || '18+'}) is visible on your profile and messages for safety purposes.
                 </p>
               </div>
 

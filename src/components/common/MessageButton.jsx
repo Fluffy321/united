@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
+import { canMessage, checkSpamLimits, recordNewChat } from '@/lib/messagingPermissions';
 
 export default function MessageButton({ 
   recipientId, 
@@ -19,19 +20,12 @@ export default function MessageButton({
 
   const handleStartConversation = async (e) => {
     e.stopPropagation();
-    if (!currentUser) {
-      toast.error('Please log in to message');
-      return;
-    }
-
-    if (currentUser.id === recipientId) {
-      toast.error("You can't message yourself");
-      return;
-    }
+    if (!currentUser) { toast.error('Please log in to message'); return; }
+    if (currentUser.id === recipientId) { toast.error("You can't message yourself"); return; }
 
     setLoading(true);
     try {
-      // Find existing direct conversation between these two users
+      // Check for existing conversation first
       const allConvs = await base44.entities.Conversation.list('-updated_date', 100);
       const existing = allConvs.find(c =>
         c.participant_ids?.includes(currentUser.id) &&
@@ -39,10 +33,22 @@ export default function MessageButton({
         c.participant_ids?.length === 2
       );
 
-      let conversationId;
       if (existing) {
-        conversationId = existing.id;
-      } else {
+        navigate(createPageUrl(`Messages?conversation=${existing.id}`));
+        return;
+      }
+
+      // New conversation — check spam limits
+      const spam = checkSpamLimits(currentUser.id);
+      if (!spam.allowed) {
+        toast.error(spam.reason);
+        return;
+      }
+
+      // Check messaging permission
+      const { canMessage: allowed } = await canMessage(currentUser, recipientId);
+
+      if (allowed) {
         const conv = await base44.entities.Conversation.create({
           participant_ids: [currentUser.id, recipientId],
           participant_names: [currentUser.full_name || currentUser.display_name, recipientName],
@@ -52,12 +58,30 @@ export default function MessageButton({
           request_type: postType,
           unread_count: { [recipientId]: 0 }
         });
-        conversationId = conv.id;
+        recordNewChat(currentUser.id);
+        navigate(createPageUrl(`Messages?conversation=${conv.id}`));
+        toast.success('Conversation started!');
+      } else {
+        // Send a message request instead
+        const existing = await base44.entities.MessageRequest.filter({
+          sender_id: currentUser.id,
+          recipient_id: recipientId,
+          status: 'pending'
+        });
+        if (existing.length > 0) {
+          toast.info('You already sent a message request to this person.');
+          return;
+        }
+        await base44.entities.MessageRequest.create({
+          sender_id: currentUser.id,
+          sender_name: currentUser.full_name || currentUser.display_name,
+          sender_avatar: currentUser.avatar_url || null,
+          recipient_id: recipientId,
+          status: 'pending',
+        });
+        recordNewChat(currentUser.id);
+        toast.success('Message request sent! They\'ll be notified to accept.');
       }
-
-      // Navigate to messages with conversation pre-selected
-      navigate(createPageUrl(`Messages?conversation=${conversationId}`));
-      toast.success('Conversation started!');
     } catch (error) {
       toast.error('Failed to start conversation');
     } finally {
@@ -74,10 +98,7 @@ export default function MessageButton({
           ? 'p-2 hover:bg-slate-100 rounded-full'
           : 'px-3.5 py-1.5 rounded-full text-sm font-semibold'
       } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-      style={variant === 'default' ? {
-        background: '#F2F4F7',
-        color: '#0F1C2E'
-      } : {}}
+      style={variant === 'default' ? { background: '#F2F4F7', color: '#0F1C2E' } : {}}
     >
       {loading ? (
         <Loader2 className="w-4 h-4 animate-spin" />

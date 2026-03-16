@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ConversationList from '@/components/messages/ConversationList';
 import ChatView from '@/components/messages/ChatView';
 import ReportModal from '@/components/common/ReportModal';
+import MessageRequestsTab from '@/components/messages/MessageRequestsTab';
 import { toast } from 'sonner';
 
 export default function Messages() {
