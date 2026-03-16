@@ -298,14 +298,14 @@ Deno.serve(async (req) => {
           user_name: name,
           role: 'member',
         }));
-        for (let i = 0; i < memberBatch.length; i += 10) {
-          await Promise.all(memberBatch.slice(i, i + 10).map(m => db.entities.GroupMember.create(m)));
-          await delay(400);
+        for (let i = 0; i < memberBatch.length; i += 5) {
+          await Promise.all(memberBatch.slice(i, i + 5).map(m => db.entities.GroupMember.create(m)));
+          await delay(500);
         }
         membersCreated += memberBatch.length;
 
-        // Create 8 posts with comments + likes
-        for (let p = 0; p < 8; p++) {
+        // Create 4 posts with comments + likes
+        for (let p = 0; p < 4; p++) {
           const template = POST_TEMPLATES[p % POST_TEMPLATES.length];
           const authorIdx = p % MEMBER_NAMES.length;
           const post = await db.entities.CommunityPost.create({
