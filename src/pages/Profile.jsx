@@ -252,40 +252,45 @@ export default function Profile() {
         {/* Content Sections */}
         <div className="space-y-4 pb-28">
 
-        {/* Streak Card */}
-        {isOwnProfile && <StreakCard streak={userStreak} />}
+          {/* Streak Card */}
+          {isOwnProfile && <div className="px-6"><StreakCard streak={userStreak} /></div>}
 
-        {/* Interests Section */}
-        {isOwnProfile && (
-          <InterestsSection 
-            interests={profileUser.interests || []} 
-            onAddInterest={() => setShowInterestPicker(true)}
-          />
-        )}
+          {/* Interests Section */}
+          {isOwnProfile && (
+            <div className="mx-6">
+              <InterestsSection 
+                interests={profileUser.interests || []} 
+                onAddInterest={() => setShowInterestPicker(true)}
+              />
+            </div>
+          )}
 
-        {/* Impact or Get Started */}
-        {isOwnProfile && (
-          hasActivity ? (
-            <ImpactSection points={mitzvahPoints} weeklyCount={weeklyMitzvahCount} streak={userStreak} />
-          ) : (
-            <GetStartedCard />
-          )
-        )}
+          {/* Impact or Get Started */}
+          {isOwnProfile && (
+            <div className="mx-6">
+              {hasActivity ? (
+                <ImpactSection points={mitzvahPoints} weeklyCount={weeklyMitzvahCount} streak={userStreak} />
+              ) : (
+                <GetStartedCard />
+              )}
+            </div>
+          )}
 
-        {/* Weekly Summary */}
-        {isOwnProfile && <WeeklySummaryCard mitzvahCount={weeklyMitzvahCount} />}
+          {/* Weekly Summary */}
+          {isOwnProfile && <div className="mx-6"><WeeklySummaryCard mitzvahCount={weeklyMitzvahCount} /></div>}
 
-        {/* Communities Section */}
-        {isOwnProfile && userCommunities.length > 0 && <CommunitiesSection userCommunities={userCommunities} />}
+          {/* Communities Section */}
+          {isOwnProfile && userCommunities.length > 0 && <div className="mx-6"><CommunitiesSection userCommunities={userCommunities} /></div>}
 
-        {/* Badges Section */}
-        {isOwnProfile && <BadgesSection user={profileUser} />}
+          {/* Badges Section */}
+          {isOwnProfile && <div className="mx-6"><BadgesSection user={profileUser} /></div>}
 
-        {/* Mitzvah Journey */}
-        {isOwnProfile && mitzvahLogs.length > 0 && <MitzvahJourneySection logs={mitzvahLogs} />}
+          {/* Mitzvah Journey */}
+          {isOwnProfile && mitzvahLogs.length > 0 && <div className="mx-6"><MitzvahJourneySection logs={mitzvahLogs} /></div>}
 
-        {/* Recent Posts */}
-        <RecentPostsSection posts={unifiedPosts} currentUser={currentUser} profileUser={profileUser} isOwnProfile={isOwnProfile} />
+          {/* Recent Posts */}
+          <div className="mx-6"><RecentPostsSection posts={unifiedPosts} currentUser={currentUser} profileUser={profileUser} isOwnProfile={isOwnProfile} /></div>
+        </div>
       </div>
 
       <ReportModal
