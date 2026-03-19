@@ -451,13 +451,15 @@ export default function MitzvahCircle({ isActive = true }) {
                             {request.category}
                           </span>
                         </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleClaim(e, request); }}
-                          disabled={claimMutation.isPending}
-                          className="w-full mt-3 py-2 px-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-[12px] font-semibold transition-colors disabled:opacity-50"
-                        >
-                          {claimMutation.isPending ? 'Joining...' : "I'll Help"}
-                        </button>
+                        <div className="flex justify-end mt-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleClaim(e, request); }}
+                            disabled={claimMutation.isPending}
+                            className="h-7 px-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold transition-colors disabled:opacity-50 flex items-center gap-1"
+                          >
+                            {claimMutation.isPending ? 'Joining...' : "I'll Help"}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
