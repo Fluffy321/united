@@ -184,17 +184,6 @@ export default function Profile() {
     navigate(createPageUrl('Feed'));
   };
 
-  const shareProfile = () => {
-    const profileUrl = `${window.location.origin}${createPageUrl('Profile')}?id=${profileUser.id}`;
-    if (navigator.share) {
-      navigator.share({ title: displayName, url: profileUrl });
-    } else {
-      navigator.clipboard.writeText(profileUrl);
-      toast.success('Profile link copied!');
-    }
-    setShowMenu(false);
-  };
-
   if (!profileUser) {
     return (
       <div className="min-h-screen flex items-center justify-center">
