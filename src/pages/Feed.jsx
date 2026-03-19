@@ -387,7 +387,7 @@ export default function Feed() {
       />
 
       {/* FAB */}
-      <div className="fixed bottom-40 right-4 z-40 flex flex-col items-end gap-2">
+      <div className={`fixed bottom-32 right-4 z-40 flex flex-col items-end gap-2 transition-all duration-300 ${isScrollingDown ? 'translate-x-32' : 'translate-x-0'}`}>
         {showFAB && (
           <>
             {[
