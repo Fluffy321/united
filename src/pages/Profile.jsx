@@ -26,7 +26,6 @@ export default function Profile() {
   const [currentUser, setCurrentUser] = useState(null);
   const [profileUser, setProfileUser] = useState(null);
   const [showReport, setShowReport] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   const [showInterestPicker, setShowInterestPicker] = useState(false);
   const navigate = useNavigate();
