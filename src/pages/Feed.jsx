@@ -36,6 +36,7 @@ export default function Feed() {
   const [showFABTypeSelector, setShowFABTypeSelector] = useState(false);
   const [activeTab, setActiveTab] = useState('trending');
   const [showAlertModal, setShowAlertModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [feedPrompts, setFeedPrompts] = useState([]);
   const queryClient = useQueryClient();
