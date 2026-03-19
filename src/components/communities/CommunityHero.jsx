@@ -52,27 +52,27 @@ export default function CommunityHero({ community, isFollowing, isAdmin, onBack,
         </div>
 
         {/* Action buttons */}
-        <div className="flex gap-2 mt-4">
-          <button
-            onClick={onFollow}
-            className={`flex-1 h-10 text-[14px] font-bold rounded-xl transition-colors ${
-              isFollowing
-                ? 'bg-white border border-[#E0EDFF] text-slate-600 hover:bg-[#EEF4FF]'
-                : 'bg-[#2563EB] text-white hover:bg-[#1d4ed8]'
-            }`}
-          >
-            {isFollowing ? '✓ Following' : '+ Join Community'}
-          </button>
-          <InviteLinkButton type="community" id={community.id} name={community.name} />
-          {!community.is_claimed && !isAdmin && (
-            <button
-              onClick={onClaim}
-              className="h-10 px-4 text-[13px] font-semibold rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-            >
-              Claim
-            </button>
-          )}
-        </div>
+         <div className="flex gap-2 mt-4">
+           <button
+             onClick={onFollow}
+             className={`flex-1 h-10 text-[14px] font-bold rounded-xl transition-colors ${
+               isFollowing
+                 ? 'bg-white border border-[#E0EDFF] text-slate-600 hover:bg-[#EEF4FF]'
+                 : 'bg-[#2563EB] text-white hover:bg-[#1d4ed8]'
+             }`}
+           >
+             {isFollowing ? '✓ Joined' : '+ Join Community'}
+           </button>
+           <InviteLinkButton type="community" id={community.id} name={community.name} />
+           {!community.is_claimed && !isAdmin && (
+             <button
+               onClick={onClaim}
+               className="h-10 px-4 text-[13px] font-semibold rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+             >
+               Claim
+             </button>
+           )}
+         </div>
       </div>
     </div>
   );
