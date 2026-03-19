@@ -73,13 +73,17 @@ export default function Communities() {
       setMembershipsReady(true);
 
       // Defer community/group queries to avoid burst with Feed queries
-      setTimeout(() => setQueriesReady(true), 3000);
+      setTimeout(() => setQueriesReady(true), 6000);
 
       // Defer pending requests further
       setTimeout(async () => {
-        const reqs = await base44.entities.GroupJoinRequest.filter({ user_id: user.id, status: 'pending' });
-        setPendingRequestSet(new Set(reqs.map(r => r.group_id)));
-      }, 6000);
+        try {
+          const reqs = await base44.entities.GroupJoinRequest.filter({ user_id: user.id, status: 'pending' });
+          setPendingRequestSet(new Set(reqs.map(r => r.group_id)));
+        } catch (e) {
+          // Silently ignore rate limit errors for non-critical pending requests
+        }
+      }, 12000);
 
       // Auto-join: only once per session and only if user has few communities
       // Store user info for use after groups load — actual joining happens in a separate effect
