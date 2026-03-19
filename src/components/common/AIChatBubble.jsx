@@ -58,17 +58,18 @@ export default function AIChatBubble({ currentUser, isScrollingDown }) {
     setAiThinking(false);
   };
 
-  if (!isOpen) {
-    return (
-      <button
-        onClick={handleOpen}
-        className={`fixed bottom-28 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-xl active:scale-95 transition-transform duration-300 flex items-center justify-center z-40 ${isScrollingDown ? 'translate-y-96' : 'translate-y-0'}`}
-      >
-        <Sparkles className="w-6 h-6" />
-      </button>
-    );
-  }
+  return (
+    <button
+      onClick={handleOpen}
+      className={`fixed bottom-28 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-xl active:scale-95 transition-transform duration-300 flex items-center justify-center z-40 ${isScrollingDown ? 'translate-y-96' : 'translate-y-0'}`}
+    >
+      <Sparkles className="w-6 h-6" />
+    </button>
+  );
+}
 
+// Keep the old chat interface code below but unused - can be removed if not needed
+/*
   return (
     <div className={`fixed bottom-[96px] right-6 w-80 bg-white rounded-2xl shadow-2xl flex flex-col z-39 h-96 transition-transform duration-300 ${isScrollingDown ? 'translate-y-96' : 'translate-y-0'}`}>
       {/* Header */}
