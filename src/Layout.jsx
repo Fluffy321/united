@@ -135,7 +135,7 @@ export default function Layout({ children, currentPageName }) {
 
       <Toaster position="top-center" richColors />
       
-      {currentUser && <AIChatBubble currentUser={currentUser} />}
+      {currentUser && <AIChatBubble currentUser={currentUser} isScrollingDown={isScrollingDown} />}
 
       {/* Main Content */}
       <main className={!hideBottomPadding ? 'h-screen' : 'h-screen'}>
