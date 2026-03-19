@@ -281,22 +281,23 @@ export default function Profile() {
         </div>
       </div>
 
-      <ReportModal
-        open={showReport}
-        onOpenChange={setShowReport}
-        contentId={profileUser.id}
-        contentType="user"
-        currentUser={currentUser}
-      />
-
-      {isOwnProfile && (
-        <InterestPickerModal
-          open={showInterestPicker}
-          onOpenChange={setShowInterestPicker}
-          currentUser={profileUser}
-          onInterestAdded={() => loadProfile()}
+        <ReportModal
+          open={showReport}
+          onOpenChange={setShowReport}
+          contentId={profileUser.id}
+          contentType="user"
+          currentUser={currentUser}
         />
-      )}
+
+        {isOwnProfile && (
+          <InterestPickerModal
+            open={showInterestPicker}
+            onOpenChange={setShowInterestPicker}
+            currentUser={profileUser}
+            onInterestAdded={() => loadProfile()}
+          />
+        )}
+      </div>
     </div>
   );
 }
