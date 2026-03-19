@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Loader2, MapPin, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Loader2, MapPin, Check, Bold, Italic, List } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -111,6 +111,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [placeholder, setPlaceholder] = useState('');
   const [attachedFiles, setAttachedFiles] = useState([]);
+  const textareaRef = useRef(null);
 
   useEffect(() => {
     if (open) {
@@ -126,6 +127,39 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
   const requiresTitle = isEvent || postType === 'job' || postType === 'housing';
   const categories = HELP_CATEGORIES || [];
   const selectedCategory = categories.find(cat => cat.value === category);
+
+  const applyFormatting = (format) => {
+    if (!textareaRef.current) return;
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = body.substring(start, end);
+    
+    if (!selectedText) return;
+    
+    let formattedText;
+    switch (format) {
+      case 'bold':
+        formattedText = `**${selectedText}**`;
+        break;
+      case 'italic':
+        formattedText = `*${selectedText}*`;
+        break;
+      case 'bullet':
+        formattedText = selectedText.split('\n').map(line => `• ${line}`).join('\n');
+        break;
+      default:
+        return;
+    }
+    
+    const newBody = body.substring(0, start) + formattedText + body.substring(end);
+    setBody(newBody);
+    
+    setTimeout(() => {
+      textarea.focus();
+      textarea.selectionStart = textarea.selectionEnd = start + formattedText.length;
+    }, 0);
+  };
 
   const getModalTitle = () => {
     if (isPromptReply) return 'Reply to Prompt';
@@ -267,11 +301,41 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
 
           <div>
             <Label>{requiresTitle ? 'Details' : 'What\'s on your mind?'}</Label>
+            {/* Formatting toolbar */}
+            <div className="flex gap-1.5 mt-2 mb-2 p-2 bg-slate-50 rounded-lg border border-slate-200">
+              <button
+                type="button"
+                onClick={() => applyFormatting('bold')}
+                className="p-2 hover:bg-slate-200 rounded transition-colors flex items-center justify-center"
+                title="Bold"
+              >
+                <Bold className="w-4 h-4 text-slate-600" />
+              </button>
+              <button
+                type="button"
+                onClick={() => applyFormatting('italic')}
+                className="p-2 hover:bg-slate-200 rounded transition-colors flex items-center justify-center"
+                title="Italic"
+              >
+                <Italic className="w-4 h-4 text-slate-600" />
+              </button>
+              <button
+                type="button"
+                onClick={() => applyFormatting('bullet')}
+                className="p-2 hover:bg-slate-200 rounded transition-colors flex items-center justify-center"
+                title="Bullet points"
+              >
+                <List className="w-4 h-4 text-slate-600" />
+              </button>
+              <div className="flex-1" />
+              <span className="text-xs text-slate-500 self-center">Select text to format</span>
+            </div>
             <Textarea
+              ref={textareaRef}
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder={placeholder || 'Write here...'}
-              className="mt-1 min-h-[120px] resize-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="min-h-[120px] resize-none focus:ring-2 focus:ring-indigo-500 transition-all"
             />
           </div>
 
