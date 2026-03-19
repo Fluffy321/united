@@ -305,7 +305,7 @@ export default function Feed() {
               </React.Fragment>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       <UnifiedPostModal
