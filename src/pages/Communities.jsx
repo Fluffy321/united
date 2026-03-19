@@ -91,6 +91,30 @@ export default function Communities() {
     });
   }, []);
 
+  // Auto-join using already-fetched groups data — no extra API call
+  useEffect(() => {
+    if (!currentUser || groups.length === 0) return;
+    const pendingKey = `auto_join_pending_${currentUser.id}`;
+    if (!sessionStorage.getItem(pendingKey)) return;
+    sessionStorage.removeItem(pendingKey);
+
+    const groupsToJoin = groups.filter(g =>
+      (AUTO_JOIN_NAMES.includes(g.name) || FALLBACK_AUTO_JOIN.includes(g.name)) &&
+      !membershipSet.has(g.id)
+    ).slice(0, 4);
+
+    if (groupsToJoin.length === 0) return;
+
+    (async () => {
+      const newSet = new Set(membershipSet);
+      for (const g of groupsToJoin) {
+        await base44.entities.GroupMember.create({ group_id: g.id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
+        newSet.add(g.id);
+      }
+      setMembershipSet(newSet);
+    })();
+  }, [groups, currentUser]);
+
   const retryWithBackoff = (failureCount, error) => {
     if (error?.message?.includes('429') || error?.status === 429) {
       return failureCount < 2; // 2 retries for rate limit
