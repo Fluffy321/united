@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, MapPin, Loader2, Edit2, Flag, Ban, MessageCircle, MoreVertical, Plus, Flame, Star, Calendar } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import ReportModal from '@/components/common/ReportModal';
-import UserAvatar from '@/components/common/UserAvatar';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns';
-import ProfileHero from '@/components/profile/ProfileHero.jsx';
+import ModernProfileHeader from '@/components/profile/ModernProfileHeader.jsx';
+import ModernStatsRow from '@/components/profile/ModernStatsRow.jsx';
+import ModernActionButtons from '@/components/profile/ModernActionButtons.jsx';
 import StreakCard from '@/components/profile/StreakCard.jsx';
 import InterestsSection from '@/components/profile/InterestsSection.jsx';
 import ImpactSection from '@/components/profile/ImpactSection.jsx';
@@ -21,6 +20,7 @@ import MitzvahJourneySection from '@/components/profile/MitzvahJourneySection.js
 import CommunitiesSection from '@/components/profile/CommunitiesSection.jsx';
 import RecentPostsSection from '@/components/profile/RecentPostsSection.jsx';
 import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
+import SectionCard from '@/components/profile/SectionCard.jsx';
 
 export default function Profile() {
   const [currentUser, setCurrentUser] = useState(null);
