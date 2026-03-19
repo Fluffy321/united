@@ -67,6 +67,17 @@ export default function Feed() {
     init();
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      setIsScrollingDown(currentScrollY > lastScrollY);
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
   const loadPinnedPrompt = async () => {
     try {
       const prompts = await base44.entities.DailyPrompt.filter({ is_pinned: true });
