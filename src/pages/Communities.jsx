@@ -12,20 +12,45 @@ import { toast } from 'sonner';
 
 const FEATURED_SHULS = ["Young Israel Woodmere", "Chabad of Woodmere", "Beth Shalom", "Shaaray Tefila"];
 
-const CATEGORY_EMOJI = {
-  'Local Life': '📍', 'Local': '📍',
-  'Chessed': '❤️',
-  'Social': '🏀',
-  'Learning': '📚',
-  'Institutional': '🏛️',
-  'Shul': '🕍',
-  'School': '🏫',
-  'Camp': '⛺',
-  'Other': '🏘️',
-};
+function getActivityIndicator(community) {
+  if (!community.updated_date) return 'No recent activity';
+  const lastUpdate = new Date(community.updated_date);
+  const now = new Date();
+  const hours = Math.floor((now - lastUpdate) / (1000 * 60 * 60));
+  const days = Math.floor(hours / 24);
+  
+  if (hours < 1) return 'Active now';
+  if (hours === 1) return '1 new post';
+  if (hours < 24) return `${hours} new posts`;
+  if (days === 1) return 'Active today';
+  if (days < 7) return `Active ${days}d ago`;
+  return 'Inactive';
+}
 
-function getEmoji(item) {
-  return CATEGORY_EMOJI[item.category] || CATEGORY_EMOJI[item.type] || '🏘️';
+function getSuggestedCommunities(allCommunities, userCommunityIds, currentUser) {
+  const notJoined = allCommunities.filter(c => !userCommunityIds.has(c.id));
+  const userInterests = new Set(currentUser.interests || []);
+  const userCity = currentUser.cityPreset || currentUser.city || '';
+  
+  return notJoined.sort((a, b) => {
+    let scoreA = 0, scoreB = 0;
+    
+    // Location match
+    if (userCity && a.neighborhood?.toLowerCase().includes(userCity.toLowerCase())) scoreA += 50;
+    if (userCity && b.neighborhood?.toLowerCase().includes(userCity.toLowerCase())) scoreB += 50;
+    
+    // Category match to interests
+    userInterests.forEach(interest => {
+      if ((a.description_long || a.description_short || '').toLowerCase().includes(interest.toLowerCase())) scoreA += 10;
+      if ((b.description_long || b.description_short || '').toLowerCase().includes(interest.toLowerCase())) scoreB += 10;
+    });
+    
+    // Higher follower count
+    scoreA += (a.follower_count || 0) * 0.1;
+    scoreB += (b.follower_count || 0) * 0.1;
+    
+    return scoreB - scoreA;
+  }).slice(0, 5);
 }
 
 export default function Communities() {
