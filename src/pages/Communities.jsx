@@ -65,19 +65,20 @@ export default function Communities() {
     base44.auth.me().then(async user => {
       setCurrentUser(user);
 
-      // Delay enabling React Query queries to avoid burst with Feed page queries
-      setTimeout(() => setQueriesReady(true), 1000);
-
-      // Load memberships first, then pending requests with a small delay
+      // Load memberships first (immediate), then enable community queries after
       const memberships = await base44.entities.GroupMember.filter({ user_id: user.id });
       const joinedGroupIds = new Set(memberships.map(m => m.group_id));
       setMembershipSet(joinedGroupIds);
+      setMembershipsReady(true);
 
-      // Defer pending requests to reduce burst
+      // Defer community/group queries to avoid burst with Feed queries
+      setTimeout(() => setQueriesReady(true), 1500);
+
+      // Defer pending requests further
       setTimeout(async () => {
         const reqs = await base44.entities.GroupJoinRequest.filter({ user_id: user.id, status: 'pending' });
         setPendingRequestSet(new Set(reqs.map(r => r.group_id)));
-      }, 1500);
+      }, 3000);
 
       // Auto-join: only once per session and only if user has few communities
       const autoJoinKey = `auto_joined_${user.id}`;
