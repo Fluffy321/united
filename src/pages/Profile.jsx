@@ -140,7 +140,14 @@ export default function Profile() {
 
   const { data: userCommunities = [] } = useQuery({
     queryKey: ['user-communities', profileUser?.id],
-    queryFn: () => base44.entities.UserCommunity.filter({ user_id: profileUser.id }, '-created_date', 50),
+    queryFn: async () => {
+      const comms = await base44.entities.UserCommunity.filter({ user_id: profileUser.id }, '-created_date', 50);
+      // Update user's communities_joined_count
+      if (comms.length > 0 && (!profileUser.communities_joined_count || profileUser.communities_joined_count !== comms.length)) {
+        base44.auth.updateMe({ communities_joined_count: comms.length }).catch(() => {});
+      }
+      return comms;
+    },
     enabled: !!profileUser,
     staleTime: 300000,
     retry: 1
