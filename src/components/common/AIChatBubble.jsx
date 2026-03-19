@@ -62,7 +62,7 @@ export default function AIChatBubble({ currentUser, isScrollingDown }) {
     return (
       <button
         onClick={handleOpen}
-        className={`fixed bottom-28 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-xl active:scale-95 transition-transform duration-300 flex items-center justify-center z-40 ${isScrollingDown ? 'translate-x-96' : 'translate-x-0'}`}
+        className={`fixed bottom-20 right-24 w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-xl active:scale-95 transition-transform duration-300 flex items-center justify-center z-40 ${isScrollingDown ? 'translate-x-96' : 'translate-x-0'}`}
       >
         <Sparkles className="w-6 h-6" />
       </button>
@@ -70,7 +70,7 @@ export default function AIChatBubble({ currentUser, isScrollingDown }) {
   }
 
   return (
-    <div className={`fixed bottom-28 right-6 w-80 bg-white rounded-2xl shadow-2xl flex flex-col z-40 h-96 transition-transform duration-300 ${isScrollingDown ? 'translate-x-96' : 'translate-x-0'}`}>
+    <div className={`fixed bottom-20 right-24 w-80 bg-white rounded-2xl shadow-2xl flex flex-col z-40 h-96 transition-transform duration-300 ${isScrollingDown ? 'translate-x-96' : 'translate-x-0'}`}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-slate-100 flex-shrink-0">
         <div className="flex items-center gap-2">
