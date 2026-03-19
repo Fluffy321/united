@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Edit2, MessageCircle } from 'lucide-react';
+import { MapPin, Edit2, MessageCircle, Share2, Heart, Users } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import UserAvatar from '@/components/common/UserAvatar';
 import { Link, useNavigate } from 'react-router-dom';
