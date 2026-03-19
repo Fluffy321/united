@@ -265,8 +265,8 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Impact Stats */}
-        {isOwnProfile && (
+        {/* Impact Stats — only show when user has some activity */}
+        {isOwnProfile && (mitzvahPoints > 0 || weeklyMitzvahCount > 0 || (userStreak?.current_streak || 0) > 0) && (
           <div className="bg-white rounded-2xl border border-slate-100 p-4" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
             <h2 className="text-[14px] font-bold text-slate-900 mb-3">Impact</h2>
             <div className="grid grid-cols-3 gap-3">
