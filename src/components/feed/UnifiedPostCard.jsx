@@ -206,20 +206,18 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           )}
         </p>
 
-        {/* Image */}
+        {/* Image — full width, tap to toggle zoom */}
         {post.image_url && (
-          <div className="mt-2.5 mb-1">
-            {imgExpanded ? (
-              <div className="rounded-xl overflow-hidden cursor-pointer" onClick={() => setImgExpanded(false)}>
-                <img src={post.image_url} alt="" className="w-full object-cover" loading="lazy" decoding="async" />
-              </div>
-            ) : (
-              <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setImgExpanded(true)}>
-                <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-[#EAECF0]">
-                  <img src={post.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                </div>
-                <span className="text-xs text-[#98A2B3] font-medium">Tap to expand</span>
-              </div>
+          <div className="mt-3 -mx-4 cursor-pointer" onClick={() => setImgExpanded(e => !e)}>
+            <img
+              src={post.image_url}
+              alt=""
+              className={`w-full object-cover transition-all ${imgExpanded ? 'max-h-[480px]' : 'max-h-52'}`}
+              loading="lazy"
+              decoding="async"
+            />
+            {!imgExpanded && (
+              <div className="absolute bottom-2 right-2 bg-black/40 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full pointer-events-none">tap to expand</div>
             )}
           </div>
         )}
