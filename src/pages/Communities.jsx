@@ -112,10 +112,10 @@ export default function Communities() {
 
   const { data: posts = [] } = useQuery({
     queryKey: ['community-posts'],
-    queryFn: () => base44.entities.CommunityPost.list('-created_date', 50),
+    queryFn: () => base44.entities.CommunityPost.list('-created_date', 100),
     staleTime: 3600000,
     gcTime: 7200000,
-    enabled: !!currentUser && activeTab === 'Discover',
+    enabled: !!currentUser,
     retry: 0,
   });
 
