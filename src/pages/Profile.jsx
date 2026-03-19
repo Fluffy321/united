@@ -10,17 +10,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns';
-import ProfileHero from '@/components/profile/ProfileHero';
-import StreakCard from '@/components/profile/StreakCard';
-import InterestsSection from '@/components/profile/InterestsSection';
-import ImpactSection from '@/components/profile/ImpactSection';
-import GetStartedCard from '@/components/profile/GetStartedCard';
-import WeeklySummaryCard from '@/components/profile/WeeklySummaryCard';
-import BadgesSection from '@/components/profile/BadgesSection';
-import MitzvahJourneySection from '@/components/profile/MitzvahJourneySection';
-import CommunitiesSection from '@/components/profile/CommunitiesSection';
-import RecentPostsSection from '@/components/profile/RecentPostsSection';
-import InterestPickerModal from '@/components/profile/InterestPickerModal';
+import ProfileHero from '@/components/profile/ProfileHero.jsx';
+import StreakCard from '@/components/profile/StreakCard.jsx';
+import InterestsSection from '@/components/profile/InterestsSection.jsx';
+import ImpactSection from '@/components/profile/ImpactSection.jsx';
+import GetStartedCard from '@/components/profile/GetStartedCard.jsx';
+import WeeklySummaryCard from '@/components/profile/WeeklySummaryCard.jsx';
+import BadgesSection from '@/components/profile/BadgesSection.jsx';
+import MitzvahJourneySection from '@/components/profile/MitzvahJourneySection.jsx';
+import CommunitiesSection from '@/components/profile/CommunitiesSection.jsx';
+import RecentPostsSection from '@/components/profile/RecentPostsSection.jsx';
+import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
 
 export default function Profile() {
   const [currentUser, setCurrentUser] = useState(null);
