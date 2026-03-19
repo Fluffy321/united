@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 
 const TABS = [
   { id: 'trending', label: '🔥 Trending' },
+  { id: 'events', label: '📅 Events' },
   { id: 'nearby', label: '📍 Near You' },
   { id: 'chessed', label: '❤️ Chessed' },
   { id: 'learning', label: '📚 Learning' },

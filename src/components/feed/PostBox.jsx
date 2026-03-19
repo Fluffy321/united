@@ -1,5 +1,5 @@
 import React from 'react';
-import { HandHeart, Bell, Calendar, MapPin } from 'lucide-react';
+import { HandHeart, Bell, Calendar, MapPin, ImagePlus } from 'lucide-react';
 import UserAvatar from '@/components/common/UserAvatar';
 
 const QUICK_ACTIONS = [
