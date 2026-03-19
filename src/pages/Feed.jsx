@@ -43,6 +43,8 @@ export default function Feed() {
   const [feedPrompts, setFeedPrompts] = useState([]);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('All Five Towns');
+  const [isScrollingDown, setIsScrollingDown] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const queryClient = useQueryClient();
 
   const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Cedarhurst', 'Woodmere', 'Hewlett', 'Inwood', 'Far Rockaway'];
