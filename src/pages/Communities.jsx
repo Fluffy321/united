@@ -336,7 +336,14 @@ export default function Communities() {
                          <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-wide mb-2">{type}</h3>
                          <div className="space-y-2">
                            {items.map(c => (
-                             <MyCommunityCard key={c.id} community={c} onOpen={openCommunity} />
+                             <MyCommunityCard 
+                               key={c.id} 
+                               community={c} 
+                               onOpen={openCommunity}
+                               isPinned={pinnedCommunityIds.has(c.id)}
+                               onPin={togglePin}
+                               activity={getActivityIndicator(c)}
+                             />
                            ))}
                          </div>
                        </div>
