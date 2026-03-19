@@ -49,6 +49,10 @@ export default function Feed() {
   const scrollTimeoutRef = useRef(null);
   const queryClient = useQueryClient();
 
+  const { isRefreshing, pullDistance } = usePullToRefresh(async () => {
+    await refetchPosts();
+  });
+
   const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Cedarhurst', 'Woodmere', 'Hewlett', 'Inwood', 'Far Rockaway'];
 
   useEffect(() => {
