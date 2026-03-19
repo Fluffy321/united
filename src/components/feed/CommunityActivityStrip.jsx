@@ -1,19 +1,39 @@
 import React from 'react';
 
-const EMOJIS = ['🏀', '🚨', '❤️', '📚', '☕', '🕯️', '🤝', '🎉'];
+function getInitials(name) {
+  if (!name) return '?';
+  const words = name.trim().split(/\s+/);
+  if (words.length === 1) return name.slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+const BG_COLORS = [
+  'bg-blue-100 text-blue-700',
+  'bg-violet-100 text-violet-700',
+  'bg-emerald-100 text-emerald-700',
+  'bg-amber-100 text-amber-700',
+  'bg-rose-100 text-rose-700',
+  'bg-cyan-100 text-cyan-700',
+  'bg-orange-100 text-orange-700',
+  'bg-indigo-100 text-indigo-700',
+];
 
 export default function CommunityActivityStrip({ groups = [] }) {
   if (groups.length === 0) return null;
 
   return (
-    <div className="flex gap-2.5 overflow-x-auto scrollbar-hide mb-3 -mx-4 px-4">
+    <div className="flex gap-3 overflow-x-auto scrollbar-hide mb-3 -mx-4 px-4">
       {groups.slice(0, 8).map((g, i) => (
         <div
           key={g.id}
           className="flex-shrink-0 flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform"
         >
-          <div className="w-12 h-12 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center text-xl shadow-sm">
-            {EMOJIS[i % EMOJIS.length]}
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-[15px] font-bold shadow-sm border-2 border-white overflow-hidden ${BG_COLORS[i % BG_COLORS.length]}`}>
+            {g.cover_image_url ? (
+              <img src={g.cover_image_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              getInitials(g.name)
+            )}
           </div>
           <span className="text-[10px] font-semibold text-slate-600 max-w-[52px] text-center leading-tight line-clamp-2">{g.name}</span>
         </div>
