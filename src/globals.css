@@ -290,7 +290,7 @@ h1, h2, h3 {
   transition: background 120ms ease, transform 100ms ease;
 }
 .u-btn-primary:active { transform: scale(0.97); }
-.u-btn-primary:hover { background: var(--primary-hover); }
+.u-btn-primary:hover { background: #1D4ED8; }
 
 .u-btn-secondary {
   background: var(--secondary);
