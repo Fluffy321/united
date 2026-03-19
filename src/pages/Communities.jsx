@@ -442,6 +442,7 @@ export default function Communities() {
               myGroups={myGroups}
               allGroups={groups}
               loading={communitiesLoading || membershipsLoading}
+              isRateLimited={isRateLimited}
               onViewCommunity={handleViewCommunity}
               onViewGroup={setSelectedGroup}
               onDiscover={() => setActiveTab('Discover')}
