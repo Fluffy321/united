@@ -174,8 +174,9 @@ export default function Feed() {
     if (activeTab === 'trending') return sorted.slice(0, 40);
     if (activeTab === 'chessed') return sorted.filter(p => p.type === 'help' || p.board === 'help');
     if (activeTab === 'learning') return sorted.filter(p => p.type === 'news' || /torah|parsha|daf|halacha|shiur/i.test(p.body || ''));
-    if (activeTab === 'social') return sorted.filter(p => p.type === 'event' || p.type === 'feed');
+    if (activeTab === 'social') return sorted.filter(p => p.type === 'feed');
     if (activeTab === 'nearby') return sorted.filter(p => p.city);
+    if (activeTab === 'events') return sorted.filter(p => p.type === 'event' || p.board === 'events');
     return sorted.slice(0, 40);
   })();
 
