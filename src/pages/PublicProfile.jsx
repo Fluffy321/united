@@ -5,7 +5,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format, parseISO } from 'date-fns';
 import UserAvatar from '@/components/common/UserAvatar';
-import RecentPostsSection from '@/components/profile/RecentPostsSection';
+import RecentPostsSection from '@/components/profile/RecentPostsSection.jsx';
 
 export default function PublicProfile() {
   const [searchParams] = useSearchParams();
