@@ -1,14 +1,78 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { useState, useEffect } from 'react';
+import { Loader2, MessageCircle, X, Plus } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import ConversationList from '@/components/messages/ConversationList';
-import ChatView from '@/components/messages/ChatView';
-import ReportModal from '@/components/common/ReportModal';
-import MessageRequestsTab from '@/components/messages/MessageRequestsTab';
-import UserSearchPanel from '@/components/messages/UserSearchPanel';
-import { buildAIConversation } from '@/lib/aiAgent';
+import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import ChatView from '@/components/messages/ChatView';
+import ConversationList from '@/components/messages/ConversationList';
+import UserSearchPanel from '@/components/messages/UserSearchPanel';
+import MessageRequestsTab from '@/components/messages/MessageRequestsTab';
+import NewMessageComposer from '@/components/messages/NewMessageComposer';
+import ReportModal from '@/components/common/ReportModal';
+import { buildAIConversation } from '@/lib/aiAgent';
+
+// Demo conversation data
+const DEMO_CONVERSATIONS = [
+  {
+    participant_ids: null,
+    participant_names: ['Rachel G', null],
+    participant_ages: ['18+', '18+'],
+    participant_avatars: ['', ''],
+    last_message: 'Are you coming to the shiur tonight?',
+    last_message_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    unread_count: { [null]: 1 },
+    is_demo: true,
+    demo_user_name: 'Rachel G'
+  },
+  {
+    participant_ids: null,
+    participant_names: ['David Cohen', null],
+    participant_ages: ['18+', '18+'],
+    participant_avatars: ['', ''],
+    last_message: 'Thanks for helping with the grocery pickup!',
+    last_message_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    unread_count: {},
+    is_demo: true,
+    demo_user_name: 'David Cohen'
+  },
+  {
+    participant_ids: null,
+    participant_names: ['Shul Admin', null],
+    participant_ages: ['18+', '18+'],
+    participant_avatars: ['', ''],
+    last_message: 'Reminder: Mincha is at 1:30 PM today',
+    last_message_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+    unread_count: { [null]: 1 },
+    is_demo: true,
+    demo_user_name: 'Shul Admin'
+  },
+  {
+    participant_ids: null,
+    participant_names: ['Sarah Miller', null],
+    participant_ages: ['18+', '18+'],
+    participant_avatars: ['', ''],
+    last_message: 'Is the apartment still available?',
+    last_message_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    unread_count: {},
+    is_demo: true,
+    demo_user_name: 'Sarah Miller'
+  }
+];
+
+const DEMO_REQUESTS = [
+  {
+    sender_name: 'Josh Levy',
+    message: 'Hey, I saw your post about the summer sublet. Is it still available?',
+    created_date: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+    is_demo: true
+  },
+  {
+    sender_name: 'Anonymous',
+    message: 'Are you the one offering rides to JFK?',
+    created_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    is_demo: true
+  }
+];
 
 export default function Messages() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -16,6 +80,7 @@ export default function Messages() {
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [activeTab, setActiveTab] = useState('inbox');
+  const [showNewMessage, setShowNewMessage] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -25,7 +90,6 @@ export default function Messages() {
 
   useEffect(() => {
     if (!currentUser) return;
-    // Subscribe to message events for real-time notifications
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.type === 'create') {
         const newMsg = event.data;
@@ -91,8 +155,24 @@ export default function Messages() {
     gcTime: 120000,
   });
 
-  // Always prepend AI conversation regardless of query status
-  const allConversations = aiConversation ? [aiConversation, ...conversations] : conversations;
+  // Seed demo conversations with current user ID
+  const demoConversations = DEMO_CONVERSATIONS.map(demo => ({
+    ...demo,
+    id: `demo-${demo.demo_user_name}`,
+    participant_ids: [currentUser?.id, `user-${demo.demo_user_name}`],
+    unread_count: { [currentUser?.id]: demo.unread_count[currentUser?.id] || 0 }
+  }));
+
+  // Always prepend AI conversation, then demo conversations, then real conversations
+  const allConversations = [
+    ...(aiConversation ? [aiConversation] : []),
+    ...(conversations.length === 0 ? demoConversations : []),
+    ...conversations
+  ];
+
+  const unreadCount = allConversations.reduce((sum, conv) => 
+    sum + (conv.unread_count?.[currentUser?.id] || 0), 0
+  );
 
   const handleReport = (id, type) => {
     setReportTarget({ id, type });
@@ -117,9 +197,23 @@ export default function Messages() {
     );
   }
 
+  if (showNewMessage) {
+    return (
+      <div className="flex flex-col bg-white" style={{ height: '100dvh' }}>
+        <NewMessageComposer
+          currentUser={currentUser}
+          onConversationSelect={(conv) => {
+            setSelectedConversation(conv);
+            setShowNewMessage(false);
+          }}
+          onCancel={() => setShowNewMessage(false)}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col bg-white" style={{ height: '100dvh' }}>
-      {/* Mobile: show list OR chat. Desktop: side-by-side */}
+    <div className="flex flex-col bg-white relative" style={{ height: '100dvh' }}>
       <div className="flex flex-1 min-h-0">
         {/* Conversation List */}
         <div className={`flex flex-col w-full lg:w-96 lg:border-r border-slate-200 ${
@@ -141,16 +235,37 @@ export default function Messages() {
               ))}
             </div>
           </div>
-          <UserSearchPanel
-            currentUser={currentUser}
-            onConversationOpened={(conv) => { setSelectedConversation(conv); setActiveTab('inbox'); }}
-          />
+
+          {activeTab === 'inbox' && (
+            <UserSearchPanel
+              currentUser={currentUser}
+              onConversationOpened={(conv) => { setSelectedConversation(conv); setActiveTab('inbox'); }}
+            />
+          )}
+
           <div className="flex-1 overflow-y-auto">
             {activeTab === 'requests' ? (
-              <MessageRequestsTab
-                currentUser={currentUser}
-                onAccepted={(conv) => { setSelectedConversation(conv); setActiveTab('inbox'); }}
-              />
+              <>
+                <div className="bg-blue-50 border-b border-blue-100 p-3 text-[12px] text-blue-800">
+                  Messages from people you're not connected with appear here. Accept to start a conversation.
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {DEMO_REQUESTS.map((req, idx) => (
+                    <div key={idx} className="px-4 py-3 flex flex-col gap-2">
+                      <p className="font-semibold text-[14px] text-slate-900">{req.sender_name}</p>
+                      <p className="text-[13px] text-slate-600">{req.message}</p>
+                      <div className="flex gap-2 pt-1">
+                        <button className="flex-1 py-1.5 bg-blue-600 text-white text-[12px] font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                          Accept
+                        </button>
+                        <button className="flex-1 py-1.5 bg-slate-100 text-slate-600 text-[12px] font-semibold rounded-lg hover:bg-slate-200 transition-colors">
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : isLoading ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7]" />
@@ -189,6 +304,16 @@ export default function Messages() {
           )}
         </div>
       </div>
+
+      {/* New Message FAB */}
+      {activeTab === 'inbox' && !selectedConversation && (
+        <button
+          onClick={() => setShowNewMessage(true)}
+          className="absolute bottom-28 right-6 w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center"
+        >
+          <MessageCircle className="w-6 h-6" />
+        </button>
+      )}
 
       <ReportModal
         open={showReport}
