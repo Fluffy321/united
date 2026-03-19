@@ -137,6 +137,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
         onBack={onBack}
         eventCount={events.length}
         mitzvahCount={opportunities.filter(o => o.is_active !== false).length}
+        actualMemberCount={actualMemberCount}
       />
 
       {/* Scrollable tabs */}
