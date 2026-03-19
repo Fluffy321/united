@@ -171,7 +171,14 @@ export default function Feed() {
     );
   }
 
-  const visiblePosts = posts.filter(p => p.type !== 'dating');
+  const visiblePosts = posts.filter(p => {
+    if (p.type === 'dating') return false;
+    if (selectedNeighborhood !== 'All Five Towns') {
+      const loc = (p.location_text || p.city || '').toLowerCase();
+      if (loc && !loc.includes(selectedNeighborhood.toLowerCase())) return false;
+    }
+    return true;
+  });
   const trendingScore = (p) => (p.likes_count || 0) + (p.comments_count || 0) * 2;
 
   const feedPosts = (() => {
