@@ -62,25 +62,52 @@ export default function ProfileHero({ user, isOwnProfile, onMessage, displayName
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-3 justify-center pt-2">
+        <div className="flex gap-2 justify-center pt-1 mb-4">
           {!isOwnProfile ? (
             <>
               <button
                 onClick={onMessage}
-                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all active:scale-95 shadow-md"
+                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all active:scale-95 shadow-md text-sm"
               >
                 <MessageCircle className="w-4 h-4" />
                 Message
               </button>
+              <button className="p-2.5 border-2 border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all active:scale-95">
+                <Heart className="w-4 h-4" />
+              </button>
+              <button className="p-2.5 border-2 border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all active:scale-95">
+                <Share2 className="w-4 h-4" />
+              </button>
             </>
           ) : (
-            <Link to={createPageUrl('Settings')}>
-              <button className="flex items-center gap-2 px-8 py-3 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 transition-all active:scale-95">
-                <Edit2 className="w-4 h-4" />
-                Edit Profile
+            <>
+              <Link to={createPageUrl('Settings')}>
+                <button className="flex items-center gap-2 px-6 py-2.5 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 transition-all active:scale-95 text-sm">
+                  <Edit2 className="w-4 h-4" />
+                  Edit Profile
+                </button>
+              </Link>
+              <button className="p-2.5 border-2 border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all active:scale-95">
+                <Share2 className="w-4 h-4" />
               </button>
-            </Link>
+            </>
           )}
+        </div>
+
+        {/* Quick Stats Row */}
+        <div className="flex gap-3 justify-center text-center">
+          <div className="flex-1 py-2 px-3 bg-indigo-50 rounded-lg">
+            <div className="text-xs text-slate-500 font-medium">Followers</div>
+            <div className="text-lg font-bold text-indigo-600">{user.follower_count || 0}</div>
+          </div>
+          <div className="flex-1 py-2 px-3 bg-purple-50 rounded-lg">
+            <div className="text-xs text-slate-500 font-medium">Posts</div>
+            <div className="text-lg font-bold text-purple-600">{user.post_count || 0}</div>
+          </div>
+          <div className="flex-1 py-2 px-3 bg-blue-50 rounded-lg">
+            <div className="text-xs text-slate-500 font-medium">Impact</div>
+            <div className="text-lg font-bold text-blue-600">{user.impact_score || 0}</div>
+          </div>
         </div>
       </div>
     </div>
