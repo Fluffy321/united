@@ -63,35 +63,42 @@ export default function Communities() {
     base44.auth.me().then(async user => {
       setCurrentUser(user);
 
-      // Fetch memberships and pending requests sequentially to avoid rate limits
+      // Load memberships first, then pending requests with a small delay
       const memberships = await base44.entities.GroupMember.filter({ user_id: user.id });
-      const reqs = await base44.entities.GroupJoinRequest.filter({ user_id: user.id, status: 'pending' });
-
       const joinedGroupIds = new Set(memberships.map(m => m.group_id));
       setMembershipSet(joinedGroupIds);
-      setPendingRequestSet(new Set(reqs.map(r => r.group_id)));
 
-      // Only run auto-join once per session to avoid hammering the API
+      // Defer pending requests to reduce burst
+      setTimeout(async () => {
+        const reqs = await base44.entities.GroupJoinRequest.filter({ user_id: user.id, status: 'pending' });
+        setPendingRequestSet(new Set(reqs.map(r => r.group_id)));
+      }, 1500);
+
+      // Auto-join: only once per session and only if user has few communities
       const autoJoinKey = `auto_joined_${user.id}`;
       if (sessionStorage.getItem(autoJoinKey)) return;
+      if (joinedGroupIds.size >= MIN_COMMUNITIES) {
+        sessionStorage.setItem(autoJoinKey, '1');
+        return;
+      }
       sessionStorage.setItem(autoJoinKey, '1');
 
-      // Only auto-join if user has fewer than MIN_COMMUNITIES
-      if (joinedGroupIds.size >= MIN_COMMUNITIES) return;
+      // Delay auto-join to avoid rate limit burst on page load
+      setTimeout(async () => {
+        const allGroups = await base44.entities.CommunityGroup.list();
+        const groupsToJoin = allGroups.filter(g =>
+          (AUTO_JOIN_NAMES.includes(g.name) || FALLBACK_AUTO_JOIN.includes(g.name)) &&
+          !joinedGroupIds.has(g.id)
+        ).slice(0, 4);
 
-      const allGroups = await base44.entities.CommunityGroup.list();
-      const groupsToJoin = allGroups.filter(g =>
-        (AUTO_JOIN_NAMES.includes(g.name) || FALLBACK_AUTO_JOIN.includes(g.name)) &&
-        !joinedGroupIds.has(g.id)
-      ).slice(0, 6);
-
-      for (const g of groupsToJoin) {
-        await base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: user.full_name, role: 'member' });
-        joinedGroupIds.add(g.id);
-      }
-      if (groupsToJoin.length > 0) {
-        setMembershipSet(new Set(joinedGroupIds));
-      }
+        for (const g of groupsToJoin) {
+          await base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: user.full_name, role: 'member' });
+          joinedGroupIds.add(g.id);
+        }
+        if (groupsToJoin.length > 0) {
+          setMembershipSet(new Set(joinedGroupIds));
+        }
+      }, 3000);
     });
   }, []);
 
