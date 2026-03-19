@@ -239,8 +239,17 @@ export default function Feed() {
         {/* 4. Community Activity */}
         <CommunityActivityStrip groups={communityGroups} />
 
-        {/* 5. Feed Posts */}
-        {isLoading ? (
+        {/* 5. Events Calendar Tab */}
+        {activeTab === 'events' && !isLoading && (
+          <EventsFeedSection
+            posts={visiblePosts}
+            currentUser={currentUser}
+            onCreateEvent={() => { setPostModalType('event'); setShowPostModal(true); }}
+          />
+        )}
+
+        {/* 6. Feed Posts (all tabs except events) */}
+        {activeTab !== 'events' && isLoading ? (
           <div className="space-y-3">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="bg-white rounded-[16px] p-4">
