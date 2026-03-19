@@ -15,6 +15,8 @@ import { toast } from 'sonner';
 
 const TABS = ['My Communities', 'Discover'];
 
+const AUTO_JOIN_GROUP_NAMES = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Young Israel Woodmere Members', 'Pickup Basketball', 'Young Adults Hangouts', 'Daf Yomi Chat'];
+
 const CATEGORY_CONFIG = {
   'Torah Learning': { emoji: '📚', color: 'bg-amber-50 text-amber-700 border-amber-200' },
   'Shabbat':        { emoji: '🕯️', color: 'bg-blue-50 text-blue-700 border-blue-200' },
