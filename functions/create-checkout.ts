@@ -16,18 +16,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Get origin from request headers for redirect URLs
     const origin = req.headers.get('origin') || 'https://united.community';
     const backUrl = `${origin}/Feed`;
     const thankYouUrl = `${origin}/ThankYou`;
 
-    // Create checkout session via Wix Payments API
     const checkoutPayload = {
       lineItems: [
         {
           quantity: '1',
           priceData: {
-            price: Math.round(amount * 100), // Convert to cents
+            price: Math.round(amount * 100),
             currency: 'USD'
           },
           name: description,
@@ -47,7 +45,7 @@ Deno.serve(async (req) => {
     const response = await fetch('https://www.wixapis.com/v1/payments/checkout-sessions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('WIX_PAYMENTS_API_KEY')}',
+        'Authorization': `Bearer ${Deno.env.get('WIX_PAYMENTS_API_KEY')}`,
         'wix-site-id': Deno.env.get('WIX_PAYMENTS_SITE_ID'),
         'Content-Type': 'application/json'
       },
@@ -62,7 +60,6 @@ Deno.serve(async (req) => {
 
     const checkoutSession = await response.json();
 
-    // Create transaction record in database
     await base44.asServiceRole.entities.Transaction.create({
       user_id: user.id,
       order_id: checkoutSession.id,
