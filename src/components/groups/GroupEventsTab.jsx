@@ -21,7 +21,6 @@ function EventDetailModal({ event, currentUser, onClose, onRSVPChange }) {
   const handleRSVP = async () => {
     if (myRsvp) {
       await base44.entities.RSVP.delete(myRsvp.id);
-      await base44.entities.GroupEvent.update(event.id, { rsvp_count: Math.max(0, (event.rsvp_count || 1) - 1) });
       setMyRsvp(null);
       setRsvps(r => r.filter(x => x.id !== myRsvp.id));
       onRSVPChange(event.id, -1);
@@ -34,7 +33,6 @@ function EventDetailModal({ event, currentUser, onClose, onRSVPChange }) {
         status: 'going',
         attended: false,
       });
-      await base44.entities.GroupEvent.update(event.id, { rsvp_count: (event.rsvp_count || 0) + 1 });
       setMyRsvp(created);
       setRsvps(r => [...r, created]);
       onRSVPChange(event.id, 1);
@@ -49,7 +47,7 @@ function EventDetailModal({ event, currentUser, onClose, onRSVPChange }) {
     setMarking(null);
   };
 
-  const eventPast = isPast(new Date(event.date + 'T23:59:59'));
+  const eventPast = isPast(new Date(event.start_date + 'T23:59:59'));
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
@@ -66,16 +64,16 @@ function EventDetailModal({ event, currentUser, onClose, onRSVPChange }) {
           </div>
 
           <div className="space-y-2 mb-4">
-            <div className="flex items-center gap-2 text-[13px] text-slate-600">
-              <Calendar className="w-4 h-4 text-[#2563EB]" />
-              <span>{format(parseISO(event.date), 'EEEE, MMMM d, yyyy')}</span>
-            </div>
-            {event.time && (
-              <div className="flex items-center gap-2 text-[13px] text-slate-600">
-                <Clock className="w-4 h-4 text-[#2563EB]" />
-                <span>{event.time}{event.end_time ? ` – ${event.end_time}` : ''}</span>
-              </div>
-            )}
+             <div className="flex items-center gap-2 text-[13px] text-slate-600">
+               <Calendar className="w-4 h-4 text-[#2563EB]" />
+               <span>{format(parseISO(event.start_date), 'EEEE, MMMM d, yyyy')}</span>
+             </div>
+             {event.start_time && (
+               <div className="flex items-center gap-2 text-[13px] text-slate-600">
+                 <Clock className="w-4 h-4 text-[#2563EB]" />
+                 <span>{event.start_time}{event.end_time ? ` – ${event.end_time}` : ''}</span>
+               </div>
+             )}
             {event.location && (
               <div className="flex items-center gap-2 text-[13px] text-slate-600">
                 <MapPin className="w-4 h-4 text-[#2563EB]" />
@@ -152,17 +150,16 @@ function CreateEventModal({ groupId, currentUser, onClose, onCreated }) {
     e.preventDefault();
     if (!form.title.trim() || !form.date) return;
     setSaving(true);
-    const event = await base44.entities.GroupEvent.create({
-      group_id: groupId,
+    const event = await base44.entities.CommunityEvent.create({
+      community_id: groupId,
       title: form.title.trim(),
       description: form.description.trim() || undefined,
-      date: form.date,
-      time: form.time || undefined,
+      start_date: form.date,
+      start_time: form.time || undefined,
+      end_date: form.date,
       end_time: form.end_time || undefined,
       location: form.location.trim() || undefined,
-      created_by_user_id: currentUser.id,
-      created_by_name: currentUser.full_name,
-      rsvp_count: 0,
+      is_official: false,
     });
     setSaving(false);
     onCreated(event);
@@ -248,14 +245,14 @@ export default function GroupEventsTab({ group, currentUser, isMember }) {
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
-    base44.entities.GroupEvent.filter({ group_id: group.id }, 'date', 50).then(e => {
+    base44.entities.CommunityEvent.filter({ community_id: group.id }, 'start_date', 50).then(e => {
       setEvents(e);
       setLoading(false);
     });
   }, [group.id]);
 
   const handleCreated = (event) => {
-    setEvents(prev => [event, ...prev].sort((a, b) => a.date.localeCompare(b.date)));
+    setEvents(prev => [event, ...prev].sort((a, b) => a.start_date.localeCompare(b.start_date)));
     setShowCreate(false);
   };
 
@@ -266,8 +263,8 @@ export default function GroupEventsTab({ group, currentUser, isMember }) {
     }
   };
 
-  const upcoming = events.filter(e => !isPast(new Date(e.date + 'T23:59:59')));
-  const past = events.filter(e => isPast(new Date(e.date + 'T23:59:59')));
+  const upcoming = events.filter(e => !isPast(new Date(e.start_date + 'T23:59:59')));
+  const past = events.filter(e => isPast(new Date(e.start_date + 'T23:59:59')));
 
   if (loading) {
     return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-[#2563EB]" /></div>;
@@ -328,7 +325,7 @@ export default function GroupEventsTab({ group, currentUser, isMember }) {
 }
 
 function EventCard({ event, onClick, past }) {
-  const dateStr = format(parseISO(event.date), 'EEE, MMM d');
+  const dateStr = format(parseISO(event.start_date), 'EEE, MMM d');
   return (
     <div
       onClick={onClick}
@@ -337,27 +334,26 @@ function EventCard({ event, onClick, past }) {
     >
       <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-50 flex flex-col items-center justify-center border border-blue-100">
         <span className="text-[10px] font-bold text-blue-400 uppercase leading-none">{dateStr.split(',')[0]}</span>
-        <span className="text-[18px] font-black text-[#2563EB] leading-tight">{parseISO(event.date).getDate()}</span>
+        <span className="text-[18px] font-black text-[#2563EB] leading-tight">{parseISO(event.start_date).getDate()}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-slate-900 text-[14px] truncate">{event.title}</p>
-        <div className="flex items-center gap-3 mt-1 flex-wrap">
-          {event.time && (
-            <span className="flex items-center gap-1 text-[11px] text-slate-500">
-              <Clock className="w-3 h-3" />{event.time}
-            </span>
-          )}
-          {event.location && (
-            <span className="flex items-center gap-1 text-[11px] text-slate-500">
-              <MapPin className="w-3 h-3" />{event.location}
-            </span>
-          )}
-        </div>
+         <p className="font-bold text-slate-900 text-[14px] truncate">{event.title}</p>
+         <div className="flex items-center gap-3 mt-1 flex-wrap">
+           {event.start_time && (
+             <span className="flex items-center gap-1 text-[11px] text-slate-500">
+               <Clock className="w-3 h-3" />{event.start_time}
+             </span>
+           )}
+           {event.location && (
+             <span className="flex items-center gap-1 text-[11px] text-slate-500">
+               <MapPin className="w-3 h-3" />{event.location}
+             </span>
+           )}
+         </div>
         <div className="flex items-center gap-1 mt-1.5">
-          <Users className="w-3 h-3 text-slate-400" />
-          <span className="text-[11px] text-slate-400 font-medium">{event.rsvp_count || 0} going</span>
-          {!past && <span className="ml-2 text-[11px] font-semibold text-[#2563EB]">RSVP →</span>}
-        </div>
+           <Users className="w-3 h-3 text-slate-400" />
+           <span className="text-[11px] text-slate-400 font-medium">View details</span>
+         </div>
       </div>
     </div>
   );
