@@ -206,7 +206,7 @@ export default function Feed() {
         {/* 1. Post Box */}
         <PostBox
           currentUser={currentUser}
-          onPostClick={(type) => { setPostModalType(type); setShowPostModal(true); }}
+          onPostClick={(type) => { setPostModalType(type === 'photo' ? 'feed' : type); setShowPostModal(true); }}
           onQuickAction={(type) => {
             if (type === 'alert') { setShowAlertModal(true); return; }
             if (type === 'mitzvah') { navigate(createPageUrl('MitzvahCircle')); return; }
