@@ -55,6 +55,59 @@ const ACTION_BUTTON = {
   dating: { label: 'Connect', icon: null },
 };
 
+function InterestedButton({ post, currentUser }) {
+  const navigate = useNavigate();
+  const [sent, setSent] = React.useState(false);
+
+  const handleInterested = async () => {
+    try {
+      // Find or create a conversation with the poster
+      const convs = await base44.entities.Conversation.list('-updated_date', 50);
+      let conv = convs.find(c =>
+        c.participant_ids?.includes(currentUser.id) && c.participant_ids?.includes(post.user_id)
+      );
+      if (!conv) {
+        conv = await base44.entities.Conversation.create({
+          participant_ids: [currentUser.id, post.user_id],
+          participant_names: [
+            currentUser.display_name || currentUser.full_name?.split(' ')[0],
+            post.user_name,
+          ],
+          participant_ages: [currentUser.age_range || '18+', '18+'],
+          unread_count: {},
+          request_title: post.title || post.body?.substring(0, 50),
+          request_type: 'general',
+        });
+      }
+      await base44.entities.Message.create({
+        conversation_id: conv.id,
+        sender_id: currentUser.id,
+        sender_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],
+        recipient_id: post.user_id,
+        content: `Hi! I'm interested in your housing post: "${post.title || post.body?.substring(0, 60)}"`,
+        is_read: false,
+      });
+      setSent(true);
+      toast.success('Message sent to the poster!');
+      setTimeout(() => navigate(createPageUrl('Messages') + `?conversation=${conv.id}`), 800);
+    } catch {
+      toast.error('Could not send message');
+    }
+  };
+
+  return (
+    <button
+      onClick={handleInterested}
+      disabled={sent}
+      className={`h-8 px-3.5 rounded-full text-[13px] font-semibold transition-colors ${
+        sent ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+      }`}
+    >
+      {sent ? '✓ Sent' : 'Interested'}
+    </button>
+  );
+}
+
 export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, liked, communities }) {
   const isOwner = currentUser?.id === post.user_id;
   const communityName = post.community_name || (communities && post.community_id
