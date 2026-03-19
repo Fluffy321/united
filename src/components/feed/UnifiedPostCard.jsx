@@ -363,8 +363,13 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
               </button>
             )}
 
-            {/* Other types: secondary action */}
-            {ACTION_BUTTON[post.type] && post.type !== 'help' && post.type !== 'event' && (
+            {/* Housing: Interested → open DM */}
+            {post.type === 'housing' && post.user_id !== currentUser?.id && (
+              <InterestedButton post={post} currentUser={currentUser} />
+            )}
+
+            {/* Other types: secondary action (not housing, help, event) */}
+            {ACTION_BUTTON[post.type] && post.type !== 'help' && post.type !== 'event' && post.type !== 'housing' && (
               <button
                 onClick={() => onComment(post)}
                 className="h-8 px-3.5 rounded-full text-[13px] font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
