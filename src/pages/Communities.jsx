@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Loader2, Plus, Search, X } from 'lucide-react';
+import { Loader2, Plus, Search, X, ChevronRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
