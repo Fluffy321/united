@@ -33,7 +33,16 @@ export default function Profile() {
 
   useEffect(() => {
     loadProfile();
+    seedDemoPostsIfNeeded();
   }, []);
+
+  const seedDemoPostsIfNeeded = async () => {
+    try {
+      await base44.functions.invoke('seedProfilePosts', {});
+    } catch (e) {
+      // Silently fail if already seeded
+    }
+  };
 
   const loadProfile = async () => {
     try {
