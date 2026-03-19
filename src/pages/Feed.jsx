@@ -249,7 +249,7 @@ export default function Feed() {
         )}
 
         {/* 6. Feed Posts (all tabs except events) */}
-        {activeTab !== 'events' && (isLoading ? (<>
+        {activeTab !== 'events' && isLoading && (
           <div className="space-y-3">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="bg-white rounded-[16px] p-4">
@@ -265,13 +265,15 @@ export default function Feed() {
               </div>
             ))}
           </div>
-        ) : isError ? (
+        )}
+        {activeTab !== 'events' && !isLoading && isError && (
           <div className="text-center py-12 bg-white rounded-2xl cursor-pointer" onClick={() => refetchPosts()}>
             <span className="text-2xl">⚠️</span>
             <p className="text-slate-700 font-semibold mt-2">Feed failed to load</p>
             <p className="text-[13px] text-blue-600 mt-1 font-semibold">Tap to retry</p>
           </div>
-        ) : (
+        )}
+        {activeTab !== 'events' && !isLoading && !isError && (
           <div className="space-y-2.5">
             {feedPosts.length === 0 ? (
               <div className="bg-white rounded-2xl p-8 text-center">
@@ -305,7 +307,7 @@ export default function Feed() {
               </React.Fragment>
             ))}
           </div>
-        ) : null)}
+        )}
       </div>
 
       <UnifiedPostModal
