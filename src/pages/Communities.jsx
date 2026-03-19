@@ -376,28 +376,14 @@ export default function Communities() {
                   <h2 className="text-[16px] font-bold text-slate-900 mb-3">🔥 Trending</h2>
                   <div className="space-y-2.5">
                     {getTrendingCommunities(filterByQuery(discoverCommunities)).map(c => (
-                      <div key={c.id} className="bg-white rounded-2xl p-3.5 shadow-sm border-l-3 border-orange-400">
-                        <div className="flex items-center gap-3">
-                          <div
-                            onClick={() => openCommunity(c.id)}
-                            className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-xl flex-shrink-0 overflow-hidden cursor-pointer"
-                          >
-                            {c.logo_url ? <img src={c.logo_url} alt="" className="w-full h-full object-cover" /> : getEmoji(c)}
-                          </div>
-                          <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openCommunity(c.id)}>
-                            <div className="font-bold text-[14px] text-slate-900 truncate">{c.name}</div>
-                            <div className="text-[11px] text-slate-400 mt-0.5">{c.follower_count || 0} members</div>
-                          </div>
-                          <button
-                            onClick={() => joinCommunity(c)}
-                            disabled={joiningId === c.id}
-                            className="bg-blue-600 text-white rounded-full px-3.5 py-1 text-[11px] font-semibold flex-shrink-0 disabled:opacity-60"
-                          >
-                            {joiningId === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Join'}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                       <TrendingCommunityCard 
+                         key={c.id} 
+                         community={c} 
+                         onOpen={openCommunity}
+                         onJoin={joinCommunity}
+                         isJoining={joiningId === c.id}
+                       />
+                     ))}
                   </div>
                 </section>
               )}
