@@ -10,6 +10,7 @@ import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 import ReportModal from '@/components/common/ReportModal';
 import ProfileSetup from '@/components/profile/ProfileSetup';
+import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 import PostTypeSelector from '@/components/feed/PostTypeSelector';
 import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
