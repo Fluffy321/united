@@ -61,18 +61,17 @@ export default function Messages() {
     }
   };
 
+  const aiConversation = currentUser ? buildAIConversation(currentUser) : null;
+
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ['conversations', currentUser?.id],
     queryFn: async () => {
       const allConvs = await base44.entities.Conversation.list('-updated_date', 50);
       const userConvs = allConvs.filter(c => c.participant_ids?.includes(currentUser.id));
       
-      // Fetch avatar URLs for all participants
-      const allUserIds = [...new Set(userConvs.flatMap(c => c.participant_ids))];
       const users = await base44.entities.User.list();
       const userMap = Object.fromEntries(users.map(u => [u.id, u.avatar_url]));
 
-      // Fetch linked request titles
       const requestIds = [...new Set(userConvs.map(c => c.request_id).filter(Boolean))];
       const requestTitleMap = {};
       await Promise.all(requestIds.map(async (rid) => {
@@ -80,20 +79,19 @@ export default function Messages() {
         if (req) requestTitleMap[rid] = req.title;
       }));
       
-      const mapped = userConvs.map(conv => ({
+      return userConvs.map(conv => ({
         ...conv,
         participant_avatars: conv.participant_ids?.map(id => userMap[id] || null),
         request_title: conv.request_id ? requestTitleMap[conv.request_id] : null
       }));
-
-      // Pin AI conversation at top
-      const aiConv = buildAIConversation(currentUser);
-      return aiConv ? [aiConv, ...mapped] : mapped;
     },
     enabled: !!currentUser,
     staleTime: 60000,
     gcTime: 120000,
   });
+
+  // Always prepend AI conversation regardless of query status
+  const allConversations = aiConversation ? [aiConversation, ...conversations] : conversations;
 
   const handleReport = (id, type) => {
     setReportTarget({ id, type });
