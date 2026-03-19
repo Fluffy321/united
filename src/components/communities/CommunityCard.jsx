@@ -35,7 +35,7 @@ function getEmoji(item) {
   return CATEGORY_EMOJI[item.category] || CATEGORY_EMOJI[item.type] || '🏘️';
 }
 
-export function MyCommunityCard({ community, onOpen }) {
+export function MyCommunityCard({ community, onOpen, isPinned, onPin, activity }) {
   return (
     <button 
       onClick={() => onOpen(community.id)} 
@@ -55,12 +55,24 @@ export function MyCommunityCard({ community, onOpen }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-bold text-[13px] text-slate-900 line-clamp-2">{community.name}</div>
-          <div className="text-[11px] text-slate-400 mt-1">{community.follower_count || 0} members</div>
+          <div className="text-[11px] text-slate-400 mt-0.5">{community.follower_count || 0} members · {activity}</div>
           {community.description_short && (
-            <div className="text-[11px] text-slate-600 mt-1.5 line-clamp-1">{community.description_short}</div>
+            <div className="text-[11px] text-slate-600 mt-1 line-clamp-1">{community.description_short}</div>
           )}
         </div>
-        <span className="text-slate-300 text-lg flex-shrink-0">›</span>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            onClick={(e) => { e.stopPropagation(); onPin(community.id); }}
+            className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            {isPinned ? (
+              <Pin className="w-4 h-4 text-blue-600 fill-blue-600" />
+            ) : (
+              <PinOff className="w-4 h-4 text-slate-300" />
+            )}
+          </button>
+          <ChevronRight className="w-5 h-5 text-slate-300" />
+        </div>
       </div>
     </button>
   );
