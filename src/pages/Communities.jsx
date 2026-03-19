@@ -64,6 +64,9 @@ export default function Communities() {
     base44.auth.me().then(async user => {
       setCurrentUser(user);
 
+      // Delay enabling React Query queries to avoid burst with Feed page queries
+      setTimeout(() => setQueriesReady(true), 1000);
+
       // Load memberships first, then pending requests with a small delay
       const memberships = await base44.entities.GroupMember.filter({ user_id: user.id });
       const joinedGroupIds = new Set(memberships.map(m => m.group_id));
