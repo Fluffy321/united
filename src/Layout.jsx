@@ -142,6 +142,7 @@ export default function Layout({ children, currentPageName }) {
 
       <Toaster position="top-center" richColors />
       
+      {/* Pass scroll state to all pages via layout context would be ideal, but for now we'll handle it per-page */}
       {currentUser && <AIChatBubble currentUser={currentUser} isScrollingDown={isScrollingDown} />}
 
       {/* Main Content */}
