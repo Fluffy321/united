@@ -281,7 +281,7 @@ h1, h2, h3 {
 
 /* Button system */
 .u-btn-primary {
-  background: var(--primary);
+  background: #2563EB;
   color: #fff;
   font-weight: 600;
   font-size: 14px;
