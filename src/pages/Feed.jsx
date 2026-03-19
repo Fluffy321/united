@@ -336,11 +336,39 @@ export default function Feed() {
         currentUser={currentUser}
       />
 
-      <PostTypeSelector
-        open={showFABTypeSelector}
-        onOpenChange={setShowFABTypeSelector}
-        onSelectType={(type) => { setPostModalType(type); setShowPostModal(true); }}
-      />
+      {/* FAB */}
+      <div className="fixed bottom-24 right-4 z-40 flex flex-col items-end gap-2">
+        {showFAB && (
+          <>
+            {[
+              { label: 'Post Alert', icon: Bell, type: 'alert', color: 'bg-red-500' },
+              { label: 'Ask for Help', icon: HandHeart, type: 'help', color: 'bg-orange-500' },
+              { label: 'Create Event', icon: Calendar, type: 'event', color: 'bg-blue-500' },
+            ].map(({ label, icon: Icon, type, color }) => (
+              <button
+                key={type}
+                onClick={() => {
+                  setShowFAB(false);
+                  if (type === 'alert') { setShowAlertModal(true); return; }
+                  setPostModalType(type);
+                  setShowPostModal(true);
+                }}
+                className={`flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-full text-white text-[13px] font-semibold shadow-lg ${color}`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </button>
+            ))}
+          </>
+        )}
+        <button
+          onClick={() => setShowFAB(v => !v)}
+          className="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xl active:scale-95 transition-all"
+          style={{ boxShadow: '0 6px 20px rgba(37,99,235,0.4)' }}
+        >
+          {showFAB ? <X className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
+        </button>
+      </div>
 
       <SearchModal
         open={showSearch}
