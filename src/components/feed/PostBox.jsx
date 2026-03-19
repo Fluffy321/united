@@ -21,6 +21,13 @@ export default function PostBox({ currentUser, onPostClick, onQuickAction }) {
         >
           What's happening in your community?
         </button>
+        <button
+          onClick={() => onPostClick('photo')}
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors flex-shrink-0"
+          title="Add photo"
+        >
+          <ImagePlus className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
+        </button>
       </div>
 
       {/* Quick action buttons */}
