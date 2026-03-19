@@ -206,7 +206,6 @@ export default function Profile() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <h1 className="text-xl font-bold text-slate-900 truncate">{displayName}</h1>
-                <Badge variant="outline" className="text-xs flex-shrink-0">{profileUser.age_range || '18+'}</Badge>
               </div>
               <div className="flex items-center gap-1 text-slate-400 text-[13px] mb-2">
                 <MapPin className="w-3.5 h-3.5" />
