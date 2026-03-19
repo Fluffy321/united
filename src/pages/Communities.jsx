@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Loader2, Plus, Search, ChevronRight, CheckCircle2, MapPin, Users, Globe, Star, BookOpen, Flame, Heart, Calendar, Coffee, Baby, UserCheck } from 'lucide-react';
+import { Loader2, Plus, Search, ChevronRight, CheckCircle2, MapPin, Users, Globe, Star, BookOpen, Flame, Heart, Calendar, Coffee, Baby, UserCheck, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
 import CommunityLogo from '@/components/communities/CommunityLogo';
