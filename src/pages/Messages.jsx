@@ -55,9 +55,13 @@ export default function Messages() {
   };
 
   const loadConversation = async (id) => {
-    const conv = await base44.entities.Conversation.filter({ id });
-    if (conv[0]) {
-      setSelectedConversation(conv[0]);
+    try {
+      const conv = await base44.entities.Conversation.filter({ id });
+      if (conv[0]) {
+        setSelectedConversation(conv[0]);
+      }
+    } catch (e) {
+      console.error('Failed to load conversation:', e);
     }
   };
 
