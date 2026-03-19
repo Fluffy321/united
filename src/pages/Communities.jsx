@@ -324,7 +324,7 @@ export default function Communities() {
                 <section>
                   <h2 className="text-[16px] font-bold text-slate-900 mb-3">Communities</h2>
                   <div className="space-y-3">
-                    {discoverCommunities.slice(0, 20).map(c => (
+                    {filterByQuery(discoverCommunities).slice(0, 20).map(c => (
                       <div key={c.id} className="bg-white rounded-3xl p-4 shadow-sm">
                         <div className="flex items-center gap-3.5">
                           <div
