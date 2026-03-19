@@ -156,7 +156,7 @@ export default function Messages() {
               </div>
             ) : (
               <ConversationList
-                conversations={conversations}
+                conversations={allConversations}
                 currentUser={currentUser}
                 selectedId={selectedConversation?.id}
                 onSelect={setSelectedConversation}
