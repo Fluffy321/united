@@ -269,6 +269,81 @@ export default function Communities() {
     );
   }
 
+  if (selectedCommunityId) {
+    const selectedCommunity = allCommunities.find(c => c.id === selectedCommunityId);
+
+    if (detailError) {
+      return (
+        <div className="flex flex-col h-full bg-[#F5F7FB]">
+          <div className="bg-white border-b border-slate-100 p-4 flex items-center gap-3">
+            <button onClick={handleBackFromDetail} className="text-[#2563EB] font-semibold text-[14px]">← Back</button>
+          </div>
+          <div className="flex-1 flex items-center justify-center p-6">
+            <div className="bg-white rounded-2xl border border-red-100 p-6 text-center max-w-sm">
+              <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+              <p className="font-semibold text-slate-800 mb-1">Could not load community</p>
+              <p className="text-[13px] text-slate-500 mb-4">{detailError}</p>
+              <button onClick={handleBackFromDetail} className="px-4 py-2 rounded-full text-white text-[13px] font-semibold" style={{ background: '#2563EB' }}>Go Back</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (!selectedCommunity && communitiesLoading) {
+      return (
+        <div className="flex flex-col h-full bg-[#F5F7FB]">
+          <div className="bg-white border-b border-slate-100 p-4 flex items-center gap-3">
+            <button onClick={handleBackFromDetail} className="text-[#2563EB] font-semibold text-[14px]">← Back</button>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" />
+          </div>
+        </div>
+      );
+    }
+
+    if (!selectedCommunity && !communitiesLoading) {
+      // Community not found in loaded list — show error, don't navigate away
+      return (
+        <div className="flex flex-col h-full bg-[#F5F7FB]">
+          <div className="bg-white border-b border-slate-100 p-4 flex items-center gap-3">
+            <button onClick={handleBackFromDetail} className="text-[#2563EB] font-semibold text-[14px]">← Back</button>
+          </div>
+          <div className="flex-1 flex items-center justify-center p-6">
+            <div className="bg-white rounded-2xl border border-red-100 p-6 text-center max-w-sm">
+              <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+              <p className="font-semibold text-slate-800 mb-1">Community not found</p>
+              <button onClick={handleBackFromDetail} className="mt-2 px-4 py-2 rounded-full text-white text-[13px] font-semibold" style={{ background: '#2563EB' }}>Go Back</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const isFeaturedShul = selectedCommunity && FEATURED_SHULS.some(name =>
+      selectedCommunity.name?.toLowerCase().includes(name.toLowerCase())
+    );
+
+    if (isFeaturedShul && selectedCommunity.type === 'Shul') {
+      return (
+        <ShulCommunityPage
+          community={selectedCommunity}
+          currentUser={currentUser}
+          onBack={handleBackFromDetail}
+        />
+      );
+    }
+
+    return (
+      <CommunityDetailView
+        communityId={selectedCommunityId}
+        currentUser={currentUser}
+        onBack={handleBackFromDetail}
+      />
+    );
+  }
+
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     if (!createForm.name.trim()) return toast.error('Community name is required');
