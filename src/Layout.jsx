@@ -235,8 +235,7 @@ export default function Layout({ children, currentPageName }) {
             </div>
           </div>
 
-          {/* Safe area for iOS */}
-          <div className="h-safe-area-inset-bottom bg-white" />
+
         </nav>
       )}
     </div>
