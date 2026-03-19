@@ -41,7 +41,11 @@ export default function Feed() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [feedPrompts, setFeedPrompts] = useState([]);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState('All Five Towns');
   const queryClient = useQueryClient();
+
+  const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Cedarhurst', 'Woodmere', 'Hewlett', 'Inwood', 'Far Rockaway'];
 
   useEffect(() => {
     const init = async () => {

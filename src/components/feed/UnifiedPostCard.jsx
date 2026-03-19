@@ -55,7 +55,7 @@ const ACTION_BUTTON = {
   dating: { label: 'Connect', icon: null },
 };
 
-export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, liked }) {
+export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, liked, communities }) {
   const isOwner = currentUser?.id === post.user_id;
   const isAnonymous = post.is_anonymous;
 
