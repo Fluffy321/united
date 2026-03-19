@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, Calendar, Search, Plus, Bell, HandHeart, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -43,6 +43,9 @@ export default function Feed() {
   const [feedPrompts, setFeedPrompts] = useState([]);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('All Five Towns');
+  const [isScrollingDown, setIsScrollingDown] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const scrollTimeoutRef = useRef(null);
   const queryClient = useQueryClient();
 
   const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Cedarhurst', 'Woodmere', 'Hewlett', 'Inwood', 'Far Rockaway'];
@@ -64,6 +67,23 @@ export default function Feed() {
     };
     init();
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        const currentScrollY = window.scrollY;
+        setIsScrollingDown(currentScrollY > lastScrollY);
+        setLastScrollY(currentScrollY);
+      }, 100);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
+  }, [lastScrollY]);
 
   const loadPinnedPrompt = async () => {
     try {
@@ -374,7 +394,7 @@ export default function Feed() {
       />
 
       {/* FAB */}
-      <div className="fixed bottom-48 right-6 z-40 flex flex-col items-end gap-3">
+      <div className={`fixed bottom-48 right-6 z-40 flex flex-col items-end gap-3 transition-transform duration-300 ${isScrollingDown ? 'translate-x-32' : 'translate-x-0'}`}>
         {showFAB && (
           <>
             {[
