@@ -14,10 +14,11 @@ export default function CommunitiesSection({ userCommunities }) {
   });
 
   useEffect(() => {
+    if (!allCommunities || !userCommunities) return;
     const communityIds = userCommunities.map(uc => uc.community_id);
     const userComms = allCommunities.filter(c => communityIds.includes(c.id));
     setCommunities(userComms.slice(0, 5));
-  }, [allCommunities, userCommunities]);
+  }, [allCommunities.length, userCommunities.length]);
 
   if (communities.length === 0) return null;
 
