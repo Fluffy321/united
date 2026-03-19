@@ -70,7 +70,7 @@ export default function AIChatBubble({ currentUser, isScrollingDown }) {
   }
 
   return (
-    <div className={`fixed bottom-[136px] right-6 w-80 bg-white rounded-2xl shadow-2xl flex flex-col z-40 h-96 transition-transform duration-300 ${isScrollingDown ? 'translate-y-96' : 'translate-y-0'}`}>
+    <div className={`fixed bottom-[96px] right-6 w-80 bg-white rounded-2xl shadow-2xl flex flex-col z-39 h-96 transition-transform duration-300 ${isScrollingDown ? 'translate-y-96' : 'translate-y-0'}`}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-slate-100 flex-shrink-0">
         <div className="flex items-center gap-2">
