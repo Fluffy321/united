@@ -75,6 +75,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
 
   const isFollowing = followRecord.length > 0;
   const isAdmin = currentUser?.role === 'admin';
+  const actualMemberCount = members.length;
 
   const handleFollow = async () => {
     if (isFollowing) {
