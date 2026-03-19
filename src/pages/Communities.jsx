@@ -427,20 +427,26 @@ export default function Communities() {
                 </div>
               </div>
 
-              {/* Trending Communities */}
+              {/* Suggested for You */}
+              {!selectedCategory && getSuggestedCommunities(filterByQuery(discoverCommunities), new Set(), currentUser).length > 0 && (
+                <section>
+                  <h2 className="text-[16px] font-bold text-slate-900 mb-3">✨ Suggested for You</h2>
+                  <div className="space-y-3">
+                    {getSuggestedCommunities(filterByQuery(discoverCommunities), new Set(), currentUser).slice(0, 5).map(c => (
+                      <SuggestedCommunityCard key={c.id} community={c} onOpen={openCommunity} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Popular Communities */}
               {!selectedCategory && getTrendingCommunities(filterByQuery(discoverCommunities)).length > 0 && (
                 <section>
-                  <h2 className="text-[16px] font-bold text-slate-900 mb-3">🔥 Trending</h2>
+                  <h2 className="text-[16px] font-bold text-slate-900 mb-3">🔥 Popular</h2>
                   <div className="space-y-2.5">
                     {getTrendingCommunities(filterByQuery(discoverCommunities)).map(c => (
-                       <TrendingCommunityCard 
-                         key={c.id} 
-                         community={c} 
-                         onOpen={openCommunity}
-                         onJoin={joinCommunity}
-                         isJoining={joiningId === c.id}
-                       />
-                     ))}
+                      <DiscoverCommunityCard key={c.id} community={c} onOpen={openCommunity} />
+                    ))}
                   </div>
                 </section>
               )}
