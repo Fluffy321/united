@@ -426,7 +426,7 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-6 space-y-3">
               <Button 
                 variant="outline" 
                 onClick={handleLogout}
@@ -434,6 +434,16 @@ export default function Settings() {
               >
                 <LogOut className="w-4 h-4" />
                 Log Out
+              </Button>
+
+              <Button 
+                variant="outline" 
+                onClick={handleDeleteAccount}
+                disabled={isSaving}
+                className="w-full text-red-700 border-red-300 hover:bg-red-50 gap-2"
+              >
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : '🗑️'}
+                Delete Account
               </Button>
             </div>
           </TabsContent>
