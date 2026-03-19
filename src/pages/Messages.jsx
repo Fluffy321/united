@@ -69,9 +69,6 @@ export default function Messages() {
       const allConvs = await base44.entities.Conversation.list('-updated_date', 50);
       const userConvs = allConvs.filter(c => c.participant_ids?.includes(currentUser.id));
       
-      const users = await base44.entities.User.list('-created_date', 200);
-      const userMap = Object.fromEntries(users.map(u => [u.id, u.avatar_url]));
-
       const requestIds = [...new Set(userConvs.map(c => c.request_id).filter(Boolean))];
       const requestTitleMap = {};
       await Promise.all(requestIds.map(async (rid) => {
@@ -81,7 +78,7 @@ export default function Messages() {
       
       return userConvs.map(conv => ({
         ...conv,
-        participant_avatars: conv.participant_ids?.map(id => userMap[id] || null),
+        participant_avatars: conv.participant_avatars || [],
         request_title: conv.request_id ? requestTitleMap[conv.request_id] : null
       }));
     },
