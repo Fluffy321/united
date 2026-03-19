@@ -304,21 +304,10 @@ export default function Communities() {
     }
 
     if (!selectedCommunity && !communitiesLoading) {
-      // Community not found in loaded list — show error, don't navigate away
-      return (
-        <div className="flex flex-col h-full bg-[#F5F7FB]">
-          <div className="bg-white border-b border-slate-100 p-4 flex items-center gap-3">
-            <button onClick={handleBackFromDetail} className="text-[#2563EB] font-semibold text-[14px]">← Back</button>
-          </div>
-          <div className="flex-1 flex items-center justify-center p-6">
-            <div className="bg-white rounded-2xl border border-red-100 p-6 text-center max-w-sm">
-              <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
-              <p className="font-semibold text-slate-800 mb-1">Community not found</p>
-              <button onClick={handleBackFromDetail} className="mt-2 px-4 py-2 rounded-full text-white text-[13px] font-semibold" style={{ background: '#2563EB' }}>Go Back</button>
-            </div>
-          </div>
-        </div>
-      );
+      // Community not found — clear the param and fall through to show communities list
+      // Use setTimeout to avoid setState-during-render
+      setTimeout(() => handleBackFromDetail(), 0);
+      return null;
     }
 
     const isFeaturedShul = selectedCommunity && FEATURED_SHULS.some(name =>
