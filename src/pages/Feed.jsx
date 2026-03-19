@@ -204,6 +204,9 @@ export default function Feed() {
 
       <div className="max-w-2xl mx-auto px-4 pt-4 pb-32">
 
+        {/* Push notification prompt */}
+        <PushNotificationPrompt />
+
         {/* 1. Post Box */}
         <PostBox
           currentUser={currentUser}
