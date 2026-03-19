@@ -153,6 +153,18 @@ export default function Feed() {
     return <ProfileSetup user={currentUser} onComplete={() => base44.auth.me().then(setCurrentUser)} />;
   }
 
+  if (showOnboarding) {
+    return (
+      <OnboardingFlow
+        user={currentUser}
+        onComplete={() => {
+          setShowOnboarding(false);
+          base44.auth.me().then(setCurrentUser);
+        }}
+      />
+    );
+  }
+
   const visiblePosts = posts.filter(p => p.type !== 'dating');
   const trendingScore = (p) => (p.likes_count || 0) + (p.comments_count || 0) * 2;
 
