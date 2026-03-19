@@ -556,6 +556,7 @@ function MyCommunitiesTab({ joinedCommunities, myGroups, loading, isRateLimited,
       ) : (
         <EmptyMyCommunitiesState allGroups={allGroups} onAutoJoin={onAutoJoin} onDiscover={onDiscover} />
       )}
+      
 
       {/* Explore Categories grid */}
       <section>
