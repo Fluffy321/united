@@ -21,25 +21,30 @@ import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { HELP_REQUEST_CATEGORIES } from '@/components/feed/RequestHelpModal';
 
+// Unified badge style: blue for informational, dark-blue outlined for urgent
+const BASE_BADGE = 'bg-blue-50 text-blue-700 border border-blue-200';
+const URGENT_BADGE = 'bg-blue-900 text-white border border-blue-900';
+const MUTED_BADGE = 'bg-slate-100 text-slate-500 border border-slate-200';
+
 const TYPE_CONFIGS = {
-  feed:         { label: 'Post',         color: 'bg-slate-100 text-slate-600' },
-  help:         { label: 'Help Needed',  color: 'bg-orange-50 text-orange-700 border border-orange-200' },
-  event:        { label: 'Event',        color: 'bg-blue-50 text-blue-700 border border-blue-200' },
-  job:          { label: 'Job',          color: 'bg-green-50 text-green-700 border border-green-200' },
-  housing:      { label: 'Housing',      color: 'bg-purple-50 text-purple-700 border border-purple-200' },
-  dating:       { label: 'Dating',       color: 'bg-pink-50 text-pink-700 border border-pink-200' },
-  food:         { label: 'Food',         color: 'bg-amber-50 text-amber-700 border border-amber-200' },
-  shul:         { label: 'Shul',         color: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
-  news:         { label: 'News',         color: 'bg-slate-100 text-slate-700 border border-slate-200' },
-  prompt_reply: { label: 'Prompt',       color: 'bg-violet-50 text-violet-700 border border-violet-200' },
+  feed:         { label: 'Post',        color: MUTED_BADGE },
+  help:         { label: 'Help Needed', color: URGENT_BADGE },
+  event:        { label: 'Event',       color: BASE_BADGE },
+  job:          { label: 'Job',         color: BASE_BADGE },
+  housing:      { label: 'Housing',     color: BASE_BADGE },
+  dating:       { label: 'Dating',      color: BASE_BADGE },
+  food:         { label: 'Food',        color: BASE_BADGE },
+  shul:         { label: 'Shul',        color: BASE_BADGE },
+  news:         { label: 'News',        color: MUTED_BADGE },
+  prompt_reply: { label: 'Prompt',      color: BASE_BADGE },
 };
 
 const SUBTYPE_CONFIGS = {
-  discussion:     { label: '💬 Discussion',     color: 'bg-slate-100 text-slate-600' },
-  question:       { label: '❓ Question',        color: 'bg-yellow-50 text-yellow-700 border border-yellow-200' },
-  alert:          { label: '🚨 Alert',           color: 'bg-red-50 text-red-700 border border-red-200' },
-  recommendation: { label: '⭐ Recommendation', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-  lost_found:     { label: '🔍 Lost & Found',   color: 'bg-blue-50 text-blue-700 border border-blue-200' },
+  discussion:     { label: '💬 Discussion',     color: MUTED_BADGE },
+  question:       { label: '❓ Question',        color: BASE_BADGE },
+  alert:          { label: '🚨 Alert',           color: URGENT_BADGE },
+  recommendation: { label: '⭐ Tip',             color: BASE_BADGE },
+  lost_found:     { label: '🔍 Lost & Found',   color: BASE_BADGE },
 };
 
 const ACTION_BUTTON = {
@@ -143,9 +148,9 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             const isChessed = post.type === 'help';
             return (
               <>
-                {isHot && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">🔥 Active</span>}
-                {isNew && !isHot && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">🟢 New</span>}
-                {isChessed && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">❤️ Chessed</span>}
+                {isHot && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">🔥 Active</span>}
+                {isNew && !isHot && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">🟢 New</span>}
+                {isChessed && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-900 text-white border border-blue-900">❤️ Chessed</span>}
               </>
             );
           })()}
