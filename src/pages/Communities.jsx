@@ -36,9 +36,9 @@ const FEATURED_SHULS = [
 ];
 
 export default function Communities() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState('My Communities');
-  const [selectedCommunityId, setSelectedCommunityId] = useState(null);
   const [membershipSet, setMembershipSet] = useState(new Set());
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -49,7 +49,10 @@ export default function Communities() {
   const [createForm, setCreateForm] = useState({ name: '', description: '', category: 'General', location: '' });
   const [creating, setCreating] = useState(false);
   const [pendingRequestSet, setPendingRequestSet] = useState(new Set());
+  const [detailError, setDetailError] = useState(null);
   const queryClient = useQueryClient();
+
+  const selectedCommunityId = searchParams.get('communityId') || null;
 
   const AUTO_JOIN_NAMES = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Young Israel Woodmere Members', 'Pickup Basketball', 'Young Adults Hangouts', 'Daf Yomi Chat'];
 
