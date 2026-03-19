@@ -276,49 +276,59 @@ export default function Communities() {
                   </button>
                 </div>
               ) : (
-                <>
-                  {myCommunities.length > 0 && (
-                    <section>
-                      <h2 className="text-[16px] font-bold text-slate-900 mb-3">Your Communities</h2>
-                      <div className="space-y-3">
-                        {filterByQuery(myCommunities).map(c => (
-                          <button key={c.id} onClick={() => openCommunity(c.id)} className="w-full bg-white rounded-3xl p-4 text-left shadow-sm active:scale-[0.99] transition-transform">
-                            <div className="flex items-center gap-3.5">
-                              <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
-                                {c.logo_url ? <img src={c.logo_url} alt="" className="w-full h-full object-cover" /> : getEmoji(c)}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="font-bold text-[15px] text-slate-900 truncate">{c.name}</div>
-                                <div className="text-[12px] text-slate-400 mt-0.5">{c.follower_count || 0} members</div>
-                              </div>
-                              <span className="text-slate-300 text-lg">›</span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </section>
-                  )}
+               <>
+                 {myCommunities.length > 0 && (
+                   <section>
+                     <h2 className="text-[16px] font-bold text-slate-900 mb-3">Your Communities</h2>
+                     {Object.entries(groupByType(filterByQuery(myCommunities))).map(([type, items]) => (
+                       <div key={type} className="mb-4">
+                         <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-wide mb-2">{type}</h3>
+                         <div className="space-y-2">
+                           {items.map(c => (
+                             <button key={c.id} onClick={() => openCommunity(c.id)} className="w-full bg-white rounded-2xl p-3 text-left shadow-sm active:scale-[0.99] transition-transform">
+                               <div className="flex items-center gap-3">
+                                 <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-xl flex-shrink-0 overflow-hidden">
+                                   {c.logo_url ? <img src={c.logo_url} alt="" className="w-full h-full object-cover" /> : getEmoji(c)}
+                                 </div>
+                                 <div className="flex-1 min-w-0">
+                                   <div className="font-bold text-[14px] text-slate-900 truncate">{c.name}</div>
+                                   <div className="text-[11px] text-slate-400 mt-0.5">{c.follower_count || 0} members</div>
+                                 </div>
+                                 <span className="text-slate-300 text-lg">›</span>
+                               </div>
+                             </button>
+                           ))}
+                         </div>
+                       </div>
+                     ))}
+                   </section>
+                 )}
 
-                  {myGroups.length > 0 && (
-                    <section>
-                      <h2 className="text-[16px] font-bold text-slate-900 mb-3">Your Groups</h2>
-                      <div className="space-y-3">
-                        {filterByQuery(myGroups).map(g => (
-                          <button key={g.id} onClick={() => setSelectedGroup(g)} className="w-full bg-white rounded-3xl p-4 text-left shadow-sm active:scale-[0.99] transition-transform">
-                            <div className="flex items-center gap-3.5">
-                              <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-2xl flex-shrink-0">{getEmoji(g)}</div>
-                              <div className="flex-1 min-w-0">
-                                <div className="font-bold text-[15px] text-slate-900 truncate">{g.name}</div>
-                                <div className="text-[12px] text-slate-400 mt-0.5 truncate">{g.description || `${g.member_count || 0} members`}</div>
-                              </div>
-                              <span className="text-slate-300 text-lg">›</span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-                </>
+                 {myGroups.length > 0 && (
+                   <section>
+                     <h2 className="text-[16px] font-bold text-slate-900 mb-3">Your Groups</h2>
+                     {Object.entries(groupByType(filterByQuery(myGroups))).map(([type, items]) => (
+                       <div key={type} className="mb-4">
+                         <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-wide mb-2">{type}</h3>
+                         <div className="space-y-2">
+                           {items.map(g => (
+                             <button key={g.id} onClick={() => setSelectedGroup(g)} className="w-full bg-white rounded-2xl p-3 text-left shadow-sm active:scale-[0.99] transition-transform">
+                               <div className="flex items-center gap-3">
+                                 <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-xl flex-shrink-0">{getEmoji(g)}</div>
+                                 <div className="flex-1 min-w-0">
+                                   <div className="font-bold text-[14px] text-slate-900 truncate">{g.name}</div>
+                                   <div className="text-[11px] text-slate-400 mt-0.5 truncate">{g.description || `${g.member_count || 0} members`}</div>
+                                 </div>
+                                 <span className="text-slate-300 text-lg">›</span>
+                               </div>
+                             </button>
+                           ))}
+                         </div>
+                       </div>
+                     ))}
+                   </section>
+                 )}
+               </>
               )}
 
               {/* Explore Categories */}
