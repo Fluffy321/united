@@ -58,9 +58,23 @@ export default function Layout({ children, currentPageName }) {
   const [pillStyle, setPillStyle] = useState({ left: 0, opacity: 0 });
   const [currentUser, setCurrentUser] = useState(null);
 
+  const [isScrollingDown, setIsScrollingDown] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
   useEffect(() => {
     base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      setIsScrollingDown(currentScrollY > lastScrollY);
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   const { data: unreadMessages = 0 } = useQuery({
     queryKey: ['unread-messages', currentUser?.id],
