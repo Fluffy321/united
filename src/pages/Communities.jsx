@@ -210,6 +210,10 @@ export default function Communities() {
     );
   }
 
+  const handleViewCommunity = (id) => {
+    if (id) setSelectedCommunityId(id);
+  };
+
   const handleJoinChange = () => {
     refetchMemberships();
     queryClient.invalidateQueries({ queryKey: ['communities-list'] });
