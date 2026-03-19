@@ -57,6 +57,9 @@ const ACTION_BUTTON = {
 
 export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, liked, communities }) {
   const isOwner = currentUser?.id === post.user_id;
+  const communityName = post.community_name || (communities && post.community_id
+    ? communities.find(c => c.id === post.community_id)?.name
+    : null);
   const isAnonymous = post.is_anonymous;
 
   // For seeded posts, generate a deterministic spread-out timestamp from post ID
