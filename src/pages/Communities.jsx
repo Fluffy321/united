@@ -459,22 +459,19 @@ export default function Communities() {
                 const hasItems = Object.values(grouped).some(arr => arr.length > 0);
 
                 return hasItems ? (
-                  Object.entries(grouped).map(([type, items]) => (
-                    <section key={type}>
-                      <h2 className="text-[14px] font-bold text-slate-600 uppercase tracking-wide mb-2.5">{type}</h2>
-                      <div className="space-y-2">
-                        {items.slice(0, 10).map(c => (
-                           <DiscoverCommunityCard 
-                             key={c.id} 
-                             community={c} 
-                             onOpen={openCommunity}
-                             onJoin={joinCommunity}
-                             isJoining={joiningId === c.id}
-                           />
-                         ))}
-                      </div>
-                    </section>
-                  ))
+                  <>
+                    <h2 className="text-[16px] font-bold text-slate-900 mb-3">All Communities</h2>
+                    {Object.entries(grouped).map(([type, items]) => (
+                      <section key={type}>
+                        <h3 className="text-[14px] font-bold text-slate-600 uppercase tracking-wide mb-2.5">{type}</h3>
+                        <div className="space-y-2">
+                          {items.slice(0, 10).map(c => (
+                            <DiscoverCommunityCard key={c.id} community={c} onOpen={openCommunity} />
+                          ))}
+                        </div>
+                      </section>
+                    ))}
+                  </>
                 ) : (
                   <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
                     <p className="font-bold text-slate-900">No communities in this category</p>
