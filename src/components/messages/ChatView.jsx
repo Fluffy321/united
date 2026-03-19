@@ -184,24 +184,26 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       saveAIMessages(currentUser.id, updated);
 
       setAiThinking(true);
-      try {
-        const reply = await getAIReply(text, currentUser, updated);
-        const aiMsg = {
-          id: `ai-${Date.now()}`,
-          conversation_id: conversation.id,
-          sender_id: AI_AGENT.id,
-          sender_name: AI_AGENT.full_name,
-          recipient_id: currentUser.id,
-          content: reply,
-          created_date: new Date().toISOString(),
-        };
-        const withReply = [...updated, aiMsg];
-        setMessages(withReply);
-        saveAIMessages(currentUser.id, withReply);
-      } catch {
-        toast.error('AI failed to respond, try again.');
-      }
-      setAiThinking(false);
+       try {
+         // Wait 1-2 seconds for typing animation effect
+         await new Promise(resolve => setTimeout(resolve, 1500));
+         const reply = await getAIReply(text, currentUser, updated);
+         const aiMsg = {
+           id: `ai-${Date.now()}`,
+           conversation_id: conversation.id,
+           sender_id: AI_AGENT.id,
+           sender_name: AI_AGENT.full_name,
+           recipient_id: currentUser.id,
+           content: reply,
+           created_date: new Date().toISOString(),
+         };
+         const withReply = [...updated, aiMsg];
+         setMessages(withReply);
+         saveAIMessages(currentUser.id, withReply);
+       } catch {
+         toast.error('AI failed to respond, try again.');
+       }
+       setAiThinking(false);
       return;
     }
 
