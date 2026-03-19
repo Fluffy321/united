@@ -218,7 +218,15 @@ export default function Feed() {
   })();
 
   return (
-    <div className="min-h-screen" style={{ background: '#F5F7FB' }}>
+    <div className="min-h-screen relative" style={{ background: '#F5F7FB' }}>
+      {/* Pull-to-refresh indicator */}
+      {pullDistance > 0 && (
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-30">
+          <div className={`transition-all ${isRefreshing ? 'animate-spin' : ''}`} style={{ transform: `rotate(${pullDistance * 3}deg)` }}>
+            <RefreshCw className="w-6 h-6 text-blue-600" />
+          </div>
+        </div>
+      )}
 
       {/* Sticky Header */}
       <div className="sticky top-0 z-20 bg-white" style={{ borderBottom: '1px solid #E8ECF4', boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
