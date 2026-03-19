@@ -308,13 +308,14 @@ export default function Feed() {
             ) : feedPosts.map((post, index) => (
               <React.Fragment key={post.id}>
                 <UnifiedPostCard
-                  post={post}
-                  currentUser={currentUser}
-                  liked={userLikes.includes(post.id)}
-                  onLike={handleLike}
-                  onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
-                  onDelete={(id) => deleteMutation.mutate(id)}
-                  onReport={handleReport}
+                 post={post}
+                 currentUser={currentUser}
+                 liked={userLikes.includes(post.id)}
+                 onLike={handleLike}
+                 onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
+                 onDelete={(id) => deleteMutation.mutate(id)}
+                 onReport={handleReport}
+                 communities={communityGroups}
                 />
                 {(index + 1) % 6 === 0 && feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length] && (
                   <InlineFeedPrompt
