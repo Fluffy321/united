@@ -25,6 +25,7 @@ export default function MitzvahJourneySection({ logs }) {
   });
 
   const capitalizeTitle = (text) => {
+    if (!text) return 'Activity';
     return text.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
   };
 
