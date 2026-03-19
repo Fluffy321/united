@@ -47,6 +47,11 @@ export default function Feed() {
         const user = await base44.auth.me();
         setCurrentUser(user);
         await Promise.allSettled([loadPinnedPrompt(), loadUserLikes(user), loadFeedPrompts()]);
+        // Show onboarding once per user if not yet done
+        const onboardingKey = `onboarding_done_${user.id}`;
+        if (user.is_profile_complete && !user.onboarding_complete && !localStorage.getItem(onboardingKey)) {
+          setShowOnboarding(true);
+        }
       } catch (e) {
         setCurrentUser({ id: 'guest', full_name: 'Guest', display_name: 'Guest', role: 'user', is_profile_complete: true });
       }
