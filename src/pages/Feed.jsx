@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Loader2, Calendar, Search, Plus, Bell, HandHeart, X } from 'lucide-react';
+import { Loader2, Calendar, Search, Plus, Bell, HandHeart, X, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
