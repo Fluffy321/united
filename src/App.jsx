@@ -59,6 +59,7 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/PublicProfile" element={<PublicProfile />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
