@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { AI_AGENT, loadAIMessages, saveAIMessages, getAIReply } from '@/lib/aiAgent';
 
-export default function AIChatBubble({ currentUser }) {
+export default function AIChatBubble({ currentUser, isScrollingDown }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
