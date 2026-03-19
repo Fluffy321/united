@@ -180,6 +180,11 @@ export default function Communities() {
 
   if (selectedCommunityId) {
     const selectedCommunity = allCommunities.find(c => c.id === selectedCommunityId);
+    if (!selectedCommunity && !communitiesLoading) {
+      // Community not found — go back silently instead of crashing
+      setSelectedCommunityId(null);
+      return null;
+    }
     
     // Check if it's a shul (featured shul)
     const isFeaturedShul = selectedCommunity && FEATURED_SHULS.some(name => 
