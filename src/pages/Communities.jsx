@@ -365,7 +365,7 @@ export default function Communities() {
               myGroups={myGroups}
               allGroups={groups}
               loading={communitiesLoading || membershipsLoading}
-              onViewCommunity={setSelectedCommunityId}
+              onViewCommunity={handleViewCommunity}
               onViewGroup={setSelectedGroup}
               onDiscover={() => setActiveTab('Discover')}
               onAutoJoin={handleGroupJoin}
@@ -389,7 +389,7 @@ export default function Communities() {
               onLeaveGroup={handleGroupLeave}
               onViewGroup={setSelectedGroup}
               onJoinCommunity={handleJoin}
-              onViewCommunity={setSelectedCommunityId}
+              onViewCommunity={handleViewCommunity}
             />
           )}
           </div>
