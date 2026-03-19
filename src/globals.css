@@ -5,27 +5,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Design Tokens */
-  --primary: #16A34A;
-  --primary-hover: #15803D;
-  --secondary: #E2E8F0;
-  --background: #F8FAFC;
+  /* Design Tokens — Blue & White */
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --secondary: #EFF6FF;
+  --background: #F0F6FF;
   --card: #FFFFFF;
-  --text-main: #0F172A;
-  --text-muted: #64748B;
-  --accent: #1E3A8A;
+  --text-main: #1E3A5F;
+  --text-muted: #5B7FA6;
+  --accent: #1D4ED8;
   --success: #22C55E;
-  --border: #E5E7EB;
+  --border: #BFDBFE;
 
   /* Legacy aliases (kept for compatibility) */
-  --color-bg: #F8FAFC;
+  --color-bg: #F0F6FF;
   --color-card: #FFFFFF;
-  --color-border: #E5E7EB;
-  --color-border-subtle: #F0F3F9;
+  --color-border: #BFDBFE;
+  --color-border-subtle: #DBEAFE;
 
-  --color-navy: #0F172A;
-  --color-navy-80: rgba(15, 23, 42, 0.8);
-  --color-brand: #1E3A8A;
+  --color-navy: #1E3A5F;
+  --color-navy-80: rgba(30, 58, 95, 0.8);
+  --color-brand: #2563EB;
   --color-brand-light: #EFF6FF;
   --color-brand-mid: #BFDBFE;
 
