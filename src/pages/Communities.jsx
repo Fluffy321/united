@@ -7,6 +7,7 @@ import CommunityDetailView from '@/components/communities/CommunityDetailView';
 import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
+import { MyCommunityCard, DiscoverCommunityCard, TrendingCommunityCard } from '@/components/communities/CommunityCard';
 import { toast } from 'sonner';
 
 const FEATURED_SHULS = ["Young Israel Woodmere", "Chabad of Woodmere", "Beth Shalom", "Shaaray Tefila"];
