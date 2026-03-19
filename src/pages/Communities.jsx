@@ -205,24 +205,6 @@ export default function Communities() {
     );
   }
 
-  if (selectedGroup) {
-    return (
-      <CommunityGroupPage
-        group={selectedGroup}
-        currentUser={currentUser}
-        isMember={membershipSet.has(selectedGroup.id)}
-        isPendingRequest={pendingRequestSet.has(selectedGroup.id)}
-        onJoin={handleGroupJoin}
-        onLeave={handleGroupLeave}
-        onBack={() => setSelectedGroup(null)}
-        onMemberApproved={(groupId) => {
-          setMembershipSet(prev => new Set([...prev, groupId]));
-          queryClient.invalidateQueries({ queryKey: ['community-groups'] });
-        }}
-      />
-    );
-  }
-
   const handleJoinChange = () => {
     refetchMemberships();
     queryClient.invalidateQueries({ queryKey: ['communities-list'] });
