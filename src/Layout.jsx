@@ -105,7 +105,7 @@ export default function Layout({ children, currentPageName }) {
     <div className="min-h-screen" style={{ background: 'var(--background)' }}>
       <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-          body { font-family: 'Inter', system-ui, sans-serif; background: #F5F7FB; -webkit-font-smoothing: antialiased; }
+          body { font-family: 'Inter', system-ui, sans-serif; background: #F0F6FF; -webkit-font-smoothing: antialiased; }
           .scrollbar-hide::-webkit-scrollbar { display: none; }
           .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
           @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
