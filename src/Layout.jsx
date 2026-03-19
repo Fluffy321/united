@@ -4,6 +4,7 @@ import { Home, User, HandHeart, Newspaper, Users, MessageCircle, Loader2, Calend
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
 import SwipeableTabs from '@/components/common/SwipeableTabs';
+import AIChatBubble from '@/components/common/AIChatBubble';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 
