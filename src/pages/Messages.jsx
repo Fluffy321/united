@@ -69,7 +69,7 @@ export default function Messages() {
       const allConvs = await base44.entities.Conversation.list('-updated_date', 50);
       const userConvs = allConvs.filter(c => c.participant_ids?.includes(currentUser.id));
       
-      const users = await base44.entities.User.list();
+      const users = await base44.entities.User.list('-created_date', 200);
       const userMap = Object.fromEntries(users.map(u => [u.id, u.avatar_url]));
 
       const requestIds = [...new Set(userConvs.map(c => c.request_id).filter(Boolean))];
