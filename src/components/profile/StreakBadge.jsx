@@ -11,7 +11,19 @@ const BADGE_CONFIG = {
 };
 
 export default function StreakBadge({ streak, size = 'default' }) {
-  if (!streak || streak.current_streak === 0) return null;
+  const hasStreak = streak && streak.current_streak > 0;
+
+  if (!hasStreak) {
+    return (
+      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 border border-blue-100 text-blue-700">
+        <Flame className="w-5 h-5 text-blue-400" />
+        <div>
+          <div className="font-bold text-sm">Start your streak today!</div>
+          <div className="text-xs opacity-70">Complete a mitzvah to begin</div>
+        </div>
+      </div>
+    );
+  }
 
   const config = BADGE_CONFIG[streak.badge_level] || BADGE_CONFIG.none;
 

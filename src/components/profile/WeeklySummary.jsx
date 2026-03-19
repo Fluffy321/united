@@ -16,9 +16,15 @@ export default function WeeklySummary({ mitzvahCount }) {
       </div>
       <div className="flex items-center gap-2">
         <Heart className="w-5 h-5 text-purple-600 fill-current" />
-        <p className="text-lg font-bold text-slate-900">
-          You helped {mitzvahCount} {mitzvahCount === 1 ? 'person' : 'people'}
-        </p>
+        {mitzvahCount > 0 ? (
+          <p className="text-lg font-bold text-slate-900">
+            You helped {mitzvahCount} {mitzvahCount === 1 ? 'person' : 'people'} this week 🎉
+          </p>
+        ) : (
+          <p className="text-lg font-bold text-slate-900">
+            Your first mitzvah is waiting! ✨
+          </p>
+        )}
       </div>
     </div>
   );
