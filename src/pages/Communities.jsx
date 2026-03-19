@@ -50,6 +50,7 @@ export default function Communities() {
   const [creating, setCreating] = useState(false);
   const [pendingRequestSet, setPendingRequestSet] = useState(new Set());
   const [detailError, setDetailError] = useState(null);
+  const [queriesReady, setQueriesReady] = useState(false);
   const queryClient = useQueryClient();
 
   const selectedCommunityId = searchParams.get('communityId') || null;
