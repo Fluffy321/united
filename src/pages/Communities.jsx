@@ -108,24 +108,37 @@ export default function Communities() {
     });
   }, []);
 
-  const { data: allCommunities = [], isLoading: communitiesLoading } = useQuery({
+  const retryWithBackoff = (failureCount, error) => {
+    if (error?.message?.includes('429') || error?.status === 429) {
+      return failureCount < 2; // 2 retries for rate limit
+    }
+    return false;
+  };
+
+  const retryDelay = (attempt) => Math.min(2000 * 2 ** attempt, 10000);
+
+  const { data: userMemberships = [], isLoading: membershipsLoading, refetch: refetchMemberships } = useQuery({
+    queryKey: ['user-communities', currentUser?.id],
+    queryFn: () => base44.entities.UserCommunity.filter({ user_id: currentUser.id }),
+    enabled: !!currentUser && membershipsReady,
+    staleTime: Infinity,
+    gcTime: 7200000,
+    refetchOnWindowFocus: false,
+    retry: retryWithBackoff,
+    retryDelay,
+    placeholderData: keepPreviousData,
+  });
+
+  const { data: allCommunities = [], isLoading: communitiesLoading, isError: communitiesError, error: communitiesQueryError } = useQuery({
     queryKey: ['communities-list'],
     queryFn: () => base44.entities.Community.list('-follower_count', 100),
     enabled: !!currentUser && queriesReady,
     staleTime: Infinity,
     gcTime: 7200000,
     refetchOnWindowFocus: false,
-    retry: 0,
-  });
-
-  const { data: userMemberships = [], isLoading: membershipsLoading, refetch: refetchMemberships } = useQuery({
-    queryKey: ['user-communities', currentUser?.id],
-    queryFn: () => base44.entities.UserCommunity.filter({ user_id: currentUser.id }),
-    enabled: !!currentUser && queriesReady,
-    staleTime: Infinity,
-    gcTime: 7200000,
-    refetchOnWindowFocus: false,
-    retry: 0,
+    retry: retryWithBackoff,
+    retryDelay,
+    placeholderData: keepPreviousData,
   });
 
   const { data: groups = [], refetch: refetchGroups } = useQuery({
@@ -134,7 +147,9 @@ export default function Communities() {
     staleTime: Infinity,
     gcTime: 7200000,
     enabled: !!currentUser && queriesReady,
-    retry: 0,
+    retry: retryWithBackoff,
+    retryDelay,
+    placeholderData: keepPreviousData,
     refetchOnWindowFocus: false,
   });
 
@@ -144,9 +159,13 @@ export default function Communities() {
     staleTime: Infinity,
     gcTime: 7200000,
     enabled: !!currentUser && queriesReady,
-    retry: 0,
+    retry: retryWithBackoff,
+    retryDelay,
+    placeholderData: keepPreviousData,
     refetchOnWindowFocus: false,
   });
+
+  const isRateLimited = communitiesError && (communitiesQueryError?.message?.includes('429') || String(communitiesQueryError).includes('429'));
 
   const joinedIds = useMemo(() => new Set(userMemberships.map(m => m.community_id)), [userMemberships]);
   const joinedCommunities = useMemo(() => allCommunities.filter(c => joinedIds.has(c.id)), [allCommunities, joinedIds]);
