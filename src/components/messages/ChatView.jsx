@@ -79,8 +79,13 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   };
 
   const markAsRead = async () => {
-    const unreadCount = { ...conversation.unread_count, [currentUser.id]: 0 };
-    await base44.entities.Conversation.update(conversation.id, { unread_count: unreadCount });
+    try {
+      if (!conversation?.id) return;
+      const unreadCount = { ...conversation.unread_count, [currentUser.id]: 0 };
+      await base44.entities.Conversation.update(conversation.id, { unread_count: unreadCount });
+    } catch (error) {
+      console.error('Failed to mark conversation as read:', error);
+    }
   };
 
   const loadMitzvahContext = async () => {
