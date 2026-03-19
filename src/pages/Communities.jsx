@@ -39,6 +39,7 @@ export default function Communities() {
   const [joiningId, setJoiningId] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const selectedCommunityId = searchParams.get('communityId') || null;
 
