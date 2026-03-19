@@ -263,6 +263,24 @@ export default function Communities() {
     toast.success(`Left ${group.name}`);
   };
 
+  if (selectedGroup) {
+    return (
+      <CommunityGroupPage
+        group={selectedGroup}
+        currentUser={currentUser}
+        isMember={membershipSet.has(selectedGroup.id)}
+        isPendingRequest={pendingRequestSet.has(selectedGroup.id)}
+        onJoin={handleGroupJoin}
+        onLeave={handleGroupLeave}
+        onBack={() => setSelectedGroup(null)}
+        onMemberApproved={(groupId) => {
+          setMembershipSet(prev => new Set([...prev, groupId]));
+          queryClient.invalidateQueries({ queryKey: ['community-groups'] });
+        }}
+      />
+    );
+  }
+
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     if (!createForm.name.trim()) return toast.error('Community name is required');
