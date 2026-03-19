@@ -305,11 +305,11 @@ h1, h2, h3 {
 .u-btn-secondary:hover { background: #CBD5E1; }
 
 /* Aliases for backwards compatibility */
-.primary-btn { background: var(--primary); color: white; border-radius: 12px; font-weight: 600; border: none; cursor: pointer; transition: background 0.2s ease; }
-.primary-btn:hover { background: var(--primary-hover); }
-.secondary-btn { background: var(--secondary); color: var(--text-main); border-radius: 12px; font-weight: 600; border: none; cursor: pointer; }
-.secondary-btn:hover { background: #cbd5e1; }
-.join-btn { background: var(--primary); color: white; padding: 12px 18px; border-radius: 12px; font-weight: 600; }
+.primary-btn { background: #2563EB; color: white; border-radius: 12px; font-weight: 600; border: none; cursor: pointer; transition: background 0.2s ease; }
+.primary-btn:hover { background: #1D4ED8; }
+.secondary-btn { background: #EFF6FF; color: #1E3A5F; border-radius: 12px; font-weight: 600; border: 1px solid #BFDBFE; cursor: pointer; }
+.secondary-btn:hover { background: #DBEAFE; }
+.join-btn { background: #2563EB; color: white; padding: 12px 18px; border-radius: 12px; font-weight: 600; }
 
 .welcome-strip {
   background: #fef3c7;
