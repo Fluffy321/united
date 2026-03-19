@@ -56,9 +56,8 @@ export default function Communities() {
 
   const selectedCommunityId = searchParams.get('communityId') || null;
 
-  const AUTO_JOIN_NAMES = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Young Israel Woodmere Members', 'Pickup Basketball', 'Young Adults Hangouts', 'Daf Yomi Chat'];
-
-  const FALLBACK_AUTO_JOIN = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Young Israel Woodmere Members', 'Pickup Basketball', 'Daf Yomi Chat'];
+  const AUTO_JOIN_NAMES = AUTO_JOIN_GROUP_NAMES;
+  const FALLBACK_AUTO_JOIN = AUTO_JOIN_GROUP_NAMES;
   const MIN_COMMUNITIES = 3;
 
   useEffect(() => {
