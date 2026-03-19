@@ -3,8 +3,8 @@ import { ArrowLeft, CheckCircle2, Star, Users, Calendar, HandHeart } from 'lucid
 import CommunityLogo from './CommunityLogo';
 import InviteLinkButton from './InviteLinkButton';
 
-export default function CommunityHero({ community, isFollowing, isAdmin, onBack, onFollow, onClaim, eventCount, mitzvahCount }) {
-  const memberCount = community.follower_count || 0;
+export default function CommunityHero({ community, isFollowing, isAdmin, onBack, onFollow, onClaim, eventCount, mitzvahCount, actualMemberCount }) {
+  const memberCount = actualMemberCount || community.follower_count || 0;
 
   return (
     <div style={{ background: 'linear-gradient(160deg, #EEF4FF 0%, #F5F7FB 100%)', borderBottom: '1px solid #E0EDFF' }}>
