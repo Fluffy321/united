@@ -35,7 +35,7 @@ export default function Feed() {
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [pinnedPrompt, setPinnedPrompt] = useState(null);
   const [userLikes, setUserLikes] = useState([]);
-  const [showFABTypeSelector, setShowFABTypeSelector] = useState(false);
+  const [showFAB, setShowFAB] = useState(false);
   const [activeTab, setActiveTab] = useState('trending');
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
