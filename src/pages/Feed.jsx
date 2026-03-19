@@ -19,6 +19,7 @@ import PostBox from '@/components/feed/PostBox';
 import HomeFeedTabs from '@/components/feed/HomeFeedTabs';
 import CommunityActivityStrip from '@/components/feed/CommunityActivityStrip';
 import EventsFeedSection from '@/components/feed/EventsFeedSection';
+import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
