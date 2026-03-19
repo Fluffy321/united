@@ -513,6 +513,31 @@ export default function Communities() {
         currentUser={currentUser}
         onCreated={() => loadData(currentUser)}
       />
+
+      {/* Leave Community Confirmation */}
+      {leaveConfirm && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-end">
+          <div className="w-full bg-white rounded-t-3xl p-6 space-y-4">
+            <h2 className="text-[18px] font-bold text-slate-900">Leave {leaveConfirm.name}?</h2>
+            <p className="text-[14px] text-slate-600">You'll be removed from this community and can rejoin anytime.</p>
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={() => setLeaveConfirm(null)}
+                className="flex-1 py-3 border border-slate-200 rounded-xl font-semibold text-slate-700 active:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => leaveCommunity(leaveConfirm)}
+                disabled={leavingId === leaveConfirm.id}
+                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold active:bg-red-700 transition-colors disabled:opacity-60 flex items-center justify-center"
+              >
+                {leavingId === leaveConfirm.id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Leave'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
