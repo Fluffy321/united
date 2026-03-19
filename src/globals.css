@@ -231,8 +231,8 @@ h1, h2, h3 {
 
 /* Section card — consistent across Help, Events, Communities, Posts */
 .section-card {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: #FFFFFF;
+  border: 1px solid #BFDBFE;
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 16px;
