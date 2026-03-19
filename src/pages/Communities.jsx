@@ -536,7 +536,12 @@ function MyCommunitiesTab({ joinedCommunities, myGroups, loading, isRateLimited,
       )}
 
       {/* Your Communities */}
-      {(joinedCommunities.length > 0 || myGroups.length > 0) ? (
+      {isRateLimited && joinedCommunities.length === 0 && myGroups.length === 0 ? (
+        <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 text-center">
+          <p className="text-[14px] font-semibold text-amber-800">Still loading communities…</p>
+          <p className="text-[12px] text-amber-600 mt-1">Too many requests. Retrying shortly.</p>
+        </div>
+      ) : (joinedCommunities.length > 0 || myGroups.length > 0) ? (
         <section>
           <SectionHeader title="Your Communities" count={joinedCommunities.length + myGroups.length} />
           <div className="space-y-2.5">
