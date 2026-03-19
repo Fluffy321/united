@@ -72,39 +72,22 @@ export default function Communities() {
       setMembershipsReady(true);
 
       // Defer community/group queries to avoid burst with Feed queries
-      setTimeout(() => setQueriesReady(true), 1500);
+      setTimeout(() => setQueriesReady(true), 3000);
 
       // Defer pending requests further
       setTimeout(async () => {
         const reqs = await base44.entities.GroupJoinRequest.filter({ user_id: user.id, status: 'pending' });
         setPendingRequestSet(new Set(reqs.map(r => r.group_id)));
-      }, 3000);
+      }, 6000);
 
       // Auto-join: only once per session and only if user has few communities
+      // Store user info for use after groups load — actual joining happens in a separate effect
       const autoJoinKey = `auto_joined_${user.id}`;
-      if (sessionStorage.getItem(autoJoinKey)) return;
-      if (joinedGroupIds.size >= MIN_COMMUNITIES) {
+      if (!sessionStorage.getItem(autoJoinKey) && joinedGroupIds.size < MIN_COMMUNITIES) {
         sessionStorage.setItem(autoJoinKey, '1');
-        return;
+        // Flag that auto-join should run once groups are loaded
+        sessionStorage.setItem(`auto_join_pending_${user.id}`, '1');
       }
-      sessionStorage.setItem(autoJoinKey, '1');
-
-      // Delay auto-join to avoid rate limit burst on page load
-      setTimeout(async () => {
-        const allGroups = await base44.entities.CommunityGroup.list();
-        const groupsToJoin = allGroups.filter(g =>
-          (AUTO_JOIN_NAMES.includes(g.name) || FALLBACK_AUTO_JOIN.includes(g.name)) &&
-          !joinedGroupIds.has(g.id)
-        ).slice(0, 4);
-
-        for (const g of groupsToJoin) {
-          await base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: user.full_name, role: 'member' });
-          joinedGroupIds.add(g.id);
-        }
-        if (groupsToJoin.length > 0) {
-          setMembershipSet(new Set(joinedGroupIds));
-        }
-      }, 3000);
     });
   }, []);
 
