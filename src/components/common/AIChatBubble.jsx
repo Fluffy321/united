@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { AI_AGENT, loadAIMessages, saveAIMessages, getAIReply } from '@/lib/aiAgent';
 
 export default function AIChatBubble({ currentUser, isScrollingDown }) {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -14,10 +15,7 @@ export default function AIChatBubble({ currentUser, isScrollingDown }) {
   const [aiThinking, setAiThinking] = useState(false);
 
   const handleOpen = () => {
-    if (!isOpen) {
-      setMessages(loadAIMessages(currentUser.id));
-    }
-    setIsOpen(true);
+    navigate(createPageUrl('Messages'));
   };
 
   const handleSend = async () => {
