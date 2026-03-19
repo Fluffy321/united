@@ -260,7 +260,7 @@ export default function Communities() {
                     <section>
                       <h2 className="text-[16px] font-bold text-slate-900 mb-3">Your Communities</h2>
                       <div className="space-y-3">
-                        {myCommunities.map(c => (
+                        {filterByQuery(myCommunities).map(c => (
                           <button key={c.id} onClick={() => openCommunity(c.id)} className="w-full bg-white rounded-3xl p-4 text-left shadow-sm active:scale-[0.99] transition-transform">
                             <div className="flex items-center gap-3.5">
                               <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
