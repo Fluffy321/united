@@ -155,7 +155,7 @@ export default function Layout({ children, currentPageName }) {
                 width: '40px',
                 height: '28px',
                 transform: 'translateX(-50%)',
-                background: 'rgba(37,99,235,0.08)',
+                background: 'rgba(37,99,235,0.12)',
                 borderRadius: '12px',
                 opacity: pillStyle.opacity,
                 transition: 'left 180ms ease, opacity 120ms ease',
