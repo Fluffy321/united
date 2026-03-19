@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
-import { createVerify } from 'npm:crypto';
 
 Deno.serve(async (req) => {
   try {
@@ -17,10 +16,26 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Configuration error' }, { status: 500 });
     }
 
-    // Verify JWT signature
-    const verify = createVerify('RSA-SHA256');
-    verify.update(body);
-    const isValid = verify.verify(publicKey, signature, 'base64');
+    // Verify JWT signature using Web Crypto API
+    const keyData = new TextEncoder().encode(publicKey);
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+
+    const signatureBytes = new Uint8Array(
+      atob(signature).split('').map(c => c.charCodeAt(0))
+    );
+
+    const isValid = await crypto.subtle.verify(
+      'RSASSA-PKCS1-v1_5',
+      key,
+      signatureBytes,
+      new TextEncoder().encode(body)
+    );
 
     if (!isValid) {
       console.error('Invalid webhook signature');
@@ -33,14 +48,12 @@ Deno.serve(async (req) => {
       const orderId = event.data.order.id;
       const status = event.data.order.paymentStatus === 'PAID' ? 'completed' : 'failed';
 
-      // Update transaction status
       const transactions = await base44.asServiceRole.entities.Transaction.filter({ order_id: orderId });
       if (transactions.length > 0) {
         await base44.asServiceRole.entities.Transaction.update(transactions[0].id, {
           status: status
         });
 
-        // Create notification for user
         if (status === 'completed') {
           await base44.asServiceRole.entities.Notification.create({
             user_id: transactions[0].user_id,
