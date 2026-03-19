@@ -141,11 +141,11 @@
 }
 
 .card {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: #FFFFFF;
+  border: 1px solid #BFDBFE;
   border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(37,99,235,0.06);
   margin-bottom: 16px;
 }
 
