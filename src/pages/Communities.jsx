@@ -350,28 +350,58 @@ export default function Communities() {
             </div>
           ) : (
             /* Discover Tab */
-            <div className="space-y-6">
-              {discoverCommunities.length > 0 && (
+            <div className="space-y-5">
+              {/* Category Filter Pills */}
+              <div className="bg-white rounded-2xl p-3 shadow-sm sticky top-0 z-10">
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+                      !selectedCategory
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {['Shul', 'School', 'Yeshiva', 'Seminary', 'Camp', 'Local Life', 'Chessed', 'Social', 'Learning'].map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+                        selectedCategory === cat
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Trending Communities */}
+              {!selectedCategory && getTrendingCommunities(filterByQuery(discoverCommunities)).length > 0 && (
                 <section>
-                  <h2 className="text-[16px] font-bold text-slate-900 mb-3">Communities</h2>
-                  <div className="space-y-3">
-                    {filterByQuery(discoverCommunities).slice(0, 20).map(c => (
-                      <div key={c.id} className="bg-white rounded-3xl p-4 shadow-sm">
-                        <div className="flex items-center gap-3.5">
+                  <h2 className="text-[16px] font-bold text-slate-900 mb-3">🔥 Trending</h2>
+                  <div className="space-y-2.5">
+                    {getTrendingCommunities(filterByQuery(discoverCommunities)).map(c => (
+                      <div key={c.id} className="bg-white rounded-2xl p-3.5 shadow-sm border-l-3 border-orange-400">
+                        <div className="flex items-center gap-3">
                           <div
                             onClick={() => openCommunity(c.id)}
-                            className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden cursor-pointer"
+                            className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-xl flex-shrink-0 overflow-hidden cursor-pointer"
                           >
                             {c.logo_url ? <img src={c.logo_url} alt="" className="w-full h-full object-cover" /> : getEmoji(c)}
                           </div>
                           <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openCommunity(c.id)}>
-                            <div className="font-bold text-[15px] text-slate-900 truncate">{c.name}</div>
-                            <div className="text-[12px] text-slate-400 mt-0.5">{c.follower_count || 0} members · {c.neighborhood || c.type}</div>
+                            <div className="font-bold text-[14px] text-slate-900 truncate">{c.name}</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">{c.follower_count || 0} members</div>
                           </div>
                           <button
                             onClick={() => joinCommunity(c)}
                             disabled={joiningId === c.id}
-                            className="bg-blue-600 text-white rounded-full px-4 py-1.5 text-[12px] font-semibold flex-shrink-0 disabled:opacity-60"
+                            className="bg-blue-600 text-white rounded-full px-3.5 py-1 text-[11px] font-semibold flex-shrink-0 disabled:opacity-60"
                           >
                             {joiningId === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Join'}
                           </button>
@@ -382,26 +412,73 @@ export default function Communities() {
                 </section>
               )}
 
+              {/* All Communities by Type */}
+              {(() => {
+                const filtered = filterByQuery(discoverCommunities);
+                const byCategory = filterByCategory(filtered, selectedCategory);
+                const grouped = groupByType(byCategory);
+                const hasItems = Object.values(grouped).some(arr => arr.length > 0);
+
+                return hasItems ? (
+                  Object.entries(grouped).map(([type, items]) => (
+                    <section key={type}>
+                      <h2 className="text-[14px] font-bold text-slate-600 uppercase tracking-wide mb-2.5">{type}</h2>
+                      <div className="space-y-2">
+                        {items.slice(0, 10).map(c => (
+                          <div key={c.id} className="bg-white rounded-2xl p-3 shadow-sm">
+                            <div className="flex items-center gap-3">
+                              <div
+                                onClick={() => openCommunity(c.id)}
+                                className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-xl flex-shrink-0 overflow-hidden cursor-pointer"
+                              >
+                                {c.logo_url ? <img src={c.logo_url} alt="" className="w-full h-full object-cover" /> : getEmoji(c)}
+                              </div>
+                              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openCommunity(c.id)}>
+                                <div className="font-bold text-[14px] text-slate-900 truncate">{c.name}</div>
+                                <div className="text-[11px] text-slate-400 mt-0.5">{c.follower_count || 0} members</div>
+                              </div>
+                              <button
+                                onClick={() => joinCommunity(c)}
+                                disabled={joiningId === c.id}
+                                className="bg-blue-600 text-white rounded-full px-3.5 py-1 text-[11px] font-semibold flex-shrink-0 disabled:opacity-60"
+                              >
+                                {joiningId === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Join'}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  ))
+                ) : (
+                  <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
+                    <p className="font-bold text-slate-900">No communities in this category</p>
+                    <p className="text-[12px] text-slate-400 mt-1">Try a different filter</p>
+                  </div>
+                );
+              })()}
+
+              {/* Groups Section */}
               {discoverGroups.length > 0 && (
                 <section>
-                  <h2 className="text-[16px] font-bold text-slate-900 mb-3">Groups</h2>
-                  <div className="space-y-3">
-                    {filterByQuery(discoverGroups).slice(0, 20).map(g => (
-                      <div key={g.id} className="bg-white rounded-3xl p-4 shadow-sm">
-                        <div className="flex items-center gap-3.5">
+                  <h2 className="text-[14px] font-bold text-slate-600 uppercase tracking-wide mb-2.5">Groups</h2>
+                  <div className="space-y-2">
+                    {filterByQuery(discoverGroups).slice(0, 10).map(g => (
+                      <div key={g.id} className="bg-white rounded-2xl p-3 shadow-sm">
+                        <div className="flex items-center gap-3">
                           <div
                             onClick={() => setSelectedGroup(g)}
-                            className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-2xl flex-shrink-0 cursor-pointer"
+                            className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-xl flex-shrink-0 cursor-pointer"
                           >
                             {getEmoji(g)}
                           </div>
                           <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedGroup(g)}>
-                            <div className="font-bold text-[15px] text-slate-900 truncate">{g.name}</div>
-                            <div className="text-[12px] text-slate-400 mt-0.5 truncate">{g.description || `${g.member_count || 0} members`}</div>
+                            <div className="font-bold text-[14px] text-slate-900 truncate">{g.name}</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5 truncate">{g.description || `${g.member_count || 0} members`}</div>
                           </div>
                           <button
                             onClick={() => joinGroup(g)}
-                            className="bg-green-600 text-white rounded-full px-4 py-1.5 text-[12px] font-semibold flex-shrink-0"
+                            className="bg-green-600 text-white rounded-full px-3.5 py-1 text-[11px] font-semibold flex-shrink-0"
                           >
                             Join
                           </button>
@@ -410,14 +487,6 @@ export default function Communities() {
                     ))}
                   </div>
                 </section>
-              )}
-
-              {discoverCommunities.length === 0 && discoverGroups.length === 0 && (
-                <div className="bg-white rounded-3xl p-8 text-center shadow-sm">
-                  <div className="text-4xl mb-3">🎉</div>
-                  <p className="font-bold text-slate-900">You've joined everything!</p>
-                  <p className="text-[13px] text-slate-400 mt-1">Check back later for new communities</p>
-                </div>
               )}
             </div>
           )}
