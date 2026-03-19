@@ -206,47 +206,51 @@ export default function Profile() {
   const displayName = profileUser.display_name || profileUser.full_name?.split(' ')[0] || 'User';
   const hasActivity = mitzvahPoints > 0 || weeklyMitzvahCount > 0 || (userStreak?.current_streak || 0) > 0 || mitzvahLogs.length >= 3;
 
-  return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
-          <span className="font-bold text-slate-900 text-base">Profile</span>
-          {isOwnProfile ? (
-            <div className="relative">
-              <Button variant="ghost" size="icon" className="text-slate-500" onClick={() => setShowMenu(!showMenu)}>
-                <MoreVertical className="w-5 h-5" />
-              </Button>
-              {showMenu && (
-                <div className="absolute right-0 top-12 bg-white border border-slate-200 rounded-lg shadow-lg z-20">
-                  <Link to={createPageUrl('Settings')} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 border-b border-slate-100">
-                    Edit Profile
-                  </Link>
-                  <Link to={createPageUrl('Settings')} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 border-b border-slate-100">
-                    Settings
-                  </Link>
-                  <button onClick={shareProfile} className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                    Share Profile
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex gap-1">
-              <Button variant="ghost" size="icon" className="text-slate-500" onClick={() => setShowReport(true)}>
-                <Flag className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="text-slate-500" onClick={handleBlock}>
-                <Ban className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+  const handleEditProfile = () => {
+    navigate(createPageUrl('Settings'));
+  };
 
-      <div className="max-w-2xl mx-auto pb-28">
-        {/* Hero Section */}
-        <ProfileHero user={profileUser} isOwnProfile={isOwnProfile} onMessage={handleMessage} displayName={displayName} />
+  const handleShareProfile = () => {
+    const profileUrl = `${window.location.origin}${createPageUrl('Profile')}?id=${profileUser.id}`;
+    if (navigator.share) {
+      navigator.share({ title: displayName, url: profileUrl });
+    } else {
+      navigator.clipboard.writeText(profileUrl);
+      toast.success('Profile link copied!');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-100/50">
+      <div className="max-w-2xl mx-auto">
+        {/* Modern Header */}
+        <ModernProfileHeader
+          user={profileUser}
+          isOwnProfile={isOwnProfile}
+          onMessage={handleMessage}
+          onReport={() => setShowReport(true)}
+          onBlock={handleBlock}
+        />
+
+        {/* Stats Row */}
+        <ModernStatsRow
+          following={0}
+          posts={unifiedPosts.length}
+          impact={mitzvahPoints}
+        />
+
+        {/* Action Buttons */}
+        <ModernActionButtons
+          isOwnProfile={isOwnProfile}
+          onEditProfile={handleEditProfile}
+          onMessage={handleMessage}
+          onShare={handleShareProfile}
+          onReport={() => setShowReport(true)}
+          onBlock={handleBlock}
+        />
+
+        {/* Content Sections */}
+        <div className="space-y-4 pb-28">
 
         {/* Streak Card */}
         {isOwnProfile && <StreakCard streak={userStreak} />}
