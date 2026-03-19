@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2, Megaphone, Calendar, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -40,7 +40,7 @@ export default function Notifications() {
   const [filter, setFilter] = useState('all');
   const queryClient = useQueryClient();
 
-  React.useEffect(() => {
+  useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
