@@ -180,7 +180,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       </div>
 
       {/* Content area */}
-      <div className="px-4 pt-3 pb-1">
+      <div className="px-4 pt-3 pb-1 relative">
         {/* Prompt context */}
         {post.prompt_text && (
           <div className="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl px-3 py-2 mb-2.5 border border-violet-100">
