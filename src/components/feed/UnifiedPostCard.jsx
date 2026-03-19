@@ -112,7 +112,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             </div>
           ) : (
             <Link to={createPageUrl('Profile') + `?id=${post.user_id}`} className="flex items-center gap-2.5 min-w-0">
-              <UserAvatar user={{...post, display_name: post.user_name}} size="sm" />
+              <UserAvatar user={post} name={post.user_name} size="sm" />
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="font-semibold text-[#0F1C2E] text-[14px] truncate">{post.user_name}</span>
