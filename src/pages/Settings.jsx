@@ -147,6 +147,25 @@ export default function Settings() {
     base44.auth.logout();
   };
 
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('Are you sure? This will permanently delete your account and all your data. This cannot be undone.')) {
+      return;
+    }
+    if (!window.confirm('Type "DELETE" to confirm account deletion. This is your last warning.')) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await base44.functions.invoke('deleteUserAccount', { userId: currentUser.id });
+      toast.success('Account deleted. Logging out...');
+      setTimeout(() => base44.auth.logout(), 1500);
+    } catch (error) {
+      toast.error('Failed to delete account');
+      setIsSaving(false);
+    }
+  };
+
   if (!currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center">
