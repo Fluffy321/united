@@ -265,7 +265,7 @@ export default function Feed() {
               </div>
             ))}
           </div>
-        ) : activeTab !== 'events' && isError ? (
+        ) : isError ? (
           <div className="text-center py-12 bg-white rounded-2xl cursor-pointer" onClick={() => refetchPosts()}>
             <span className="text-2xl">⚠️</span>
             <p className="text-slate-700 font-semibold mt-2">Feed failed to load</p>
