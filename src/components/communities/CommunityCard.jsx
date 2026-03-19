@@ -1,91 +1,140 @@
-import React from 'react';
-import { MapPin, Phone, Globe, CheckCircle2, Star, ChevronRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import VerifiedBadge from './VerifiedBadge';
+import React, { useMemo } from 'react';
+import { Loader2 } from 'lucide-react';
 
-const TYPE_COLORS = {
-  Shul:     'bg-blue-100 text-blue-700',
-  School:   'bg-green-100 text-green-700',
-  Yeshiva:  'bg-purple-100 text-purple-700',
-  Seminary: 'bg-pink-100 text-pink-700',
-  Camp:     'bg-orange-100 text-orange-700',
-  Other:    'bg-slate-100 text-slate-600',
+const CATEGORY_EMOJI = {
+  'Local Life': '📍', 'Local': '📍',
+  'Chessed': '❤️',
+  'Social': '🏀',
+  'Learning': '📚',
+  'Institutional': '🏛️',
+  'Shul': '🕍',
+  'School': '🏫',
+  'Camp': '⛺',
+  'Other': '🏘️',
 };
 
-export default function CommunityCard({ community, onView, onClaim }) {
+const BRAND_COLORS = [
+  'bg-blue-100', 'bg-purple-100', 'bg-pink-100', 'bg-green-100',
+  'bg-orange-100', 'bg-yellow-100', 'bg-indigo-100', 'bg-teal-100'
+];
+
+function getColorIndex(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return Math.abs(hash) % BRAND_COLORS.length;
+}
+
+function getInitials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+function getEmoji(item) {
+  return CATEGORY_EMOJI[item.category] || CATEGORY_EMOJI[item.type] || '🏘️';
+}
+
+export function MyCommunityCard({ community, onOpen }) {
   return (
-    <div
-      className="bg-white border-b border-slate-100 last:border-b-0 px-4 py-3.5 hover:bg-slate-50 transition-colors cursor-pointer"
-      onClick={() => onView(community)}
+    <button 
+      onClick={() => onOpen(community.id)} 
+      className="w-full bg-white rounded-2xl p-3 text-left shadow-sm active:scale-[0.99] transition-transform"
     >
       <div className="flex items-start gap-3">
-        {/* Logo */}
-        <div className="w-12 h-12 rounded-xl flex-shrink-0 bg-[#E6F0FF] flex items-center justify-center overflow-hidden border border-slate-100">
+        <div className="flex-shrink-0">
           {community.logo_url ? (
-            <img src={community.logo_url} alt="" className="w-full h-full object-cover" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
+              <img src={community.logo_url} alt="" className="w-full h-full object-cover" />
+            </div>
           ) : (
-            <span className="text-[#0F5ED7] font-bold text-lg">{community.name?.charAt(0)}</span>
-          )}
-        </div>
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-            <span className="font-bold text-slate-900 text-sm truncate">{community.name}</span>
-            {community.is_verified && <VerifiedBadge community={community} />}
-            {community.is_claimed && !community.is_verified && (
-              <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-            )}
-            {community.is_featured && (
-              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap mb-1">
-            <Badge className={`${TYPE_COLORS[community.type] || TYPE_COLORS.Other} border-0 text-[10px] font-semibold px-1.5 py-0`}>
-              {community.type}
-            </Badge>
-            <span className="text-xs text-slate-400">{community.neighborhood}</span>
-          </div>
-
-          {community.address && (
-            <div className="flex items-center gap-1 text-xs text-slate-500 mb-1">
-              <MapPin className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate">{community.address}</span>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${BRAND_COLORS[getColorIndex(community.name)]} text-slate-700`}>
+              {getInitials(community.name)}
             </div>
           )}
-
-          <div className="flex items-center gap-3">
-            {community.phone && (
-              <span className="flex items-center gap-1 text-xs text-slate-400">
-                <Phone className="w-3 h-3" />{community.phone}
-              </span>
-            )}
-            {community.website && (
-              <span className="flex items-center gap-1 text-xs text-[#0F5ED7]">
-                <Globe className="w-3 h-3" />Website
-              </span>
-            )}
-          </div>
         </div>
-
-        {/* Right side */}
-        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-          {!community.is_claimed ? (
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-xs h-7 px-2 border-slate-200 text-slate-600 hover:border-[#0F5ED7] hover:text-[#0F5ED7]"
-              onClick={e => { e.stopPropagation(); onClaim(community); }}
-            >
-              Claim
-            </Button>
-          ) : (
-            <Badge className="bg-blue-50 text-blue-700 border-0 text-[10px]">Claimed</Badge>
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-[13px] text-slate-900 line-clamp-2">{community.name}</div>
+          <div className="text-[11px] text-slate-400 mt-1">{community.follower_count || 0} members</div>
+          {community.description_short && (
+            <div className="text-[11px] text-slate-600 mt-1.5 line-clamp-1">{community.description_short}</div>
           )}
-          <ChevronRight className="w-4 h-4 text-slate-300" />
         </div>
+        <span className="text-slate-300 text-lg flex-shrink-0">›</span>
+      </div>
+    </button>
+  );
+}
+
+export function DiscoverCommunityCard({ community, onOpen, onJoin, isJoining }) {
+  return (
+    <div className="bg-white rounded-2xl p-3.5 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div 
+          onClick={() => onOpen(community.id)}
+          className="flex-shrink-0 cursor-pointer"
+        >
+          {community.logo_url ? (
+            <div className="w-10 h-10 rounded-xl overflow-hidden">
+              <img src={community.logo_url} alt="" className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${BRAND_COLORS[getColorIndex(community.name)]} text-slate-700`}>
+              {getInitials(community.name)}
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onOpen(community.id)}>
+          <div className="font-bold text-[13px] text-slate-900 line-clamp-2">{community.name}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5">{community.follower_count || 0} members</div>
+          {community.description_short && (
+            <div className="text-[11px] text-slate-600 mt-1 line-clamp-2">{community.description_short}</div>
+          )}
+        </div>
+        <button
+          onClick={() => onJoin(community)}
+          disabled={isJoining}
+          className="bg-blue-600 text-white rounded-full px-3.5 py-1 text-[11px] font-semibold flex-shrink-0 disabled:opacity-60"
+        >
+          {isJoining ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Join'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function TrendingCommunityCard({ community, onOpen, onJoin, isJoining }) {
+  return (
+    <div className="bg-white rounded-2xl p-3.5 shadow-sm border-l-3 border-orange-400">
+      <div className="flex items-start gap-3">
+        <div 
+          onClick={() => onOpen(community.id)}
+          className="flex-shrink-0 cursor-pointer"
+        >
+          {community.logo_url ? (
+            <div className="w-10 h-10 rounded-xl overflow-hidden">
+              <img src={community.logo_url} alt="" className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${BRAND_COLORS[getColorIndex(community.name)]} text-slate-700`}>
+              {getInitials(community.name)}
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onOpen(community.id)}>
+          <div className="font-bold text-[13px] text-slate-900 line-clamp-2">{community.name}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5">{community.follower_count || 0} members</div>
+          {community.description_short && (
+            <div className="text-[11px] text-slate-600 mt-1 line-clamp-2">{community.description_short}</div>
+          )}
+        </div>
+        <button
+          onClick={() => onJoin(community)}
+          disabled={isJoining}
+          className="bg-blue-600 text-white rounded-full px-3.5 py-1 text-[11px] font-semibold flex-shrink-0 disabled:opacity-60"
+        >
+          {isJoining ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Join'}
+        </button>
       </div>
     </div>
   );
