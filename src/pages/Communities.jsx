@@ -256,9 +256,9 @@ export default function Communities() {
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-1.5 bg-blue-600 text-white rounded-full px-4 py-2 text-[13px] font-semibold"
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
             >
-              <Plus className="w-3.5 h-3.5" /> Create
+              <Plus className="w-5 h-5 text-slate-600" />
             </button>
           </div>
 
