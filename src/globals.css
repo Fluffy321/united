@@ -165,6 +165,12 @@ html, body {
   font-size: 15px;
   line-height: 1.5;
   background-color: #F0F6FF;
+  overscroll-behavior: none;
+}
+
+button, [role="tab"] {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 button {
