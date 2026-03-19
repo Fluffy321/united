@@ -66,6 +66,9 @@ export default function Communities() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pinnedCommunityIds, setPinnedCommunityIds] = useState(new Set());
+  const [leavingId, setLeavingId] = useState(null);
+  const [leaveConfirm, setLeaveConfirm] = useState(null);
 
   const selectedCommunityId = searchParams.get('communityId') || null;
 
