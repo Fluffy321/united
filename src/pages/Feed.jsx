@@ -18,6 +18,7 @@ import SearchModal from '@/components/feed/SearchModal';
 import PostBox from '@/components/feed/PostBox';
 import HomeFeedTabs from '@/components/feed/HomeFeedTabs';
 import CommunityActivityStrip from '@/components/feed/CommunityActivityStrip';
+import EventsFeedSection from '@/components/feed/EventsFeedSection';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
