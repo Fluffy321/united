@@ -271,7 +271,7 @@ export default function Feed() {
             <p className="text-slate-700 font-semibold mt-2">Feed failed to load</p>
             <p className="text-[13px] text-blue-600 mt-1 font-semibold">Tap to retry</p>
           </div>
-        ) : activeTab !== 'events' ? (
+        ) : (
           <div className="space-y-2.5">
             {feedPosts.length === 0 ? (
               <div className="bg-white rounded-2xl p-8 text-center">
