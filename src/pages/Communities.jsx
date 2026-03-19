@@ -109,7 +109,17 @@ export default function Communities() {
   const { data: allCommunities = [], isLoading: communitiesLoading } = useQuery({
     queryKey: ['communities-list'],
     queryFn: () => base44.entities.Community.list('-follower_count', 100),
-    enabled: !!currentUser,
+    enabled: !!currentUser && queriesReady,
+    staleTime: Infinity,
+    gcTime: 7200000,
+    refetchOnWindowFocus: false,
+    retry: 0,
+  });
+
+  const { data: userMemberships = [], isLoading: membershipsLoading, refetch: refetchMemberships } = useQuery({
+    queryKey: ['user-communities', currentUser?.id],
+    queryFn: () => base44.entities.UserCommunity.filter({ user_id: currentUser.id }),
+    enabled: !!currentUser && queriesReady,
     staleTime: Infinity,
     gcTime: 7200000,
     refetchOnWindowFocus: false,
@@ -121,7 +131,7 @@ export default function Communities() {
     queryFn: () => base44.entities.CommunityGroup.list('-created_date', 50),
     staleTime: Infinity,
     gcTime: 7200000,
-    enabled: !!currentUser,
+    enabled: !!currentUser && queriesReady,
     retry: 0,
     refetchOnWindowFocus: false,
   });
@@ -131,19 +141,9 @@ export default function Communities() {
     queryFn: () => base44.entities.CommunityPost.list('-created_date', 100),
     staleTime: Infinity,
     gcTime: 7200000,
-    enabled: !!currentUser,
+    enabled: !!currentUser && queriesReady,
     retry: 0,
     refetchOnWindowFocus: false,
-  });
-
-  const { data: userMemberships = [], isLoading: membershipsLoading, refetch: refetchMemberships } = useQuery({
-    queryKey: ['user-communities', currentUser?.id],
-    queryFn: () => base44.entities.UserCommunity.filter({ user_id: currentUser.id }),
-    enabled: !!currentUser,
-    staleTime: Infinity,
-    gcTime: 7200000,
-    refetchOnWindowFocus: false,
-    retry: 0,
   });
 
   const joinedIds = useMemo(() => new Set(userMemberships.map(m => m.community_id)), [userMemberships]);
