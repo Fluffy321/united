@@ -486,24 +486,16 @@ export default function Communities() {
                   <h2 className="text-[14px] font-bold text-slate-600 uppercase tracking-wide mb-2.5">Groups</h2>
                   <div className="space-y-2">
                     {filterByQuery(discoverGroups).slice(0, 10).map(g => (
-                      <div key={g.id} className="bg-white rounded-2xl p-3 shadow-sm">
+                      <div key={g.id} onClick={() => setSelectedGroup(g)} className="bg-white rounded-2xl p-3 shadow-sm cursor-pointer active:scale-[0.99] transition-transform">
                         <div className="flex items-center gap-3">
-                          <div
-                            onClick={() => setSelectedGroup(g)}
-                            className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-xl flex-shrink-0 cursor-pointer"
-                          >
-                            {getEmoji(g)}
+                          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-sm font-bold text-slate-700 flex-shrink-0">
+                            {g.name?.slice(0, 2).toUpperCase()}
                           </div>
-                          <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedGroup(g)}>
-                            <div className="font-bold text-[14px] text-slate-900 truncate">{g.name}</div>
-                            <div className="text-[11px] text-slate-400 mt-0.5 truncate">{g.description || `${g.member_count || 0} members`}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-[13px] text-slate-900 line-clamp-2">{g.name}</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">{g.description || `${g.member_count || 0} members`}</div>
                           </div>
-                          <button
-                            onClick={() => joinGroup(g)}
-                            className="bg-green-600 text-white rounded-full px-3.5 py-1 text-[11px] font-semibold flex-shrink-0"
-                          >
-                            Join
-                          </button>
+                          <ChevronRight className="w-5 h-5 text-slate-300 flex-shrink-0" />
                         </div>
                       </div>
                     ))}
