@@ -112,14 +112,13 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
 
         <div className="flex gap-2">
           {isOpen && !isRequester && (
-            <Button 
+            <button
               onClick={(e) => { e.stopPropagation(); onClaim(e, request); }}
-              className="btn-primary !px-3 !py-1.5 !rounded-lg text-sm"
-              size="sm"
+              className="flex items-center gap-1.5 h-7 px-3 rounded-full text-[12px] font-semibold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all"
             >
-              <Hand className="w-4 h-4 mr-2" />
+              <Hand className="w-3.5 h-3.5" />
               I'll Help
-            </Button>
+            </button>
           )}
 
           {isClaimed && (isRequester || isHelper) && (
