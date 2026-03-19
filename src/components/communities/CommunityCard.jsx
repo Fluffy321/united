@@ -109,38 +109,32 @@ export function DiscoverCommunityCard({ community, onOpen }) {
   );
 }
 
-export function TrendingCommunityCard({ community, onOpen, onJoin, isJoining }) {
+export function SuggestedCommunityCard({ community, onOpen }) {
   return (
-    <div className="bg-white rounded-2xl p-3.5 shadow-sm border-l-3 border-orange-400">
+    <div 
+      onClick={() => onOpen(community.id)}
+      className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 shadow-sm cursor-pointer active:scale-[0.99] transition-transform border border-blue-100"
+    >
       <div className="flex items-start gap-3">
-        <div 
-          onClick={() => onOpen(community.id)}
-          className="flex-shrink-0 cursor-pointer"
-        >
+        <div className="flex-shrink-0">
           {community.logo_url ? (
-            <div className="w-10 h-10 rounded-xl overflow-hidden">
+            <div className="w-12 h-12 rounded-xl overflow-hidden">
               <img src={community.logo_url} alt="" className="w-full h-full object-cover" />
             </div>
           ) : (
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${BRAND_COLORS[getColorIndex(community.name)]} text-slate-700`}>
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-base font-bold ${BRAND_COLORS[getColorIndex(community.name)]} text-slate-700`}>
               {getInitials(community.name)}
             </div>
           )}
         </div>
-        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onOpen(community.id)}>
-          <div className="font-bold text-[13px] text-slate-900 line-clamp-2">{community.name}</div>
-          <div className="text-[11px] text-slate-400 mt-0.5">{community.follower_count || 0} members</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-[14px] text-slate-900 line-clamp-2">{community.name}</div>
+          <div className="text-[11px] text-slate-500 mt-0.5">{(community.follower_count || 0) > 0 ? `${community.follower_count} members` : 'New'}</div>
           {community.description_short && (
-            <div className="text-[11px] text-slate-600 mt-1 line-clamp-2">{community.description_short}</div>
+            <div className="text-[12px] text-slate-700 mt-1.5 line-clamp-2">{community.description_short}</div>
           )}
         </div>
-        <button
-          onClick={() => onJoin(community)}
-          disabled={isJoining}
-          className="bg-blue-600 text-white rounded-full px-3.5 py-1 text-[11px] font-semibold flex-shrink-0 disabled:opacity-60"
-        >
-          {isJoining ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Join'}
-        </button>
+        <ChevronRight className="w-5 h-5 text-slate-300 flex-shrink-0" />
       </div>
     </div>
   );
