@@ -137,6 +137,29 @@ export default function Communities() {
     refetchOnWindowFocus: false,
   });
 
+  // Auto-join using already-fetched groups data — no extra API call
+  useEffect(() => {
+    if (!currentUser || groups.length === 0) return;
+    const pendingKey = `auto_join_pending_${currentUser.id}`;
+    if (!sessionStorage.getItem(pendingKey)) return;
+    sessionStorage.removeItem(pendingKey);
+
+    const groupsToJoin = groups.filter(g =>
+      AUTO_JOIN_GROUP_NAMES.includes(g.name) && !membershipSet.has(g.id)
+    ).slice(0, 4);
+
+    if (groupsToJoin.length === 0) return;
+
+    (async () => {
+      const newSet = new Set(membershipSet);
+      for (const g of groupsToJoin) {
+        await base44.entities.GroupMember.create({ group_id: g.id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
+        newSet.add(g.id);
+      }
+      setMembershipSet(newSet);
+    })();
+  }, [groups, currentUser]);
+
   const { data: posts = [] } = useQuery({
     queryKey: ['community-posts'],
     queryFn: () => base44.entities.CommunityPost.list('-created_date', 100),
