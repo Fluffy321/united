@@ -118,7 +118,7 @@
 }
 
 .quick-post-button {
-  background: #6366f1;
+  background: #2563EB;
   border-radius: 12px;
   font-weight: 600;
   padding: 10px 18px;
@@ -126,7 +126,7 @@
 }
 
 .quick-post-button:hover {
-  background: #4f46e5;
+  background: #1D4ED8;
 }
 
 .bottom-nav {
