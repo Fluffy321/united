@@ -211,12 +211,6 @@ export default function Feed() {
         <PostBox
           currentUser={currentUser}
           onPostClick={(type) => { setPostModalType(type === 'photo' ? 'feed' : type); setShowPostModal(true); }}
-          onQuickAction={(type) => {
-            if (type === 'alert') { setShowAlertModal(true); return; }
-            if (type === 'mitzvah') { navigate(createPageUrl('MitzvahCircle')); return; }
-            setPostModalType(type);
-            setShowPostModal(true);
-          }}
         />
 
         {/* 2. Feed Tabs */}
@@ -224,23 +218,7 @@ export default function Feed() {
           <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
         </div>
 
-        {/* 3. Mitzvah Map Preview */}
-        <div
-          onClick={() => navigate(createPageUrl('MitzvahMap'))}
-          className="rounded-2xl p-4 mb-3 cursor-pointer active:scale-[0.99] transition-transform flex items-center gap-3"
-          style={{ background: 'linear-gradient(135deg, #1d4ed8, #2563eb)', boxShadow: '0 4px 14px rgba(37,99,235,0.3)' }}
-        >
-          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-            <MapPin className="w-5 h-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="text-white font-bold text-[14px]">Mitzvah Map</p>
-            <p className="text-blue-100 text-[12px]">See help requests near you right now</p>
-          </div>
-          <span className="text-white/80 text-[13px] font-bold">View →</span>
-        </div>
-
-        {/* 4. Community Activity */}
+        {/* 3. Community Activity (compact circles) */}
         <CommunityActivityStrip groups={communityGroups} />
 
         {/* 5. Events Calendar Tab */}
