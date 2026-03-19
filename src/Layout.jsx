@@ -66,14 +66,21 @@ export default function Layout({ children, currentPageName }) {
   }, []);
 
   useEffect(() => {
+    let scrollTimeout;
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setIsScrollingDown(currentScrollY > lastScrollY);
-      setLastScrollY(currentScrollY);
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const currentScrollY = window.scrollY;
+        setIsScrollingDown(currentScrollY > lastScrollY);
+        setLastScrollY(currentScrollY);
+      }, 100);
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
+    };
   }, [lastScrollY]);
 
   const { data: unreadMessages = 0 } = useQuery({
