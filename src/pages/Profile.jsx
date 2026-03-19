@@ -210,7 +210,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100/50">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100">
       <div className="max-w-2xl mx-auto">
         {/* Modern Header */}
         <ModernProfileHeader
