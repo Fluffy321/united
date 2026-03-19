@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import React, { useState } from 'react';
 import { Search, Loader2, MessageCircle, Users, Bot } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { canMessage, checkSpamLimits, recordNewChat } from '@/lib/messagingPermissions';
