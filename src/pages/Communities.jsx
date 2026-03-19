@@ -361,12 +361,12 @@ export default function Communities() {
                            {items.map(g => (
                              <button key={g.id} onClick={() => setSelectedGroup(g)} className="w-full bg-white rounded-2xl p-3 text-left shadow-sm active:scale-[0.99] transition-transform">
                                <div className="flex items-center gap-3">
-                                 <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-xl flex-shrink-0">{getEmoji(g)}</div>
+                                 <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-sm font-bold text-slate-700 flex-shrink-0">{g.name?.slice(0, 2).toUpperCase()}</div>
                                  <div className="flex-1 min-w-0">
-                                   <div className="font-bold text-[14px] text-slate-900 truncate">{g.name}</div>
-                                   <div className="text-[11px] text-slate-400 mt-0.5 truncate">{g.description || `${g.member_count || 0} members`}</div>
+                                   <div className="font-bold text-[13px] text-slate-900 line-clamp-2">{g.name}</div>
+                                   <div className="text-[11px] text-slate-400 mt-0.5">{g.description || `${g.member_count || 0} members`}</div>
                                  </div>
-                                 <span className="text-slate-300 text-lg">›</span>
+                                 <ChevronRight className="w-5 h-5 text-slate-300 flex-shrink-0" />
                                </div>
                              </button>
                            ))}
