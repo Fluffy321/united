@@ -75,10 +75,31 @@ export default function Communities() {
   const discoverCommunities = useMemo(() => allCommunities.filter(c => !userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
   const discoverGroups = useMemo(() => allGroups.filter(g => !memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
 
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
   const filterByQuery = (items) => {
     if (!searchQuery.trim()) return items;
     const q = searchQuery.toLowerCase();
     return items.filter(item => item.name?.toLowerCase().includes(q) || item.description?.toLowerCase().includes(q));
+  };
+
+  const groupByType = (items) => {
+    const grouped = {};
+    items.forEach(item => {
+      const type = item.type || item.category || 'Other';
+      if (!grouped[type]) grouped[type] = [];
+      grouped[type].push(item);
+    });
+    return grouped;
+  };
+
+  const filterByCategory = (items, category) => {
+    if (!category) return items;
+    return items.filter(c => (c.type || c.category) === category);
+  };
+
+  const getTrendingCommunities = (items) => {
+    return [...items].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0)).slice(0, 5);
   };
 
   if (!currentUser) {
