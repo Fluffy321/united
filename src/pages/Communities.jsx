@@ -75,6 +75,12 @@ export default function Communities() {
   const discoverCommunities = useMemo(() => allCommunities.filter(c => !userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
   const discoverGroups = useMemo(() => allGroups.filter(g => !memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
 
+  const filterByQuery = (items) => {
+    if (!searchQuery.trim()) return items;
+    const q = searchQuery.toLowerCase();
+    return items.filter(item => item.name?.toLowerCase().includes(q) || item.description?.toLowerCase().includes(q));
+  };
+
   if (!currentUser) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
   }
