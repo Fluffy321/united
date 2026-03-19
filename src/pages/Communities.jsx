@@ -286,18 +286,7 @@ export default function Communities() {
                          <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-wide mb-2">{type}</h3>
                          <div className="space-y-2">
                            {items.map(c => (
-                             <button key={c.id} onClick={() => openCommunity(c.id)} className="w-full bg-white rounded-2xl p-3 text-left shadow-sm active:scale-[0.99] transition-transform">
-                               <div className="flex items-center gap-3">
-                                 <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-xl flex-shrink-0 overflow-hidden">
-                                   {c.logo_url ? <img src={c.logo_url} alt="" className="w-full h-full object-cover" /> : getEmoji(c)}
-                                 </div>
-                                 <div className="flex-1 min-w-0">
-                                   <div className="font-bold text-[14px] text-slate-900 truncate">{c.name}</div>
-                                   <div className="text-[11px] text-slate-400 mt-0.5">{c.follower_count || 0} members</div>
-                                 </div>
-                                 <span className="text-slate-300 text-lg">›</span>
-                               </div>
-                             </button>
+                             <MyCommunityCard key={c.id} community={c} onOpen={openCommunity} />
                            ))}
                          </div>
                        </div>
