@@ -168,6 +168,28 @@ export default function Communities() {
     } catch { toast.error('Something went wrong'); }
   }
 
+  async function leaveCommunity(community) {
+    setLeavingId(community.id);
+    try {
+      const memberships = await base44.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: community.id });
+      if (memberships[0]) await base44.entities.UserCommunity.delete(memberships[0].id);
+      await base44.entities.Community.update(community.id, { follower_count: Math.max(0, (community.follower_count || 0) - 1) });
+      setUserCommunityIds(prev => { const s = new Set(prev); s.delete(community.id); return s; });
+      toast.success(`Left ${community.name}`);
+    } catch { toast.error('Something went wrong'); }
+    setLeavingId(null);
+    setLeaveConfirm(null);
+  }
+
+  function togglePin(communityId) {
+    setPinnedCommunityIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(communityId)) newSet.delete(communityId);
+      else newSet.add(communityId);
+      return newSet;
+    });
+  }
+
   function openCommunity(id) {
     setSearchParams({ communityId: String(id) });
   }
