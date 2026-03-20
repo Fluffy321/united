@@ -198,13 +198,23 @@ export default function Profile() {
     navigate(createPageUrl('Settings'));
   };
 
-  const handleShareProfile = () => {
+  const handleShareProfile = async () => {
     const profileUrl = `${window.location.origin}${createPageUrl('Profile')}?id=${profileUser.id}`;
-    if (navigator.share) {
-      navigator.share({ title: displayName, url: profileUrl });
-    } else {
-      navigator.clipboard.writeText(profileUrl);
-      toast.success('Profile link copied!');
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: displayName, url: profileUrl });
+      } else {
+        await navigator.clipboard.writeText(profileUrl);
+        toast.success('Profile link copied!');
+      }
+    } catch (e) {
+      // Fallback to clipboard if share is denied
+      try {
+        await navigator.clipboard.writeText(profileUrl);
+        toast.success('Profile link copied!');
+      } catch {
+        toast.error('Could not share profile');
+      }
     }
   };
 
