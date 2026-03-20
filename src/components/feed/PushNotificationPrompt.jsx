@@ -5,7 +5,7 @@ const STORAGE_KEY = 'push_notif_prompt_dismissed';
 
 export default function PushNotificationPrompt() {
   const [dismissed, setDismissed] = useState(() => {
-    return localStorage.getItem(STORAGE_KEY) === '1' || Notification?.permission === 'granted';
+    return localStorage.getItem(STORAGE_KEY) === '1' || (typeof Notification !== 'undefined' && Notification.permission === 'granted');
   });
   const [requesting, setRequesting] = useState(false);
 
