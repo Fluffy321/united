@@ -137,11 +137,7 @@ export default function Communities() {
     return [...items].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0)).slice(0, 5);
   };
 
-  if (!currentUser) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
-  }
-
-  if (!currentUser.is_profile_complete) {
+  if (currentUser?.is_profile_complete === false) {
     return <ProfileSetup user={currentUser} onComplete={() => base44.auth.me().then(setCurrentUser)} />;
   }
 
