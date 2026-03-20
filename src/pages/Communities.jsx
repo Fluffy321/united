@@ -73,10 +73,15 @@ export default function Communities() {
   const selectedCommunityId = searchParams.get('communityId') || null;
 
   useEffect(() => {
-    base44.auth.me().then(user => {
-      setCurrentUser(user);
-      loadData(user);
-    });
+    base44.auth.me()
+      .then(user => {
+        setCurrentUser(user);
+        loadData(user);
+      })
+      .catch(() => {
+        // Not logged in — load public data without user-specific filters
+        loadData(null);
+      });
   }, []);
 
   async function loadData(user) {
