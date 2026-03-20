@@ -87,12 +87,13 @@ export default function Communities() {
   async function loadData(user) {
     setLoading(true);
     try {
-      const [communities, groups, memberships, groupMembers] = await Promise.allSettled([
+      const queries = [
         base44.entities.Community.list('-follower_count', 80),
         base44.entities.CommunityGroup.list('-member_count', 50),
-        base44.entities.UserCommunity.filter({ user_id: user.id }),
-        base44.entities.GroupMember.filter({ user_id: user.id }),
-      ]);
+        user ? base44.entities.UserCommunity.filter({ user_id: user.id }) : Promise.resolve([]),
+        user ? base44.entities.GroupMember.filter({ user_id: user.id }) : Promise.resolve([]),
+      ];
+      const [communities, groups, memberships, groupMembers] = await Promise.allSettled(queries);
 
       if (communities.status === 'fulfilled') setAllCommunities(communities.value || []);
       if (groups.status === 'fulfilled') setAllGroups(groups.value || []);
