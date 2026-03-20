@@ -108,7 +108,8 @@ export default function MitzvahCircle({ isActive = true }) {
         if (!dismissed) setTimeout(() => setShowLocationPrompt(true), 2000);
       }
     } catch (e) {
-      console.warn('MitzvahCircle: not authenticated', e?.message);
+      // Not logged in — show page as guest
+      setCurrentUser({ id: 'guest', full_name: 'Guest', display_name: 'Guest', role: 'user', is_profile_complete: true });
     }
   };
 
