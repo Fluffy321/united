@@ -119,7 +119,7 @@ export default function MitzvahCircle({ isActive = true }) {
     queryFn: async () => {
       return base44.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 100);
     },
-    enabled: !!currentUser
+    enabled: !!currentUser && currentUser.id !== 'guest'
   });
 
   const userOrigin = useMemo(() => liveLocation || getUserOrigin(currentUser), [liveLocation, currentUser]);
