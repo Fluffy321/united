@@ -111,64 +111,41 @@ export function RichCommunityCard({ community, onOpen, onJoin, onLeave, isJoined
 
 // Featured hero card at the top of Discover
 export function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, isJoining }) {
-  const gradient = getGradient(community.type);
+  if (!community) return null;
 
   return (
-    <div
-      className="bg-white rounded-3xl overflow-hidden cursor-pointer active:scale-[0.99] transition-all"
-      style={{ boxShadow: '0 8px 28px rgba(37,99,235,0.15)', border: '1px solid rgba(226,232,240,0.5)' }}
-    >
-      <div className={`h-32 bg-gradient-to-r ${gradient} relative`}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-white/15 font-black text-7xl">{getInitials(community.name)}</span>
+    <div className="rounded-3xl overflow-hidden bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-600 text-white shadow-lg mb-2">
+      <div className="p-6">
+        <div className="text-[12px] font-semibold text-white/75 mb-2 uppercase tracking-wide">⭐ Featured Community</div>
+        <div className="text-[22px] font-bold leading-tight">{community.name}</div>
+        <div className="text-white/80 mt-2 text-[13px] leading-relaxed line-clamp-2">
+          {community.description_short || community.description_long || 'An active community you should know about.'}
         </div>
-        <div className="absolute top-3 left-3">
-          <span className="bg-amber-400 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full">⭐ Trending</span>
+
+        <div className="flex items-center gap-3 text-[12px] text-white/70 mt-4">
+          <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{(community.follower_count || 0).toLocaleString()} members</span>
+          <span>•</span>
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />Trending now</span>
         </div>
-      </div>
 
-      <div className="p-4 -mt-8">
-        <div className="flex items-start justify-between gap-3">
-          <div className="w-16 h-16 rounded-2xl bg-white shadow-md border border-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
-            {community.logo_url ? (
-              <img src={community.logo_url} alt={community.name} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-[16px] font-black text-slate-700">{getInitials(community.name)}</span>
-            )}
-          </div>
-
+        <div className="flex items-center gap-3 mt-5">
           <button
-            onClick={e => { e.stopPropagation(); if (!isJoined) onJoin(community); }}
-            disabled={isJoining}
-            className={`mt-9 rounded-full px-5 py-2 text-[13px] font-bold transition-all shadow-sm ${
-              isJoined ? 'bg-slate-100 text-slate-700' : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
+            onClick={() => onOpen(community.id)}
+            className="bg-white text-slate-900 rounded-full px-5 py-2.5 text-[13px] font-bold shadow"
           >
-            {isJoining ? '…' : isJoined ? '✓ Joined' : 'Join'}
+            View Community
           </button>
-        </div>
-
-        <button onClick={() => onOpen(community.id)} className="w-full text-left mt-3">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[18px] font-bold text-slate-900">{community.name}</span>
-            {community.is_verified && <CheckCircle className="w-4 h-4 text-blue-500" />}
-          </div>
-          {community.description_short && (
-            <p className="text-[13px] text-slate-500 mt-1 line-clamp-2">{community.description_short}</p>
+          {!isJoined && (
+            <button
+              onClick={e => { e.stopPropagation(); onJoin(community); }}
+              disabled={isJoining}
+              className="bg-white/20 border border-white/30 text-white rounded-full px-5 py-2.5 text-[13px] font-bold"
+            >
+              {isJoining ? '…' : 'Join'}
+            </button>
           )}
-          <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-2">
-            <span className="flex items-center gap-1"><Users className="w-3 h-3" />{(community.follower_count || 0).toLocaleString()} members</span>
-            <span>•</span>
-            <span className="text-green-500 font-medium flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" /> Active now
-            </span>
-          </div>
-          <div className="mt-3 rounded-2xl bg-slate-50 px-3 py-2.5 text-[12px] text-slate-600 leading-relaxed">
-            {community.description_long
-              ? community.description_long.slice(0, 120) + (community.description_long.length > 120 ? '…' : '')
-              : `See announcements, discussions, and upcoming events from ${community.name}.`}
-          </div>
-        </button>
+          {isJoined && <span className="text-white/70 text-[12px] font-semibold">✓ You're a member</span>}
+        </div>
       </div>
     </div>
   );
