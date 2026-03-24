@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Loader2, Plus, Search, X, ChevronRight } from 'lucide-react';
+import { Loader2, Plus, Search, X, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
 import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
-import { MyCommunityCard, DiscoverCommunityCard, SuggestedCommunityCard } from '@/components/communities/CommunityCard';
+import { FeaturedHeroCard, RichCommunityCard, MyRichCommunityCard } from '@/components/communities/RichCommunityCard';
 import { toast } from 'sonner';
 
 const FEATURED_SHULS = ["Young Israel Woodmere", "Chabad of Woodmere", "Beth Shalom", "Shaaray Tefila"];
@@ -245,22 +245,26 @@ export default function Communities() {
     { label: 'Institutions', emoji: '🏛️' },
   ];
 
+  const featuredCommunity = useMemo(() => {
+    return [...allCommunities].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0))[0] || null;
+  }, [allCommunities]);
+
   return (
-    <div className="min-h-screen bg-[#f7f8fc] flex flex-col h-full">
+    <div className="min-h-screen bg-[#F0F4FB] flex flex-col h-full">
 
       {/* Header */}
-      <div className="bg-white border-b border-slate-100 flex-shrink-0 px-5 pt-5 pb-0">
+      <div className="bg-white border-b border-slate-100 flex-shrink-0 px-5 pt-5 pb-0" style={{ boxShadow: '0 1px 8px rgba(15,23,42,0.05)' }}>
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-[22px] font-bold text-slate-900">Communities</h1>
-              <p className="text-[13px] text-slate-400">Discover Jewish communities worldwide</p>
+              <p className="text-[13px] text-slate-400">Discover & connect with your community</p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-full text-[13px] font-bold shadow-md hover:bg-blue-700 transition-colors"
             >
-              <Plus className="w-5 h-5 text-slate-600" />
+              <Plus className="w-4 h-4" /> Create
             </button>
           </div>
 
@@ -270,8 +274,8 @@ export default function Communities() {
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search communities & groups…"
-              className="w-full pl-9 pr-9 py-2 bg-slate-100 rounded-full text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Search communities…"
+              className="w-full pl-9 pr-9 py-2.5 bg-slate-100 rounded-full text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -286,7 +290,7 @@ export default function Communities() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-2.5 text-[13px] font-semibold border-b-2 transition-all ${
+                className={`flex-1 py-2.5 text-[13px] font-bold border-b-2 transition-all ${
                   activeTab === tab.id ? 'text-blue-600 border-blue-600' : 'text-slate-400 border-transparent'
                 }`}
               >
@@ -299,211 +303,194 @@ export default function Communities() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto pb-28 scrollbar-hide">
-        <div className="max-w-2xl mx-auto px-4 pt-4">
+        <div className="max-w-2xl mx-auto px-4 pt-5">
 
           {loading ? (
-            <div className="space-y-3 mt-2">
+            <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="bg-white rounded-3xl p-5 flex items-center gap-4">
-                  <div className="skeleton w-12 h-12 rounded-2xl flex-shrink-0" />
+                <div key={i} className="bg-white rounded-2xl p-4 flex items-center gap-3" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                  <div className="skeleton w-11 h-11 rounded-xl flex-shrink-0" />
                   <div className="flex-1 space-y-2">
-                    <div className="skeleton h-4 w-40 rounded" />
-                    <div className="skeleton h-3 w-56 rounded" />
+                    <div className="skeleton h-4 w-36 rounded" />
+                    <div className="skeleton h-3 w-48 rounded" />
                   </div>
                 </div>
               ))}
             </div>
           ) : activeTab === 'mine' ? (
             <div className="space-y-6">
-              {/* My Communities */}
               {myCommunities.length === 0 && myGroups.length === 0 ? (
-                <div className="bg-white rounded-3xl p-8 text-center shadow-sm mt-2">
-                  <div className="text-5xl mb-3">🌍</div>
+                <div className="bg-white rounded-3xl p-10 text-center" style={{ boxShadow: '0 4px 20px rgba(15,23,42,0.08)' }}>
+                  <div className="text-5xl mb-4">🌍</div>
                   <div className="text-[18px] font-bold text-slate-900 mb-2">No communities yet</div>
-                  <div className="text-[13px] text-slate-500 mb-4">Join some popular groups to get started</div>
+                  <div className="text-[13px] text-slate-500 mb-5">Join some communities to get started</div>
                   <button
                     onClick={() => setActiveTab('discover')}
-                    className="bg-blue-600 text-white rounded-full px-6 py-2.5 text-[13px] font-semibold"
+                    className="bg-blue-600 text-white rounded-full px-6 py-2.5 text-[13px] font-bold shadow-md"
                   >
-                    Browse communities
+                    Browse Communities
                   </button>
                 </div>
               ) : (
-               <>
-                 {myCommunities.length > 0 && (
-                   <section>
-                     <h2 className="text-[16px] font-bold text-slate-900 mb-3">Your Communities</h2>
-                     {Object.entries(groupByType(filterByQuery(myCommunities))).map(([type, items]) => (
-                       <div key={type} className="mb-4">
-                         <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-wide mb-2">{type}</h3>
-                         <div className="space-y-2">
-                           {items.map(c => (
-                             <MyCommunityCard 
-                               key={c.id} 
-                               community={c} 
-                               onOpen={openCommunity}
-                               isPinned={pinnedCommunityIds.has(c.id)}
-                               onPin={togglePin}
-                               activity={getActivityIndicator(c)}
-                             />
-                           ))}
-                         </div>
-                       </div>
-                     ))}
-                   </section>
-                 )}
+                <>
+                  {myCommunities.length > 0 && (
+                    <section>
+                      <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-[16px] font-bold text-slate-900">Your Communities</h2>
+                        <span className="text-[12px] font-semibold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">{myCommunities.length}</span>
+                      </div>
+                      <div className="space-y-2.5">
+                        {filterByQuery(myCommunities).map(c => (
+                          <MyRichCommunityCard
+                            key={c.id}
+                            community={c}
+                            onOpen={openCommunity}
+                            activity={getActivityIndicator(c)}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  )}
 
-                 {myGroups.length > 0 && (
-                   <section>
-                     <h2 className="text-[16px] font-bold text-slate-900 mb-3">Your Groups</h2>
-                     {Object.entries(groupByType(filterByQuery(myGroups))).map(([type, items]) => (
-                       <div key={type} className="mb-4">
-                         <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-wide mb-2">{type}</h3>
-                         <div className="space-y-2">
-                           {items.map(g => (
-                             <button key={g.id} onClick={() => setSelectedGroup(g)} className="w-full bg-white rounded-2xl p-3 text-left shadow-sm active:scale-[0.99] transition-transform">
-                               <div className="flex items-center gap-3">
-                                 <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-sm font-bold text-slate-700 flex-shrink-0">{g.name?.slice(0, 2).toUpperCase()}</div>
-                                 <div className="flex-1 min-w-0">
-                                   <div className="font-bold text-[13px] text-slate-900 line-clamp-2">{g.name}</div>
-                                   <div className="text-[11px] text-slate-400 mt-0.5">{g.description || `${g.member_count || 0} members`}</div>
-                                 </div>
-                                 <ChevronRight className="w-5 h-5 text-slate-300 flex-shrink-0" />
-                               </div>
-                             </button>
-                           ))}
-                         </div>
-                       </div>
-                     ))}
-                   </section>
-                 )}
-               </>
+                  {myGroups.length > 0 && (
+                    <section>
+                      <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-[16px] font-bold text-slate-900">Your Groups</h2>
+                        <span className="text-[12px] font-semibold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">{myGroups.length}</span>
+                      </div>
+                      <div className="space-y-2.5">
+                        {filterByQuery(myGroups).map(g => (
+                          <div key={g.id} onClick={() => setSelectedGroup(g)} className="bg-white rounded-2xl p-4 cursor-pointer active:scale-[0.99] transition-all flex items-center gap-3" style={{ boxShadow: '0 2px 8px rgba(15,23,42,0.06)', border: '1px solid rgba(226,232,240,0.8)' }}>
+                            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center flex-shrink-0">
+                              <span className="text-white font-black text-[12px]">{g.name?.slice(0,2).toUpperCase()}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-bold text-[14px] text-slate-900 truncate">{g.name}</div>
+                              <div className="text-[11px] text-slate-400 mt-0.5">{g.member_count || 0} members</div>
+                            </div>
+                            <span className="text-[11px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">Group</span>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </>
               )}
-
-              {/* Explore Categories */}
-              <section>
-                <h3 className="text-[16px] font-bold text-slate-900 mb-3">Explore Communities</h3>
-                <div className="grid grid-cols-3 gap-3">
-                  {EXPLORE_CATEGORIES.map(cat => (
-                    <button
-                      key={cat.label}
-                      onClick={() => setActiveTab('discover')}
-                      className="bg-white rounded-3xl p-4 text-center shadow-sm active:scale-[0.97] transition-transform flex flex-col items-center gap-1.5"
-                    >
-                      <span className="text-2xl">{cat.emoji}</span>
-                      <span className="text-[12px] font-semibold text-slate-700">{cat.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </section>
             </div>
           ) : (
             /* Discover Tab */
-            <div className="space-y-5">
+            <div className="space-y-6">
+              {/* Featured Hero */}
+              {!searchQuery && featuredCommunity && (
+                <section>
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <h2 className="text-[14px] font-bold text-slate-700">Trending Community</h2>
+                  </div>
+                  <FeaturedHeroCard
+                    community={featuredCommunity}
+                    onOpen={openCommunity}
+                    onJoin={joinCommunity}
+                    isJoined={userCommunityIds.has(featuredCommunity.id)}
+                    isJoining={joiningId === featuredCommunity.id}
+                  />
+                </section>
+              )}
+
               {/* Category Filter Pills */}
-              <div className="bg-white rounded-2xl p-3 shadow-sm sticky top-0 z-10">
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className={`px-4 py-2 rounded-full text-[12px] font-bold whitespace-nowrap transition-all flex-shrink-0 ${
+                    !selectedCategory ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'
+                  }`}
+                >
+                  All
+                </button>
+                {['Shul', 'School', 'Yeshiva', 'Seminary', 'Camp', 'Other'].map(cat => (
                   <button
-                    onClick={() => setSelectedCategory(null)}
-                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
-                      !selectedCategory
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    key={cat}
+                    onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+                    className={`px-4 py-2 rounded-full text-[12px] font-bold whitespace-nowrap transition-all flex-shrink-0 ${
+                      selectedCategory === cat ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'
                     }`}
                   >
-                    All
+                    {cat}
                   </button>
-                  {['Shul', 'School', 'Yeshiva', 'Seminary', 'Camp', 'Local Life', 'Chessed', 'Social', 'Learning'].map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
-                        selectedCategory === cat
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
+                ))}
               </div>
 
-              {/* Suggested for You */}
-              {!selectedCategory && getSuggestedCommunities(filterByQuery(discoverCommunities), new Set(), currentUser).length > 0 && (
-                <section>
-                  <h2 className="text-[16px] font-bold text-slate-900 mb-3">✨ Suggested for You</h2>
-                  <div className="space-y-3">
-                    {getSuggestedCommunities(filterByQuery(discoverCommunities), new Set(), currentUser).slice(0, 5).map(c => (
-                      <SuggestedCommunityCard key={c.id} community={c} onOpen={openCommunity} />
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Popular Communities */}
-              {!selectedCategory && getTrendingCommunities(filterByQuery(discoverCommunities)).length > 0 && (
-                <section>
-                  <h2 className="text-[16px] font-bold text-slate-900 mb-3">🔥 Popular</h2>
-                  <div className="space-y-2.5">
-                    {getTrendingCommunities(filterByQuery(discoverCommunities)).map(c => (
-                      <DiscoverCommunityCard key={c.id} community={c} onOpen={openCommunity} />
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* All Communities by Type */}
+              {/* Community List */}
               {(() => {
                 const filtered = filterByQuery(discoverCommunities);
                 const byCategory = filterByCategory(filtered, selectedCategory);
-                const grouped = groupByType(byCategory);
-                const hasItems = Object.values(grouped).some(arr => arr.length > 0);
+                const sorted = [...byCategory].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0));
 
-                return hasItems ? (
-                  <>
-                    <h2 className="text-[16px] font-bold text-slate-900 mb-3">All Communities</h2>
-                    {Object.entries(grouped).map(([type, items]) => (
-                      <section key={type}>
-                        <h3 className="text-[14px] font-bold text-slate-600 uppercase tracking-wide mb-2.5">{type}</h3>
-                        <div className="space-y-2">
-                          {items.slice(0, 10).map(c => (
-                            <DiscoverCommunityCard key={c.id} community={c} onOpen={openCommunity} />
-                          ))}
-                        </div>
-                      </section>
-                    ))}
-                  </>
+                return sorted.length > 0 ? (
+                  <section>
+                    <h2 className="text-[16px] font-bold text-slate-900 mb-3">
+                      {selectedCategory ? `${selectedCategory} Communities` : '🔥 All Communities'}
+                    </h2>
+                    <div className="space-y-3">
+                      {sorted.map(c => (
+                        <RichCommunityCard
+                          key={c.id}
+                          community={c}
+                          onOpen={openCommunity}
+                          onJoin={joinCommunity}
+                          isJoined={userCommunityIds.has(c.id)}
+                          isJoining={joiningId === c.id}
+                          activity={getActivityIndicator(c)}
+                        />
+                      ))}
+                    </div>
+                  </section>
                 ) : (
-                  <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-                    <p className="font-bold text-slate-900">No communities in this category</p>
+                  <div className="bg-white rounded-2xl p-8 text-center">
+                    <p className="font-bold text-slate-900">No communities found</p>
                     <p className="text-[12px] text-slate-400 mt-1">Try a different filter</p>
                   </div>
                 );
               })()}
 
-              {/* Groups Section */}
-              {discoverGroups.length > 0 && (
+              {/* Groups */}
+              {discoverGroups.length > 0 && !selectedCategory && (
                 <section>
-                  <h2 className="text-[14px] font-bold text-slate-600 uppercase tracking-wide mb-2.5">Groups</h2>
-                  <div className="space-y-2">
+                  <h2 className="text-[16px] font-bold text-slate-900 mb-3">👥 Groups</h2>
+                  <div className="space-y-2.5">
                     {filterByQuery(discoverGroups).slice(0, 10).map(g => (
-                      <div key={g.id} onClick={() => setSelectedGroup(g)} className="bg-white rounded-2xl p-3 shadow-sm cursor-pointer active:scale-[0.99] transition-transform">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-sm font-bold text-slate-700 flex-shrink-0">
-                            {g.name?.slice(0, 2).toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-bold text-[13px] text-slate-900 line-clamp-2">{g.name}</div>
-                            <div className="text-[11px] text-slate-400 mt-0.5">{g.description || `${g.member_count || 0} members`}</div>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-slate-300 flex-shrink-0" />
+                      <div key={g.id} onClick={() => setSelectedGroup(g)} className="bg-white rounded-2xl p-4 cursor-pointer active:scale-[0.99] transition-all flex items-center gap-3" style={{ boxShadow: '0 2px 8px rgba(15,23,42,0.06)', border: '1px solid rgba(226,232,240,0.8)' }}>
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-black text-[12px]">{g.name?.slice(0,2).toUpperCase()}</span>
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-[14px] text-slate-900 truncate">{g.name}</div>
+                          <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">{g.description || `${g.member_count || 0} members`}</div>
+                        </div>
+                        <button
+                          onClick={e => { e.stopPropagation(); joinGroup(g); }}
+                          className="flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-bold bg-blue-600 text-white"
+                        >
+                          Join
+                        </button>
                       </div>
                     ))}
                   </div>
                 </section>
               )}
+
+              {/* Create CTA */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-3xl p-6 text-center border border-blue-100">
+                <div className="text-3xl mb-2">🏛️</div>
+                <h3 className="text-[16px] font-bold text-slate-900 mb-1">Start a Community</h3>
+                <p className="text-[12px] text-slate-500 mb-4">Bring your shul, school, or group online</p>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-blue-600 text-white rounded-full px-6 py-2.5 text-[13px] font-bold shadow-md hover:bg-blue-700 transition-colors"
+                >
+                  Create Community
+                </button>
+              </div>
             </div>
           )}
         </div>
