@@ -115,15 +115,32 @@ export default function Feed() {
     } catch (e) {}
   };
 
+  const FEED_CACHE_KEY = 'feed_posts_cache';
+
+  const getCachedPosts = () => {
+    try {
+      const cached = localStorage.getItem(FEED_CACHE_KEY);
+      return cached ? JSON.parse(cached) : [];
+    } catch { return []; }
+  };
+
+  const [cachedPosts, setCachedPosts] = useState(getCachedPosts);
+
   const { data: posts = [], isLoading, isError, refetch: refetchPosts } = useQuery({
     queryKey: ['unified-posts'],
-    queryFn: () => base44.entities.UnifiedPost.list('-created_date', 40),
+    queryFn: async () => {
+      const result = await base44.entities.UnifiedPost.list('-created_date', 40);
+      try { localStorage.setItem(FEED_CACHE_KEY, JSON.stringify(result)); } catch {}
+      setCachedPosts(result);
+      return result;
+    },
     staleTime: 3600000,
     gcTime: 7200000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
-    retry: 0,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
     enabled: !!currentUser
   });
 
@@ -196,7 +213,8 @@ export default function Feed() {
     );
   }
 
-  const visiblePosts = posts.filter(p => {
+  const activePosts = posts.length > 0 ? posts : cachedPosts;
+  const visiblePosts = activePosts.filter(p => {
     if (p.type === 'dating') return false;
     if (selectedNeighborhood !== 'All Five Towns') {
       const loc = (p.location_text || p.city || '').toLowerCase();
@@ -317,15 +335,29 @@ export default function Feed() {
             ))}
           </div>
         )}
-        {activeTab !== 'events' && !isLoading && isError && (
-          <div className="text-center py-12 bg-white rounded-2xl cursor-pointer" onClick={() => refetchPosts()}>
-            <span className="text-2xl">⚠️</span>
-            <p className="text-slate-700 font-semibold mt-2">Feed failed to load</p>
-            <p className="text-[13px] text-blue-600 mt-1 font-semibold">Tap to retry</p>
+        {activeTab !== 'events' && isError && cachedPosts.length === 0 && (
+          <div className="space-y-3">
+            <p className="text-[12px] text-slate-400 text-center">Still loading posts...</p>
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white rounded-[16px] p-4">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="skeleton w-8 h-8 rounded-full" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="skeleton h-3 w-24 rounded" />
+                    <div className="skeleton h-2.5 w-16 rounded" />
+                  </div>
+                </div>
+                <div className="skeleton h-3 w-full rounded mb-2" />
+                <div className="skeleton h-3 w-4/5 rounded" />
+              </div>
+            ))}
           </div>
         )}
-        {activeTab !== 'events' && !isLoading && !isError && (
+        {activeTab !== 'events' && (isError ? cachedPosts.length > 0 : !isLoading) && (
           <div className="space-y-2.5">
+            {isError && cachedPosts.length > 0 && (
+              <p className="text-[12px] text-slate-400 text-center">Showing cached posts — still loading...</p>
+            )}
             {feedPosts.length === 0 ? (
               <div className="bg-white rounded-2xl p-8 text-center">
                 <p className="text-3xl mb-3">💬</p>
