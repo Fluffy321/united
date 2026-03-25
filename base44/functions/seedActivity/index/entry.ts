@@ -177,8 +177,7 @@ Deno.serve(async (req) => {
 
         await base44.asServiceRole.entities.Comment.create({
           post_id: post.id,
-          post_type: "feed",
-          content: comment,
+          body: comment,
           author_id: user.id,
           author_name: user.name,
           author_age_range: user.age_range,
