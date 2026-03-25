@@ -8,6 +8,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import PublicProfile from '@/pages/PublicProfile';
+import Events from '@/pages/Events';
 import CommunityMap from '@/pages/CommunityMap';
 import ThankYou from '@/pages/ThankYou';
 
@@ -61,6 +62,7 @@ const AuthenticatedApp = () => {
       <Route path="/PublicProfile" element={<PublicProfile />} />
       <Route path="/ThankYou" element={<ThankYou />} />
       <Route path="/CommunityMap" element={<CommunityMap />} />
+      <Route path="/Events" element={<Events />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

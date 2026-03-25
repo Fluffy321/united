@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Eye, EyeOff, Ban, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Ban, CheckCircle2, AlertTriangle, Trash2, ExternalLink } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -64,6 +64,18 @@ export default function AdminModerationQueue() {
     }
   });
 
+  const deleteContentMutation = useMutation({
+    mutationFn: async ({ contentType, contentId }) => {
+      if (contentType === 'post') await base44.entities.UnifiedPost.delete(contentId);
+      else if (contentType === 'request') await base44.entities.MitzvahRequest.delete(contentId);
+      else if (contentType === 'comment') await base44.entities.Comment.delete(contentId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-reports'] });
+      toast.success('Content deleted');
+    }
+  });
+
   const resolveReportMutation = useMutation({
     mutationFn: async (reportId) => {
       await base44.entities.Report.update(reportId, { 
@@ -72,7 +84,7 @@ export default function AdminModerationQueue() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin-reports']);
+      queryClient.invalidateQueries({ queryKey: ['admin-reports'] });
       toast.success('Report marked as resolved');
     }
   });
@@ -136,7 +148,7 @@ export default function AdminModerationQueue() {
                       <span>Reported {formatDistanceToNow(new Date(report.created_date), { addSuffix: true })}</span>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
                         variant="outline"
@@ -144,6 +156,14 @@ export default function AdminModerationQueue() {
                       >
                         <EyeOff className="w-4 h-4 mr-2" />
                         Hide Content
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => deleteContentMutation.mutate({ contentType: report.content_type, contentId: report.reported_content_id })}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
                       </Button>
                       <Button
                         size="sm"

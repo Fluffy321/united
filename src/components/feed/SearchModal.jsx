@@ -3,9 +3,11 @@ import { Search, X, FileText, HandHeart, Users, User, Calendar } from 'lucide-re
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import UserAvatar from '@/components/common/UserAvatar';
 
 const TABS = [
+
   { id: 'all', label: 'All' },
   { id: 'posts', label: 'Posts', icon: FileText },
   { id: 'people', label: 'People', icon: User },
@@ -14,6 +16,7 @@ const TABS = [
 ];
 
 export default function SearchModal({ open, onOpenChange, posts = [] }) {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
 
@@ -131,7 +134,7 @@ export default function SearchModal({ open, onOpenChange, posts = [] }) {
               {tabResults.posts?.length > 0 && (
                 <Section title="Posts" count={tabResults.posts.length}>
                   {tabResults.posts.map(post => (
-                    <div key={post.id} className="flex items-start gap-2.5 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+                    <div key={post.id} onClick={() => { onOpenChange(false); }} className="flex items-start gap-2.5 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
                       <UserAvatar name={post.user_name} size="sm" />
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-slate-900 line-clamp-1">{post.title || post.body?.substring(0, 50)}</p>
@@ -146,7 +149,7 @@ export default function SearchModal({ open, onOpenChange, posts = [] }) {
               {tabResults.people?.length > 0 && (
                 <Section title="People" count={tabResults.people.length}>
                   {tabResults.people.map(u => (
-                    <div key={u.id} className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+                    <div key={u.id} onClick={() => { navigate(`/PublicProfile?id=${u.id}`); onOpenChange(false); }} className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
                       <UserAvatar user={u} size="sm" />
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-slate-900">{u.display_name || u.full_name}</p>
@@ -161,7 +164,7 @@ export default function SearchModal({ open, onOpenChange, posts = [] }) {
               {tabResults.communities?.length > 0 && (
                 <Section title="Communities" count={tabResults.communities.length}>
                   {tabResults.communities.map(c => (
-                    <div key={c.id} className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+                    <div key={c.id} onClick={() => { navigate(`/Communities?communityId=${c.id}`); onOpenChange(false); }} className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
                       <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 border border-blue-100 overflow-hidden">
                         {c.logo_url ? <img src={c.logo_url} className="w-full h-full object-cover" /> : <span className="text-blue-600 font-bold text-[12px]">{c.name?.charAt(0)}</span>}
                       </div>
@@ -178,7 +181,7 @@ export default function SearchModal({ open, onOpenChange, posts = [] }) {
               {tabResults.events?.length > 0 && (
                 <Section title="Events" count={tabResults.events.length}>
                   {tabResults.events.map(ev => (
-                    <div key={ev.id} className="flex items-start gap-2.5 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+                    <div key={ev.id} onClick={() => { navigate('/Events'); onOpenChange(false); }} className="flex items-start gap-2.5 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
                       <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0 border border-purple-100">
                         <Calendar className="w-4 h-4 text-purple-500" />
                       </div>

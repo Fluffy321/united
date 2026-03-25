@@ -241,6 +241,17 @@ export default function Feed() {
 
   const feedPosts = (() => {
     const sorted = [...visiblePosts].sort((a, b) => trendingScore(b) - trendingScore(a));
+    if (activeTab === 'for_you') {
+      const userInterests = currentUser?.interests || [];
+      const userCity = currentUser?.cityPreset || '';
+      return sorted.filter(p => {
+        if (userInterests.length === 0 && !userCity) return true;
+        const bodyLower = (p.body || '').toLowerCase();
+        const interestMatch = userInterests.some(i => bodyLower.includes(i.toLowerCase()));
+        const cityMatch = userCity && (p.city || p.location_text || '').toLowerCase().includes(userCity.toLowerCase());
+        return interestMatch || cityMatch || (p.user_id === currentUser?.id);
+      }).slice(0, 40);
+    }
     if (activeTab === 'trending') return sorted.slice(0, 40);
     if (activeTab === 'chessed') return sorted.filter(p => p.type === 'help' || p.board === 'help');
     if (activeTab === 'learning') return sorted.filter(p => p.type === 'news' || /torah|parsha|daf|halacha|shiur/i.test(p.body || ''));
