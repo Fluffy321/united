@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2, Camera, LogOut, Shield, Bell, UserCircle, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Camera, LogOut, Shield, Bell, UserCircle, X, Trash2 } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel
+} from '@/components/ui/alert-dialog';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +48,8 @@ export default function Settings() {
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteInput, setDeleteInput] = useState('');
   const [notifications, setNotifications] = useState({
     messages: true,
     comments: true,
@@ -148,20 +154,15 @@ export default function Settings() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!window.confirm('Are you sure? This will permanently delete your account and all your data. This cannot be undone.')) {
-      return;
-    }
-    if (!window.confirm('Type "DELETE" to confirm account deletion. This is your last warning.')) {
-      return;
-    }
-
+    if (deleteInput !== 'DELETE') return;
+    setShowDeleteDialog(false);
     setIsSaving(true);
     try {
       await base44.functions.invoke('deleteUserAccount', { userId: currentUser.id });
       toast.success('Account deleted. Logging out...');
       setTimeout(() => base44.auth.logout(), 1500);
     } catch (error) {
-      toast.error('Failed to delete account');
+      toast.error('Failed to delete account. Please contact support.');
       setIsSaving(false);
     }
   };
@@ -436,19 +437,50 @@ export default function Settings() {
                 Log Out
               </Button>
 
-              <Button 
-                variant="outline" 
-                onClick={handleDeleteAccount}
+              <Button
+                variant="outline"
+                onClick={() => { setDeleteInput(''); setShowDeleteDialog(true); }}
                 disabled={isSaving}
                 className="w-full text-red-700 border-red-300 hover:bg-red-50 gap-2"
               >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : '🗑️'}
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 Delete Account
               </Button>
             </div>
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Delete Account Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-700">Delete your account?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>This will <strong>permanently delete</strong> your account, all your posts, messages, and community history. This cannot be undone.</p>
+              <p className="text-slate-700 font-medium">Type <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-red-700">DELETE</span> to confirm:</p>
+              <input
+                type="text"
+                value={deleteInput}
+                onChange={e => setDeleteInput(e.target.value)}
+                placeholder="Type DELETE here"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-red-400 mt-1"
+                autoComplete="off"
+              />
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <button
+              onClick={handleDeleteAccount}
+              disabled={deleteInput !== 'DELETE'}
+              className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold disabled:opacity-40 hover:bg-red-700 transition-colors"
+            >
+              Permanently Delete
+            </button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

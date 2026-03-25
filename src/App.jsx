@@ -1,9 +1,10 @@
 import { Toaster } from "@/components/ui/toaster"
+import { AnimatePresence, motion } from 'framer-motion';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -20,8 +21,21 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
+const PageTransition = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 8 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -8 }}
+    transition={{ duration: 0.15, ease: 'easeOut' }}
+    style={{ minHeight: '100%' }}
+  >
+    {children}
+  </motion.div>
+);
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const location = useLocation();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -42,29 +56,27 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
-      <Route path="/" element={
-        <LayoutWrapper currentPageName={mainPageKey}>
-          <MainPage />
-        </LayoutWrapper>
-      } />
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
-          }
-        />
-      ))}
-      <Route path="/PublicProfile" element={<PublicProfile />} />
-      <Route path="/ThankYou" element={<ThankYou />} />
-      <Route path="/CommunityMap" element={<CommunityMap />} />
-      <Route path="/Events" element={<Events />} />
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><LayoutWrapper currentPageName={mainPageKey}><MainPage /></LayoutWrapper></PageTransition>} />
+        {Object.entries(Pages).map(([path, Page]) => (
+          <Route
+            key={path}
+            path={`/${path}`}
+            element={
+              <PageTransition>
+                <LayoutWrapper currentPageName={path}><Page /></LayoutWrapper>
+              </PageTransition>
+            }
+          />
+        ))}
+        <Route path="/PublicProfile" element={<PageTransition><PublicProfile /></PageTransition>} />
+        <Route path="/ThankYou" element={<PageTransition><ThankYou /></PageTransition>} />
+        <Route path="/CommunityMap" element={<PageTransition><CommunityMap /></PageTransition>} />
+        <Route path="/Events" element={<PageTransition><Events /></PageTransition>} />
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </AnimatePresence>
   );
 };
 

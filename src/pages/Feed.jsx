@@ -176,26 +176,32 @@ export default function Feed() {
 
   const handleLike = async (postId) => {
     const isLiked = userLikes.includes(postId);
-    const post = posts.find(p => p.id === postId);
+    const post = (queryClient.getQueryData(['unified-posts']) || posts).find(p => p.id === postId);
+    // Optimistic UI update — instant feedback
+    setUserLikes(prev => isLiked ? prev.filter(id => id !== postId) : [...prev, postId]);
+    queryClient.setQueryData(['unified-posts'], old =>
+      old?.map(p => p.id === postId
+        ? { ...p, likes_count: Math.max(0, (p.likes_count || 0) + (isLiked ? -1 : 1)) }
+        : p
+      )
+    );
+    // Background sync
     if (isLiked) {
       const like = await base44.entities.Like.filter({ post_id: postId, user_id: currentUser.id });
       if (like[0]) await base44.entities.Like.delete(like[0].id);
-      await base44.entities.UnifiedPost.update(postId, { likes_count: Math.max(0, (post.likes_count || 0) - 1) });
-      setUserLikes(prev => prev.filter(id => id !== postId));
     } else {
       await base44.entities.Like.create({ post_id: postId, user_id: currentUser.id });
-      await base44.entities.UnifiedPost.update(postId, { likes_count: (post.likes_count || 0) + 1 });
-      setUserLikes(prev => [...prev, postId]);
-      if (post.user_id && post.user_id !== currentUser.id) {
+      if (post?.user_id && post.user_id !== currentUser.id) {
         base44.entities.Notification.create({
-          user_id: post.user_id,
-          type: 'like',
+          user_id: post.user_id, type: 'like',
           message: `${currentUser.display_name || currentUser.full_name} liked your post`,
           read: false
         });
       }
     }
-    queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+    base44.entities.UnifiedPost.update(postId, {
+      likes_count: Math.max(0, (post?.likes_count || 0) + (isLiked ? -1 : 1))
+    });
   };
 
   const handleReport = (id, type) => {
