@@ -1,6 +1,5 @@
 import React from 'react';
 import UserAvatar from '@/components/common/UserAvatar';
-import { ShieldCheck } from 'lucide-react';
 
 export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onReport, onBlock }) {
   return (
@@ -45,8 +44,8 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
             </span>
           )}
           {user.is_verified && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
-              <ShieldCheck className="w-3.5 h-3.5" /> Verified Member
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+              ✓ Verified
             </span>
           )}
           {(user.current_streak || 0) > 0 && (
