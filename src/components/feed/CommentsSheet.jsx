@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 
-export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, currentUser }) {
+export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, currentUser, blockedIds = [] }) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -20,7 +20,7 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
   const loadComments = async () => {
     setLoading(true);
     const allComments = await base44.entities.Comment.filter({ post_id: postId }, '-created_date');
-    setComments(allComments);
+    setComments(allComments.filter(c => !blockedIds.includes(c.author_id)));
     setLoading(false);
   };
 

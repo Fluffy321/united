@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2, Users } from 'lucide-react';
+import { MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2, Users, Ban } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import UserAvatar from '@/components/common/UserAvatar';
 import HelperBadge from '@/components/profile/HelperBadge';
@@ -108,7 +108,7 @@ function InterestedButton({ post, currentUser }) {
   );
 }
 
-export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, liked, communities }) {
+export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, onBlock, blockedIds = [], liked, communities }) {
   const isOwner = currentUser?.id === post.user_id;
   const communityName = post.community_name || (communities && post.community_id
     ? communities.find(c => c.id === post.community_id)?.name
@@ -236,9 +236,16 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
                   <Trash2 className="w-4 h-4 mr-2" />Delete
                 </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem onClick={() => onReport(post.id, 'post')}>
-                  <Flag className="w-4 h-4 mr-2" />Report
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem onClick={() => onReport(post.id, 'post')}>
+                    <Flag className="w-4 h-4 mr-2" />Report
+                  </DropdownMenuItem>
+                  {onBlock && (
+                    <DropdownMenuItem onClick={() => onBlock(post.user_id)} className="text-red-600">
+                      <Ban className="w-4 h-4 mr-2" />Block User
+                    </DropdownMenuItem>
+                  )}
+                </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -441,6 +448,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         isOpen={commentsOpen}
         onClose={() => setCommentsOpen(false)}
         currentUser={currentUser}
+        blockedIds={blockedIds}
       />
     </motion.div>
   );

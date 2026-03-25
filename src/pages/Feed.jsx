@@ -36,6 +36,7 @@ export default function Feed() {
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [pinnedPrompt, setPinnedPrompt] = useState(null);
   const [userLikes, setUserLikes] = useState([]);
+  const [blockedIds, setBlockedIds] = useState([]);
   const [showFAB, setShowFAB] = useState(false);
   const [activeTab, setActiveTab] = useState('trending');
   const [showAlertModal, setShowAlertModal] = useState(false);
@@ -60,7 +61,7 @@ export default function Feed() {
       try {
         const user = await base44.auth.me();
         setCurrentUser(user);
-        await Promise.allSettled([loadPinnedPrompt(), loadUserLikes(user), loadFeedPrompts()]);
+        await Promise.allSettled([loadPinnedPrompt(), loadUserLikes(user), loadFeedPrompts(), loadBlocks(user)]);
         // Show onboarding once per user if not yet done
         const onboardingKey = `onboarding_done_${user.id}`;
         if (user.is_profile_complete && !user.onboarding_complete && !localStorage.getItem(onboardingKey)) {
@@ -106,6 +107,19 @@ export default function Feed() {
       const prompts = await base44.entities.DailyPrompt.list('-created_date', 5);
       setFeedPrompts(prompts);
     } catch (e) {}
+  };
+
+  const loadBlocks = async (user) => {
+    try {
+      const blocks = await base44.entities.Block.filter({ blocker_id: user.id });
+      setBlockedIds(blocks.map(b => b.blocked_id));
+    } catch (e) {}
+  };
+
+  const handleBlock = async (userId) => {
+    await base44.entities.Block.create({ blocker_id: currentUser.id, blocked_id: userId });
+    setBlockedIds(prev => [...prev, userId]);
+    toast.success('User blocked');
   };
 
   const loadUserLikes = async (user) => {
@@ -216,6 +230,7 @@ export default function Feed() {
   const activePosts = posts.length > 0 ? posts : cachedPosts;
   const visiblePosts = activePosts.filter(p => {
     if (p.type === 'dating') return false;
+    if (blockedIds.includes(p.user_id)) return false;
     if (selectedNeighborhood !== 'All Five Towns') {
       const loc = (p.location_text || p.city || '').toLowerCase();
       if (loc && !loc.includes(selectedNeighborhood.toLowerCase())) return false;
@@ -379,6 +394,8 @@ export default function Feed() {
                  onLike={handleLike}
                  onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
                  onDelete={(id) => deleteMutation.mutate(id)}
+                 onBlock={handleBlock}
+                 blockedIds={blockedIds}
                  onReport={handleReport}
                  communities={communityGroups}
                 />
