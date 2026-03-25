@@ -61,46 +61,45 @@ function setCache(list) {
 }
 
 function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
-  const initials = getInitials(community.name);
+  const initials = community.name?.slice(0, 2)?.toUpperCase() || 'CO';
   const typeColor = TYPE_COLORS[community.type] || 'bg-slate-100 text-slate-600';
   return (
     <div
+      className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 hover:shadow-md transition flex flex-col gap-3 cursor-pointer"
       onClick={() => onOpen(community.id)}
-      className="bg-white rounded-2xl p-3.5 cursor-pointer hover:shadow-md transition-all flex flex-col gap-2"
-      style={{ border: '1px solid #E8EDF5', boxShadow: '0 1px 4px rgba(15,23,42,0.05)' }}
     >
-      <div className="flex items-center gap-2.5">
-        {community.logo_url ? (
-          <img src={community.logo_url} alt="" className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
-        ) : (
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-black text-[11px]">{initials}</span>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          {community.logo_url ? (
+            <img src={community.logo_url} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-200 flex items-center justify-center text-sm font-bold text-slate-700 flex-shrink-0">
+              {initials}
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="font-semibold text-[13px] text-slate-900 truncate">{community.name}</div>
+            <div className="text-[11px] text-slate-500 truncate mt-0.5">{community.neighborhood || community.type || 'Community'}</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">{(community.follower_count || 0).toLocaleString()} members</div>
           </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="font-bold text-[13px] text-slate-900 leading-tight truncate">{community.name}</div>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${typeColor}`}>{community.type}</span>
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 text-[11px] text-slate-400">
-          <Users className="w-3 h-3" />
-          <span>{(community.follower_count || 0).toLocaleString()}</span>
         </div>
         {isJoined ? (
-          <span className="text-[11px] font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">Joined ✓</span>
+          <span className="flex-shrink-0 text-[11px] font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">Joined ✓</span>
         ) : (
           <button
             onClick={e => { e.stopPropagation(); onJoin(community); }}
             disabled={isJoining}
-            className="text-[11px] font-bold bg-blue-600 text-white px-3 py-1.5 rounded-full hover:bg-blue-700 transition-colors disabled:opacity-60 flex items-center gap-1"
+            className="flex-shrink-0 rounded-full bg-blue-600 text-white text-[11px] font-semibold px-3 py-1.5 hover:bg-blue-700 transition-colors disabled:opacity-60 flex items-center gap-1"
           >
             {isJoining ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Join'}
           </button>
         )}
       </div>
+      {community.description_short && (
+        <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+          {community.description_short}
+        </p>
+      )}
     </div>
   );
 }
