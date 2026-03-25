@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import DonationModal from './DonationModal';
+import PaymentModal from './PaymentModal';
 
 export default function PaymentButton() {
   const [showDonation, setShowDonation] = useState(false);
@@ -15,7 +15,7 @@ export default function PaymentButton() {
         <Heart className="w-4 h-4 fill-current" />
         Support Community
       </Button>
-      <DonationModal open={showDonation} onOpenChange={setShowDonation} />
+      <PaymentModal open={showDonation} onOpenChange={setShowDonation} type="donation" defaultAmount={25} />
     </>
   );
 }

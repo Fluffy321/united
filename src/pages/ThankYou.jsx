@@ -57,7 +57,7 @@ export default function ThankYou() {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-slate-600">Amount</span>
-                <span className="font-semibold text-slate-900">${(transaction.amount / 100).toFixed(2)}</span>
+                <span className="font-semibold text-slate-900">${parseFloat(transaction.amount).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600">Type</span>

@@ -1,5 +1,15 @@
-import React, { useState } from 'react';
-import { X, Loader2, Heart } from 'lucide-react';
+import PaymentModal from './PaymentModal';
+
+export default function DonationModal({ open, onOpenChange }) {
+  return (
+    <PaymentModal
+      open={open}
+      onOpenChange={onOpenChange}
+      type="donation"
+      defaultAmount={25}
+    />
+  );
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';

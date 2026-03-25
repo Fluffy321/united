@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, Clock, Plus, ChevronLeft, Users } from 'lucide-react';
+import { Calendar, MapPin, Clock, Plus, ChevronLeft, Users, Ticket } from 'lucide-react';
+import PaymentModal from '@/components/payments/PaymentModal';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +27,7 @@ export default function Events() {
   const [activeFilter, setActiveFilter] = useState('upcoming');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [paymentEvent, setPaymentEvent] = useState(null);
 
   React.useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -181,27 +183,49 @@ export default function Events() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <span className="text-[12px] text-slate-400">by {event.user_name}</span>
-                  {currentUser && (
-                    <button
-                      onClick={() => rsvpMutation.mutate({ event, isGoing })}
-                      disabled={rsvpMutation.isPending}
-                      className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all ${
-                        isGoing
-                          ? 'bg-green-100 text-green-700 border border-green-200'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
-                      }`}
-                    >
-                      {isGoing ? '✓ Going' : 'RSVP'}
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {event.ticket_price > 0 && currentUser && (
+                      <button
+                        onClick={() => setPaymentEvent(event)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-bold bg-purple-600 text-white hover:bg-purple-700 transition-all"
+                      >
+                        <Ticket className="w-3 h-3" /> ${event.ticket_price}
+                      </button>
+                    )}
+                    {currentUser && (
+                      <button
+                        onClick={() => rsvpMutation.mutate({ event, isGoing })}
+                        disabled={rsvpMutation.isPending}
+                        className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all ${
+                          isGoing
+                            ? 'bg-green-100 text-green-700 border border-green-200'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
+                      >
+                        {isGoing ? '✓ Going' : 'RSVP'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           );
         })}
       </div>
+
+      {paymentEvent && (
+        <PaymentModal
+          open={!!paymentEvent}
+          onOpenChange={(v) => { if (!v) setPaymentEvent(null); }}
+          type="event_registration"
+          fixedAmount={paymentEvent.ticket_price}
+          description={`Ticket: ${paymentEvent.title || paymentEvent.body?.slice(0, 60)}`}
+          relatedEntityId={paymentEvent.id}
+          relatedEntityType="event"
+        />
+      )}
 
       {currentUser && (
         <UnifiedPostModal
