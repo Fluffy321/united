@@ -24,7 +24,7 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
           
           {/* Avatar with border */}
           <div className="w-36 h-36 rounded-2xl border-4 border-white shadow-2xl bg-white p-0.5 overflow-hidden">
-            <UserAvatar name={user.full_name} size={140} />
+            <UserAvatar name={user.full_name} avatarUrl={user.avatar_url} size={140} />
           </div>
         </div>
       </div>
