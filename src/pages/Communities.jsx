@@ -14,21 +14,25 @@ const FEATURED_SHULS = ["Young Israel Woodmere", "Chabad of Woodmere", "Beth Sha
 
 const CATEGORIES = [
   { label: 'All', value: null },
-  { label: '🏫 Schools & Yeshivas', value: 'schools' },
-  { label: '❤️ Chessed & Volunteering', value: 'chessed' },
-  { label: '✈️ Travel', value: 'travel' },
-  { label: '💼 Careers & Networking', value: 'careers' },
-  { label: '📖 Learning & Torah', value: 'learning' },
-  { label: '🎉 Social & Events', value: 'social' },
-  { label: '🏋️ Sports & Fitness', value: 'sports' },
-  { label: '🍽️ Food & Lifestyle', value: 'food' },
-  { label: '👶 Programs & Youth', value: 'programs' },
-  { label: '🏘️ Local Communities', value: 'local' },
+  { label: '🏫 Schools & Yeshivas', value: 'Schools & Yeshivas' },
+  { label: '❤️ Chessed & Volunteering', value: 'Chessed & Volunteering' },
+  { label: '✈️ Travel', value: 'Travel' },
+  { label: '💼 Careers & Networking', value: 'Careers & Networking' },
+  { label: '📖 Learning & Torah', value: 'Learning & Torah' },
+  { label: '🎉 Social & Events', value: 'Social & Events' },
+  { label: '👶 Programs & Youth', value: 'Programs & Youth' },
+  { label: '🏋️ Sports & Fitness', value: 'Sports & Fitness' },
+  { label: '🍽️ Food & Lifestyle', value: 'Food & Lifestyle' },
+  { label: '🏘️ Local Communities', value: 'Local Communities' },
 ];
 
 const TYPE_TO_CATEGORY = {
-  School: 'schools', Yeshiva: 'schools', Seminary: 'schools',
-  Shul: 'local', Camp: 'programs', Other: 'chessed',
+  School: 'Schools & Yeshivas',
+  Yeshiva: 'Schools & Yeshivas',
+  Seminary: 'Schools & Yeshivas',
+  Shul: 'Local Communities',
+  Camp: 'Programs & Youth',
+  Other: null,
 };
 
 const DEMO_COMMUNITIES = [
@@ -213,7 +217,10 @@ export default function Communities() {
       result = result.filter(c => c.name?.toLowerCase().includes(q) || c.neighborhood?.toLowerCase().includes(q));
     }
     if (selectedCategory) {
-      result = result.filter(c => TYPE_TO_CATEGORY[c.type] === selectedCategory || c.category === selectedCategory);
+      result = result.filter(c => {
+        const cat = c.category || TYPE_TO_CATEGORY[c.type] || null;
+        return cat === selectedCategory;
+      });
     }
     return result;
   }, [searchQuery, selectedCategory]);
