@@ -13,17 +13,17 @@ const CACHE_KEY = 'communities_v3_cache';
 const FEATURED_SHULS = ["Young Israel Woodmere", "Chabad of Woodmere", "Beth Shalom", "Shaaray Tefila"];
 
 const CATEGORIES = [
-  { label: 'All', value: null },
-  { label: '🏫 Schools & Yeshivas', value: 'Schools & Yeshivas' },
-  { label: '🤝 Chessed & Volunteering', value: 'Chessed & Volunteering' },
-  { label: '✈️ Travel', value: 'Travel' },
-  { label: '💼 Careers & Networking', value: 'Careers & Networking' },
-  { label: '📚 Learning & Torah', value: 'Learning & Torah' },
-  { label: '🎉 Social & Events', value: 'Social & Events' },
-  { label: '🧒 Programs & Youth', value: 'Programs & Youth' },
-  { label: '🏀 Sports & Fitness', value: 'Sports & Fitness' },
-  { label: '🍽️ Food & Lifestyle', value: 'Food & Lifestyle' },
-  { label: '🌍 Local Communities', value: 'Local Communities' },
+  { key: 'all', label: 'All', value: null },
+  { key: 'schools', label: '🏫 Schools & Yeshivas', value: 'Schools & Yeshivas' },
+  { key: 'chessed', label: '🤝 Chessed & Volunteering', value: 'Chessed & Volunteering' },
+  { key: 'travel', label: '✈️ Travel', value: 'Travel' },
+  { key: 'careers', label: '💼 Careers & Networking', value: 'Careers & Networking' },
+  { key: 'learning', label: '📚 Learning & Torah', value: 'Learning & Torah' },
+  { key: 'social', label: '🎉 Social & Events', value: 'Social & Events' },
+  { key: 'programs', label: '🧒 Programs & Youth', value: 'Programs & Youth' },
+  { key: 'sports', label: '🏀 Sports & Fitness', value: 'Sports & Fitness' },
+  { key: 'food', label: '🍽️ Food & Lifestyle', value: 'Food & Lifestyle' },
+  { key: 'local', label: '🌍 Local Communities', value: 'Local Communities' },
 ];
 
 const TYPE_TO_CATEGORY = {
@@ -157,7 +157,7 @@ export default function Communities() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [activeCategory, setActiveCategory] = useState('all');
   const [isDemo, setIsDemo] = useState(false);
 
   const selectedCommunityId = searchParams.get('communityId') || null;
@@ -211,14 +211,17 @@ export default function Communities() {
       const q = searchQuery.toLowerCase();
       result = result.filter(c => c.name?.toLowerCase().includes(q) || c.neighborhood?.toLowerCase().includes(q));
     }
-    if (selectedCategory) {
-      result = result.filter(c => {
-        const cat = c.category || TYPE_TO_CATEGORY[c.type] || null;
-        return cat === selectedCategory;
-      });
+    if (activeCategory !== 'all') {
+      const cat = CATEGORIES.find(c => c.key === activeCategory)?.value;
+      if (cat) {
+        result = result.filter(c => {
+          const itemCat = c.category || TYPE_TO_CATEGORY[c.type] || null;
+          return itemCat === cat;
+        });
+      }
     }
     return result;
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, activeCategory]);
 
   const joinCommunity = async (community) => {
     if (!currentUser) { toast.error('Sign in to join communities'); return; }
@@ -341,10 +344,10 @@ export default function Communities() {
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1 mb-4">
               {CATEGORIES.map(cat => (
                 <button
-                  key={cat.label}
-                  onClick={() => setSelectedCategory(prev => prev === cat.value ? null : cat.value)}
+                  key={cat.key}
+                  onClick={() => setActiveCategory(cat.key)}
                   className={`px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap flex-shrink-0 transition-all ${
-                    selectedCategory === cat.value
+                    activeCategory === cat.key
                       ? 'bg-blue-600 text-white shadow'
                       : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                   }`}
@@ -395,7 +398,7 @@ export default function Communities() {
               userCommunityIds={userCommunityIds}
               memberGroupIds={memberGroupIds}
               setShowCreateModal={setShowCreateModal}
-              hasFilter={!!selectedCategory || !!searchQuery}
+              hasFilter={activeCategory !== 'all' || !!searchQuery}
             />
           )}
         </div>
