@@ -11,69 +11,6 @@ import NewMessageComposer from '@/components/messages/NewMessageComposer';
 import ReportModal from '@/components/common/ReportModal';
 import { buildAIConversation } from '@/lib/aiAgent';
 
-// Demo conversation data
-const DEMO_CONVERSATIONS = [
-  {
-    participant_ids: null,
-    participant_names: ['Rachel G', null],
-    participant_ages: ['18+', '18+'],
-    participant_avatars: ['', ''],
-    last_message: 'Are you coming to the shiur tonight?',
-    last_message_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    unread_count: { [null]: 1 },
-    is_demo: true,
-    demo_user_name: 'Rachel G'
-  },
-  {
-    participant_ids: null,
-    participant_names: ['David Cohen', null],
-    participant_ages: ['18+', '18+'],
-    participant_avatars: ['', ''],
-    last_message: 'Thanks for helping with the grocery pickup!',
-    last_message_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    unread_count: {},
-    is_demo: true,
-    demo_user_name: 'David Cohen'
-  },
-  {
-    participant_ids: null,
-    participant_names: ['Shul Admin', null],
-    participant_ages: ['18+', '18+'],
-    participant_avatars: ['', ''],
-    last_message: 'Reminder: Mincha is at 1:30 PM today',
-    last_message_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-    unread_count: { [null]: 1 },
-    is_demo: true,
-    demo_user_name: 'Shul Admin'
-  },
-  {
-    participant_ids: null,
-    participant_names: ['Sarah Miller', null],
-    participant_ages: ['18+', '18+'],
-    participant_avatars: ['', ''],
-    last_message: 'Is the apartment still available?',
-    last_message_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    unread_count: {},
-    is_demo: true,
-    demo_user_name: 'Sarah Miller'
-  }
-];
-
-const DEMO_REQUESTS = [
-  {
-    sender_name: 'Josh Levy',
-    message: 'Hey, I saw your post about the summer sublet. Is it still available?',
-    created_date: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-    is_demo: true
-  },
-  {
-    sender_name: 'Anonymous',
-    message: 'Are you the one offering rides to JFK?',
-    created_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true
-  }
-];
-
 export default function Messages() {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -160,18 +97,8 @@ export default function Messages() {
     gcTime: 120000,
   });
 
-  // Seed demo conversations with current user ID
-  const demoConversations = DEMO_CONVERSATIONS.map(demo => ({
-    ...demo,
-    id: `demo-${demo.demo_user_name}`,
-    participant_ids: [currentUser?.id, `user-${demo.demo_user_name}`],
-    unread_count: { [currentUser?.id]: demo.unread_count[currentUser?.id] || 0 }
-  }));
-
-  // Always prepend AI conversation, then demo conversations, then real conversations
   const allConversations = [
     ...(aiConversation ? [aiConversation] : []),
-    ...(conversations.length === 0 ? demoConversations : []),
     ...conversations
   ];
 

@@ -3,7 +3,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { HandHeart, Bot, Circle } from 'lucide-react';
 import { AI_AGENT } from '@/lib/aiAgent';
 
-const ONLINE_USERS = new Set(['Rachel G', 'David Cohen']); // Hardcoded for demo
 
 export default function ConversationList({ conversations, currentUser, selectedId, onSelect }) {
   const getOther = (conv) => {
@@ -44,7 +43,6 @@ export default function ConversationList({ conversations, currentUser, selectedI
         const unread = conv.unread_count?.[currentUser.id] || 0;
         const isSelected = selectedId === conv.id;
         const isAIChat = other.id === AI_AGENT.id;
-        const isOnline = ONLINE_USERS.has(other.name);
 
         return (
           <div key={conv.id || idx}>
@@ -66,10 +64,6 @@ export default function ConversationList({ conversations, currentUser, selectedI
                 }
               </div>
               
-              {/* Online indicator */}
-              {isOnline && !isAIChat && (
-                <div className="absolute w-3 h-3 bg-green-500 rounded-full border-2 border-white" style={{ left: '32px', top: '24px' }} />
-              )}
 
               {/* Content */}
               <div className="flex-1 min-w-0">

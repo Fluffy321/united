@@ -41,13 +41,6 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
     setSearching(false);
   };
 
-  const getMutualCount = async (userId) => {
-    if (!userGroups) return 0;
-    const theirMemberships = await base44.entities.GroupMember.filter({ user_id: userId });
-    const theirGroups = new Set(theirMemberships.map(m => m.group_id));
-    return [...userGroups].filter(id => theirGroups.has(id)).length;
-  };
-
   const handleUserClick = async (recipient) => {
     if (actionLoading) return;
     setActionLoading(recipient.id);

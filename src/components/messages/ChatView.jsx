@@ -242,7 +242,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b border-slate-100 bg-white flex-shrink-0">
         <Button variant="ghost" size="icon" onClick={onBack} className="lg:hidden">
@@ -385,8 +385,37 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         </div>
       </div>
 
-      {/* Input Bar - fixed at bottom above nav */}
-      <div className="absolute bottom-20 left-0 right-0 border-t border-slate-100 bg-white p-3 z-10">
+      {/* Mitzvah Completion Actions */}
+      {mitzvahRequest && mitzvahRequest.status === 'InProgress' && (
+        <div className="flex-shrink-0 px-3 py-2 bg-white border-t border-slate-100 space-y-2 text-center text-xs">
+          {currentUser.id === mitzvahRequest.claimed_by_user_id && !helpOffer?.completed_by_helper && (
+            <Button onClick={handleMarkCompleted} disabled={isProcessing} size="sm" className="w-full bg-green-600 hover:bg-green-700">
+              <CheckCircle2 className="w-3 h-3 mr-1" /> Mark as Completed
+            </Button>
+          )}
+          {currentUser.id === mitzvahRequest.created_by_user_id && helpOffer?.completed_by_helper && (
+            <>
+              <p className="text-green-900 bg-green-50 p-2 rounded">
+                <strong>{mitzvahRequest.claimed_by_name}</strong> marked as completed
+              </p>
+              <Button onClick={handleConfirmCompleted} disabled={isProcessing} size="sm" className="w-full bg-green-600 hover:bg-green-700">
+                Confirm Completed
+              </Button>
+            </>
+          )}
+          {currentUser.id === mitzvahRequest.created_by_user_id && !helpOffer?.completed_by_helper && (
+            <p className="text-amber-900 bg-amber-50 p-2 rounded">Waiting for helper...</p>
+          )}
+        </div>
+      )}
+      {mitzvahRequest && mitzvahRequest.status === 'Completed' && (
+        <div className="flex-shrink-0 px-3 py-2 bg-green-50 border-t border-green-100 flex items-center justify-center gap-1 text-xs text-green-900">
+          <CheckCircle2 className="w-3 h-3" /> Mitzvah Completed!
+        </div>
+      )}
+
+      {/* Input Bar */}
+      <div className="flex-shrink-0 border-t border-slate-100 bg-white p-3">
         {pendingAttachment && (
           <div className="mb-2">
             <PendingAttachmentChip attachment={pendingAttachment} onRemove={() => setPendingAttachment(null)} />
@@ -416,52 +445,8 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           >
             {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
-          </div>
-          </div>
-
-          {/* Completion Actions - removed from main flow */}
-          {mitzvahRequest && mitzvahRequest.status === 'InProgress' && (
-          <div className="px-3 py-2 bg-white border-t border-slate-100 space-y-2 text-center text-xs">
-          {currentUser.id === mitzvahRequest.claimed_by_user_id && !helpOffer?.completed_by_helper && (
-            <Button
-              onClick={handleMarkCompleted}
-              disabled={isProcessing}
-              size="sm"
-              className="w-full bg-green-600 hover:bg-green-700"
-            >
-              <CheckCircle2 className="w-3 h-3 mr-1" />
-              Mark as Completed
-            </Button>
-          )}
-
-          {currentUser.id === mitzvahRequest.created_by_user_id && helpOffer?.completed_by_helper && (
-            <>
-              <p className="text-green-900 bg-green-50 p-2 rounded">
-                <strong>{mitzvahRequest.claimed_by_name}</strong> marked as completed
-              </p>
-              <Button
-                onClick={handleConfirmCompleted}
-                disabled={isProcessing}
-                size="sm"
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                Confirm Completed
-              </Button>
-            </>
-          )}
-
-          {currentUser.id === mitzvahRequest.created_by_user_id && !helpOffer?.completed_by_helper && (
-            <p className="text-amber-900 bg-amber-50 p-2 rounded">Waiting for helper...</p>
-          )}
-          </div>
-          )}
-
-          {mitzvahRequest && mitzvahRequest.status === 'Completed' && (
-          <div className="px-3 py-2 bg-green-50 border-t border-green-100 flex items-center justify-center gap-1 text-xs text-green-900">
-          <CheckCircle2 className="w-3 h-3" />
-          Mitzvah Completed!
-          </div>
-          )}
-          </div>
-          );
-          }
+        </div>
+      </div>
+    </div>
+  );
+}
