@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Eye, EyeOff, Ban, CheckCircle2, AlertTriangle, Trash2, ExternalLink } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Ban, CheckCircle2, AlertTriangle, Trash2, ExternalLink, ShieldCheck, ShieldX, ShieldAlert } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,6 +41,35 @@ export default function AdminModerationQueue() {
       return requests.filter(r => r.is_hidden);
     },
     enabled: !!currentUser
+  });
+
+  const { data: verificationRequests = [], isLoading: verificationsLoading } = useQuery({
+    queryKey: ['admin-verifications'],
+    queryFn: () => base44.entities.VerificationRequest.filter({ status: 'pending' }, '-created_date'),
+    enabled: !!currentUser
+  });
+
+  const approveVerificationMutation = useMutation({
+    mutationFn: async ({ reqId, userId }) => {
+      await base44.entities.VerificationRequest.update(reqId, {
+        status: 'approved', reviewed_by: currentUser.id, reviewed_at: new Date().toISOString()
+      });
+      // Mark user as verified
+      await base44.asServiceRole?.entities?.User?.update?.(userId, { is_verified: true }).catch(() =>
+        base44.entities.User?.update?.(userId, { is_verified: true })
+      );
+    },
+    onSuccess: () => { queryClient.invalidateQueries(['admin-verifications']); toast.success('User verified ✓'); }
+  });
+
+  const rejectVerificationMutation = useMutation({
+    mutationFn: async ({ reqId, note }) => {
+      await base44.entities.VerificationRequest.update(reqId, {
+        status: 'rejected', admin_note: note || 'Insufficient documentation.',
+        reviewed_by: currentUser.id, reviewed_at: new Date().toISOString()
+      });
+    },
+    onSuccess: () => { queryClient.invalidateQueries(['admin-verifications']); toast.success('Request rejected'); }
   });
 
   const hideRequestMutation = useMutation({
@@ -114,6 +143,10 @@ export default function AdminModerationQueue() {
             <TabsTrigger value="hidden" className="gap-2">
               <EyeOff className="w-4 h-4" />
               Hidden Requests ({flaggedRequests.length})
+            </TabsTrigger>
+            <TabsTrigger value="verifications" className="gap-2">
+              <ShieldCheck className="w-4 h-4" />
+              Verifications ({verificationRequests.length})
             </TabsTrigger>
           </TabsList>
 
@@ -218,6 +251,61 @@ export default function AdminModerationQueue() {
                       <Eye className="w-4 h-4 mr-2" />
                       Restore
                     </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="verifications">
+            {verificationsLoading ? (
+              <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>
+            ) : verificationRequests.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-2xl">
+                <ShieldCheck className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                <p className="text-slate-600 font-medium">No pending verification requests</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {verificationRequests.map(req => (
+                  <div key={req.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <ShieldAlert className="w-4 h-4 text-amber-500" />
+                          <span className="text-xs font-bold uppercase tracking-wide text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{req.verification_type?.replace('_', ' ')}</span>
+                        </div>
+                        <p className="font-bold text-slate-900">{req.user_name}</p>
+                        <p className="text-xs text-slate-400">{req.user_email}</p>
+                        {req.community_name && <p className="text-sm text-slate-600 mt-1">🏛 {req.community_name}</p>}
+                        <p className="text-sm text-slate-700 mt-2 bg-slate-50 rounded-lg p-2">{req.proof_description}</p>
+                      </div>
+                    </div>
+                    {req.proof_image_url && (
+                      <a href={req.proof_image_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs text-blue-600 font-semibold mb-3 hover:underline">
+                        <ExternalLink className="w-3.5 h-3.5" /> View proof document
+                      </a>
+                    )}
+                    <p className="text-xs text-slate-400 mb-3">Submitted {formatDistanceToNow(new Date(req.created_date), { addSuffix: true })}</p>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700 gap-1"
+                        onClick={() => approveVerificationMutation.mutate({ reqId: req.id, userId: req.user_id })}
+                        disabled={approveVerificationMutation.isPending}
+                      >
+                        <ShieldCheck className="w-4 h-4" /> Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600 border-red-200 gap-1"
+                        onClick={() => rejectVerificationMutation.mutate({ reqId: req.id, note: '' })}
+                        disabled={rejectVerificationMutation.isPending}
+                      >
+                        <ShieldX className="w-4 h-4" /> Reject
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

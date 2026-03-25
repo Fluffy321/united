@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2, Camera, LogOut, Shield, Bell, UserCircle, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Camera, LogOut, Shield, Bell, UserCircle, X, Trash2, ShieldCheck } from 'lucide-react';
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel
@@ -30,6 +30,7 @@ import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 import CitySelector from '@/components/common/CitySelector';
 import NotificationSettings from '@/components/settings/NotificationSettings';
+import VerificationSubmit from '@/components/settings/VerificationSubmit';
 
 const INTERESTS = [
   "Torah & Learning", "Sports", "Music", "Art", "Tech", 
@@ -203,6 +204,10 @@ export default function Settings() {
               <Shield className="w-4 h-4" />
               Privacy
             </TabsTrigger>
+            <TabsTrigger value="verification" className="flex-1 gap-2">
+              <ShieldCheck className="w-4 h-4" />
+              Verify
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
@@ -319,6 +324,14 @@ export default function Settings() {
           <TabsContent value="notifications">
             <div className="bg-white rounded-xl p-6">
               <NotificationSettings userId={currentUser.id} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="verification">
+            <div className="bg-white rounded-xl p-6">
+              <h3 className="text-base font-bold text-slate-900 mb-1">Identity Verification</h3>
+              <p className="text-sm text-slate-400 mb-4">Get a Verified badge to build trust for housing and local help exchanges.</p>
+              <VerificationSubmit currentUser={currentUser} />
             </div>
           </TabsContent>
 
