@@ -106,8 +106,13 @@ export default function Messages() {
   }, [currentUser?.id]);
 
   const loadUser = async () => {
-    const user = await base44.auth.me();
-    setCurrentUser(user);
+    try {
+      const user = await base44.auth.me();
+      setCurrentUser(user);
+    } catch (e) {
+      // User not authenticated — redirect to login
+      base44.auth.redirectToLogin(window.location.href);
+    }
   };
 
   const checkUrlParams = () => {
