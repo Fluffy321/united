@@ -15,15 +15,15 @@ const FEATURED_SHULS = ["Young Israel Woodmere", "Chabad of Woodmere", "Beth Sha
 const CATEGORIES = [
   { label: 'All', value: null },
   { label: '🏫 Schools & Yeshivas', value: 'Schools & Yeshivas' },
-  { label: '❤️ Chessed & Volunteering', value: 'Chessed & Volunteering' },
+  { label: '🤝 Chessed & Volunteering', value: 'Chessed & Volunteering' },
   { label: '✈️ Travel', value: 'Travel' },
   { label: '💼 Careers & Networking', value: 'Careers & Networking' },
-  { label: '📖 Learning & Torah', value: 'Learning & Torah' },
+  { label: '📚 Learning & Torah', value: 'Learning & Torah' },
   { label: '🎉 Social & Events', value: 'Social & Events' },
-  { label: '👶 Programs & Youth', value: 'Programs & Youth' },
-  { label: '🏋️ Sports & Fitness', value: 'Sports & Fitness' },
+  { label: '🧒 Programs & Youth', value: 'Programs & Youth' },
+  { label: '🏀 Sports & Fitness', value: 'Sports & Fitness' },
   { label: '🍽️ Food & Lifestyle', value: 'Food & Lifestyle' },
-  { label: '🏘️ Local Communities', value: 'Local Communities' },
+  { label: '🌍 Local Communities', value: 'Local Communities' },
 ];
 
 const TYPE_TO_CATEGORY = {
@@ -66,44 +66,39 @@ function setCache(list) {
 
 function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
   const initials = community.name?.slice(0, 2)?.toUpperCase() || 'CO';
-  const typeColor = TYPE_COLORS[community.type] || 'bg-slate-100 text-slate-600';
+  const categoryLabel = community.category || (TYPE_TO_CATEGORY[community.type] ? community.type : 'Community');
   return (
-    <div
-      className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 hover:shadow-md transition flex flex-col gap-3 cursor-pointer"
-      onClick={() => onOpen(community.id)}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
+    <div className="rounded-2xl bg-white border border-slate-100 shadow-sm p-3 flex flex-col">
+      <div className="flex items-start gap-3">
+        <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-sm font-bold text-slate-700 flex-shrink-0">
           {community.logo_url ? (
-            <img src={community.logo_url} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
-          ) : (
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-200 flex items-center justify-center text-sm font-bold text-slate-700 flex-shrink-0">
-              {initials}
-            </div>
-          )}
-          <div className="min-w-0">
-            <div className="font-semibold text-[13px] text-slate-900 truncate">{community.name}</div>
-            <div className="text-[11px] text-slate-500 truncate mt-0.5">{community.neighborhood || community.type || 'Community'}</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">{(community.follower_count || 0).toLocaleString()} members</div>
-          </div>
+            <img src={community.logo_url} alt={community.name} className="h-11 w-11 rounded-xl object-cover" />
+          ) : initials}
         </div>
+        <div className="min-w-0 flex-1">
+          <button onClick={() => onOpen(community.id)} className="block w-full text-left">
+            <div className="truncate text-sm font-semibold text-slate-900">{community.name}</div>
+            <div className="mt-0.5 text-xs text-slate-500">{(community.follower_count || 0).toLocaleString()} members</div>
+            {community.description_short && (
+              <div className="mt-1 line-clamp-2 text-xs text-slate-400">{community.description_short}</div>
+            )}
+          </button>
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <span className="truncate text-[11px] text-slate-400">{categoryLabel}</span>
         {isJoined ? (
-          <span className="flex-shrink-0 text-[11px] font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">Joined ✓</span>
+          <button className="rounded-full px-3 py-1.5 text-xs font-semibold bg-slate-100 text-slate-700">Joined</button>
         ) : (
           <button
             onClick={e => { e.stopPropagation(); onJoin(community); }}
             disabled={isJoining}
-            className="flex-shrink-0 rounded-full bg-blue-600 text-white text-[11px] font-semibold px-3 py-1.5 hover:bg-blue-700 transition-colors disabled:opacity-60 flex items-center gap-1"
+            className="rounded-full px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-60 flex items-center gap-1"
           >
             {isJoining ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Join'}
           </button>
         )}
       </div>
-      {community.description_short && (
-        <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
-          {community.description_short}
-        </p>
-      )}
     </div>
   );
 }
