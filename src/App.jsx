@@ -56,27 +56,25 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageTransition><LayoutWrapper currentPageName={mainPageKey}><MainPage /></LayoutWrapper></PageTransition>} />
-        {Object.entries(Pages).map(([path, Page]) => (
-          <Route
-            key={path}
-            path={`/${path}`}
-            element={
-              <PageTransition>
-                <LayoutWrapper currentPageName={path}><Page /></LayoutWrapper>
-              </PageTransition>
-            }
-          />
-        ))}
-        <Route path="/PublicProfile" element={<PageTransition><PublicProfile /></PageTransition>} />
-        <Route path="/ThankYou" element={<PageTransition><ThankYou /></PageTransition>} />
-        <Route path="/CommunityMap" element={<PageTransition><CommunityMap /></PageTransition>} />
-        <Route path="/Events" element={<PageTransition><Events /></PageTransition>} />
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
-    </AnimatePresence>
+    <Routes location={location} key={location.pathname}>
+      <Route path="/" element={<PageTransition><LayoutWrapper currentPageName={mainPageKey}><MainPage /></LayoutWrapper></PageTransition>} />
+      {Object.entries(Pages).map(([path, Page]) => (
+        <Route
+          key={path}
+          path={`/${path}`}
+          element={
+            <PageTransition>
+              <LayoutWrapper currentPageName={path}><Page /></LayoutWrapper>
+            </PageTransition>
+          }
+        />
+      ))}
+      <Route path="/PublicProfile" element={<PageTransition><PublicProfile /></PageTransition>} />
+      <Route path="/ThankYou" element={<PageTransition><ThankYou /></PageTransition>} />
+      <Route path="/CommunityMap" element={<PageTransition><CommunityMap /></PageTransition>} />
+      <Route path="/Events" element={<PageTransition><Events /></PageTransition>} />
+      <Route path="*" element={<PageNotFound />} />
+    </Routes>
   );
 };
 
