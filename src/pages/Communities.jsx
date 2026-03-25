@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Loader2, Plus, Search, X, Users, AlertCircle } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Loader2, Plus, Search, X, Users, AlertCircle, Map } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
@@ -145,6 +145,7 @@ function GroupCard({ group, isMember, onClick, onJoin }) {
 }
 
 export default function Communities() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState('mine');
@@ -291,12 +292,21 @@ export default function Communities() {
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-[20px] font-bold text-slate-900">Communities</h1>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-1 bg-blue-600 text-white px-3.5 py-1.5 rounded-full text-[12px] font-bold shadow hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" /> Create
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate('/CommunityMap')}
+                className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
+                title="Map view"
+              >
+                <Map className="w-4 h-4 text-slate-600" />
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-1 bg-blue-600 text-white px-3.5 py-1.5 rounded-full text-[12px] font-bold shadow hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" /> Create
+              </button>
+            </div>
           </div>
 
           {/* Search */}
