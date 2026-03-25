@@ -250,27 +250,10 @@ export default function Messages() {
 
           <div className="flex-1 overflow-y-auto">
             {activeTab === 'requests' ? (
-              <>
-                <div className="bg-blue-50 border-b border-blue-100 p-3 text-[12px] text-blue-800">
-                  Messages from people you're not connected with appear here. Accept to start a conversation.
-                </div>
-                <div className="divide-y divide-slate-100">
-                  {DEMO_REQUESTS.map((req, idx) => (
-                    <div key={idx} className="px-4 py-3 flex flex-col gap-2">
-                      <p className="font-semibold text-[14px] text-slate-900">{req.sender_name}</p>
-                      <p className="text-[13px] text-slate-600">{req.message}</p>
-                      <div className="flex gap-2 pt-1">
-                        <button className="flex-1 py-1.5 bg-blue-600 text-white text-[12px] font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                          Accept
-                        </button>
-                        <button className="flex-1 py-1.5 bg-slate-100 text-slate-600 text-[12px] font-semibold rounded-lg hover:bg-slate-200 transition-colors">
-                          Decline
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
+              <MessageRequestsTab
+                currentUser={currentUser}
+                onAccepted={(conv) => { setSelectedConversation(conv); setActiveTab('inbox'); }}
+              />
             ) : isLoading ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7]" />
