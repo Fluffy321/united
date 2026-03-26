@@ -184,7 +184,9 @@ export default function Events() {
                   )}
                 </div>
 
-                <EventSummaryButton event={event} />
+                <div className="mb-3">
+                  <EventSummaryButton event={event} />
+                </div>
 
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[12px] text-slate-400">by {event.user_name}</span>
