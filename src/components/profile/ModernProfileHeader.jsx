@@ -7,18 +7,18 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
     <div className="relative">
       {/* Gradient header */}
       <div className="relative h-28 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
+        <div className="opacity-65 rounded absolute inset-0">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full mix-blend-screen blur-3xl" />
         </div>
-        {isOwnProfile && onSettings && (
-          <button
-            onClick={onSettings}
-            className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm text-white text-[13px] font-semibold hover:bg-white/30 transition-colors"
-          >
+        {isOwnProfile && onSettings &&
+        <button
+          onClick={onSettings}
+          className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm text-white text-[13px] font-semibold hover:bg-white/30 transition-colors">
+          
             <Settings className="w-4 h-4" />
             Settings
           </button>
-        )}
+        }
       </div>
 
       {/* Avatar + Info row */}
@@ -36,19 +36,19 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
 
       {/* Badges */}
       <div className="px-5 pb-3 flex flex-wrap gap-1.5">
-        {user.age_range === '13-17' && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">👤 Teen</span>
-        )}
-        {user.is_verified && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-100 text-green-700">✓ Verified</span>
-        )}
-        {(user.current_streak || 0) > 0 && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-orange-100 text-orange-700">🔥 {user.current_streak} Day Streak</span>
-        )}
-        {(user.communities_joined_count || 0) > 0 && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-purple-100 text-purple-700">🏘️ Community Member</span>
-        )}
+        {user.age_range === '13-17' &&
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">👤 Teen</span>
+        }
+        {user.is_verified &&
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-100 text-green-700">✓ Verified</span>
+        }
+        {(user.current_streak || 0) > 0 &&
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-orange-100 text-orange-700">🔥 {user.current_streak} Day Streak</span>
+        }
+        {(user.communities_joined_count || 0) > 0 &&
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-purple-100 text-purple-700">🏘️ Community Member</span>
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 }
