@@ -146,7 +146,7 @@ export default function Layout({ children, currentPageName }) {
       {currentUser && <AIChatBubble currentUser={currentUser} isScrollingDown={isScrollingDown} />}
 
       {/* Main Content */}
-      <main className={!hideBottomPadding ? 'h-screen' : 'h-screen'}>
+      <main className="min-h-screen overflow-visible">
         {isSwipeable ? (
           <SwipeableTabs 
             tabs={['Feed', 'Mitzvah', 'Communities', 'Profile']}
