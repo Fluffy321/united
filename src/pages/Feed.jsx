@@ -370,7 +370,7 @@ export default function Feed() {
         {/* 5. Events Calendar Tab */}
         {activeTab === 'events' && !isLoading && (
           <>
-            <EventsForYou currentUser={currentUser} />
+            <EventsForYou currentUser={currentUser} events={visiblePosts.filter(p => p.type === 'event')} />
             <EventsFeedSection
               posts={visiblePosts}
               currentUser={currentUser}
@@ -530,8 +530,7 @@ export default function Feed() {
         <button
           onClick={() => setShowFAB(v => !v)}
           className="w-14 h-14 rounded-full text-white flex items-center justify-center shadow-xl active:scale-95 transition-all"
-          style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)', boxShadow: '0 6px 24px rgba(124,58,237,0.35)' }}
-          style={{ boxShadow: '0 6px 20px rgba(37,99,235,0.4)' }}
+          style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)', boxShadow: '0 6px 20px rgba(37,99,235,0.4)' }}
         >
           {showFAB ? <X className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
         </button>

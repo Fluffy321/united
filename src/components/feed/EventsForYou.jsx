@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Calendar, MapPin, Sparkles, Clock } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { format, parseISO, startOfToday, addDays, isBefore } from 'date-fns';
+import { format, parseISO, startOfToday, isBefore } from 'date-fns';
 import EventRSVPSection from '@/components/events/EventRSVPSection';
 
 // Keywords that tie interests → event body/title text
@@ -42,22 +40,7 @@ function scoreEvent(event, userInterests = [], userCity = '') {
   return score;
 }
 
-export default function EventsForYou({ currentUser }) {
-  const [selectedEvent, setSelectedEvent] = useState(null);
-
-  const { data: events = [] } = useQuery({
-    queryKey: ['events-for-you'],
-    queryFn: async () => {
-      const all = await base44.entities.UnifiedPost.filter({ type: 'event' }, 'event_date', 80);
-      const today = startOfToday();
-      return all.filter(e => {
-        if (!e.event_date) return true;
-        return !isBefore(parseISO(e.event_date), today);
-      });
-    },
-    staleTime: 120000,
-    retry: 0,
-  });
+export default function EventsForYou({ currentUser, events = [] }) {
 
   const recommended = useMemo(() => {
     const userInterests = currentUser?.interests || [];
