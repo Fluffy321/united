@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { tabActive, tabInactive, btnPrimary, btnSecondary, badgeBlue, gradientStyle } from '@/lib/theme';
 import { Calendar, MapPin, Clock, Plus, ChevronLeft, Users, Ticket } from 'lucide-react';
 import PaymentModal from '@/components/payments/PaymentModal';
+import EventSummaryButton from '@/components/events/EventSummaryButton';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -182,6 +183,8 @@ export default function Events() {
                     <span className="flex items-center gap-1"><Users className="w-3 h-3" />{attendeeCount} going</span>
                   )}
                 </div>
+
+                <EventSummaryButton event={event} />
 
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[12px] text-slate-400">by {event.user_name}</span>
