@@ -41,6 +41,7 @@ function scoreEvent(event, userInterests = [], userCity = '') {
 }
 
 export default function EventsForYou({ currentUser, events = [] }) {
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   const recommended = useMemo(() => {
     const userInterests = currentUser?.interests || [];
