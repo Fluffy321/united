@@ -23,6 +23,7 @@ import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
 import SectionCard from '@/components/profile/SectionCard.jsx';
 
 export default function Profile() {
+  const [searchParams] = useSearchParams();
   const [currentUser, setCurrentUser] = useState(null);
   const [profileUser, setProfileUser] = useState(null);
   const [showReport, setShowReport] = useState(false);
@@ -32,7 +33,7 @@ export default function Profile() {
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [searchParams]);
 
 
   const loadProfile = async () => {
@@ -40,8 +41,7 @@ export default function Profile() {
       const user = await base44.auth.me();
       setCurrentUser(user);
       
-      const params = new URLSearchParams(window.location.search);
-      const profileId = params.get('id');
+      const profileId = searchParams.get('id');
       
       if (profileId && profileId !== user.id) {
         try {
@@ -70,7 +70,8 @@ export default function Profile() {
   const { data: unifiedPosts = [] } = useQuery({
     queryKey: ['user-posts', profileUser?.id],
     queryFn: () => base44.entities.UnifiedPost.filter({ user_id: profileUser.id }, '-created_date', 10),
-    enabled: !!profileUser
+    enabled: !!profileUser,
+    gcTime: 0
   });
 
   const { data: userStreak } = useQuery({
@@ -80,8 +81,9 @@ export default function Profile() {
       return existing[0] || null;
     },
     enabled: !!profileUser,
-    staleTime: 300000,
-    retry: 1
+    staleTime: 0,
+    retry: 1,
+    gcTime: 0
   });
 
   const { data: mitzvahLogs = [] } = useQuery({
@@ -91,8 +93,9 @@ export default function Profile() {
       return logs;
     },
     enabled: !!profileUser && isOwnProfile,
-    staleTime: 300000,
-    retry: 1
+    staleTime: 0,
+    retry: 1,
+    gcTime: 0
   });
 
   const { data: weeklyMitzvahCount = 0 } = useQuery({
@@ -114,8 +117,9 @@ export default function Profile() {
       return weekActions.length + weekLogs.length;
     },
     enabled: !!profileUser && isOwnProfile,
-    staleTime: 300000,
-    retry: 1
+    staleTime: 0,
+    retry: 1,
+    gcTime: 0
   });
 
   const { data: mitzvahPoints = 0 } = useQuery({
@@ -125,8 +129,9 @@ export default function Profile() {
       return points.length > 0 ? points[0].total_points : 0;
     },
     enabled: !!profileUser,
-    staleTime: 300000,
-    retry: 1
+    staleTime: 0,
+    retry: 1,
+    gcTime: 0
   });
 
   const { data: userCommunities = [] } = useQuery({
@@ -140,8 +145,9 @@ export default function Profile() {
       return comms;
     },
     enabled: !!profileUser,
-    staleTime: 300000,
-    retry: 1
+    staleTime: 0,
+    retry: 1,
+    gcTime: 0
   });
 
   const handleMessage = async () => {
