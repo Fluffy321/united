@@ -26,7 +26,7 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
         <div className="w-20 h-20 rounded-2xl border-4 border-white shadow-xl bg-white overflow-hidden flex-shrink-0">
           <UserAvatar user={user} size="xl" className="!w-full !h-full !rounded-none" />
         </div>
-        <div className="pb-1 min-w-0 flex-1">
+        <div className="min-w-0 flex-1">
           <h1 className="text-xl font-black text-slate-900 leading-tight truncate">
             {user.display_name || user.full_name?.split(' ')[0] || 'User'}
           </h1>
