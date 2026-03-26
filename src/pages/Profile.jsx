@@ -190,6 +190,11 @@ export default function Profile() {
     navigate(createPageUrl('Settings'));
   };
 
+  const scrollTo = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const handleShareProfile = async () => {
     const profileUrl = `${window.location.origin}${createPageUrl('Profile')}?id=${profileUser.id}`;
     try {
@@ -226,9 +231,12 @@ export default function Profile() {
 
         {/* Stats Row */}
         <ModernStatsRow
-          following={0}
+          following={userCommunities.length}
           posts={unifiedPosts.length}
           impact={mitzvahPoints}
+          onPostsClick={() => scrollTo('recent-posts-section')}
+          onImpactClick={() => scrollTo('impact-section')}
+          onFollowingClick={() => scrollTo('communities-section')}
         />
 
         {/* Action Buttons */}
@@ -259,7 +267,7 @@ export default function Profile() {
 
           {/* Impact or Get Started */}
           {isOwnProfile && (
-            <div className="mx-6">
+            <div id="impact-section" className="mx-6">
               {hasActivity ? (
                 <ImpactSection points={mitzvahPoints} weeklyCount={weeklyMitzvahCount} streak={userStreak} />
               ) : (
@@ -272,7 +280,7 @@ export default function Profile() {
           {isOwnProfile && <div className="mx-6"><WeeklySummaryCard mitzvahCount={weeklyMitzvahCount} /></div>}
 
           {/* Communities Section */}
-          {isOwnProfile && userCommunities.length > 0 && <div className="mx-6"><CommunitiesSection userCommunities={userCommunities} /></div>}
+          {isOwnProfile && userCommunities.length > 0 && <div id="communities-section" className="mx-6"><CommunitiesSection userCommunities={userCommunities} /></div>}
 
           {/* Badges Section */}
           {isOwnProfile && <div className="mx-6"><BadgesSection user={profileUser} /></div>}
@@ -281,7 +289,7 @@ export default function Profile() {
           {isOwnProfile && mitzvahLogs.length > 0 && <div className="mx-6"><MitzvahJourneySection logs={mitzvahLogs} /></div>}
 
           {/* Recent Posts */}
-          <div className="mx-6"><RecentPostsSection posts={unifiedPosts} currentUser={currentUser} profileUser={profileUser} isOwnProfile={isOwnProfile} /></div>
+          <div id="recent-posts-section" className="mx-6"><RecentPostsSection posts={unifiedPosts} currentUser={currentUser} profileUser={profileUser} isOwnProfile={isOwnProfile} /></div>
         </div>
       </div>
 
