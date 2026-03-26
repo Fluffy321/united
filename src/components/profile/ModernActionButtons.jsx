@@ -17,7 +17,7 @@ export default function ModernActionButtons({ isOwnProfile, onEditProfile, onMes
           <Button
             onClick={onShare}
             variant="outline"
-            className="w-full font-semibold py-3 rounded-xl transition-all duration-200 hover:bg-slate-50 active:scale-95 gap-2 border-slate-200"
+            className="w-full font-semibold py-3 rounded-xl transition-all duration-200 hover:bg-slate-100 active:scale-95 gap-2 border-slate-200"
           >
             <Share2 className="w-4 h-4" />
             Share Profile
@@ -35,7 +35,7 @@ export default function ModernActionButtons({ isOwnProfile, onEditProfile, onMes
           <Button
             onClick={onShare}
             variant="outline"
-            className="flex-1 font-semibold py-3 rounded-xl transition-all duration-200 hover:bg-slate-50 active:scale-95 gap-2 border-slate-200"
+            className="flex-1 font-semibold py-3 rounded-xl transition-all duration-200 hover:bg-slate-100 active:scale-95 gap-2 border-slate-200"
           >
             <Share2 className="w-4 h-4" />
             Share
