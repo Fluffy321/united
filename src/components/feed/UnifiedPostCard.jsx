@@ -7,6 +7,7 @@ import HelperBadge from '@/components/profile/HelperBadge';
 import MessageButton from '@/components/common/MessageButton';
 import CommentsSheet from './CommentsSheet';
 import EventRSVPSection from '@/components/events/EventRSVPSection';
+import EventSummaryButton from '@/components/events/EventSummaryButton';
 import ReactionBar from './ReactionBar';
 import {
   DropdownMenu,
@@ -331,14 +332,17 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
               )}
             </button>
             
-            {/* RSVP Section */}
+            {/* AI Summary & RSVP Section */}
             {showEventDetails && (
-              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
-                <EventRSVPSection 
-                  postId={post.id}
-                  currentUser={currentUser}
-                  eventDate={post.event_date}
-                />
+              <div className="space-y-2">
+                <EventSummaryButton event={post} />
+                <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                  <EventRSVPSection 
+                    postId={post.id}
+                    currentUser={currentUser}
+                    eventDate={post.event_date}
+                  />
+                </div>
               </div>
             )}
           </div>
