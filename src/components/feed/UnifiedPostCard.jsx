@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2, Users, Ban } from 'lucide-react';
+import PromptCard from './PromptCard';
 import { Button } from "@/components/ui/button";
 import UserAvatar from '@/components/common/UserAvatar';
 import HelperBadge from '@/components/profile/HelperBadge';
@@ -20,6 +21,12 @@ import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { HELP_REQUEST_CATEGORIES } from '@/components/feed/RequestHelpModal';
+
+// Short-circuit for community prompts
+// (Rendered before exports so the hook rules are satisfied)
+function PromptWrapper({ post, currentUser }) {
+  return <PromptCard post={post} currentUser={currentUser} />;
+}
 
 // Unified badge style: blue for informational, dark-blue outlined for urgent
 const BASE_BADGE = 'bg-blue-50 text-blue-700 border border-blue-200';
@@ -109,6 +116,8 @@ function InterestedButton({ post, currentUser }) {
 }
 
 export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, onBlock, blockedIds = [], liked, communities }) {
+  if (post.type === 'prompt') return <PromptWrapper post={post} currentUser={currentUser} />;
+
   const isOwner = currentUser?.id === post.user_id;
   const communityName = post.community_name || (communities && post.community_id
     ? communities.find(c => c.id === post.community_id)?.name

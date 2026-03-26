@@ -106,6 +106,28 @@ export default function Feed() {
     try {
       const prompts = await base44.entities.DailyPrompt.list('-created_date', 5);
       setFeedPrompts(prompts);
+      // Seed example community prompts if none exist
+      const existing = await base44.entities.UnifiedPost.filter({ type: 'prompt' }, '-created_date', 1);
+      if (existing.length === 0) {
+        const EXAMPLE_PROMPTS = [
+          "What are your Shabbos plans this week?",
+          "Anyone hosting or looking for a Shabbos meal?",
+          "Best kosher takeout for Thursday night?",
+          "Who's going to Israel this summer?",
+        ];
+        for (const q of EXAMPLE_PROMPTS) {
+          await base44.entities.UnifiedPost.create({
+            user_id: 'system',
+            user_name: 'Community',
+            type: 'prompt',
+            board: 'feed',
+            body: q,
+            city: 'Five Towns',
+            comments_count: 0,
+            is_seeded: true,
+          });
+        }
+      }
     } catch (e) {}
   };
 
@@ -236,6 +258,7 @@ export default function Feed() {
   const activePosts = posts.length > 0 ? posts : cachedPosts;
   const visiblePosts = activePosts.filter(p => {
     if (p.type === 'dating') return false;
+    if (p.type === 'prompt' && activeTab !== 'trending' && activeTab !== 'for_you' && activeTab !== 'social') return false;
     if (blockedIds.includes(p.user_id)) return false;
     if (selectedNeighborhood !== 'All Five Towns') {
       const loc = (p.location_text || p.city || '').toLowerCase();

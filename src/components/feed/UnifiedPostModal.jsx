@@ -168,6 +168,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
     if (postType === 'job') return 'Post Job';
     if (postType === 'housing') return 'Post Housing';
     if (postType === 'food') return 'Food Post';
+    if (postType === 'prompt') return 'Ask the Community';
     return 'New Post';
   };
 
@@ -177,6 +178,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
     if (postType === 'housing') return 'housing';
     if (postType === 'food') return 'food';
     if (postType === 'help') return 'help';
+    if (postType === 'prompt') return 'feed';
     return 'feed';
   };
 

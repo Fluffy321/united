@@ -1,0 +1,52 @@
+import React, { useState } from 'react';
+import { MessageSquare, ChevronRight } from 'lucide-react';
+import PromptResponsesSheet from './PromptResponsesSheet';
+import { useQueryClient } from '@tanstack/react-query';
+
+export default function PromptCard({ post, currentUser }) {
+  const [showSheet, setShowSheet] = useState(false);
+  const [localCount, setLocalCount] = useState(post.comments_count || 0);
+  const queryClient = useQueryClient();
+
+  return (
+    <>
+      <div
+        onClick={() => setShowSheet(true)}
+        className="bg-white rounded-2xl p-4 cursor-pointer hover:shadow-md transition-shadow border border-purple-100"
+        style={{ boxShadow: '0 2px 8px rgba(124,58,237,0.07)' }}
+      >
+        {/* Label */}
+        <div className="flex items-center gap-1.5 mb-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+          <span className="text-[11px] font-bold text-purple-600 uppercase tracking-wide">Community Prompt</span>
+        </div>
+
+        {/* Question */}
+        <p className="text-[16px] font-bold text-slate-900 leading-snug mb-3">{post.body}</p>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-[12px] text-slate-500">
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>{localCount} {localCount === 1 ? 'response' : 'responses'}</span>
+          </div>
+          <div className="flex items-center gap-1 text-[12px] font-semibold text-purple-600">
+            <span>Answer</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </div>
+        </div>
+      </div>
+
+      <PromptResponsesSheet
+        post={post}
+        currentUser={currentUser}
+        open={showSheet}
+        onOpenChange={setShowSheet}
+        onResponseAdded={() => {
+          setLocalCount(c => c + 1);
+          queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+        }}
+      />
+    </>
+  );
+}
