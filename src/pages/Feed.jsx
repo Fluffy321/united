@@ -360,7 +360,7 @@ export default function Feed() {
 
 
         {/* 2. Feed Tabs */}
-        <div className="bg-white rounded-2xl border border-slate-100 mb-3 overflow-hidden" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+        <div className="rounded-2xl mb-3 overflow-hidden" style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #4C1D95 100%)', boxShadow: '0 4px 16px rgba(37,99,235,0.2)' }}>
           <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
         </div>
 
@@ -369,14 +369,14 @@ export default function Feed() {
 
         {/* 5. Events Calendar Tab */}
         {activeTab === 'events' && !isLoading && (
-          <>
-            <EventsForYou currentUser={currentUser} events={visiblePosts.filter(p => p.type === 'event')} />
-            <EventsFeedSection
-              posts={visiblePosts}
-              currentUser={currentUser}
-              onCreateEvent={() => { setPostModalType('event'); setShowPostModal(true); }}
-            />
-          </>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #F0F9FF 0%, #FAF5FF 100%)', border: '1px solid #C7D7FD', boxShadow: '0 2px 12px rgba(37,99,235,0.06)', marginBottom: 12, padding: 0 }}>
+          <EventsForYou currentUser={currentUser} events={visiblePosts.filter(p => p.type === 'event')} />
+          <EventsFeedSection
+            posts={visiblePosts}
+            currentUser={currentUser}
+            onCreateEvent={() => { setPostModalType('event'); setShowPostModal(true); }}
+          />
+          </div>
         )}
 
         {/* 6. Feed Posts (all tabs except events) */}

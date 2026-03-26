@@ -21,14 +21,24 @@ const BG_COLORS = [
 export default function CommunityActivityStrip({ groups = [] }) {
   if (groups.length === 0) return null;
 
+  const RING_COLORS = [
+    '#3B82F6','#8B5CF6','#10B981','#F59E0B','#EF4444','#06B6D4','#F97316','#6366F1'
+  ];
+
   return (
-    <div className="flex gap-3 overflow-x-auto scrollbar-hide mb-3 -mx-4 px-4">
+    <div
+      className="flex gap-3 overflow-x-auto scrollbar-hide mb-3 -mx-4 px-4 py-3 rounded-2xl"
+      style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 100%)', marginLeft: 0, marginRight: 0 }}
+    >
       {groups.slice(0, 8).map((g, i) => (
         <div
           key={g.id}
-          className="flex-shrink-0 flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform"
+          className="flex-shrink-0 flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
         >
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-[15px] font-bold shadow-sm border-2 border-white overflow-hidden ${BG_COLORS[i % BG_COLORS.length]}`}>
+          <div
+            className={`w-12 h-12 rounded-full flex items-center justify-center text-[15px] font-bold overflow-hidden ${BG_COLORS[i % BG_COLORS.length]}`}
+            style={{ border: `2.5px solid ${RING_COLORS[i % RING_COLORS.length]}`, boxShadow: `0 0 0 2px white, 0 2px 8px rgba(0,0,0,0.1)` }}
+          >
             {g.cover_image_url ? (
               <img src={g.cover_image_url} alt="" className="w-full h-full object-cover" />
             ) : (
