@@ -1,4 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
+import { tabActive, tabInactive, gradientStyle } from '@/lib/theme';
 
 const TABS = [
   { id: 'for_you', label: '✨ For You' },
@@ -22,12 +23,8 @@ export default function HomeFeedTabs({ activeTab, onChange }) {
         <button
           key={tab.id}
           onClick={() => onChange(tab.id)}
-          className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-semibold transition-all whitespace-nowrap ${
-            activeTab === tab.id
-              ? 'text-white shadow-sm'
-              : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-200 hover:text-blue-600'
-          }`}
-          style={activeTab === tab.id ? { background: 'linear-gradient(135deg, #2563EB, #7C3AED)' } : {}}
+          className={activeTab === tab.id ? tabActive : tabInactive}
+          style={activeTab === tab.id ? gradientStyle : {}}
         >
           {tab.label}
         </button>

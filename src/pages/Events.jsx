@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { tabActive, tabInactive, btnPrimary, btnSecondary, badgeBlue, gradientStyle } from '@/lib/theme';
 import { Calendar, MapPin, Clock, Plus, ChevronLeft, Users, Ticket } from 'lucide-react';
 import PaymentModal from '@/components/payments/PaymentModal';
 import { base44 } from '@/api/base44Client';
@@ -112,9 +113,8 @@ export default function Events() {
               <button
                 key={f.id}
                 onClick={() => setActiveFilter(f.id)}
-                className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap ${
-                  activeFilter === f.id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                className={activeFilter === f.id ? tabActive : tabInactive}
+              style={activeFilter === f.id ? gradientStyle : {}}
               >
                 {f.label}
               </button>
@@ -198,11 +198,8 @@ export default function Events() {
                       <button
                         onClick={() => rsvpMutation.mutate({ event, isGoing })}
                         disabled={rsvpMutation.isPending}
-                        className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all ${
-                          isGoing
-                            ? 'bg-green-100 text-green-700 border border-green-200'
-                            : 'bg-blue-600 text-white hover:bg-blue-700'
-                        }`}
+                        className={isGoing ? badgeBlue + ' px-4 py-1.5 text-[12px]' : btnPrimary + ' text-[12px] py-1.5'}
+                        style={isGoing ? {} : gradientStyle}
                       >
                         {isGoing ? '✓ Going' : 'RSVP'}
                       </button>
