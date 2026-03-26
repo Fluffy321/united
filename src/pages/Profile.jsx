@@ -213,18 +213,7 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100">
       <div className="max-w-2xl mx-auto">
-        {/* Settings button for own profile */}
-        {isOwnProfile && (
-          <div className="flex justify-end px-4 pt-3">
-            <button
-              onClick={handleEditProfile}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 text-[13px] font-semibold shadow-sm hover:bg-slate-50 transition-colors"
-            >
-              <Settings className="w-4 h-4" />
-              Settings
-            </button>
-          </div>
-        )}
+
         {/* Modern Header */}
         <ModernProfileHeader
           user={profileUser}
@@ -232,6 +221,7 @@ export default function Profile() {
           onMessage={handleMessage}
           onReport={() => setShowReport(true)}
           onBlock={handleBlock}
+          onSettings={isOwnProfile ? handleEditProfile : undefined}
         />
 
         {/* Stats Row */}

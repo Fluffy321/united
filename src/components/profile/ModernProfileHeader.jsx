@@ -1,7 +1,8 @@
 import React from 'react';
+import { Settings } from 'lucide-react';
 import UserAvatar from '@/components/common/UserAvatar';
 
-export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onReport, onBlock }) {
+export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onReport, onBlock, onSettings }) {
   return (
     <div className="relative pb-20">
       {/* Gradient header with blur backdrop */}
@@ -14,6 +15,17 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full mix-blend-screen blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-300 rounded-full mix-blend-screen blur-3xl" />
         </div>
+
+        {/* Settings button inside the blue header */}
+        {isOwnProfile && onSettings && (
+          <button
+            onClick={onSettings}
+            className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm text-white text-[13px] font-semibold hover:bg-white/30 transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+            Settings
+          </button>
+        )}
       </div>
 
       {/* Overlapping profile image section */}
