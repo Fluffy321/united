@@ -22,7 +22,7 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
       </div>
 
       {/* Avatar + Info row */}
-      <div className="px-5 -mt-10 flex items-end gap-4 pb-3 relative z-10">
+      <div className="px-5 -mt-6 flex items-end gap-4 pb-3 relative z-10">
         <div className="w-20 h-20 rounded-2xl border-4 border-white shadow-xl bg-white overflow-hidden flex-shrink-0">
           <UserAvatar user={user} size="xl" className="!w-full !h-full !rounded-none" />
         </div>
