@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Calendar, MapPin, Clock, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Clock, ChevronRight, Sparkles } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { format, parseISO, startOfToday, addDays, isBefore, isAfter } from 'date-fns';
-import CommentsSheet from './CommentsSheet';
+import { format, parseISO, startOfToday, addDays, isBefore, isToday, isTomorrow } from 'date-fns';
 import EventRSVPSection from '@/components/events/EventRSVPSection';
 
 export default function ThisWeekEvents({ currentUser }) {
@@ -29,26 +28,28 @@ export default function ThisWeekEvents({ currentUser }) {
 
   return (
     <>
-      <div className="mb-3">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-2 px-0.5">
-          <div className="flex items-center gap-1.5">
-            <span className="text-base">📅</span>
-            <span className="text-[14px] font-bold text-slate-900">This Week</span>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 ml-0.5">
+      <div className="mb-4 bg-white rounded-2xl border border-slate-100 overflow-hidden" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+        {/* Section header */}
+        <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}>
+              <Sparkles className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="text-[15px] font-bold text-slate-900">This Week's Events</span>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
               {events.length}
             </span>
           </div>
           <a
             href="/Events"
-            className="flex items-center gap-0.5 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+            className="flex items-center gap-0.5 text-[12px] font-semibold text-blue-600 hover:text-blue-700"
           >
             See all <ChevronRight className="w-3.5 h-3.5" />
           </a>
         </div>
 
         {/* Horizontal scroll strip */}
-        <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
+        <div className="flex gap-3 overflow-x-auto pb-3.5 px-4 scrollbar-hide">
           {events.map(event => (
             <EventCard
               key={event.id}
@@ -60,7 +61,6 @@ export default function ThisWeekEvents({ currentUser }) {
         </div>
       </div>
 
-      {/* Event detail bottom sheet */}
       {selectedEvent && (
         <EventDetailSheet
           event={selectedEvent}
@@ -72,65 +72,63 @@ export default function ThisWeekEvents({ currentUser }) {
   );
 }
 
-function EventCard({ event, currentUser, onJoin }) {
-  const dateLabel = event.event_date
-    ? format(parseISO(event.event_date), 'EEE, MMM d')
-    : null;
+function getDateLabel(dateStr) {
+  const d = parseISO(dateStr);
+  if (isToday(d)) return { label: 'Today', color: 'text-emerald-600', bg: 'bg-emerald-50' };
+  if (isTomorrow(d)) return { label: 'Tomorrow', color: 'text-orange-600', bg: 'bg-orange-50' };
+  return { label: format(d, 'EEE, MMM d'), color: 'text-blue-600', bg: 'bg-blue-50' };
+}
 
-  const bgColors = [
-    'from-blue-500 to-blue-600',
-    'from-purple-500 to-purple-600',
-    'from-emerald-500 to-emerald-600',
-    'from-orange-500 to-orange-600',
-    'from-pink-500 to-pink-600',
-  ];
-  const colorIdx = event.id ? event.id.charCodeAt(0) % bgColors.length : 0;
-  const gradient = bgColors[colorIdx];
+const GRADIENTS = [
+  'from-blue-500 to-blue-700',
+  'from-purple-500 to-purple-700',
+  'from-emerald-500 to-emerald-700',
+  'from-orange-500 to-orange-600',
+  'from-pink-500 to-rose-600',
+];
+
+function EventCard({ event, currentUser, onJoin }) {
+  const dateInfo = event.event_date ? getDateLabel(event.event_date) : null;
+  const gradient = GRADIENTS[(event.id?.charCodeAt(0) || 0) % GRADIENTS.length];
 
   return (
     <div
-      className="flex-shrink-0 w-52 rounded-2xl overflow-hidden bg-white border border-slate-100 cursor-pointer hover:shadow-md transition-shadow"
-      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+      className="flex-shrink-0 w-56 rounded-2xl overflow-hidden bg-white border border-slate-100 cursor-pointer active:scale-[0.98] transition-transform"
+      style={{ boxShadow: '0 2px 10px rgba(0,0,0,0.07)' }}
       onClick={onJoin}
     >
-      {/* Header band */}
       {event.image_url ? (
-        <img src={event.image_url} alt="" className="w-full h-24 object-cover" />
+        <img src={event.image_url} alt="" className="w-full h-28 object-cover" />
       ) : (
-        <div className={`w-full h-24 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
-          <Calendar className="w-8 h-8 text-white/80" />
+        <div className={`w-full h-28 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+          <Calendar className="w-10 h-10 text-white/70" />
         </div>
       )}
 
       <div className="p-3">
-        {/* Date */}
-        {dateLabel && (
-          <div className="flex items-center gap-1 text-[11px] font-bold text-blue-600 mb-1">
-            <Calendar className="w-3 h-3" />
-            {dateLabel}
-            {event.event_time && (
-              <><Clock className="w-3 h-3 ml-1" />{event.event_time}</>
-            )}
-          </div>
+        {dateInfo && (
+          <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full ${dateInfo.bg} ${dateInfo.color} mb-1.5`}>
+            <Calendar className="w-2.5 h-2.5" />
+            {dateInfo.label}
+            {event.event_time && ` · ${event.event_time}`}
+          </span>
         )}
 
-        {/* Title */}
         <p className="text-[13px] font-bold text-slate-900 leading-snug line-clamp-2 mb-1.5">
           {event.title || event.body?.slice(0, 60)}
         </p>
 
-        {/* Location */}
         {event.location_text && (
-          <div className="flex items-center gap-1 text-[11px] text-slate-400 mb-2 truncate">
+          <div className="flex items-center gap-1 text-[11px] text-slate-400 mb-2.5 truncate">
             <MapPin className="w-3 h-3 flex-shrink-0" />
             <span className="truncate">{event.location_text}</span>
           </div>
         )}
 
-        {/* Join button */}
         <button
           onClick={e => { e.stopPropagation(); onJoin(); }}
-          className="w-full py-1.5 rounded-xl bg-blue-600 text-white text-[12px] font-bold hover:bg-blue-700 transition-colors"
+          className="w-full py-1.5 rounded-xl text-white text-[12px] font-bold transition-opacity hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}
         >
           Join Event
         </button>
@@ -140,48 +138,44 @@ function EventCard({ event, currentUser, onJoin }) {
 }
 
 function EventDetailSheet({ event, currentUser, onClose }) {
-  const dateLabel = event.event_date
-    ? format(parseISO(event.event_date), 'EEEE, MMMM d, yyyy')
-    : null;
+  const dateInfo = event.event_date ? getDateLabel(event.event_date) : null;
+  const fullDate = event.event_date ? format(parseISO(event.event_date), 'EEEE, MMMM d, yyyy') : null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col"
+      className="fixed inset-0 z-50"
       style={{ background: 'rgba(0,0,0,0.45)' }}
       onClick={onClose}
     >
       <div
-        className="mt-auto bg-white rounded-t-3xl overflow-y-auto"
-        style={{ maxHeight: '80vh' }}
+        className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl overflow-y-auto"
+        style={{ maxHeight: '82vh' }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-2">
+        <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-slate-200" />
         </div>
 
-        {/* Image or gradient banner */}
         {event.image_url ? (
           <img src={event.image_url} alt="" className="w-full h-44 object-cover" />
         ) : (
-          <div className="mx-4 h-32 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-2">
+          <div className="mx-4 h-32 rounded-2xl flex items-center justify-center mb-2" style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}>
             <Calendar className="w-12 h-12 text-white/80" />
           </div>
         )}
 
         <div className="px-4 py-4 space-y-3">
-          {/* Date + time */}
-          {dateLabel && (
-            <div className="flex items-center gap-2 text-[13px] font-bold text-blue-600">
-              <Calendar className="w-4 h-4" />
-              {dateLabel}
+          {dateInfo && (
+            <span className={`inline-flex items-center gap-1.5 text-[12px] font-bold px-3 py-1 rounded-full ${dateInfo.bg} ${dateInfo.color}`}>
+              <Calendar className="w-3.5 h-3.5" />
+              {fullDate}
               {event.event_time && (
-                <><Clock className="w-4 h-4 ml-1" />{event.event_time}</>
+                <><Clock className="w-3.5 h-3.5 ml-1" />{event.event_time}</>
               )}
-            </div>
+            </span>
           )}
 
-          <h2 className="text-[18px] font-bold text-slate-900 leading-snug">
+          <h2 className="text-[19px] font-bold text-slate-900 leading-snug">
             {event.title || event.body?.slice(0, 80)}
           </h2>
 
@@ -196,9 +190,8 @@ function EventDetailSheet({ event, currentUser, onClose }) {
             </div>
           )}
 
-          <div className="text-[12px] text-slate-400">Posted by {event.user_name}</div>
+          <p className="text-[12px] text-slate-400">Posted by {event.user_name}</p>
 
-          {/* RSVP section */}
           <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
             <EventRSVPSection
               postId={event.id}
@@ -207,8 +200,7 @@ function EventDetailSheet({ event, currentUser, onClose }) {
             />
           </div>
         </div>
-
-        <div className="h-6" />
+        <div className="h-8" />
       </div>
     </div>
   );
