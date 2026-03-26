@@ -22,7 +22,6 @@ import CommunityActivityStrip from '@/components/feed/CommunityActivityStrip';
 import EventsFeedSection from '@/components/feed/EventsFeedSection';
 import EventsForYou from '@/components/feed/EventsForYou';
 import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
-import FeedFilterBar from '@/components/feed/FeedFilterBar';
 
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -50,7 +49,6 @@ export default function Feed() {
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('All Five Towns');
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedCommunityId, setSelectedCommunityId] = useState(null);
   const scrollTimeoutRef = useRef(null);
   const queryClient = useQueryClient();
@@ -269,8 +267,6 @@ export default function Feed() {
       const loc = (p.location_text || p.city || '').toLowerCase();
       if (loc && !loc.includes(selectedNeighborhood.toLowerCase())) return false;
     }
-    if (categoryFilter !== 'all' && p.type !== categoryFilter) return false;
-    if (selectedCommunityId && p.community_id !== selectedCommunityId) return false;
     return true;
   });
   const trendingScore = (p) => (p.likes_count || 0) + (p.comments_count || 0) * 2;
@@ -370,14 +366,7 @@ export default function Feed() {
           <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
         </div>
 
-        {/* Filter Bar */}
-        <FeedFilterBar 
-          activeFilter={categoryFilter}
-          onFilterChange={setCategoryFilter}
-          communities={communityGroups}
-          selectedCommunity={selectedCommunityId}
-          onCommunityChange={setSelectedCommunityId}
-        />
+
 
         {/* 3. Community Activity (compact circles) */}
         <CommunityActivityStrip groups={communityGroups} />
