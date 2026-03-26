@@ -347,20 +347,21 @@ export default function Feed() {
       )}
 
       <div className="max-w-2xl mx-auto px-4 pt-4 pb-32">
-        <div className="bg-gradient-to-b from-blue-50 via-white to-white rounded-3xl mb-3 -mx-1 px-1 pt-1">
 
         {/* Push notification prompt */}
         <PushNotificationPrompt />
+
 
         {/* 1. Post Box */}
         <PostBox
           currentUser={currentUser}
           onPostClick={(type) => { setPostModalType(type === 'photo' ? 'feed' : type); setShowPostModal(true); }}
         />
-        </div>
+
+
 
         {/* 2. Feed Tabs */}
-        <div className="mb-3">
+        <div className="rounded-2xl mb-3 overflow-hidden" style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #4C1D95 100%)', boxShadow: '0 4px 16px rgba(37,99,235,0.2)' }}>
           <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
         </div>
 
