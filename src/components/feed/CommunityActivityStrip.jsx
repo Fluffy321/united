@@ -1,4 +1,6 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 function getInitials(name) {
   if (!name) return '?';
@@ -19,6 +21,7 @@ const BG_COLORS = [
 ];
 
 export default function CommunityActivityStrip({ groups = [] }) {
+  const navigate = useNavigate();
   if (groups.length === 0) return null;
 
   const RING_COLORS = [
@@ -33,6 +36,7 @@ export default function CommunityActivityStrip({ groups = [] }) {
       {groups.slice(0, 8).map((g, i) => (
         <div
           key={g.id}
+          onClick={() => navigate(createPageUrl('Communities') + `?communityId=${g.id}`)}
           className="flex-shrink-0 flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
         >
           <div
