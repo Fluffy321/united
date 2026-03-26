@@ -132,11 +132,7 @@ export default function CitySelector({ cityPreset, cityCustom, cityState, onChan
         </div>
       )}
 
-      {displayValue && (
-        <p className="text-xs text-slate-500">
-          Selected: <span className="font-medium text-slate-700">{displayValue}</span>
-        </p>
-      )}
+
     </div>
   );
 }

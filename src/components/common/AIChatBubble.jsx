@@ -61,7 +61,7 @@ export default function AIChatBubble({ currentUser, isScrollingDown }) {
     <>
       {/* Chat Bubble */}
       {isOpen && (
-        <div className={`fixed bottom-[96px] right-6 w-80 bg-white rounded-2xl shadow-2xl flex flex-col z-40 h-96 transition-transform duration-300 ${isScrollingDown ? 'translate-y-96' : 'translate-y-0'}`}>
+        <div className={`fixed bottom-28 right-6 w-80 bg-white rounded-2xl shadow-2xl flex flex-col z-40 h-96 transition-transform duration-300 ${isScrollingDown ? 'translate-y-96' : 'translate-y-0'}`}>
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-slate-100 flex-shrink-0">
             <div className="flex items-center gap-2">
@@ -131,13 +131,13 @@ export default function AIChatBubble({ currentUser, isScrollingDown }) {
         </div>
       )}
 
-      {/* FAB Button */}
-      {!isOpen && (
+      {/* FAB Button — Only show on Feed page */}
+      {!isOpen && (typeof window !== 'undefined' && window.location.pathname.includes('Feed')) && (
         <button
           onClick={handleOpen}
-          className={`fixed bottom-28 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-xl active:scale-95 transition-transform duration-300 flex items-center justify-center z-40 ${isScrollingDown ? 'translate-y-96' : 'translate-y-0'}`}
+          className={`fixed bottom-48 right-6 w-12 h-12 rounded-full bg-slate-700 text-white shadow-lg hover:shadow-xl active:scale-95 transition-transform duration-300 flex items-center justify-center z-40 text-xs font-semibold ${isScrollingDown ? 'translate-y-96' : 'translate-y-0'}`}
         >
-          <Sparkles className="w-6 h-6" />
+          AI
         </button>
       )}
     </>

@@ -48,14 +48,15 @@ export default function MitzvahJourneySection({ logs }) {
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">{month}</p>
               <div className="space-y-2">
                 {items.map(log => {
-                  const categoryInfo = CATEGORY_ICONS[log.category] || { icon: Heart, label: 'Act' };
+                  const categoryInfo = CATEGORY_ICONS[log.category] || { icon: Heart, label: 'Activity' };
                   const Icon = categoryInfo.icon;
+                  const title = log.description || log.title || categoryInfo.label;
                   return (
                     <div key={log.id} className="flex gap-3 p-2 hover:bg-slate-50 rounded transition-colors">
                       <Icon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-slate-900">
-                          {capitalizeTitle(log.activity_name)}
+                          {capitalizeTitle(title)}
                         </p>
                         {log.reflection && (
                           <p className="text-xs text-slate-500 italic mt-1">"{log.reflection}"</p>
