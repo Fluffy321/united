@@ -1,0 +1,63 @@
+{
+  "name": "GroupResource",
+  "type": "object",
+  "properties": {
+    "group_id": {
+      "type": "string",
+      "description": "ID of the community group"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "User ID who uploaded"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Name of user who uploaded"
+    },
+    "title": {
+      "type": "string",
+      "description": "Resource title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "General",
+        "Documents",
+        "Templates",
+        "Links",
+        "Media"
+      ],
+      "default": "General"
+    },
+    "resource_type": {
+      "type": "string",
+      "enum": [
+        "file",
+        "link"
+      ],
+      "description": "Whether this is a file or external link"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL of uploaded file"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Original file name"
+    },
+    "link_url": {
+      "type": "string",
+      "description": "External URL (for links)"
+    }
+  },
+  "required": [
+    "group_id",
+    "user_id",
+    "title",
+    "resource_type"
+  ]
+}

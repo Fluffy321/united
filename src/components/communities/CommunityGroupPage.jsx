@@ -5,6 +5,8 @@ import InviteLinkButton from './InviteLinkButton';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import GroupEventsTab from '@/components/groups/GroupEventsTab';
+import GroupDiscussionTab from '@/components/groups/GroupDiscussionTab';
+import GroupResourcesTab from '@/components/groups/GroupResourcesTab';
 import FileAttachmentButton from '@/components/common/FileAttachmentButton';
 import { AttachmentPreview, PendingAttachmentChip } from '@/components/common/FileAttachmentPreview';
 
@@ -17,6 +19,8 @@ const CATEGORY_EMOJIS = {
 
 const TABS = [
   { id: 'events', label: 'Events', icon: Calendar },
+  { id: 'discussion', label: 'Forum', icon: MessageSquare },
+  { id: 'resources', label: 'Resources', icon: UserCheck },
   { id: 'posts', label: 'Posts', icon: Send },
   { id: 'members', label: 'Members', icon: UserPlus },
   { id: 'announcements', label: 'Announce', icon: Megaphone },
@@ -206,6 +210,16 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
             {/* Events Tab */}
             {tab === 'events' && (
               <GroupEventsTab group={group} currentUser={currentUser} isMember={isMember} />
+            )}
+
+            {/* Discussion/Forum Tab */}
+            {tab === 'discussion' && (
+              <GroupDiscussionTab group={group} currentUser={currentUser} isMember={isMember} />
+            )}
+
+            {/* Resources Tab */}
+            {tab === 'resources' && (
+              <GroupResourcesTab group={group} currentUser={currentUser} isMember={isMember} isAdmin={isAdmin} />
             )}
 
             {/* Posts Tab */}

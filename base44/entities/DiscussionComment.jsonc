@@ -1,0 +1,27 @@
+{
+  "name": "DiscussionComment",
+  "type": "object",
+  "properties": {
+    "discussion_id": {
+      "type": "string",
+      "description": "ID of the discussion"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "User ID of comment author"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Display name of author"
+    },
+    "body": {
+      "type": "string",
+      "description": "Comment text"
+    }
+  },
+  "required": [
+    "discussion_id",
+    "user_id",
+    "body"
+  ]
+}

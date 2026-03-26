@@ -1,0 +1,44 @@
+{
+  "name": "GroupDiscussion",
+  "type": "object",
+  "properties": {
+    "group_id": {
+      "type": "string",
+      "description": "ID of the community group"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "User ID of discussion author"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Display name of author"
+    },
+    "title": {
+      "type": "string",
+      "description": "Discussion topic title"
+    },
+    "body": {
+      "type": "string",
+      "description": "Main discussion content"
+    },
+    "likes_count": {
+      "type": "number",
+      "default": 0
+    },
+    "comments_count": {
+      "type": "number",
+      "default": 0
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "group_id",
+    "user_id",
+    "title",
+    "body"
+  ]
+}
