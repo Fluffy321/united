@@ -2,6 +2,8 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import NavigationTracker from '@/lib/NavigationTracker'
+import ThemeProvider from '@/components/theme/ThemeProvider'
+import PageTransition from '@/components/common/PageTransition'
 import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
@@ -43,18 +45,18 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={<LayoutWrapper currentPageName={mainPageKey}><MainPage /></LayoutWrapper>} />
+      <Route path="/" element={<PageTransition><LayoutWrapper currentPageName={mainPageKey}><MainPage /></LayoutWrapper></PageTransition>} />
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}
           path={`/${path}`}
-          element={<LayoutWrapper currentPageName={path}><Page /></LayoutWrapper>}
+          element={<PageTransition><LayoutWrapper currentPageName={path}><Page /></LayoutWrapper></PageTransition>}
         />
       ))}
-      <Route path="/PublicProfile" element={<PublicProfile />} />
-      <Route path="/ThankYou" element={<ThankYou />} />
-      <Route path="/CommunityMap" element={<CommunityMap />} />
-      <Route path="/Events" element={<Events />} />
+      <Route path="/PublicProfile" element={<PageTransition><PublicProfile /></PageTransition>} />
+      <Route path="/ThankYou" element={<PageTransition><ThankYou /></PageTransition>} />
+      <Route path="/CommunityMap" element={<PageTransition><CommunityMap /></PageTransition>} />
+      <Route path="/Events" element={<PageTransition><Events /></PageTransition>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
@@ -62,17 +64,18 @@ const AuthenticatedApp = () => {
 
 
 function App() {
-
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <NavigationTracker />
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <NavigationTracker />
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 
