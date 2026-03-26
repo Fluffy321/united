@@ -1,0 +1,45 @@
+{
+  "name": "NewsletterLog",
+  "type": "object",
+  "properties": {
+    "group_id": {
+      "type": "string",
+      "description": "ID of the community group"
+    },
+    "sent_by_user_id": {
+      "type": "string",
+      "description": "User ID who sent the newsletter"
+    },
+    "sent_by_name": {
+      "type": "string",
+      "description": "Name of sender"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Newsletter subject line"
+    },
+    "recipients_count": {
+      "type": "number",
+      "description": "Total recipients"
+    },
+    "sent_count": {
+      "type": "number",
+      "description": "Successfully sent"
+    },
+    "failed_count": {
+      "type": "number",
+      "description": "Failed to send"
+    },
+    "sent_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When newsletter was sent"
+    }
+  },
+  "required": [
+    "group_id",
+    "sent_by_user_id",
+    "subject",
+    "recipients_count"
+  ]
+}

@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Users, MessageSquare, Calendar, Download, TrendingUp, Clock, Star, Lock } from 'lucide-react';
+import { Users, MessageSquare, Calendar, Download, TrendingUp, Clock, Star, Lock, Mail, History } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import NewsletterComposer from './NewsletterComposer';
 
 const COLORS = ['#2563EB', '#7C3AED', '#F59E0B', '#EF4444', '#10B981', '#EC4899', '#06B6D4', '#F97316'];
 
 export default function GroupAnalyticsDashboard({ group, currentUser, isAdmin }) {
   const [isPremium, setIsPremium] = useState(false);
   const [checkingPremium, setCheckingPremium] = useState(true);
+  const [showNewsletter, setShowNewsletter] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [memberEmails, setMemberEmails] = useState([]);
 
   useEffect(() => {
     checkPremiumStatus();
+    loadMemberEmails();
   }, []);
 
   const checkPremiumStatus = async () => {
@@ -24,6 +29,16 @@ export default function GroupAnalyticsDashboard({ group, currentUser, isAdmin })
       setIsPremium(false);
     } finally {
       setCheckingPremium(false);
+    }
+  };
+
+  const loadMemberEmails = async () => {
+    try {
+      const members = await base44.entities.GroupMember.filter({ group_id: group.id });
+      const userIds = members.map(m => m.user_id).filter(Boolean);
+      setMemberEmails(userIds);
+    } catch (e) {
+      console.error('Failed to load member emails:', e);
     }
   };
 
@@ -80,15 +95,32 @@ export default function GroupAnalyticsDashboard({ group, currentUser, isAdmin })
 
   return (
     <div className="p-4 space-y-6">
-      {/* Header */}
+      {/* Header with Newsletter Button */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-900">Analytics Dashboard</h2>
           <p className="text-sm text-slate-500">Track your community's engagement</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-50 to-purple-50 rounded-full border border-blue-200">
-          <Star className="w-4 h-4 text-blue-600" />
-          <span className="text-xs font-bold text-blue-700">Premium</span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowHistory(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            <History className="w-4 h-4" />
+            History
+          </button>
+          <button
+            onClick={() => setShowNewsletter(true)}
+            disabled={memberEmails.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full text-sm font-semibold hover:shadow-lg transition-all disabled:opacity-40"
+          >
+            <Mail className="w-4 h-4" />
+            Send Newsletter
+          </button>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-50 to-purple-50 rounded-full border border-blue-200">
+            <Star className="w-4 h-4 text-blue-600" />
+            <span className="text-xs font-bold text-blue-700">Premium</span>
+          </div>
         </div>
       </div>
 
@@ -218,6 +250,24 @@ export default function GroupAnalyticsDashboard({ group, currentUser, isAdmin })
             </ResponsiveContainer>
           </div>
         </div>
+      )}
+
+      {/* Newsletter Composer Modal */}
+      {showNewsletter && (
+        <NewsletterComposer
+          group={group}
+          memberEmails={memberEmails}
+          onClose={() => setShowNewsletter(false)}
+          onSent={() => {}}
+        />
+      )}
+
+      {/* Newsletter History Modal */}
+      {showHistory && (
+        <NewsletterHistoryModal
+          groupId={group.id}
+          onClose={() => setShowHistory(false)}
+        />
       )}
     </div>
   );
