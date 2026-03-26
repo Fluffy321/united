@@ -21,7 +21,7 @@ import HomeFeedTabs from '@/components/feed/HomeFeedTabs';
 import CommunityActivityStrip from '@/components/feed/CommunityActivityStrip';
 import EventsFeedSection from '@/components/feed/EventsFeedSection';
 import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
-import ThisWeekEvents from '@/components/feed/ThisWeekEvents';
+
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -356,8 +356,7 @@ export default function Feed() {
           onPostClick={(type) => { setPostModalType(type === 'photo' ? 'feed' : type); setShowPostModal(true); }}
         />
 
-        {/* 1b. This Week Events Strip */}
-        <ThisWeekEvents currentUser={currentUser} />
+
 
         {/* 2. Feed Tabs */}
         <div className="bg-white rounded-2xl border border-slate-100 mb-3 overflow-hidden" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
