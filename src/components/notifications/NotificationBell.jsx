@@ -22,7 +22,8 @@ export default function NotificationBell({ userId }) {
   return (
     <button
       onClick={() => navigate(createPageUrl('Notifications'))}
-      className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+      className="relative flex items-center justify-center w-11 h-11 rounded-full hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer touch-manipulation"
+      style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       <Bell className="w-5 h-5 text-[#374151] pointer-events-none" strokeWidth={1.75} />
       {count > 0 && (

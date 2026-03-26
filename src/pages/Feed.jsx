@@ -305,27 +305,30 @@ export default function Feed() {
       )}
 
       {/* Sticky Header */}
-      <div className="sticky top-0 z-20 bg-white" style={{ borderBottom: '1px solid #E8ECF4', boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
-        <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
+      <div className="sticky top-0 z-50 bg-white" style={{ borderBottom: '1px solid #E8ECF4', boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
+        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <button
             onClick={() => setShowLocationPicker(v => !v)}
-            className="flex items-center gap-1 font-bold text-[16px] tracking-[-0.01em] text-slate-900 hover:text-blue-600 transition-colors"
+            className="flex items-center gap-1 font-bold text-[16px] tracking-[-0.01em] text-slate-900 hover:text-blue-600 transition-colors active:scale-95 touch-manipulation"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <span>{selectedNeighborhood}</span>
             <svg className="w-4 h-4 text-slate-400 mt-0.5 transition-transform" style={{ transform: showLocationPicker ? 'rotate(180deg)' : 'rotate(0deg)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button 
               onClick={() => setShowSearch(true)} 
-              className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 rounded-full transition-colors cursor-pointer" 
+              className="w-11 h-11 flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 rounded-full transition-colors cursor-pointer touch-manipulation" 
               title="Search posts"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <Search className="w-5 h-5 text-slate-500 pointer-events-none" />
             </button>
             <button 
               onClick={() => setActiveTab('events')} 
-              className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 rounded-full transition-colors cursor-pointer" 
+              className="w-11 h-11 flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 rounded-full transition-colors cursor-pointer touch-manipulation" 
               title="View events"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <Calendar className="w-5 h-5 text-slate-500 pointer-events-none" />
             </button>
