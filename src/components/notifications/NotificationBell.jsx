@@ -22,11 +22,11 @@ export default function NotificationBell({ userId }) {
   return (
     <button
       onClick={() => navigate(createPageUrl('Notifications'))}
-      className="relative flex items-center justify-center w-9 h-9 rounded-full active:bg-[#f1f5f9] transition-colors"
+      className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
     >
-      <Bell className="w-5 h-5 text-[#374151]" strokeWidth={1.75} />
+      <Bell className="w-5 h-5 text-[#374151] pointer-events-none" strokeWidth={1.75} />
       {count > 0 && (
-        <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+        <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
           {count > 99 ? '99+' : count}
         </span>
       )}
