@@ -24,9 +24,10 @@ export default function HomeFeedTabs({ activeTab, onChange }) {
           onClick={() => onChange(tab.id)}
           className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-semibold transition-all whitespace-nowrap ${
             activeTab === tab.id
-              ? 'bg-slate-900 text-white'
-              : 'bg-white text-slate-600 border border-slate-200'
+              ? 'text-white shadow-sm'
+              : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-200 hover:text-blue-600'
           }`}
+          style={activeTab === tab.id ? { background: 'linear-gradient(135deg, #2563EB, #7C3AED)' } : {}}
         >
           {tab.label}
         </button>

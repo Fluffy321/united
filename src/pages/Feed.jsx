@@ -292,7 +292,7 @@ export default function Feed() {
   })();
 
   return (
-    <div className="min-h-screen relative" style={{ background: '#F5F7FB' }}>
+    <div className="min-h-screen relative" style={{ background: '#F8FAFC' }}>
       {/* Pull-to-refresh indicator */}
       {pullDistance > 0 && (
         <div className="fixed top-2 left-1/2 -translate-x-1/2 z-30">
@@ -526,7 +526,8 @@ export default function Feed() {
         )}
         <button
           onClick={() => setShowFAB(v => !v)}
-          className="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xl active:scale-95 transition-all"
+          className="w-14 h-14 rounded-full text-white flex items-center justify-center shadow-xl active:scale-95 transition-all"
+          style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)', boxShadow: '0 6px 24px rgba(124,58,237,0.35)' }}
           style={{ boxShadow: '0 6px 20px rgba(37,99,235,0.4)' }}
         >
           {showFAB ? <X className="w-6 h-6" /> : <Plus className="w-6 h-6" />}

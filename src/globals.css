@@ -5,26 +5,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Design Tokens — Blue & White */
+  /* Design Tokens — Vibrant & Modern */
   --primary: #2563EB;
   --primary-hover: #1D4ED8;
   --secondary: #EFF6FF;
-  --background: #F0F6FF;
+  --background: #F8FAFC;
   --card: #FFFFFF;
-  --text-main: #1E3A5F;
-  --text-muted: #5B7FA6;
-  --accent: #1D4ED8;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --accent: #7C3AED;
+  --accent-pink: #EC4899;
   --success: #22C55E;
-  --border: #BFDBFE;
+  --warning: #F59E0B;
+  --border: #E2E8F0;
 
-  /* Legacy aliases (kept for compatibility) */
-  --color-bg: #F0F6FF;
+  /* Legacy aliases */
+  --color-bg: #F8FAFC;
   --color-card: #FFFFFF;
-  --color-border: #BFDBFE;
-  --color-border-subtle: #DBEAFE;
+  --color-border: #E2E8F0;
+  --color-border-subtle: #F1F5F9;
 
-  --color-navy: #1E3A5F;
-  --color-navy-80: rgba(30, 58, 95, 0.8);
+  --color-navy: #0F172A;
+  --color-navy-80: rgba(15, 23, 42, 0.8);
   --color-brand: #2563EB;
   --color-brand-light: #EFF6FF;
   --color-brand-mid: #BFDBFE;
@@ -142,10 +144,10 @@
 
 .card {
   background: #FFFFFF;
-  border: 1px solid #BFDBFE;
+  border: 1px solid #E2E8F0;
   border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 2px 8px rgba(37,99,235,0.06);
+  box-shadow: 0 2px 8px rgba(15,23,42,0.05);
   margin-bottom: 16px;
 }
 
@@ -164,7 +166,7 @@ html, body {
   color: var(--text-main);
   font-size: 15px;
   line-height: 1.5;
-  background-color: #F0F6FF;
+  background-color: #F8FAFC;
   overscroll-behavior: none;
 }
 
@@ -231,8 +233,8 @@ h1, h2, h3 {
 .u-card {
   background: #FFFFFF;
   border-radius: 16px;
-  border: 1px solid #BFDBFE;
-  box-shadow: 0 4px 12px rgba(37,99,235,0.07), 0 1px 3px rgba(37,99,235,0.04);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 12px rgba(15,23,42,0.06), 0 1px 3px rgba(15,23,42,0.04);
 }
 
 /* Section card — consistent across Help, Events, Communities, Posts */
@@ -246,14 +248,14 @@ h1, h2, h3 {
 
 /* Standard button classes */
 .btn-primary {
-  background: var(--primary);
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
   color: white;
   font-weight: 600;
   border-radius: 12px;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
   border: none;
 }
-.btn-primary:hover { background: var(--primary-hover); }
+.btn-primary:hover { background: linear-gradient(135deg, #1D4ED8, #1E40AF); }
 .btn-primary:active { transform: scale(0.98); }
 
 .btn-secondary {
@@ -369,7 +371,7 @@ h1, h2, h3 {
   100% { background-position: 400px 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, #DBEAFE 25%, #BFDBFE 50%, #DBEAFE 75%);
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s infinite linear;
   border-radius: 8px;

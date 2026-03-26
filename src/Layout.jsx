@@ -128,17 +128,17 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
+    <div className="min-h-screen" style={{ background: '#F8FAFC' }}>
       <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-          body { font-family: 'Inter', system-ui, sans-serif; background: #F0F6FF; -webkit-font-smoothing: antialiased; }
-          .scrollbar-hide::-webkit-scrollbar { display: none; }
-          .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-          @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
-          .skeleton { background: linear-gradient(90deg, #F2F4F7 25%, #E9EBF0 50%, #F2F4F7 75%); background-size: 800px 100%; animation: shimmer 1.4s infinite linear; border-radius: 8px; }
-          .tab-fade-in { animation: tabFade 160ms ease both; }
-          @keyframes tabFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        `}</style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; background: #F8FAFC; -webkit-font-smoothing: antialiased; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+        .skeleton { background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%); background-size: 800px 100%; animation: shimmer 1.4s infinite linear; border-radius: 8px; }
+        .tab-fade-in { animation: tabFade 160ms ease both; }
+        @keyframes tabFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
 
       <Toaster position="top-center" richColors />
       
@@ -173,7 +173,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Bottom Navigation */}
       {!hideNav && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white z-50" style={{ boxShadow: '0 -1px 0 #BFDBFE, 0 -4px 16px rgba(37,99,235,0.08)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <nav className="fixed bottom-0 left-0 right-0 bg-white z-50" style={{ boxShadow: '0 -1px 0 #E2E8F0, 0 -4px 20px rgba(15,23,42,0.06)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="max-w-2xl mx-auto px-4" ref={navContainerRef}>
             {/* Sliding pill highlight */}
             <div
