@@ -4,19 +4,11 @@ import UserAvatar from '@/components/common/UserAvatar';
 
 export default function PostBox({ currentUser, onPostClick }) {
   return (
-    <div
-      className="rounded-2xl p-3 mb-3 flex items-center gap-3"
-      style={{
-        background: 'linear-gradient(135deg, #EFF6FF 0%, #F3EEFF 100%)',
-        border: '1px solid #C7D7FD',
-        boxShadow: '0 2px 12px rgba(37,99,235,0.08)'
-      }}
-    >
+    <div className="rounded-3xl border border-blue-100 bg-white/80 shadow-sm backdrop-blur p-4 mb-3 flex items-center gap-3">
       <UserAvatar user={currentUser} size="sm" />
       <button
         onClick={() => onPostClick('feed')}
-        className="flex-1 text-left px-4 py-2.5 rounded-full text-[14px] font-medium transition-colors"
-        style={{ background: 'rgba(255,255,255,0.7)', color: '#94a3b8', border: '1px solid #DDE6FF' }}
+        className="flex-1 text-left px-4 py-2.5 rounded-2xl text-[14px] font-medium transition-colors bg-blue-50/70 text-slate-400 border-0"
       >
         What's happening?
       </button>

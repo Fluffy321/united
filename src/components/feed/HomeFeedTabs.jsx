@@ -1,14 +1,13 @@
 import React, { useRef } from 'react';
-import { tabActive, tabInactive, gradientStyle } from '@/lib/theme';
 
 const TABS = [
-  { id: 'for_you', label: '✨ For You' },
-  { id: 'trending', label: '🔥 Trending' },
-  { id: 'events', label: '📅 Events' },
-  { id: 'nearby', label: '📍 Near You' },
-  { id: 'chessed', label: '❤️ Chessed' },
-  { id: 'learning', label: '📚 Learning' },
-  { id: 'social', label: '🏀 Social' },
+  { id: 'for_you',   label: '✨ For You',  inactive: { bg: '#F1F5F9', color: '#475569', border: '#E2E8F0' } },
+  { id: 'trending',  label: '🔥 Trending',  inactive: { bg: '#FFF7ED', color: '#C2410C', border: '#FED7AA' } },
+  { id: 'events',    label: '📅 Events',    inactive: { bg: '#FFFBEB', color: '#B45309', border: '#FDE68A' } },
+  { id: 'nearby',    label: '📍 Near You',  inactive: { bg: '#F0FDF4', color: '#166534', border: '#BBF7D0' } },
+  { id: 'chessed',   label: '❤️ Chessed',   inactive: { bg: '#FFF1F2', color: '#BE123C', border: '#FECDD3' } },
+  { id: 'learning',  label: '📚 Learning',  inactive: { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' } },
+  { id: 'social',    label: '🏀 Social',    inactive: { bg: '#FAF5FF', color: '#7E22CE', border: '#E9D5FF' } },
 ];
 
 export default function HomeFeedTabs({ activeTab, onChange }) {
@@ -25,8 +24,8 @@ export default function HomeFeedTabs({ activeTab, onChange }) {
           onClick={() => onChange(tab.id)}
           className="flex-shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap transition-all"
           style={activeTab === tab.id
-            ? { background: 'white', color: '#2563EB', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }
-            : { background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.2)' }
+            ? { background: 'linear-gradient(135deg, #2563EB, #7C3AED)', color: 'white', boxShadow: '0 2px 8px rgba(37,99,235,0.35)' }
+            : { background: tab.inactive.bg, color: tab.inactive.color, border: `1px solid ${tab.inactive.border}` }
           }
         >
           {tab.label}
