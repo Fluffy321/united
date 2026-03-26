@@ -13,6 +13,7 @@ import CommunityEventsTab from './CommunityEventsTab';
 import CommunityMitzvahTab from './CommunityMitzvahTab';
 import MembersListTab from './MembersListTab';
 import GroupChatSection from './GroupChatSection';
+import CommunityResourceLibrary from './CommunityResourceLibrary';
 
 const TABS = [
   { key: 'home', label: 'Home' },
@@ -23,6 +24,7 @@ const TABS = [
   { key: 'events', label: 'Events' },
   { key: 'mitzvah', label: 'Mitzvah' },
   { key: 'chat', label: 'Chat' },
+  { key: 'resources', label: 'Resources' },
 ];
 
 export default function CommunityDetailView({ communityId, currentUser, onBack }) {
@@ -221,6 +223,10 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
           <div className="pt-4 h-[600px]">
             <GroupChatSection communityId={communityId} currentUser={currentUser} />
           </div>
+        )}
+
+        {activeTab === 'resources' && (
+          <CommunityResourceLibrary communityId={communityId} currentUser={currentUser} isAdmin={isAdmin} />
         )}
       </div>
 
