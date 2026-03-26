@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { X, Send, Loader2, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { formatDistanceToNow, parseISO } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, currentUser, blockedIds = [] }) {
+  const navigate = useNavigate();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -97,15 +99,29 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
                 )}
                 <div className="bg-slate-50 rounded-xl p-3">
                   <div className="flex items-center gap-2 mb-1.5">
-                    {comment.author_avatar_url ? (
-                      <img src={comment.author_avatar_url} alt="" className="w-6 h-6 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[11px] font-bold text-blue-600">
-                        {comment.author_name?.[0]}
-                      </div>
-                    )}
+                    <button
+                      onClick={() => {
+                        if (comment.author_id) navigate(`/PublicProfile?id=${comment.author_id}`);
+                      }}
+                      className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                    >
+                      {comment.author_avatar_url ? (
+                        <img src={comment.author_avatar_url} alt="" className="w-6 h-6 rounded-full object-cover cursor-pointer" />
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[11px] font-bold text-blue-600 cursor-pointer">
+                          {comment.author_name?.[0]}
+                        </div>
+                      )}
+                    </button>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-slate-900">{comment.author_name}</p>
+                      <button
+                        onClick={() => {
+                          if (comment.author_id) navigate(`/PublicProfile?id=${comment.author_id}`);
+                        }}
+                        className="text-[13px] font-semibold text-slate-900 hover:text-blue-600 transition-colors text-left"
+                      >
+                        {comment.author_name}
+                      </button>
                     </div>
                     <p className="text-[11px] text-slate-400 flex-shrink-0">
                       {formatDistanceToNow(parseISO(comment.created_date), { addSuffix: true })}

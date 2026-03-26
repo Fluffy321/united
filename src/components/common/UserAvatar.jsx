@@ -25,8 +25,10 @@ function getInitials(name) {
   return name.slice(0, 2).toUpperCase();
 }
 
-export default function UserAvatar({ user, name, size = 'md', className = '' }) {
+export default function UserAvatar({ user, name, size = 'md', className = '', onClick = null, clickable = false, userId = null }) {
   const [imgError, setImgError] = useState(false);
+  const displayName = name || user?.display_name || user?.full_name || user?.user_name || user?.author_name || '';
+  const finalUserId = userId || user?.id;
 
   const sizes = {
     xs: 'w-6 h-6',
@@ -44,14 +46,21 @@ export default function UserAvatar({ user, name, size = 'md', className = '' }) 
     xl: 'text-[32px]'
   };
 
-  const displayName = name || user?.display_name || user?.full_name || user?.user_name || user?.author_name || '';
   const avatarUrl = user?.avatar_url;
   const sizeClass = sizes[size] || sizes.md;
   const fontClass = fontSizes[size] || fontSizes.md;
 
+  const canClick = (clickable || onClick) && finalUserId;
+
   if (avatarUrl && !imgError) {
     return (
-      <div className={`${sizeClass} rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0 ${className}`}>
+      <div
+        className={`${sizeClass} rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0 ${className} ${canClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+        onClick={canClick ? onClick : undefined}
+        role={canClick ? 'button' : undefined}
+        tabIndex={canClick ? 0 : undefined}
+        onKeyDown={canClick ? (e) => e.key === 'Enter' && onClick?.() : undefined}
+      >
         <img
           src={avatarUrl}
           alt={displayName}
@@ -67,8 +76,12 @@ export default function UserAvatar({ user, name, size = 'md', className = '' }) 
 
   return (
     <div
-      className={`${sizeClass} rounded-full flex items-center justify-center flex-shrink-0 font-bold select-none ${fontClass} ${className}`}
+      className={`${sizeClass} rounded-full flex items-center justify-center flex-shrink-0 font-bold select-none ${fontClass} ${className} ${canClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
       style={{ background: color.bg, color: color.text, border: `2px solid ${color.bg}` }}
+      onClick={canClick ? onClick : undefined}
+      role={canClick ? 'button' : undefined}
+      tabIndex={canClick ? 0 : undefined}
+      onKeyDown={canClick ? (e) => e.key === 'Enter' && onClick?.() : undefined}
     >
       {initials}
     </div>

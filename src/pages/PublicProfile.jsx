@@ -13,6 +13,7 @@ export default function PublicProfile() {
   const [currentUser, setCurrentUser] = useState(null);
   const [profileUser, setProfileUser] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,20 +22,25 @@ export default function PublicProfile() {
 
   const loadProfile = async () => {
     try {
-      const user = await base44.auth.me();
-      setCurrentUser(user);
+      try {
+        const user = await base44.auth.me();
+        setCurrentUser(user);
+      } catch {
+        // Allow guest access to public profiles
+      }
 
       if (userId) {
         const users = await base44.entities.User.filter({ id: userId });
         if (users[0]) {
           setProfileUser(users[0]);
-          const userPosts = await base44.entities.UnifiedPost.filter({ user_id: userId }, '-created_date', 10);
-          setPosts(userPosts);
+          setLoadingPosts(true);
+          const userPosts = await base44.entities.UnifiedPost.filter({ user_id: userId }, '-created_date', 50);
+          setPosts(userPosts.filter(p => p.type !== 'dating'));
+          setLoadingPosts(false);
         }
       }
     } catch (e) {
-      console.warn('Public profile: not authenticated', e?.message);
-      base44.auth.redirectToLogin();
+      console.warn('Public profile error:', e?.message);
     }
   };
 
@@ -62,7 +68,7 @@ export default function PublicProfile() {
 
   if (!profileUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
@@ -132,20 +138,43 @@ export default function PublicProfile() {
               </div>
             )}
 
-            {/* Message Button */}
-            <button
-              onClick={handleMessage}
-              className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Message
-            </button>
+            {/* Message Button — only for authenticated users */}
+            {currentUser && (
+              <button
+                onClick={handleMessage}
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Message
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Recent Posts */}
+        {/* Posts Feed */}
         <div className="px-4 pt-4">
-          <RecentPostsSection posts={posts} currentUser={currentUser} profileUser={profileUser} isOwnProfile={false} />
+          {posts.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-slate-500 text-sm font-medium">No posts yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3 pb-8">
+              <h2 className="text-lg font-bold text-slate-900 mb-3">Posts by {displayName}</h2>
+              {loadingPosts ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                </div>
+              ) : (
+                posts.map(post => (
+                  <div key={post.id} className="bg-white rounded-lg p-3 border border-slate-100 cursor-pointer hover:border-slate-200 transition-colors" onClick={() => navigate(`/PostDetail?id=${post.id}`)}>
+                    {post.title && <h3 className="font-bold text-[14px] text-slate-900 mb-1">{post.title}</h3>}
+                    <p className="text-[13px] text-slate-600 line-clamp-2">{post.body}</p>
+                    <p className="text-[11px] text-slate-400 mt-2">{format(parseISO(post.created_date), 'MMM d, yyyy')}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
