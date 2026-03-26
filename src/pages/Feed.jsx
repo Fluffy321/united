@@ -530,10 +530,10 @@ export default function Feed() {
         )}
         <button
           onClick={() => setShowFAB(v => !v)}
-          className="w-14 h-14 rounded-full text-white flex items-center justify-center shadow-xl active:scale-95 transition-all"
-          style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)', boxShadow: '0 6px 20px rgba(37,99,235,0.4)' }}
+          className="w-11 h-11 rounded-full text-white flex items-center justify-center shadow-md active:scale-95 transition-all"
+          style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)', boxShadow: '0 2px 8px rgba(37,99,235,0.3)' }}
         >
-          {showFAB ? <X className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
+          {showFAB ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
         </button>
       </div>
 
