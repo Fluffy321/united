@@ -288,7 +288,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           )}
         </p>
 
-        {/* Image — full width, tap to toggle zoom */}
+        {/* Images and attachments */}
         {post.image_url && (
           <div className="mt-3 -mx-4 cursor-pointer" onClick={() => setImgExpanded(e => !e)}>
             <img
@@ -301,6 +301,42 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             {!imgExpanded && (
               <div className="absolute bottom-2 right-2 bg-black/40 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full pointer-events-none">tap to expand</div>
             )}
+          </div>
+        )}
+
+        {/* Additional attachments */}
+        {post.attachment_urls && post.attachment_urls.length > (post.image_url ? 1 : 0) && (
+          <div className="mt-3 space-y-2">
+            {post.attachment_urls.filter(url => url !== post.image_url).map((url, idx) => {
+              const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+              return isImage ? (
+                <div key={idx} className="-mx-4 cursor-pointer" onClick={() => setImgExpanded(!imgExpanded)}>
+                  <img
+                    src={url}
+                    alt="attachment"
+                    className={`w-full object-cover transition-all rounded-lg ${imgExpanded ? 'max-h-[480px]' : 'max-h-32'}`}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+              ) : (
+                <a
+                  key={idx}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-2.5 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors text-[12px]"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
+                    📎
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-blue-700 truncate">Download File</p>
+                    <p className="text-[11px] text-blue-600">Click to open or download</p>
+                  </div>
+                </a>
+              );
+            })}
           </div>
         )}
 
