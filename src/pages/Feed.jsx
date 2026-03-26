@@ -20,6 +20,7 @@ import PostBox from '@/components/feed/PostBox';
 import HomeFeedTabs from '@/components/feed/HomeFeedTabs';
 import CommunityActivityStrip from '@/components/feed/CommunityActivityStrip';
 import EventsFeedSection from '@/components/feed/EventsFeedSection';
+import EventsForYou from '@/components/feed/EventsForYou';
 import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
 
 import { toast } from 'sonner';
@@ -368,11 +369,14 @@ export default function Feed() {
 
         {/* 5. Events Calendar Tab */}
         {activeTab === 'events' && !isLoading && (
-          <EventsFeedSection
-            posts={visiblePosts}
-            currentUser={currentUser}
-            onCreateEvent={() => { setPostModalType('event'); setShowPostModal(true); }}
-          />
+          <>
+            <EventsForYou currentUser={currentUser} />
+            <EventsFeedSection
+              posts={visiblePosts}
+              currentUser={currentUser}
+              onCreateEvent={() => { setPostModalType('event'); setShowPostModal(true); }}
+            />
+          </>
         )}
 
         {/* 6. Feed Posts (all tabs except events) */}
