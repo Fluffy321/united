@@ -25,9 +25,9 @@ export default function NotificationBell({ userId }) {
       className="relative flex items-center justify-center w-11 h-11 rounded-full hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer touch-manipulation"
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
-      <Bell className="w-5 h-5 text-[#374151] pointer-events-none" strokeWidth={1.75} />
+      <Bell className="w-5 h-5 text-[#374151]" strokeWidth={1.75} />
       {count > 0 && (
-        <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+        <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none pointer-events-none">
           {count > 99 ? '99+' : count}
         </span>
       )}

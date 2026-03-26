@@ -318,19 +318,19 @@ export default function Feed() {
           <div className="flex items-center gap-1.5">
             <button 
               onClick={() => setShowSearch(true)} 
-              className="w-11 h-11 flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 rounded-full transition-colors cursor-pointer touch-manipulation" 
+              className="w-11 h-11 flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 rounded-full transition-colors cursor-pointer touch-manipulation relative" 
               title="Search posts"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <Search className="w-5 h-5 text-slate-500 pointer-events-none" />
+              <Search className="w-5 h-5 text-slate-500" />
             </button>
             <button 
               onClick={() => setActiveTab('events')} 
-              className="w-11 h-11 flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 rounded-full transition-colors cursor-pointer touch-manipulation" 
+              className="w-11 h-11 flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 rounded-full transition-colors cursor-pointer touch-manipulation relative" 
               title="View events"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <Calendar className="w-5 h-5 text-slate-500 pointer-events-none" />
+              <Calendar className="w-5 h-5 text-slate-500" />
             </button>
             <NotificationBell userId={currentUser?.id} />
           </div>
