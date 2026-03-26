@@ -3,7 +3,7 @@ import { Loader2, Settings } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import ReportModal from '@/components/common/ReportModal';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns';
