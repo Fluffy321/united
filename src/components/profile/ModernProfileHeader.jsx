@@ -7,7 +7,7 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
     <div className="relative">
       {/* Gradient header */}
       <div className="relative h-28 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 overflow-hidden">
-        <div className="opacity-65 rounded absolute inset-0">
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full mix-blend-screen blur-3xl" />
         </div>
         {isOwnProfile && onSettings &&
@@ -22,7 +22,7 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
       </div>
 
       {/* Avatar + Info row */}
-      <div className="px-5 -mt-10 flex items-end gap-4 pb-3">
+      <div className="px-5 -mt-10 flex items-end gap-4 pb-3 relative z-10">
         <div className="w-20 h-20 rounded-2xl border-4 border-white shadow-xl bg-white overflow-hidden flex-shrink-0">
           <UserAvatar user={user} size="xl" className="!w-full !h-full !rounded-none" />
         </div>
