@@ -334,7 +334,7 @@ export default function MitzvahCircle({ isActive = true }) {
 
   return (
     <>
-      <div className="min-h-screen flex flex-col" style={{ background: '#F8FAFC' }}>
+      <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(180deg, #F0F6FF 0%, #FAF5FF 30%, #F8FAFC 100%)' }}>
         {/* Header */}
         <div className="bg-white sticky top-0 z-20 flex-shrink-0" style={{ borderBottom: '1px solid #E8ECF4' }}>
           <div className="max-w-2xl mx-auto px-4 py-4">
@@ -432,14 +432,14 @@ export default function MitzvahCircle({ isActive = true }) {
                     ))}
                   </div>
                 ) : requests.length === 0 ? (
-                  <div className="text-center py-10 bg-white rounded-[16px] border border-[#EAECF0]">
-                    <div className="w-14 h-14 rounded-full bg-[#F2F4F7] flex items-center justify-center mx-auto mb-3">
-                      <HandHeart className="w-6 h-6 text-[#98A2B3]" />
-                    </div>
-                    <p className="text-[14px] font-semibold text-[#0F1C2E]">No open requests</p>
-                    <p className="text-[12px] text-[#98A2B3] mt-1">Check back soon</p>
-                  </div>
-                ) : (
+                   <div className="text-center py-10 rounded-[16px] border" style={{ background: 'rgba(255,255,255,0.6)', borderColor: '#BFDBFE' }}>
+                     <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
+                       <HandHeart className="w-6 h-6 text-blue-600" />
+                     </div>
+                     <p className="text-[14px] font-semibold text-slate-900">No open requests</p>
+                     <p className="text-[12px] text-slate-500 mt-1">Check back soon</p>
+                   </div>
+                 ) : (
                   <div className="space-y-3">
                     {requests.map((request) => (
                       <div key={request.id} className="bg-white rounded-[16px] border border-[#EAECF0] p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedRequest(request)}>
@@ -468,7 +468,7 @@ export default function MitzvahCircle({ isActive = true }) {
               </div>
 
               {/* Request Help CTA */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-[16px] border border-blue-200 p-4 text-center">
+              <div className="rounded-[16px] p-4 text-center" style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)', border: '1px solid #BFDBFE' }}>
                 <p className="text-[13px] text-slate-700 mb-3">Need help with something?</p>
                 <button
                   onClick={() => setShowCreateModal(true)}

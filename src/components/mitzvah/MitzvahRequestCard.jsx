@@ -19,6 +19,18 @@ const CATEGORY_COLORS = {
   'Other':        'bg-slate-100 text-slate-600',
 };
 
+const CATEGORY_BG = {
+  'Errand':       'bg-blue-50',
+  'Lost & Found': 'bg-amber-50',
+  'Quick Favor':  'bg-purple-50',
+  'Tutoring':     'bg-green-50',
+  'Shabbat Help': 'bg-indigo-50',
+  'Ride':         'bg-sky-50',
+  'Meal':         'bg-orange-50',
+  'Moving':       'bg-rose-50',
+  'Other':        'bg-slate-50',
+};
+
 const CATEGORY_EMOJI = {
   'Errand': '🛒', 'Lost & Found': '🔍', 'Quick Favor': '⚡',
   'Tutoring': '📚', 'Shabbat Help': '🕯️', 'Ride': '🚗',
@@ -54,7 +66,7 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
     : request.status;
 
   return (
-    <div className="bg-white rounded-2xl p-4 border border-slate-100 hover:shadow-md transition-shadow" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+    <div className={`rounded-2xl p-4 border hover:shadow-md transition-shadow ${CATEGORY_BG[request.category] || CATEGORY_BG['Other']}`} style={{ borderColor: 'rgba(0,0,0,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
       {/* Status pipeline — always visible */}
       <StatusPipeline status={normalizedStatus} />
 
