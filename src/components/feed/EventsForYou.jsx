@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Calendar, MapPin, Sparkles, Clock } from 'lucide-react';
 import { format, parseISO, startOfToday, isBefore } from 'date-fns';
 import EventRSVPSection from '@/components/events/EventRSVPSection';
+import EventSummaryButton from '@/components/events/EventSummaryButton';
 
 // Keywords that tie interests → event body/title text
 const INTEREST_KEYWORDS = {
@@ -185,6 +186,10 @@ function EventSheet({ event, currentUser, onClose }) {
           )}
 
           <p className="text-[12px] text-slate-400">Posted by {event.user_name}</p>
+
+          <div className="mb-2">
+            <EventSummaryButton event={event} />
+          </div>
 
           <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
             <EventRSVPSection postId={event.id} currentUser={currentUser} eventDate={event.event_date} />
