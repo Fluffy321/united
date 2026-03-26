@@ -21,7 +21,7 @@ export default function SwipeableTabs({ activeIndex, onIndexChange, children }) 
   }, [activeIndex]);
 
   return (
-    <div className="relative w-full h-full overflow-x-hidden">
+    <div className="relative w-full h-full" style={{ overflowX: 'clip' }}>
       {childArray.map((child, index) => {
         if (!visited.has(index)) return null;
         return (
