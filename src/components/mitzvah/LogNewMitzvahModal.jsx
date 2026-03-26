@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import FileUploadZone from '@/components/common/FileUploadZone';
 import { format } from 'date-fns';
 
 export default function LogNewMitzvahModal({ open, onOpenChange, onSubmit }) {
@@ -12,6 +13,7 @@ export default function LogNewMitzvahModal({ open, onOpenChange, onSubmit }) {
   const [hoursCompleted, setHoursCompleted] = useState('');
   const [community, setCommunity] = useState('');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [photoUrl, setPhotoUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -20,14 +22,21 @@ export default function LogNewMitzvahModal({ open, onOpenChange, onSubmit }) {
 
     setIsSubmitting(true);
     try {
-      await onSubmit({ title, description, hoursCompleted, community, date });
+      await onSubmit({ title, description, hoursCompleted, community, date, photo_url: photoUrl });
       setTitle('');
       setDescription('');
       setHoursCompleted('');
       setCommunity('');
       setDate(format(new Date(), 'yyyy-MM-dd'));
+      setPhotoUrl('');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePhotoUpload = (files) => {
+    if (files.length > 0) {
+      setPhotoUrl(files[0].url);
     }
   };
 
@@ -97,6 +106,22 @@ export default function LogNewMitzvahModal({ open, onOpenChange, onSubmit }) {
               onChange={(e) => setDate(e.target.value)}
               className="mt-1"
             />
+          </div>
+
+          <div>
+            <Label className="text-sm font-semibold">Add Photo (optional)</Label>
+            <div className="mt-1">
+              <FileUploadZone
+                onFilesUpload={handlePhotoUpload}
+                maxFiles={1}
+                acceptedTypes={['image/*']}
+              />
+            </div>
+            {photoUrl && (
+              <div className="mt-2 rounded-lg overflow-hidden border border-slate-200">
+                <img src={photoUrl} alt="Mitzvah" className="w-full h-32 object-cover" />
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 pt-4">
