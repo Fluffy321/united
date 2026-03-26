@@ -297,7 +297,7 @@ export default function Feed() {
     <div className="min-h-screen relative" style={{ background: '#F8FAFC' }}>
       {/* Pull-to-refresh indicator */}
       {pullDistance > 0 && (
-        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-30">
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[40] pointer-events-none">
           <div className={`transition-all ${isRefreshing ? 'animate-spin' : ''}`} style={{ transform: `rotate(${pullDistance * 3}deg)` }}>
             <RefreshCw className="w-6 h-6 text-blue-600" />
           </div>
@@ -305,7 +305,7 @@ export default function Feed() {
       )}
 
       {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-white" style={{ borderBottom: '1px solid #E8ECF4', boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
+      <div className="sticky top-0 z-[60] bg-white" style={{ borderBottom: '1px solid #E8ECF4', boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between" style={{ pointerEvents: 'auto' }}>
           <button
             onClick={() => setShowLocationPicker(v => !v)}
@@ -315,20 +315,22 @@ export default function Feed() {
             <span>{selectedNeighborhood}</span>
             <svg className="w-4 h-4 text-slate-400 mt-0.5 transition-transform" style={{ transform: showLocationPicker ? 'rotate(180deg)' : 'rotate(0deg)', pointerEvents: 'none' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
           </button>
-          <div className="flex items-center gap-1.5" style={{ pointerEvents: 'auto' }}>
+          <div className="flex items-center gap-1.5 relative" style={{ pointerEvents: 'auto', zIndex: 70 }}>
             <button 
-              onClick={() => setShowSearch(true)} 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowSearch(true); }}
+              onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowSearch(true); }}
               className="w-11 h-11 flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 rounded-full transition-colors cursor-pointer touch-manipulation relative" 
               title="Search posts"
-              style={{ WebkitTapHighlightColor: 'transparent', pointerEvents: 'auto' }}
+              style={{ WebkitTapHighlightColor: 'transparent', pointerEvents: 'auto', WebkitTouchCallout: 'none', zIndex: 80 }}
             >
               <Search className="w-5 h-5 text-slate-500" style={{ pointerEvents: 'none' }} />
             </button>
             <button 
-              onClick={() => setActiveTab('events')} 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveTab('events'); }}
+              onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setActiveTab('events'); }}
               className="w-11 h-11 flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 rounded-full transition-colors cursor-pointer touch-manipulation relative" 
               title="View events"
-              style={{ WebkitTapHighlightColor: 'transparent', pointerEvents: 'auto' }}
+              style={{ WebkitTapHighlightColor: 'transparent', pointerEvents: 'auto', WebkitTouchCallout: 'none', zIndex: 80 }}
             >
               <Calendar className="w-5 h-5 text-slate-500" style={{ pointerEvents: 'none' }} />
             </button>
