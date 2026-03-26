@@ -134,7 +134,8 @@ export default function SearchModal({ open, onOpenChange, posts = [] }) {
               {tabResults.posts?.length > 0 && (
                 <Section title="Posts" count={tabResults.posts.length}>
                   {tabResults.posts.map(post => (
-                    <div key={post.id} onClick={() => { onOpenChange(false); }} className="flex items-start gap-2.5 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+                    <div key={post.id} onClick={() => { navigate(`/PostDetail?id=${post.id}`); onOpenChange(false); }} className="flex items-start gap-2.5 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+
                       <UserAvatar name={post.user_name} size="sm" />
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-slate-900 line-clamp-1">{post.title || post.body?.substring(0, 50)}</p>

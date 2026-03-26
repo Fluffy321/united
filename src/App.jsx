@@ -13,6 +13,7 @@ import PublicProfile from '@/pages/PublicProfile';
 import Events from '@/pages/Events';
 import CommunityMap from '@/pages/CommunityMap';
 import ThankYou from '@/pages/ThankYou';
+import PostDetail from '@/pages/PostDetail';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -54,6 +55,7 @@ const AuthenticatedApp = () => {
         />
       ))}
       <Route path="/PublicProfile" element={<PageTransition><PublicProfile /></PageTransition>} />
+      <Route path="/PostDetail" element={<PageTransition><PostDetail /></PageTransition>} />
       <Route path="/ThankYou" element={<PageTransition><ThankYou /></PageTransition>} />
       <Route path="/CommunityMap" element={<PageTransition><CommunityMap /></PageTransition>} />
       <Route path="/Events" element={<PageTransition><Events /></PageTransition>} />
