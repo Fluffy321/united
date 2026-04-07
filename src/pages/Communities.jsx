@@ -390,10 +390,9 @@ export default function Communities() {
               </button>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-1.5 text-white px-4 py-2 rounded-full text-[13px] font-bold transition-all active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)', boxShadow: '0 4px 14px rgba(37,99,235,0.4)' }}
+                className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-5 py-2.5 font-semibold shadow-md hover:shadow-lg transition"
               >
-                <Plus className="w-3.5 h-3.5" /> Create
+                + Create
               </button>
             </div>
           </div>
