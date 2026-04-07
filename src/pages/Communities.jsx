@@ -544,68 +544,37 @@ export default function Communities() {
 function FeaturedCommunityBanner({ community, onOpen }) {
   if (!community) return null;
   const activeNow = 12 + (community.id?.charCodeAt(0) % 20);
-  const initials = community.name?.slice(0, 2)?.toUpperCase() || 'CO';
 
   return (
-    <div
-      className="relative rounded-3xl overflow-hidden mb-6 text-white"
-      style={{
-        background: 'linear-gradient(135deg, #1e40af 0%, #4f46e5 50%, #7c3aed 100%)',
-        boxShadow: '0 8px 32px rgba(79,70,229,0.45), 0 2px 8px rgba(0,0,0,0.15)',
-        minHeight: 200,
-      }}
-    >
-      {/* Subtle noise/texture overlay */}
-      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-
-      {/* Cover image overlay */}
+    <div className="mb-6 rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white shadow-xl">
       {community.cover_image_url && (
         <img src={community.cover_image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
       )}
-
-      <div className="relative p-7">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-[10px] uppercase tracking-widest font-bold text-white/60">✦ Featured Community</span>
+      <div className="p-7">
+        <div className="text-xs font-semibold text-white/80 mb-3 tracking-wide">
+          ⭐ FEATURED COMMUNITY
         </div>
 
-        <div className="flex items-start gap-4 mb-5">
-          {community.logo_url ? (
-            <img src={community.logo_url} alt={community.name} className="w-14 h-14 rounded-2xl border-2 border-white/30 shadow-lg object-cover flex-shrink-0" />
-          ) : (
-            <div className="w-14 h-14 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center text-lg font-black flex-shrink-0">
-              {initials}
-            </div>
-          )}
-          <div className="min-w-0">
-            <h2 className="text-[26px] font-black leading-tight text-white">{community.name}</h2>
-            {community.type && (
-              <span className="text-[12px] font-semibold text-white/60">{community.type}</span>
-            )}
-          </div>
+        <div className="text-3xl font-extrabold leading-tight">
+          {community.name}
         </div>
 
-        {(community.description_short || community.description) && (
-          <p className="text-[14px] text-white/80 leading-relaxed line-clamp-2 mb-5">
-            {community.description_short || community.description}
-          </p>
-        )}
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 text-[13px] text-white/70">
-            <span className="font-semibold">{(community.follower_count || 0).toLocaleString()} members</span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />
-              {activeNow} active now
-            </span>
-          </div>
-
-          <button
-            onClick={() => onOpen(community.id)}
-            className="rounded-full bg-white text-slate-900 px-6 py-3 text-[14px] font-bold shadow-lg hover:shadow-xl transition-all active:scale-95"
-          >
-            View →
-          </button>
+        <div className="mt-3 text-sm text-white/85 max-w-xl line-clamp-2">
+          {community.description_short || community.description}
         </div>
+
+        <div className="mt-5 flex items-center gap-4 text-sm text-white/80">
+          <span>{(community.follower_count || 0).toLocaleString()} members</span>
+          <span>•</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />{activeNow} active now</span>
+        </div>
+
+        <button
+          onClick={() => onOpen(community.id)}
+          className="mt-6 bg-white text-slate-900 rounded-full px-6 py-3 font-semibold shadow-lg hover:scale-105 transition active:scale-95"
+        >
+          View Community
+        </button>
       </div>
     </div>
   );
