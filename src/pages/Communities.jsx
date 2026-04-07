@@ -531,22 +531,23 @@ function FeaturedCommunityBanner({ community, onOpen }) {
   const activeNow = 12 + (community.id?.charCodeAt(0) % 20);
 
   return (
-    <div className="mb-5 rounded-2xl overflow-hidden text-white shadow-lg" style={{ background: 'linear-gradient(135deg, #1e40af 0%, #4f46e5 60%, #7c3aed 100%)' }}>
-      <div className="px-4 py-4 flex items-center gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="text-[10px] font-bold tracking-widest text-white/60 uppercase mb-1">✦ Featured</div>
-          <div className="font-bold text-[16px] leading-tight truncate">{community.name}</div>
-          <p className="text-white/75 text-[12px] mt-0.5 line-clamp-1">{community.description_short || community.description}</p>
-          <div className="flex items-center gap-3 mt-2 text-[11px] text-white/70">
-            <span>👥 {(community.follower_count || 0).toLocaleString()} members</span>
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />{activeNow} active now</span>
-          </div>
+    <div className="rounded-3xl overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md mb-5">
+      <div className="p-5">
+        <div className="text-xs uppercase tracking-wide text-white/75 font-semibold">Featured Community</div>
+        <div className="mt-2 text-2xl font-bold">{community.name}</div>
+        <div className="mt-2 text-sm text-white/85 max-w-xl line-clamp-2">
+          {community.description_short || community.description}
+        </div>
+        <div className="mt-4 flex items-center gap-4 text-sm text-white/80">
+          <span>{(community.follower_count || 0).toLocaleString()} members</span>
+          <span>•</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />{activeNow} active now</span>
         </div>
         <button
           onClick={() => onOpen(community.id)}
-          className="shrink-0 bg-white text-indigo-700 font-bold text-[12px] px-4 py-2 rounded-full shadow hover:shadow-md transition-all active:scale-95"
+          className="mt-4 rounded-full bg-white text-slate-900 px-5 py-2.5 text-sm font-semibold shadow-sm hover:shadow-md transition-all active:scale-95"
         >
-          View →
+          View Community
         </button>
       </div>
     </div>
