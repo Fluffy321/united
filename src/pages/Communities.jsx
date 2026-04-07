@@ -503,6 +503,7 @@ export default function Communities() {
               memberGroupIds={memberGroupIds}
               setShowCreateModal={setShowCreateModal}
               hasFilter={activeCategory !== 'all' || !!searchQuery}
+              setActiveCategory={setActiveCategory}
             />
           )}
         </div>
@@ -545,16 +546,43 @@ function FeaturedCommunityBanner({ community, onOpen }) {
   );
 }
 
+const SUGGESTED_CATEGORIES = [
+  { emoji: '🏫', label: 'Schools & Yeshivas', key: 'schools' },
+  { emoji: '🤝', label: 'Chessed & Volunteering', key: 'chessed' },
+  { emoji: '📚', label: 'Learning & Torah', key: 'learning' },
+  { emoji: '🎉', label: 'Social & Events', key: 'social' },
+  { emoji: '🏀', label: 'Sports & Fitness', key: 'sports' },
+  { emoji: '🍽️', label: 'Food & Lifestyle', key: 'food' },
+];
+
 function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId }) {
   if (myCommunities.length === 0 && myGroups.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-8 text-center" style={{ border: '1px solid #E8EDF5' }}>
-        <div className="text-4xl mb-3">🌍</div>
-        <div className="text-[16px] font-bold text-slate-900 mb-1">No communities yet</div>
-        <div className="text-[12px] text-slate-500 mb-4">Join communities to get started</div>
-        <button onClick={() => setActiveTab('discover')} className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold shadow">
-          Browse Communities
-        </button>
+      <div className="space-y-4">
+        <div className="rounded-3xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 100%)', border: '1px solid #DBEAFE' }}>
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg">🌍</div>
+            <h3 className="text-[18px] font-bold text-slate-900 mb-1">Find your community</h3>
+            <p className="text-[13px] text-slate-500 mb-5 max-w-xs mx-auto">Join shuls, schools, and local groups in the Five Towns and beyond</p>
+            <button onClick={() => setActiveTab('discover')} className="bg-blue-600 text-white rounded-full px-6 py-2.5 text-[13px] font-bold shadow hover:bg-blue-700 transition-colors">
+              Browse Communities
+            </button>
+          </div>
+        </div>
+        <div>
+          <h3 className="text-[13px] font-bold text-slate-500 uppercase tracking-wide mb-3">Popular Categories</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {SUGGESTED_CATEGORIES.map(cat => (
+              <button key={cat.key} onClick={() => setActiveTab('discover')}
+                className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 text-left hover:bg-slate-50 transition-colors"
+                style={{ border: '1px solid #E8EDF5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+              >
+                <span className="text-xl">{cat.emoji}</span>
+                <span className="text-[12px] font-semibold text-slate-700 leading-tight">{cat.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -569,14 +597,7 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
           </div>
           <div className="grid grid-cols-2 gap-2.5">
             {myCommunities.map(c => (
-              <CommunityCard
-                key={c.id}
-                community={c}
-                isJoined={userCommunityIds.has(c.id)}
-                isJoining={joiningId === c.id}
-                onOpen={openCommunity}
-                onJoin={onJoinCommunity}
-              />
+              <CommunityCard key={c.id} community={c} isJoined={userCommunityIds.has(c.id)} isJoining={joiningId === c.id} onOpen={openCommunity} onJoin={onJoinCommunity} />
             ))}
           </div>
         </section>
@@ -589,13 +610,7 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
           </div>
           <div className="grid grid-cols-2 gap-2.5">
             {myGroups.map(g => (
-              <GroupCard
-                key={g.id}
-                group={g}
-                isMember={memberGroupIds.has(g.id)}
-                onClick={() => setSelectedGroup(g)}
-                onJoin={onJoinGroup}
-              />
+              <GroupCard key={g.id} group={g} isMember={memberGroupIds.has(g.id)} onClick={() => setSelectedGroup(g)} onJoin={onJoinGroup} />
             ))}
           </div>
         </section>
@@ -604,10 +619,54 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
   );
 }
 
-function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter }) {
+function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory }) {
   const sorted = [...communities].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0));
   const featured = sorted[0];
   const rest = sorted.slice(1);
+
+  const noResults = communities.length === 0 && groups.length === 0;
+
+  if (noResults) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-3xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', border: '1px dashed #BFDBFE' }}>
+          <div className="text-3xl mb-2">🔍</div>
+          <h3 className="text-[15px] font-bold text-slate-800 mb-1">No results found</h3>
+          <p className="text-[12px] text-slate-500 mb-4">Try a different search or explore by category</p>
+          <button
+            onClick={() => setActiveCategory('all')}
+            className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold"
+          >
+            Clear Filters
+          </button>
+        </div>
+        <div>
+          <h3 className="text-[13px] font-bold text-slate-500 uppercase tracking-wide mb-3">Explore Categories</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {SUGGESTED_CATEGORIES.map(cat => (
+              <button
+                key={cat.key}
+                onClick={() => setActiveCategory(cat.key)}
+                className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 text-left hover:bg-slate-50 transition-colors"
+                style={{ border: '1px solid #E8EDF5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+              >
+                <span className="text-xl">{cat.emoji}</span>
+                <span className="text-[12px] font-semibold text-slate-700 leading-tight">{cat.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 text-center border border-blue-100">
+          <div className="text-2xl mb-1.5">🏛️</div>
+          <h3 className="text-[14px] font-bold text-slate-900 mb-1">Start a Community</h3>
+          <p className="text-[11px] text-slate-500 mb-3">Bring your shul, school, or group online</p>
+          <button onClick={() => setShowCreateModal(true)} className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold shadow">
+            Create Community
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
