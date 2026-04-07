@@ -140,22 +140,8 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, feature
 
   return (
     <div
-      className="group rounded-[20px] bg-white border border-slate-100 overflow-hidden cursor-pointer"
-      style={{
-        boxShadow: '0 2px 8px rgba(15,23,42,0.06)',
-        transition: 'transform 160ms ease, box-shadow 160ms ease',
-      }}
+      className="w-full rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] transition-all duration-200 overflow-hidden text-left cursor-pointer"
       onClick={() => onOpen(community.id)}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = 'translateY(-3px) scale(1.01)';
-        e.currentTarget.style.boxShadow = '0 12px 28px rgba(37,99,235,0.15), 0 4px 10px rgba(15,23,42,0.08)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = '';
-        e.currentTarget.style.boxShadow = '0 2px 8px rgba(15,23,42,0.06)';
-      }}
-      onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)'; }}
-      onMouseUp={e => { e.currentTarget.style.transform = 'translateY(-3px) scale(1.01)'; }}
     >
       <div className={`h-2 w-full bg-gradient-to-r ${gradient}`} />
 
@@ -219,22 +205,7 @@ function GroupCard({ group, isMember, onClick, onJoin }) {
   return (
     <div
       onClick={onClick}
-      className="rounded-[20px] bg-white overflow-hidden flex flex-col cursor-pointer"
-      style={{
-        border: '1px solid #EEF2F8',
-        boxShadow: '0 2px 8px rgba(15,23,42,0.06)',
-        transition: 'transform 160ms ease, box-shadow 160ms ease',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = 'translateY(-3px) scale(1.01)';
-        e.currentTarget.style.boxShadow = '0 12px 28px rgba(37,99,235,0.15), 0 4px 10px rgba(15,23,42,0.08)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = '';
-        e.currentTarget.style.boxShadow = '0 2px 8px rgba(15,23,42,0.06)';
-      }}
-      onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)'; }}
-      onMouseUp={e => { e.currentTarget.style.transform = 'translateY(-3px) scale(1.01)'; }}
+      className="w-full rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] transition-all duration-200 overflow-hidden text-left flex flex-col cursor-pointer"
     >
       <div className={`h-2 bg-gradient-to-r ${catGrad}`} />
 
