@@ -11,6 +11,10 @@ module.exports = {
       'to-indigo-500','to-amber-500',
       // bg-gradient-to-br combos
       'bg-gradient-to-br',
+      // category border-l colors
+      'border-l-blue-500','border-l-blue-600','border-l-orange-500','border-l-green-600',
+      'border-l-slate-400','border-l-purple-500','border-l-cyan-500','border-l-amber-500',
+      'border-l-pink-500','border-l-violet-500',
     ],
     darkMode: ["class"],
     content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
