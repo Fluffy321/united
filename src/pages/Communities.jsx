@@ -542,70 +542,40 @@ function FeaturedCommunityBanner({ community, onOpen }) {
   const newPosts = 15 + (community.id?.charCodeAt(0) % 20);
 
   return (
-    <div
-      onClick={() => onOpen(community.id)}
-      className="mb-6 rounded-3xl overflow-hidden relative cursor-pointer group"
-      style={{
-        background: 'linear-gradient(145deg, #1e40af 0%, #312e81 50%, #4c1d95 100%)',
-        boxShadow: '0 20px 60px rgba(37,99,235,0.45), 0 8px 20px rgba(0,0,0,0.2)',
-      }}
-    >
-      {/* Background image */}
+    <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg mb-6">
       {community.cover_image_url && (
-        <img src={community.cover_image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-25 group-hover:opacity-30 transition-opacity duration-300" />
+        <img src={community.cover_image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
       )}
+      <div className="absolute inset-0 bg-white/5 backdrop-blur-[2px]" />
 
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 70% 20%, rgba(139,92,246,0.35) 0%, transparent 60%)' }} />
-
-      {/* Glow dots */}
-      <div className="absolute top-6 right-8 w-32 h-32 rounded-full opacity-20 blur-2xl" style={{ background: '#818cf8' }} />
-      <div className="absolute bottom-4 left-4 w-24 h-24 rounded-full opacity-15 blur-2xl" style={{ background: '#60a5fa' }} />
-
-      {/* Content */}
-      <div className="relative px-7 pt-8 pb-8 group-hover:scale-[1.01] active:scale-[0.99] transition-transform duration-200">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-1.5 mb-4 px-3 py-1 rounded-full text-[11px] font-bold tracking-widest" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.9)' }}>
+      <div className="relative p-6">
+        <div className="text-xs font-semibold text-white/80 mb-2">
           ⭐ FEATURED COMMUNITY
         </div>
 
-        {/* Title */}
-        <h2 className="text-[32px] font-extrabold text-white leading-tight tracking-tight mb-3" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.3)' }}>
+        <div className="text-3xl font-extrabold leading-tight">
           {community.name}
-        </h2>
+        </div>
 
-        {/* Description */}
-        {(community.description_short || community.description) && (
-          <p className="text-[15px] text-white/80 leading-relaxed mb-4 max-w-sm line-clamp-2">
-            {community.description_short || community.description}
-          </p>
-        )}
+        <div className="mt-2 text-white/85 text-sm max-w-lg">
+          {community.description_short || community.description}
+        </div>
 
-        {/* Trending line */}
-        <div className="inline-flex items-center gap-2 mb-6 px-3.5 py-1.5 rounded-full text-[12px] font-semibold" style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.18)', color: 'white' }}>
+        <div className="mt-3 text-sm text-white/80">
           🔥 {newPosts} new posts this week
         </div>
 
-        {/* Stats row */}
-        <div className="flex items-center gap-5 text-[13px] text-white/70 mb-7">
-          <span className="flex items-center gap-1.5">
-            <Users className="w-3.5 h-3.5" />
-            {(community.follower_count || 0).toLocaleString()} members
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />
-            {activeNow} active now
-          </span>
+        <div className="mt-4 flex items-center gap-4 text-sm text-white/80">
+          <span>{(community.follower_count || 0).toLocaleString()} members</span>
+          <span>•</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />{activeNow} active now</span>
         </div>
 
-        {/* CTA */}
         <button
-          onClick={e => { e.stopPropagation(); onOpen(community.id); }}
-          className="inline-flex items-center gap-2 bg-white text-slate-900 rounded-full px-8 py-3.5 text-[15px] font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all duration-150"
-          style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.25)' }}
+          onClick={() => onOpen(community.id)}
+          className="mt-5 rounded-full bg-white text-slate-900 px-6 py-3 font-semibold shadow hover:scale-105 active:scale-95 transition-all duration-150"
         >
-          View Community →
+          View Community
         </button>
       </div>
     </div>
