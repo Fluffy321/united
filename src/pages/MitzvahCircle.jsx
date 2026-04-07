@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Plus, HandHeart, SlidersHorizontal, Bell, AlertCircle } from 'lucide-react';
+import { Plus, HandHeart, SlidersHorizontal, Bell, AlertCircle, Flame, Heart, BookOpen, Users, Coffee, HelpCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import LogMitzvahModal from '@/components/feed/LogMitzvahModal';
 import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
@@ -336,10 +336,10 @@ export default function MitzvahCircle({ isActive = true }) {
     <>
       <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(180deg, #F0F6FF 0%, #FAF5FF 30%, #F8FAFC 100%)' }}>
         {/* Header */}
-        <div className="bg-white sticky top-0 z-20 flex-shrink-0" style={{ borderBottom: '1px solid #E8ECF4' }}>
-          <div className="max-w-2xl mx-auto px-4 py-4">
-            <h1 className="text-[20px] font-bold text-slate-900">Mitzvah Circle</h1>
-            <p className="text-[13px] text-slate-500 mt-1">Helping the community together</p>
+        <div className="sticky top-0 z-20 flex-shrink-0" style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}>
+          <div className="max-w-2xl mx-auto px-4 py-5">
+            <h1 className="text-[22px] font-bold text-white">Mitzvah Circle</h1>
+            <p className="text-[13px] text-white/70 mt-0.5">Helping the community together</p>
           </div>
         </div>
 
@@ -355,47 +355,70 @@ export default function MitzvahCircle({ isActive = true }) {
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                  className="rounded-[14px] p-4 flex flex-col items-center gap-2 hover:opacity-90 transition-opacity active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, #2563EB, #1D4ED8)', boxShadow: '0 4px 14px rgba(37,99,235,0.35)' }}
                 >
-                  <Plus className="w-5 h-5 text-slate-700" />
-                  <span className="text-[12px] font-semibold text-slate-700 text-center">Request Help</span>
+                  <Plus className="w-5 h-5 text-white" />
+                  <span className="text-[12px] font-bold text-white text-center">Request Help</span>
                 </button>
                 <button
                   onClick={() => setShowFilterDrawer(true)}
-                  className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                  className="rounded-[14px] p-4 flex flex-col items-center gap-2 hover:opacity-90 transition-opacity active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)', boxShadow: '0 4px 14px rgba(22,163,74,0.35)' }}
                 >
-                  <HandHeart className="w-5 h-5 text-slate-700" />
-                  <span className="text-[12px] font-semibold text-slate-700 text-center">Offer Help</span>
+                  <HandHeart className="w-5 h-5 text-white" />
+                  <span className="text-[12px] font-bold text-white text-center">Offer Help</span>
                 </button>
                 <button
                   onClick={() => setShowAlertModal(true)}
-                  className="bg-white rounded-[14px] border border-[#EAECF0] p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                  className="rounded-[14px] p-4 flex flex-col items-center gap-2 hover:opacity-90 transition-opacity active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, #DC2626, #B91C1C)', boxShadow: '0 4px 14px rgba(220,38,38,0.35)' }}
                 >
-                  <AlertCircle className="w-5 h-5 text-slate-700" />
-                  <span className="text-[12px] font-semibold text-slate-700 text-center">Alert</span>
+                  <AlertCircle className="w-5 h-5 text-white" />
+                  <span className="text-[12px] font-bold text-white text-center">Alert</span>
                 </button>
               </div>
 
-              {/* Your Daily Mitzvah Section */}
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-[16px] border border-purple-200 p-4">
-                <h3 className="text-[14px] font-bold text-slate-900 mb-3">Your Daily Mitzvah</h3>
-                
-                <div className="bg-white rounded-[12px] p-3.5 mb-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[12px] font-semibold text-slate-700">Current Streak</span>
-                    <span className="text-[20px] font-bold text-purple-600">{userStreak?.current_streak || 0}</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500">
-                    {Math.max(0, 2 - (todayMitzvahCount || 0))} more mitzvah{Math.max(0, 2 - (todayMitzvahCount || 0)) !== 1 ? 's' : ''} to keep streak
-                  </p>
-                </div>
+              {/* Your Daily Mitzvah HERO */}
+              <div
+                className="rounded-[20px] p-5 relative overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, #6D28D9 0%, #4F46E5 60%, #2563EB 100%)',
+                  boxShadow: '0 8px 32px rgba(109,40,217,0.45)',
+                }}
+              >
+                {/* Glow orbs */}
+                <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #fff 0%, transparent 70%)' }} />
+                <div className="absolute -bottom-4 -left-4 w-24 h-24 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #fff 0%, transparent 70%)' }} />
 
-                <button
-                  onClick={() => setShowLogMitzvah(true)}
-                  className="w-full py-2.5 px-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-[12px] font-semibold transition-colors"
-                >
-                  Log Mitzvah
-                </button>
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-2xl">✡️</span>
+                    <h3 className="text-[18px] font-bold text-white">Your Daily Mitzvah</h3>
+                  </div>
+                  <p className="text-white/70 text-[13px] mb-4">Do good, every single day</p>
+
+                  <div className="bg-white/15 backdrop-blur rounded-[14px] p-3.5 mb-4 flex items-center justify-between">
+                    <div>
+                      <span className="text-[12px] font-semibold text-white/80">Current Streak</span>
+                      <p className="text-[11px] text-white/60 mt-0.5">
+                        {Math.max(0, 2 - (todayMitzvahCount || 0))} more to keep it going
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Flame className="w-5 h-5 text-orange-300" />
+                      <span className="text-[28px] font-black text-white">{userStreak?.current_streak || 0}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setShowLogMitzvah(true)}
+                    className="w-full py-3 rounded-[12px] font-bold text-[14px] text-purple-700 transition-all active:scale-95 hover:shadow-lg"
+                    style={{ background: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+                  >
+                    + Log a Mitzvah
+                  </button>
+                </div>
               </div>
 
               {/* Help Requests Section */}
@@ -441,14 +464,26 @@ export default function MitzvahCircle({ isActive = true }) {
                    </div>
                  ) : (
                   <div className="space-y-3">
-                    {requests.map((request) => (
+                    {requests.map((request) => {
+                      const CAT_ICONS = {
+                        'Chesed': { icon: Heart, color: '#EC4899', bg: '#FDF2F8' },
+                        'Torah Study': { icon: BookOpen, color: '#7C3AED', bg: '#F5F3FF' },
+                        'Community': { icon: Users, color: '#2563EB', bg: '#EFF6FF' },
+                        'Food': { icon: Coffee, color: '#D97706', bg: '#FFFBEB' },
+                      };
+                      const catStyle = CAT_ICONS[request.category] || { icon: HelpCircle, color: '#64748B', bg: '#F8FAFC' };
+                      const CatIcon = catStyle.icon;
+                      return (
                       <div key={request.id} className="bg-white rounded-[16px] border border-[#EAECF0] p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedRequest(request)}>
-                        <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex items-start gap-3 mb-2">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: catStyle.bg }}>
+                            <CatIcon className="w-5 h-5" style={{ color: catStyle.color }} />
+                          </div>
                           <div className="flex-1">
                             <p className="text-[14px] font-semibold text-slate-900">{request.title}</p>
-                            <p className="text-[12px] text-slate-500 mt-1 line-clamp-2">{request.description}</p>
+                            <p className="text-[12px] text-slate-500 mt-0.5 line-clamp-2">{request.description}</p>
                           </div>
-                          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 flex-shrink-0">
+                          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0" style={{ background: catStyle.bg, color: catStyle.color }}>
                             {request.category}
                           </span>
                         </div>
@@ -456,13 +491,14 @@ export default function MitzvahCircle({ isActive = true }) {
                           <button
                             onClick={(e) => { e.stopPropagation(); handleClaim(e, request); }}
                             disabled={claimMutation.isPending}
-                            className="h-7 px-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold transition-colors disabled:opacity-50 flex items-center gap-1"
+                            className="h-8 px-4 rounded-full bg-blue-600 text-white text-[13px] font-bold shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
                           >
-                            {claimMutation.isPending ? 'Joining...' : "I'll Help"}
+                            {claimMutation.isPending ? 'Joining...' : "✋ I'll Help"}
                           </button>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
