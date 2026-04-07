@@ -217,14 +217,21 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           {/* Activity labels */}
           {(() => {
             const score = (post.likes_count || 0) + (post.comments_count || 0) * 2;
-            const isNew = !post.is_seeded && (Date.now() - new Date(post.created_date).getTime()) < 2 * 60 * 60 * 1000;
+            const ageMs = Date.now() - new Date(post.created_date).getTime();
+            const isNew = !post.is_seeded && ageMs < 2 * 60 * 60 * 1000;
             const isHot = score >= 20;
-            const isChessed = post.type === 'help';
+            const isUrgent = post.type === 'help' && post.help_status !== 'fulfilled';
             return (
               <>
-                {isHot && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">🔥 Active</span>}
-                {isNew && !isHot && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">🟢 New</span>}
-                {isChessed && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-900 text-white border border-blue-900">❤️ Chessed</span>}
+                {isUrgent && (
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white">🚨 Urgent</span>
+                )}
+                {isHot && !isUrgent && (
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">🔥 Hot</span>
+                )}
+                {isNew && !isHot && !isUrgent && (
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">🟢 New</span>
+                )}
               </>
             );
           })()}
