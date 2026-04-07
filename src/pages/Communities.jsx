@@ -456,15 +456,15 @@ export default function Communities() {
 
         {/* Category chips — discover only */}
         {activeTab === 'discover' && (
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1 mb-5">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1 mb-6">
             {CATEGORIES.map(cat => (
               <button
                 key={cat.key}
                 onClick={() => setActiveCategory(cat.key)}
-                className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap flex-shrink-0 transition-all ${
+                className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
                   activeCategory === cat.key
-                    ? 'bg-blue-600 text-white shadow'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                    ? 'bg-slate-800 text-white'
+                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                 }`}
               >
                 {cat.label}
@@ -598,11 +598,11 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8">
       {myCommunities.length > 0 && (
         <section>
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[14px] font-bold text-slate-700">Your Communities</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[17px] font-extrabold text-slate-900 tracking-tight">Your Communities</h2>
             <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{myCommunities.length}</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -614,8 +614,8 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
       )}
       {myGroups.length > 0 && (
         <section>
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[14px] font-bold text-slate-700">Your Groups</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[17px] font-extrabold text-slate-900 tracking-tight">Your Groups</h2>
             <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{myGroups.length}</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -679,10 +679,10 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8">
       {featured && (
         <section>
-          <h2 className="text-[14px] font-bold text-slate-700 mb-2">⭐ Featured Community</h2>
+          <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">⭐ Featured</h2>
           <CommunityCard
             community={featured}
             isJoined={userCommunityIds.has(featured.id)}
@@ -693,9 +693,10 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
           />
         </section>
       )}
+
       {rest.length > 0 && (
         <section>
-          <h2 className="text-[14px] font-bold text-slate-700 mb-2">Communities</h2>
+          <h2 className="text-[17px] font-extrabold text-slate-900 tracking-tight mb-3">Communities</h2>
           <div className="grid grid-cols-2 gap-3">
             {rest.map(c => (
               <CommunityCard
@@ -713,7 +714,7 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
 
       {groups.length > 0 && (
         <section>
-          <h2 className="text-[14px] font-bold text-slate-700 mb-2">Groups</h2>
+          <h2 className="text-[17px] font-extrabold text-slate-900 tracking-tight mb-3">Groups</h2>
           <div className="grid grid-cols-2 gap-3">
             {groups.slice(0, 12).map(g => (
               <GroupCard
