@@ -400,97 +400,75 @@ export default function Communities() {
 
   return (
     <div className="min-h-screen bg-[#F0F4FB] flex flex-col" style={{ height: '100dvh' }}>
-      {/* Header */}
-      <div className="bg-white flex-shrink-0 px-4 pt-4 pb-0" style={{ borderBottom: '1px solid #E8EDF5', boxShadow: '0 1px 6px rgba(15,23,42,0.04)' }}>
-        <div className="max-w-2xl mx-auto">
-          <div className="flex items-center justify-between mb-3">
-            <h1 className="text-[20px] font-bold text-slate-900">Communities</h1>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => navigate('/CommunityMap')}
-                className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
-                title="Map view"
-              >
-                <Map className="w-4 h-4 text-slate-600" />
-              </button>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-5 py-2.5 font-semibold shadow-md hover:shadow-lg transition"
-              >
-                + Create
-              </button>
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-            <input
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search…"
-              className="w-full pl-8 pr-8 py-2 bg-slate-100 rounded-full text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                <X className="w-3.5 h-3.5 text-slate-400" />
-              </button>
-            )}
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-1 pt-1">
-            {[{ id: 'mine', label: 'My Communities' }, { id: 'discover', label: 'Discover' }].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative px-4 py-2.5 text-[14px] font-semibold transition-colors ${
-                  activeTab === tab.id
-                    ? 'text-blue-600'
-                    : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                {tab.label}
-                {activeTab === tab.id && (
-                  <span className="absolute bottom-0 left-0 right-0 h-[2.5px] rounded-full bg-blue-600" />
-                )}
-              </button>
-            ))}
+      {/* Slim header — title + actions only */}
+      <div className="bg-white flex-shrink-0 px-4 pt-4 pb-3" style={{ borderBottom: '1px solid #E8EDF5', boxShadow: '0 1px 6px rgba(15,23,42,0.04)' }}>
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <h1 className="text-[20px] font-bold text-slate-900">Communities</h1>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/CommunityMap')}
+              className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
+              title="Map view"
+            >
+              <Map className="w-4 h-4 text-slate-600" />
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-5 py-2 font-semibold shadow-md hover:shadow-lg transition text-[13px]"
+            >
+              + Create
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Body */}
+      {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto pb-28 scrollbar-hide">
-        <div className="max-w-2xl mx-auto px-4 pt-4">
-          {isDemo && (
-            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-3 text-[11px] text-amber-800">
-              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> Showing demo data — seed communities to see real data.
-            </div>
-          )}
+        <div className="max-w-2xl mx-auto px-4">
 
-          {/* Featured Community Banner */}
-          <FeaturedCommunityBanner
-            community={allCommunities[0]}
-            onOpen={openCommunity}
-          />
+          {/* 1. Featured community */}
+          <div className="pt-5">
+            <FeaturedCommunityBanner community={allCommunities[0]} onOpen={openCommunity} />
+          </div>
 
-          {/* Category filter chips */}
-          {activeTab === 'discover' && (
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1 mb-4">
-              {CATEGORIES.map(cat => (
-                <button
-                  key={cat.key}
-                  onClick={() => setActiveCategory(cat.key)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap flex-shrink-0 transition-all ${
-                    activeCategory === cat.key
-                      ? 'bg-blue-600 text-white shadow'
-                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-                  }`}
-                >
-                  {cat.label}
+          {/* 2. Search */}
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search communities…"
+                className="w-full pl-10 pr-9 py-3 bg-white border border-slate-200 rounded-2xl text-[14px] text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                  <X className="w-4 h-4 text-slate-400" />
                 </button>
-              ))}
+              )}
+            </div>
+          </div>
+
+          {/* 3. Category chips */}
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1 mb-6">
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat.key}
+                onClick={() => setActiveCategory(cat.key)}
+                className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap flex-shrink-0 transition-all ${
+                  activeCategory === cat.key
+                    ? 'bg-blue-600 text-white shadow'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          {isDemo && (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-5 text-[11px] text-amber-800">
+              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> Showing demo data — seed communities to see real data.
             </div>
           )}
 
@@ -509,34 +487,69 @@ export default function Communities() {
                 </div>
               ))}
             </div>
-          ) : activeTab === 'mine' ? (
-            <MineTab
-              myCommunities={filterItems(myCommunities)}
-              myGroups={filterItems(myGroups)}
-              openCommunity={openCommunity}
-              setSelectedGroup={setSelectedGroup}
-              setActiveTab={setActiveTab}
-              userCommunityIds={userCommunityIds}
-              memberGroupIds={memberGroupIds}
-              onJoinCommunity={joinCommunity}
-              onJoinGroup={joinGroup}
-              joiningId={joiningId}
-            />
           ) : (
-            <DiscoverTabContent
-              communities={filterItems(discoverCommunities)}
-              groups={filterItems(discoverGroups)}
-              openCommunity={openCommunity}
-              setSelectedGroup={setSelectedGroup}
-              onJoin={joinCommunity}
-              onJoinGroup={joinGroup}
-              joiningId={joiningId}
-              userCommunityIds={userCommunityIds}
-              memberGroupIds={memberGroupIds}
-              setShowCreateModal={setShowCreateModal}
-              hasFilter={activeCategory !== 'all' || !!searchQuery}
-              setActiveCategory={setActiveCategory}
-            />
+            <div className="space-y-8">
+              {/* 4. My Communities */}
+              {(filterItems(myCommunities).length > 0 || filterItems(myGroups).length > 0) && (
+                <section>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-[16px] font-bold text-slate-900">My Communities</h2>
+                    <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">{filterItems(myCommunities).length + filterItems(myGroups).length}</span>
+                  </div>
+                  {filterItems(myCommunities).length > 0 && (
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      {filterItems(myCommunities).map(c => (
+                        <CommunityCard key={c.id} community={c} isJoined={userCommunityIds.has(c.id)} isJoining={joiningId === c.id} onOpen={openCommunity} onJoin={joinCommunity} />
+                      ))}
+                    </div>
+                  )}
+                  {filterItems(myGroups).length > 0 && (
+                    <div className="grid grid-cols-2 gap-3">
+                      {filterItems(myGroups).map(g => (
+                        <GroupCard key={g.id} group={g} isMember={memberGroupIds.has(g.id)} onClick={() => setSelectedGroup(g)} onJoin={joinGroup} />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {/* 5. Discover */}
+              {(filterItems(discoverCommunities).length > 0 || filterItems(discoverGroups).length > 0) && (
+                <section>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-[16px] font-bold text-slate-900">Discover</h2>
+                    <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">{filterItems(discoverCommunities).length + filterItems(discoverGroups).length}</span>
+                  </div>
+                  {filterItems(discoverCommunities).length > 0 && (
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      {filterItems(discoverCommunities).map(c => (
+                        <CommunityCard key={c.id} community={c} isJoined={userCommunityIds.has(c.id)} isJoining={joiningId === c.id} onOpen={openCommunity} onJoin={joinCommunity} />
+                      ))}
+                    </div>
+                  )}
+                  {filterItems(discoverGroups).length > 0 && (
+                    <div className="grid grid-cols-2 gap-3">
+                      {filterItems(discoverGroups).slice(0, 12).map(g => (
+                        <GroupCard key={g.id} group={g} isMember={memberGroupIds.has(g.id)} onClick={() => setSelectedGroup(g)} onJoin={joinGroup} />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {/* Create CTA */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 text-center border border-blue-100">
+                <div className="text-2xl mb-2">🏛️</div>
+                <h3 className="text-[15px] font-bold text-slate-900 mb-1">Start a Community</h3>
+                <p className="text-[12px] text-slate-500 mb-4">Bring your shul, school, or group online</p>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-blue-600 text-white rounded-full px-6 py-2.5 text-[13px] font-bold shadow hover:bg-blue-700 transition-colors"
+                >
+                  Create Community
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>
