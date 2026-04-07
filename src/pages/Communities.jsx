@@ -232,11 +232,11 @@ function GroupCard({ group, isMember, onClick, onJoin }) {
         </div>
 
         {isMember ? (
-          <button className="w-full rounded-full py-1.5 text-[12px] font-bold bg-green-50 text-green-700 border border-green-200">✓ Joined</button>
+          <button className="w-full rounded-full py-1.5 text-[12px] font-bold bg-green-50 text-green-700 border border-green-200 active:scale-95 transition-all duration-150">✓ Joined</button>
         ) : (
           <button
             onClick={e => { e.stopPropagation(); onJoin(group); }}
-            className="w-full rounded-full py-1.5 text-[12px] font-bold text-white"
+            className="w-full rounded-full py-1.5 text-[12px] font-bold text-white active:scale-95 transition-all duration-150"
             style={{ background: 'linear-gradient(135deg, #0EA5E9, #2563EB)' }}
           >
             Join
@@ -390,6 +390,11 @@ export default function Communities() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
+      <style>{`
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-up { animation: fadeUp 180ms ease both; }
+        .fade-up-delay { animation: fadeUp 180ms ease 80ms both; }
+      `}</style>
       <div className="max-w-2xl mx-auto px-4 pt-6">
 
         {/* Header */}
@@ -398,14 +403,14 @@ export default function Communities() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/CommunityMap')}
-              className="p-2.5 rounded-full bg-white border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors"
+              className="p-2.5 rounded-full bg-white border border-slate-200 shadow-sm hover:bg-slate-50 active:scale-90 transition-all duration-150"
               title="Map view"
             >
               <Map className="w-4 h-4 text-slate-600" />
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="rounded-full bg-blue-600 text-white px-4 py-2.5 text-[13px] font-semibold shadow-sm hover:bg-blue-700 transition-colors"
+              className="rounded-full bg-blue-600 text-white px-4 py-2.5 text-[13px] font-semibold shadow-sm hover:bg-blue-700 active:scale-95 transition-all duration-150"
             >
               + Create
             </button>
@@ -439,9 +444,10 @@ export default function Communities() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 rounded-xl py-2.5 text-[13px] font-semibold transition-all ${
-                activeTab === tab.id ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-800'
-              }`}
+              className={`flex-1 rounded-xl py-2.5 text-[13px] font-semibold transition-all duration-150 active:scale-95 ${{
+                true: 'bg-blue-600 text-white shadow-sm',
+                false: 'text-slate-600 hover:text-slate-800'
+              }[String(activeTab === tab.id)]}`}
             >
               {tab.label}
             </button>
@@ -461,7 +467,7 @@ export default function Communities() {
               <button
                 key={cat.key}
                 onClick={() => setActiveCategory(cat.key)}
-                className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all ${
+                className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all duration-150 active:scale-95 ${
                   activeCategory === cat.key
                     ? 'bg-slate-800 text-white'
                     : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
@@ -486,7 +492,7 @@ export default function Communities() {
             ))}
           </div>
         ) : (
-          <>
+          <div className="fade-up">
             {activeTab === 'mine' ? (
               <MineTab
                 myCommunities={filterItems(myCommunities)}
@@ -516,7 +522,7 @@ export default function Communities() {
                 setActiveCategory={setActiveCategory}
               />
             )}
-          </>
+          </div>
         )}
       </div>
 
@@ -589,7 +595,7 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
         </div>
         <button
           onClick={() => setActiveTab('discover')}
-          className="mt-4 rounded-full bg-blue-600 text-white px-5 py-2.5 text-sm font-semibold"
+          className="mt-4 rounded-full bg-blue-600 text-white px-5 py-2.5 text-sm font-semibold active:scale-95 transition-all duration-150"
         >
           Explore Communities
         </button>
@@ -645,7 +651,7 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
           <p className="text-[12px] text-slate-500 mb-4">Try a different search or explore by category</p>
           <button
             onClick={() => setActiveCategory('all')}
-            className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold"
+            className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold active:scale-95 transition-all duration-150"
           >
             Clear Filters
           </button>
@@ -670,7 +676,7 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
           <div className="text-2xl mb-1.5">🏛️</div>
           <h3 className="text-[14px] font-bold text-slate-900 mb-1">Start a Community</h3>
           <p className="text-[11px] text-slate-500 mb-3">Bring your shul, school, or group online</p>
-          <button onClick={() => setShowCreateModal(true)} className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold shadow">
+          <button onClick={() => setShowCreateModal(true)} className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold shadow active:scale-95 transition-all duration-150">
             Create Community
           </button>
         </div>
