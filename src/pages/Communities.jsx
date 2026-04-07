@@ -92,96 +92,81 @@ function setCache(list) {
 }
 
 const CATEGORY_GRADIENTS = {
-  'Local Communities':     'from-blue-500 to-indigo-600',
-  'Schools & Yeshivas':    'from-purple-500 to-violet-600',
-  'Chessed & Volunteering':'from-rose-500 to-pink-600',
-  'Learning & Torah':      'from-indigo-500 to-blue-700',
-  'Social & Events':       'from-amber-500 to-orange-500',
-  'Programs & Youth':      'from-green-500 to-teal-600',
-  'Sports & Fitness':      'from-cyan-500 to-blue-500',
-  'Careers & Networking':  'from-slate-600 to-slate-800',
-  'Food & Lifestyle':      'from-orange-400 to-red-500',
-  'Travel':                'from-teal-500 to-emerald-600',
+  'Schools & Yeshivas':    'from-sky-500 to-blue-600',
+  'Chessed & Volunteering':'from-emerald-500 to-green-600',
+  'Travel':                'from-cyan-500 to-teal-500',
+  'Careers & Networking':  'from-indigo-500 to-violet-600',
+  'Learning & Torah':      'from-amber-400 to-orange-500',
+  'Social & Events':       'from-pink-500 to-rose-500',
+  'Programs & Youth':      'from-purple-500 to-fuchsia-500',
+  'Sports & Fitness':      'from-lime-500 to-green-500',
+  'Food & Lifestyle':      'from-red-400 to-orange-500',
+  'Local Communities':     'from-blue-500 to-indigo-500',
 };
 
 function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, featured = false }) {
-  const initials = getInitials(community.name);
-  const catKey = community.category || (TYPE_TO_CATEGORY[community.type]) || '';
-  const gradient = CATEGORY_GRADIENTS[catKey] || TYPE_GRADIENTS[community.type] || 'from-blue-500 to-indigo-600';
+  const catKey = community.category || TYPE_TO_CATEGORY[community.type] || '';
+  const gradient = CATEGORY_GRADIENTS[catKey] || 'from-blue-500 to-indigo-600';
+  const initials = community.name?.slice(0, 2)?.toUpperCase() || 'CO';
   const activity = getMockActivity(community.id);
-  const memberCount = community.follower_count || 0;
-  const isActive = memberCount > 50;
 
   return (
-    <div
+    <button
       onClick={() => onOpen(community.id)}
-      className="rounded-2xl bg-white shadow-sm hover:shadow-lg cursor-pointer overflow-hidden flex flex-col"
-      style={{
-        border: featured ? '2px solid #BFDBFE' : '1px solid #E8EDF5',
-        transition: 'transform 150ms ease, box-shadow 150ms ease',
-      }}
-      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = featured ? '' : '0 1px 3px rgba(0,0,0,0.07)'; }}
+      className="w-full rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md active:scale-[0.99] transition overflow-hidden text-left"
     >
-      {/* Colored accent bar */}
-      <div className={`h-1.5 bg-gradient-to-r ${gradient}`} />
+      <div className={`h-2 w-full bg-gradient-to-r ${gradient}`} />
 
-      <div className="p-3 flex flex-col gap-2 flex-1">
-        {/* Logo + name + active */}
-        <div className="flex items-center gap-2.5">
-          {community.logo_url ? (
-            <img src={community.logo_url} alt={community.name} className="w-9 h-9 rounded-xl object-cover flex-shrink-0" />
-          ) : (
-            <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center bg-gradient-to-br ${gradient}`}>
-              <span className="text-white font-black text-[11px]">{initials}</span>
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-[13px] text-slate-900 truncate leading-tight">{community.name}</p>
-            {isActive ? (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-600">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                Active now
-              </span>
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            {community.logo_url ? (
+              <img src={community.logo_url} alt={community.name} className="h-12 w-12 rounded-2xl object-cover shrink-0" />
             ) : (
-              <span className="text-[10px] text-slate-400">{catKey || community.type || 'Community'}</span>
+              <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center font-bold shadow-sm shrink-0`}>
+                {initials}
+              </div>
             )}
+            <div className="min-w-0">
+              <div className="font-bold text-slate-900 text-sm truncate">{community.name}</div>
+              <div className="text-xs text-slate-500 truncate">{(community.follower_count || 0).toLocaleString()} members</div>
+              <div className="mt-1 flex items-center gap-1 text-[11px] text-emerald-600 font-medium">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                Active now
+              </div>
+            </div>
           </div>
-          {featured && <span className="text-[9px] font-black bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full flex-shrink-0">⭐</span>}
-        </div>
 
-        {/* Latest activity */}
-        <p className="text-[11px] text-slate-400 line-clamp-1 leading-snug">{activity}</p>
-
-        {/* Member avatars + count */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-0">
-            {[0,1,2].map(i => (
-              <div key={i} className="w-5 h-5 rounded-full border-2 border-white -ml-1 first:ml-0 flex-shrink-0"
-                style={{ background: ['#2563EB','#7C3AED','#16A34A'][i], zIndex: 3 - i }} />
-            ))}
-            {memberCount > 3 && (
-              <span className="text-[10px] font-semibold text-slate-400 ml-1.5">{memberCount > 1000 ? `${(memberCount/1000).toFixed(1)}k` : memberCount}</span>
-            )}
-          </div>
-          <span className="text-[10px] text-slate-400">{memberCount > 0 ? `${memberCount.toLocaleString()} members` : 'New'}</span>
-        </div>
-
-        {/* Action button */}
-        {isJoined ? (
-          <button className="w-full rounded-full py-1.5 text-[12px] font-bold bg-green-50 text-green-700 border border-green-200">✓ Joined</button>
-        ) : (
           <button
             onClick={e => { e.stopPropagation(); onJoin(community); }}
             disabled={isJoining}
-            className="w-full rounded-full py-1.5 text-[12px] font-bold text-white disabled:opacity-60"
-            style={{ background: `linear-gradient(135deg, #2563EB, #7C3AED)` }}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-60 ${
+              isJoined ? 'bg-slate-100 text-slate-700' : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
           >
-            {isJoining ? '...' : 'Join'}
+            {isJoining ? '...' : isJoined ? 'Joined' : 'Join'}
           </button>
+        </div>
+
+        {community.description_short && (
+          <div className="mt-3 text-xs text-slate-600 line-clamp-2">{community.description_short}</div>
         )}
+
+        <div className="mt-3 rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
+          {activity}
+        </div>
+
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex -space-x-2">
+            {[0,1,2].map(i => (
+              <div key={i} className="h-7 w-7 rounded-full border-2 border-white"
+                style={{ background: ['#2563EB','#7C3AED','#16A34A'][i] }} />
+            ))}
+          </div>
+          <div className="text-[11px] font-medium text-slate-400">{catKey || community.type || 'Community'}</div>
+        </div>
       </div>
-    </div>
+    </button>
   );
 }
 
