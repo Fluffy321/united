@@ -104,67 +104,86 @@ const CATEGORY_GRADIENTS = {
   'Local Communities':     'from-blue-500 to-indigo-500',
 };
 
+const AVATAR_COLORS = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899'];
+
+function MemberAvatarStack({ count = 0 }) {
+  const shown = Math.min(count > 0 ? 3 : 2, 3);
+  return (
+    <div className="flex items-center gap-1">
+      <div className="flex -space-x-1.5">
+        {[...Array(shown)].map((_, i) => (
+          <div key={i} className="w-5 h-5 rounded-full border-2 border-white flex-shrink-0"
+            style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length], zIndex: shown - i }} />
+        ))}
+      </div>
+      {count > 3 && <span className="text-[10px] font-semibold text-slate-400">+{count - 3}</span>}
+    </div>
+  );
+}
+
 function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, featured = false }) {
   const catKey = community.category || TYPE_TO_CATEGORY[community.type] || '';
   const gradient = CATEGORY_GRADIENTS[catKey] || 'from-blue-500 to-indigo-600';
   const initials = community.name?.slice(0, 2)?.toUpperCase() || 'CO';
   const activity = getMockActivity(community.id);
+  const activeNow = 3 + (community.id?.charCodeAt(0) % 12);
 
   return (
     <button
       onClick={() => onOpen(community.id)}
-      className="w-full rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md active:scale-[0.99] transition overflow-hidden text-left"
+      className="w-full rounded-2xl bg-white border border-slate-200 text-left overflow-hidden active:scale-[0.97] transition-all"
+      style={{ boxShadow: '0 2px 10px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.05)' }}
     >
-      <div className={`h-2 w-full bg-gradient-to-r ${gradient}`} />
+      {/* Colored top accent */}
+      <div className={`h-1.5 w-full bg-gradient-to-r ${gradient}`} />
 
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            {community.logo_url ? (
-              <img src={community.logo_url} alt={community.name} className="h-12 w-12 rounded-2xl object-cover shrink-0" />
-            ) : (
-              <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center font-bold shadow-sm shrink-0`}>
-                {initials}
-              </div>
-            )}
-            <div className="min-w-0">
-              <div className="font-bold text-slate-900 text-sm truncate">{community.name}</div>
-              <div className="text-xs text-slate-500 truncate">{(community.follower_count || 0).toLocaleString()} members</div>
-              <div className="mt-1 flex items-center gap-1 text-[11px] text-emerald-600 font-medium">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                Active now
-              </div>
+      <div className="p-3.5">
+        {/* Logo + name row */}
+        <div className="flex items-start gap-2.5 mb-2.5">
+          {community.logo_url ? (
+            <img src={community.logo_url} alt={community.name} className="h-10 w-10 rounded-xl object-cover shrink-0" />
+          ) : (
+            <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center font-bold text-[12px] shadow-sm shrink-0`}>
+              {initials}
             </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-slate-900 text-[13px] leading-tight truncate">{community.name}</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">{catKey || community.type || 'Community'}</div>
           </div>
-
-          <button
-            onClick={e => { e.stopPropagation(); onJoin(community); }}
-            disabled={isJoining}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-60 ${
-              isJoined ? 'bg-slate-100 text-slate-700' : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {isJoining ? '...' : isJoined ? 'Joined' : 'Join'}
-          </button>
         </div>
 
+        {/* Description */}
         {community.description_short && (
-          <div className="mt-3 text-xs text-slate-600 line-clamp-2">{community.description_short}</div>
+          <p className="text-[11px] text-slate-500 line-clamp-2 mb-2.5 leading-relaxed">{community.description_short}</p>
         )}
 
-        <div className="mt-3 rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
-          {activity}
+        {/* Activity preview */}
+        <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 text-[10px] text-slate-500 mb-2.5 line-clamp-1">
+          💬 {activity}
         </div>
 
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex -space-x-2">
-            {[0,1,2].map(i => (
-              <div key={i} className="h-7 w-7 rounded-full border-2 border-white"
-                style={{ background: ['#2563EB','#7C3AED','#16A34A'][i] }} />
-            ))}
+        {/* Members row */}
+        <div className="flex items-center justify-between mb-3">
+          <MemberAvatarStack count={community.follower_count || 0} />
+          <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            {activeNow} active
           </div>
-          <div className="text-[11px] font-medium text-slate-400">{catKey || community.type || 'Community'}</div>
         </div>
+
+        {/* Join button */}
+        <button
+          onClick={e => { e.stopPropagation(); onJoin(community); }}
+          disabled={isJoining}
+          className={`w-full rounded-full py-1.5 text-[12px] font-bold transition-all active:scale-95 disabled:opacity-60 ${
+            isJoined
+              ? 'bg-slate-100 text-slate-600 border border-slate-200'
+              : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm hover:shadow-md'
+          }`}
+        >
+          {isJoining ? '…' : isJoined ? '✓ Joined' : 'Join'}
+        </button>
       </div>
     </button>
   );
