@@ -278,6 +278,10 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, feature
           );
         })()}
 
+        <div className="text-xs text-slate-500 mb-3">
+          Joined by {community.friendNames || 'people near you'}
+        </div>
+
         <div className="flex items-center justify-between gap-2 mb-3">
           <MemberStack count={community.follower_count || 0} />
           <div className="flex items-center gap-1 text-[10px] text-slate-400">
