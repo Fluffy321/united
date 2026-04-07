@@ -519,12 +519,19 @@ export default function MitzvahCircle({ isActive = true }) {
           {/* Tab: Map */}
           {activeTab === 'map' && (
             <div className="max-w-2xl mx-auto">
-              <div className="rounded-[16px] overflow-hidden border border-[#EAECF0]" style={{ height: '60vh', minHeight: 320 }}>
+              <div className="rounded-[16px] overflow-hidden border border-[#EAECF0]" style={{ height: '65vh', minHeight: 340 }}>
                 <MitzvahMapView
                   requests={requests}
-                  center={mapCenter}
-                  zoom={mapZoom}
-                  onRequestClick={(r) => setSelectedRequest(r)}
+                  userOrigin={userOrigin}
+                  mapCenter={mapCenter}
+                  mapZoom={mapZoom}
+                  onSelectRequest={(r) => setSelectedRequest(r)}
+                  onUseMyLocation={() => {
+                    navigator.geolocation?.getCurrentPosition(
+                      (pos) => setLiveLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                      () => toast.error('Location access denied')
+                    );
+                  }}
                 />
               </div>
               <p className="text-[12px] text-slate-400 mt-2 text-center">{requests.length} open request{requests.length !== 1 ? 's' : ''} near Five Towns</p>
