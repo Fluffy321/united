@@ -230,7 +230,7 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, feature
 
   return (
     <div
-      className="w-full rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] transition-all duration-200 overflow-hidden text-left cursor-pointer"
+      className="w-full rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-[0.97] active:shadow-xl transition-all duration-150 overflow-hidden text-left cursor-pointer"
       onClick={() => onOpen(community.id)}
     >
       <div className={`h-2 w-full bg-gradient-to-r ${gradient}`} />
@@ -312,7 +312,7 @@ function GroupCard({ group, isMember, onClick, onJoin }) {
   return (
     <div
       onClick={onClick}
-      className="w-full rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] transition-all duration-200 overflow-hidden text-left flex flex-col cursor-pointer"
+      className="w-full rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-[0.97] active:shadow-xl transition-all duration-150 overflow-hidden text-left flex flex-col cursor-pointer"
     >
       <div className={`h-2 bg-gradient-to-r ${catGrad}`} />
 
