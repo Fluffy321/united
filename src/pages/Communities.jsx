@@ -80,6 +80,69 @@ const CATEGORY_ICONS = {
   Shul: '🕍', Camp: '⛺', Other: '🌐',
 };
 
+const VALUE_PROPOSITIONS = {
+  'Schools & Yeshivas': [
+    'Connect with alumni & families',
+    'Share resources & study tips',
+    'Network with educators',
+  ],
+  'Chessed & Volunteering': [
+    'Help others & build community',
+    'Find volunteering opportunities',
+    'Make a real difference',
+  ],
+  'Travel': [
+    'Plan trips together',
+    'Share travel tips & deals',
+    'Meet fellow travelers',
+  ],
+  'Careers & Networking': [
+    'Find jobs & network',
+    'Share career opportunities',
+    'Grow professionally',
+  ],
+  'Learning & Torah': [
+    'Daily Torah discussions',
+    'Deepen your knowledge',
+    'Learn with others',
+  ],
+  'Social & Events': [
+    'Weekly events & real connections',
+    'Meet people & have fun',
+    'Build lasting friendships',
+  ],
+  'Programs & Youth': [
+    'Programs for all ages',
+    'Activities & mentorship',
+    'Youth engagement',
+  ],
+  'Sports & Fitness': [
+    'Join leagues & activities',
+    'Find workout partners',
+    'Stay active together',
+  ],
+  'Food & Lifestyle': [
+    'Kosher dining & recipes',
+    'Share lifestyle tips',
+    'Food events & gatherings',
+  ],
+  'Local Communities': [
+    'Connect with your neighborhood',
+    'Local updates & events',
+    'Build community bonds',
+  ],
+  'Shul': [
+    'Shabbos meals & rides',
+    'Daily minyanim & programming',
+    'Community connection',
+  ],
+  'School': [
+    'Connect with school community',
+    'Share resources & updates',
+    'Parent networking',
+  ],
+};
+
 function getActivityBadge(id) {
   const n = id ? id.charCodeAt(0) % 3 : 0;
   if (n === 0) return { label: '🔥 Hot', color: 'bg-red-50 text-red-600' };
@@ -202,8 +265,18 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, feature
         </div>
 
         {community.description_short && (
-          <div className="text-[11px] text-slate-600 line-clamp-2 mb-3">{community.description_short}</div>
+          <div className="text-[11px] text-slate-600 line-clamp-2 mb-2">{community.description_short}</div>
         )}
+
+        {(() => {
+          const props = VALUE_PROPOSITIONS[typeKey] || VALUE_PROPOSITIONS[catKey] || ['Join this community'];
+          const valueProp = props[Math.floor(Math.random() * props.length)];
+          return (
+            <div className="text-[10px] text-slate-400 font-medium mb-3">
+              ✓ {valueProp}
+            </div>
+          );
+        })()}
 
         <div className="flex items-center justify-between gap-2 mb-3">
           <MemberStack count={community.follower_count || 0} />
