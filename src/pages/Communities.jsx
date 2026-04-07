@@ -44,17 +44,44 @@ const DEMO_COMMUNITIES = [
   { id: 'demo-6', name: 'Woodmere Minyan', type: 'Shul', follower_count: 140, description_short: 'Multiple daily minyanim.', neighborhood: 'Woodmere' },
 ];
 
-const TYPE_COLORS = {
-  Shul: 'bg-blue-100 text-blue-700',
-  School: 'bg-purple-100 text-purple-700',
-  Yeshiva: 'bg-indigo-100 text-indigo-700',
-  Seminary: 'bg-pink-100 text-pink-700',
-  Camp: 'bg-green-100 text-green-700',
-  Other: 'bg-orange-100 text-orange-700',
+const TYPE_GRADIENTS = {
+  Shul:     'from-blue-600 to-indigo-600',
+  School:   'from-purple-600 to-violet-600',
+  Yeshiva:  'from-indigo-600 to-blue-700',
+  Seminary: 'from-pink-500 to-rose-600',
+  Camp:     'from-green-500 to-teal-600',
+  Other:    'from-orange-500 to-amber-600',
 };
+
+const ACTIVITY_LABELS = [
+  'Just posted a new update',
+  'Event coming up this Shabbos',
+  'New members joined today',
+  'Posted a help request',
+  'Shared a learning resource',
+];
 
 function getInitials(name = '') {
   return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+}
+
+function getMockActivity(id) {
+  const idx = id ? id.charCodeAt(0) % ACTIVITY_LABELS.length : 0;
+  return ACTIVITY_LABELS[idx];
+}
+
+function StackedAvatars({ count = 0 }) {
+  const colors = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899'];
+  const shown = Math.min(count > 0 ? Math.min(count, 4) : 3, 4);
+  return (
+    <div className="flex items-center">
+      {[...Array(shown)].map((_, i) => (
+        <div key={i} className="w-5 h-5 rounded-full border-2 border-white -ml-1.5 first:ml-0 flex-shrink-0"
+          style={{ background: colors[i % colors.length], zIndex: shown - i }} />
+      ))}
+      {count > 4 && <span className="text-[10px] font-bold text-slate-400 ml-1">+{count - 4}</span>}
+    </div>
+  );
 }
 
 function getCached() {
@@ -64,38 +91,64 @@ function setCache(list) {
   try { localStorage.setItem(CACHE_KEY, JSON.stringify(list)); } catch {}
 }
 
-function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
-  const initials = community.name?.slice(0, 2)?.toUpperCase() || 'CO';
-  const categoryLabel = community.category || (TYPE_TO_CATEGORY[community.type] ? community.type : 'Community');
+function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, featured = false }) {
+  const initials = getInitials(community.name);
+  const gradient = TYPE_GRADIENTS[community.type] || 'from-slate-500 to-slate-700';
+  const activity = getMockActivity(community.id);
+  const isActive = (community.follower_count || 0) > 100;
+
   return (
-    <div className="rounded-2xl bg-white border border-slate-100 shadow-sm p-3 flex flex-col">
-      <div className="flex items-start gap-3">
-        <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-sm font-bold text-slate-700 flex-shrink-0">
+    <div
+      onClick={() => onOpen(community.id)}
+      className="rounded-2xl bg-white cursor-pointer overflow-hidden flex flex-col"
+      style={{
+        boxShadow: featured ? '0 8px 30px rgba(37,99,235,0.2)' : '0 4px 16px rgba(0,0,0,0.08)',
+        border: featured ? '2px solid #BFDBFE' : '1px solid #EEF2F8',
+        transition: 'transform 150ms ease, box-shadow 150ms ease',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+    >
+      <div className={`bg-gradient-to-r ${gradient} px-3 pt-3 pb-4 relative`}>
+        {featured && (
+          <span className="absolute top-2 right-2 text-[10px] font-black bg-white/25 text-white px-2 py-0.5 rounded-full">⭐ Featured</span>
+        )}
+        {isActive && (
+          <span className="absolute top-2 left-2 flex items-center gap-1 text-[9px] font-bold bg-green-500 text-white px-1.5 py-0.5 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse inline-block" />
+            Active
+          </span>
+        )}
+        <div className="flex items-center justify-center mt-2">
           {community.logo_url ? (
-            <img src={community.logo_url} alt={community.name} className="h-11 w-11 rounded-xl object-cover" />
-          ) : initials}
-        </div>
-        <div className="min-w-0 flex-1">
-          <button onClick={() => onOpen(community.id)} className="block w-full text-left">
-            <div className="truncate text-sm font-semibold text-slate-900">{community.name}</div>
-            <div className="mt-0.5 text-xs text-slate-500">{(community.follower_count || 0).toLocaleString()} members</div>
-            {community.description_short && (
-              <div className="mt-1 line-clamp-2 text-xs text-slate-400">{community.description_short}</div>
-            )}
-          </button>
+            <img src={community.logo_url} alt={community.name} className="w-14 h-14 rounded-2xl object-cover" style={{ border: '3px solid white' }} />
+          ) : (
+            <div className="w-14 h-14 rounded-2xl bg-white/25 backdrop-blur flex items-center justify-center" style={{ border: '2px solid rgba(255,255,255,0.5)' }}>
+              <span className="text-white font-black text-[18px]">{initials}</span>
+            </div>
+          )}
         </div>
       </div>
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <span className="truncate text-[11px] text-slate-400">{categoryLabel}</span>
+
+      <div className="px-3 pt-2.5 pb-3 flex flex-col gap-2 flex-1">
+        <div>
+          <p className="font-bold text-[13px] text-slate-900 leading-snug truncate text-center">{community.name}</p>
+          <p className="text-[11px] text-slate-400 text-center mt-0.5 line-clamp-1">{activity}</p>
+        </div>
+        <div className="flex items-center justify-between">
+          <StackedAvatars count={community.follower_count || 0} />
+          <span className="text-[10px] text-slate-400 font-medium">{(community.follower_count || 0).toLocaleString()} members</span>
+        </div>
         {isJoined ? (
-          <button className="rounded-full px-3 py-1.5 text-xs font-semibold bg-slate-100 text-slate-700">Joined</button>
+          <button className="w-full rounded-full py-1.5 text-[12px] font-bold bg-green-50 text-green-700 border border-green-200">✓ Joined</button>
         ) : (
           <button
             onClick={e => { e.stopPropagation(); onJoin(community); }}
             disabled={isJoining}
-            className="rounded-full px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-60 flex items-center gap-1"
+            className="w-full rounded-full py-1.5 text-[12px] font-bold text-white transition-opacity disabled:opacity-60"
+            style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}
           >
-            {isJoining ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Join'}
+            {isJoining ? '...' : 'Join'}
           </button>
         )}
       </div>
@@ -105,36 +158,54 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
 
 function GroupCard({ group, isMember, onClick, onJoin }) {
   const initials = getInitials(group.name);
+  const catGrad = {
+    'Local Life': 'from-teal-500 to-cyan-600',
+    'Chessed':    'from-rose-500 to-pink-600',
+    'Social':     'from-amber-500 to-orange-600',
+    'Learning':   'from-indigo-500 to-violet-600',
+    'Institutional': 'from-slate-500 to-slate-700',
+  }[group.category] || 'from-blue-500 to-indigo-600';
+  const activity = getMockActivity(group.id);
+
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-2xl p-3.5 cursor-pointer hover:shadow-md transition-all flex flex-col gap-2"
-      style={{ border: '1px solid #E8EDF5', boxShadow: '0 1px 4px rgba(15,23,42,0.05)' }}
+      className="bg-white rounded-2xl cursor-pointer overflow-hidden flex flex-col"
+      style={{
+        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+        border: '1px solid #EEF2F8',
+        transition: 'transform 150ms ease, box-shadow 150ms ease',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
     >
-      <div className="flex items-center gap-2.5">
-        {group.cover_image_url ? (
-          <img src={group.cover_image_url} alt="" className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
-        ) : (
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-black text-[11px]">{initials}</span>
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="font-bold text-[13px] text-slate-900 leading-tight truncate">{group.name}</div>
-          <div className="text-[11px] text-slate-400 mt-0.5 truncate">{group.category || 'Group'}</div>
+      <div className={`bg-gradient-to-r ${catGrad} px-3 pt-3 pb-4`}>
+        <div className="flex items-center justify-center mt-1">
+          {group.cover_image_url ? (
+            <img src={group.cover_image_url} alt="" className="w-14 h-14 rounded-2xl object-cover" style={{ border: '3px solid white' }} />
+          ) : (
+            <div className="w-14 h-14 rounded-2xl bg-white/25 flex items-center justify-center" style={{ border: '2px solid rgba(255,255,255,0.5)' }}>
+              <span className="text-white font-black text-[18px]">{initials}</span>
+            </div>
+          )}
         </div>
       </div>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 text-[11px] text-slate-400">
-          <Users className="w-3 h-3" />
-          <span>{(group.member_count || 0).toLocaleString()}</span>
+      <div className="px-3 pt-2.5 pb-3 flex flex-col gap-2 flex-1">
+        <div>
+          <p className="font-bold text-[13px] text-slate-900 truncate text-center">{group.name}</p>
+          <p className="text-[11px] text-slate-400 text-center mt-0.5 line-clamp-1">{activity}</p>
+        </div>
+        <div className="flex items-center justify-between">
+          <StackedAvatars count={group.member_count || 0} />
+          <span className="text-[10px] text-slate-400">{(group.member_count || 0).toLocaleString()} members</span>
         </div>
         {isMember ? (
-          <span className="text-[11px] font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">Joined ✓</span>
+          <button className="w-full rounded-full py-1.5 text-[12px] font-bold bg-green-50 text-green-700 border border-green-200">✓ Joined</button>
         ) : (
           <button
             onClick={e => { e.stopPropagation(); onJoin(group); }}
-            className="text-[11px] font-bold bg-blue-600 text-white px-3 py-1.5 rounded-full hover:bg-blue-700 transition-colors"
+            className="w-full rounded-full py-1.5 text-[12px] font-bold text-white"
+            style={{ background: 'linear-gradient(135deg, #0EA5E9, #2563EB)' }}
           >
             Join
           </button>
@@ -485,23 +556,29 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
 
 function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter }) {
   const sorted = [...communities].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0));
-
-  if (sorted.length === 0 && groups.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl p-8 text-center" style={{ border: '1px solid #E8EDF5' }}>
-        <p className="font-bold text-slate-900">No communities found</p>
-        <p className="text-[12px] text-slate-400 mt-1">{hasFilter ? 'Try a different filter' : 'Check back soon'}</p>
-      </div>
-    );
-  }
+  const featured = sorted[0];
+  const rest = sorted.slice(1);
 
   return (
     <div className="space-y-5">
-      {sorted.length > 0 && (
+      {featured && (
+        <section>
+          <h2 className="text-[14px] font-bold text-slate-700 mb-2">⭐ Featured Community</h2>
+          <CommunityCard
+            community={featured}
+            isJoined={userCommunityIds.has(featured.id)}
+            isJoining={joiningId === featured.id}
+            onOpen={openCommunity}
+            onJoin={onJoin}
+            featured={true}
+          />
+        </section>
+      )}
+      {rest.length > 0 && (
         <section>
           <h2 className="text-[14px] font-bold text-slate-700 mb-2">Communities</h2>
           <div className="grid grid-cols-2 gap-2.5">
-            {sorted.map(c => (
+            {rest.map(c => (
               <CommunityCard
                 key={c.id}
                 community={c}
