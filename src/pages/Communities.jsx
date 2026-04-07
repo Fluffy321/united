@@ -437,6 +437,16 @@ export default function Communities() {
             </div>
           )}
 
+          {/* Featured Community Banner */}
+          <FeaturedCommunityBanner
+            communities={activeTab === 'mine' ? myCommunities : discoverCommunities.slice(0,1)}
+            allCommunities={allCommunities}
+            userCommunityIds={userCommunityIds}
+            joiningId={joiningId}
+            onOpen={openCommunity}
+            onJoin={joinCommunity}
+          />
+
           {/* Category filter chips */}
           {activeTab === 'discover' && (
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1 mb-4">
@@ -508,6 +518,75 @@ export default function Communities() {
         currentUser={currentUser}
         onCreated={() => loadData(currentUser)}
       />
+    </div>
+  );
+}
+
+function FeaturedCommunityBanner({ communities, allCommunities, userCommunityIds, joiningId, onOpen, onJoin }) {
+  // Pick the community with the most followers
+  const featured = [...allCommunities].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0))[0];
+  if (!featured) return null;
+  const catKey = featured.category || TYPE_TO_CATEGORY[featured.type] || '';
+  const gradient = CATEGORY_GRADIENTS[catKey] || 'from-blue-600 to-indigo-700';
+  const isJoined = userCommunityIds.has(featured.id);
+  const isJoining = joiningId === featured.id;
+  const initials = featured.name?.slice(0, 2)?.toUpperCase() || 'CO';
+
+  return (
+    <div
+      onClick={() => onOpen(featured.id)}
+      className={`relative rounded-3xl overflow-hidden cursor-pointer mb-4 bg-gradient-to-br ${gradient}`}
+      style={{ boxShadow: '0 8px 32px rgba(37,99,235,0.25)' }}
+    >
+      {/* Background texture */}
+      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 0%, transparent 60%)' }} />
+
+      <div className="relative p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            {featured.logo_url ? (
+              <img src={featured.logo_url} alt={featured.name} className="w-14 h-14 rounded-2xl object-cover border-2 border-white/30" />
+            ) : (
+              <div className="w-14 h-14 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center">
+                <span className="text-white font-black text-xl">{initials}</span>
+              </div>
+            )}
+            <div>
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-[10px] font-black bg-white/25 text-white px-2 py-0.5 rounded-full">⭐ Featured</span>
+              </div>
+              <h3 className="text-white font-bold text-[17px] leading-tight">{featured.name}</h3>
+              <p className="text-white/70 text-[12px] mt-0.5">{(featured.follower_count || 0).toLocaleString()} members</p>
+            </div>
+          </div>
+
+          <button
+            onClick={e => { e.stopPropagation(); onJoin(featured); }}
+            disabled={isJoining || isJoined}
+            className="shrink-0 rounded-full px-4 py-2 text-[12px] font-bold transition-all disabled:opacity-70"
+            style={isJoined
+              ? { background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.4)' }
+              : { background: 'white', color: '#2563EB' }
+            }
+          >
+            {isJoining ? '...' : isJoined ? '✓ Joined' : 'Join Now'}
+          </button>
+        </div>
+
+        {featured.description_short && (
+          <p className="text-white/80 text-[13px] mt-3 leading-relaxed line-clamp-2">{featured.description_short}</p>
+        )}
+
+        <div className="mt-3 flex items-center gap-3">
+          <div className="flex -space-x-2">
+            {[0,1,2].map(i => (
+              <div key={i} className="w-6 h-6 rounded-full border-2 border-white/50"
+                style={{ background: ['rgba(255,255,255,0.5)','rgba(255,255,255,0.35)','rgba(255,255,255,0.2)'][i] }} />
+            ))}
+          </div>
+          <span className="text-white/60 text-[11px] font-medium">Active community · tap to explore →</span>
+        </div>
+      </div>
     </div>
   );
 }
