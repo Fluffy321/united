@@ -800,11 +800,11 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
 
   return (
     <div className="space-y-6">
-      {sorted.length > 0 && (
+      {rest.length > 0 && (
         <div>
           <div className="text-lg font-bold text-slate-900 mb-3">Communities</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {sorted.map(c => (
+            {rest.map(c => (
               <CommunityCard
                 key={c.id}
                 community={c}
@@ -815,10 +815,10 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
               />
             ))}
           </div>
-        </div>
-      )}
+          </div>
+          )}
 
-      {groups.length > 0 && (
+          {groups.length > 0 && (
         <div>
           <div className="text-lg font-bold text-slate-900 mb-3">Groups</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
