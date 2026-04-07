@@ -140,14 +140,26 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, feature
 
   return (
     <div
-      className="rounded-3xl bg-white border border-slate-100 overflow-hidden active:scale-[0.99] transition-all cursor-pointer"
-      style={{ boxShadow: '0 2px 10px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.04)' }}
+      className="group rounded-[20px] bg-white border border-slate-100 overflow-hidden cursor-pointer"
+      style={{
+        boxShadow: '0 2px 8px rgba(15,23,42,0.06)',
+        transition: 'transform 160ms ease, box-shadow 160ms ease',
+      }}
       onClick={() => onOpen(community.id)}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = 'translateY(-3px) scale(1.01)';
+        e.currentTarget.style.boxShadow = '0 12px 28px rgba(37,99,235,0.15), 0 4px 10px rgba(15,23,42,0.08)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = '';
+        e.currentTarget.style.boxShadow = '0 2px 8px rgba(15,23,42,0.06)';
+      }}
+      onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)'; }}
+      onMouseUp={e => { e.currentTarget.style.transform = 'translateY(-3px) scale(1.01)'; }}
     >
       <div className={`h-2 w-full bg-gradient-to-r ${gradient}`} />
 
       <div className="p-4">
-        {/* Header */}
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-start gap-2.5 flex-1 min-w-0">
             {community.logo_url ? (
@@ -176,18 +188,15 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, feature
           </button>
         </div>
 
-        {/* Description */}
         {community.description_short && (
           <div className="text-[11px] text-slate-600 line-clamp-2 mb-3">{community.description_short}</div>
         )}
 
-        {/* Members + activity */}
         <div className="flex items-center justify-between gap-2 mb-3">
           <MemberStack count={community.follower_count || 0} />
           <div className="text-[10px] text-slate-400 truncate">{catKey || typeKey || 'Community'}</div>
         </div>
 
-        {/* Latest activity preview */}
         <div className="rounded-2xl bg-slate-50 px-3 py-2 text-[11px] text-slate-500 line-clamp-2">
           {activity}
         </div>
@@ -210,13 +219,22 @@ function GroupCard({ group, isMember, onClick, onJoin }) {
   return (
     <div
       onClick={onClick}
-      className="rounded-2xl bg-white shadow-sm hover:shadow-md cursor-pointer overflow-hidden flex flex-col"
+      className="rounded-[20px] bg-white overflow-hidden flex flex-col cursor-pointer"
       style={{
         border: '1px solid #EEF2F8',
-        transition: 'transform 150ms ease, box-shadow 150ms ease',
+        boxShadow: '0 2px 8px rgba(15,23,42,0.06)',
+        transition: 'transform 160ms ease, box-shadow 160ms ease',
       }}
-      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = 'translateY(-3px) scale(1.01)';
+        e.currentTarget.style.boxShadow = '0 12px 28px rgba(37,99,235,0.15), 0 4px 10px rgba(15,23,42,0.08)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = '';
+        e.currentTarget.style.boxShadow = '0 2px 8px rgba(15,23,42,0.06)';
+      }}
+      onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)'; }}
+      onMouseUp={e => { e.currentTarget.style.transform = 'translateY(-3px) scale(1.01)'; }}
     >
       <div className={`h-2 bg-gradient-to-r ${catGrad}`} />
 
@@ -616,7 +634,7 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
             <h2 className="text-[14px] font-bold text-slate-700">Your Communities</h2>
             <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{myCommunities.length}</span>
           </div>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-3">
             {myCommunities.map(c => (
               <CommunityCard key={c.id} community={c} isJoined={userCommunityIds.has(c.id)} isJoining={joiningId === c.id} onOpen={openCommunity} onJoin={onJoinCommunity} />
             ))}
@@ -629,7 +647,7 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
             <h2 className="text-[14px] font-bold text-slate-700">Your Groups</h2>
             <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{myGroups.length}</span>
           </div>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-3">
             {myGroups.map(g => (
               <GroupCard key={g.id} group={g} isMember={memberGroupIds.has(g.id)} onClick={() => setSelectedGroup(g)} onJoin={onJoinGroup} />
             ))}
@@ -707,7 +725,7 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
       {rest.length > 0 && (
         <section>
           <h2 className="text-[14px] font-bold text-slate-700 mb-2">Communities</h2>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-3">
             {rest.map(c => (
               <CommunityCard
                 key={c.id}
@@ -725,7 +743,7 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
       {groups.length > 0 && (
         <section>
           <h2 className="text-[14px] font-bold text-slate-700 mb-2">Groups</h2>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-3">
             {groups.slice(0, 12).map(g => (
               <GroupCard
                 key={g.id}
