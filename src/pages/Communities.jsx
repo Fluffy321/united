@@ -580,34 +580,18 @@ const SUGGESTED_CATEGORIES = [
 function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId }) {
   if (myCommunities.length === 0 && myGroups.length === 0) {
     return (
-      <div className="space-y-4">
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
-          <div className="mx-auto h-14 w-14 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mb-4">
-            👥
-          </div>
-          <div className="text-xl font-bold text-slate-900">No communities yet</div>
-          <div className="text-slate-500 mt-2">Create the first one and start bringing people together.</div>
-          <button
-            onClick={() => setActiveTab('discover')}
-            className="mt-5 rounded-full bg-blue-600 text-white px-5 py-3 font-semibold shadow-sm"
-          >
-            Browse Communities
-          </button>
+      <div className="rounded-3xl bg-white border border-slate-200 shadow-sm p-8 text-center">
+        <div className="text-4xl mb-3">🏘️</div>
+        <div className="text-lg font-bold text-slate-900">No communities yet</div>
+        <div className="text-sm text-slate-500 mt-2">
+          Join communities to start seeing events, discussions, and people near you.
         </div>
-        <div>
-          <h3 className="text-[13px] font-bold text-slate-500 uppercase tracking-wide mb-3">Popular Categories</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {SUGGESTED_CATEGORIES.map(cat => (
-              <button key={cat.key} onClick={() => setActiveTab('discover')}
-                className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 text-left hover:bg-slate-50 transition-colors"
-                style={{ border: '1px solid #E8EDF5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
-              >
-                <span className="text-xl">{cat.emoji}</span>
-                <span className="text-[12px] font-semibold text-slate-700 leading-tight">{cat.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <button
+          onClick={() => setActiveTab('discover')}
+          className="mt-4 rounded-full bg-blue-600 text-white px-5 py-2.5 text-sm font-semibold"
+        >
+          Explore Communities
+        </button>
       </div>
     );
   }
