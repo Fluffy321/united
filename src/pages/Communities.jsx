@@ -104,88 +104,94 @@ const CATEGORY_GRADIENTS = {
   'Local Communities':     'from-blue-500 to-indigo-500',
 };
 
-const AVATAR_COLORS = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899'];
+const CATEGORY_CARD_GRADIENTS = {
+  School:    'from-sky-500 to-blue-600',
+  Yeshiva:   'from-sky-500 to-blue-600',
+  Seminary:  'from-sky-500 to-blue-600',
+  Shul:      'from-violet-500 to-purple-600',
+  Community: 'from-indigo-500 to-blue-600',
+  Travel:    'from-cyan-500 to-teal-500',
+  Chessed:   'from-emerald-500 to-green-600',
+  Camp:      'from-amber-400 to-orange-500',
+  Other:     'from-blue-500 to-purple-600',
+};
 
-function MemberAvatarStack({ count = 0 }) {
+function MemberStack({ count = 0 }) {
+  const colors = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899'];
   const shown = Math.min(count > 0 ? 3 : 2, 3);
   return (
-    <div className="flex items-center gap-1">
-      <div className="flex -space-x-1.5">
-        {[...Array(shown)].map((_, i) => (
-          <div key={i} className="w-5 h-5 rounded-full border-2 border-white flex-shrink-0"
-            style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length], zIndex: shown - i }} />
-        ))}
-      </div>
-      {count > 3 && <span className="text-[10px] font-semibold text-slate-400">+{count - 3}</span>}
+    <div className="flex -space-x-2">
+      {[...Array(shown)].map((_, i) => (
+        <div key={i} className="h-6 w-6 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
+          style={{ background: colors[i % colors.length], zIndex: shown - i }} />
+      ))}
     </div>
   );
 }
 
 function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, featured = false }) {
-  const catKey = community.category || TYPE_TO_CATEGORY[community.type] || '';
-  const gradient = CATEGORY_GRADIENTS[catKey] || 'from-blue-500 to-indigo-600';
+  const typeKey = community.type || '';
+  const catKey = community.category || TYPE_TO_CATEGORY[typeKey] || '';
+  const gradient = CATEGORY_CARD_GRADIENTS[typeKey] || CATEGORY_CARD_GRADIENTS[catKey] || 'from-blue-500 to-purple-600';
   const initials = community.name?.slice(0, 2)?.toUpperCase() || 'CO';
   const activity = getMockActivity(community.id);
   const activeNow = 3 + (community.id?.charCodeAt(0) % 12);
 
   return (
-    <button
+    <div
+      className="rounded-3xl bg-white border border-slate-100 overflow-hidden active:scale-[0.99] transition-all cursor-pointer"
+      style={{ boxShadow: '0 2px 10px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.04)' }}
       onClick={() => onOpen(community.id)}
-      className="w-full rounded-2xl bg-white border border-slate-200 text-left overflow-hidden active:scale-[0.97] transition-all"
-      style={{ boxShadow: '0 2px 10px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.05)' }}
     >
-      {/* Colored top accent */}
-      <div className={`h-1.5 w-full bg-gradient-to-r ${gradient}`} />
+      <div className={`h-2 w-full bg-gradient-to-r ${gradient}`} />
 
-      <div className="p-3.5">
-        {/* Logo + name row */}
-        <div className="flex items-start gap-2.5 mb-2.5">
-          {community.logo_url ? (
-            <img src={community.logo_url} alt={community.name} className="h-10 w-10 rounded-xl object-cover shrink-0" />
-          ) : (
-            <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center font-bold text-[12px] shadow-sm shrink-0`}>
-              {initials}
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-start gap-2.5 flex-1 min-w-0">
+            {community.logo_url ? (
+              <img src={community.logo_url} alt={community.name} className="h-11 w-11 rounded-2xl object-cover shrink-0" />
+            ) : (
+              <div className={`h-11 w-11 rounded-2xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center font-bold text-[12px] shadow-sm shrink-0`}>
+                {initials}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="text-[13px] font-bold text-slate-900 truncate">{community.name}</div>
+              <div className="text-[11px] text-slate-500 mt-0.5">{(community.follower_count || 0).toLocaleString()} members</div>
+              <div className="mt-1 inline-flex rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700">
+                {activeNow} active now
+              </div>
             </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="font-bold text-slate-900 text-[13px] leading-tight truncate">{community.name}</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">{catKey || community.type || 'Community'}</div>
           </div>
+          <button
+            onClick={e => { e.stopPropagation(); onJoin(community); }}
+            disabled={isJoining}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-all active:scale-95 disabled:opacity-60 ${
+              isJoined ? 'bg-slate-100 text-slate-600' : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {isJoining ? '…' : isJoined ? '✓ Joined' : 'Join'}
+          </button>
         </div>
 
         {/* Description */}
         {community.description_short && (
-          <p className="text-[11px] text-slate-500 line-clamp-2 mb-2.5 leading-relaxed">{community.description_short}</p>
+          <div className="text-[11px] text-slate-600 line-clamp-2 mb-3">{community.description_short}</div>
         )}
 
-        {/* Activity preview */}
-        <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 text-[10px] text-slate-500 mb-2.5 line-clamp-1">
-          💬 {activity}
+        {/* Members + activity */}
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <MemberStack count={community.follower_count || 0} />
+          <div className="text-[10px] text-slate-400 truncate">{catKey || typeKey || 'Community'}</div>
         </div>
 
-        {/* Members row */}
-        <div className="flex items-center justify-between mb-3">
-          <MemberAvatarStack count={community.follower_count || 0} />
-          <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            {activeNow} active
-          </div>
+        {/* Latest activity preview */}
+        <div className="rounded-2xl bg-slate-50 px-3 py-2 text-[11px] text-slate-500 line-clamp-2">
+          {activity}
         </div>
-
-        {/* Join button */}
-        <button
-          onClick={e => { e.stopPropagation(); onJoin(community); }}
-          disabled={isJoining}
-          className={`w-full rounded-full py-1.5 text-[12px] font-bold transition-all active:scale-95 disabled:opacity-60 ${
-            isJoined
-              ? 'bg-slate-100 text-slate-600 border border-slate-200'
-              : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm hover:shadow-md'
-          }`}
-        >
-          {isJoining ? '…' : isJoined ? '✓ Joined' : 'Join'}
-        </button>
       </div>
-    </button>
+    </div>
   );
 }
 
