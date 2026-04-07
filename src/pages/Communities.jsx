@@ -56,11 +56,36 @@ const TYPE_GRADIENTS = {
 
 const ACTIVITY_LABELS = [
   'Just posted a new update',
-  'Event coming up this Shabbos',
+  'Shabbos event coming up',
   'New members joined today',
-  'Posted a help request',
+  'Someone posted a help request',
   'Shared a learning resource',
+  'Hosting a community event',
+  'New discussion started',
+  'Mitzvah opportunity posted',
 ];
+
+const CATEGORY_ICONS = {
+  'Schools & Yeshivas': '🏫',
+  'Chessed & Volunteering': '🤝',
+  'Travel': '✈️',
+  'Careers & Networking': '💼',
+  'Learning & Torah': '📚',
+  'Social & Events': '🎉',
+  'Programs & Youth': '🧒',
+  'Sports & Fitness': '🏀',
+  'Food & Lifestyle': '🍽️',
+  'Local Communities': '🌍',
+  School: '🏫', Yeshiva: '🏫', Seminary: '🎓',
+  Shul: '🕍', Camp: '⛺', Other: '🌐',
+};
+
+function getActivityBadge(id) {
+  const n = id ? id.charCodeAt(0) % 3 : 0;
+  if (n === 0) return { label: '🔥 Hot', color: 'bg-red-50 text-red-600' };
+  if (n === 1) return { label: '🟢 Active', color: 'bg-green-50 text-green-700' };
+  return { label: '✨ New', color: 'bg-violet-50 text-violet-600' };
+}
 
 function getInitials(name = '') {
   return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -137,6 +162,8 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, feature
   const initials = community.name?.slice(0, 2)?.toUpperCase() || 'CO';
   const activity = getMockActivity(community.id);
   const activeNow = 3 + (community.id?.charCodeAt(0) % 12);
+  const badge = getActivityBadge(community.id);
+  const catIcon = CATEGORY_ICONS[typeKey] || CATEGORY_ICONS[catKey] || '🏘️';
 
   return (
     <div
@@ -158,8 +185,8 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, feature
             <div className="min-w-0 flex-1">
               <div className="text-[13px] font-bold text-slate-900 truncate">{community.name}</div>
               <div className="text-[11px] text-slate-500 mt-0.5">{(community.follower_count || 0).toLocaleString()} members</div>
-              <div className="mt-1 inline-flex rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700">
-                {activeNow} active now
+              <div className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${badge.color}`}>
+                {badge.label}
               </div>
             </div>
           </div>
@@ -180,7 +207,10 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, feature
 
         <div className="flex items-center justify-between gap-2 mb-3">
           <MemberStack count={community.follower_count || 0} />
-          <div className="text-[10px] text-slate-400 truncate">{catKey || typeKey || 'Community'}</div>
+          <div className="flex items-center gap-1 text-[10px] text-slate-400">
+            <span>{catIcon}</span>
+            <span>{catKey || typeKey || 'Community'}</span>
+          </div>
         </div>
 
         <div className="rounded-2xl bg-slate-50 px-3 py-2 text-[11px] text-slate-500 line-clamp-2">
