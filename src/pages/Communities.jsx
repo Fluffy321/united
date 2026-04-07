@@ -100,52 +100,54 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, feature
   return (
     <div
       onClick={() => onOpen(community.id)}
-      className="rounded-2xl bg-white cursor-pointer overflow-hidden flex flex-col"
+      className="rounded-2xl bg-white shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden flex flex-col"
       style={{
-        boxShadow: featured ? '0 8px 30px rgba(37,99,235,0.2)' : '0 4px 16px rgba(0,0,0,0.08)',
         border: featured ? '2px solid #BFDBFE' : '1px solid #EEF2F8',
+        transform: 'scale(1)',
         transition: 'transform 150ms ease, box-shadow 150ms ease',
       }}
       onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; }}
       onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
     >
-      <div className={`bg-gradient-to-r ${gradient} px-3 pt-3 pb-4 relative`}>
-        {featured && (
-          <span className="absolute top-2 right-2 text-[10px] font-black bg-white/25 text-white px-2 py-0.5 rounded-full">⭐ Featured</span>
-        )}
-        {isActive && (
-          <span className="absolute top-2 left-2 flex items-center gap-1 text-[9px] font-bold bg-green-500 text-white px-1.5 py-0.5 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse inline-block" />
-            Active
-          </span>
-        )}
-        <div className="flex items-center justify-center mt-2">
+      {/* Thin gradient top bar */}
+      <div className={`h-2 bg-gradient-to-r ${gradient}`} />
+
+      <div className="p-3.5 flex flex-col gap-2.5 flex-1">
+        <div className="flex items-start gap-2.5">
           {community.logo_url ? (
-            <img src={community.logo_url} alt={community.name} className="w-14 h-14 rounded-2xl object-cover" style={{ border: '3px solid white' }} />
+            <img src={community.logo_url} alt={community.name} className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
           ) : (
-            <div className="w-14 h-14 rounded-2xl bg-white/25 backdrop-blur flex items-center justify-center" style={{ border: '2px solid rgba(255,255,255,0.5)' }}>
-              <span className="text-white font-black text-[18px]">{initials}</span>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ${gradient}`}>
+              <span className="text-white font-black text-[13px]">{initials}</span>
             </div>
           )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1 flex-wrap">
+              {featured && <span className="text-[9px] font-black bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">⭐ Featured</span>}
+            </div>
+            <p className="font-bold text-[13px] text-slate-900 leading-snug truncate">{community.name}</p>
+            {isActive && (
+              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-green-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" /> Active now
+              </span>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="px-3 pt-2.5 pb-3 flex flex-col gap-2 flex-1">
-        <div>
-          <p className="font-bold text-[13px] text-slate-900 leading-snug truncate text-center">{community.name}</p>
-          <p className="text-[11px] text-slate-400 text-center mt-0.5 line-clamp-1">{activity}</p>
-        </div>
+        <p className="text-[11px] text-slate-400 line-clamp-1">{activity}</p>
+
         <div className="flex items-center justify-between">
           <StackedAvatars count={community.follower_count || 0} />
           <span className="text-[10px] text-slate-400 font-medium">{(community.follower_count || 0).toLocaleString()} members</span>
         </div>
+
         {isJoined ? (
           <button className="w-full rounded-full py-1.5 text-[12px] font-bold bg-green-50 text-green-700 border border-green-200">✓ Joined</button>
         ) : (
           <button
             onClick={e => { e.stopPropagation(); onJoin(community); }}
             disabled={isJoining}
-            className="w-full rounded-full py-1.5 text-[12px] font-bold text-white transition-opacity disabled:opacity-60"
+            className="w-full rounded-full py-1.5 text-[12px] font-bold text-white disabled:opacity-60"
             style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}
           >
             {isJoining ? '...' : 'Join'}
@@ -170,35 +172,38 @@ function GroupCard({ group, isMember, onClick, onJoin }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-2xl cursor-pointer overflow-hidden flex flex-col"
+      className="rounded-2xl bg-white shadow-sm hover:shadow-md cursor-pointer overflow-hidden flex flex-col"
       style={{
-        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
         border: '1px solid #EEF2F8',
         transition: 'transform 150ms ease, box-shadow 150ms ease',
       }}
       onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; }}
       onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
     >
-      <div className={`bg-gradient-to-r ${catGrad} px-3 pt-3 pb-4`}>
-        <div className="flex items-center justify-center mt-1">
+      <div className={`h-2 bg-gradient-to-r ${catGrad}`} />
+
+      <div className="p-3.5 flex flex-col gap-2.5 flex-1">
+        <div className="flex items-start gap-2.5">
           {group.cover_image_url ? (
-            <img src={group.cover_image_url} alt="" className="w-14 h-14 rounded-2xl object-cover" style={{ border: '3px solid white' }} />
+            <img src={group.cover_image_url} alt="" className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
           ) : (
-            <div className="w-14 h-14 rounded-2xl bg-white/25 flex items-center justify-center" style={{ border: '2px solid rgba(255,255,255,0.5)' }}>
-              <span className="text-white font-black text-[18px]">{initials}</span>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ${catGrad}`}>
+              <span className="text-white font-black text-[13px]">{initials}</span>
             </div>
           )}
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-[13px] text-slate-900 leading-snug truncate">{group.name}</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">{group.category || 'Group'}</p>
+          </div>
         </div>
-      </div>
-      <div className="px-3 pt-2.5 pb-3 flex flex-col gap-2 flex-1">
-        <div>
-          <p className="font-bold text-[13px] text-slate-900 truncate text-center">{group.name}</p>
-          <p className="text-[11px] text-slate-400 text-center mt-0.5 line-clamp-1">{activity}</p>
-        </div>
+
+        <p className="text-[11px] text-slate-400 line-clamp-1">{activity}</p>
+
         <div className="flex items-center justify-between">
           <StackedAvatars count={group.member_count || 0} />
           <span className="text-[10px] text-slate-400">{(group.member_count || 0).toLocaleString()} members</span>
         </div>
+
         {isMember ? (
           <button className="w-full rounded-full py-1.5 text-[12px] font-bold bg-green-50 text-green-700 border border-green-200">✓ Joined</button>
         ) : (
