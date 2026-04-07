@@ -598,32 +598,32 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {myCommunities.length > 0 && (
-        <section>
+        <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[17px] font-extrabold text-slate-900 tracking-tight">Your Communities</h2>
+            <div className="text-lg font-bold text-slate-900">Your Communities</div>
             <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{myCommunities.length}</span>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {myCommunities.map(c => (
               <CommunityCard key={c.id} community={c} isJoined={userCommunityIds.has(c.id)} isJoining={joiningId === c.id} onOpen={openCommunity} onJoin={onJoinCommunity} />
             ))}
           </div>
-        </section>
+        </div>
       )}
       {myGroups.length > 0 && (
-        <section>
+        <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[17px] font-extrabold text-slate-900 tracking-tight">Your Groups</h2>
+            <div className="text-lg font-bold text-slate-900">Your Groups</div>
             <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{myGroups.length}</span>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {myGroups.map(g => (
               <GroupCard key={g.id} group={g} isMember={memberGroupIds.has(g.id)} onClick={() => setSelectedGroup(g)} onJoin={onJoinGroup} />
             ))}
           </div>
-        </section>
+        </div>
       )}
     </div>
   );
@@ -679,26 +679,12 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
   }
 
   return (
-    <div className="space-y-8">
-      {featured && (
-        <section>
-          <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">⭐ Featured</h2>
-          <CommunityCard
-            community={featured}
-            isJoined={userCommunityIds.has(featured.id)}
-            isJoining={joiningId === featured.id}
-            onOpen={openCommunity}
-            onJoin={onJoin}
-            featured={true}
-          />
-        </section>
-      )}
-
-      {rest.length > 0 && (
-        <section>
-          <h2 className="text-[17px] font-extrabold text-slate-900 tracking-tight mb-3">Communities</h2>
-          <div className="grid grid-cols-2 gap-3">
-            {rest.map(c => (
+    <div className="space-y-6">
+      {sorted.length > 0 && (
+        <div>
+          <div className="text-lg font-bold text-slate-900 mb-3">Communities</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {sorted.map(c => (
               <CommunityCard
                 key={c.id}
                 community={c}
@@ -709,13 +695,13 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
               />
             ))}
           </div>
-        </section>
+        </div>
       )}
 
       {groups.length > 0 && (
-        <section>
-          <h2 className="text-[17px] font-extrabold text-slate-900 tracking-tight mb-3">Groups</h2>
-          <div className="grid grid-cols-2 gap-3">
+        <div>
+          <div className="text-lg font-bold text-slate-900 mb-3">Groups</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {groups.slice(0, 12).map(g => (
               <GroupCard
                 key={g.id}
@@ -726,7 +712,7 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
               />
             ))}
           </div>
-        </section>
+        </div>
       )}
 
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 text-center border border-blue-100">
