@@ -501,6 +501,8 @@ export default function Communities() {
         @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .fade-up { animation: fadeUp 180ms ease both; }
         .fade-up-delay { animation: fadeUp 180ms ease 80ms both; }
+        @keyframes heroEnter { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .hero-enter { animation: heroEnter 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
       `}</style>
       <div className="max-w-2xl mx-auto px-4 pt-6">
 
@@ -649,30 +651,31 @@ function FeaturedCommunityBanner({ community, onOpen }) {
   const newPosts = 15 + (community.id?.charCodeAt(0) % 20);
 
   return (
-    <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg mb-6">
+    <div className="hero-enter relative rounded-[2rem] overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white shadow-2xl mb-8" style={{ boxShadow: '0 20px 60px rgba(37, 99, 235, 0.35)' }}>
       {community.cover_image_url && (
-        <img src={community.cover_image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
+        <img src={community.cover_image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-25" />
       )}
-      <div className="absolute inset-0 bg-white/5 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 backdrop-blur-sm" />
+      <div className="absolute inset-0 opacity-40" style={{ background: 'radial-gradient(circle at 30% 50%, rgba(255,255,255,0.08), transparent 70%)' }} />
 
-      <div className="relative p-6">
-        <div className="text-xs font-semibold text-white/80 mb-2">
+      <div className="relative p-10">
+        <div className="text-xs font-semibold text-white/70 mb-3 tracking-widest">
           ⭐ FEATURED COMMUNITY
         </div>
 
-        <div className="text-3xl font-extrabold leading-tight">
+        <div className="text-5xl font-black leading-tight mb-3">
           {community.name}
         </div>
 
-        <div className="mt-2 text-white/85 text-sm max-w-lg">
+        <div className="mt-6 text-white/80 text-base max-w-2xl leading-relaxed">
           {community.description_short || community.description}
         </div>
 
-        <div className="mt-3 text-sm text-white/80">
-          🔥 {newPosts} new posts this week
+        <div className="mt-7 flex items-center gap-3 text-sm text-white/75">
+          <span className="text-lg">🔥</span> {newPosts} new posts this week
         </div>
 
-        <div className="mt-4 flex items-center gap-4 text-sm text-white/80">
+        <div className="mt-8 flex items-center gap-5 text-sm text-white/75">
           <span>{(community.follower_count || 0).toLocaleString()} members</span>
           <span>•</span>
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />{activeNow} active now</span>
@@ -680,71 +683,11 @@ function FeaturedCommunityBanner({ community, onOpen }) {
 
         <button
           onClick={() => onOpen(community.id)}
-          className="mt-5 rounded-full bg-white text-slate-900 px-6 py-3 font-semibold shadow hover:scale-105 active:scale-95 transition-all duration-150"
+          className="mt-10 rounded-full bg-white text-slate-900 px-8 py-4 font-bold text-base shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
         >
           View Community
         </button>
       </div>
-    </div>
-  );
-}
-
-const SUGGESTED_CATEGORIES = [
-  { emoji: '🏫', label: 'Schools & Yeshivas', key: 'schools' },
-  { emoji: '🤝', label: 'Chessed & Volunteering', key: 'chessed' },
-  { emoji: '📚', label: 'Learning & Torah', key: 'learning' },
-  { emoji: '🎉', label: 'Social & Events', key: 'social' },
-  { emoji: '🏀', label: 'Sports & Fitness', key: 'sports' },
-  { emoji: '🍽️', label: 'Food & Lifestyle', key: 'food' },
-];
-
-function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId }) {
-  if (myCommunities.length === 0 && myGroups.length === 0) {
-    return (
-      <div className="rounded-3xl bg-white border border-slate-200 shadow-sm p-8 text-center">
-        <div className="text-4xl mb-3">🏘️</div>
-        <div className="text-lg font-bold text-slate-900">No communities yet</div>
-        <div className="text-sm text-slate-500 mt-2">
-          Join communities to start seeing events, discussions, and people near you.
-        </div>
-        <button
-          onClick={() => setActiveTab('discover')}
-          className="mt-4 rounded-full bg-blue-600 text-white px-5 py-2.5 text-sm font-semibold active:scale-95 transition-all duration-150"
-        >
-          Explore Communities
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {myCommunities.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-lg font-bold text-slate-900">Your Communities</div>
-            <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{myCommunities.length}</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {myCommunities.map(c => (
-              <CommunityCard key={c.id} community={c} isJoined={userCommunityIds.has(c.id)} isJoining={joiningId === c.id} onOpen={openCommunity} onJoin={onJoinCommunity} />
-            ))}
-          </div>
-        </div>
-      )}
-      {myGroups.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-lg font-bold text-slate-900">Your Groups</div>
-            <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{myGroups.length}</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {myGroups.map(g => (
-              <GroupCard key={g.id} group={g} isMember={memberGroupIds.has(g.id)} onClick={() => setSelectedGroup(g)} onJoin={onJoinGroup} />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
