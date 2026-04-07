@@ -4,6 +4,7 @@ import { Loader2, Plus, Search, X, Users, AlertCircle, Map } from 'lucide-react'
 import { base44 } from '@/api/base44Client';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
+import CommunityDetailPage from '@/components/communities/CommunityDetailPage';
 import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
@@ -393,7 +394,7 @@ export default function Communities() {
     if (isFeaturedShul && community.type === 'Shul') {
       return <ShulCommunityPage community={community} currentUser={currentUser} onBack={backToList} />;
     }
-    return <CommunityDetailView communityId={selectedCommunityId} currentUser={currentUser} onBack={backToList} />;
+    return <CommunityDetailPage communityId={selectedCommunityId} currentUser={currentUser} onBack={backToList} />;
   }
 
   const isLoading = loadingPhase === 'loading' && allCommunities.length === 0;
