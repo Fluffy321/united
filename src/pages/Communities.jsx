@@ -501,39 +501,16 @@ export default function Communities() {
         </div>
 
         {/* Tab switcher */}
-        <div className="mb-6 flex rounded-2xl bg-white p-1 shadow-sm border border-slate-200">
+        <div className="mb-6 flex bg-slate-100 rounded-2xl p-1">
           {[{ id: 'mine', label: 'My Communities' }, { id: 'discover', label: 'Discover' }].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 rounded-xl py-2.5 text-[13px] font-semibold transition-all duration-150 active:scale-95 ${{
-                true: 'bg-blue-600 text-white shadow-sm',
-                false: 'text-slate-600 hover:text-slate-800'
-              }[String(activeTab === tab.id)]}`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {isDemo && (
-          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4 text-[11px] text-amber-800">
-            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> Showing demo data — seed communities to see real data.
-          </div>
-        )}
-
-        {/* Category chips — discover only */}
-        {activeTab === 'discover' && (
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1 mb-6">
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat.key}
-                onClick={() => setActiveCategory(cat.key)}
-                className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all duration-150 active:scale-95 ${
-                  activeCategory === cat.key
-                    ? 'bg-slate-800 text-white'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                }`}
+              className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-150 active:scale-95 ${
+                activeTab === tab.id
+                  ? 'bg-white text-blue-600 shadow'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
               >
                 {cat.label}
               </button>
