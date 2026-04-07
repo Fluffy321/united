@@ -375,15 +375,13 @@ export default function Feed() {
 
 
 
-        {/* 2. Feed Tabs */}
-        <div className="rounded-2xl mb-3 overflow-hidden" style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #4C1D95 100%)', boxShadow: '0 4px 16px rgba(37,99,235,0.2)' }}>
-          <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
+        {/* 2. Feed Filters + Stories grouped */}
+        <div className="rounded-2xl mb-3 bg-blue-50/60 border border-blue-100/60 p-2.5 space-y-2">
+          <div className="rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #4C1D95 100%)' }}>
+            <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
+          </div>
+          <CommunityActivityStrip groups={communityGroups} />
         </div>
-
-
-
-        {/* 3. Community Activity (compact circles) */}
-        <CommunityActivityStrip groups={communityGroups} />
 
         {/* 5. Events Calendar Tab */}
         {activeTab === 'events' && !isLoading && (

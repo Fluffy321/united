@@ -35,24 +35,21 @@ export default function PushNotificationPrompt() {
   };
 
   return (
-    <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-4 mb-3 flex items-center gap-3" style={{ boxShadow: '0 4px 14px rgba(37,99,235,0.3)' }}>
-      <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-        <Bell className="w-5 h-5 text-white" />
-      </div>
+    <div className="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 mb-2 flex items-center gap-2.5">
+      <Bell className="w-4 h-4 text-blue-500 flex-shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-white font-bold text-[13px] leading-tight">Enable Notifications</p>
-        <p className="text-blue-100 text-[11px] mt-0.5">Get alerts for help requests & community updates</p>
+        <p className="text-blue-700 font-semibold text-[12px] leading-tight">Enable community notifications</p>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-center gap-1.5 flex-shrink-0">
         <button
           onClick={handleEnable}
           disabled={requesting}
-          className="px-3 py-1.5 bg-white text-blue-700 rounded-full text-[12px] font-bold hover:bg-blue-50 transition-colors disabled:opacity-70"
+          className="px-2.5 py-1 bg-blue-600 text-white rounded-full text-[11px] font-bold hover:bg-blue-700 transition-colors disabled:opacity-70"
         >
           {requesting ? '…' : 'Enable'}
         </button>
-        <button onClick={handleDismiss} className="text-white/70 hover:text-white transition-colors p-1">
-          <X className="w-4 h-4" />
+        <button onClick={handleDismiss} className="text-slate-400 hover:text-slate-600 transition-colors p-0.5">
+          <X className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>

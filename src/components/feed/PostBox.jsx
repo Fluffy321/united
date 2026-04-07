@@ -14,23 +14,26 @@ export default function PostBox({ currentUser, onPostClick }) {
   const removeFile = (index) => {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
+
   return (
-    <div className="rounded-3xl border border-blue-100 bg-white/80 shadow-sm backdrop-blur p-4 mb-3 flex items-center gap-3">
-      <UserAvatar user={currentUser} size="sm" />
-      <button
-        onClick={() => onPostClick('feed')}
-        className="flex-1 text-left px-4 py-2.5 rounded-2xl text-[14px] font-medium transition-colors bg-blue-50/70 text-slate-400 border-0"
-      >
-        What's happening?
-      </button>
-      <button
-        onClick={() => setShowFileUpload(!showFileUpload)}
-        className="w-9 h-9 flex items-center justify-center rounded-full hover:opacity-80 transition-opacity flex-shrink-0"
-        style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)', color: 'white' }}
-        title="Add photo or file"
-      >
-        <ImagePlus style={{ width: 18, height: 18 }} />
-      </button>
+    <div className="rounded-3xl mb-4" style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(124,58,237,0.08) 100%)', padding: '10px', boxShadow: '0 4px 18px rgba(37,99,235,0.1)' }}>
+      <div className="bg-white rounded-2xl border border-blue-100/80 p-3.5 flex items-center gap-3" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+        <UserAvatar user={currentUser} size="sm" />
+        <button
+          onClick={() => onPostClick('feed')}
+          className="flex-1 text-left px-4 py-2.5 rounded-2xl text-[14px] font-medium transition-colors bg-slate-50 text-slate-400 border border-slate-100"
+        >
+          What's happening?
+        </button>
+        <button
+          onClick={() => setShowFileUpload(!showFileUpload)}
+          className="w-9 h-9 flex items-center justify-center rounded-full hover:opacity-80 transition-opacity flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)', color: 'white' }}
+          title="Add photo or file"
+        >
+          <ImagePlus style={{ width: 18, height: 18 }} />
+        </button>
+      </div>
 
       {/* File upload popover */}
       {showFileUpload && (
@@ -52,7 +55,6 @@ export default function PostBox({ currentUser, onPostClick }) {
               maxFiles={3}
             />
 
-            {/* Preview attached files */}
             {uploadedFiles.length > 0 && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-semibold text-slate-700">Attached ({uploadedFiles.length})</p>

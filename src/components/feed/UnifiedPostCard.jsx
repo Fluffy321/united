@@ -167,7 +167,11 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
       className="rounded-[14px] border border-[#EAECF0] overflow-visible"
-      style={{ background: '#ffffff', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+      style={{
+        background: '#ffffff',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
+        borderLeft: `3px solid ${{ feed: '#2563EB', help: '#F97316', event: '#16A34A', news: '#94A3B8', housing: '#7C3AED', job: '#0891B2', food: '#F59E0B', shul: '#2563EB', dating: '#EC4899', prompt_reply: '#7C3AED' }[post.type] || '#2563EB'}`,
+      }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3.5 pb-0">
@@ -262,7 +266,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       </div>
 
       {/* Content area */}
-      <div className="px-4 pt-3 pb-1 relative">
+      <div className="px-4 pt-3.5 pb-1.5 relative">
         {/* Prompt context */}
         {post.prompt_text && (
           <div className="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl px-3 py-2 mb-2.5 border border-violet-100">
@@ -415,7 +419,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       </div>
 
       {/* Actions footer */}
-      <div className="px-3 py-2 mt-1 border-t border-[#F2F4F7] bg-white rounded-b-[14px]">
+      <div className="px-3 py-2.5 mt-1 border-t border-[#F2F4F7] bg-white rounded-b-[14px]">
         <div className="flex items-center justify-between">
           {/* Left: Likes + Comments */}
           <div className="flex items-center gap-1">
