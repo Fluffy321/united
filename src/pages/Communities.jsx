@@ -439,12 +439,8 @@ export default function Communities() {
 
           {/* Featured Community Banner */}
           <FeaturedCommunityBanner
-            communities={activeTab === 'mine' ? myCommunities : discoverCommunities.slice(0,1)}
-            allCommunities={allCommunities}
-            userCommunityIds={userCommunityIds}
-            joiningId={joiningId}
+            community={allCommunities[0]}
             onOpen={openCommunity}
-            onJoin={joinCommunity}
           />
 
           {/* Category filter chips */}
@@ -522,25 +518,24 @@ export default function Communities() {
   );
 }
 
-function FeaturedCommunityBanner({ communities, allCommunities, userCommunityIds, joiningId, onOpen, onJoin }) {
-  const featured = [...allCommunities].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0))[0];
-  if (!featured) return null;
+function FeaturedCommunityBanner({ community, onOpen }) {
+  if (!community) return null;
 
   return (
     <div className="mb-6 rounded-3xl overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg">
       <div className="p-6">
         <div className="text-xs font-semibold text-white/80 mb-2">FEATURED COMMUNITY</div>
-        <div className="text-2xl font-bold">{featured.name}</div>
+        <div className="text-2xl font-bold">{community.name}</div>
         <div className="mt-2 text-sm text-white/85 max-w-xl">
-          {featured.description_short || featured.description}
+          {community.description_short || community.description}
         </div>
         <div className="mt-4 flex items-center gap-3 text-sm text-white/80">
-          <span>{(featured.follower_count || 0).toLocaleString()} members</span>
+          <span>{(community.follower_count || 0).toLocaleString()} members</span>
           <span>•</span>
-          <span>{getMockActivity(featured.id)}</span>
+          <span>{getMockActivity(community.id)}</span>
         </div>
         <button
-          onClick={() => onOpen(featured.id)}
+          onClick={() => onOpen(community.id)}
           className="mt-5 rounded-full bg-white text-slate-900 px-5 py-2.5 font-semibold shadow"
         >
           View Community
