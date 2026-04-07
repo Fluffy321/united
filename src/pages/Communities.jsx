@@ -8,6 +8,7 @@ import CommunityDetailPage from '@/components/communities/CommunityDetailPage';
 import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
+import FeaturedCommunityBanner from '@/components/communities/FeaturedCommunityBanner';
 import { toast } from 'sonner';
 
 const CACHE_KEY = 'communities_v3_cache';
@@ -37,12 +38,12 @@ const TYPE_TO_CATEGORY = {
 };
 
 const DEMO_COMMUNITIES = [
-  { id: 'demo-1', name: 'Young Israel Woodmere', type: 'Shul', follower_count: 420, description_short: 'Heart of the Five Towns community.', is_verified: true, neighborhood: 'Woodmere' },
-  { id: 'demo-2', name: 'HAFTR Day School', type: 'School', follower_count: 310, description_short: 'Leading Jewish day school K–12.', is_verified: true, neighborhood: 'Lawrence' },
-  { id: 'demo-3', name: 'Chabad of Woodmere', type: 'Shul', follower_count: 280, description_short: 'Open to everyone. Shabbat & holidays.', neighborhood: 'Woodmere' },
-  { id: 'demo-4', name: 'Five Towns Chessed Network', type: 'Other', follower_count: 175, description_short: 'Connecting volunteers with those in need.', neighborhood: 'Five Towns' },
-  { id: 'demo-5', name: 'Hebrew Academy Long Beach', type: 'School', follower_count: 195, description_short: 'Torah and academic excellence since 1952.', neighborhood: 'Long Beach' },
-  { id: 'demo-6', name: 'Woodmere Minyan', type: 'Shul', follower_count: 140, description_short: 'Multiple daily minyanim.', neighborhood: 'Woodmere' },
+  { id: 'demo-1', name: 'Young Israel Woodmere', type: 'Shul', follower_count: 420, description_short: 'Heart of the Five Towns community.', is_verified: true, neighborhood: 'Woodmere', description: 'Heart of the Five Towns community.' },
+  { id: 'demo-2', name: 'HAFTR Day School', type: 'School', follower_count: 310, description_short: 'Leading Jewish day school K–12.', is_verified: true, neighborhood: 'Lawrence', description: 'Leading Jewish day school K–12.' },
+  { id: 'demo-3', name: 'Chabad of Woodmere', type: 'Shul', follower_count: 280, description_short: 'Open to everyone. Shabbat & holidays.', neighborhood: 'Woodmere', description: 'Open to everyone. Shabbat & holidays.' },
+  { id: 'demo-4', name: 'Five Towns Chessed Network', type: 'Other', follower_count: 175, description_short: 'Connecting volunteers with those in need.', neighborhood: 'Five Towns', description: 'Connecting volunteers with those in need.' },
+  { id: 'demo-5', name: 'Hebrew Academy Long Beach', type: 'School', follower_count: 195, description_short: 'Torah and academic excellence since 1952.', neighborhood: 'Long Beach', description: 'Torah and academic excellence since 1952.' },
+  { id: 'demo-6', name: 'Woodmere Minyan', type: 'Shul', follower_count: 140, description_short: 'Multiple daily minyanim.', neighborhood: 'Woodmere', description: 'Multiple daily minyanim.' },
 ];
 
 const TYPE_GRADIENTS = {
@@ -81,66 +82,18 @@ const CATEGORY_ICONS = {
 };
 
 const VALUE_PROPOSITIONS = {
-  'Schools & Yeshivas': [
-    'Connect with alumni & families',
-    'Share resources & study tips',
-    'Network with educators',
-  ],
-  'Chessed & Volunteering': [
-    'Help others & build community',
-    'Find volunteering opportunities',
-    'Make a real difference',
-  ],
-  'Travel': [
-    'Plan trips together',
-    'Share travel tips & deals',
-    'Meet fellow travelers',
-  ],
-  'Careers & Networking': [
-    'Find jobs & network',
-    'Share career opportunities',
-    'Grow professionally',
-  ],
-  'Learning & Torah': [
-    'Daily Torah discussions',
-    'Deepen your knowledge',
-    'Learn with others',
-  ],
-  'Social & Events': [
-    'Weekly events & real connections',
-    'Meet people & have fun',
-    'Build lasting friendships',
-  ],
-  'Programs & Youth': [
-    'Programs for all ages',
-    'Activities & mentorship',
-    'Youth engagement',
-  ],
-  'Sports & Fitness': [
-    'Join leagues & activities',
-    'Find workout partners',
-    'Stay active together',
-  ],
-  'Food & Lifestyle': [
-    'Kosher dining & recipes',
-    'Share lifestyle tips',
-    'Food events & gatherings',
-  ],
-  'Local Communities': [
-    'Connect with your neighborhood',
-    'Local updates & events',
-    'Build community bonds',
-  ],
-  'Shul': [
-    'Shabbos meals & rides',
-    'Daily minyanim & programming',
-    'Community connection',
-  ],
-  'School': [
-    'Connect with school community',
-    'Share resources & updates',
-    'Parent networking',
-  ],
+  'Schools & Yeshivas': ['Connect with alumni & families', 'Share resources & study tips', 'Network with educators'],
+  'Chessed & Volunteering': ['Help others & build community', 'Find volunteering opportunities', 'Make a real difference'],
+  'Travel': ['Plan trips together', 'Share travel tips & deals', 'Meet fellow travelers'],
+  'Careers & Networking': ['Find jobs & network', 'Share career opportunities', 'Grow professionally'],
+  'Learning & Torah': ['Daily Torah discussions', 'Deepen your knowledge', 'Learn with others'],
+  'Social & Events': ['Weekly events & real connections', 'Meet people & have fun', 'Build lasting friendships'],
+  'Programs & Youth': ['Programs for all ages', 'Activities & mentorship', 'Youth engagement'],
+  'Sports & Fitness': ['Join leagues & activities', 'Find workout partners', 'Stay active together'],
+  'Food & Lifestyle': ['Kosher dining & recipes', 'Share lifestyle tips', 'Food events & gatherings'],
+  'Local Communities': ['Connect with your neighborhood', 'Local updates & events', 'Build community bonds'],
+  'Shul': ['Shabbos meals & rides', 'Daily minyanim & programming', 'Community connection'],
+  'School': ['Connect with school community', 'Share resources & updates', 'Parent networking'],
 };
 
 function getActivityBadge(id) {
@@ -526,10 +479,10 @@ export default function Communities() {
           </div>
         </div>
 
-        {/* 1. Featured */}
+        {/* Featured Banner */}
         <FeaturedCommunityBanner community={allCommunities[0]} onOpen={openCommunity} />
 
-        {/* 2. Search */}
+        {/* Search */}
         <div className="mb-4">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -547,7 +500,7 @@ export default function Communities() {
           </div>
         </div>
 
-        {/* 3. Tab switcher */}
+        {/* Tab switcher */}
         <div className="mb-6 flex rounded-2xl bg-white p-1 shadow-sm border border-slate-200">
           {[{ id: 'mine', label: 'My Communities' }, { id: 'discover', label: 'Discover' }].map(tab => (
             <button
@@ -645,58 +598,66 @@ export default function Communities() {
   );
 }
 
-function FeaturedCommunityBanner({ community, onOpen }) {
-  if (!community) return null;
-  const activeNow = 12 + (community.id?.charCodeAt(0) % 20);
-  const newPosts = 15 + (community.id?.charCodeAt(0) % 20);
+function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId }) {
+  if (myCommunities.length === 0 && myGroups.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-3xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', border: '1px dashed #BFDBFE' }}>
+          <div className="text-3xl mb-2">👋</div>
+          <h3 className="text-[15px] font-bold text-slate-800 mb-1">Join communities to get started</h3>
+          <p className="text-[12px] text-slate-500 mb-4">Discover communities and groups that match your interests</p>
+          <button
+            onClick={() => setActiveTab('discover')}
+            className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold active:scale-95 transition-all duration-150"
+          >
+            Explore Communities
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="hero-enter relative rounded-[2rem] overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white shadow-2xl mb-8" style={{ boxShadow: '0 20px 60px rgba(37, 99, 235, 0.35)' }}>
-      {community.cover_image_url && (
-        <img src={community.cover_image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-25" />
+    <div className="space-y-6">
+      {myCommunities.length > 0 && (
+        <div>
+          <div className="text-lg font-bold text-slate-900 mb-3">My Communities</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {myCommunities.map(c => (
+              <CommunityCard
+                key={c.id}
+                community={c}
+                isJoined={userCommunityIds.has(c.id)}
+                isJoining={joiningId === c.id}
+                onOpen={openCommunity}
+                onJoin={onJoinCommunity}
+              />
+            ))}
+          </div>
+        </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 backdrop-blur-sm" />
-      <div className="absolute inset-0 opacity-40" style={{ background: 'radial-gradient(circle at 30% 50%, rgba(255,255,255,0.08), transparent 70%)' }} />
 
-      <div className="relative p-10">
-        <div className="text-xs font-semibold text-white/70 mb-3 tracking-widest">
-          ⭐ FEATURED COMMUNITY
+      {myGroups.length > 0 && (
+        <div>
+          <div className="text-lg font-bold text-slate-900 mb-3">My Groups</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {myGroups.map(g => (
+              <GroupCard
+                key={g.id}
+                group={g}
+                isMember={memberGroupIds.has(g.id)}
+                onClick={() => setSelectedGroup(g)}
+                onJoin={onJoinGroup}
+              />
+            ))}
+          </div>
         </div>
-
-        <div className="text-5xl font-black leading-tight mb-3">
-          {community.name}
-        </div>
-
-        <div className="mt-6 text-white/80 text-base max-w-2xl leading-relaxed">
-          {community.description_short || community.description}
-        </div>
-
-        <div className="mt-7 flex items-center gap-3 text-sm text-white/75">
-          <span className="text-lg">🔥</span> {newPosts} new posts this week
-        </div>
-
-        <div className="mt-8 flex items-center gap-5 text-sm text-white/75">
-          <span>{(community.follower_count || 0).toLocaleString()} members</span>
-          <span>•</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />{activeNow} active now</span>
-        </div>
-
-        <button
-          onClick={() => onOpen(community.id)}
-          className="mt-10 rounded-full bg-white text-slate-900 px-8 py-4 font-bold text-base shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
-        >
-          View Community
-        </button>
-      </div>
+      )}
     </div>
   );
 }
 
 function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory }) {
-  const sorted = [...communities].sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0));
-  const featured = sorted[0];
-  const rest = sorted.slice(1);
-
   const noResults = communities.length === 0 && groups.length === 0;
 
   if (noResults) {
@@ -713,41 +674,17 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
             Clear Filters
           </button>
         </div>
-        <div>
-          <h3 className="text-[13px] font-bold text-slate-500 uppercase tracking-wide mb-3">Explore Categories</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {SUGGESTED_CATEGORIES.map(cat => (
-              <button
-                key={cat.key}
-                onClick={() => setActiveCategory(cat.key)}
-                className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 text-left hover:bg-slate-50 transition-colors"
-                style={{ border: '1px solid #E8EDF5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
-              >
-                <span className="text-xl">{cat.emoji}</span>
-                <span className="text-[12px] font-semibold text-slate-700 leading-tight">{cat.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 text-center border border-blue-100">
-          <div className="text-2xl mb-1.5">🏛️</div>
-          <h3 className="text-[14px] font-bold text-slate-900 mb-1">Start a Community</h3>
-          <p className="text-[11px] text-slate-500 mb-3">Bring your shul, school, or group online</p>
-          <button onClick={() => setShowCreateModal(true)} className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold shadow active:scale-95 transition-all duration-150">
-            Create Community
-          </button>
-        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {rest.length > 0 && (
+      {communities.length > 0 && (
         <div>
           <div className="text-lg font-bold text-slate-900 mb-3">Communities</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {rest.map(c => (
+            {communities.map(c => (
               <CommunityCard
                 key={c.id}
                 community={c}
@@ -758,10 +695,10 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
               />
             ))}
           </div>
-          </div>
-          )}
+        </div>
+      )}
 
-          {groups.length > 0 && (
+      {groups.length > 0 && (
         <div>
           <div className="text-lg font-bold text-slate-900 mb-3">Groups</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
