@@ -559,15 +559,18 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
   if (myCommunities.length === 0 && myGroups.length === 0) {
     return (
       <div className="space-y-4">
-        <div className="rounded-3xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 100%)', border: '1px solid #DBEAFE' }}>
-          <div className="p-8 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg">🌍</div>
-            <h3 className="text-[18px] font-bold text-slate-900 mb-1">Find your community</h3>
-            <p className="text-[13px] text-slate-500 mb-5 max-w-xs mx-auto">Join shuls, schools, and local groups in the Five Towns and beyond</p>
-            <button onClick={() => setActiveTab('discover')} className="bg-blue-600 text-white rounded-full px-6 py-2.5 text-[13px] font-bold shadow hover:bg-blue-700 transition-colors">
-              Browse Communities
-            </button>
+        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto h-14 w-14 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mb-4">
+            👥
           </div>
+          <div className="text-xl font-bold text-slate-900">No communities yet</div>
+          <div className="text-slate-500 mt-2">Create the first one and start bringing people together.</div>
+          <button
+            onClick={() => setActiveTab('discover')}
+            className="mt-5 rounded-full bg-blue-600 text-white px-5 py-3 font-semibold shadow-sm"
+          >
+            Browse Communities
+          </button>
         </div>
         <div>
           <h3 className="text-[13px] font-bold text-slate-500 uppercase tracking-wide mb-3">Popular Categories</h3>
