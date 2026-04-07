@@ -414,18 +414,20 @@ export default function Communities() {
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-3 border-b border-slate-200">
+          <div className="flex gap-1 pt-1">
             {[{ id: 'mine', label: 'My Communities' }, { id: 'discover', label: 'Discover' }].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-1 py-3 text-sm font-semibold transition ${
-                  activeTab === tab.id ? 'text-blue-600' : 'text-slate-400'
+                className={`relative px-4 py-2.5 text-[14px] font-semibold transition-colors ${
+                  activeTab === tab.id
+                    ? 'text-blue-600'
+                    : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
                 {tab.label}
                 {activeTab === tab.id && (
-                  <span className="absolute left-0 bottom-0 h-[3px] w-full rounded-full bg-blue-600" />
+                  <span className="absolute bottom-0 left-0 right-0 h-[2.5px] rounded-full bg-blue-600" />
                 )}
               </button>
             ))}
