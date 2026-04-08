@@ -1,43 +1,36 @@
-export default function FeaturedCommunityBanner({ community, onOpen }) {
-  if (!community) return null;
+const GRADIENTS = [
+  'from-blue-600 via-indigo-600 to-purple-600',
+  'from-emerald-500 via-teal-600 to-cyan-600',
+  'from-rose-500 via-pink-600 to-fuchsia-600',
+  'from-amber-500 via-orange-500 to-red-500',
+];
 
-  const activeNow = community.activeNow || 12;
-  const memberCount = community.memberCount || community.follower_count || 0;
+export default function FeaturedCommunityBanner({ communities = [], community, onOpen }) {
+  // Support both `communities` (array) and legacy `community` (single)
+  const items = communities.length > 0 ? communities.slice(0, 4) : (community ? [community] : []);
+  if (items.length === 0) return null;
 
   return (
-    <div className="relative mb-6 rounded-[28px] overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white shadow-2xl">
-      <div className="absolute inset-0 bg-white/5 backdrop-blur-[3px]" />
-
-      <div className="relative p-8">
-        <div className="text-xs font-semibold text-white/80 mb-3 tracking-wide">
-          ⭐ FEATURED COMMUNITY
-        </div>
-
-        <div className="text-3xl font-extrabold leading-tight">
-          {community.name}
-        </div>
-
-        <div className="mt-3 text-sm text-white/85 max-w-xl">
-          {community.description}
-        </div>
-
-        <div className="mt-4 text-sm text-white/80">
-          🔥 {community.trendingText || "23 new posts this week"}
-        </div>
-
-        <div className="mt-5 flex items-center gap-4 text-sm text-white/80">
-          <span>{memberCount.toLocaleString()} members</span>
-          <span>•</span>
-          <span>{activeNow} active now</span>
-        </div>
-
-        <button
-          onClick={() => onOpen(community.id)}
-          className="mt-6 bg-white text-slate-900 rounded-full px-7 py-3.5 font-semibold shadow-xl hover:scale-105 transition-all duration-200 active:scale-95"
-        >
-          View Community
-        </button>
-      </div>
+    <div className="mb-6 grid grid-cols-2 gap-3">
+      {items.map((c, i) => {
+        const memberCount = c.follower_count || 0;
+        const gradient = GRADIENTS[i % GRADIENTS.length];
+        return (
+          <div
+            key={c.id}
+            onClick={() => onOpen(c.id)}
+            className={`relative rounded-2xl overflow-hidden bg-gradient-to-br ${gradient} text-white shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all duration-200 cursor-pointer`}
+          >
+            <div className="absolute inset-0 bg-black/10" />
+            <div className="relative p-4">
+              <div className="text-[9px] font-bold text-white/70 mb-2 tracking-widest uppercase">⭐ Featured</div>
+              <div className="text-[14px] font-extrabold leading-tight line-clamp-2">{c.name}</div>
+              <div className="mt-2 text-[11px] text-white/80 line-clamp-2">{c.description_short || c.description}</div>
+              <div className="mt-3 text-[11px] text-white/70">{memberCount.toLocaleString()} members</div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

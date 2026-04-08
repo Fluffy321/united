@@ -480,7 +480,7 @@ export default function Communities() {
         </div>
 
         {/* Featured Banner */}
-        <FeaturedCommunityBanner community={allCommunities[0]} onOpen={openCommunity} />
+        <FeaturedCommunityBanner communities={allCommunities.slice(0, 4)} onOpen={openCommunity} />
 
         {/* Search */}
         <div className="mb-4">
