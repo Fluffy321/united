@@ -9,7 +9,7 @@ import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
 import FeaturedCommunityBanner from '@/components/communities/FeaturedCommunityBanner';
-import DiscoverCategoriesScreen, { DISCOVER_CATEGORIES } from '@/components/communities/DiscoverCategoriesScreen';
+import DiscoverCategoryCards, { DISCOVER_CATEGORIES } from '@/components/communities/DiscoverCategoriesScreen';
 import { toast } from 'sonner';
 
 const CACHE_KEY = 'communities_v3_cache';
@@ -323,7 +323,7 @@ export default function Communities() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
-  const [showCategoryBrowse, setShowCategoryBrowse] = useState(true);
+  const [showCategoryBrowse, setShowCategoryBrowse] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
 
   const selectedCommunityId = searchParams.get('communityId') || null;
@@ -378,9 +378,9 @@ export default function Communities() {
       result = result.filter(c => c.name?.toLowerCase().includes(q) || c.neighborhood?.toLowerCase().includes(q));
     }
     if (activeCategory !== 'all') {
-      const oldCat = CATEGORIES.find(c => c.key === activeCategory)?.value;
-      const newCat = DISCOVER_CATEGORIES.find(c => c.key === activeCategory)?.filterValue;
-      const cat = oldCat || newCat;
+      const discoverCat = DISCOVER_CATEGORIES.find(c => c.key === activeCategory)?.filterValue;
+      const legacyCat = CATEGORIES.find(c => c.key === activeCategory)?.value;
+      const cat = discoverCat || legacyCat;
       if (cat) {
         result = result.filter(c => {
           const itemCat = c.category || TYPE_TO_CATEGORY[c.type] || null;
@@ -527,32 +527,7 @@ export default function Communities() {
           </div>
         )}
 
-        {/* Category chips — discover only */}
-        {activeTab === 'discover' && (
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1 mb-4">
-            <button
-              onClick={() => { setShowCategoryBrowse(true); setActiveCategory('all'); }}
-              className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all duration-150 active:scale-95 ${
-                showCategoryBrowse && activeCategory === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-              }`}
-            >
-              Browse
-            </button>
-            {DISCOVER_CATEGORIES.map(cat => (
-              <button
-                key={cat.key}
-                onClick={() => { setActiveCategory(cat.key); setShowCategoryBrowse(false); }}
-                className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap flex-shrink-0 transition-all duration-150 active:scale-95 ${
-                  !showCategoryBrowse && activeCategory === cat.key
-                    ? 'bg-slate-800 text-white'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        )}
+
 
         {/* Grid */}
         {isLoading ? (
@@ -581,17 +556,14 @@ export default function Communities() {
                 onJoinGroup={joinGroup}
                 joiningId={joiningId}
               />
-            ) : showCategoryBrowse && activeCategory === 'all' && !searchQuery ? (
-              <DiscoverCategoriesScreen
-                communities={allCommunities}
-                myCommunities={myCommunities}
-                onOpen={openCommunity}
-                onSelectCategory={(filterValue) => {
-                  const cat = DISCOVER_CATEGORIES.find(c => c.filterValue === filterValue);
-                  if (cat) { setActiveCategory(cat.key); setShowCategoryBrowse(false); }
-                }}
-              />
             ) : (
+              <>
+                {!searchQuery && (
+                  <DiscoverCategoryCards
+                    activeCategory={activeCategory}
+                    onSelectCategory={(key) => setActiveCategory(key)}
+                  />
+                )}
               <DiscoverTabContent
                 communities={filterItems(discoverCommunities)}
                 groups={filterItems(discoverGroups)}
@@ -605,7 +577,7 @@ export default function Communities() {
                 setShowCreateModal={setShowCreateModal}
                 hasFilter={activeCategory !== 'all' || !!searchQuery}
                 setActiveCategory={setActiveCategory}
-              />
+              /></>
             )}
           </div>
         )}
