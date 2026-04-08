@@ -457,28 +457,34 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="rounded-2xl overflow-hidden bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 shadow-sm"
+        className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-3xl p-4 shadow-md"
       >
-        <div className="px-4 pt-4 pb-3">
-          <div className="bg-white/60 rounded-xl px-3 py-2 mb-3 border border-violet-100">
-            <p className="text-[12px] font-bold text-violet-700">💭 {post.prompt_text}</p>
-          </div>
-          <div className="flex items-start gap-2.5">
-            <UserAvatar user={post} name={post.user_name} size="xs" />
-            <div className="flex-1">
-              <span className="font-semibold text-[13px] text-slate-900">{post.user_name}</span>
-              <p className="text-[14px] text-slate-700 leading-relaxed mt-1">{bodyPreview}
-                {bodyLong && <button onClick={() => setExpanded(e => !e)} className="ml-1 text-violet-600 font-semibold text-[13px]">{expanded ? 'less' : 'more'}</button>}
-              </p>
+        <div className="text-xs font-semibold opacity-80 uppercase tracking-wide">Community Question</div>
+        <div className="text-lg font-bold mt-1 leading-snug">{post.prompt_text}</div>
+        {post.body && (
+          <div className="mt-3 bg-white/20 rounded-xl px-3 py-2 text-sm leading-relaxed">
+            <div className="flex items-center gap-2 mb-1">
+              <UserAvatar user={post} name={post.user_name} size="xs" />
+              <span className="font-semibold text-[12px] opacity-90">{post.user_name}</span>
             </div>
+            {bodyPreview}
+            {bodyLong && <button onClick={() => setExpanded(e => !e)} className="ml-1 font-bold opacity-80 text-[12px]">{expanded ? 'less' : 'more'}</button>}
           </div>
-          <div className="flex items-center gap-1 mt-3 pt-2 border-t border-violet-100">
-            <span className="text-[11px] text-slate-400 flex-1">{timeAgo}</span>
-            <ReactionBar postId={post.id} currentUser={currentUser} />
-            <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1 h-7 px-2 rounded-full text-[12px] text-slate-500 hover:bg-white/60">
-              <MessageCircle className="w-3.5 h-3.5" />{commentCount > 0 && commentCount}
+        )}
+        <div className="flex items-center gap-2 mt-3">
+          <button
+            onClick={() => setCommentsOpen(true)}
+            className="bg-white text-purple-700 rounded-full px-4 py-1.5 text-sm font-semibold hover:bg-white/90 active:scale-95 transition-all"
+          >
+            Answer
+          </button>
+          <ReactionBar postId={post.id} currentUser={currentUser} />
+          {commentCount > 0 && (
+            <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1 text-[12px] text-white/70">
+              <MessageCircle className="w-3.5 h-3.5" />{commentCount}
             </button>
-          </div>
+          )}
+          <span className="text-[11px] text-white/60 ml-auto">{timeAgo}</span>
         </div>
         <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
       </motion.div>
