@@ -161,20 +161,341 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const bodyLong = post.body && post.body.length > BODY_LIMIT;
   const bodyPreview = bodyLong && !expanded ? post.body.slice(0, BODY_LIMIT).trimEnd() + '…' : post.body;
 
+  // ── Photo post ────────────────────────────────────────────────────────
+  if (post.image_url && post.type === 'feed' && !post.title) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="rounded-2xl overflow-hidden bg-white border border-slate-100 shadow-md"
+      >
+        {/* Big image */}
+        <div className="relative cursor-pointer" onClick={() => setImgExpanded(e => !e)}>
+          <img
+            src={post.image_url}
+            alt=""
+            className={`w-full object-cover transition-all ${imgExpanded ? 'max-h-[600px]' : 'max-h-72'}`}
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+          <div className="absolute bottom-3 left-4 right-4 text-white">
+            <div className="flex items-center gap-2">
+              <UserAvatar user={post} name={post.user_name} size="xs" />
+              <span className="font-semibold text-[13px]">{post.user_name}</span>
+              <span className="text-[11px] text-white/70 ml-auto">{timeAgo}</span>
+            </div>
+          </div>
+        </div>
+        {/* Caption */}
+        {post.body && (
+          <div className="px-4 pt-3 pb-1">
+            <p className="text-[14px] text-slate-700 leading-relaxed">{post.body}</p>
+          </div>
+        )}
+        <div className="px-3 py-2.5 border-t border-slate-100">
+          <div className="flex items-center gap-1">
+            <ReactionBar postId={post.id} currentUser={currentUser} />
+            <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-slate-500 hover:bg-slate-100 transition-colors">
+              <MessageCircle className="w-4 h-4" />{commentCount > 0 && <span>{commentCount}</span>}
+            </button>
+          </div>
+        </div>
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+      </motion.div>
+    );
+  }
+
+  // ── Event post ────────────────────────────────────────────────────────
+  if (post.type === 'event') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="rounded-2xl overflow-hidden bg-white border border-slate-100 shadow-sm"
+      >
+        {/* Event color bar + date chip */}
+        <div className="h-2 bg-gradient-to-r from-green-500 to-teal-500" />
+        <div className="px-4 pt-4 pb-3">
+          <div className="flex items-start gap-3">
+            {/* Date block */}
+            {post.event_date && (
+              <div className="flex-shrink-0 w-12 h-14 rounded-xl bg-gradient-to-br from-green-500 to-teal-600 flex flex-col items-center justify-center text-white shadow">
+                <span className="text-[10px] font-bold uppercase tracking-wide opacity-80">
+                  {new Date(post.event_date).toLocaleDateString('en-US', { month: 'short' })}
+                </span>
+                <span className="text-[22px] font-extrabold leading-none">
+                  {new Date(post.event_date).getDate()}
+                </span>
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">📅 Event</span>
+                <span className="text-[11px] text-slate-400 ml-auto">{timeAgo}</span>
+              </div>
+              {post.title && <h3 className="font-bold text-[16px] text-slate-900 leading-snug mb-1">{post.title}</h3>}
+              {post.body && <p className="text-[13px] text-slate-600 line-clamp-2">{post.body}</p>}
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                {post.event_time && (
+                  <span className="flex items-center gap-1 text-[12px] text-slate-500 font-medium">
+                    <Clock className="w-3 h-3" />{post.event_time}
+                  </span>
+                )}
+                {post.location_text && (
+                  <span className="flex items-center gap-1 text-[12px] text-slate-500 font-medium">
+                    <MapPin className="w-3 h-3" />{post.location_text}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* Author row */}
+          <div className="flex items-center gap-2 mt-3 pt-2 border-t border-slate-100">
+            <UserAvatar user={post} name={post.user_name} size="xs" />
+            <span className="text-[12px] text-slate-500">{post.user_name}</span>
+            <div className="ml-auto flex items-center gap-2">
+              <ReactionBar postId={post.id} currentUser={currentUser} />
+              <button
+                onClick={() => setShowEventDetails(!showEventDetails)}
+                className="h-8 px-4 rounded-full text-[12px] font-bold bg-green-600 text-white hover:bg-green-700 transition-colors active:scale-95"
+              >
+                RSVP
+              </button>
+            </div>
+          </div>
+          {showEventDetails && (
+            <div className="mt-3 bg-slate-50 rounded-xl p-3 border border-slate-100">
+              <EventRSVPSection postId={post.id} currentUser={currentUser} eventDate={post.event_date} />
+            </div>
+          )}
+        </div>
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+      </motion.div>
+    );
+  }
+
+  // ── Job post ────────────────────────────────────────────────────────
+  if (post.type === 'job') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="rounded-2xl overflow-hidden bg-white border border-slate-100 shadow-sm"
+      >
+        <div className="h-2 bg-gradient-to-r from-cyan-500 to-blue-600" />
+        <div className="px-4 pt-4 pb-3">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="flex items-start gap-3 flex-1 min-w-0">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">💼</div>
+              <div className="min-w-0">
+                {post.title && <h3 className="font-bold text-[15px] text-slate-900 leading-snug">{post.title}</h3>}
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200">💼 Job</span>
+                  {post.location_text && <span className="flex items-center gap-1 text-[11px] text-slate-500"><MapPin className="w-3 h-3" />{post.location_text}</span>}
+                </div>
+              </div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100"><MoreHorizontal className="w-4 h-4" /></button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {isOwner ? (
+                  <DropdownMenuItem onClick={() => onDelete(post.id)} className="text-red-600"><Trash2 className="w-4 h-4 mr-2" />Delete</DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => onReport(post.id, 'post')}><Flag className="w-4 h-4 mr-2" />Report</DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          {post.body && <p className="text-[13px] text-slate-600 leading-relaxed line-clamp-3 mb-3">{post.body}</p>}
+          <div className="flex items-center gap-2">
+            <UserAvatar user={post} name={post.user_name} size="xs" />
+            <span className="text-[12px] text-slate-500 flex-1">{post.user_name} · {timeAgo}</span>
+            <ReactionBar postId={post.id} currentUser={currentUser} />
+            {post.user_id !== currentUser?.id && (
+              <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
+            )}
+          </div>
+        </div>
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+      </motion.div>
+    );
+  }
+
+  // ── Housing post ────────────────────────────────────────────────────────
+  if (post.type === 'housing') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="rounded-2xl overflow-hidden bg-white border border-slate-100 shadow-sm"
+      >
+        {post.image_url && (
+          <img src={post.image_url} alt="" className="w-full h-44 object-cover" loading="lazy" />
+        )}
+        <div className="h-2 bg-gradient-to-r from-violet-500 to-purple-600" />
+        <div className="px-4 pt-4 pb-3">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200">🏠 Housing</span>
+            {post.location_text && <span className="flex items-center gap-1 text-[11px] text-slate-500"><MapPin className="w-3 h-3" />{post.location_text}</span>}
+          </div>
+          {post.title && <h3 className="font-bold text-[15px] text-slate-900 mb-1 leading-snug">{post.title}</h3>}
+          {post.body && <p className="text-[13px] text-slate-600 leading-relaxed line-clamp-3 mb-3">{post.body}</p>}
+          <div className="flex items-center gap-2">
+            <UserAvatar user={post} name={post.user_name} size="xs" />
+            <span className="text-[12px] text-slate-500 flex-1">{post.user_name} · {timeAgo}</span>
+            <ReactionBar postId={post.id} currentUser={currentUser} />
+            {post.user_id !== currentUser?.id && <InterestedButton post={post} currentUser={currentUser} />}
+          </div>
+        </div>
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+      </motion.div>
+    );
+  }
+
+  // ── Help post ────────────────────────────────────────────────────────
+  if (post.type === 'help') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="rounded-2xl overflow-hidden bg-white border border-l-4 border-orange-400 shadow-sm"
+      >
+        <div className="px-4 pt-4 pb-3">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-xl flex-shrink-0">
+              {helpCat?.emoji || '🤝'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200">🚨 Help Needed</span>
+                {helpCat && <span className="text-[11px] font-semibold text-slate-500">{helpCat.label}</span>}
+                {helpStatus === 'fulfilled' && <span className="text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Fulfilled</span>}
+              </div>
+              {post.title && <h3 className="font-bold text-[15px] text-slate-900 leading-snug">{post.title}</h3>}
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100"><MoreHorizontal className="w-4 h-4" /></button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {isOwner ? (
+                  <DropdownMenuItem onClick={() => onDelete(post.id)} className="text-red-600"><Trash2 className="w-4 h-4 mr-2" />Delete</DropdownMenuItem>
+                ) : (
+                  <><DropdownMenuItem onClick={() => onReport(post.id, 'post')}><Flag className="w-4 h-4 mr-2" />Report</DropdownMenuItem>
+                  {onBlock && <DropdownMenuItem onClick={() => onBlock(post.user_id)} className="text-red-600"><Ban className="w-4 h-4 mr-2" />Block User</DropdownMenuItem>}</>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          {post.body && (
+            <p className="mt-2 text-[14px] text-slate-700 leading-relaxed">
+              {bodyPreview}
+              {bodyLong && <button onClick={() => setExpanded(e => !e)} className="ml-1 text-blue-600 font-semibold text-[13px]">{expanded ? 'less' : 'more'}</button>}
+            </p>
+          )}
+          <div className="flex items-center gap-2 mt-3 pt-2 border-t border-slate-100">
+            <UserAvatar user={post} name={post.user_name} size="xs" />
+            <span className="text-[12px] text-slate-500 flex-1">{isAnonymous ? 'Anonymous' : post.user_name} · {timeAgo}</span>
+            <ReactionBar postId={post.id} currentUser={currentUser} />
+            <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1 h-7 px-2 rounded-full text-[12px] text-slate-500 hover:bg-slate-100">
+              <MessageCircle className="w-3.5 h-3.5" />{commentCount > 0 && commentCount}
+            </button>
+            {isOwner && helpStatus === 'open' && (
+              <button onClick={handleFulfilled} disabled={fulfilling} className="h-8 px-3 rounded-full text-[12px] font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" />{fulfilling ? '…' : 'Fulfilled'}
+              </button>
+            )}
+            {post.user_id !== currentUser?.id && helpStatus === 'open' && (
+              <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
+            )}
+          </div>
+        </div>
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+      </motion.div>
+    );
+  }
+
+  // ── News / community update ─────────────────────────────────────────
+  if (post.type === 'news') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.15 }}
+        className="rounded-2xl overflow-hidden bg-slate-50 border border-slate-200"
+      >
+        <div className="px-4 py-3 flex items-start gap-3">
+          <div className="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center text-base flex-shrink-0">📰</div>
+          <div className="flex-1 min-w-0">
+            {post.title && <p className="font-semibold text-[14px] text-slate-800 leading-snug">{post.title}</p>}
+            {post.body && <p className="text-[12px] text-slate-500 line-clamp-2 mt-0.5">{post.body}</p>}
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-[11px] text-slate-400">{post.user_name} · {timeAgo}</span>
+              <ReactionBar postId={post.id} currentUser={currentUser} />
+            </div>
+          </div>
+        </div>
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+      </motion.div>
+    );
+  }
+
+  // ── Prompt reply ────────────────────────────────────────────────────
+  if (post.type === 'prompt_reply' && post.prompt_text) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="rounded-2xl overflow-hidden bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 shadow-sm"
+      >
+        <div className="px-4 pt-4 pb-3">
+          <div className="bg-white/60 rounded-xl px-3 py-2 mb-3 border border-violet-100">
+            <p className="text-[12px] font-bold text-violet-700">💭 {post.prompt_text}</p>
+          </div>
+          <div className="flex items-start gap-2.5">
+            <UserAvatar user={post} name={post.user_name} size="xs" />
+            <div className="flex-1">
+              <span className="font-semibold text-[13px] text-slate-900">{post.user_name}</span>
+              <p className="text-[14px] text-slate-700 leading-relaxed mt-1">{bodyPreview}
+                {bodyLong && <button onClick={() => setExpanded(e => !e)} className="ml-1 text-violet-600 font-semibold text-[13px]">{expanded ? 'less' : 'more'}</button>}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 mt-3 pt-2 border-t border-violet-100">
+            <span className="text-[11px] text-slate-400 flex-1">{timeAgo}</span>
+            <ReactionBar postId={post.id} currentUser={currentUser} />
+            <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1 h-7 px-2 rounded-full text-[12px] text-slate-500 hover:bg-white/60">
+              <MessageCircle className="w-3.5 h-3.5" />{commentCount > 0 && commentCount}
+            </button>
+          </div>
+        </div>
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+      </motion.div>
+    );
+  }
+
+  // ── Default feed post ────────────────────────────────────────────────
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-      className="rounded-[14px] border border-[#EAECF0] overflow-visible"
+      className="rounded-2xl border border-[#EAECF0] overflow-hidden"
       style={{
         background: '#ffffff',
         boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
-        borderLeft: `3px solid ${{ feed: '#2563EB', help: '#F97316', event: '#16A34A', news: '#94A3B8', housing: '#7C3AED', job: '#0891B2', food: '#F59E0B', shul: '#2563EB', dating: '#EC4899', prompt_reply: '#7C3AED' }[post.type] || '#2563EB'}`,
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-3.5 pb-0">
+      <div className="flex items-center justify-between px-4 pt-4 pb-0">
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           {isAnonymous ? (
             <div className="flex items-center gap-2">
@@ -190,48 +511,30 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="font-semibold text-[#0F1C2E] text-[14px] truncate">{post.user_name}</span>
-                  {post.helper_badge && post.helper_badge !== 'none' && (
-                    <HelperBadge badge={post.helper_badge} size="sm" />
-                  )}
+                  {post.helper_badge && post.helper_badge !== 'none' && <HelperBadge badge={post.helper_badge} size="sm" />}
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                   <span className="text-[11px] text-[#98A2B3]">{timeAgo}</span>
                   {communityName ? (
-                    <>
-                      <span className="text-[#C8D0DC] text-[10px]">·</span>
-                      <span className="text-[11px] text-[#2563EB] font-semibold">📌 {communityName}</span>
-                    </>
+                    <><span className="text-[#C8D0DC] text-[10px]">·</span><span className="text-[11px] text-[#2563EB] font-semibold">📌 {communityName}</span></>
                   ) : post.city ? (
-                    <>
-                      <span className="text-[#C8D0DC] text-[10px]">·</span>
-                      <span className="text-[11px] text-[#2563EB] font-medium">{post.city}</span>
-                    </>
+                    <><span className="text-[#C8D0DC] text-[10px]">·</span><span className="text-[11px] text-[#2563EB] font-medium">{post.city}</span></>
                   ) : null}
                 </div>
               </div>
             </Link>
           )}
         </div>
-        
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          {/* Activity labels */}
           {(() => {
             const score = (post.likes_count || 0) + (post.comments_count || 0) * 2;
             const ageMs = Date.now() - new Date(post.created_date).getTime();
             const isNew = !post.is_seeded && ageMs < 2 * 60 * 60 * 1000;
             const isHot = score >= 20;
-            const isUrgent = post.type === 'help' && post.help_status !== 'fulfilled';
             return (
               <>
-                {isUrgent && (
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white">🚨 Urgent</span>
-                )}
-                {isHot && !isUrgent && (
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">🔥 Hot</span>
-                )}
-                {isNew && !isHot && !isUrgent && (
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">🟢 New</span>
-                )}
+                {isHot && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">🔥 Hot</span>}
+                {isNew && !isHot && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">🟢 New</span>}
               </>
             );
           })()}
@@ -239,11 +542,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${SUBTYPE_CONFIGS[post.post_subtype].color}`}>
               {SUBTYPE_CONFIGS[post.post_subtype].label}
             </span>
-          ) : (
-            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${typeConfig.color}`}>
-              {typeConfig.label}
-            </span>
-          )}
+          ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="w-7 h-7 flex items-center justify-center rounded-full text-[#64748B] hover:bg-slate-100 transition-colors">
@@ -252,19 +551,11 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {isOwner ? (
-                <DropdownMenuItem onClick={() => onDelete(post.id)} className="text-red-600">
-                  <Trash2 className="w-4 h-4 mr-2" />Delete
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDelete(post.id)} className="text-red-600"><Trash2 className="w-4 h-4 mr-2" />Delete</DropdownMenuItem>
               ) : (
                 <>
-                  <DropdownMenuItem onClick={() => onReport(post.id, 'post')}>
-                    <Flag className="w-4 h-4 mr-2" />Report
-                  </DropdownMenuItem>
-                  {onBlock && (
-                    <DropdownMenuItem onClick={() => onBlock(post.user_id)} className="text-red-600">
-                      <Ban className="w-4 h-4 mr-2" />Block User
-                    </DropdownMenuItem>
-                  )}
+                  <DropdownMenuItem onClick={() => onReport(post.id, 'post')}><Flag className="w-4 h-4 mr-2" />Report</DropdownMenuItem>
+                  {onBlock && <DropdownMenuItem onClick={() => onBlock(post.user_id)} className="text-red-600"><Ban className="w-4 h-4 mr-2" />Block User</DropdownMenuItem>}
                 </>
               )}
             </DropdownMenuContent>
@@ -272,240 +563,53 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         </div>
       </div>
 
-      {/* Content area */}
-      <div className="px-4 pt-3.5 pb-1.5 relative">
-        {/* Prompt context */}
+      {/* Content */}
+      <div className="px-4 pt-3.5 pb-1.5">
         {post.prompt_text && (
           <div className="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl px-3 py-2 mb-2.5 border border-violet-100">
             <p className="text-xs text-violet-700 font-semibold">💭 {post.prompt_text}</p>
           </div>
         )}
-
-        {/* Title */}
-        {post.title && (
-          <h3 className="font-bold text-[15px] text-[#0F1C2E] mb-1.5 leading-snug">{post.title}</h3>
-        )}
-
-        {/* Body */}
+        {post.title && <h3 className="font-bold text-[15px] text-[#0F1C2E] mb-1.5 leading-snug">{post.title}</h3>}
         <p className="text-[14.5px] text-[#344054] leading-relaxed">
           {bodyPreview}
           {bodyLong && (
-            <button
-              onClick={() => setExpanded(e => !e)}
-              className="ml-1 text-[#2563EB] font-semibold text-[13px]"
-            >
-              {expanded ? 'less' : 'more'}
-            </button>
+            <button onClick={() => setExpanded(e => !e)} className="ml-1 text-[#2563EB] font-semibold text-[13px]">{expanded ? 'less' : 'more'}</button>
           )}
         </p>
-
-        {/* Images and attachments */}
+        {/* Image */}
         {post.image_url && (
-          <div className="mt-3 -mx-4 cursor-pointer" onClick={() => setImgExpanded(e => !e)}>
-            <img
-              src={post.image_url}
-              alt=""
-              className={`w-full object-cover transition-all ${imgExpanded ? 'max-h-[480px]' : 'max-h-52'}`}
-              loading="lazy"
-              decoding="async"
-            />
-            {!imgExpanded && (
-              <div className="absolute bottom-2 right-2 bg-black/40 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full pointer-events-none">tap to expand</div>
-            )}
+          <div className="mt-3 -mx-4 cursor-pointer relative" onClick={() => setImgExpanded(e => !e)}>
+            <img src={post.image_url} alt="" className={`w-full object-cover rounded-xl transition-all ${imgExpanded ? 'max-h-[480px]' : 'max-h-60'}`} loading="lazy" />
           </div>
         )}
-
-        {/* Additional attachments */}
-        {post.attachment_urls && post.attachment_urls.length > (post.image_url ? 1 : 0) && (
-          <div className="mt-3 space-y-2">
-            {post.attachment_urls.filter(url => url !== post.image_url).map((url, idx) => {
-              const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
-              return isImage ? (
-                <div key={idx} className="-mx-4 cursor-pointer" onClick={() => setImgExpanded(!imgExpanded)}>
-                  <img
-                    src={url}
-                    alt="attachment"
-                    className={`w-full object-cover transition-all rounded-lg ${imgExpanded ? 'max-h-[480px]' : 'max-h-32'}`}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
-              ) : (
-                <a
-                  key={idx}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 p-2.5 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors text-[12px]"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
-                    📎
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-blue-700 truncate">Download File</p>
-                    <p className="text-[11px] text-blue-600">Click to open or download</p>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Event details */}
-        {post.type === 'event' && (
-          <div className="space-y-3 mt-3">
-            <button
-              onClick={() => setShowEventDetails(!showEventDetails)}
-              className="w-full bg-slate-50 rounded-xl px-3 py-2 flex flex-wrap gap-x-4 gap-y-1 border border-slate-200 hover:bg-slate-100 transition-colors text-left"
-            >
-              {post.event_date && (
-                <div className="flex items-center gap-1.5 text-[12px] text-slate-700 font-medium">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>{new Date(post.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                </div>
-              )}
-              {post.event_time && (
-                <div className="flex items-center gap-1.5 text-[12px] text-slate-700 font-medium">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>{post.event_time}</span>
-                </div>
-              )}
-              {post.location_text && (
-                <div className="flex items-center gap-1.5 text-[12px] text-slate-700 font-medium">
-                  <MapPin className="w-3.5 h-3.5" />
-                  <span>{post.location_text}</span>
-                </div>
-              )}
-            </button>
-            
-            {/* RSVP Section */}
-            {showEventDetails && (
-              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
-                <EventRSVPSection 
-                  postId={post.id}
-                  currentUser={currentUser}
-                  eventDate={post.event_date}
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Location tag */}
-        {post.location_text && post.type !== 'event' && (
+        {post.location_text && (
           <div className="mt-2">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 text-[11px] font-semibold">
-              <MapPin className="w-3 h-3" />
-              {post.location_text}
+              <MapPin className="w-3 h-3" />{post.location_text}
             </span>
-          </div>
-        )}
-
-        {/* Help status and metadata */}
-        {post.type === 'help' && (
-          <div className="flex flex-wrap items-center gap-2 mt-3">
-            {helpCat && (
-              <span
-                className="text-[12px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1.5"
-                style={{ backgroundColor: helpCat.bgColor, color: helpCat.textColor }}
-              >
-                <span>{helpCat.emoji}</span> {helpCat.label}
-              </span>
-            )}
-            {helpStatus === 'fulfilled' ? (
-              <span className="text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Fulfilled
-              </span>
-            ) : (
-              <span className="text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-200 px-2.5 py-0.5 rounded-full">
-                Open
-              </span>
-            )}
           </div>
         )}
       </div>
 
-      {/* Actions footer */}
-      <div className="px-3 py-2.5 mt-1 border-t border-[#F2F4F7] bg-white rounded-b-[14px]">
+      {/* Footer */}
+      <div className="px-3 py-2.5 mt-1 border-t border-[#F2F4F7] bg-white">
         <div className="flex items-center justify-between">
-          {/* Left: Likes + Comments */}
           <div className="flex items-center gap-1">
             <ReactionBar postId={post.id} currentUser={currentUser} />
-            <button
-              onClick={() => setCommentsOpen(true)}
-              className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-[#64748B] hover:bg-slate-100 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" />
-              {commentCount > 0 && <span>{commentCount}</span>}
+            <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-[#64748B] hover:bg-slate-100 transition-colors">
+              <MessageCircle className="w-4 h-4" />{commentCount > 0 && <span>{commentCount}</span>}
             </button>
           </div>
-
-          {/* Right: context-aware action */}
           <div className="flex items-center gap-1.5">
-            {/* Message button (not for own posts) */}
-            {post.user_id !== currentUser?.id && post.type !== 'event' && (
-              <MessageButton
-                recipientId={post.user_id}
-                recipientName={post.user_name}
-                postId={post.id}
-                postTitle={post.title || post.body?.substring(0, 50)}
-                postType={post.type}
-                currentUser={currentUser}
-                variant="compact"
-              />
-            )}
-
-            {/* Help: mark fulfilled (owner) */}
-            {post.type === 'help' && isOwner && helpStatus === 'open' && (
-              <button
-                onClick={handleFulfilled}
-                disabled={fulfilling}
-                className="h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 text-white disabled:opacity-50"
-                style={{ background: '#16A34A' }}
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                {fulfilling ? 'Saving…' : 'Fulfilled'}
-              </button>
-            )}
-
-            {/* Event: RSVP */}
-            {post.type === 'event' && (
-              <button
-                onClick={() => setShowEventDetails(!showEventDetails)}
-                className="h-8 px-3.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-              >
-                <Users className="w-3.5 h-3.5" />
-                {showEventDetails ? 'Hide' : 'RSVP'}
-              </button>
-            )}
-
-            {/* Housing: Interested → open DM */}
-            {post.type === 'housing' && post.user_id !== currentUser?.id && (
-              <InterestedButton post={post} currentUser={currentUser} />
-            )}
-
-            {/* Other types: secondary action (not housing, help, event) */}
-            {ACTION_BUTTON[post.type] && post.type !== 'help' && post.type !== 'event' && post.type !== 'housing' && (
-              <button
-                onClick={() => onComment(post)}
-                className="h-8 px-3.5 rounded-full text-[13px] font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
-              >
-                {ACTION_BUTTON[post.type].label}
-              </button>
+            {post.user_id !== currentUser?.id && (
+              <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
             )}
           </div>
         </div>
       </div>
 
-      {/* Comments Sheet */}
-      <CommentsSheet 
-        postId={post.id}
-        postAuthorId={post.user_id}
-        isOpen={commentsOpen}
-        onClose={() => setCommentsOpen(false)}
-        currentUser={currentUser}
-        blockedIds={blockedIds}
-      />
+      <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
     </motion.div>
   );
 }
