@@ -254,6 +254,43 @@ export default function MitzvahCircle({ isActive = true }) {
     retry: 1
   });
 
+  const { data: todayHelpedCount = 0 } = useQuery({
+    queryKey: ['today-helped-count'],
+    queryFn: async () => {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const signups = await base44.entities.MitzvahSignup.list('-created_date', 100);
+      return signups.filter(s => new Date(s.created_date) >= today).length;
+    },
+    staleTime: 60000,
+    retry: 0
+  });
+
+  const { data: recentlyCompleted = [] } = useQuery({
+    queryKey: ['recently-completed'],
+    queryFn: async () => {
+      return base44.entities.MitzvahRequest.filter({ status: 'completed' }, '-updated_date', 5);
+    },
+    staleTime: 60000,
+    retry: 0
+  });
+
+  const { data: allSignups = [] } = useQuery({
+    queryKey: ['all-signups'],
+    queryFn: async () => base44.entities.MitzvahSignup.list('-created_date', 200),
+    staleTime: 60000,
+    retry: 0
+  });
+
+  const signupsByRequest = useMemo(() => {
+    const map = {};
+    allSignups.forEach(s => {
+      if (!map[s.request_id]) map[s.request_id] = [];
+      map[s.request_id].push(s);
+    });
+    return map;
+  }, [allSignups]);
+
   const handleClaim = (e, request) => {
     if (e?.stopPropagation) e.stopPropagation();
     claimMutation.mutate(request);
@@ -421,6 +458,39 @@ export default function MitzvahCircle({ isActive = true }) {
                 </div>
               </div>
 
+              {/* Social Pulse Banner */}
+              {(todayHelpedCount > 0 || recentlyCompleted.length > 0) && (
+                <div className="rounded-2xl bg-white border border-emerald-100 shadow-sm overflow-hidden">
+                  {todayHelpedCount > 0 && (
+                    <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+                      <span className="text-xl">🙌</span>
+                      <div>
+                        <p className="text-[14px] font-bold text-emerald-800">{todayHelpedCount} {todayHelpedCount === 1 ? 'person' : 'people'} helped today</p>
+                        <p className="text-[11px] text-emerald-600">Keep the momentum going!</p>
+                      </div>
+                    </div>
+                  )}
+                  {recentlyCompleted.length > 0 && (
+                    <div className="px-4 py-3">
+                      <p className="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-2">Recently Completed</p>
+                      <div className="space-y-2">
+                        {recentlyCompleted.slice(0, 3).map(r => (
+                          <div key={r.id} className="flex items-center gap-2">
+                            <span className="text-base">✅</span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[13px] font-semibold text-slate-800 truncate">{r.title}</p>
+                              {r.claimed_by_name && (
+                                <p className="text-[11px] text-emerald-600">Helped by {r.claimed_by_name}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Help Requests Section */}
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -464,42 +534,61 @@ export default function MitzvahCircle({ isActive = true }) {
                    </div>
                  ) : (
                   <div className="space-y-3">
-                    {requests.map((request) => {
-                      const CAT_ICONS = {
-                        'Chesed': { icon: Heart, color: '#EC4899', bg: '#FDF2F8' },
-                        'Torah Study': { icon: BookOpen, color: '#7C3AED', bg: '#F5F3FF' },
-                        'Community': { icon: Users, color: '#2563EB', bg: '#EFF6FF' },
-                        'Food': { icon: Coffee, color: '#D97706', bg: '#FFFBEB' },
-                      };
-                      const catStyle = CAT_ICONS[request.category] || { icon: HelpCircle, color: '#64748B', bg: '#F8FAFC' };
-                      const CatIcon = catStyle.icon;
-                      return (
-                      <div key={request.id} className="bg-white rounded-[16px] border border-[#EAECF0] p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedRequest(request)}>
-                        <div className="flex items-start gap-3 mb-2">
-                          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: catStyle.bg }}>
-                            <CatIcon className="w-5 h-5" style={{ color: catStyle.color }} />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-[14px] font-semibold text-slate-900">{request.title}</p>
-                            <p className="text-[12px] text-slate-500 mt-0.5 line-clamp-2">{request.description}</p>
-                          </div>
-                          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0" style={{ background: catStyle.bg, color: catStyle.color }}>
-                            {request.category}
-                          </span>
-                        </div>
-                        <div className="flex justify-end mt-2">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleClaim(e, request); }}
-                            disabled={claimMutation.isPending}
-                            className="h-8 px-4 rounded-full bg-blue-600 text-white text-[13px] font-bold shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
-                          >
-                            {claimMutation.isPending ? 'Joining...' : "✋ I'll Help"}
-                          </button>
-                        </div>
-                      </div>
-                      );
-                    })}
-                  </div>
+                     {requests.map((request) => {
+                       const responders = signupsByRequest[request.id] || [];
+                       const CAT_ICONS = {
+                         'Chesed': { icon: Heart, color: '#EC4899', bg: '#FDF2F8' },
+                         'Torah Study': { icon: BookOpen, color: '#7C3AED', bg: '#F5F3FF' },
+                         'Community': { icon: Users, color: '#2563EB', bg: '#EFF6FF' },
+                         'Food': { icon: Coffee, color: '#D97706', bg: '#FFFBEB' },
+                       };
+                       const catStyle = CAT_ICONS[request.category] || { icon: HelpCircle, color: '#64748B', bg: '#F8FAFC' };
+                       const CatIcon = catStyle.icon;
+                       return (
+                       <div key={request.id} className="bg-white rounded-[16px] border border-[#EAECF0] p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedRequest(request)}>
+                         <div className="flex items-start gap-3 mb-2">
+                           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: catStyle.bg }}>
+                             <CatIcon className="w-5 h-5" style={{ color: catStyle.color }} />
+                           </div>
+                           <div className="flex-1">
+                             <p className="text-[14px] font-semibold text-slate-900">{request.title}</p>
+                             <p className="text-[12px] text-slate-500 mt-0.5 line-clamp-2">{request.description}</p>
+                           </div>
+                           <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0" style={{ background: catStyle.bg, color: catStyle.color }}>
+                             {request.category}
+                           </span>
+                         </div>
+                         {/* Activity row: responder avatars + counts */}
+                         <div className="flex items-center gap-2 mb-2">
+                           {responders.length > 0 && (
+                             <div className="flex items-center gap-1">
+                               <div className="flex -space-x-1.5">
+                                 {responders.slice(0, 3).map((s, i) => (
+                                   <div key={i} className="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-bold text-white" style={{ background: ['#2563EB','#7C3AED','#16A34A'][i % 3], zIndex: 3 - i }}>
+                                     {(s.user_name || '?')[0]?.toUpperCase()}
+                                   </div>
+                                 ))}
+                               </div>
+                               <span className="text-[11px] text-emerald-600 font-semibold">{responders.length} helping</span>
+                             </div>
+                           )}
+                           {request.views_count > 0 && (
+                             <span className="text-[11px] text-slate-400">{request.views_count} views</span>
+                           )}
+                         </div>
+                         <div className="flex justify-end mt-2">
+                           <button
+                             onClick={(e) => { e.stopPropagation(); handleClaim(e, request); }}
+                             disabled={claimMutation.isPending}
+                             className="h-8 px-4 rounded-full bg-blue-600 text-white text-[13px] font-bold shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
+                           >
+                             {claimMutation.isPending ? 'Joining...' : "✋ I'll Help"}
+                           </button>
+                         </div>
+                       </div>
+                       );
+                     })}
+                   </div>
                 )}
               </div>
 
