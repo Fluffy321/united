@@ -4,10 +4,11 @@ import { Loader2, Plus, Search, X, Users, AlertCircle, Map } from 'lucide-react'
 import { base44 } from '@/api/base44Client';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
-import CommunityDetailPage from '@/components/communities/CommunityDetailPage.jsx';
+import CommunityDetailPage from '@/components/communities/CommunityDetailView';
 import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
+import FeaturedCommunityCard from '@/components/communities/FeaturedCommunityCard';
 import FeaturedCommunityBanner from '@/components/communities/FeaturedCommunityBanner';
 import DiscoverCategoryCards, { DISCOVER_CATEGORIES } from '@/components/communities/DiscoverCategoriesScreen';
 import { toast } from 'sonner';
@@ -359,6 +360,7 @@ export default function Communities() {
       .catch(() => loadData(null));
   }, [loadData]);
 
+  const featuredCommunities = useMemo(() => allCommunities.filter(c => c.is_featured).sort((a, b) => (b.featured_priority || 0) - (a.featured_priority || 0)), [allCommunities]);
   const myCommunities = useMemo(() => allCommunities.filter(c => userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
   const myGroups = useMemo(() => allGroups.filter(g => memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
   const discoverCommunities = useMemo(() => allCommunities.filter(c => !userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
@@ -389,7 +391,10 @@ export default function Communities() {
     setJoiningId(community.id);
     try {
       await base44.entities.UserCommunity.create({ user_id: currentUser.id, community_id: community.id, role: 'Member' });
-      await base44.entities.Community.update(community.id, { follower_count: (community.follower_count || 0) + 1 });
+      await base44.entities.Community.update(community.id, {
+        follower_count: (community.follower_count || 0) + 1,
+        joins_this_week: (community.joins_this_week || 0) + 1
+      });
       setUserCommunityIds(prev => new Set([...prev, community.id]));
       toast.success(`Joined ${community.name}!`);
     } catch { toast.error('Something went wrong'); }
@@ -406,7 +411,13 @@ export default function Communities() {
     } catch { toast.error('Something went wrong'); }
   };
 
-  const openCommunity = (id) => setSearchParams({ communityId: String(id) });
+  const openCommunity = (id) => {
+    const community = allCommunities.find(c => c.id === id);
+    if (community) {
+      base44.entities.Community.update(id, { views_count: (community.views_count || 0) + 1 }).catch(() => {});
+    }
+    setSearchParams({ communityId: String(id) });
+  };
   const backToList = () => setSearchParams({});
 
   if (currentUser?.is_profile_complete === false) {
@@ -476,8 +487,31 @@ export default function Communities() {
           </div>
         </div>
 
-        {/* Featured Banner */}
-        <FeaturedCommunityBanner communities={allCommunities.slice(0, 4)} onOpen={openCommunity} />
+        {/* Featured Communities */}
+        {featuredCommunities.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg font-bold text-slate-900">⭐ Featured</span>
+              <span className="text-[11px] text-slate-400 font-medium bg-slate-100 rounded-full px-2 py-0.5">{featuredCommunities.length} communities</span>
+            </div>
+            <div className="space-y-4">
+              {featuredCommunities.map((c, i) => (
+                <FeaturedCommunityCard
+                  key={c.id}
+                  community={c}
+                  index={i}
+                  isJoined={userCommunityIds.has(c.id)}
+                  isJoining={joiningId === c.id}
+                  onOpen={openCommunity}
+                  onJoin={joinCommunity}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+        {featuredCommunities.length === 0 && (
+          <FeaturedCommunityBanner communities={allCommunities.slice(0, 4)} onOpen={openCommunity} />
+        )}
 
         {/* Search */}
         <div className="mb-4">
@@ -646,7 +680,14 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
 }
 
 function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory }) {
-  const noResults = communities.length === 0 && groups.length === 0;
+  // Sort: featured first, then by follower count
+  const sortedCommunities = [...communities].sort((a, b) => {
+    if (a.is_featured && !b.is_featured) return -1;
+    if (!a.is_featured && b.is_featured) return 1;
+    return (b.follower_count || 0) - (a.follower_count || 0);
+  });
+
+  const noResults = sortedCommunities.length === 0 && groups.length === 0;
 
   if (noResults) {
     return (
@@ -672,7 +713,7 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
         <div>
           <div className="text-lg font-bold text-slate-900 mb-3">Communities</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {communities.map(c => (
+            {sortedCommunities.map(c => (
               <CommunityCard
                 key={c.id}
                 community={c}

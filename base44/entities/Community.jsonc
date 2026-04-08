@@ -1,0 +1,134 @@
+{
+  "name": "Community",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Shul",
+        "School",
+        "Yeshiva",
+        "Seminary",
+        "Camp",
+        "Other"
+      ]
+    },
+    "neighborhood": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
+    "hours": {
+      "type": "string"
+    },
+    "email_public": {
+      "type": "string"
+    },
+    "rabbi_or_principal": {
+      "type": "string"
+    },
+    "description_short": {
+      "type": "string"
+    },
+    "description_long": {
+      "type": "string"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "logo_source": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "AUTO",
+        "UPLOADED"
+      ],
+      "default": "NONE"
+    },
+    "cover_image_url": {
+      "type": "string"
+    },
+    "is_claimed": {
+      "type": "boolean",
+      "default": false
+    },
+    "claimed_org_id": {
+      "type": "string"
+    },
+    "follower_count": {
+      "type": "number",
+      "default": 0
+    },
+    "post_count": {
+      "type": "number",
+      "default": 0
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "featured_tagline": {
+      "type": "string",
+      "description": "Short tagline shown on featured community cards (e.g. 'The heart of Five Towns')"
+    },
+    "featured_accent_color": {
+      "type": "string",
+      "description": "Hex color for featured card accent (e.g. #2563EB)"
+    },
+    "featured_priority": {
+      "type": "number",
+      "default": 0,
+      "description": "Higher = shown first among featured communities"
+    },
+    "views_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Total profile views"
+    },
+    "joins_this_week": {
+      "type": "number",
+      "default": 0,
+      "description": "New joins in the past 7 days"
+    },
+    "is_seeded": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Verified communities get admin controls, pinned announcements, event management, member messaging, and are eligible for membership fees."
+    },
+    "verified_type": {
+      "type": "string",
+      "enum": [
+        "Shul",
+        "School",
+        "Yeshiva",
+        "Seminary",
+        "Camp",
+        "Organization"
+      ],
+      "description": "Type label shown in the verified badge (e.g. Verified Shul, Verified School)"
+    },
+    "verified_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this community was verified"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}
