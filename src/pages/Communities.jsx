@@ -4,7 +4,7 @@ import { Loader2, Plus, Search, X, Users, AlertCircle, Map } from 'lucide-react'
 import { base44 } from '@/api/base44Client';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
-import CommunityDetailPage from '@/components/communities/CommunityDetailPage';
+import CommunityDetailPage from '@/components/communities/CommunityDetailPage.jsx';
 import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
