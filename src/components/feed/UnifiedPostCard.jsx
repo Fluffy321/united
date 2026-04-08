@@ -168,35 +168,38 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="rounded-2xl overflow-hidden bg-white border border-slate-100 shadow-md"
+        className="bg-white rounded-3xl shadow-sm overflow-hidden"
       >
-        {/* Big image */}
-        <div className="relative cursor-pointer" onClick={() => setImgExpanded(e => !e)}>
-          <img
-            src={post.image_url}
-            alt=""
-            className={`w-full object-cover transition-all ${imgExpanded ? 'max-h-[600px]' : 'max-h-72'}`}
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
-          <div className="absolute bottom-3 left-4 right-4 text-white">
-            <div className="flex items-center gap-2">
-              <UserAvatar user={post} name={post.user_name} size="xs" />
-              <span className="font-semibold text-[13px]">{post.user_name}</span>
-              <span className="text-[11px] text-white/70 ml-auto">{timeAgo}</span>
-            </div>
+        <img
+          src={post.image_url}
+          alt=""
+          className="w-full h-52 object-cover cursor-pointer"
+          loading="lazy"
+          onClick={() => setImgExpanded(e => !e)}
+        />
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <UserAvatar user={post} name={post.user_name} size="xs" />
+            <span className="font-semibold text-slate-900 text-[13px]">{post.user_name}</span>
+            <span className="text-[11px] text-slate-400 ml-auto">{timeAgo}</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100"><MoreHorizontal className="w-3.5 h-3.5" /></button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {isOwner ? (
+                  <DropdownMenuItem onClick={() => onDelete(post.id)} className="text-red-600"><Trash2 className="w-4 h-4 mr-2" />Delete</DropdownMenuItem>
+                ) : (
+                  <><DropdownMenuItem onClick={() => onReport(post.id, 'post')}><Flag className="w-4 h-4 mr-2" />Report</DropdownMenuItem>
+                  {onBlock && <DropdownMenuItem onClick={() => onBlock(post.user_id)} className="text-red-600"><Ban className="w-4 h-4 mr-2" />Block User</DropdownMenuItem>}</>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        </div>
-        {/* Caption */}
-        {post.body && (
-          <div className="px-4 pt-3 pb-1">
-            <p className="text-[14px] text-slate-700 leading-relaxed">{post.body}</p>
-          </div>
-        )}
-        <div className="px-3 py-2.5 border-t border-slate-100">
-          <div className="flex items-center gap-1">
+          {post.body && <div className="text-sm text-slate-600">{post.body}</div>}
+          <div className="flex items-center gap-1 mt-3 pt-2 border-t border-slate-100">
             <ReactionBar postId={post.id} currentUser={currentUser} />
-            <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-slate-500 hover:bg-slate-100 transition-colors">
+            <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-slate-500 hover:bg-slate-100">
               <MessageCircle className="w-4 h-4" />{commentCount > 0 && <span>{commentCount}</span>}
             </button>
           </div>
