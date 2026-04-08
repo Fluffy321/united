@@ -1,5 +1,4 @@
 import React from 'react';
-import { ChevronRight } from 'lucide-react';
 
 export const DISCOVER_CATEGORIES = [
   {
@@ -89,44 +88,24 @@ export default function DiscoverCategoriesScreen({ onSelectCategory }) {
         <p className="text-[13px] text-slate-500 mt-0.5">Find communities that match your interests</p>
       </div>
 
-      {DISCOVER_CATEGORIES.map((cat) => (
-        <button
-          key={cat.key}
-          onClick={() => onSelectCategory(cat.filterValue)}
-          className="w-full text-left rounded-3xl overflow-hidden bg-white border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-150"
-        >
-          {/* Gradient accent bar */}
-          <div className={`h-1.5 w-full bg-gradient-to-r ${cat.gradient}`} />
-
-          <div className="p-4 flex items-start gap-4">
-            {/* Icon */}
-            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${cat.gradient} flex items-center justify-center text-3xl shadow-sm flex-shrink-0`}>
-              {cat.emoji}
+      <div className="grid grid-cols-2 gap-3">
+        {DISCOVER_CATEGORIES.map((cat) => (
+          <button
+            key={cat.key}
+            onClick={() => onSelectCategory(cat.filterValue)}
+            className={`text-left rounded-3xl p-5 bg-gradient-to-br ${cat.gradient} text-white shadow-md hover:shadow-xl hover:-translate-y-1 active:scale-[0.97] transition-all duration-150`}
+          >
+            <div className="text-3xl mb-2">{cat.emoji}</div>
+            <div className="text-[15px] font-bold leading-snug">{cat.label}</div>
+            <div className="text-[12px] opacity-80 mt-1 leading-snug">{cat.description}</div>
+            <div className="flex flex-wrap gap-1 mt-3">
+              {cat.examples.slice(0, 2).map((ex) => (
+                <span key={ex} className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-white/20">{ex}</span>
+              ))}
             </div>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-[16px] text-slate-900">{cat.label}</span>
-                <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
-              </div>
-              <p className="text-[12px] text-slate-500 mt-0.5 leading-snug">{cat.description}</p>
-
-              {/* Example communities */}
-              <div className="flex flex-wrap gap-1.5 mt-2.5">
-                {cat.examples.map((ex) => (
-                  <span
-                    key={ex}
-                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${cat.bg} ${cat.textAccent}`}
-                  >
-                    {ex}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </button>
-      ))}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
