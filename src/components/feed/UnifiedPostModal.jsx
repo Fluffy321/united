@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Loader2, MapPin, Check, Bold, Italic, List } from 'lucide-react';
+import { X, Loader2, MapPin, Check, Bold, Italic, List, ImagePlus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -111,6 +111,9 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [placeholder, setPlaceholder] = useState('');
   const [attachedFiles, setAttachedFiles] = useState([]);
+  const [caption, setCaption] = useState('');
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [imageUrls, setImageUrls] = useState([]);
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -218,7 +221,9 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
         event_time: eventTime || undefined,
         prompt_id: promptId || undefined,
         prompt_text: promptText || undefined,
-        image_url: attachedFiles[0]?.url || undefined,
+        image_url: imageUrls[0] || attachedFiles[0]?.url || undefined,
+        image_urls: imageUrls.length > 0 ? imageUrls : undefined,
+        caption: caption.trim() || undefined,
         attachment_urls: attachedFiles.map(f => f.url),
         post_subtype: isFeedPost ? postSubtype : undefined,
       };
@@ -248,6 +253,8 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
       setEventDate('');
       setEventTime('');
       setAttachedFiles([]);
+      setCaption('');
+      setImageUrls([]);
     } catch (error) {
       toast.error('Failed to post');
     } finally {
@@ -443,7 +450,59 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
             )}
           </div>
 
-          {/* File upload */}
+          {/* Photo upload — feed posts only */}
+          {(postType === 'feed' || postType === 'housing') && (
+            <div>
+              <Label className="mb-2 block">📷 Photos <span className="text-slate-400 font-normal">(up to 3, optional)</span></Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {imageUrls.map((url, i) => (
+                  <div key={i} className="relative group w-20 h-20">
+                    <img src={url} alt="" className="w-full h-full object-cover rounded-xl" />
+                    <button
+                      type="button"
+                      onClick={() => setImageUrls(prev => prev.filter((_, idx) => idx !== i))}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >✕</button>
+                  </div>
+                ))}
+                {imageUrls.length < 3 && (
+                  <label className="w-20 h-20 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                    {uploadingImages ? <Loader2 className="w-5 h-5 animate-spin text-slate-400" /> : <ImagePlus className="w-5 h-5 text-slate-400" />}
+                    <span className="text-[10px] text-slate-400 mt-1">Add photo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        setUploadingImages(true);
+                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                        setImageUrls(prev => [...prev, file_url]);
+                        setUploadingImages(false);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+              {imageUrls.length > 0 && (
+                <div>
+                  <Label className="text-xs text-slate-500 mb-1 block">Caption (optional)</Label>
+                  <input
+                    value={caption}
+                    onChange={e => setCaption(e.target.value)}
+                    placeholder="Add a caption..."
+                    className="w-full px-3 py-2 text-[13px] rounded-xl border border-slate-200 outline-none focus:border-blue-400 bg-slate-50"
+                    maxLength={200}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* File upload — non-feed posts */}
+          {postType !== 'feed' && postType !== 'housing' && (
           <div>
             <Label className="mb-2 block">Attachments <span className="text-slate-400 font-normal">(optional)</span></Label>
             <FileUploadZone 
@@ -451,6 +510,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
               maxFiles={3}
             />
           </div>
+          )}
           </div>
 
         <div className="flex justify-end gap-3 pt-4">

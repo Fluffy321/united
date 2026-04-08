@@ -162,7 +162,8 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const bodyPreview = bodyLong && !expanded ? post.body.slice(0, BODY_LIMIT).trimEnd() + '…' : post.body;
 
   // ── Photo post ────────────────────────────────────────────────────────
-  if (post.image_url && post.type === 'feed' && !post.title) {
+  const allImages = post.image_urls?.length > 0 ? post.image_urls : (post.image_url ? [post.image_url] : []);
+  if (allImages.length > 0 && post.type === 'feed' && !post.title) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 8 }}
@@ -170,13 +171,60 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         transition={{ duration: 0.2 }}
         className="bg-white rounded-3xl shadow-sm overflow-hidden"
       >
-        <img
-          src={post.image_url}
-          alt=""
-          className="w-full h-52 object-cover cursor-pointer"
-          loading="lazy"
-          onClick={() => setImgExpanded(e => !e)}
-        />
+        {/* Image grid */}
+        <div className={`overflow-hidden ${
+          allImages.length === 1 ? '' :
+          allImages.length === 2 ? 'grid grid-cols-2 gap-0.5' :
+          'grid grid-cols-2 gap-0.5'
+        }`}>
+          {allImages.length === 1 && (
+            <div className="overflow-hidden rounded-t-3xl group">
+              <img
+                src={allImages[0]}
+                alt=""
+                className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105 cursor-pointer"
+                loading="lazy"
+                onClick={() => setImgExpanded(e => !e)}
+              />
+            </div>
+          )}
+          {allImages.length === 2 && allImages.map((url, i) => (
+            <div key={i} className={`overflow-hidden group ${
+              i === 0 ? 'rounded-tl-3xl' : 'rounded-tr-3xl'
+            }`}>
+              <img
+                src={url}
+                alt=""
+                className="w-full h-52 object-cover transition-transform duration-300 group-hover:scale-105 cursor-pointer"
+                loading="lazy"
+              />
+            </div>
+          ))}
+          {allImages.length >= 3 && (
+            <>
+              <div className="overflow-hidden group rounded-tl-3xl col-span-2">
+                <img
+                  src={allImages[0]}
+                  alt=""
+                  className="w-full h-44 object-cover transition-transform duration-300 group-hover:scale-105 cursor-pointer"
+                  loading="lazy"
+                />
+              </div>
+              {allImages.slice(1, 3).map((url, i) => (
+                <div key={i} className={`overflow-hidden group ${
+                  i === 0 ? 'rounded-bl-3xl' : 'rounded-br-3xl'
+                }`}>
+                  <img
+                    src={url}
+                    alt=""
+                    className="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-105 cursor-pointer"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </>
+          )}
+        </div>
         <div className="p-4">
           <div className="flex items-center gap-2 mb-2">
             <UserAvatar user={post} name={post.user_name} size="xs" />
@@ -196,7 +244,9 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          {post.body && <div className="text-sm text-slate-600">{post.body}</div>}
+          {(post.caption || post.body) && (
+            <div className="text-sm text-slate-700 leading-relaxed">{post.caption || post.body}</div>
+          )}
           <div className="flex items-center gap-1 mt-3 pt-2 border-t border-slate-100">
             <ReactionBar postId={post.id} currentUser={currentUser} />
             <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-slate-500 hover:bg-slate-100">

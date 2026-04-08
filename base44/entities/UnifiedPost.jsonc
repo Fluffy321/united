@@ -1,0 +1,151 @@
+{
+  "name": "UnifiedPost",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_age_range": {
+      "type": "string",
+      "enum": [
+        "13-17",
+        "18+"
+      ]
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "avatar_type": {
+      "type": "string",
+      "enum": [
+        "photo",
+        "avatar",
+        "initials"
+      ]
+    },
+    "avatar_preset_id": {
+      "type": "string"
+    },
+    "avatar_theme": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "feed",
+        "help",
+        "event",
+        "job",
+        "housing",
+        "food",
+        "dating",
+        "shul",
+        "news",
+        "prompt_reply",
+        "prompt"
+      ]
+    },
+    "post_subtype": {
+      "type": "string",
+      "enum": [
+        "discussion",
+        "question",
+        "alert",
+        "recommendation",
+        "lost_found"
+      ],
+      "description": "Sub-classification for feed posts"
+    },
+    "board": {
+      "type": "string",
+      "enum": [
+        "feed",
+        "help",
+        "events",
+        "jobs",
+        "housing",
+        "food",
+        "dating",
+        "shul"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "image_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Up to 3 image URLs for multi-image posts"
+    },
+    "caption": {
+      "type": "string",
+      "description": "Optional caption shown below images"
+    },
+    "location_text": {
+      "type": "string"
+    },
+    "is_anonymous": {
+      "type": "boolean",
+      "default": false
+    },
+    "category": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string",
+      "default": "Five Towns"
+    },
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "event_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "event_time": {
+      "type": "string"
+    },
+    "likes_count": {
+      "type": "number",
+      "default": 0
+    },
+    "comments_count": {
+      "type": "number",
+      "default": 0
+    },
+    "prompt_id": {
+      "type": "string"
+    },
+    "prompt_text": {
+      "type": "string"
+    },
+    "is_seeded": {
+      "type": "boolean",
+      "default": false
+    },
+    "migrated_from": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "user_name",
+    "type",
+    "board",
+    "body"
+  ]
+}
