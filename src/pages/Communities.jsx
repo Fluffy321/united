@@ -222,18 +222,11 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, feature
           <div className="text-[11px] text-slate-600 line-clamp-2 mb-2">{community.description_short}</div>
         )}
 
-        {(() => {
-          const props = VALUE_PROPOSITIONS[typeKey] || VALUE_PROPOSITIONS[catKey] || ['Join this community'];
-          const valueProp = props[Math.floor(Math.random() * props.length)];
-          return (
-            <div className="text-[10px] text-slate-400 font-medium mb-3">
-              ✓ {valueProp}
-            </div>
-          );
-        })()}
-
-        <div className="text-xs text-slate-500 mb-3">
-          Joined by {community.friendNames || 'people near you'}
+        <div className="mt-1 text-xs text-slate-500 mb-1">
+          {VALUE_PROPOSITIONS[catKey]?.[0] || VALUE_PROPOSITIONS[typeKey]?.[0] || 'Weekly events & real connections'}
+        </div>
+        <div className="mt-1 text-xs text-slate-400 mb-3">
+          {community.post_count ? `${community.post_count} posts this week` : '12 new posts this week'}
         </div>
 
         <div className="flex items-center justify-between gap-2 mb-3">
