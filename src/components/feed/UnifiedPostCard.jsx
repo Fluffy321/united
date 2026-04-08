@@ -47,9 +47,9 @@ const TYPE_CONFIGS = {
 };
 
 const SUBTYPE_CONFIGS = {
-  discussion:     { label: '💬 Discussion',     color: MUTED_BADGE },
-  question:       { label: '❓ Question',        color: BASE_BADGE },
-  alert:          { label: '🚨 Alert',           color: URGENT_BADGE },
+discussion:     { label: '💬 Discussion',     color: MUTED_BADGE },
+question:       { label: '❓ Question',        color: BASE_BADGE },
+alert:          { label: '🚨 Alert',           color: 'bg-red-600 text-white border border-red-600' },
   recommendation: { label: '⭐ Tip',             color: BASE_BADGE },
   lost_found:     { label: '🔍 Lost & Found',   color: BASE_BADGE },
 };
@@ -336,17 +336,17 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="rounded-2xl overflow-hidden bg-white border border-slate-100 shadow-sm"
+        className="rounded-2xl overflow-hidden bg-white border border-green-100 shadow-sm"
       >
-        <div className="h-2 bg-gradient-to-r from-cyan-500 to-blue-600" />
+        <div className="h-2 bg-gradient-to-r from-green-500 to-emerald-600" />
         <div className="px-4 pt-4 pb-3">
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex items-start gap-3 flex-1 min-w-0">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">💼</div>
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">💼</div>
               <div className="min-w-0">
                 {post.title && <h3 className="font-bold text-[15px] text-slate-900 leading-snug">{post.title}</h3>}
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200">💼 Job</span>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">💼 Job</span>
                   {post.location_text && <span className="flex items-center gap-1 text-[11px] text-slate-500"><MapPin className="w-3 h-3" />{post.location_text}</span>}
                 </div>
               </div>
@@ -386,15 +386,12 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="rounded-2xl overflow-hidden bg-white border border-slate-100 shadow-sm"
+        className="rounded-2xl overflow-hidden bg-white border border-blue-100 shadow-sm"
       >
-        {post.image_url && (
-          <img src={post.image_url} alt="" className="w-full h-44 object-cover" loading="lazy" />
-        )}
-        <div className="h-2 bg-gradient-to-r from-violet-500 to-purple-600" />
+        <div className="h-2 bg-gradient-to-r from-blue-500 to-sky-600" />
         <div className="px-4 pt-4 pb-3">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200">🏠 Housing</span>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">🏠 Housing</span>
             {post.location_text && <span className="flex items-center gap-1 text-[11px] text-slate-500"><MapPin className="w-3 h-3" />{post.location_text}</span>}
           </div>
           {post.title && <h3 className="font-bold text-[15px] text-slate-900 mb-1 leading-snug">{post.title}</h3>}
@@ -418,16 +415,16 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="rounded-2xl overflow-hidden bg-white border border-l-4 border-orange-400 shadow-sm"
+        className="rounded-2xl overflow-hidden bg-white border-l-4 border-purple-500 shadow-sm"
       >
         <div className="px-4 pt-4 pb-3">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-xl flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-xl flex-shrink-0">
               {helpCat?.emoji || '🤝'}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200">🚨 Help Needed</span>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">🤝 Chesed Needed</span>
                 {helpCat && <span className="text-[11px] font-semibold text-slate-500">{helpCat.label}</span>}
                 {helpStatus === 'fulfilled' && <span className="text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Fulfilled</span>}
               </div>
@@ -547,10 +544,12 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-      className="rounded-2xl border border-[#EAECF0] overflow-hidden"
+      className={`rounded-2xl border overflow-hidden ${
+        post.post_subtype === 'alert' ? 'border-red-300' : 'border-[#EAECF0]'
+      }`}
       style={{
         background: '#ffffff',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
+        boxShadow: post.post_subtype === 'alert' ? '0 2px 10px rgba(220,38,38,0.12)' : '0 2px 10px rgba(0,0,0,0.07)',
       }}
     >
       {/* Header */}
@@ -621,6 +620,13 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Alert banner for alert subtype */}
+      {post.post_subtype === 'alert' && (
+        <div className="bg-red-600 px-4 py-1.5 flex items-center gap-2">
+          <span className="text-white text-[12px] font-bold uppercase tracking-wide">🚨 Community Alert</span>
+        </div>
+      )}
 
       {/* Content */}
       <div className="px-4 pt-3.5 pb-1.5">
