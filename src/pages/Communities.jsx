@@ -583,6 +583,9 @@ export default function Communities() {
               />
             ) : showCategoryBrowse && activeCategory === 'all' && !searchQuery ? (
               <DiscoverCategoriesScreen
+                communities={allCommunities}
+                myCommunities={myCommunities}
+                onOpen={openCommunity}
                 onSelectCategory={(filterValue) => {
                   const cat = DISCOVER_CATEGORIES.find(c => c.filterValue === filterValue);
                   if (cat) { setActiveCategory(cat.key); setShowCategoryBrowse(false); }
