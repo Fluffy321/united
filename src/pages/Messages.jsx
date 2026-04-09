@@ -17,6 +17,7 @@ export default function Messages() {
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [activeTab, setActiveTab] = useState('inbox');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [showNewMessage, setShowNewMessage] = useState(false);
   const queryClient = useQueryClient();
 
@@ -152,8 +153,28 @@ export default function Messages() {
         selectedConversation ? 'hidden lg:flex' : 'flex'}`
         }>
           <div className="px-4 pt-4 pb-0 border-b border-slate-100 flex-shrink-0">
-            <h1 className="text-[20px] font-bold text-slate-900">Messages</h1>
-            <div className="flex mt-3">
+            <h1 className="text-[20px] font-bold text-slate-900 mb-3">Messages</h1>
+            {/* Filter pills */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+              {[
+                { key: 'all', label: 'All' },
+                { key: 'unread', label: 'Unread' },
+                { key: 'communities', label: 'Communities' },
+                { key: 'requests', label: 'Requests' },
+              ].map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setActiveFilter(f.key)}
+                  className={`flex-shrink-0 rounded-full px-4 py-1.5 text-[13px] font-semibold transition-all duration-150 active:scale-95 ${
+                    activeFilter === f.key ? 'text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                  }`}
+                  style={activeFilter === f.key ? { background: 'linear-gradient(135deg, #2563EB, #7C3AED)' } : {}}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex mt-1">
               {['inbox', 'requests'].map((tab) =>
               <button
                 key={tab}
@@ -161,7 +182,6 @@ export default function Messages() {
                 className={`flex-1 py-2.5 text-[13px] font-semibold border-b-2 transition-colors capitalize ${
                 activeTab === tab ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-400 border-transparent'}`
                 }>
-                
                   {tab === 'inbox' ? 'Inbox' : 'Requests'}
                 </button>
               )}
@@ -187,7 +207,12 @@ export default function Messages() {
               </div> :
 
             <ConversationList
-              conversations={allConversations}
+              conversations={allConversations.filter(conv => {
+                if (activeFilter === 'unread') return (conv.unread_count?.[currentUser?.id] || 0) > 0;
+                if (activeFilter === 'communities') return !!conv.community_id;
+                if (activeFilter === 'requests') return !!conv.request_id;
+                return true;
+              })}
               currentUser={currentUser}
               selectedId={selectedConversation?.id}
               onSelect={setSelectedConversation} />
@@ -221,14 +246,18 @@ export default function Messages() {
       </div>
 
       {/* New Message FAB */}
-      
-
-
-
-
-
-
-      
+      {activeTab === 'inbox' && !selectedConversation && (
+        <button
+          onClick={() => setShowNewMessage(true)}
+          className="absolute bottom-28 right-5 w-16 h-16 rounded-full text-white flex items-center justify-center active:scale-90 transition-all duration-150"
+          style={{
+            background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)',
+            boxShadow: '0 8px 24px rgba(37,99,235,0.45), 0 2px 8px rgba(0,0,0,0.15)'
+          }}
+        >
+          <MessageCircle className="w-7 h-7" />
+        </button>
+      )}
 
       <ReportModal
         open={showReport}
