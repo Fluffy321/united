@@ -77,6 +77,15 @@
       "type": "boolean",
       "default": false
     },
+    "isMainFeatured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Hero/main featured slot"
+    },
+    "featuredRank": {
+      "type": "number",
+      "description": "Sort order for featured communities"
+    },
     "featured_slot_type": {
       "type": "string",
       "enum": [

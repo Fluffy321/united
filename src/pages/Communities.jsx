@@ -361,13 +361,11 @@ export default function Communities() {
       .catch(() => loadData(null));
   }, [loadData]);
 
-  const featuredCommunities = useMemo(() => {
-    const featured = allCommunities.filter(c => c.is_featured && c.featured_slot_type).sort((a, b) => (b.featured_priority || 0) - (a.featured_priority || 0));
-    return featured;
+  const mainFeatured = useMemo(() => allCommunities.find(c => c.isMainFeatured === true), [allCommunities]);
+  const secondaryFeatured = useMemo(() => {
+    const secondary = allCommunities.filter(c => c.isFeatured === true && c.isMainFeatured !== true).sort((a, b) => (a.featuredRank || 999) - (b.featuredRank || 999)).slice(0, 4);
+    return secondary;
   }, [allCommunities]);
-
-  const heroFeatured = useMemo(() => featuredCommunities.find(c => c.featured_slot_type === 'hero'), [featuredCommunities]);
-  const secondaryFeatured = useMemo(() => featuredCommunities.filter(c => c.featured_slot_type === 'secondary').slice(0, 4), [featuredCommunities]);
   const myCommunities = useMemo(() => allCommunities.filter(c => userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
   const myGroups = useMemo(() => allGroups.filter(g => memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
   const discoverCommunities = useMemo(() => allCommunities.filter(c => !userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
@@ -494,14 +492,14 @@ export default function Communities() {
           </div>
         </div>
 
-        {/* Featured Communities - 1 Hero + up to 2 Secondary */}
-        {(heroFeatured || secondaryFeatured.length > 0) ? (
+        {/* Featured Communities - 1 Hero + up to 4 Secondary */}
+        {mainFeatured || secondaryFeatured.length > 0 ? (
           <div className="mb-8 space-y-4">
-            {heroFeatured && (
+            {mainFeatured && (
               <FeaturedHeroCard
-                community={heroFeatured}
-                isJoined={userCommunityIds.has(heroFeatured.id)}
-                isJoining={joiningId === heroFeatured.id}
+                community={mainFeatured}
+                isJoined={userCommunityIds.has(mainFeatured.id)}
+                isJoining={joiningId === mainFeatured.id}
                 onOpen={openCommunity}
                 onJoin={joinCommunity}
               />
@@ -521,9 +519,7 @@ export default function Communities() {
               </div>
             )}
           </div>
-        ) : (
-          <FeaturedCommunityBanner communities={allCommunities.slice(0, 4)} onOpen={openCommunity} />
-        )}
+        ) : null}
 
         {/* Search */}
         <div className="mb-4">
