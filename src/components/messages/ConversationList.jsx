@@ -51,6 +51,13 @@ function isLikelyActive(userId) {
   return code % 3 === 0; // ~33% appear active
 }
 
+// Deterministically mock typing state for ~15% of conversations
+function isMockTyping(convId) {
+  if (!convId) return false;
+  const code = convId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return code % 7 === 0;
+}
+
 export default function ConversationList({ conversations, currentUser, selectedId, onSelect, onArchive, onMarkUnread }) {
   const getOther = (conv) => {
     if (conv.is_demo) {
@@ -169,16 +176,24 @@ export default function ConversationList({ conversations, currentUser, selectedI
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-0.5">
-            <span className={`font-bold text-[15px] truncate flex items-center gap-1.5 leading-snug ${
-              unread > 0 ? 'text-slate-900' : 'text-slate-700'
-            }`}>
-              {other.name}
-              {isAIChat && (
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #7C3AED, #6366F1)', color: 'white' }}>
-                  AI
-                </span>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className={`font-bold text-[15px] truncate flex items-center gap-1.5 leading-snug ${
+                unread > 0 ? 'text-slate-900' : 'text-slate-700'
+              }`}>
+                {other.name}
+                {isAIChat && (
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #7C3AED, #6366F1)', color: 'white' }}>
+                    AI
+                  </span>
+                )}
+              </span>
+              {isLikelyActive(other.id) && !isAIChat && (
+                <span className="text-[10px] font-semibold text-emerald-500 leading-none mt-0.5">Active now</span>
               )}
-            </span>
+              {isAIChat && (
+                <span className="text-[10px] font-semibold text-emerald-400 leading-none mt-0.5">Always available</span>
+              )}
+            </div>
             <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
               {conv.last_message_at && (
                 <span className={`text-[11px] whitespace-nowrap font-medium ${
@@ -202,11 +217,22 @@ export default function ConversationList({ conversations, currentUser, selectedI
               <HandHeart className="w-3 h-3 flex-shrink-0" /> {conv.request_title}
             </p>
           )}
-          <p className={`text-[13px] truncate leading-snug ${
-            unread > 0 ? 'text-slate-800 font-semibold' : 'text-slate-400 font-normal'
-          }`}>
-            {conv.last_message || getPreview(conv.id)}
-          </p>
+          {isMockTyping(conv.id) && !isAIChat ? (
+            <p className="text-[13px] text-emerald-500 font-semibold flex items-center gap-1">
+              <span className="flex gap-0.5 items-end h-3">
+                <span className="w-1 h-1 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1 h-1 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1 h-1 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </span>
+              typing…
+            </p>
+          ) : (
+            <p className={`text-[13px] truncate leading-snug ${
+              unread > 0 ? 'text-slate-800 font-semibold' : 'text-slate-400 font-normal'
+            }`}>
+              {conv.last_message || getPreview(conv.id)}
+            </p>
+          )}
         </div>
       </button>
       </SwipeableConversationItem>
