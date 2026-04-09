@@ -11,65 +11,12 @@ import NewMessageComposer from '@/components/messages/NewMessageComposer';
 import ReportModal from '@/components/common/ReportModal';
 import { buildAIConversation } from '@/lib/aiAgent';
 
-const now = Date.now();
-const DEMO_CONVERSATIONS = [
-  {
-    id: 'demo-1', is_demo: true, demo_user_name: 'Yael Goldstein',
-    last_message: 'Are you going tonight?',
-    last_message_at: new Date(now - 4 * 60 * 1000).toISOString(),
-    unread_count: {},
-    participant_ids: [], participant_names: ['Yael Goldstein'], participant_avatars: [null],
-    _demo_unread: 2,
-  },
-  {
-    id: 'demo-2', is_demo: true, demo_user_name: 'Moshe Levy',
-    last_message: "I'll send it in a bit",
-    last_message_at: new Date(now - 38 * 60 * 1000).toISOString(),
-    unread_count: {},
-    participant_ids: [], participant_names: ['Moshe Levy'], participant_avatars: [null],
-    _demo_unread: 0,
-  },
-  {
-    id: 'demo-3', is_demo: true, demo_user_name: 'Rivka Cohen',
-    last_message: 'Thanks again 🙏',
-    last_message_at: new Date(now - 2.5 * 60 * 60 * 1000).toISOString(),
-    unread_count: {},
-    participant_ids: [], participant_names: ['Rivka Cohen'], participant_avatars: [null],
-    _demo_unread: 1,
-  },
-  {
-    id: 'demo-4', is_demo: true, demo_user_name: 'Ari Shapiro',
-    last_message: 'Did you see the post?',
-    last_message_at: new Date(now - 5 * 60 * 60 * 1000).toISOString(),
-    unread_count: {},
-    participant_ids: [], participant_names: ['Ari Shapiro'], participant_avatars: [null],
-    _demo_unread: 3,
-  },
-  {
-    id: 'demo-5', is_demo: true, demo_user_name: 'Dina Rosen',
-    last_message: 'Shabbos at 7 still?',
-    last_message_at: new Date(now - 22 * 60 * 60 * 1000).toISOString(),
-    unread_count: {},
-    participant_ids: [], participant_names: ['Dina Rosen'], participant_avatars: [null],
-    _demo_unread: 0,
-  },
-  {
-    id: 'demo-6', is_demo: true, demo_user_name: 'Nachum Weiss',
-    last_message: 'Can you cover for me?',
-    last_message_at: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    unread_count: {},
-    participant_ids: [], participant_names: ['Nachum Weiss'], participant_avatars: [null],
-    _demo_unread: 0,
-  },
-];
-
 export default function Messages() {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [activeTab, setActiveTab] = useState('inbox');
-  const [activeFilter, setActiveFilter] = useState('all');
   const [showNewMessage, setShowNewMessage] = useState(false);
   const queryClient = useQueryClient();
 
@@ -150,19 +97,9 @@ export default function Messages() {
     gcTime: 120000,
   });
 
-  // Inject demo conversations when inbox is sparse
-  const demoWithUnread = DEMO_CONVERSATIONS.map(d => ({
-    ...d,
-    unread_count: d._demo_unread > 0 ? { [currentUser?.id]: d._demo_unread } : {},
-  }));
-  const realConvs = conversations;
-  const fillCount = Math.max(0, 4 - realConvs.length);
-  const demoPadding = demoWithUnread.slice(0, fillCount + demoWithUnread.length); // always show demos
-
   const allConversations = [
     ...(aiConversation ? [aiConversation] : []),
-    ...realConvs,
-    ...demoWithUnread,
+    ...conversations
   ];
 
   const unreadCount = allConversations.reduce((sum, conv) => 
@@ -208,47 +145,21 @@ export default function Messages() {
   }
 
   return (
-    <div className="flex flex-col bg-slate-50 relative" style={{ height: '100dvh' }}>
+    <div className="flex flex-col bg-white relative" style={{ height: '100dvh' }}>
       <div className="flex flex-1 min-h-0">
         {/* Conversation List */}
-        <div className={`flex flex-col w-full lg:w-96 lg:border-r border-slate-200 bg-slate-50 ${
+        <div className={`flex flex-col w-full lg:w-96 lg:border-r border-slate-200 ${
           selectedConversation ? 'hidden lg:flex' : 'flex'
         }`}>
-          <div className="px-5 pt-5 pb-0 border-b border-slate-200 bg-white flex-shrink-0 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h1 className="text-[22px] font-extrabold text-slate-900">Messages</h1>
-            </div>
-            {/* Filter pills */}
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-              {[
-                { key: 'all', label: 'All' },
-                { key: 'unread', label: 'Unread' },
-                { key: 'communities', label: 'Communities' },
-                { key: 'requests', label: 'Requests' },
-              ].map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => setActiveFilter(f.key)}
-                  className={`flex-shrink-0 rounded-full px-4 py-1.5 text-[13px] font-semibold transition-all duration-150 active:scale-95 ${
-                    activeFilter === f.key
-                      ? 'text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                  }`}
-                  style={activeFilter === f.key ? { background: 'linear-gradient(135deg, #2563EB, #7C3AED)' } : {}}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-1 mt-1">
+          <div className="px-4 pt-4 pb-0 border-b border-slate-100 flex-shrink-0">
+            <h1 className="text-[20px] font-bold text-slate-900">Messages</h1>
+            <div className="flex mt-3">
               {['inbox', 'requests'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-5 py-2.5 text-[13px] font-bold rounded-t-xl transition-all capitalize ${
-                    activeTab === tab
-                      ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600'
-                      : 'text-slate-400 hover:text-slate-600 border-b-2 border-transparent'
+                  className={`flex-1 py-2.5 text-[13px] font-semibold border-b-2 transition-colors capitalize ${
+                    activeTab === tab ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-400 border-transparent'
                   }`}
                 >
                   {tab === 'inbox' ? 'Inbox' : 'Requests'}
@@ -264,7 +175,7 @@ export default function Messages() {
             />
           )}
 
-          <div className="flex-1 overflow-y-auto bg-slate-50">
+          <div className="flex-1 overflow-y-auto">
             {activeTab === 'requests' ? (
               <MessageRequestsTab
                 currentUser={currentUser}
@@ -276,12 +187,7 @@ export default function Messages() {
               </div>
             ) : (
               <ConversationList
-                conversations={allConversations.filter(conv => {
-                  if (activeFilter === 'unread') return (conv.unread_count?.[currentUser?.id] || 0) > 0;
-                  if (activeFilter === 'communities') return !!conv.community_id;
-                  if (activeFilter === 'requests') return !!conv.request_id;
-                  return true;
-                })}
+                conversations={allConversations}
                 currentUser={currentUser}
                 selectedId={selectedConversation?.id}
                 onSelect={setSelectedConversation}
@@ -318,13 +224,9 @@ export default function Messages() {
       {activeTab === 'inbox' && !selectedConversation && (
         <button
           onClick={() => setShowNewMessage(true)}
-          className="absolute bottom-28 right-5 w-16 h-16 rounded-full text-white flex items-center justify-center active:scale-90 transition-all duration-150"
-          style={{
-            background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)',
-            boxShadow: '0 8px 24px rgba(37,99,235,0.45), 0 2px 8px rgba(0,0,0,0.15)'
-          }}
+          className="absolute bottom-28 right-6 w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center"
         >
-          <MessageCircle className="w-7 h-7" />
+          <MessageCircle className="w-6 h-6" />
         </button>
       )}
 
