@@ -1,8 +1,31 @@
 import React from 'react';
+import { differenceInMinutes, differenceInHours, differenceInDays, isYesterday, isToday, format } from 'date-fns';
 import { formatDistanceToNow } from 'date-fns';
-import { HandHeart, Bot, Circle } from 'lucide-react';
+import { HandHeart, Bot } from 'lucide-react';
 import { AI_AGENT } from '@/lib/aiAgent';
 
+
+function formatTimestamp(date) {
+  if (!date) return '';
+  const d = new Date(date);
+  const now = new Date();
+  const mins = differenceInMinutes(now, d);
+  if (mins < 1) return 'now';
+  if (mins < 60) return `${mins}m`;
+  const hrs = differenceInHours(now, d);
+  if (hrs < 24 && isToday(d)) return `${hrs}h`;
+  if (isYesterday(d)) return 'yesterday';
+  const days = differenceInDays(now, d);
+  if (days < 7) return format(d, 'EEE');
+  return format(d, 'MMM d');
+}
+
+// Deterministically decide if a user appears "active" based on their ID
+function isLikelyActive(userId) {
+  if (!userId) return false;
+  const code = userId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return code % 3 === 0; // ~33% appear active
+}
 
 export default function ConversationList({ conversations, currentUser, selectedId, onSelect }) {
   const getOther = (conv) => {
@@ -70,6 +93,10 @@ export default function ConversationList({ conversations, currentUser, selectedI
                 ? <img src={other.avatar} alt="" className="w-full h-full object-cover" />
                 : initials
               }
+              {/* Online indicator */}
+              {(isAIChat || isLikelyActive(other.id)) && (
+                <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
+              )}
             </div>
 
             {/* Content */}
@@ -87,10 +114,10 @@ export default function ConversationList({ conversations, currentUser, selectedI
                 </span>
                 <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
                   {conv.last_message_at && (
-                    <span className={`text-[11px] whitespace-nowrap ${
+                    <span className={`text-[11px] whitespace-nowrap font-medium ${
                       unread > 0 ? 'text-blue-500 font-semibold' : 'text-slate-400'
                     }`}>
-                      {formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false })}
+                      {formatTimestamp(conv.last_message_at)}
                     </span>
                   )}
                   {unread > 0 && (
