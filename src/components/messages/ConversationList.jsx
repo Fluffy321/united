@@ -1,4 +1,5 @@
 import React from 'react';
+import SwipeableConversationItem from './SwipeableConversationItem';
 import { differenceInMinutes, differenceInHours, differenceInDays, isYesterday, isToday, format } from 'date-fns';
 import { HandHeart, Bot, Sparkles } from 'lucide-react';
 import { AI_AGENT } from '@/lib/aiAgent';
@@ -26,7 +27,7 @@ function isLikelyActive(userId) {
   return code % 3 === 0; // ~33% appear active
 }
 
-export default function ConversationList({ conversations, currentUser, selectedId, onSelect }) {
+export default function ConversationList({ conversations, currentUser, selectedId, onSelect, onArchive, onMarkUnread }) {
   const getOther = (conv) => {
     if (conv.is_demo) {
       return {
@@ -77,8 +78,12 @@ export default function ConversationList({ conversations, currentUser, selectedI
         const initials = other.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
 
         return (
-          <button
+          <SwipeableConversationItem
             key={conv.id || idx}
+            onArchive={() => onArchive?.(conv)}
+            onMarkUnread={() => onMarkUnread?.(conv)}
+          >
+          <button
             onClick={() => onSelect(conv)}
             className={`w-full rounded-2xl px-4 py-3.5 cursor-pointer flex items-center gap-3.5 text-left border transition-all duration-150 ${
               isAIChat && isSelected
@@ -171,6 +176,7 @@ export default function ConversationList({ conversations, currentUser, selectedI
               </p>
             </div>
           </button>
+          </SwipeableConversationItem>
         );
       })}
     </div>

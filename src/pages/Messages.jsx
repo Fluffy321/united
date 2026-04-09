@@ -112,6 +112,28 @@ export default function Messages() {
     setShowReport(true);
   };
 
+  const handleArchive = async (conv) => {
+    // Mark conversation as archived by clearing unread and hiding from list
+    try {
+      await base44.entities.Conversation.update(conv.id, { is_archived: true });
+      queryClient.invalidateQueries({ queryKey: ['conversations', currentUser.id] });
+      toast.success('Conversation archived');
+    } catch (e) {
+      toast.error('Failed to archive');
+    }
+  };
+
+  const handleMarkUnread = async (conv) => {
+    try {
+      const newUnread = { ...(conv.unread_count || {}), [currentUser.id]: 1 };
+      await base44.entities.Conversation.update(conv.id, { unread_count: newUnread });
+      queryClient.invalidateQueries({ queryKey: ['conversations', currentUser.id] });
+      toast.success('Marked as unread');
+    } catch (e) {
+      toast.error('Failed to update');
+    }
+  };
+
   const handleBlock = async (userId) => {
     await base44.entities.Block.create({
       blocker_id: currentUser.id,
@@ -208,6 +230,7 @@ export default function Messages() {
 
             <ConversationList
               conversations={allConversations.filter(conv => {
+                if (conv.is_archived) return false;
                 if (activeFilter === 'unread') return (conv.unread_count?.[currentUser?.id] || 0) > 0;
                 if (activeFilter === 'communities') return !!conv.community_id;
                 if (activeFilter === 'requests') return !!conv.request_id;
@@ -215,7 +238,9 @@ export default function Messages() {
               })}
               currentUser={currentUser}
               selectedId={selectedConversation?.id}
-              onSelect={setSelectedConversation} />
+              onSelect={setSelectedConversation}
+              onArchive={handleArchive}
+              onMarkUnread={handleMarkUnread} />
 
             }
           </div>
