@@ -1,7 +1,6 @@
 import React from 'react';
 import { differenceInMinutes, differenceInHours, differenceInDays, isYesterday, isToday, format } from 'date-fns';
-import { formatDistanceToNow } from 'date-fns';
-import { HandHeart, Bot } from 'lucide-react';
+import { HandHeart, Bot, Sparkles } from 'lucide-react';
 import { AI_AGENT } from '@/lib/aiAgent';
 
 
@@ -59,9 +58,18 @@ export default function ConversationList({ conversations, currentUser, selectedI
     );
   }
 
+  // Pin AI chat to top
+  const sorted = [...conversations].sort((a, b) => {
+    const aIsAI = getOther(a).id === AI_AGENT.id;
+    const bIsAI = getOther(b).id === AI_AGENT.id;
+    if (aIsAI && !bIsAI) return -1;
+    if (!aIsAI && bIsAI) return 1;
+    return 0;
+  });
+
   return (
     <div className="px-3 py-3 space-y-2">
-      {conversations.map((conv, idx) => {
+      {sorted.map((conv, idx) => {
         const other = getOther(conv);
         const unread = conv.unread_count?.[currentUser.id] || 0;
         const isSelected = selectedId === conv.id;
@@ -73,29 +81,53 @@ export default function ConversationList({ conversations, currentUser, selectedI
             key={conv.id || idx}
             onClick={() => onSelect(conv)}
             className={`w-full rounded-2xl px-4 py-3.5 cursor-pointer flex items-center gap-3.5 text-left border transition-all duration-150 ${
-              isSelected
-                ? 'bg-blue-50 border-blue-200 shadow-md shadow-blue-100'
+              isAIChat && isSelected
+                ? 'border-violet-300 shadow-lg shadow-violet-100'
                 : isAIChat
-                ? 'bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-100 hover:shadow-md hover:border-indigo-200 active:scale-[0.98]'
+                ? 'border-violet-200 hover:shadow-lg hover:border-violet-300 active:scale-[0.98]'
+                : isSelected
+                ? 'bg-blue-50 border-blue-200 shadow-md shadow-blue-100'
                 : unread > 0
                 ? 'bg-white border-blue-100 shadow-sm hover:shadow-lg hover:border-blue-200 active:scale-[0.98]'
                 : 'bg-white border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 active:scale-[0.98]'
             }`}
+            style={isAIChat ? {
+              background: isSelected
+                ? 'linear-gradient(135deg, #EDE9FE, #F5F3FF)'
+                : 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 50%, #FAF5FF 100%)'
+            } : {}}
           >
             {/* Avatar */}
             <div
-              className="relative w-14 h-14 rounded-full flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-[17px] text-white shadow-sm"
-              style={{ background: isAIChat ? 'linear-gradient(135deg, #6366F1, #8B5CF6)' : 'linear-gradient(135deg, #2563EB, #7C3AED)' }}
+              className={`relative flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-white shadow-md ${
+                isAIChat
+                  ? 'w-14 h-14 rounded-2xl'
+                  : 'w-14 h-14 rounded-full'
+              }`}
+              style={{ background: isAIChat
+                ? 'linear-gradient(135deg, #7C3AED, #6366F1, #8B5CF6)'
+                : 'linear-gradient(135deg, #2563EB, #7C3AED)'
+              }}
             >
               {isAIChat
                 ? <Bot className="w-7 h-7 text-white" />
                 : other.avatar
                 ? <img src={other.avatar} alt="" className="w-full h-full object-cover" />
-                : initials
+                : <span className="text-[17px]">{initials}</span>
               }
+              {/* AI sparkle badge */}
+              {isAIChat && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center shadow border-2 border-white">
+                  <Sparkles className="w-2.5 h-2.5 text-white" />
+                </span>
+              )}
               {/* Online indicator */}
-              {(isAIChat || isLikelyActive(other.id)) && (
+              {!isAIChat && isLikelyActive(other.id) && (
                 <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
+              )}
+              {/* AI always-online */}
+              {isAIChat && (
+                <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full shadow-sm" />
               )}
             </div>
 
@@ -107,7 +139,7 @@ export default function ConversationList({ conversations, currentUser, selectedI
                 }`}>
                   {other.name}
                   {isAIChat && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-600 uppercase tracking-wide">
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #7C3AED, #6366F1)', color: 'white' }}>
                       AI
                     </span>
                   )}
