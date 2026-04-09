@@ -364,7 +364,7 @@ export default function Communities() {
 
   const mainFeatured = useMemo(() => allCommunities.find(c => c.isMainFeatured === true), [allCommunities]);
   const secondaryFeatured = useMemo(() => {
-    const secondary = allCommunities.filter(c => c.isFeatured === true && c.isMainFeatured !== true).sort((a, b) => (a.featuredRank || 999) - (b.featuredRank || 999)).slice(0, 4);
+    const secondary = allCommunities.filter(c => c.isFeatured === true && c.isMainFeatured !== true).sort((a, b) => (a.featuredRank || 999) - (b.featuredRank || 999)).slice(0, 3);
     return secondary;
   }, [allCommunities]);
   const myCommunities = useMemo(() => allCommunities.filter(c => userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
@@ -533,7 +533,7 @@ export default function Communities() {
               />
             )}
             {secondaryFeatured.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {secondaryFeatured.map(c => (
                   <FeaturedSecondaryCard
                     key={c.id}

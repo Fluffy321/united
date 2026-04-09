@@ -42,9 +42,9 @@ Deno.serve(async (req) => {
       mainFeaturedId = haftr.id;
     }
 
-    // Set up to 4 secondary featured communities
+    // Set up to 3 secondary featured communities
     const secondaryPool = communities.filter(c => c.id !== mainFeaturedId).slice(0, 8);
-    const shuffled = secondaryPool.sort(() => Math.random() - 0.5).slice(0, 4);
+    const shuffled = secondaryPool.sort(() => Math.random() - 0.5).slice(0, 3);
 
     for (let i = 0; i < shuffled.length; i++) {
       await base44.entities.Community.update(shuffled[i].id, {
