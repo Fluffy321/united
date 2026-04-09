@@ -1,0 +1,32 @@
+{
+  "name": "CommunityEventRSVP",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "community_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "going",
+        "maybe",
+        "not_attending"
+      ],
+      "default": "going"
+    }
+  },
+  "required": [
+    "event_id",
+    "user_id",
+    "status"
+  ]
+}

@@ -223,7 +223,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
         )}
 
         {activeTab === 'events' && (
-          <CommunityEventsTab events={events} isLoading={eventsLoading} />
+          <CommunityEventsTab events={events} isLoading={eventsLoading} currentUser={currentUser} />
         )}
 
         {activeTab === 'mitzvah' && (
