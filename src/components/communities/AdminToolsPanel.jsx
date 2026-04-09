@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Loader2, Plus, Sparkles, Bell, Pin, BarChart2, Users, FileText, Upload, Save } from 'lucide-react';
+import FeaturedEligibilityChecker from './FeaturedEligibilityChecker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -269,6 +270,12 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
                 <Button className="w-full bg-gradient-to-r from-[#0F5ED7] to-[#7B3FE4] text-white font-bold h-11 rounded-xl">
                   <Sparkles className="w-4 h-4 mr-2" />Upgrade to Premium
                 </Button>
+
+                {/* Featured placement — requires eligibility check */}
+                <div className="mt-4 border-t border-slate-100 pt-4">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">✨ Featured Placement</p>
+                  <FeaturedEligibilityChecker community={community} />
+                </div>
               </>
             )}
           </div>
