@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Loader2, MapPin, Check, Bold, Italic, List, ImagePlus } from 'lucide-react';
+import { X, Loader2, MapPin, Check, Bold, Italic, List, ImagePlus, MessageCircle, HelpCircle, Calendar, Bell } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -92,14 +92,14 @@ const HELP_CATEGORIES = [
 ];
 
 const FEED_SUBTYPES = [
-  { value: 'discussion',     label: 'Discussion',     emoji: '💬', color: 'bg-slate-100 text-slate-700 border-slate-300' },
-  { value: 'question',       label: 'Question',       emoji: '❓', color: 'bg-yellow-50 text-yellow-700 border-yellow-300' },
-  { value: 'alert',          label: 'Alert',          emoji: '🚨', color: 'bg-red-50 text-red-700 border-red-300' },
-  { value: 'recommendation', label: 'Recommendation', emoji: '⭐', color: 'bg-emerald-50 text-emerald-700 border-emerald-300' },
-  { value: 'lost_found',     label: 'Lost & Found',   emoji: '🔍', color: 'bg-blue-50 text-blue-700 border-blue-300' },
+  { value: 'discussion', label: 'Discussion', icon: MessageCircle, active: 'bg-blue-600 text-white border-blue-600', inactive: 'bg-white text-slate-600 border-slate-200 hover:border-blue-300' },
+  { value: 'question',   label: 'Question',   icon: HelpCircle,    active: 'bg-amber-500 text-white border-amber-500', inactive: 'bg-white text-slate-600 border-slate-200 hover:border-amber-300' },
+  { value: 'event',      label: 'Event',      icon: Calendar,      active: 'bg-emerald-600 text-white border-emerald-600', inactive: 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300' },
+  { value: 'alert',      label: 'Alert',      icon: Bell,          active: 'bg-red-500 text-white border-red-500', inactive: 'bg-white text-slate-600 border-slate-200 hover:border-red-300' },
 ];
 
 export default function UnifiedPostModal({ open, onOpenChange, currentUser, postType = 'feed', promptId = null, promptText = null, initialSubtype = null }) {
+  const userInitials = (currentUser?.display_name || currentUser?.full_name || '?').charAt(0).toUpperCase();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [location, setLocation] = useState('');
@@ -167,13 +167,20 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
 
   const getModalTitle = () => {
     if (isPromptReply) return 'Reply to Prompt';
-    if (isHelp) return 'Need Help';
-    if (isEvent) return 'Post Event';
-    if (postType === 'job') return 'Post Job';
+    if (isHelp) return 'Need Help?';
+    if (isEvent) return 'Create Event';
+    if (postType === 'job') return 'Post a Job';
     if (postType === 'housing') return 'Post Housing';
     if (postType === 'food') return 'Food Post';
     if (postType === 'prompt') return 'Ask the Community';
-    return 'New Post';
+    return 'What\'s happening?';
+  };
+
+  const getPlaceholderBySubtype = () => {
+    if (postSubtype === 'question') return 'Ask the community something...';
+    if (postSubtype === 'event') return 'Tell people about this event...';
+    if (postSubtype === 'alert') return 'Share an important update...';
+    return 'Share something with your community...';
   };
 
   const getBoardFromType = () => {
@@ -265,12 +272,12 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{getModalTitle()}</DialogTitle>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white">
+        <DialogHeader className="pb-0">
+          <DialogTitle className="text-[18px] font-bold text-slate-900">{getModalTitle()}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 pt-1">
           {isPromptReply && promptText && (
             <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
               <p className="text-sm text-indigo-700 font-medium">💭 {promptText}</p>
@@ -291,62 +298,54 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
 
           {/* Post subtype selector — only for regular feed posts */}
           {!isPromptReply && postType === 'feed' && (
-            <div>
-              <Label className="mb-2 block text-sm font-medium text-slate-700">Post type</Label>
-              <div className="flex flex-wrap gap-2">
-                {FEED_SUBTYPES.map(st => (
+            <div className="flex gap-2 flex-wrap">
+              {FEED_SUBTYPES.map(st => {
+                const Icon = st.icon;
+                const isActive = postSubtype === st.value;
+                return (
                   <button
                     key={st.value}
                     type="button"
                     onClick={() => setPostSubtype(st.value)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold border transition-all ${st.color} ${postSubtype === st.value ? 'ring-2 ring-offset-1 ring-current opacity-100' : 'opacity-60 hover:opacity-90'}`}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-semibold border transition-all shadow-sm ${isActive ? st.active : st.inactive}`}
                   >
-                    <span>{st.emoji}</span>
+                    <Icon className="w-3.5 h-3.5" />
                     {st.label}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
           )}
 
-          <div>
-            <Label>{requiresTitle ? 'Details' : 'What\'s on your mind?'}</Label>
-            {/* Formatting toolbar */}
-            <div className="flex gap-1.5 mt-2 mb-2 p-2 bg-slate-50 rounded-lg border border-slate-200">
-              <button
-                type="button"
-                onClick={() => applyFormatting('bold')}
-                className="p-2 hover:bg-slate-200 rounded transition-colors flex items-center justify-center"
-                title="Bold"
-              >
-                <Bold className="w-4 h-4 text-slate-600" />
-              </button>
-              <button
-                type="button"
-                onClick={() => applyFormatting('italic')}
-                className="p-2 hover:bg-slate-200 rounded transition-colors flex items-center justify-center"
-                title="Italic"
-              >
-                <Italic className="w-4 h-4 text-slate-600" />
-              </button>
-              <button
-                type="button"
-                onClick={() => applyFormatting('bullet')}
-                className="p-2 hover:bg-slate-200 rounded transition-colors flex items-center justify-center"
-                title="Bullet points"
-              >
-                <List className="w-4 h-4 text-slate-600" />
-              </button>
-              <div className="flex-1" />
-              <span className="text-xs text-slate-500 self-center">Select text to format</span>
+          {/* Avatar + Textarea row */}
+          <div className="flex gap-3 items-start">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 mt-1">
+              {currentUser?.avatar_url
+                ? <img src={currentUser.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                : userInitials
+              }
             </div>
-            <Textarea
-              ref={textareaRef}
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder={placeholder || 'Write here...'}
-              className="min-h-[120px] resize-none focus:ring-2 focus:ring-indigo-500 transition-all"
-            />
+            <div className="flex-1">
+              <Textarea
+                ref={textareaRef}
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder={getPlaceholderBySubtype()}
+                className="min-h-[100px] resize-none border-0 border-b border-slate-200 rounded-none px-0 text-[15px] focus:ring-0 focus:border-blue-400 bg-transparent placeholder:text-slate-400"
+              />
+              {/* Inline formatting toolbar */}
+              <div className="flex gap-1 mt-1">
+                <button type="button" onClick={() => applyFormatting('bold')} className="p-1.5 hover:bg-slate-100 rounded transition-colors" title="Bold">
+                  <Bold className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+                <button type="button" onClick={() => applyFormatting('italic')} className="p-1.5 hover:bg-slate-100 rounded transition-colors" title="Italic">
+                  <Italic className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+                <button type="button" onClick={() => applyFormatting('bullet')} className="p-1.5 hover:bg-slate-100 rounded transition-colors" title="Bullets">
+                  <List className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+              </div>
+            </div>
           </div>
 
           {isHelp && (
