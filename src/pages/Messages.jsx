@@ -245,20 +245,6 @@ export default function Messages() {
         </div>
       </div>
 
-      {/* New Message FAB */}
-      {activeTab === 'inbox' && !selectedConversation && (
-        <button
-          onClick={() => setShowNewMessage(true)}
-          className="absolute bottom-28 right-5 w-16 h-16 rounded-full text-white flex items-center justify-center active:scale-90 transition-all duration-150"
-          style={{
-            background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)',
-            boxShadow: '0 8px 24px rgba(37,99,235,0.45), 0 2px 8px rgba(0,0,0,0.15)'
-          }}
-        >
-          <MessageCircle className="w-7 h-7" />
-        </button>
-      )}
-
       <ReportModal
         open={showReport}
         onOpenChange={setShowReport}
