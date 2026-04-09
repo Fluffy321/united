@@ -43,6 +43,16 @@ export default function CommunityListCard({ community, joined, loading, onJoin, 
           {community.follower_count > 0 && (
             <span className="text-[11px] text-[#98A2B3]">{community.follower_count.toLocaleString()} members</span>
           )}
+          {(community.joins_this_week || 0) > 0 && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />{community.joins_this_week} joined this week
+            </span>
+          )}
+          {!(community.joins_this_week > 0) && (community.post_count || 0) > 10 && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-full">
+              {community.post_count} posts
+            </span>
+          )}
           {community.website && <Globe className="w-3 h-3 text-[#2563EB] flex-shrink-0" />}
         </div>
         {community.description_short && (

@@ -1,4 +1,20 @@
 import React, { useMemo } from 'react';
+
+function ActivityBadge({ community }) {
+  const w = community.joins_this_week || 0;
+  const p = community.post_count || 0;
+  if (w > 0) return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />{w} joined this week
+    </span>
+  );
+  if (p > 10) return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-full">
+      {p} posts
+    </span>
+  );
+  return null;
+}
 import { Loader2, Pin, PinOff, ChevronRight } from 'lucide-react';
 
 const CATEGORY_EMOJI = {
@@ -56,6 +72,7 @@ export function MyCommunityCard({ community, onOpen, isPinned, onPin, activity }
         <div className="flex-1 min-w-0">
           <div className="font-bold text-[13px] text-slate-900 line-clamp-2">{community.name}</div>
           <div className="text-[11px] text-slate-400 mt-0.5">{community.follower_count || 0} members · {activity}</div>
+          <div className="mt-1"><ActivityBadge community={community} /></div>
           {community.description_short && (
             <div className="text-[11px] text-slate-600 mt-1 line-clamp-1">{community.description_short}</div>
           )}
@@ -99,6 +116,7 @@ export function DiscoverCommunityCard({ community, onOpen }) {
         <div className="flex-1 min-w-0">
           <div className="font-bold text-[13px] text-slate-900 line-clamp-2">{community.name}</div>
           <div className="text-[11px] text-slate-400 mt-0.5">{(community.follower_count || 0) > 0 ? `${community.follower_count} members` : 'New'}</div>
+          <div className="mt-1"><ActivityBadge community={community} /></div>
           {community.description_short && (
             <div className="text-[11px] text-slate-600 mt-1 line-clamp-2">{community.description_short}</div>
           )}
