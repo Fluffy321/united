@@ -83,126 +83,160 @@ export default function ConversationList({ conversations, currentUser, selectedI
     );
   }
 
-  // Pin AI chat to top
+  // Sort: AI first, then unread, then by recency
   const sorted = [...conversations].sort((a, b) => {
     const aIsAI = getOther(a).id === AI_AGENT.id;
     const bIsAI = getOther(b).id === AI_AGENT.id;
     if (aIsAI && !bIsAI) return -1;
     if (!aIsAI && bIsAI) return 1;
-    return 0;
+    const aUnread = (a.unread_count?.[currentUser.id] || 0) > 0;
+    const bUnread = (b.unread_count?.[currentUser.id] || 0) > 0;
+    if (aUnread && !bUnread) return -1;
+    if (!aUnread && bUnread) return 1;
+    const aTime = new Date(a.last_message_at || a.updated_date || 0).getTime();
+    const bTime = new Date(b.last_message_at || b.updated_date || 0).getTime();
+    return bTime - aTime;
   });
 
-  return (
-    <div className="px-3 py-3 space-y-2">
-      {sorted.map((conv, idx) => {
-        const other = getOther(conv);
-        const unread = conv.unread_count?.[currentUser.id] || 0;
-        const isSelected = selectedId === conv.id;
-        const isAIChat = other.id === AI_AGENT.id;
-        const initials = other.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  // Group into sections
+  const aiConvs = sorted.filter(c => getOther(c).id === AI_AGENT.id);
+  const unreadConvs = sorted.filter(c => getOther(c).id !== AI_AGENT.id && (c.unread_count?.[currentUser.id] || 0) > 0);
+  const recentConvs = sorted.filter(c => getOther(c).id !== AI_AGENT.id && (c.unread_count?.[currentUser.id] || 0) === 0);
 
-        return (
-          <SwipeableConversationItem
-            key={conv.id || idx}
-            onArchive={() => onArchive?.(conv)}
-            onMarkUnread={() => onMarkUnread?.(conv)}
-          >
-          <button
-            onClick={() => onSelect(conv)}
-            className={`w-full rounded-2xl px-4 py-3.5 cursor-pointer flex items-center gap-3.5 text-left border transition-all duration-150 ${
-              isAIChat && isSelected
-                ? 'border-violet-300 shadow-lg shadow-violet-100'
-                : isAIChat
-                ? 'border-violet-200 hover:shadow-lg hover:border-violet-300 active:scale-[0.98]'
-                : isSelected
-                ? 'bg-blue-50 border-blue-200 shadow-md shadow-blue-100'
-                : unread > 0
-                ? 'bg-white border-blue-100 shadow-sm hover:shadow-lg hover:border-blue-200 active:scale-[0.98]'
-                : 'bg-white border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 active:scale-[0.98]'
-            }`}
-            style={isAIChat ? {
-              background: isSelected
-                ? 'linear-gradient(135deg, #EDE9FE, #F5F3FF)'
-                : 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 50%, #FAF5FF 100%)'
-            } : {}}
-          >
-            {/* Avatar */}
-            <div
-              className={`relative flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-white shadow-md ${
-                isAIChat
-                  ? 'w-14 h-14 rounded-2xl'
-                  : 'w-14 h-14 rounded-full'
-              }`}
-              style={{ background: isAIChat
-                ? 'linear-gradient(135deg, #7C3AED, #6366F1, #8B5CF6)'
-                : 'linear-gradient(135deg, #2563EB, #7C3AED)'
-              }}
-            >
-              {isAIChat
-                ? <Bot className="w-7 h-7 text-white" />
-                : other.avatar
-                ? <img src={other.avatar} alt="" className="w-full h-full object-cover" />
-                : <span className="text-[17px]">{initials}</span>
-              }
-              {/* AI sparkle badge */}
+  const renderConv = (conv, idx) => {
+    const other = getOther(conv);
+    const unread = conv.unread_count?.[currentUser.id] || 0;
+    const isSelected = selectedId === conv.id;
+    const isAIChat = other.id === AI_AGENT.id;
+    const initials = other.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+
+    return (
+      <SwipeableConversationItem
+        key={conv.id || idx}
+        onArchive={() => onArchive?.(conv)}
+        onMarkUnread={() => onMarkUnread?.(conv)}
+      >
+      <button
+        onClick={() => onSelect(conv)}
+        className={`w-full rounded-2xl px-4 py-3.5 cursor-pointer flex items-center gap-3.5 text-left border transition-all duration-150 ${
+          isAIChat && isSelected
+            ? 'border-violet-300 shadow-lg shadow-violet-100'
+            : isAIChat
+            ? 'border-violet-200 hover:shadow-lg hover:border-violet-300 active:scale-[0.98]'
+            : isSelected
+            ? 'bg-blue-50 border-blue-200 shadow-md shadow-blue-100'
+            : unread > 0
+            ? 'bg-white border-blue-100 shadow-sm hover:shadow-lg hover:border-blue-200 active:scale-[0.98]'
+            : 'bg-white border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 active:scale-[0.98]'
+        }`}
+        style={isAIChat ? {
+          background: isSelected
+            ? 'linear-gradient(135deg, #EDE9FE, #F5F3FF)'
+            : 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 50%, #FAF5FF 100%)'
+        } : {}}
+      >
+        {/* Avatar */}
+        <div
+          className={`relative flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-white shadow-md ${
+            isAIChat
+              ? 'w-14 h-14 rounded-2xl'
+              : 'w-14 h-14 rounded-full'
+          }`}
+          style={{ background: isAIChat
+            ? 'linear-gradient(135deg, #7C3AED, #6366F1, #8B5CF6)'
+            : 'linear-gradient(135deg, #2563EB, #7C3AED)'
+          }}
+        >
+          {isAIChat
+            ? <Bot className="w-7 h-7 text-white" />
+            : other.avatar
+            ? <img src={other.avatar} alt="" className="w-full h-full object-cover" />
+            : <span className="text-[17px]">{initials}</span>
+          }
+          {isAIChat && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center shadow border-2 border-white">
+              <Sparkles className="w-2.5 h-2.5 text-white" />
+            </span>
+          )}
+          {!isAIChat && isLikelyActive(other.id) && (
+            <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
+          )}
+          {isAIChat && (
+            <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full shadow-sm" />
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-0.5">
+            <span className={`font-bold text-[15px] truncate flex items-center gap-1.5 leading-snug ${
+              unread > 0 ? 'text-slate-900' : 'text-slate-700'
+            }`}>
+              {other.name}
               {isAIChat && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center shadow border-2 border-white">
-                  <Sparkles className="w-2.5 h-2.5 text-white" />
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #7C3AED, #6366F1)', color: 'white' }}>
+                  AI
                 </span>
               )}
-              {/* Online indicator */}
-              {!isAIChat && isLikelyActive(other.id) && (
-                <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
-              )}
-              {/* AI always-online */}
-              {isAIChat && (
-                <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full shadow-sm" />
-              )}
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2 mb-0.5">
-                <span className={`font-bold text-[15px] truncate flex items-center gap-1.5 leading-snug ${
-                  unread > 0 ? 'text-slate-900' : 'text-slate-700'
+            </span>
+            <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
+              {conv.last_message_at && (
+                <span className={`text-[11px] whitespace-nowrap font-medium ${
+                  unread > 0 ? 'text-blue-500 font-semibold' : 'text-slate-400'
                 }`}>
-                  {other.name}
-                  {isAIChat && (
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #7C3AED, #6366F1)', color: 'white' }}>
-                      AI
-                    </span>
-                  )}
+                  {formatTimestamp(conv.last_message_at)}
                 </span>
-                <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
-                  {conv.last_message_at && (
-                    <span className={`text-[11px] whitespace-nowrap font-medium ${
-                      unread > 0 ? 'text-blue-500 font-semibold' : 'text-slate-400'
-                    }`}>
-                      {formatTimestamp(conv.last_message_at)}
-                    </span>
-                  )}
-                  {unread > 0 && (
-                    <span className="min-w-[20px] h-5 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1.5 shadow-sm">
-                      {unread > 9 ? '9+' : unread}
-                    </span>
-                  )}
-                </div>
-              </div>
-              {conv.request_title && (
-                <p className="text-[11px] font-semibold text-blue-500 truncate flex items-center gap-1 mb-0.5">
-                  <HandHeart className="w-3 h-3 flex-shrink-0" /> {conv.request_title}
-                </p>
               )}
-              <p className={`text-[13px] truncate leading-snug ${
-                unread > 0 ? 'text-slate-800 font-semibold' : 'text-slate-400 font-normal'
-              }`}>
-                {conv.last_message || getPreview(conv.id)}
-              </p>
+              {unread > 0 && (
+                <span className="min-w-[20px] h-5 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1.5 shadow-sm">
+                  {unread > 9 ? '9+' : unread}
+                </span>
+              )}
             </div>
-          </button>
-          </SwipeableConversationItem>
-        );
-      })}
+          </div>
+          {conv.request_title && (
+            <p className="text-[11px] font-semibold text-blue-500 truncate flex items-center gap-1 mb-0.5">
+              <HandHeart className="w-3 h-3 flex-shrink-0" /> {conv.request_title}
+            </p>
+          )}
+          <p className={`text-[13px] truncate leading-snug ${
+            unread > 0 ? 'text-slate-800 font-semibold' : 'text-slate-400 font-normal'
+          }`}>
+            {conv.last_message || getPreview(conv.id)}
+          </p>
+        </div>
+      </button>
+      </SwipeableConversationItem>
+    );
+  };
+
+  return (
+    <div className="px-3 py-3 space-y-1">
+      {/* AI Assistant */}
+      {aiConvs.map((conv, idx) => renderConv(conv, idx))}
+
+      {/* Unread */}
+      {unreadConvs.length > 0 && (
+        <>
+          <div className="flex items-center gap-2 px-1 pt-3 pb-1">
+            <span className="text-[11px] font-bold text-blue-500 uppercase tracking-wider">Unread</span>
+            <span className="flex-1 h-px bg-blue-100" />
+            <span className="w-2 h-2 rounded-full bg-blue-500" />
+          </div>
+          {unreadConvs.map((conv, idx) => renderConv(conv, idx))}
+        </>
+      )}
+
+      {/* Recent */}
+      {recentConvs.length > 0 && (
+        <>
+          <div className="flex items-center gap-2 px-1 pt-3 pb-1">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Recent</span>
+            <span className="flex-1 h-px bg-slate-100" />
+          </div>
+          {recentConvs.map((conv, idx) => renderConv(conv, idx))}
+        </>
+      )}
     </div>
   );
 }
