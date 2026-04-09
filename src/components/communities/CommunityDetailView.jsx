@@ -14,6 +14,7 @@ import CommunityMitzvahTab from './CommunityMitzvahTab';
 import MembersListTab from './MembersListTab';
 import GroupChatSection from './GroupChatSection';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
+import CommunityPaymentButton from './CommunityPaymentButton';
 
 const TABS = [
   { key: 'home', label: 'Home' },
@@ -143,6 +144,16 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
         mitzvahCount={opportunities.filter(o => o.is_active !== false).length}
         actualMemberCount={actualMemberCount}
       />
+
+      {/* Payment strip */}
+      <div className="bg-white border-b border-slate-100 px-4 py-3">
+        <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
+          <p className="text-[13px] text-slate-600">
+            {community.is_verified ? '✅ Verified community' : '🏘️ Community page'} · Support {community.name}
+          </p>
+          <CommunityPaymentButton community={community} />
+        </div>
+      </div>
 
       {/* Scrollable tabs */}
       <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
