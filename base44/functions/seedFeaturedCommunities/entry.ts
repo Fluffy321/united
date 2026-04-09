@@ -4,43 +4,55 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Fetch top communities by follower count
+    // Fetch all communities
     const communities = await base44.entities.Community.list('-follower_count', 100);
     if (communities.length < 3) {
-      return Response.json({ error: 'Not enough communities to seed', count: communities.length }, { status: 400 });
+      return Response.json({ error: 'Not enough communities', count: communities.length }, { status: 400 });
     }
 
-    // Mark top 1 as main featured, next 2 as secondary
+    // Find HAFTR (case-insensitive)
+    const haftr = communities.find(c => c.name?.toLowerCase().includes('haftr'));
+    if (!haftr) {
+      return Response.json({ error: 'HAFTR not found' }, { status: 400 });
+    }
+
+    // Get other communities (exclude HAFTR)
+    const others = communities.filter(c => c.id !== haftr.id);
+    
+    // Pick random secondary featured (shuffle and take 2-4)
+    const numSecondary = Math.min(4, others.length);
+    const shuffled = others.sort(() => Math.random() - 0.5);
+    const secondary = shuffled.slice(0, numSecondary);
+
     const updates = [];
 
-    // Main featured (hero)
+    // Set HAFTR as hero featured
     updates.push(
-      base44.entities.Community.update(communities[0].id, {
+      base44.entities.Community.update(haftr.id, {
         isFeatured: true,
         isMainFeatured: true,
         featuredRank: 1,
       })
     );
 
-    // Secondary featured (1-2)
-    for (let i = 1; i < 3; i++) {
+    // Set random communities as secondary featured
+    secondary.forEach((c, idx) => {
       updates.push(
-        base44.entities.Community.update(communities[i].id, {
+        base44.entities.Community.update(c.id, {
           isFeatured: true,
           isMainFeatured: false,
-          featuredRank: i + 1,
+          featuredRank: idx + 2,
         })
       );
-    }
+    });
 
     await Promise.all(updates);
 
     return Response.json({
       success: true,
       featured: [
-        { id: communities[0].id, name: communities[0].name, type: 'hero' },
-        { id: communities[1].id, name: communities[1].name, type: 'secondary' },
-        { id: communities[2].id, name: communities[2].name, type: 'secondary' },
+        { id: haftr.id, name: haftr.name, type: 'hero' },
+        ...secondary.map((c, i) => ({ id: c.id, name: c.name, type: 'secondary' })),
       ],
     });
   } catch (error) {
