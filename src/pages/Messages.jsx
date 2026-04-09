@@ -145,21 +145,23 @@ export default function Messages() {
   }
 
   return (
-    <div className="flex flex-col bg-white relative" style={{ height: '100dvh' }}>
+    <div className="flex flex-col bg-slate-50 relative" style={{ height: '100dvh' }}>
       <div className="flex flex-1 min-h-0">
         {/* Conversation List */}
-        <div className={`flex flex-col w-full lg:w-96 lg:border-r border-slate-200 ${
+        <div className={`flex flex-col w-full lg:w-96 lg:border-r border-slate-200 bg-slate-50 ${
           selectedConversation ? 'hidden lg:flex' : 'flex'
         }`}>
-          <div className="px-4 pt-4 pb-0 border-b border-slate-100 flex-shrink-0">
-            <h1 className="text-[20px] font-bold text-slate-900">Messages</h1>
-            <div className="flex mt-3">
+          <div className="px-5 pt-5 pb-0 border-b border-slate-200 bg-white flex-shrink-0 shadow-sm">
+            <h1 className="text-[22px] font-extrabold text-slate-900 mb-3">Messages</h1>
+            <div className="flex gap-1">
               {['inbox', 'requests'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-2.5 text-[13px] font-semibold border-b-2 transition-colors capitalize ${
-                    activeTab === tab ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-400 border-transparent'
+                  className={`px-5 py-2.5 text-[13px] font-bold rounded-t-xl transition-all capitalize ${
+                    activeTab === tab
+                      ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600'
+                      : 'text-slate-400 hover:text-slate-600 border-b-2 border-transparent'
                   }`}
                 >
                   {tab === 'inbox' ? 'Inbox' : 'Requests'}
@@ -175,7 +177,7 @@ export default function Messages() {
             />
           )}
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto bg-slate-50">
             {activeTab === 'requests' ? (
               <MessageRequestsTab
                 currentUser={currentUser}

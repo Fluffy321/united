@@ -120,17 +120,17 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
   };
 
   return (
-    <div className="px-4 py-3 border-b border-slate-100">
+    <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
       {/* Search Input */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           value={query}
           onChange={e => handleSearch(e.target.value)}
           placeholder="Search people…"
-          className="w-full pl-9 pr-4 py-2.5 text-[14px] bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#2563EB] transition-colors placeholder:text-slate-400"
+          className="w-full pl-11 pr-4 py-3 text-[14px] bg-white border border-slate-200 rounded-2xl outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-slate-400 shadow-sm"
         />
-        {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-slate-400" />}
+        {searching && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-slate-400" />}
       </div>
 
       {/* Results */}
