@@ -27,7 +27,7 @@ export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, 
 
       {/* Content wrapper */}
       <div
-        className="relative z-10 rounded-[26px] p-8 space-y-5"
+        className="relative z-10 rounded-[26px] px-8 py-8 pr-10 space-y-5"
         style={{
           background: `linear-gradient(135deg, ${accentColor}ee 0%, ${accentColor}dd 100%)`,
           backdropFilter: 'blur(12px)',
@@ -85,7 +85,7 @@ export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, 
           <button
             onClick={e => { e.stopPropagation(); onJoin(community); }}
             disabled={isJoining}
-            className="flex-shrink-0 rounded-full font-bold text-sm transition-all active:scale-95 disabled:opacity-60 px-6 py-2.5 border-2 border-white/40 backdrop-blur-sm hover:bg-white/20 duration-200 whitespace-nowrap"
+            className="flex-shrink-0 self-center rounded-full font-bold text-sm transition-all active:scale-95 disabled:opacity-60 px-5 py-2 border-2 border-white/40 backdrop-blur-sm hover:bg-white/20 duration-200 whitespace-nowrap"
             style={{
               background: isJoined ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.25)',
               color: '#FFFFFF',
