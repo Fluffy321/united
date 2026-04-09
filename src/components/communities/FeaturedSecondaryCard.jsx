@@ -8,31 +8,37 @@ export default function FeaturedSecondaryCard({ community, onOpen, onJoin, isJoi
   return (
     <div
       onClick={() => onOpen(community.id)}
-      className="h-full rounded-2xl overflow-hidden cursor-pointer group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 active:scale-95"
+      className="h-full rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 active:scale-95"
       style={{
-        background: `linear-gradient(135deg, ${accentColor}08, ${accentColor}03)`,
-        border: `1.5px solid ${accentColor}20`,
+        background: `linear-gradient(135deg, ${accentColor}06, rgba(255,255,255,0.4))`,
+        border: `2px solid ${accentColor}15`,
+        boxShadow: `0 4px 16px ${accentColor}08, 0 1px 2px ${accentColor}05`,
       }}
     >
-      {/* Accent bar */}
-      <div className="h-1.5" style={{background: accentColor}} />
+      {/* Premium accent bar */}
+      <div className="h-2" style={{
+        background: `linear-gradient(90deg, ${accentColor}, ${accentColor}dd)`,
+        borderRadius: '0 0 12px 0'
+      }} />
 
-      <div className="p-4 flex flex-col h-full space-y-3">
+      <div className="p-5 flex flex-col h-full space-y-4">
         {/* Header with avatar and name */}
-        <div className="flex items-start gap-3 min-w-0">
+        <div className="flex items-start gap-3.5 min-w-0">
           {community.logo_url ? (
-            <img src={community.logo_url} alt={community.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+            <img src={community.logo_url} alt={community.name} className="w-12 h-12 rounded-xl object-cover flex-shrink-0 shadow-sm" />
           ) : (
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
-              style={{background: accentColor}}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-md"
+              style={{
+                background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`,
+              }}>
               {initials}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-slate-900 text-sm truncate">{community.name}</h3>
-            <p className="text-slate-500 text-xs mt-0.5 flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              {(community.follower_count || 0).toLocaleString()}
+            <h3 className="font-bold text-slate-900 text-sm truncate leading-tight">{community.name}</h3>
+            <p className="text-slate-500 text-xs mt-1.5 flex items-center gap-1.5">
+              <Users className="w-3 h-3 flex-shrink-0" />
+              <span className="font-medium">{(community.follower_count || 0).toLocaleString()}</span>
             </p>
           </div>
         </div>
@@ -41,13 +47,14 @@ export default function FeaturedSecondaryCard({ community, onOpen, onJoin, isJoi
         <button
           onClick={e => { e.stopPropagation(); onJoin(community); }}
           disabled={isJoining}
-          className="w-full rounded-lg font-semibold text-xs py-2 transition-all active:scale-95 disabled:opacity-60 mt-auto"
+          className="w-full rounded-lg font-semibold text-xs py-2.5 transition-all active:scale-95 disabled:opacity-60 mt-auto hover:shadow-md"
           style={{
             background: isJoined ? '#E2E8F0' : accentColor,
-            color: isJoined ? '#475569' : '#FFFFFF'
+            color: isJoined ? '#475569' : '#FFFFFF',
+            boxShadow: isJoined ? 'none' : `0 4px 12px ${accentColor}20`
           }}
         >
-          {isJoining ? '...' : isJoined ? '✓' : 'Join'}
+          {isJoining ? '...' : isJoined ? '✓ Joined' : 'Join'}
         </button>
       </div>
     </div>
