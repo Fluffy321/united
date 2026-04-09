@@ -12,6 +12,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import PublicProfile from '@/pages/PublicProfile';
 import Events from '@/pages/Events';
 import CommunityMap from '@/pages/CommunityMap';
+import AdminAnalyticsDashboard from '@/pages/AdminAnalyticsDashboard';
 import ThankYou from '@/pages/ThankYou';
 import PostDetail from '@/pages/PostDetail';
 
@@ -59,6 +60,7 @@ const AuthenticatedApp = () => {
       <Route path="/ThankYou" element={<PageTransition><ThankYou /></PageTransition>} />
       <Route path="/CommunityMap" element={<PageTransition><CommunityMap /></PageTransition>} />
       <Route path="/Events" element={<PageTransition><Events /></PageTransition>} />
+      <Route path="/AdminAnalyticsDashboard" element={<PageTransition><AdminAnalyticsDashboard /></PageTransition>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
