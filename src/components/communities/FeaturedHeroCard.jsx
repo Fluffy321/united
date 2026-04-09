@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Users, TrendingUp } from 'lucide-react';
+import { Zap, Users, Activity } from 'lucide-react';
 
 export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, isJoining }) {
   const accentColor = community.featured_accent_color || '#2563EB';
@@ -8,63 +8,94 @@ export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, 
   return (
     <div
       onClick={() => onOpen(community.id)}
-      className="w-full rounded-3xl overflow-hidden cursor-pointer group transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
+      className="w-full overflow-hidden cursor-pointer group transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 relative"
       style={{
-        background: `linear-gradient(135deg, ${accentColor}15, ${accentColor}08)`,
-        border: `2px solid ${accentColor}30`,
+        borderRadius: '28px',
+        background: `linear-gradient(135deg, ${accentColor}, ${accentColor}cc)`,
+        boxShadow: `0 0 40px ${accentColor}40, inset 0 1px 0 ${accentColor}80`,
       }}
     >
-      {/* Featured badge */}
-      <div className="flex items-center justify-center gap-1.5 py-2 px-4 text-sm font-bold text-white"
-        style={{background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`}}>
-        <Star className="w-4 h-4 fill-current" />
-        Featured Community
-      </div>
+      {/* Gradient border glow */}
+      <div
+        className="absolute inset-0 rounded-[28px] pointer-events-none"
+        style={{
+          background: `linear-gradient(135deg, ${accentColor}80, transparent)`,
+          padding: '2px',
+          borderRadius: '28px',
+        }}
+      />
 
-      {/* Content */}
-      <div className="p-6 space-y-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4 flex-1">
+      {/* Content wrapper */}
+      <div
+        className="relative z-10 rounded-[26px] p-8 space-y-5"
+        style={{
+          background: `linear-gradient(135deg, ${accentColor}ee 0%, ${accentColor}dd 100%)`,
+          backdropFilter: 'blur(12px)',
+        }}
+      >
+        {/* Featured badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30">
+          <Zap className="w-4 h-4 text-white fill-white" />
+          <span className="text-xs font-bold text-white">🔥 Featured</span>
+        </div>
+
+        {/* Main content */}
+        <div className="flex items-start justify-between gap-6">
+          {/* Left: Avatar + Info */}
+          <div className="flex items-start gap-5 flex-1 min-w-0">
             {community.logo_url ? (
-              <img src={community.logo_url} alt={community.name} className="w-16 h-16 rounded-2xl object-cover flex-shrink-0" />
+              <img
+                src={community.logo_url}
+                alt={community.name}
+                className="w-20 h-20 rounded-2xl object-cover flex-shrink-0 border-2 border-white/30"
+              />
             ) : (
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl flex-shrink-0"
-                style={{background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`}}>
+              <div
+                className="w-20 h-20 rounded-2xl flex items-center justify-center text-white font-bold text-2xl flex-shrink-0 border-2 border-white/30"
+                style={{
+                  background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
+                }}
+              >
                 {initials}
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <h2 className="text-2xl font-bold text-slate-900 mb-1">{community.name}</h2>
-              <p className="text-slate-600 text-sm mb-2">{community.featured_tagline || community.description_short}</p>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 text-slate-700">
-                  <Users className="w-4 h-4" />
-                  <span className="text-sm font-semibold">{(community.follower_count || 0).toLocaleString()} members</span>
+              <h2 className="text-3xl font-black text-white mb-2 leading-tight">{community.name}</h2>
+              <p className="text-white/90 text-base mb-3 line-clamp-2 font-medium">
+                {community.featured_tagline || community.description_short}
+              </p>
+              <div className="flex items-center gap-5 text-white">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  <span className="text-sm font-bold">{(community.follower_count || 0).toLocaleString()}</span>
                 </div>
-                <div className="flex items-center gap-1 text-slate-700">
-                  <TrendingUp className="w-4 h-4" />
-                  <span className="text-sm font-semibold">{community.posts_this_week || 0} posts this week</span>
+                <div className="flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  <span className="text-sm font-bold">{community.posts_this_week || 0} posts</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Join button */}
+          {/* Right: Join button */}
           <button
             onClick={e => { e.stopPropagation(); onJoin(community); }}
             disabled={isJoining}
-            className="flex-shrink-0 rounded-full font-bold text-sm transition-all active:scale-95 disabled:opacity-60 px-6 py-2"
+            className="flex-shrink-0 rounded-full font-bold text-base transition-all active:scale-95 disabled:opacity-60 px-7 py-3 border-2 border-white/40 backdrop-blur-sm hover:bg-white/20 duration-200"
             style={{
-              background: isJoined ? '#E2E8F0' : accentColor,
-              color: isJoined ? '#475569' : '#FFFFFF'
+              background: isJoined ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.25)',
+              color: '#FFFFFF',
             }}
           >
             {isJoining ? '...' : isJoined ? '✓ Joined' : 'Join'}
           </button>
         </div>
 
+        {/* Description */}
         {community.description_long && (
-          <p className="text-sm text-slate-600 line-clamp-2">{community.description_long}</p>
+          <p className="text-white/85 text-sm leading-relaxed line-clamp-2">
+            {community.description_long}
+          </p>
         )}
       </div>
     </div>
