@@ -5,6 +5,30 @@ import { HandHeart, Bot, Sparkles } from 'lucide-react';
 import { AI_AGENT } from '@/lib/aiAgent';
 
 
+const REALISTIC_PREVIEWS = [
+  'Are you going tonight?',
+  "I'll send it in a bit",
+  'Did you see the post?',
+  'Thanks again 🙏',
+  'Let me know what you think',
+  'Can you make it on Shabbos?',
+  'Just saw your message!',
+  'That sounds great 👍',
+  'We should catch up soon',
+  'Did you hear about the event?',
+  'I\'ll be there at 7',
+  'Check this out when you get a chance',
+  'Hope you\'re doing well!',
+  'Any update on that?',
+  'Sounds good to me!',
+];
+
+function getPreview(convId) {
+  if (!convId) return REALISTIC_PREVIEWS[0];
+  const idx = convId.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % REALISTIC_PREVIEWS.length;
+  return REALISTIC_PREVIEWS[idx];
+}
+
 function formatTimestamp(date) {
   if (!date) return '';
   const d = new Date(date);
@@ -172,7 +196,7 @@ export default function ConversationList({ conversations, currentUser, selectedI
               <p className={`text-[13px] truncate leading-snug ${
                 unread > 0 ? 'text-slate-800 font-semibold' : 'text-slate-400 font-normal'
               }`}>
-                {conv.last_message || 'Start the conversation…'}
+                {conv.last_message || getPreview(conv.id)}
               </p>
             </div>
           </button>
