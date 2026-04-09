@@ -77,16 +77,16 @@ export default function Messages() {
     queryKey: ['conversations', currentUser?.id],
     queryFn: async () => {
       const allConvs = await base44.entities.Conversation.list('-updated_date', 50);
-      const userConvs = allConvs.filter(c => c.participant_ids?.includes(currentUser.id));
-      
-      const requestIds = [...new Set(userConvs.map(c => c.request_id).filter(Boolean))];
+      const userConvs = allConvs.filter((c) => c.participant_ids?.includes(currentUser.id));
+
+      const requestIds = [...new Set(userConvs.map((c) => c.request_id).filter(Boolean))];
       const requestTitleMap = {};
       await Promise.all(requestIds.map(async (rid) => {
         const [req] = await base44.entities.MitzvahRequest.filter({ id: rid });
         if (req) requestTitleMap[rid] = req.title;
       }));
-      
-      return userConvs.map(conv => ({
+
+      return userConvs.map((conv) => ({
         ...conv,
         participant_avatars: conv.participant_avatars || [],
         request_title: conv.request_id ? requestTitleMap[conv.request_id] : null
@@ -94,16 +94,16 @@ export default function Messages() {
     },
     enabled: !!currentUser,
     staleTime: 60000,
-    gcTime: 120000,
+    gcTime: 120000
   });
 
   const allConversations = [
-    ...(aiConversation ? [aiConversation] : []),
-    ...conversations
-  ];
+  ...(aiConversation ? [aiConversation] : []),
+  ...conversations];
 
-  const unreadCount = allConversations.reduce((sum, conv) => 
-    sum + (conv.unread_count?.[currentUser?.id] || 0), 0
+
+  const unreadCount = allConversations.reduce((sum, conv) =>
+  sum + (conv.unread_count?.[currentUser?.id] || 0), 0
   );
 
   const handleReport = (id, type) => {
@@ -125,8 +125,8 @@ export default function Messages() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-      </div>
-    );
+      </div>);
+
   }
 
   if (showNewMessage) {
@@ -138,10 +138,10 @@ export default function Messages() {
             setSelectedConversation(conv);
             setShowNewMessage(false);
           }}
-          onCancel={() => setShowNewMessage(false)}
-        />
-      </div>
-    );
+          onCancel={() => setShowNewMessage(false)} />
+        
+      </div>);
+
   }
 
   return (
@@ -149,94 +149,94 @@ export default function Messages() {
       <div className="flex flex-1 min-h-0">
         {/* Conversation List */}
         <div className={`flex flex-col w-full lg:w-96 lg:border-r border-slate-200 ${
-          selectedConversation ? 'hidden lg:flex' : 'flex'
-        }`}>
+        selectedConversation ? 'hidden lg:flex' : 'flex'}`
+        }>
           <div className="px-4 pt-4 pb-0 border-b border-slate-100 flex-shrink-0">
             <h1 className="text-[20px] font-bold text-slate-900">Messages</h1>
             <div className="flex mt-3">
-              {['inbox', 'requests'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-2.5 text-[13px] font-semibold border-b-2 transition-colors capitalize ${
-                    activeTab === tab ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-400 border-transparent'
-                  }`}
-                >
+              {['inbox', 'requests'].map((tab) =>
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-2.5 text-[13px] font-semibold border-b-2 transition-colors capitalize ${
+                activeTab === tab ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-400 border-transparent'}`
+                }>
+                
                   {tab === 'inbox' ? 'Inbox' : 'Requests'}
                 </button>
-              ))}
+              )}
             </div>
           </div>
 
-          {activeTab === 'inbox' && (
-            <UserSearchPanel
-              currentUser={currentUser}
-              onConversationOpened={(conv) => { setSelectedConversation(conv); setActiveTab('inbox'); }}
-            />
-          )}
+          {activeTab === 'inbox' &&
+          <UserSearchPanel
+            currentUser={currentUser}
+            onConversationOpened={(conv) => {setSelectedConversation(conv);setActiveTab('inbox');}} />
+
+          }
 
           <div className="flex-1 overflow-y-auto">
-            {activeTab === 'requests' ? (
-              <MessageRequestsTab
-                currentUser={currentUser}
-                onAccepted={(conv) => { setSelectedConversation(conv); setActiveTab('inbox'); }}
-              />
-            ) : isLoading ? (
-              <div className="flex justify-center py-12">
+            {activeTab === 'requests' ?
+            <MessageRequestsTab
+              currentUser={currentUser}
+              onAccepted={(conv) => {setSelectedConversation(conv);setActiveTab('inbox');}} /> :
+
+            isLoading ?
+            <div className="flex justify-center py-12">
                 <Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7]" />
-              </div>
-            ) : (
-              <ConversationList
-                conversations={allConversations}
-                currentUser={currentUser}
-                selectedId={selectedConversation?.id}
-                onSelect={setSelectedConversation}
-              />
-            )}
+              </div> :
+
+            <ConversationList
+              conversations={allConversations}
+              currentUser={currentUser}
+              selectedId={selectedConversation?.id}
+              onSelect={setSelectedConversation} />
+
+            }
           </div>
         </div>
 
         {/* Chat View */}
         <div className={`flex-1 flex flex-col min-h-0 ${
-          selectedConversation ? 'flex' : 'hidden lg:flex lg:items-center lg:justify-center'
-        }`}>
-          {selectedConversation ? (
-            <ChatView
-              conversation={selectedConversation}
-              currentUser={currentUser}
-              onBack={() => setSelectedConversation(null)}
-              onReport={handleReport}
-              onBlock={handleBlock}
-            />
-          ) : (
-            <div className="text-center p-8">
+        selectedConversation ? 'flex' : 'hidden lg:flex lg:items-center lg:justify-center'}`
+        }>
+          {selectedConversation ?
+          <ChatView
+            conversation={selectedConversation}
+            currentUser={currentUser}
+            onBack={() => setSelectedConversation(null)}
+            onReport={handleReport}
+            onBlock={handleBlock} /> :
+
+
+          <div className="text-center p-8">
               <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">💬</span>
               </div>
               <p className="text-slate-600 font-medium">Select a conversation</p>
               <p className="text-sm text-slate-400 mt-1">Choose from your existing conversations</p>
             </div>
-          )}
+          }
         </div>
       </div>
 
       {/* New Message FAB */}
-      {activeTab === 'inbox' && !selectedConversation && (
-        <button
-          onClick={() => setShowNewMessage(true)}
-          className="absolute bottom-28 right-6 w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center"
-        >
-          <MessageCircle className="w-6 h-6" />
-        </button>
-      )}
+      
+
+
+
+
+
+
+      
 
       <ReportModal
         open={showReport}
         onOpenChange={setShowReport}
         contentId={reportTarget.id}
         contentType={reportTarget.type}
-        currentUser={currentUser}
-      />
-    </div>
-  );
+        currentUser={currentUser} />
+      
+    </div>);
+
 }
