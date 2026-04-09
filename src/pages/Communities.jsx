@@ -10,6 +10,7 @@ import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
 import FeaturedHeroCard from '@/components/communities/FeaturedHeroCard';
 import FeaturedSecondaryCard from '@/components/communities/FeaturedSecondaryCard';
+import FeaturedCommunityBanner from '@/components/communities/FeaturedCommunityBanner';
 import DiscoverCategoryCards, { DISCOVER_CATEGORIES } from '@/components/communities/DiscoverCategoriesScreen';
 import { toast } from 'sonner';
 
@@ -494,7 +495,7 @@ export default function Communities() {
         </div>
 
         {/* Featured Communities - 1 Hero + up to 2 Secondary */}
-        {(heroFeatured || secondaryFeatured.length > 0) && (
+        {(heroFeatured || secondaryFeatured.length > 0) ? (
           <div className="mb-8 space-y-4">
             {heroFeatured && (
               <FeaturedHeroCard
@@ -520,6 +521,8 @@ export default function Communities() {
               </div>
             )}
           </div>
+        ) : (
+          <FeaturedCommunityBanner communities={allCommunities.slice(0, 4)} onOpen={openCommunity} />
         )}
 
         {/* Search */}
