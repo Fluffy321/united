@@ -8,53 +8,46 @@ export default function FeaturedSecondaryCard({ community, onOpen, onJoin, isJoi
   return (
     <div
       onClick={() => onOpen(community.id)}
-      className="w-full rounded-2xl overflow-hidden cursor-pointer group transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+      className="h-full rounded-2xl overflow-hidden cursor-pointer group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 active:scale-95"
       style={{
-        background: `linear-gradient(135deg, ${accentColor}12, ${accentColor}06)`,
-        border: `1.5px solid ${accentColor}25`,
+        background: `linear-gradient(135deg, ${accentColor}08, ${accentColor}03)`,
+        border: `1.5px solid ${accentColor}20`,
       }}
     >
-      {/* Mini featured badge */}
-      <div className="flex items-center justify-center gap-0.5 py-1 px-3 text-xs font-bold text-white"
-        style={{background: accentColor}}>
-        <Star className="w-3 h-3 fill-current" />
-        Featured
-      </div>
+      {/* Accent bar */}
+      <div className="h-1.5" style={{background: accentColor}} />
 
-      <div className="p-4 space-y-3">
-        <div className="flex items-start gap-3">
+      <div className="p-4 flex flex-col h-full space-y-3">
+        {/* Header with avatar and name */}
+        <div className="flex items-start gap-3 min-w-0">
           {community.logo_url ? (
-            <img src={community.logo_url} alt={community.name} className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+            <img src={community.logo_url} alt={community.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
           ) : (
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-              style={{background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)`}}>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+              style={{background: accentColor}}>
               {initials}
             </div>
           )}
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-slate-900 text-sm truncate">{community.name}</h3>
-            <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">{community.featured_tagline || community.description_short}</p>
+            <p className="text-slate-500 text-xs mt-0.5 flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              {(community.follower_count || 0).toLocaleString()}
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-slate-600">
-          <div className="flex items-center gap-1 text-xs">
-            <Users className="w-3.5 h-3.5" />
-            <span className="font-semibold">{(community.follower_count || 0).toLocaleString()}</span>
-          </div>
-          <span className="text-[10px] text-slate-400">{community.posts_this_week || 0} posts</span>
-        </div>
-
+        {/* Join button */}
         <button
           onClick={e => { e.stopPropagation(); onJoin(community); }}
           disabled={isJoining}
-          className="w-full rounded-full font-semibold text-xs py-1.5 transition-all active:scale-95 disabled:opacity-60"
+          className="w-full rounded-lg font-semibold text-xs py-2 transition-all active:scale-95 disabled:opacity-60 mt-auto"
           style={{
             background: isJoined ? '#E2E8F0' : accentColor,
             color: isJoined ? '#475569' : '#FFFFFF'
           }}
         >
-          {isJoining ? '...' : isJoined ? '✓ Joined' : 'Join'}
+          {isJoining ? '...' : isJoined ? '✓' : 'Join'}
         </button>
       </div>
     </div>

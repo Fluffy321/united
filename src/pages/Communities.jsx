@@ -533,16 +533,17 @@ export default function Communities() {
               />
             )}
             {secondaryFeatured.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
                 {secondaryFeatured.map(c => (
-                  <FeaturedSecondaryCard
-                    key={c.id}
-                    community={c}
-                    isJoined={userCommunityIds.has(c.id)}
-                    isJoining={joiningId === c.id}
-                    onOpen={openCommunity}
-                    onJoin={joinCommunity}
-                  />
+                  <div key={c.id} className="flex-shrink-0 w-80">
+                    <FeaturedSecondaryCard
+                      community={c}
+                      isJoined={userCommunityIds.has(c.id)}
+                      isJoining={joiningId === c.id}
+                      onOpen={openCommunity}
+                      onJoin={joinCommunity}
+                    />
+                  </div>
                 ))}
               </div>
             )}
