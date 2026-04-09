@@ -1,0 +1,55 @@
+{
+  "name": "FeaturedEligibilityLog",
+  "type": "object",
+  "properties": {
+    "community_id": {
+      "type": "string",
+      "description": "ID of community being checked"
+    },
+    "community_name": {
+      "type": "string"
+    },
+    "check_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When eligibility was checked"
+    },
+    "is_eligible": {
+      "type": "boolean",
+      "description": "Whether community passed all checks"
+    },
+    "reasons": {
+      "type": "object",
+      "description": "Eligibility check results",
+      "properties": {
+        "profile_complete": {
+          "type": "boolean"
+        },
+        "weekly_activity_sufficient": {
+          "type": "boolean"
+        },
+        "spam_flagged": {
+          "type": "boolean"
+        },
+        "follower_count_min": {
+          "type": "boolean"
+        },
+        "weekly_posts": {
+          "type": "number"
+        },
+        "weekly_comments": {
+          "type": "number"
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Admin notes or reason for ineligibility"
+    }
+  },
+  "required": [
+    "community_id",
+    "check_date",
+    "is_eligible"
+  ]
+}

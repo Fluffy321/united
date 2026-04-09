@@ -77,28 +77,57 @@
       "type": "boolean",
       "default": false
     },
+    "featured_slot_type": {
+      "type": "string",
+      "enum": [
+        "hero",
+        "secondary"
+      ],
+      "description": "Hero (main) or secondary slot if featured"
+    },
+    "featured_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When featured status expires"
+    },
     "featured_tagline": {
       "type": "string",
-      "description": "Short tagline shown on featured community cards (e.g. 'The heart of Five Towns')"
+      "description": "Short tagline for featured cards"
     },
     "featured_accent_color": {
       "type": "string",
-      "description": "Hex color for featured card accent (e.g. #2563EB)"
+      "description": "Hex color for featured card accent"
     },
     "featured_priority": {
       "type": "number",
       "default": 0,
-      "description": "Higher = shown first among featured communities"
+      "description": "Higher = shown first"
+    },
+    "is_eligible_for_featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Has community met eligibility requirements?"
+    },
+    "eligibility_checked_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time eligibility was verified"
     },
     "views_count": {
       "type": "number",
-      "default": 0,
-      "description": "Total profile views"
+      "default": 0
     },
     "joins_this_week": {
       "type": "number",
-      "default": 0,
-      "description": "New joins in the past 7 days"
+      "default": 0
+    },
+    "posts_this_week": {
+      "type": "number",
+      "default": 0
+    },
+    "comments_this_week": {
+      "type": "number",
+      "default": 0
     },
     "is_seeded": {
       "type": "boolean",
@@ -107,7 +136,7 @@
     "is_verified": {
       "type": "boolean",
       "default": false,
-      "description": "Verified communities get admin controls, pinned announcements, event management, member messaging, and are eligible for membership fees."
+      "description": "Verified communities get admin controls and membership fees"
     },
     "verified_type": {
       "type": "string",
@@ -119,12 +148,11 @@
         "Camp",
         "Organization"
       ],
-      "description": "Type label shown in the verified badge (e.g. Verified Shul, Verified School)"
+      "description": "Type label in verified badge"
     },
     "verified_at": {
       "type": "string",
-      "format": "date-time",
-      "description": "When this community was verified"
+      "format": "date-time"
     }
   },
   "required": [

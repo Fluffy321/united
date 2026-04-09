@@ -1,0 +1,67 @@
+{
+  "name": "FeaturedCommunitySlot",
+  "type": "object",
+  "properties": {
+    "community_id": {
+      "type": "string",
+      "description": "ID of the featured community"
+    },
+    "community_name": {
+      "type": "string",
+      "description": "Display name for reference"
+    },
+    "slot_type": {
+      "type": "string",
+      "enum": [
+        "hero",
+        "secondary"
+      ],
+      "description": "Hero (1 main) or secondary (2 supporting)"
+    },
+    "priority": {
+      "type": "number",
+      "description": "Higher = shown first within slot type"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "expired",
+        "paused"
+      ],
+      "default": "active"
+    },
+    "featured_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When featured status expires"
+    },
+    "payment_id": {
+      "type": "string",
+      "description": "Transaction ID for the payment"
+    },
+    "amount_paid": {
+      "type": "number",
+      "description": "Amount paid in cents"
+    },
+    "duration_months": {
+      "type": "number",
+      "description": "Duration in months (1, 3, 6, or 12)"
+    },
+    "auto_renew": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to auto-renew on expiration"
+    },
+    "activated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this slot was activated"
+    }
+  },
+  "required": [
+    "community_id",
+    "slot_type",
+    "featured_until"
+  ]
+}

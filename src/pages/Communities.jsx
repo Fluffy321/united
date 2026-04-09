@@ -8,8 +8,8 @@ import CommunityDetailPage from '@/components/communities/CommunityDetailView';
 import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
-import FeaturedCommunityCard from '@/components/communities/FeaturedCommunityCard';
-import FeaturedCommunityBanner from '@/components/communities/FeaturedCommunityBanner';
+import FeaturedHeroCard from '@/components/communities/FeaturedHeroCard';
+import FeaturedSecondaryCard from '@/components/communities/FeaturedSecondaryCard';
 import DiscoverCategoryCards, { DISCOVER_CATEGORIES } from '@/components/communities/DiscoverCategoriesScreen';
 import { toast } from 'sonner';
 
@@ -360,7 +360,13 @@ export default function Communities() {
       .catch(() => loadData(null));
   }, [loadData]);
 
-  const featuredCommunities = useMemo(() => allCommunities.filter(c => c.is_featured).sort((a, b) => (b.featured_priority || 0) - (a.featured_priority || 0)), [allCommunities]);
+  const featuredCommunities = useMemo(() => {
+    const featured = allCommunities.filter(c => c.is_featured && c.featured_slot_type).sort((a, b) => (b.featured_priority || 0) - (a.featured_priority || 0));
+    return featured;
+  }, [allCommunities]);
+
+  const heroFeatured = useMemo(() => featuredCommunities.find(c => c.featured_slot_type === 'hero'), [featuredCommunities]);
+  const secondaryFeatured = useMemo(() => featuredCommunities.filter(c => c.featured_slot_type === 'secondary').slice(0, 2), [featuredCommunities]);
   const myCommunities = useMemo(() => allCommunities.filter(c => userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
   const myGroups = useMemo(() => allGroups.filter(g => memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
   const discoverCommunities = useMemo(() => allCommunities.filter(c => !userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
@@ -487,30 +493,33 @@ export default function Communities() {
           </div>
         </div>
 
-        {/* Featured Communities */}
-        {featuredCommunities.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-lg font-bold text-slate-900">⭐ Featured</span>
-              <span className="text-[11px] text-slate-400 font-medium bg-slate-100 rounded-full px-2 py-0.5">{featuredCommunities.length} communities</span>
-            </div>
-            <div className="space-y-4">
-              {featuredCommunities.map((c, i) => (
-                <FeaturedCommunityCard
-                  key={c.id}
-                  community={c}
-                  index={i}
-                  isJoined={userCommunityIds.has(c.id)}
-                  isJoining={joiningId === c.id}
-                  onOpen={openCommunity}
-                  onJoin={joinCommunity}
-                />
-              ))}
-            </div>
+        {/* Featured Communities - 1 Hero + up to 2 Secondary */}
+        {(heroFeatured || secondaryFeatured.length > 0) && (
+          <div className="mb-8 space-y-4">
+            {heroFeatured && (
+              <FeaturedHeroCard
+                community={heroFeatured}
+                isJoined={userCommunityIds.has(heroFeatured.id)}
+                isJoining={joiningId === heroFeatured.id}
+                onOpen={openCommunity}
+                onJoin={joinCommunity}
+              />
+            )}
+            {secondaryFeatured.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {secondaryFeatured.map(c => (
+                  <FeaturedSecondaryCard
+                    key={c.id}
+                    community={c}
+                    isJoined={userCommunityIds.has(c.id)}
+                    isJoining={joiningId === c.id}
+                    onOpen={openCommunity}
+                    onJoin={joinCommunity}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        )}
-        {featuredCommunities.length === 0 && (
-          <FeaturedCommunityBanner communities={allCommunities.slice(0, 4)} onOpen={openCommunity} />
         )}
 
         {/* Search */}
