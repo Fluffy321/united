@@ -1,4 +1,5 @@
 import React from 'react';
+import NewsletterSubscribeBox from './NewsletterSubscribeBox';
 import { Calendar, Clock, MapPin, HandHeart, Users, ChevronRight, Megaphone, Pin, UserPlus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -231,6 +232,9 @@ export default function CommunityHomepage({ community, posts, events, opportunit
           </div>
         )}
       </div>
+
+      {/* Newsletter Subscribe */}
+      <NewsletterSubscribeBox community={community} />
 
       {/* Community Feed Preview */}
       {feedPosts.length > 0 && (

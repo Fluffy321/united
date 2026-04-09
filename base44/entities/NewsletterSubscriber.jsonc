@@ -1,0 +1,23 @@
+{
+  "name": "NewsletterSubscriber",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string"
+    },
+    "community_id": {
+      "type": "string"
+    },
+    "community_name": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "default": "community_page"
+    }
+  },
+  "required": [
+    "email",
+    "community_id"
+  ]
+}
