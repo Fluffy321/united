@@ -51,7 +51,9 @@ const colorStyles = {
 
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
-  const hideNav = ['Settings', 'ShulPage'].includes(currentPageName);
+  const location = useLocation();
+  const isChatOpen = currentPageName === 'Messages' && new URLSearchParams(location.search).get('chat') === '1';
+  const hideNav = ['Settings', 'ShulPage'].includes(currentPageName) || isChatOpen;
   const hideBottomPadding = false;
   const navContainerRef = useRef(null);
   const navItemRefs = useRef({});

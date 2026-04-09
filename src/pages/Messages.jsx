@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader2, MessageCircle, X, Plus } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -12,6 +13,8 @@ import ReportModal from '@/components/common/ReportModal';
 import { buildAIConversation } from '@/lib/aiAgent';
 
 export default function Messages() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [showReport, setShowReport] = useState(false);
@@ -112,8 +115,17 @@ export default function Messages() {
     setShowReport(true);
   };
 
+  const openConversation = (conv) => {
+    setSelectedConversation(conv);
+    navigate('/Messages?chat=1', { replace: true });
+  };
+
+  const closeConversation = () => {
+    setSelectedConversation(null);
+    navigate('/Messages', { replace: true });
+  };
+
   const handleArchive = async (conv) => {
-    // Mark conversation as archived by clearing unread and hiding from list
     try {
       await base44.entities.Conversation.update(conv.id, { is_archived: true });
       queryClient.invalidateQueries({ queryKey: ['conversations', currentUser.id] });
@@ -238,7 +250,7 @@ export default function Messages() {
               })}
               currentUser={currentUser}
               selectedId={selectedConversation?.id}
-              onSelect={setSelectedConversation}
+              onSelect={openConversation}
               onArchive={handleArchive}
               onMarkUnread={handleMarkUnread} />
 
@@ -254,7 +266,7 @@ export default function Messages() {
           <ChatView
             conversation={selectedConversation}
             currentUser={currentUser}
-            onBack={() => setSelectedConversation(null)}
+            onBack={closeConversation}
             onReport={handleReport}
             onBlock={handleBlock} /> :
 
