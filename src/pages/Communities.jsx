@@ -343,8 +343,8 @@ export default function Communities() {
         setCache(comms.value);
         setIsDemo(false);
       } else {
-        const cached = getCached();
-        if (cached.length === 0) { setAllCommunities(DEMO_COMMUNITIES); setIsDemo(true); }
+        setAllCommunities(DEMO_COMMUNITIES);
+        setIsDemo(true);
       }
 
       if (groups.status === 'fulfilled') setAllGroups(groups.value || []);
