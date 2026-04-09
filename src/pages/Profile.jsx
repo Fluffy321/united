@@ -145,7 +145,7 @@ export default function Profile() {
       return comms;
     },
     enabled: !!profileUser,
-    staleTime: 0,
+    staleTime: 60000,
     retry: 1,
     gcTime: 0
   });
@@ -286,7 +286,7 @@ export default function Profile() {
           {isOwnProfile && <div className="mx-6"><WeeklySummaryCard mitzvahCount={weeklyMitzvahCount} /></div>}
 
           {/* Communities Section */}
-          {isOwnProfile && userCommunities.length > 0 && <div id="communities-section" className="mx-6"><CommunitiesSection userCommunities={userCommunities} /></div>}
+          {userCommunities.length > 0 && <div id="communities-section" className="mx-6"><CommunitiesSection userCommunities={userCommunities} /></div>}
 
           {/* Badges Section */}
           {isOwnProfile && <div className="mx-6"><BadgesSection user={profileUser} /></div>}

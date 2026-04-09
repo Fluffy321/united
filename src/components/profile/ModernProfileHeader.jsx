@@ -1,5 +1,18 @@
 import React from 'react';
 import { Settings } from 'lucide-react';
+import { differenceInDays, differenceInHours, parseISO } from 'date-fns';
+
+function getActivityLabel(user) {
+  const date = user.updated_date || user.created_date;
+  if (!date) return null;
+  const now = new Date();
+  const d = parseISO(date);
+  const hrs = differenceInHours(now, d);
+  const days = differenceInDays(now, d);
+  if (hrs < 48) return { label: 'Active this week', color: 'bg-emerald-100 text-emerald-700' };
+  if (days < 7) return { label: `Active ${days}d ago`, color: 'bg-slate-100 text-slate-500' };
+  return { label: `Last seen ${days}d ago`, color: 'bg-slate-100 text-slate-400' };
+}
 import UserAvatar from '@/components/common/UserAvatar';
 
 export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onReport, onBlock, onSettings }) {
@@ -48,6 +61,7 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
         {(user.communities_joined_count || 0) > 0 &&
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-purple-100 text-purple-700">🏘️ Community Member</span>
         }
+        {(() => { const a = getActivityLabel(user); return a ? <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${a.color}`}>🕐 {a.label}</span> : null; })()}
       </div>
     </div>);
 

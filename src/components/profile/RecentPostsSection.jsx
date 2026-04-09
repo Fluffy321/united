@@ -4,9 +4,10 @@ import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
 export default function RecentPostsSection({ posts, currentUser, profileUser, isOwnProfile }) {
+  const preview = (posts || []).slice(0, 3);
   const navigate = useNavigate();
 
-  if (!posts || posts.length === 0) {
+  if (!preview || preview.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 pt-4">
         <h2 className="text-sm font-bold text-slate-900 mb-3">Recent Posts</h2>
@@ -21,7 +22,7 @@ export default function RecentPostsSection({ posts, currentUser, profileUser, is
     <div className="max-w-2xl mx-auto px-4 pt-4">
       <h2 className="text-sm font-bold text-slate-900 mb-3">Recent Posts</h2>
       <div className="space-y-2.5">
-        {posts.map(post => (
+        {preview.map(post => (
           <div
             key={post.id}
             className="bg-white rounded-xl border border-slate-100 p-3.5 hover:shadow-md transition-shadow cursor-pointer"
