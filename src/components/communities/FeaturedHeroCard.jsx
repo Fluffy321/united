@@ -40,9 +40,9 @@ export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, 
         </div>
 
         {/* Main content */}
-        <div className="flex items-start justify-between gap-6">
+        <div className="flex items-center justify-between gap-8">
           {/* Left: Avatar + Info */}
-          <div className="flex items-start gap-5 flex-1 min-w-0">
+          <div className="flex items-start gap-6 flex-1 min-w-0">
             {community.logo_url ? (
               <img
                 src={community.logo_url}
@@ -59,19 +59,23 @@ export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, 
                 {initials}
               </div>
             )}
-            <div className="flex-1 min-w-0">
-              <h2 className="text-3xl font-black text-white mb-2 leading-tight">{community.name}</h2>
-              <p className="text-white/90 text-base mb-3 line-clamp-2 font-medium">
+            <div className="flex-1 min-w-0 pt-1">
+              <h2 className="text-3xl font-black text-white mb-2 leading-tight break-words hyphens-auto">
+                {community.name}
+              </h2>
+              <p className="text-white/90 text-sm mb-4 line-clamp-2 font-medium leading-relaxed">
                 {community.featured_tagline || community.description_short}
               </p>
-              <div className="flex items-center gap-5 text-white">
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  <span className="text-sm font-bold">{(community.follower_count || 0).toLocaleString()}</span>
+              <div className="flex items-center gap-6 text-white">
+                <div className="flex items-center gap-2.5">
+                  <Users className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-xs font-bold whitespace-nowrap">
+                    {(community.follower_count || 0).toLocaleString()}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Activity className="w-5 h-5" />
-                  <span className="text-sm font-bold">{community.posts_this_week || 0} posts</span>
+                <div className="flex items-center gap-2.5">
+                  <Activity className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-xs font-bold whitespace-nowrap">{community.posts_this_week || 0} posts</span>
                 </div>
               </div>
             </div>
@@ -81,7 +85,7 @@ export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, 
           <button
             onClick={e => { e.stopPropagation(); onJoin(community); }}
             disabled={isJoining}
-            className="flex-shrink-0 rounded-full font-bold text-base transition-all active:scale-95 disabled:opacity-60 px-7 py-3 border-2 border-white/40 backdrop-blur-sm hover:bg-white/20 duration-200"
+            className="flex-shrink-0 rounded-full font-bold text-sm transition-all active:scale-95 disabled:opacity-60 px-6 py-2.5 border-2 border-white/40 backdrop-blur-sm hover:bg-white/20 duration-200 whitespace-nowrap"
             style={{
               background: isJoined ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.25)',
               color: '#FFFFFF',
