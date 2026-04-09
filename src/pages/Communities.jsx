@@ -719,8 +719,8 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
 function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory }) {
   // Sort: featured first, then by follower count
   const sortedCommunities = [...communities].sort((a, b) => {
-    if (a.is_featured && !b.is_featured) return -1;
-    if (!a.is_featured && b.is_featured) return 1;
+    if (a.isFeatured && !b.isFeatured) return -1;
+    if (!a.isFeatured && b.isFeatured) return 1;
     return (b.follower_count || 0) - (a.follower_count || 0);
   });
 
