@@ -85,7 +85,7 @@ export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, 
           <button
             onClick={e => { e.stopPropagation(); onJoin(community); }}
             disabled={isJoining}
-            className="flex-shrink-0 rounded-full font-bold text-sm transition-all active:scale-95 disabled:opacity-60 px-5 py-2 border-2 border-white/40 backdrop-blur-sm hover:bg-white/20 duration-200 whitespace-nowrap"
+            className="flex-shrink-0 self-end rounded-full font-bold text-sm transition-all active:scale-95 disabled:opacity-60 px-5 py-2 border-2 border-white/40 backdrop-blur-sm hover:bg-white/20 duration-200 whitespace-nowrap"
             style={{
               background: isJoined ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.25)',
               color: '#FFFFFF',
