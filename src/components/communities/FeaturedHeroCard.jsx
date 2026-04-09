@@ -42,7 +42,7 @@ export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, 
         {/* Main content */}
         <div className="flex items-center justify-between gap-8">
           {/* Left: Avatar + Info */}
-          <div className="flex items-start gap-6 flex-1 min-w-0">
+          <div className="flex items-center gap-6 flex-1 min-w-0">
             {community.logo_url ? (
               <img
                 src={community.logo_url}
@@ -59,8 +59,8 @@ export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, 
                 {initials}
               </div>
             )}
-            <div className="flex-1 min-w-0 pt-1">
-              <h2 className="text-4xl font-black text-white mb-2 leading-tight break-words hyphens-auto">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-4xl font-black text-white mb-2 leading-tight">
                 {community.name}
               </h2>
               <p className="text-white/80 text-xs mb-4 line-clamp-2 font-normal leading-relaxed">
