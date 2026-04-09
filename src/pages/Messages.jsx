@@ -77,6 +77,33 @@ export default function Messages() {
 
   const aiConversation = currentUser ? buildAIConversation(currentUser) : null;
 
+  const { data: communityConversations = [] } = useQuery({
+    queryKey: ['community-convs', currentUser?.id],
+    queryFn: async () => {
+      const memberships = await base44.entities.UserCommunity.filter({ user_id: currentUser.id });
+      if (!memberships.length) return [];
+      const communityIds = memberships.map(m => m.community_id);
+      const allComms = await base44.entities.Community.list('-follower_count', 100);
+      const joined = allComms.filter(c => communityIds.includes(c.id));
+      return joined.map(c => ({
+        id: `community-${c.id}`,
+        community_id: c.id,
+        is_community_chat: true,
+        community_name: c.name,
+        community_type: c.type,
+        community_logo: c.logo_url || null,
+        participant_ids: [currentUser.id],
+        participant_names: [currentUser.full_name],
+        member_count: c.follower_count || 0,
+        last_message: null,
+        last_message_at: c.updated_date || null,
+        unread_count: {},
+      }));
+    },
+    enabled: !!currentUser,
+    staleTime: 120000,
+  });
+
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ['conversations', currentUser?.id],
     queryFn: async () => {
@@ -102,8 +129,10 @@ export default function Messages() {
   });
 
   const allConversations = [
-  ...(aiConversation ? [aiConversation] : []),
-  ...conversations];
+    ...(aiConversation ? [aiConversation] : []),
+    ...conversations,
+    ...communityConversations,
+  ];
 
 
   const unreadCount = allConversations.reduce((sum, conv) =>

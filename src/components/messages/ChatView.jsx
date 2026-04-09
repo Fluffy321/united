@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, ArrowLeft, MoreVertical, Flag, Ban, CheckCircle2, HandHeart, Bot, Sparkles } from 'lucide-react';
+import { Send, Loader2, ArrowLeft, MoreVertical, Flag, Ban, CheckCircle2, HandHeart, Bot, Sparkles, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,8 +26,18 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const [aiThinking, setAiThinking] = useState(false);
   const messagesEndRef = useRef(null);
   const isAI = isAIConversation(conversation);
+  const isCommunityChat = !!conversation.is_community_chat;
 
   const getOtherParticipant = () => {
+    if (isCommunityChat) {
+      return {
+        id: `community-${conversation.community_id}`,
+        name: conversation.community_name,
+        avatar: conversation.community_logo || null,
+        isCommunity: true,
+        memberCount: conversation.member_count || 0,
+      };
+    }
     const idx = conversation.participant_ids?.indexOf(currentUser.id);
     const otherIdx = idx === 0 ? 1 : 0;
     return {
@@ -41,6 +51,10 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const other = getOtherParticipant();
 
   useEffect(() => {
+    if (isCommunityChat) {
+      setIsLoading(false);
+      return;
+    }
     if (isAI) {
       // Load from localStorage for AI chats
       const saved = loadAIMessages(currentUser.id);
@@ -249,9 +263,16 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           <ArrowLeft className="w-5 h-5" />
         </Button>
         
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold overflow-hidden">
+        <div className={`w-10 h-10 flex items-center justify-center text-white font-semibold overflow-hidden ${
+          isCommunityChat ? 'rounded-xl bg-gradient-to-br from-sky-500 to-blue-600'
+          : 'rounded-full bg-gradient-to-br from-indigo-500 to-purple-600'
+        }`}>
           {isAI ? (
             <Bot className="w-5 h-5 text-white" />
+          ) : isCommunityChat ? (
+            other.avatar
+              ? <img src={other.avatar} alt="" className="w-full h-full object-cover" />
+              : <Users className="w-5 h-5 text-white" />
           ) : other.avatar ? (
             <img src={other.avatar} alt="" className="w-full h-full object-cover" />
           ) : (
@@ -262,6 +283,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         <div className="flex-1">
           <span className="font-semibold text-slate-900 text-[16px]">{other.name}</span>
           {isAI && <p className="text-[11px] text-indigo-500 font-medium">AI Assistant • Always available</p>}
+          {isCommunityChat && <p className="text-[11px] text-blue-500 font-medium">{other.memberCount?.toLocaleString()} members • Community Chat</p>}
         </div>
 
         {!isAI && (
@@ -310,7 +332,15 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
             </div>
           ) : messages.length === 0 ? (
             <div className="text-center py-8">
-              {isAI ? (
+              {isCommunityChat ? (
+                <div className="space-y-3 px-4">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center mx-auto">
+                    <Users className="w-8 h-8 text-white" />
+                  </div>
+                  <p className="font-semibold text-slate-800">{other.name}</p>
+                  <p className="text-sm text-slate-500 max-w-xs mx-auto">Community group chat for {other.name} members. Say hello to your community!</p>
+                </div>
+              ) : isAI ? (
                 <div className="space-y-3">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto">
                     <Bot className="w-8 h-8 text-white" />
@@ -349,8 +379,8 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
                   )}
                   <div className={`max-w-[75%] ${isOwn ? 'order-2' : ''}`}>
                     <div className={`px-4 py-2.5 rounded-2xl ${
-                      isOwn 
-                        ? 'text-white rounded-br-md' 
+                      isOwn
+                        ? 'text-white rounded-br-md'
                         : 'bg-white text-slate-800 rounded-bl-md shadow-sm border border-slate-100'
                     }`}
                     style={isOwn ? { background: '#2563EB' } : {}}>
@@ -382,7 +412,6 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
             </div>
           )}
           <div ref={messagesEndRef} />
-        </div>
       </div>
 
       {/* Mitzvah Completion Actions */}

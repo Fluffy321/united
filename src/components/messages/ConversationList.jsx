@@ -1,7 +1,7 @@
 import React from 'react';
 import SwipeableConversationItem from './SwipeableConversationItem';
 import { differenceInMinutes, differenceInHours, differenceInDays, isYesterday, isToday, format } from 'date-fns';
-import { HandHeart, Bot, Sparkles } from 'lucide-react';
+import { HandHeart, Bot, Sparkles, Users } from 'lucide-react';
 import { AI_AGENT } from '@/lib/aiAgent';
 
 
@@ -60,6 +60,15 @@ function isMockTyping(convId) {
 
 export default function ConversationList({ conversations, currentUser, selectedId, onSelect, onArchive, onMarkUnread }) {
   const getOther = (conv) => {
+    if (conv.is_community_chat) {
+      return {
+        id: `community-${conv.community_id}`,
+        name: conv.community_name,
+        avatar: conv.community_logo || null,
+        isCommunity: true,
+        memberCount: conv.member_count || 0,
+      };
+    }
     if (conv.is_demo) {
       return {
         id: `user-${conv.demo_user_name}`,
@@ -147,15 +156,23 @@ export default function ConversationList({ conversations, currentUser, selectedI
           className={`relative flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-white shadow-md ${
             isAIChat
               ? 'w-14 h-14 rounded-2xl'
+              : other.isCommunity
+              ? 'w-14 h-14 rounded-2xl'
               : 'w-14 h-14 rounded-full'
           }`}
           style={{ background: isAIChat
             ? 'linear-gradient(135deg, #7C3AED, #6366F1, #8B5CF6)'
+            : other.isCommunity
+            ? 'linear-gradient(135deg, #0EA5E9, #2563EB)'
             : 'linear-gradient(135deg, #2563EB, #7C3AED)'
           }}
         >
           {isAIChat
             ? <Bot className="w-7 h-7 text-white" />
+            : other.isCommunity
+            ? other.avatar
+              ? <img src={other.avatar} alt="" className="w-full h-full object-cover" />
+              : <Users className="w-6 h-6 text-white" />
             : other.avatar
             ? <img src={other.avatar} alt="" className="w-full h-full object-cover" />
             : <span className="text-[17px]">{initials}</span>
@@ -165,7 +182,7 @@ export default function ConversationList({ conversations, currentUser, selectedI
               <Sparkles className="w-2.5 h-2.5 text-white" />
             </span>
           )}
-          {!isAIChat && isLikelyActive(other.id) && (
+          {!isAIChat && !other.isCommunity && isLikelyActive(other.id) && (
             <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
           )}
           {isAIChat && (
@@ -187,8 +204,11 @@ export default function ConversationList({ conversations, currentUser, selectedI
                   </span>
                 )}
               </span>
-              {isLikelyActive(other.id) && !isAIChat && (
+              {isLikelyActive(other.id) && !isAIChat && !other.isCommunity && (
                 <span className="text-[10px] font-semibold text-emerald-500 leading-none mt-0.5">Active now</span>
+              )}
+              {other.isCommunity && (
+                <span className="text-[10px] font-medium text-slate-400 leading-none mt-0.5">{other.memberCount.toLocaleString()} members</span>
               )}
               {isAIChat && (
                 <span className="text-[10px] font-semibold text-emerald-400 leading-none mt-0.5">Always available</span>
