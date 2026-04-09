@@ -11,6 +11,58 @@ import NewMessageComposer from '@/components/messages/NewMessageComposer';
 import ReportModal from '@/components/common/ReportModal';
 import { buildAIConversation } from '@/lib/aiAgent';
 
+const now = Date.now();
+const DEMO_CONVERSATIONS = [
+  {
+    id: 'demo-1', is_demo: true, demo_user_name: 'Yael Goldstein',
+    last_message: 'Are you going tonight?',
+    last_message_at: new Date(now - 4 * 60 * 1000).toISOString(),
+    unread_count: {},
+    participant_ids: [], participant_names: ['Yael Goldstein'], participant_avatars: [null],
+    _demo_unread: 2,
+  },
+  {
+    id: 'demo-2', is_demo: true, demo_user_name: 'Moshe Levy',
+    last_message: "I'll send it in a bit",
+    last_message_at: new Date(now - 38 * 60 * 1000).toISOString(),
+    unread_count: {},
+    participant_ids: [], participant_names: ['Moshe Levy'], participant_avatars: [null],
+    _demo_unread: 0,
+  },
+  {
+    id: 'demo-3', is_demo: true, demo_user_name: 'Rivka Cohen',
+    last_message: 'Thanks again 🙏',
+    last_message_at: new Date(now - 2.5 * 60 * 60 * 1000).toISOString(),
+    unread_count: {},
+    participant_ids: [], participant_names: ['Rivka Cohen'], participant_avatars: [null],
+    _demo_unread: 1,
+  },
+  {
+    id: 'demo-4', is_demo: true, demo_user_name: 'Ari Shapiro',
+    last_message: 'Did you see the post?',
+    last_message_at: new Date(now - 5 * 60 * 60 * 1000).toISOString(),
+    unread_count: {},
+    participant_ids: [], participant_names: ['Ari Shapiro'], participant_avatars: [null],
+    _demo_unread: 3,
+  },
+  {
+    id: 'demo-5', is_demo: true, demo_user_name: 'Dina Rosen',
+    last_message: 'Shabbos at 7 still?',
+    last_message_at: new Date(now - 22 * 60 * 60 * 1000).toISOString(),
+    unread_count: {},
+    participant_ids: [], participant_names: ['Dina Rosen'], participant_avatars: [null],
+    _demo_unread: 0,
+  },
+  {
+    id: 'demo-6', is_demo: true, demo_user_name: 'Nachum Weiss',
+    last_message: 'Can you cover for me?',
+    last_message_at: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    unread_count: {},
+    participant_ids: [], participant_names: ['Nachum Weiss'], participant_avatars: [null],
+    _demo_unread: 0,
+  },
+];
+
 export default function Messages() {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -97,9 +149,19 @@ export default function Messages() {
     gcTime: 120000,
   });
 
+  // Inject demo conversations when inbox is sparse
+  const demoWithUnread = DEMO_CONVERSATIONS.map(d => ({
+    ...d,
+    unread_count: d._demo_unread > 0 ? { [currentUser?.id]: d._demo_unread } : {},
+  }));
+  const realConvs = conversations;
+  const fillCount = Math.max(0, 4 - realConvs.length);
+  const demoPadding = demoWithUnread.slice(0, fillCount + demoWithUnread.length); // always show demos
+
   const allConversations = [
     ...(aiConversation ? [aiConversation] : []),
-    ...conversations
+    ...realConvs,
+    ...demoWithUnread,
   ];
 
   const unreadCount = allConversations.reduce((sum, conv) => 
