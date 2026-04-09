@@ -209,10 +209,10 @@ export default function Messages() {
   }
 
   return (
-    <div className="flex flex-col bg-white relative" style={{ height: '100dvh' }}>
+    <div className="flex flex-col relative" style={{ height: '100dvh', background: '#F4F7FB' }}>
       <div className="flex flex-1 min-h-0">
         {/* Conversation List */}
-        <div className={`flex flex-col w-full lg:w-96 lg:border-r border-slate-200 ${
+        <div className={`flex flex-col w-full lg:w-96 lg:border-r border-slate-200 bg-white ${
         selectedConversation ? 'hidden lg:flex' : 'flex'}`
         }>
           <div className="px-4 pt-4 pb-0 border-b border-slate-100 flex-shrink-0">

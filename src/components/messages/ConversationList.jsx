@@ -134,7 +134,7 @@ export default function ConversationList({ conversations, currentUser, selectedI
       >
       <button
         onClick={() => onSelect(conv)}
-        className={`w-full rounded-2xl px-4 py-3.5 cursor-pointer flex items-center gap-3.5 text-left border transition-all duration-150 ${
+        className={`w-full rounded-2xl px-4 py-4 cursor-pointer flex items-center gap-3.5 text-left border transition-all duration-150 ${
           isAIChat && isSelected
             ? 'border-violet-300 shadow-lg shadow-violet-100'
             : isAIChat
@@ -155,10 +155,10 @@ export default function ConversationList({ conversations, currentUser, selectedI
         <div
           className={`relative flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-white shadow-md ${
             isAIChat
-              ? 'w-14 h-14 rounded-2xl'
+              ? 'w-[60px] h-[60px] rounded-2xl'
               : other.isCommunity
-              ? 'w-14 h-14 rounded-2xl'
-              : 'w-14 h-14 rounded-full'
+              ? 'w-[60px] h-[60px] rounded-2xl'
+              : 'w-[60px] h-[60px] rounded-full'
           }`}
           style={{ background: isAIChat
             ? 'linear-gradient(135deg, #7C3AED, #6366F1, #8B5CF6)'

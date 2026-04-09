@@ -412,6 +412,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
             </div>
           )}
           <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Mitzvah Completion Actions */}
