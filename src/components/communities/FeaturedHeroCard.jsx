@@ -60,22 +60,22 @@ export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, 
               </div>
             )}
             <div className="flex-1 min-w-0 pt-1">
-              <h2 className="text-3xl font-black text-white mb-2 leading-tight break-words hyphens-auto">
+              <h2 className="text-4xl font-black text-white mb-2 leading-tight break-words hyphens-auto">
                 {community.name}
               </h2>
-              <p className="text-white/90 text-sm mb-4 line-clamp-2 font-medium leading-relaxed">
+              <p className="text-white/80 text-xs mb-4 line-clamp-2 font-normal leading-relaxed">
                 {community.featured_tagline || community.description_short}
               </p>
-              <div className="flex items-center gap-6 text-white">
-                <div className="flex items-center gap-2.5">
-                  <Users className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-xs font-bold whitespace-nowrap">
+              <div className="flex items-center gap-6 text-white/70">
+                <div className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="text-[11px] font-medium whitespace-nowrap">
                     {(community.follower_count || 0).toLocaleString()}
                   </span>
                 </div>
-                <div className="flex items-center gap-2.5">
-                  <Activity className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-xs font-bold whitespace-nowrap">{community.posts_this_week || 0} posts</span>
+                <div className="flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="text-[11px] font-medium whitespace-nowrap">{community.posts_this_week || 0} posts</span>
                 </div>
               </div>
             </div>
