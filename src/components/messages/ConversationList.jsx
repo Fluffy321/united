@@ -187,7 +187,10 @@ export default function ConversationList({ conversations, currentUser, selectedI
                   {formatTimestamp(conv.last_message_at)}
                 </span>
               )}
-              {unread > 0 && (
+              {unread === 1 && (
+                <span className="w-2.5 h-2.5 bg-blue-500 rounded-full shadow-sm" />
+              )}
+              {unread > 1 && (
                 <span className="min-w-[20px] h-5 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1.5 shadow-sm">
                   {unread > 9 ? '9+' : unread}
                 </span>
