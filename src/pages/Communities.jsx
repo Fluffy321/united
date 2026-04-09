@@ -367,7 +367,7 @@ export default function Communities() {
   }, [allCommunities]);
 
   const heroFeatured = useMemo(() => featuredCommunities.find(c => c.featured_slot_type === 'hero'), [featuredCommunities]);
-  const secondaryFeatured = useMemo(() => featuredCommunities.filter(c => c.featured_slot_type === 'secondary').slice(0, 2), [featuredCommunities]);
+  const secondaryFeatured = useMemo(() => featuredCommunities.filter(c => c.featured_slot_type === 'secondary').slice(0, 4), [featuredCommunities]);
   const myCommunities = useMemo(() => allCommunities.filter(c => userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
   const myGroups = useMemo(() => allGroups.filter(g => memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
   const discoverCommunities = useMemo(() => allCommunities.filter(c => !userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
@@ -507,7 +507,7 @@ export default function Communities() {
               />
             )}
             {secondaryFeatured.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {secondaryFeatured.map(c => (
                   <FeaturedSecondaryCard
                     key={c.id}
