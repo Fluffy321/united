@@ -318,6 +318,7 @@ export default function Communities() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  const [reseedingFeatured, setReseedingFeatured] = useState(false);
   const [showCategoryBrowse, setShowCategoryBrowse] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
 
@@ -425,6 +426,23 @@ export default function Communities() {
   };
   const backToList = () => setSearchParams({});
 
+  const reseedFeatured = async () => {
+    if (currentUser?.role !== 'admin') {
+      toast.error('Admin access required');
+      return;
+    }
+    setReseedingFeatured(true);
+    try {
+      const result = await base44.functions.invoke('reseedFeaturedCommunities', {});
+      toast.success(`Reseeded featured communities: ${result.data.main_featured}`);
+      loadData(currentUser);
+    } catch (error) {
+      toast.error('Failed to reseed featured communities');
+    } finally {
+      setReseedingFeatured(false);
+    }
+  };
+
   if (currentUser?.is_profile_complete === false) {
     return <ProfileSetup user={currentUser} onComplete={() => base44.auth.me().then(setCurrentUser)} />;
   }
@@ -483,6 +501,16 @@ export default function Communities() {
             >
               <Map className="w-4 h-4 text-slate-600" />
             </button>
+            {currentUser?.role === 'admin' && (
+              <button
+                onClick={reseedFeatured}
+                disabled={reseedingFeatured}
+                className="rounded-full bg-amber-600 text-white px-4 py-2.5 text-[13px] font-semibold shadow-sm hover:bg-amber-700 disabled:opacity-50 active:scale-95 transition-all duration-150"
+                title="Reseed featured communities (admin only)"
+              >
+                {reseedingFeatured ? '⟳ ...' : '⟳ Reseed'}
+              </button>
+            )}
             <button
               onClick={() => setShowCreateModal(true)}
               className="rounded-full bg-blue-600 text-white px-4 py-2.5 text-[13px] font-semibold shadow-sm hover:bg-blue-700 active:scale-95 transition-all duration-150"
