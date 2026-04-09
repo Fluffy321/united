@@ -172,7 +172,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Bottom Navigation */}
       {!hideNav && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white z-50" style={{ boxShadow: '0 -1px 0 #E2E8F0, 0 -4px 20px rgba(15,23,42,0.06)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <nav className="fixed bottom-0 left-0 right-0 bg-white z-50" style={{ boxShadow: '0 -1px 0 #E2E8F0, 0 -4px 20px rgba(15,23,42,0.06)' }}>
           <div className="max-w-2xl mx-auto px-4" ref={navContainerRef}>
             {/* Sliding pill highlight */}
             <div
