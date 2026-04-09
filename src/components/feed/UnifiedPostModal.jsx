@@ -295,7 +295,8 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
         </div>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+          {/* Only show title for non-feed posts */}
           {requiresTitle && (
             <div>
               <Label>Title</Label>
@@ -308,9 +309,9 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
             </div>
           )}
 
-          {/* Avatar + Textarea row */}
-          <div className="flex gap-3 items-start">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 mt-1 overflow-hidden">
+          {/* Avatar + Large Textarea */}
+          <div className="flex gap-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden mt-2">
               {currentUser?.avatar_url
                 ? <img src={currentUser.avatar_url} alt="" className="w-full h-full object-cover" />
                 : userInitials
@@ -320,16 +321,37 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
               ref={textareaRef}
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder={getPlaceholderBySubtype()}
-              className="flex-1 min-h-[80px] resize-none border-0 border-b border-slate-200 rounded-none px-0 text-[15px] focus:ring-0 focus:border-blue-400 bg-transparent placeholder:text-slate-400"
+              placeholder={getPlaceholderBySubtype() || "What's going on?"}
+              className="flex-1 min-h-[140px] resize-none rounded-xl border border-slate-150 bg-slate-50 px-4 py-3 text-[15px] focus:ring-0 focus:border-blue-300 focus:bg-white placeholder:text-slate-400 transition-all"
             />
           </div>
 
+          {/* Quick action buttons */}
+          <div className="flex gap-2 justify-center py-2">
+            <button type="button" onClick={() => document.querySelector('input[type="file"]')?.click()}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors">
+              📸 Photo
+            </button>
+            <button type="button" onClick={() => {setPostSubtype('question'); setTimeout(() => textareaRef.current?.focus(), 100);}}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors">
+              ❓ Question
+            </button>
+            <button type="button" onClick={() => {setPostModalType('event'); setPostModalSubtype('event');}}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors">
+              🎉 Event
+            </button>
+            <button type="button" onClick={() => document.querySelector('[data-neighborhood-toggle]')?.click()}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors">
+              📍 Location
+            </button>
+          </div>
+
+          {/* Collapsible help categories — only show if help post */}
           {isHelp && (
-            <>
-              <div>
-                <Label className="mb-3 block">What type of help do you need?</Label>
-                <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
+              <details className="group">
+                <summary className="cursor-pointer text-sm font-medium text-slate-600 hover:text-slate-900 py-2">Choose a category</summary>
+                <div className="grid grid-cols-2 gap-2 pt-2">
                   {categories.map(cat => {
                     const isSelected = category === cat.value;
                     return (
@@ -357,100 +379,84 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
                     );
                   })}
                 </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
-                <div>
-                  <Label className="text-sm font-medium">Post anonymously</Label>
-                  <p className="text-xs text-slate-500">Your identity will be hidden</p>
-                </div>
+              </details>
+              <div className="flex items-center justify-between p-2.5 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
+                <Label className="text-sm font-medium cursor-pointer">Post anonymously</Label>
                 <Switch checked={isAnonymous} onCheckedChange={setIsAnonymous} />
               </div>
-            </>
+            </div>
           )}
 
           {isEvent && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
+            <details className="group">
+              <summary className="cursor-pointer text-sm font-medium text-slate-600 hover:text-slate-900 py-2">Event details</summary>
+              <div className="grid grid-cols-2 gap-2 pt-2">
                 <div>
-                  <Label>Date</Label>
-                  <Input
-                    type="date"
-                    value={eventDate}
-                    onChange={(e) => setEventDate(e.target.value)}
-                    className="mt-1"
-                  />
+                  <Label className="text-xs">Date</Label>
+                  <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="mt-1 h-8" />
                 </div>
                 <div>
-                  <Label>Time</Label>
-                  <Input
-                    type="time"
-                    value={eventTime}
-                    onChange={(e) => setEventTime(e.target.value)}
-                    className="mt-1"
-                  />
+                  <Label className="text-xs">Time</Label>
+                  <Input type="time" value={eventTime} onChange={(e) => setEventTime(e.target.value)} className="mt-1 h-8" />
                 </div>
               </div>
-            </>
+            </details>
           )}
 
-          {/* Location — compact chips */}
-          <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Neighborhood <span className="normal-case font-normal">(optional)</span></p>
-            <div className="flex flex-wrap gap-1.5">
+          {/* Location — collapsed dropdown */}
+          <details className="group" data-neighborhood-toggle>
+            <summary className="cursor-pointer text-sm font-medium text-slate-600 hover:text-slate-900 py-2 flex items-center gap-2">
+              <MapPin className="w-4 h-4" /> Add location
+            </summary>
+            <div className="flex flex-wrap gap-2 pt-2">
               {['Cedarhurst', 'Woodmere', 'Lawrence', 'Inwood', 'Hewlett'].map(n => (
                 <button key={n} type="button" onClick={() => setLocation(location === n ? '' : n)}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
-                    location === n ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-blue-300'
+                  className={`px-3 py-1 rounded-full text-[12px] font-semibold border transition-all ${
+                    location === n ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-400'
                   }`}>
-                  <MapPin className="w-2.5 h-2.5" />{n}
+                  {n}
                 </button>
               ))}
             </div>
-          </div>
+          </details>
 
           {/* Photo upload — compact inline */}
-          {(postType === 'feed' || postType === 'housing') && (
+          {(postType === 'feed' || postType === 'housing') && imageUrls.length > 0 && (
             <div className="flex items-center gap-2">
               {imageUrls.map((url, i) => (
-                <div key={i} className="relative group w-14 h-14">
-                  <img src={url} alt="" className="w-full h-full object-cover rounded-lg" />
+                <div key={i} className="relative group w-12 h-12">
+                  <img src={url} alt="" className="w-full h-full object-cover rounded" />
                   <button type="button" onClick={() => setImageUrls(prev => prev.filter((_, idx) => idx !== i))}
-                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center">
-                    ✕
-                  </button>
+                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px]">✕</button>
                 </div>
               ))}
-              {imageUrls.length < 3 && (
-                <label className="w-14 h-14 rounded-lg border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
-                  {uploadingImages ? <Loader2 className="w-4 h-4 animate-spin text-slate-400" /> : <ImagePlus className="w-4 h-4 text-slate-400" />}
-                  <span className="text-[9px] text-slate-400 mt-0.5">Photo</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                    const file = e.target.files[0]; if (!file) return;
-                    setUploadingImages(true);
-                    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                    setImageUrls(prev => [...prev, file_url]);
-                    setUploadingImages(false); e.target.value = '';
-                  }} />
-                </label>
-              )}
               {imageUrls.length > 0 && (
-                <input value={caption} onChange={e => setCaption(e.target.value)} placeholder="Add a caption..." maxLength={200}
-                  className="flex-1 px-3 py-2 text-[12px] rounded-lg border border-slate-200 outline-none focus:border-blue-400 bg-slate-50" />
+                <input value={caption} onChange={e => setCaption(e.target.value)} placeholder="Caption..." maxLength={200}
+                  className="flex-1 px-2 py-1.5 text-[12px] rounded border border-slate-200 outline-none focus:border-blue-400" />
               )}
             </div>
+          )}
+          {/* Hidden file input */}
+          {(postType === 'feed' || postType === 'housing') && imageUrls.length < 3 && (
+            <label className="hidden">
+              <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                const file = e.target.files[0]; if (!file) return;
+                setUploadingImages(true);
+                const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                setImageUrls(prev => [...prev, file_url]);
+                setUploadingImages(false); e.target.value = '';
+              }} />
+            </label>
           )}
 
         </div>
 
-        {/* Fixed footer */}
-        <div className="px-4 py-3 border-t border-slate-100 flex justify-end gap-2 flex-shrink-0 bg-white">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-9 px-4 text-sm">
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}
-            className="h-9 px-5 text-sm bg-blue-600 hover:bg-blue-700">
-            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Post'}
+        {/* Fixed footer — full-width gradient button */}
+        <div className="px-4 py-3 border-t border-slate-100 flex-shrink-0 bg-white">
+          <Button onClick={handleSubmit} disabled={isSubmitting || !body.trim()}
+            className="w-full h-10 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : null}
+            {isSubmitting ? 'Posting...' : 'Post'}
           </Button>
         </div>
       </DialogContent>
