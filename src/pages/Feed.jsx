@@ -31,6 +31,7 @@ export default function Feed() {
   const [currentUser, setCurrentUser] = useState(null);
   const [showPostModal, setShowPostModal] = useState(false);
   const [postModalType, setPostModalType] = useState('feed');
+  const [postModalSubtype, setPostModalSubtype] = useState(null);
   const [showPromptReply, setShowPromptReply] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -370,7 +371,11 @@ export default function Feed() {
         {/* 1. Post Box */}
         <PostBox
           currentUser={currentUser}
-          onPostClick={(type) => { setPostModalType(type === 'photo' ? 'feed' : type); setShowPostModal(true); }}
+          onPostClick={(type, subtype) => {
+            setPostModalType(type);
+            setPostModalSubtype(subtype || null);
+            setShowPostModal(true);
+          }}
         />
 
 
@@ -478,10 +483,11 @@ export default function Feed() {
         open={showPostModal}
         onOpenChange={(open) => {
           setShowPostModal(open);
-          if (!open) queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+          if (!open) { queryClient.invalidateQueries({ queryKey: ['unified-posts'] }); setPostModalSubtype(null); }
         }}
         currentUser={currentUser}
         postType={postModalType}
+        initialSubtype={postModalSubtype}
       />
 
       <UnifiedPostModal

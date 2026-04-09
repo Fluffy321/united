@@ -99,7 +99,7 @@ const FEED_SUBTYPES = [
   { value: 'lost_found',     label: 'Lost & Found',   emoji: '🔍', color: 'bg-blue-50 text-blue-700 border-blue-300' },
 ];
 
-export default function UnifiedPostModal({ open, onOpenChange, currentUser, postType = 'feed', promptId = null, promptText = null }) {
+export default function UnifiedPostModal({ open, onOpenChange, currentUser, postType = 'feed', promptId = null, promptText = null, initialSubtype = null }) {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [location, setLocation] = useState('');
@@ -121,8 +121,9 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
       const placeholderList = postType === 'help' ? PLACEHOLDERS.help : PLACEHOLDERS.feed;
       const randomPlaceholder = placeholderList[Math.floor(Math.random() * placeholderList.length)];
       setPlaceholder(randomPlaceholder);
+      if (initialSubtype) setPostSubtype(initialSubtype);
     }
-  }, [open, postType]);
+  }, [open, postType, initialSubtype]);
 
   const isPromptReply = !!promptId;
   const isHelp = postType === 'help';
