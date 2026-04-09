@@ -272,7 +272,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white">
+      <DialogContent className="w-[calc(100%-24px)] sm:max-w-lg max-h-[88dvh] overflow-y-auto bg-white p-4 sm:p-6">
         <DialogHeader className="pb-0">
           <DialogTitle className="text-[18px] font-bold text-slate-900">{getModalTitle()}</DialogTitle>
         </DialogHeader>
