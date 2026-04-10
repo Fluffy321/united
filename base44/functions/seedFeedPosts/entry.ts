@@ -169,6 +169,10 @@ const POOL = {
     { title: 'Community Trivia Night', body: 'Jewish trivia night at the {location} shul! Teams of 4, real prizes, lots of laughs. All ages welcome. Bring your competitive side 😄 Register by Wednesday.' },
     { title: "Kids' Havdalah Party", body: 'Community kids havdalah party this Motzei Shabbos in {location}! Songs, crafts, snacks, and ruach. Ages 3–10. So much fun last year — come join us!' },
     { title: 'Cooking Class — Shabbos Classics', body: 'Local {location} chef is teaching a Shabbos cooking class next Sunday! Challah, cholent, and kugel. Hands-on, fun, and you eat everything you make. Limited spots — sign up soon.' },
+    { title: 'Purim Party This Saturday Night', body: 'Purim party this Saturday night — should be packed!! Costume contest, live music, the whole thing. {location} — come ready to celebrate 🎉👻 Who\'s coming??' },
+    { title: 'Shiur Tonight at 8pm', body: 'Reminder: shiur tonight at 8pm in Cedarhurst. Great topic this week — really relevant to what\'s going on right now. All are welcome, no prior knowledge needed. See you there 📚 {location}' },
+    { title: 'Young Professionals Event Next Week', body: 'Young professionals event next week — who\'s going? Great lineup this year, should be a really solid crowd. {location} — drop a comment if you\'re planning to be there so we can coordinate 🙋‍♂️' },
+    { title: 'Community BBQ This Sunday!', body: 'Community BBQ this Sunday — {location}! Bring the family, bring your appetite. Burgers, dogs, the works. One of the best events of the year. Don\'t miss it 🔥🍔' },
   ],
 
   // 10% — food/photos
