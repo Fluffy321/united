@@ -146,8 +146,32 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments_count || 0);
   const [showEventDetails, setShowEventDetails] = useState(false);
+  const [quickReplyOpen, setQuickReplyOpen] = useState(false);
+  const [quickReplyText, setQuickReplyText] = useState('');
+  const [submittingQuickReply, setSubmittingQuickReply] = useState(false);
 
   const helpCat = HELP_REQUEST_CATEGORIES.find(c => c.value === post.category);
+
+  const handleQuickReply = async () => {
+    if (!quickReplyText.trim() || !currentUser) return;
+    setSubmittingQuickReply(true);
+    try {
+      await base44.entities.Comment.create({
+        post_id: post.id,
+        author_id: currentUser.id,
+        author_name: currentUser.display_name || currentUser.full_name?.split(' ')[0] || 'User',
+        body: quickReplyText.trim(),
+      });
+      setCommentCount(prev => prev + 1);
+      setQuickReplyText('');
+      setQuickReplyOpen(false);
+      toast.success('Reply posted!');
+    } catch (err) {
+      toast.error('Could not post reply');
+    } finally {
+      setSubmittingQuickReply(false);
+    }
+  };
 
   const handleFulfilled = async () => {
     setFulfilling(true);
@@ -683,7 +707,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         <div className="flex items-center justify-between gap-2 mb-2">
           {/* Quick Reply Button */}
           <button 
-            onClick={() => setCommentsOpen(true)} 
+            onClick={() => setQuickReplyOpen(!quickReplyOpen)} 
             className="flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors border border-blue-200"
           >
             <MessageCircle className="w-3.5 h-3.5" />
@@ -717,15 +741,17 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           </span>
         )}
       </div>
-      )}
         {post.comments_count > 0 && (
-          <span className="flex items-center gap-1">
-            💬 {post.comments_count} {post.comments_count === 1 ? 'comment' : 'comments'}
-          </span>
+          <button 
+            onClick={() => setCommentsOpen(true)}
+            className="hover:text-slate-700 font-semibold flex items-center gap-1 group"
+          >
+            <span className="group-hover:scale-110 transition-transform">💬</span> {post.comments_count} {post.comments_count === 1 ? 'reply' : 'replies'}
+          </button>
         )}
         {post.likes_count > 0 && (
           <span className="flex items-center gap-1">
-            ❤️ {post.likes_count} {post.likes_count === 1 ? 'like' : 'likes'}
+            <span>❤️</span> {post.likes_count} {post.likes_count === 1 ? 'like' : 'likes'}
           </span>
         )}
         {post.type === 'event' && post.rsvp_count && post.rsvp_count > 0 && (
@@ -740,6 +766,33 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         )}
       </div>
 
+      {quickReplyOpen && (
+        <div className="mt-3 pt-3 border-t border-slate-100">
+          <div className="flex items-end gap-2">
+            <input
+              type="text"
+              placeholder="Add a quick reply..."
+              value={quickReplyText}
+              onChange={(e) => setQuickReplyText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleQuickReply();
+                }
+              }}
+              className="flex-1 px-3 py-2 rounded-full border border-slate-200 bg-slate-50 text-[13px] placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:bg-white transition-colors"
+              disabled={submittingQuickReply}
+            />
+            <button
+              onClick={handleQuickReply}
+              disabled={!quickReplyText.trim() || submittingQuickReply}
+              className="h-8 px-4 rounded-full text-[12px] font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
+            >
+              {submittingQuickReply ? '…' : 'Send'}
+            </button>
+          </div>
+        </div>
+      )}
       <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
     </motion.div>
   );
