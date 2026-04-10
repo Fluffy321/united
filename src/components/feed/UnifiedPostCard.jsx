@@ -686,6 +686,30 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         </div>
       </div>
 
+      {/* Engagement Metrics */}
+      <div className="flex items-center gap-4 px-4 py-3 text-xs text-slate-500 border-t border-slate-100">
+        {post.comments_count > 0 && (
+          <span className="flex items-center gap-1">
+            💬 {post.comments_count} {post.comments_count === 1 ? 'comment' : 'comments'}
+          </span>
+        )}
+        {post.likes_count > 0 && (
+          <span className="flex items-center gap-1">
+            ❤️ {post.likes_count} {post.likes_count === 1 ? 'like' : 'likes'}
+          </span>
+        )}
+        {post.type === 'event' && post.rsvp_count && post.rsvp_count > 0 && (
+          <span className="flex items-center gap-1">
+            📍 {post.rsvp_count} {post.rsvp_count === 1 ? 'person' : 'people'} interested
+          </span>
+        )}
+        {post.type === 'help' && post.offers_count && post.offers_count > 0 && (
+          <span className="flex items-center gap-1">
+            🤝 {post.offers_count} {post.offers_count === 1 ? 'offer' : 'offers'}
+          </span>
+        )}
+      </div>
+
       <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
     </motion.div>
   );
