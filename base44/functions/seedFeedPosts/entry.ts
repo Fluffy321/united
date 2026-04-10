@@ -200,6 +200,9 @@ const POOL = {
     { body: 'Even 15 minutes of learning in the morning before work changes the whole day for me. Trying to keep the streak going. {location}' },
     { body: 'Question for the learning crowd: any good sefarim on the halachos of speech — shmirat halashon — that are readable and not too dense? Asking from {location}' },
     { body: 'My 6-year-old asked me why we say Shema at night. I gave her a real answer and she actually listened. Those parenting moments hit different. {location} 🙏' },
+    { body: 'Nice vort I heard this week — really stuck with me. Anyone want to hear it? Drop a comment and I\'ll share. {location}' },
+    { body: 'Anyone going to the Daf Yomi siyum tonight in {location}? Would love to go together if anyone\'s heading that way.' },
+    { body: 'Good shiur recommendations? Looking for something weekly, engaging, not too long. {location} or online both work. What are you listening to?' },
   ],
 };
 
