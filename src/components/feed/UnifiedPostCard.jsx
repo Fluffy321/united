@@ -741,6 +741,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           </span>
         )}
       </div>
+      )}
 
       {quickReplyOpen && (
         <div className="mt-3 pt-3 border-t border-slate-100">
