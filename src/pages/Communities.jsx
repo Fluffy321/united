@@ -321,6 +321,7 @@ export default function Communities() {
   const [reseedingFeatured, setReseedingFeatured] = useState(false);
   const [showCategoryBrowse, setShowCategoryBrowse] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
+  const [featuredError, setFeaturedError] = useState(false);
 
   const selectedCommunityId = searchParams.get('communityId') || null;
 
@@ -362,11 +363,11 @@ export default function Communities() {
       .catch(() => loadData(null));
   }, [loadData]);
 
-  const mainFeatured = useMemo(() => (allCommunities || []).find(c => c.isMainFeatured === true) || null, [allCommunities]);
+  const mainFeatured = useMemo(() => !featuredError ? ((allCommunities || []).find(c => c.isMainFeatured === true) || null) : null, [allCommunities, featuredError]);
   const secondaryFeatured = useMemo(() => {
-    const secondary = (allCommunities || []).filter(c => c.isFeatured === true && c.isMainFeatured !== true).sort((a, b) => (a.featuredRank || 999) - (b.featuredRank || 999)).slice(0, 3);
-    return secondary;
-  }, [allCommunities]);
+    if (featuredError) return [];
+    return (allCommunities || []).filter(c => c.isFeatured === true && c.isMainFeatured !== true).sort((a, b) => (a.featuredRank || 999) - (b.featuredRank || 999)).slice(0, 3);
+  }, [allCommunities, featuredError]);
   const myCommunities = useMemo(() => (allCommunities || []).filter(c => userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
   const myGroups = useMemo(() => (allGroups || []).filter(g => memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
   const discoverCommunities = useMemo(() => (allCommunities || []).filter(c => !userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
@@ -435,6 +436,7 @@ export default function Communities() {
     try {
       const result = await base44.functions.invoke('reseedFeaturedCommunities', {});
       toast.success(`Reseeded featured communities: ${result?.data?.main_featured || 'done'}`);
+      setFeaturedError(false);
       // Silently refresh communities without resetting loading state
       const comms = await base44.entities.Community.list('-follower_count', 80);
       if (comms?.length > 0) {
@@ -444,6 +446,7 @@ export default function Communities() {
       }
     } catch (error) {
       toast.error('Failed to reseed featured communities');
+      setFeaturedError(true);
       // Do NOT reload or reset page state on failure
     } finally {
       setReseedingFeatured(false);
