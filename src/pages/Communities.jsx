@@ -596,13 +596,11 @@ export default function Communities() {
           ))}
         </div>
 
-        {isDemo && !hasRealCommunities && (
+        {allCommunities.length === 0 && (
           <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4 text-[11px] text-amber-800">
-            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> Showing demo data — seed communities to see real data.
+            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> No communities yet — seed communities to see data.
           </div>
         )}
-
-
 
         {/* Grid */}
         {isLoading ? (
