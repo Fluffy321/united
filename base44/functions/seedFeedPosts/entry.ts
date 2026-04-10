@@ -101,6 +101,10 @@ const POOL = {
     { body: 'Need a ride to JFK tomorrow morning (early 😭) — leaving from {location} around 5am. Happy to Venmo for gas or split an Uber. Please help lol' },
     { body: 'Does anyone know a good cleaning lady available in Woodmere? Looking for weekly or bi-weekly. {location} — any honest recommendations appreciated 🙏' },
     { body: 'Any babysitters available for Motzei Shabbos in {location}? Two kids, ages 5 and 9. Great kids, easy night. Happy to pay well.' },
+    { body: 'Still looking for 2 spots for Shabbos lunch if anyone has room 🙏 {location} area — we\'re happy to bring a dish! Just don\'t want to be alone this week.' },
+    { body: 'Tried a new challah recipe this week and it was honestly unreal. Fluffy, golden, perfect crust. {location} bakers — I\'ll share the recipe if anyone wants it 🍞' },
+    { body: 'Who\'s around for Seudah Shlishit this week? {location} — thinking of putting something together if there\'s enough interest. Casual, low-key, good vibes.' },
+    { body: 'Anyone hosting extra guests this week and need help with logistics — rides, meals, anything? Happy to pitch in. {location} community is always so generous 🤍' },
   ],
 
   // 20% — help/useful posts
