@@ -546,19 +546,33 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   }
 
   // ── Default feed post ────────────────────────────────────────────────
+  const isQuestion = post.post_subtype === 'question';
+  const isActive = post.comments_count > 0;
+  const getActivityStatus = () => {
+    if (!isActive) return null;
+    const ageMs = Date.now() - new Date(post.created_date).getTime();
+    const ageMinutes = ageMs / (1000 * 60);
+    if (ageMinutes < 30) return `🔥 ${post.comments_count} active`;
+    if (ageMinutes < 120) return `💬 ${post.comments_count} replies`;
+    return null;
+  };
+  const activityStatus = getActivityStatus();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
       className={`rounded-2xl border overflow-hidden ${
+        isQuestion ? 'border-blue-200 bg-gradient-to-br from-blue-50 to-white' :
         post.post_subtype === 'alert' ? 'border-red-300' : 'border-[#EAECF0]'
       }`}
       style={{
-        background: '#ffffff',
-        boxShadow: post.post_subtype === 'alert' ? '0 2px 10px rgba(220,38,38,0.12)' : '0 2px 10px rgba(0,0,0,0.07)',
+        boxShadow: isQuestion ? '0 2px 12px rgba(37,99,235,0.12)' : (post.post_subtype === 'alert' ? '0 2px 10px rgba(220,38,38,0.12)' : '0 2px 10px rgba(0,0,0,0.07)'),
       }}
     >
+      {/* Question highlight bar */}
+      {isQuestion && <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-600" />}
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-0">
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
@@ -666,19 +680,19 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
       {/* Footer */}
       <div className="px-3 py-2.5 mt-1 border-t border-[#F2F4F7] bg-white">
-        {commentCount > 0 && (
-          <button onClick={() => setCommentsOpen(true)} className="text-[11px] text-slate-400 hover:text-slate-600 mb-1.5 block">
-            {commentCount === 1 ? '1 comment' : `${commentCount} comments`}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          {/* Quick Reply Button */}
+          <button 
+            onClick={() => setCommentsOpen(true)} 
+            className="flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors border border-blue-200"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            Reply
           </button>
-        )}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-1">
             <ReactionBar postId={post.id} currentUser={currentUser} />
-            <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-[#64748B] hover:bg-slate-100 transition-colors">
-              <MessageCircle className="w-4 h-4" />
-            </button>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             {post.user_id !== currentUser?.id && (
               <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
             )}
@@ -687,7 +701,23 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       </div>
 
       {/* Engagement Metrics */}
-      <div className="flex items-center gap-4 px-4 py-3 text-xs text-slate-500 border-t border-slate-100">
+      {(post.comments_count > 0 || post.likes_count > 0) && (
+      <div className="flex flex-wrap items-center gap-3 px-4 py-2.5 text-xs text-slate-500 border-t border-slate-100 bg-slate-50/50">
+        {post.comments_count > 0 && (
+          <button 
+            onClick={() => setCommentsOpen(true)}
+            className="hover:text-slate-700 font-semibold flex items-center gap-1 group"
+          >
+            <span className="group-hover:scale-110 transition-transform">💬</span> {post.comments_count} {post.comments_count === 1 ? 'reply' : 'replies'}
+          </button>
+        )}
+        {post.likes_count > 0 && (
+          <span className="flex items-center gap-1">
+            <span>❤️</span> {post.likes_count} {post.likes_count === 1 ? 'like' : 'likes'}
+          </span>
+        )}
+      </div>
+      )}
         {post.comments_count > 0 && (
           <span className="flex items-center gap-1">
             💬 {post.comments_count} {post.comments_count === 1 ? 'comment' : 'comments'}

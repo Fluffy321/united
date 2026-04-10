@@ -1,268 +1,170 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Loader2, Calendar, Search, Plus, Bell, HandHeart, X, RefreshCw } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { usePullToRefresh } from '@/lib/usePullToRefresh';
-import { createPageUrl } from '@/utils';
+import React, { useEffect, useState, useRef, lazy, Suspense, useCallback } from 'react';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import InlineFeedPrompt from '@/components/feed/InlineFeedPrompt';
+import { toast } from 'sonner';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
-import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
-import CommentsSheet from '@/components/feed/CommentsSheet';
-import ReportModal from '@/components/common/ReportModal';
-import ProfileSetup from '@/components/profile/ProfileSetup';
-import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
-import PostTypeSelector from '@/components/feed/PostTypeSelector';
-import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
-import NotificationBell from '@/components/notifications/NotificationBell';
-import SearchModal from '@/components/feed/SearchModal';
 import PostBox from '@/components/feed/PostBox';
+import QuickPromptChips from '@/components/feed/QuickPromptChips';
+import CommentsSheet from '@/components/feed/CommentsSheet';
 import HomeFeedTabs from '@/components/feed/HomeFeedTabs';
 import CommunityActivityStrip from '@/components/feed/CommunityActivityStrip';
-import EventsFeedSection from '@/components/feed/EventsFeedSection';
+import ReactionBar from '@/components/feed/ReactionBar';
 import EventsForYou from '@/components/feed/EventsForYou';
+import EventsFeedSection from '@/components/feed/EventsFeedSection';
+import InlineFeedPrompt from '@/components/feed/InlineFeedPrompt';
+import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
+import ReportModal from '@/components/common/ReportModal';
+import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
+import NotificationBell from '@/components/notifications/NotificationBell';
 import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
-import QuickPromptChips from '@/components/feed/QuickPromptChips';
+import SearchModal from '@/components/feed/SearchModal';
+import { Search, Plus, X, Bell, HandHeart, Calendar, RefreshCw, Loader2 } from 'lucide-react';
 
-import { toast } from 'sonner';
-import { format } from 'date-fns';
+const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
 
 export default function Feed() {
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [currentUser, setCurrentUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('trending');
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState('All Five Towns');
+  const [userLikes, setUserLikes] = useState([]);
+  const [blockedIds, setBlockedIds] = useState([]);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [postModalType, setPostModalType] = useState('feed');
   const [postModalSubtype, setPostModalSubtype] = useState(null);
   const [postModalInitialBody, setPostModalInitialBody] = useState('');
   const [showPromptReply, setShowPromptReply] = useState(false);
+  const [pinnedPrompt, setPinnedPrompt] = useState(null);
   const [showComments, setShowComments] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
-  const [pinnedPrompt, setPinnedPrompt] = useState(null);
-  const [userLikes, setUserLikes] = useState([]);
-  const [blockedIds, setBlockedIds] = useState([]);
-  const [showFAB, setShowFAB] = useState(false);
-  const [activeTab, setActiveTab] = useState('trending');
   const [showAlertModal, setShowAlertModal] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [feedPrompts, setFeedPrompts] = useState([]);
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const [selectedNeighborhood, setSelectedNeighborhood] = useState('All Five Towns');
+  const [showFAB, setShowFAB] = useState(false);
   const [isScrollingDown, setIsScrollingDown] = useState(false);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [selectedCommunityId, setSelectedCommunityId] = useState(null);
-  const scrollTimeoutRef = useRef(null);
-  const queryClient = useQueryClient();
-
-  const { isRefreshing, pullDistance } = usePullToRefresh(async () => {
-    await refetchPosts();
-  });
-
-  const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Cedarhurst', 'Woodmere', 'Hewlett', 'Inwood', 'Far Rockaway'];
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const lastScrollY = useRef(0);
+  const [feedPrompts, setFeedPrompts] = useState([]);
+  const [communityGroups, setCommunityGroups] = useState([]);
+  const [cachedPosts, setCachedPosts] = useState([]);
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        const user = await base44.auth.me();
-        setCurrentUser(user);
-        await Promise.allSettled([loadPinnedPrompt(), loadUserLikes(user), loadFeedPrompts(), loadBlocks(user)]);
-        // Show onboarding once per user if not yet done
-        const onboardingKey = `onboarding_done_${user.id}`;
-        if (user.is_profile_complete && !user.onboarding_complete && !localStorage.getItem(onboardingKey)) {
-          setShowOnboarding(true);
-        }
-      } catch (e) {
-        setCurrentUser({ id: 'guest', full_name: 'Guest', display_name: 'Guest', role: 'user', is_profile_complete: true });
-      }
-    };
-    init();
+    base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
   }, []);
+
+  const loadPinnedPrompt = useCallback(async () => {
+    try {
+      const prompts = await base44.entities.DailyPrompt.list('-created_date', 5);
+      if (prompts?.length > 0) setFeedPrompts(prompts);
+    } catch {}
+  }, []);
+
+  const { data: posts = [], isLoading, isError } = useQuery({
+    queryKey: ['unified-posts'],
+    queryFn: async () => {
+      const p = await base44.entities.UnifiedPost.list('-updated_date', 100);
+      setCachedPosts(p);
+      return p;
+    },
+    staleTime: 30000,
+    refetchInterval: 60000,
+  });
+
+  const { data: userCommunitiesList = [] } = useQuery({
+    queryKey: ['user-communities', currentUser?.id],
+    queryFn: async () => {
+      if (!currentUser?.id) return [];
+      const memberships = await base44.entities.UserCommunity.filter({ user_id: currentUser.id });
+      const ids = memberships.map(m => m.community_id);
+      if (ids.length === 0) return [];
+      return Promise.all(ids.map(id => base44.entities.Community.get(id))).catch(() => []);
+    },
+    enabled: !!currentUser?.id,
+  });
+
+  const { data: userBlocksList = [] } = useQuery({
+    queryKey: ['user-blocks', currentUser?.id],
+    queryFn: async () => {
+      if (!currentUser?.id) return [];
+      return base44.entities.Block.filter({ blocker_id: currentUser.id });
+    },
+    enabled: !!currentUser?.id,
+  });
+
+  useEffect(() => {
+    setBlockedIds(userBlocksList.map(b => b.blocked_id));
+  }, [userBlocksList]);
+
+  useEffect(() => {
+    setCommunityGroups(userCommunitiesList.filter(c => c));
+  }, [userCommunitiesList]);
+
+  useEffect(() => {
+    loadPinnedPrompt();
+  }, [loadPinnedPrompt]);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = setTimeout(() => {
-        const currentScrollY = window.scrollY;
-        setIsScrollingDown(currentScrollY > lastScrollY);
-        setLastScrollY(currentScrollY);
-      }, 100);
+      const currentY = window.scrollY;
+      setIsScrollingDown(currentY > lastScrollY.current);
+      lastScrollY.current = currentY;
     };
-
     window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-    };
-  }, [lastScrollY]);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const loadPinnedPrompt = async () => {
-    try {
-      const prompts = await base44.entities.DailyPrompt.filter({ is_pinned: true });
-      if (prompts.length > 0) setPinnedPrompt(prompts[0]);
-      else {
-        const newest = await base44.entities.DailyPrompt.list('-created_date', 1);
-        if (newest.length > 0) setPinnedPrompt(newest[0]);
+  const likeMutation = useMutation({
+    mutationFn: async (postId) => {
+      const existing = await base44.entities.Like.filter({ post_id: postId, user_id: currentUser.id });
+      if (existing.length > 0) {
+        await base44.entities.Like.delete(existing[0].id);
+        const post = await base44.entities.UnifiedPost.get(postId);
+        await base44.entities.UnifiedPost.update(postId, { likes_count: Math.max(0, (post.likes_count || 1) - 1) });
+      } else {
+        await base44.entities.Like.create({ post_id: postId, user_id: currentUser.id });
+        const post = await base44.entities.UnifiedPost.get(postId);
+        await base44.entities.UnifiedPost.update(postId, { likes_count: (post.likes_count || 0) + 1 });
       }
-    } catch (e) {}
-  };
-
-  const loadFeedPrompts = async () => {
-    try {
-      const prompts = await base44.entities.DailyPrompt.list('-created_date', 5);
-      setFeedPrompts(prompts);
-      // Seed example community prompts if none exist
-      const existing = await base44.entities.UnifiedPost.filter({ type: 'prompt' }, '-created_date', 1);
-      if (existing.length === 0) {
-        const EXAMPLE_PROMPTS = [
-          "What are your Shabbos plans this week?",
-          "Anyone hosting or looking for a Shabbos meal?",
-          "Best kosher takeout for Thursday night?",
-          "Who's going to Israel this summer?",
-        ];
-        for (const q of EXAMPLE_PROMPTS) {
-          await base44.entities.UnifiedPost.create({
-            user_id: 'system',
-            user_name: 'Community',
-            type: 'prompt',
-            board: 'feed',
-            body: q,
-            city: 'Five Towns',
-            comments_count: 0,
-            is_seeded: true,
-          });
-        }
-      }
-    } catch (e) {}
-  };
-
-  const loadBlocks = async (user) => {
-    try {
-      const blocks = await base44.entities.Block.filter({ blocker_id: user.id });
-      setBlockedIds(blocks.map(b => b.blocked_id));
-    } catch (e) {}
-  };
-
-  const handleBlock = async (userId) => {
-    await base44.entities.Block.create({ blocker_id: currentUser.id, blocked_id: userId });
-    setBlockedIds(prev => [...prev, userId]);
-    toast.success('User blocked');
-  };
-
-  const loadUserLikes = async (user) => {
-    try {
-      const likes = await base44.entities.Like.filter({ user_id: user.id });
-      setUserLikes(likes.map(l => l.post_id));
-    } catch (e) {}
-  };
-
-  const FEED_CACHE_KEY = 'feed_posts_cache';
-
-  const getCachedPosts = () => {
-    try {
-      const cached = localStorage.getItem(FEED_CACHE_KEY);
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  };
-
-  const [cachedPosts, setCachedPosts] = useState(getCachedPosts);
-
-  const { data: posts = [], isLoading, isError, refetch: refetchPosts } = useQuery({
-    queryKey: ['unified-posts'],
-    queryFn: async () => {
-      const result = await base44.entities.UnifiedPost.list('-created_date', 40);
-      try { localStorage.setItem(FEED_CACHE_KEY, JSON.stringify(result)); } catch {}
-      setCachedPosts(result);
-      return result;
     },
-    staleTime: 3600000,
-    gcTime: 7200000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    retry: 3,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
-    enabled: !!currentUser
-  });
-
-  const { data: communityGroups = [] } = useQuery({
-    queryKey: ['community-groups-feed'],
-    queryFn: () => base44.entities.CommunityGroup.list('-member_count', 10),
-    staleTime: 3600000,
-    retry: 0,
-    enabled: !!currentUser
+    onSuccess: (_, postId) => {
+      setUserLikes(prev => prev.includes(postId) ? prev.filter(id => id !== postId) : [...prev, postId]);
+      queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+    },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.UnifiedPost.delete(id),
+    mutationFn: async (postId) => {
+      await base44.entities.UnifiedPost.delete(postId);
+      await base44.entities.Comment.delete(await base44.entities.Comment.filter({ post_id: postId }).then(c => c.map(x => x.id)));
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
-      toast.success('Post deleted');
-    }
+    },
   });
 
-  const handleLike = async (postId) => {
-    const isLiked = userLikes.includes(postId);
-    const post = (queryClient.getQueryData(['unified-posts']) || posts).find(p => p.id === postId);
-    // Optimistic UI update — instant feedback
-    setUserLikes(prev => isLiked ? prev.filter(id => id !== postId) : [...prev, postId]);
-    queryClient.setQueryData(['unified-posts'], old =>
-      old?.map(p => p.id === postId
-        ? { ...p, likes_count: Math.max(0, (p.likes_count || 0) + (isLiked ? -1 : 1)) }
-        : p
-      )
-    );
-    // Background sync
-    if (isLiked) {
-      const like = await base44.entities.Like.filter({ post_id: postId, user_id: currentUser.id });
-      if (like[0]) await base44.entities.Like.delete(like[0].id);
-    } else {
-      await base44.entities.Like.create({ post_id: postId, user_id: currentUser.id });
-      if (post?.user_id && post.user_id !== currentUser.id) {
-        base44.entities.Notification.create({
-          user_id: post.user_id, type: 'like',
-          message: `${currentUser.display_name || currentUser.full_name} liked your post`,
-          read: false
-        });
-      }
-    }
-    base44.entities.UnifiedPost.update(postId, {
-      likes_count: Math.max(0, (post?.likes_count || 0) + (isLiked ? -1 : 1))
-    });
+  const handleLike = (postId) => {
+    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    likeMutation.mutate(postId);
   };
 
-  const handleReport = (id, type) => {
-    setReportTarget({ id, type });
+  const handleBlock = async (userId) => {
+    if (!currentUser) return;
+    try {
+      await base44.entities.Block.create({ blocker_id: currentUser.id, blocked_id: userId });
+      setBlockedIds(prev => [...prev, userId]);
+      toast.success('User blocked');
+    } catch { toast.error('Could not block user'); }
+  };
+
+  const handleReport = (contentId, contentType) => {
+    setReportTarget({ id: contentId, type: contentType });
     setShowReport(true);
   };
 
-  if (!currentUser) {
-    return (
-      <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-slate-900 border-t-transparent animate-spin" />
-      </div>
-    );
-  }
-
-  if (!currentUser.is_profile_complete) {
-    return <ProfileSetup user={currentUser} onComplete={() => base44.auth.me().then(setCurrentUser)} />;
-  }
-
-  if (showOnboarding) {
-    return (
-      <OnboardingFlow
-        user={currentUser}
-        onComplete={() => {
-          setShowOnboarding(false);
-          base44.auth.me().then(setCurrentUser);
-        }}
-      />
-    );
-  }
-
-  const activePosts = posts.length > 0 ? posts : cachedPosts;
-  const visiblePosts = activePosts.filter(p => {
+  const visiblePosts = posts.filter(p => {
     if (p.type === 'dating') return false;
     if (p.type === 'prompt' && activeTab !== 'trending' && activeTab !== 'for_you' && activeTab !== 'social') return false;
     if (blockedIds.includes(p.user_id)) return false;
@@ -272,10 +174,18 @@ export default function Feed() {
     }
     return true;
   });
-  const trendingScore = (p) => (p.likes_count || 0) + (p.comments_count || 0) * 2;
+
+  const engagementScore = (p) => {
+    const likes = p.likes_count || 0;
+    const comments = p.comments_count || 0;
+    const ageMs = Date.now() - new Date(p.created_date).getTime();
+    const ageHours = ageMs / (1000 * 60 * 60);
+    const timeDecay = Math.max(0.2, 1 - ageHours / 48);
+    return (likes + comments * 3) * timeDecay;
+  };
 
   const feedPosts = (() => {
-    const sorted = [...visiblePosts].sort((a, b) => trendingScore(b) - trendingScore(a));
+    const sorted = [...visiblePosts].sort((a, b) => engagementScore(b) - engagementScore(a));
     if (activeTab === 'for_you') {
       const userInterests = currentUser?.interests || [];
       const userCity = currentUser?.cityPreset || '';
@@ -298,7 +208,6 @@ export default function Feed() {
 
   return (
     <div className="min-h-screen relative" style={{ background: '#F8FAFC' }}>
-      {/* Pull-to-refresh indicator */}
       {pullDistance > 0 && (
         <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[40] pointer-events-none">
           <div className={`transition-all ${isRefreshing ? 'animate-spin' : ''}`} style={{ transform: `rotate(${pullDistance * 3}deg)` }}>
@@ -307,7 +216,6 @@ export default function Feed() {
         </div>
       )}
 
-      {/* Sticky Header */}
       <div className="sticky top-0 z-[60] bg-white" style={{ borderBottom: '1px solid #E8ECF4', boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between" style={{ pointerEvents: 'none' }}>
           <button
@@ -343,7 +251,6 @@ export default function Feed() {
         </div>
       </div>
 
-      {/* Location picker dropdown */}
       {showLocationPicker && (
         <div className="sticky top-12 z-20 bg-white border-b border-slate-100 shadow-md">
           <div className="max-w-2xl mx-auto px-4 py-2 flex flex-wrap gap-2">
@@ -365,12 +272,8 @@ export default function Feed() {
       )}
 
       <div className="max-w-2xl mx-auto px-4 pt-4 pb-32">
-
-        {/* Push notification prompt */}
         <PushNotificationPrompt />
 
-
-        {/* 1. Post Box */}
         <PostBox
           currentUser={currentUser}
           onPostClick={(type, subtype) => {
@@ -389,9 +292,6 @@ export default function Feed() {
           }}
         />
 
-
-
-        {/* 2. Feed Filters + Stories grouped */}
         <div className="rounded-2xl mb-3 bg-blue-50/60 border border-blue-100/60 p-2.5 space-y-2">
           <div className="rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #4C1D95 100%)' }}>
             <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
@@ -399,7 +299,6 @@ export default function Feed() {
           <CommunityActivityStrip groups={communityGroups} />
         </div>
 
-        {/* 5. Events Calendar Tab */}
         {activeTab === 'events' && !isLoading && (
           <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #F0F9FF 0%, #FAF5FF 100%)', border: '1px solid #C7D7FD', boxShadow: '0 2px 12px rgba(37,99,235,0.06)', marginBottom: 12, padding: 0 }}>
           <EventsForYou currentUser={currentUser} events={visiblePosts.filter(p => p.type === 'event')} />
@@ -411,7 +310,6 @@ export default function Feed() {
           </div>
         )}
 
-        {/* 6. Feed Posts (all tabs except events) */}
         {activeTab !== 'events' && isLoading && (
           <div className="space-y-3">
             {[...Array(4)].map((_, i) => (
@@ -536,7 +434,6 @@ export default function Feed() {
         currentUser={currentUser}
       />
 
-      {/* FAB */}
       <div className={`fixed bottom-24 right-6 z-40 flex flex-col items-end gap-3 transition-transform duration-300 ${isScrollingDown ? 'translate-x-32' : 'translate-x-0'}`}>
         {showFAB && (
           <>
