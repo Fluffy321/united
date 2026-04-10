@@ -22,6 +22,7 @@ import CommunityActivityStrip from '@/components/feed/CommunityActivityStrip';
 import EventsFeedSection from '@/components/feed/EventsFeedSection';
 import EventsForYou from '@/components/feed/EventsForYou';
 import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
+import QuickPromptChips from '@/components/feed/QuickPromptChips';
 
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -32,6 +33,7 @@ export default function Feed() {
   const [showPostModal, setShowPostModal] = useState(false);
   const [postModalType, setPostModalType] = useState('feed');
   const [postModalSubtype, setPostModalSubtype] = useState(null);
+  const [postModalInitialBody, setPostModalInitialBody] = useState('');
   const [showPromptReply, setShowPromptReply] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -374,6 +376,15 @@ export default function Feed() {
           onPostClick={(type, subtype) => {
             setPostModalType(type);
             setPostModalSubtype(subtype || null);
+            setPostModalInitialBody('');
+            setShowPostModal(true);
+          }}
+        />
+        <QuickPromptChips
+          onPostClick={(type, subtype, prefill) => {
+            setPostModalType(type);
+            setPostModalSubtype(subtype || null);
+            setPostModalInitialBody(prefill || '');
             setShowPostModal(true);
           }}
         />
@@ -483,11 +494,12 @@ export default function Feed() {
         open={showPostModal}
         onOpenChange={(open) => {
           setShowPostModal(open);
-          if (!open) { queryClient.invalidateQueries({ queryKey: ['unified-posts'] }); setPostModalSubtype(null); }
+          if (!open) { queryClient.invalidateQueries({ queryKey: ['unified-posts'] }); setPostModalSubtype(null); setPostModalInitialBody(''); }
         }}
         currentUser={currentUser}
         postType={postModalType}
         initialSubtype={postModalSubtype}
+        initialBody={postModalInitialBody}
       />
 
       <UnifiedPostModal

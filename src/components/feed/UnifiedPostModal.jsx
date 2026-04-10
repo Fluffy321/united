@@ -98,7 +98,7 @@ const FEED_SUBTYPES = [
   { value: 'alert',      label: 'Alert',      icon: Bell,          active: 'bg-red-500 text-white border-red-500', inactive: 'bg-white text-slate-600 border-slate-200 hover:border-red-300' },
 ];
 
-export default function UnifiedPostModal({ open, onOpenChange, currentUser, postType = 'feed', promptId = null, promptText = null, initialSubtype = null }) {
+export default function UnifiedPostModal({ open, onOpenChange, currentUser, postType = 'feed', promptId = null, promptText = null, initialSubtype = null, initialBody = '' }) {
   const userInitials = (currentUser?.display_name || currentUser?.full_name || '?').charAt(0).toUpperCase();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -122,8 +122,9 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
       const randomPlaceholder = placeholderList[Math.floor(Math.random() * placeholderList.length)];
       setPlaceholder(randomPlaceholder);
       if (initialSubtype) setPostSubtype(initialSubtype);
+      if (initialBody) setBody(initialBody);
     }
-  }, [open, postType, initialSubtype]);
+  }, [open, postType, initialSubtype, initialBody]);
 
   const isPromptReply = !!promptId;
   const isHelp = postType === 'help';
