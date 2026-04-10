@@ -105,6 +105,10 @@ const POOL = {
     { body: 'Tried a new challah recipe this week and it was honestly unreal. Fluffy, golden, perfect crust. {location} bakers — I\'ll share the recipe if anyone wants it 🍞' },
     { body: 'Who\'s around for Seudah Shlishit this week? {location} — thinking of putting something together if there\'s enough interest. Casual, low-key, good vibes.' },
     { body: 'Anyone hosting extra guests this week and need help with logistics — rides, meals, anything? Happy to pitch in. {location} community is always so generous 🤍' },
+    { body: 'Any recommendations for after school activities for younger kids in {location}? Looking for something fun and enriching — sports, arts, anything. My 7-year-old is bored and I need ideas 😅' },
+    { body: 'Bus was late again today… anyone else dealing with this in {location}? Third time this week. Trying to figure out if it\'s just our route or a wider issue.' },
+    { body: 'Best tutor for Regents math in {location}? Looking for someone patient and results-oriented. My kid is smart but needs a confidence boost. Any honest recs appreciated 🙏' },
+    { body: 'Anyone else completely overwhelmed with camp forms right now? The medical forms, the permission slips, the deposits… {location} parents — how do you stay on top of all this?? 😭' },
   ],
 
   // 20% — help/useful posts
