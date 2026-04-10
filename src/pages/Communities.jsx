@@ -445,9 +445,9 @@ export default function Communities() {
         setIsDemo(false);
       }
     } catch (error) {
+      console.error('[reseedFeatured] error:', error?.message || error);
       toast.error('Failed to reseed featured communities');
-      setFeaturedError(true);
-      // Do NOT reload or reset page state on failure
+      // Do NOT change any page state on failure — preserve existing data
     } finally {
       setReseedingFeatured(false);
     }
