@@ -323,6 +323,13 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
               <EventRSVPSection postId={post.id} currentUser={currentUser} eventDate={post.event_date} />
             </div>
           )}
+          {(post.likes_count > 0 || post.comments_count > 0) && (
+            <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-400">
+              {post.likes_count > 0 && <span>{post.likes_count} {post.likes_count === 1 ? 'person' : 'people'} going</span>}
+              {post.likes_count > 0 && post.comments_count > 0 && <span>·</span>}
+              {post.comments_count > 0 && <button onClick={() => setCommentsOpen(true)} className="hover:text-slate-600">{post.comments_count} {post.comments_count === 1 ? 'comment' : 'comments'}</button>}
+            </div>
+          )}
         </div>
         <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
       </motion.div>
@@ -455,7 +462,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             <span className="text-[12px] text-slate-500 flex-1">{isAnonymous ? 'Anonymous' : post.user_name} · {timeAgo}</span>
             <ReactionBar postId={post.id} currentUser={currentUser} />
             <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1 h-7 px-2 rounded-full text-[12px] text-slate-500 hover:bg-slate-100">
-              <MessageCircle className="w-3.5 h-3.5" />{commentCount > 0 && commentCount}
+              <MessageCircle className="w-3.5 h-3.5" />{commentCount > 0 && <span>{commentCount === 1 ? '1 reply' : `${commentCount} replies`}</span>}
             </button>
             {isOwner && helpStatus === 'open' && (
               <button onClick={handleFulfilled} disabled={fulfilling} className="h-8 px-3 rounded-full text-[12px] font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 flex items-center gap-1">
@@ -528,7 +535,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           <ReactionBar postId={post.id} currentUser={currentUser} />
           {commentCount > 0 && (
             <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1 text-[12px] text-white/70">
-              <MessageCircle className="w-3.5 h-3.5" />{commentCount}
+              <MessageCircle className="w-3.5 h-3.5" />{commentCount === 1 ? '1 person replied' : `${commentCount} people replied`}
             </button>
           )}
           <span className="text-[11px] text-white/60 ml-auto">{timeAgo}</span>
@@ -659,11 +666,16 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
       {/* Footer */}
       <div className="px-3 py-2.5 mt-1 border-t border-[#F2F4F7] bg-white">
+        {commentCount > 0 && (
+          <button onClick={() => setCommentsOpen(true)} className="text-[11px] text-slate-400 hover:text-slate-600 mb-1.5 block">
+            {commentCount === 1 ? '1 comment' : `${commentCount} comments`}
+          </button>
+        )}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             <ReactionBar postId={post.id} currentUser={currentUser} />
             <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium text-[#64748B] hover:bg-slate-100 transition-colors">
-              <MessageCircle className="w-4 h-4" />{commentCount > 0 && <span>{commentCount}</span>}
+              <MessageCircle className="w-4 h-4" />
             </button>
           </div>
           <div className="flex items-center gap-1.5">
