@@ -376,22 +376,32 @@ Deno.serve(async (req) => {
       postDrafts.push(post);
     }
 
-    // Save posts and then seed comments
-    let created = 0;
-    let commentCount = 0;
-    for (const draft of postDrafts) {
-      const { _type, _comment_count, ...postData } = draft;
-      const savedPost = await base44.asServiceRole.entities.UnifiedPost.create(postData);
-      created++;
+    // Bulk-create posts first
+    const cleanPosts = postDrafts.map(({ _type, _comment_count, ...rest }) => rest);
+    const createdPosts = [];
+    for (let i = 0; i < cleanPosts.length; i += 10) {
+      const batch = cleanPosts.slice(i, i + 10);
+      const results = await base44.asServiceRole.entities.UnifiedPost.bulkCreate(batch);
+      // bulkCreate returns array of created records with IDs
+      if (Array.isArray(results)) createdPosts.push(...results);
+    }
+    const created = createdPosts.length;
 
-      // Seed 2–6 comments
-      if (savedPost?.id && _comment_count > 0) {
-        const comments = generateComments(savedPost.id, _type, _comment_count, week, created);
-        for (const comment of comments) {
-          await base44.asServiceRole.entities.Comment.create(comment);
-          commentCount++;
-        }
-      }
+    // Build comment batch across all posts
+    const allComments = [];
+    for (let i = 0; i < createdPosts.length; i++) {
+      const savedPost = createdPosts[i];
+      const draft = postDrafts[i];
+      if (!savedPost?.id) continue;
+      const comments = generateComments(savedPost.id, draft._type, draft._comment_count, week, i);
+      allComments.push(...comments);
+    }
+
+    let commentCount = 0;
+    for (let i = 0; i < allComments.length; i += 20) {
+      const batch = allComments.slice(i, i + 20);
+      await base44.asServiceRole.entities.Comment.bulkCreate(batch);
+      commentCount += batch.length;
     }
 
     console.log(`seedFeedPosts done: posts=${created}, comments=${commentCount}, week=${week}`);
