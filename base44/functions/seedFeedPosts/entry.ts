@@ -186,7 +186,9 @@ const POOL = {
     { body: 'Hosting 14 people for Shabbos this week. Cooking timeline has been planned since Monday. Send me good vibes. {location} 😅' },
     { body: 'First time making gefilte fish from scratch. My mother is thrilled. My husband doesn\'t understand why I didn\'t just buy it. He has a point. {location}', hasImage: true },
     { body: 'The kosher food scene in {location} is genuinely underrated. So many good options now. We\'re lucky to live here.' },
-    { body: 'Looking for a recipe for kokosh cake — trying to recreate my bubby\'s version from memory. Anyone have a classic recipe to share? {location}' },
+    { body: 'Shabbos table from last night 🔥 {location}', hasImage: true },
+    { body: 'Made this kugel — came out insane. {location} 😍', hasImage: true },
+    { body: 'New sushi spot opened in {location} — anyone try it yet? Heard it\'s really good but want to hear from locals first.' },
     { body: 'Made a big pot of chicken soup Tuesday and it\'s been slowly disappearing all week. My family eats like it\'s Shabbos every night. {location}', hasImage: true },
   ],
 
