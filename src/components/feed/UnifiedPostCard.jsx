@@ -741,30 +741,6 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           </span>
         )}
       </div>
-        {post.comments_count > 0 && (
-          <button 
-            onClick={() => setCommentsOpen(true)}
-            className="hover:text-slate-700 font-semibold flex items-center gap-1 group"
-          >
-            <span className="group-hover:scale-110 transition-transform">💬</span> {post.comments_count} {post.comments_count === 1 ? 'reply' : 'replies'}
-          </button>
-        )}
-        {post.likes_count > 0 && (
-          <span className="flex items-center gap-1">
-            <span>❤️</span> {post.likes_count} {post.likes_count === 1 ? 'like' : 'likes'}
-          </span>
-        )}
-        {post.type === 'event' && post.rsvp_count && post.rsvp_count > 0 && (
-          <span className="flex items-center gap-1">
-            📍 {post.rsvp_count} {post.rsvp_count === 1 ? 'person' : 'people'} interested
-          </span>
-        )}
-        {post.type === 'help' && post.offers_count && post.offers_count > 0 && (
-          <span className="flex items-center gap-1">
-            🤝 {post.offers_count} {post.offers_count === 1 ? 'offer' : 'offers'}
-          </span>
-        )}
-      </div>
 
       {quickReplyOpen && (
         <div className="mt-3 pt-3 border-t border-slate-100">

@@ -1,0 +1,48 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User who should receive the notification"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "post_reply",
+        "comment_reply"
+      ],
+      "description": "Type of notification"
+    },
+    "actor_id": {
+      "type": "string",
+      "description": "User who triggered the notification"
+    },
+    "actor_name": {
+      "type": "string",
+      "description": "Display name of the user who triggered it"
+    },
+    "post_id": {
+      "type": "string",
+      "description": "Associated post ID"
+    },
+    "comment_id": {
+      "type": "string",
+      "description": "Associated comment ID (for reply notifications)"
+    },
+    "message": {
+      "type": "string",
+      "description": "Notification message"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "user_id",
+    "type",
+    "actor_id",
+    "post_id"
+  ]
+}
