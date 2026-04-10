@@ -96,6 +96,11 @@ const POOL = {
     { body: 'Best pizza place right now? Need something tonight and can\'t decide. {location} — go.' },
     { body: 'Is anyone else dealing with camp logistics chaos or just us 😅 Between forms, deposits, and medical stuff I feel like I need a full-time coordinator. {location}' },
     { body: 'Who\'s going to the shiur tonight? Just want to know if I\'ll know anyone there. {location}' },
+    { body: 'Anyone driving to Brooklyn tonight around 8? Would love to split the drive if someone\'s heading that way from {location}.' },
+    { body: 'Looking for a math tutor for 9th grade in {location} — any recommendations? Needs to be patient and good with someone who gets anxious around tests.' },
+    { body: 'Need a ride to JFK tomorrow morning (early 😭) — leaving from {location} around 5am. Happy to Venmo for gas or split an Uber. Please help lol' },
+    { body: 'Does anyone know a good cleaning lady available in Woodmere? Looking for weekly or bi-weekly. {location} — any honest recommendations appreciated 🙏' },
+    { body: 'Any babysitters available for Motzei Shabbos in {location}? Two kids, ages 5 and 9. Great kids, easy night. Happy to pay well.' },
   ],
 
   // 20% — help/useful posts
