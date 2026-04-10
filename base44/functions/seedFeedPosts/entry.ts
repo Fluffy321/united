@@ -91,6 +91,11 @@ const POOL = {
     { body: 'How do you balance learning and working full time? Feel like I never have enough time for everything. {location}' },
     { body: 'Is anyone else doing Daf Yomi? Just started and looking for chavrusa partners in {location}' },
     { body: 'Shabbos morning davening: early minyan before the kids wake up, or family davening together? What does your house do? {location}' },
+    { body: 'Where is everyone for Shabbos this week? Staying local or going away? {location} crowd — let\'s hear it 👇' },
+    { body: 'Anyone know good cholent spots in the Five Towns? Like if you\'re not making your own and want takeout Friday — who has the best? {location}' },
+    { body: 'Best pizza place right now? Need something tonight and can\'t decide. {location} — go.' },
+    { body: 'Is anyone else dealing with camp logistics chaos or just us 😅 Between forms, deposits, and medical stuff I feel like I need a full-time coordinator. {location}' },
+    { body: 'Who\'s going to the shiur tonight? Just want to know if I\'ll know anyone there. {location}' },
   ],
 
   // 20% — help/useful posts
@@ -182,6 +187,9 @@ const POOL = {
 // Per-type comment pools — realistic, varied, casual
 const COMMENT_POOLS = {
   question: [
+    ['Staying local this week! Anyone want to come for lunch?', 'We\'re in the mountains — first time in years', 'Home sweet home 🦷 shabbos in {location} is the best', 'Going to in-laws. Praying for patience 😂'],
+    ['I heard Traditions has amazing cholent takeout', 'Honestly homemade or nothing for me', 'There\'s a shul kiddush Saturday that\'s always incredible — DM me', 'I need this answer too'],
+    ['Gotta be Eden Wok for the combo deal', 'Mazur\'s is underrated honestly', 'Anywhere with garlic knots wins automatically', 'This is the most important question asked today'],
     ['We do the early minyan — game changer honestly', 'Same! Kids don\'t even know you\'re gone 😂', 'We tried that but then my husband fell back asleep...'],
     ['Omg yes I feel this every year', 'Wait you\'re not alone lol', 'The answer is yes, it absolutely gets worse 😅', 'I hired someone this year. No regrets.'],
     ['This is the most relatable thing I\'ve seen today', 'Ask me again after I survive this Shabbos', 'Same boat — following for answers'],
@@ -204,6 +212,7 @@ const COMMENT_POOLS = {
   parenting: [
     ['My son did the same thing!! I was floored', 'Mine came home quoting the rav — I had no idea what she was saying lol', 'The teachers there are incredible'],
     ['Camp stress is year-round at this point 😩', 'We went overnight last year and it was the best decision', 'Local is underrated honestly'],
+    ['We\'re in camp deposit hell right now. You are NOT alone.', 'The forms never end', 'I made a whole spreadsheet and I\'m still lost 😅', 'Same. Every. Year.'],
     ['Mine went through this at exactly 5. It passes. Sort of.', 'My middle child is in a full "only beige foods" phase', 'Ha!! Yes this is VERY real'],
     ['So proud!! That\'s a huge milestone 📚', 'The schools here really are excellent', 'My daughter did the same — best feeling ever'],
     ['Same thing happened to me!!', 'I cried reading this — I get it', 'These kids man... 😭❤️'],
