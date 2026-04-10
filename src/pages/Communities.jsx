@@ -8,8 +8,8 @@ import CommunityDetailPage from '@/components/communities/CommunityDetailView';
 import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
-import FeaturedHeroCard from '@/components/communities/FeaturedHeroCard';
-import FeaturedSecondaryCard from '@/components/communities/FeaturedSecondaryCard';
+import FeaturedHeroCard from '@/components/communities/FeaturedHeroCard.jsx';
+import FeaturedSecondaryCard from '@/components/communities/FeaturedSecondaryCard.jsx';
 import FeaturedCommunityBanner from '@/components/communities/FeaturedCommunityBanner';
 import DiscoverCategoryCards, { DISCOVER_CATEGORIES } from '@/components/communities/DiscoverCategoriesScreen';
 import { toast } from 'sonner';
@@ -362,15 +362,15 @@ export default function Communities() {
       .catch(() => loadData(null));
   }, [loadData]);
 
-  const mainFeatured = useMemo(() => allCommunities.find(c => c.isMainFeatured === true), [allCommunities]);
+  const mainFeatured = useMemo(() => (allCommunities || []).find(c => c.isMainFeatured === true) || null, [allCommunities]);
   const secondaryFeatured = useMemo(() => {
-    const secondary = allCommunities.filter(c => c.isFeatured === true && c.isMainFeatured !== true).sort((a, b) => (a.featuredRank || 999) - (b.featuredRank || 999)).slice(0, 3);
+    const secondary = (allCommunities || []).filter(c => c.isFeatured === true && c.isMainFeatured !== true).sort((a, b) => (a.featuredRank || 999) - (b.featuredRank || 999)).slice(0, 3);
     return secondary;
   }, [allCommunities]);
-  const myCommunities = useMemo(() => allCommunities.filter(c => userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
-  const myGroups = useMemo(() => allGroups.filter(g => memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
-  const discoverCommunities = useMemo(() => allCommunities.filter(c => !userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
-  const discoverGroups = useMemo(() => allGroups.filter(g => !memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
+  const myCommunities = useMemo(() => (allCommunities || []).filter(c => userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
+  const myGroups = useMemo(() => (allGroups || []).filter(g => memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
+  const discoverCommunities = useMemo(() => (allCommunities || []).filter(c => !userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
+  const discoverGroups = useMemo(() => (allGroups || []).filter(g => !memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
 
   const filterItems = useCallback((items) => {
     let result = items;
@@ -434,10 +434,17 @@ export default function Communities() {
     setReseedingFeatured(true);
     try {
       const result = await base44.functions.invoke('reseedFeaturedCommunities', {});
-      toast.success(`Reseeded featured communities: ${result.data.main_featured}`);
-      loadData(currentUser);
+      toast.success(`Reseeded featured communities: ${result?.data?.main_featured || 'done'}`);
+      // Silently refresh communities without resetting loading state
+      const comms = await base44.entities.Community.list('-follower_count', 80);
+      if (comms?.length > 0) {
+        setAllCommunities(comms);
+        setCache(comms);
+        setIsDemo(false);
+      }
     } catch (error) {
       toast.error('Failed to reseed featured communities');
+      // Do NOT reload or reset page state on failure
     } finally {
       setReseedingFeatured(false);
     }
@@ -477,7 +484,8 @@ export default function Communities() {
     return <CommunityDetailPage communityId={selectedCommunityId} currentUser={currentUser} onBack={backToList} />;
   }
 
-  const isLoading = loadingPhase === 'loading' && allCommunities.length === 0;
+  const hasRealCommunities = (allCommunities || []).some(c => !c.id?.startsWith('demo-'));
+  const isLoading = loadingPhase === 'loading' && (allCommunities || []).length === 0;
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
@@ -585,7 +593,7 @@ export default function Communities() {
           ))}
         </div>
 
-        {isDemo && (
+        {isDemo && !hasRealCommunities && (
           <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4 text-[11px] text-amber-800">
             <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> Showing demo data — seed communities to see real data.
           </div>
