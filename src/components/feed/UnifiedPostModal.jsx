@@ -337,7 +337,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors">
               ❓ Question
             </button>
-            <button type="button" onClick={() => {setPostModalType('event'); setPostModalSubtype('event');}}
+            <button type="button" onClick={() => {setPostSubtype('event'); setTimeout(() => textareaRef.current?.focus(), 100);}}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors">
               🎉 Event
             </button>

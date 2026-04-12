@@ -1,15 +1,5 @@
-import PaymentModal from './PaymentModal';
-
-export default function DonationModal({ open, onOpenChange }) {
-  return (
-    <PaymentModal
-      open={open}
-      onOpenChange={onOpenChange}
-      type="donation"
-      defaultAmount={25}
-    />
-  );
-} from 'lucide-react';
+import { useState } from 'react';
+import { Heart, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
@@ -54,10 +44,7 @@ export default function DonationModal({ open, onOpenChange }) {
             <Heart className="w-6 h-6 text-red-500" />
             <h2 className="text-xl font-bold text-slate-900">Support Our Community</h2>
           </div>
-          <button 
-            onClick={() => onOpenChange(false)}
-            className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
-          >
+          <button onClick={() => onOpenChange(false)} className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-slate-400" />
           </button>
         </div>
@@ -72,10 +59,7 @@ export default function DonationModal({ open, onOpenChange }) {
             {PRESET_AMOUNTS.map(amount => (
               <button
                 key={amount}
-                onClick={() => {
-                  setSelectedAmount(amount);
-                  setCustomAmount('');
-                }}
+                onClick={() => { setSelectedAmount(amount); setCustomAmount(''); }}
                 className={`py-3 rounded-lg font-semibold transition-all ${
                   selectedAmount === amount && !customAmount
                     ? 'bg-blue-600 text-white'
@@ -95,10 +79,7 @@ export default function DonationModal({ open, onOpenChange }) {
                 type="number"
                 placeholder="Enter amount"
                 value={customAmount}
-                onChange={(e) => {
-                  setCustomAmount(e.target.value);
-                  setSelectedAmount(0);
-                }}
+                onChange={(e) => { setCustomAmount(e.target.value); setSelectedAmount(0); }}
                 min="1"
                 step="0.01"
                 className="ml-2"
@@ -113,25 +94,11 @@ export default function DonationModal({ open, onOpenChange }) {
           </p>
         </div>
 
-        <Button
-          onClick={handleDonate}
-          disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              Processing...
-            </>
-          ) : (
-            'Continue to Payment'
-          )}
+        <Button onClick={handleDonate} disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3">
+          {isLoading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Processing...</> : 'Continue to Payment'}
         </Button>
 
-        <button
-          onClick={() => onOpenChange(false)}
-          className="w-full mt-3 py-3 text-slate-600 font-semibold hover:bg-slate-50 rounded-lg transition-colors"
-        >
+        <button onClick={() => onOpenChange(false)} className="w-full mt-3 py-3 text-slate-600 font-semibold hover:bg-slate-50 rounded-lg transition-colors">
           Cancel
         </button>
       </div>

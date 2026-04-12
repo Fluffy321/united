@@ -346,7 +346,7 @@ export default function Feed() {
           </div>
         )}
         {activeTab !== 'events' && (isError ? cachedPosts.length > 0 : !isLoading) && (
-          <div className="space-y-2.5">
+          <div className="space-y-1.5">
             {isError && cachedPosts.length > 0 && (
               <p className="text-[12px] text-slate-400 text-center">Showing cached posts — still loading...</p>
             )}

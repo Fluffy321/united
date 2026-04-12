@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import NewsletterComposer from './NewsletterComposer';
+import NewsletterHistoryModal from './NewsletterHistoryModal';
 
 const COLORS = ['#2563EB', '#7C3AED', '#F59E0B', '#EF4444', '#10B981', '#EC4899', '#06B6D4', '#F97316'];
 
