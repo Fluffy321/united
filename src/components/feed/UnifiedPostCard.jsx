@@ -156,7 +156,16 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
     return new Date(post.created_date);
   };
 
-  const timeAgo = formatDistanceToNow(getDisplayDate(), { addSuffix: true });
+  const getTimeAgo = (date) => {
+    const secs = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (secs < 60) return 'Just now';
+    if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
+    if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
+    if (secs < 604800) return `${Math.floor(secs / 86400)}d ago`;
+    return formatDistanceToNow(date, { addSuffix: true });
+  };
+  const timeAgo = getTimeAgo(getDisplayDate());
+  const isVeryRecent = !post.is_seeded && (Date.now() - new Date(post.created_date).getTime()) < 10 * 60 * 1000;
   const typeConfig = TYPE_CONFIGS[post.type] || TYPE_CONFIGS.feed;
   const helpCat = HELP_REQUEST_CATEGORIES.find(c => c.value === post.category);
 
@@ -624,7 +633,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
                   {post.helper_badge && post.helper_badge !== 'none' && <HelperBadge badge={post.helper_badge} size="sm" />}
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                  <span className="text-[10px] text-[#98A2B3]">{timeAgo}</span>
+                  <span className={`text-[10px] font-semibold ${isVeryRecent ? 'text-green-600' : 'text-[#98A2B3]'}`}>{timeAgo}</span>
                   {communityName ? (
                     <><span className="text-[#C8D0DC] text-[10px]">·</span><span className="text-[10px] text-[#2563EB] font-semibold">📌 {communityName}</span></>
                   ) : post.city ? (
