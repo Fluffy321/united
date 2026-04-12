@@ -593,12 +593,13 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15 }}
-      className={`${
+      className={`relative ${
         isQuestion ? 'bg-blue-50/60 border-l-2 border-l-blue-400' :
         post.post_subtype === 'alert' ? 'border-l-2 border-l-red-500 bg-red-50/30' :
         isActiveNow ? 'bg-white border-l-2 border-l-blue-500' :
-        isHotPost ? 'bg-white border-l-2 border-l-orange-400' : 'bg-white'
+        isHotPost ? 'bg-gradient-to-br from-orange-50/60 to-white border-l-[3px] border-l-orange-400' : 'bg-white'
       }`}
+      style={isHotPost ? { boxShadow: '0 2px 16px rgba(251,146,60,0.12), 0 1px 4px rgba(0,0,0,0.04)' } : undefined}
     >
       {/* Question highlight bar */}
       {isQuestion && <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-600" />}

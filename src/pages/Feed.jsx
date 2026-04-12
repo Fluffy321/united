@@ -362,7 +362,16 @@ export default function Feed() {
                   Post Something
                 </button>
               </div>
-            ) : feedPosts.map((post, index) => (
+            ) : (() => {
+            const hotIndex = feedPosts.findIndex(p =>
+              (p.likes_count || 0) + (p.comments_count || 0) * 2 >= 20
+            );
+            let orderedPosts = [...feedPosts];
+            if (hotIndex > 2) {
+              const [hot] = orderedPosts.splice(hotIndex, 1);
+              orderedPosts.splice(2, 0, hot);
+            }
+            return orderedPosts.map((post, index) => (
               <React.Fragment key={post.id}>
                 <UnifiedPostCard
                  post={post}
@@ -383,7 +392,8 @@ export default function Feed() {
                   />
                 )}
               </React.Fragment>
-            ))}
+            ));
+          })()}
           </div>
         )}
       </div>
