@@ -155,6 +155,35 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const bodyLong = post.body && post.body.length > BODY_LIMIT;
   const bodyPreview = bodyLong && !expanded ? post.body.slice(0, BODY_LIMIT).trimEnd() + '…' : post.body;
 
+  const handleFulfilled = async () => {
+    setFulfilling(true);
+    await base44.entities.UnifiedPost.update(post.id, { help_status: 'fulfilled' });
+    setHelpStatus('fulfilled');
+    setFulfilling(false);
+    toast.success('Marked as fulfilled! 🎉');
+  };
+
+  const handleQuickReply = async () => {
+    if (!quickReplyText.trim() || !currentUser) return;
+    setSubmittingQuickReply(true);
+    try {
+      await base44.entities.Comment.create({
+        post_id: post.id,
+        author_id: currentUser.id,
+        author_name: currentUser.display_name || currentUser.full_name?.split(' ')[0] || 'User',
+        body: quickReplyText.trim(),
+      });
+      setCommentCount(prev => prev + 1);
+      setQuickReplyText('');
+      setQuickReplyOpen(false);
+      toast.success('Reply posted!');
+    } catch (err) {
+      toast.error('Could not post reply');
+    } finally {
+      setSubmittingQuickReply(false);
+    }
+  };
+
   // ── Photo post ────────────────────────────────────────────────────────
   const allImages = post.image_urls?.length > 0 ? post.image_urls : (post.image_url ? [post.image_url] : []);
   if (allImages.length > 0 && post.type === 'feed' && !post.title) {
@@ -670,46 +699,32 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         )}
       </div>
 
-      {/* Footer */}
-      <div className="px-3 py-1.5 mt-0 border-t border-[#F2F4F7] bg-white/70">
-        <div className="flex items-center justify-between gap-2 mb-1.5">
-          {/* Quick Reply Button */}
-          <button 
-            onClick={() => setQuickReplyOpen(!quickReplyOpen)} 
-            className="flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors border border-blue-200"
-          >
-            <MessageCircle className="w-3.5 h-3.5" />
-            Reply
-          </button>
-          <div className="flex items-center gap-1 flex-1">
-            <ReactionBar postId={post.id} currentUser={currentUser} />
-          </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {post.user_id !== currentUser?.id && (
-              <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
-            )}
-          </div>
+      {/* Footer: actions + engagement on one line */}
+      <div className="px-3 py-1.5 border-t border-[#F2F4F7] bg-white/70 flex items-center gap-3">
+        <button
+          onClick={() => setQuickReplyOpen(!quickReplyOpen)}
+          className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+        >
+          <MessageCircle className="w-3 h-3" />
+          Reply
+        </button>
+        <ReactionBar postId={post.id} currentUser={currentUser} />
+        {post.user_id !== currentUser?.id && (
+          <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
+        )}
+        <div className="ml-auto flex items-center gap-2 text-[11px] text-slate-400">
+          {post.comments_count > 0 && (
+            <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-0.5 hover:text-slate-600">
+              <MessageCircle className="w-3 h-3" /> {post.comments_count}
+            </button>
+          )}
+          {post.likes_count > 0 && (
+            <span className="flex items-center gap-0.5">
+              <span className="text-[10px]">❤️</span> {post.likes_count}
+            </span>
+          )}
         </div>
       </div>
-
-      {/* Engagement Metrics */}
-      {(post.comments_count > 0 || post.likes_count > 0) && (
-      <div className="flex flex-wrap items-center gap-3 px-3 py-1.5 text-xs text-slate-500 border-t border-slate-100 bg-slate-50/50">
-        {post.comments_count > 0 && (
-          <button 
-            onClick={() => setCommentsOpen(true)}
-            className="hover:text-slate-700 font-semibold flex items-center gap-1 group"
-          >
-            <span className="group-hover:scale-110 transition-transform">💬</span> {post.comments_count} {post.comments_count === 1 ? 'reply' : 'replies'}
-          </button>
-        )}
-        {post.likes_count > 0 && (
-          <span className="flex items-center gap-1">
-            <span>❤️</span> {post.likes_count} {post.likes_count === 1 ? 'like' : 'likes'}
-          </span>
-        )}
-      </div>
-      )}
 
       {quickReplyOpen && (
         <div className="mt-3 pt-3 border-t border-slate-100">
