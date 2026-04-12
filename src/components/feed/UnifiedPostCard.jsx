@@ -214,7 +214,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
               <img
                 src={allImages[0]}
                 alt=""
-                className="w-full h-52 object-cover transition-transform duration-300 group-hover:scale-105 cursor-pointer"
+                className="w-full h-72 object-cover transition-transform duration-300 group-hover:scale-105 cursor-pointer"
                 loading="lazy"
                 onClick={() => setImgExpanded(e => !e)}
               />
@@ -454,16 +454,17 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="bg-white border-l-4 border-purple-500"
+        className="bg-amber-50/40 border-l-[3px] border-l-amber-400"
+        style={{ boxShadow: '0 1px 8px rgba(251,191,36,0.10)' }}
       >
         <div className="px-3 pt-2 pb-1.5">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-xl bg-purple-100 flex items-center justify-center text-base flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-base flex-shrink-0">
               {helpCat?.emoji || '🤝'}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">🤝 Chesed Needed</span>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">🤝 Chesed Needed</span>
                 {helpCat && <span className="text-[11px] font-semibold text-slate-500">{helpCat.label}</span>}
                 {helpStatus === 'fulfilled' && <span className="text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Fulfilled</span>}
               </div>
