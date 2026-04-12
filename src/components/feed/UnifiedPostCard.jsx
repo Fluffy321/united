@@ -709,13 +709,29 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           <img src={post.image_url} alt="" className={`w-full object-cover rounded-xl transition-all ${imgExpanded ? 'max-h-[400px]' : 'max-h-48'}`} loading="lazy" />
           </div>
         )}
-        {post.location_text && (
-          <div className="mt-2">
+        {/* Context labels */}
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {post.location_text && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 text-[11px] font-semibold">
               <MapPin className="w-3 h-3" />{post.location_text}
             </span>
-          </div>
-        )}
+          )}
+          {communityName && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-[11px] font-semibold">
+              👥 In {communityName}
+            </span>
+          )}
+          {!communityName && post.city && post.city !== 'Five Towns' && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-semibold">
+              📍 From {post.city}
+            </span>
+          )}
+          {!communityName && (post.city === 'Five Towns' || !post.city) && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100 text-[11px] font-semibold">
+              📍 From Five Towns
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Inline recent comments */}
