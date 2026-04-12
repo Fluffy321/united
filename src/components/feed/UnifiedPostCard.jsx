@@ -570,16 +570,14 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
   // ── Default feed post ────────────────────────────────────────────────
   const isQuestion = post.post_subtype === 'question';
-  const isActive = post.comments_count > 0;
-  const getActivityStatus = () => {
-    if (!isActive) return null;
-    const ageMs = Date.now() - new Date(post.created_date).getTime();
-    const ageMinutes = ageMs / (1000 * 60);
-    if (ageMinutes < 30) return `🔥 ${post.comments_count} active`;
-    if (ageMinutes < 120) return `💬 ${post.comments_count} replies`;
-    return null;
-  };
-  const activityStatus = getActivityStatus();
+
+  // Live activity signals
+  const nowMs = Date.now();
+  const postAgeMs = nowMs - new Date(post.created_date).getTime();
+  const updatedAgeMs = post.updated_date ? nowMs - new Date(post.updated_date).getTime() : postAgeMs;
+  const isActiveNow = !post.is_seeded && updatedAgeMs < 15 * 60 * 1000 && post.comments_count > 0;
+  const hasNewReplies = !post.is_seeded && updatedAgeMs < 2 * 60 * 60 * 1000 && post.comments_count > 0 && !isActiveNow;
+  const isHotPost = (post.likes_count || 0) + (post.comments_count || 0) * 2 >= 20;
 
   return (
     <motion.div
@@ -588,9 +586,10 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       transition={{ duration: 0.15 }}
       className={`${
         isQuestion ? 'bg-blue-50/60 border-l-2 border-l-blue-400' :
-        post.post_subtype === 'alert' ? 'border-l-2 border-l-red-500 bg-red-50/30' : 'bg-white'
+        post.post_subtype === 'alert' ? 'border-l-2 border-l-red-500 bg-red-50/30' :
+        isActiveNow ? 'bg-white border-l-2 border-l-blue-500' :
+        isHotPost ? 'bg-white border-l-2 border-l-orange-400' : 'bg-white'
       }`}
-      style={{}}
     >
       {/* Question highlight bar */}
       {isQuestion && <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-600" />}
@@ -627,14 +626,23 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {(() => {
-            const score = (post.likes_count || 0) + (post.comments_count || 0) * 2;
             const ageMs = Date.now() - new Date(post.created_date).getTime();
             const isNew = !post.is_seeded && ageMs < 2 * 60 * 60 * 1000;
-            const isHot = score >= 20;
             return (
               <>
-                {isHot && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">🔥 Hot</span>}
-                {isNew && !isHot && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">🟢 New</span>}
+                {isActiveNow && (
+                  <span className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse inline-block" />
+                    Active now
+                  </span>
+                )}
+                {!isActiveNow && hasNewReplies && (
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200">
+                    💬 {post.comments_count} {post.comments_count === 1 ? 'reply' : 'replies'}
+                  </span>
+                )}
+                {!isActiveNow && !hasNewReplies && isHotPost && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">🔥 Hot</span>}
+                {!isActiveNow && !hasNewReplies && !isHotPost && isNew && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">🟢 New</span>}
               </>
             );
           })()}
