@@ -44,6 +44,7 @@ export default function Feed() {
   const [showSearch, setShowSearch] = useState(false);
   const [showFAB, setShowFAB] = useState(false);
   const [isScrollingDown, setIsScrollingDown] = useState(false);
+  const [interestSignals, setInterestSignals] = useState({ types: {}, subtypes: {}, keywords: [] }); // track user interactions
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const lastScrollY = useRef(0);
@@ -145,8 +146,18 @@ export default function Feed() {
     },
   });
 
+  const recordInterest = (post) => {
+    setInterestSignals(prev => ({
+      types: { ...prev.types, [post.type]: (prev.types[post.type] || 0) + 1 },
+      subtypes: post.post_subtype ? { ...prev.subtypes, [post.post_subtype]: (prev.subtypes[post.post_subtype] || 0) + 1 } : prev.subtypes,
+      keywords: [...prev.keywords, ...(post.body || '').toLowerCase().split(/\s+/).slice(0, 5)].slice(-50),
+    }));
+  };
+
   const handleLike = (postId) => {
     if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    const post = posts.find(p => p.id === postId);
+    if (post) recordInterest(post);
     likeMutation.mutate(postId);
   };
 
@@ -181,7 +192,20 @@ export default function Feed() {
     const ageMs = Date.now() - new Date(p.created_date).getTime();
     const ageHours = ageMs / (1000 * 60 * 60);
     const timeDecay = Math.max(0.2, 1 - ageHours / 48);
-    return (likes + comments * 3) * timeDecay;
+    let base = (likes + comments * 3) * timeDecay;
+
+    // Boost active discussions (many comments recently)
+    if (comments >= 5) base *= 1.3;
+    if (comments >= 10) base *= 1.5;
+
+    // Boost posts matching user's interaction signals
+    const typeBoost = interestSignals.types[p.type] || 0;
+    const subtypeBoost = p.post_subtype ? (interestSignals.subtypes[p.post_subtype] || 0) : 0;
+    const bodyWords = (p.body || '').toLowerCase().split(/\s+/);
+    const keywordMatches = bodyWords.filter(w => w.length > 4 && interestSignals.keywords.includes(w)).length;
+    base *= (1 + typeBoost * 0.1 + subtypeBoost * 0.15 + keywordMatches * 0.05);
+
+    return base;
   };
 
   const feedPosts = (() => {
@@ -378,7 +402,7 @@ export default function Feed() {
                  currentUser={currentUser}
                  liked={userLikes.includes(post.id)}
                  onLike={handleLike}
-                 onComment={(p) => { setSelectedPost(p); setShowComments(true); }}
+                 onComment={(p) => { recordInterest(p); setSelectedPost(p); setShowComments(true); }}
                  onDelete={(id) => deleteMutation.mutate(id)}
                  onBlock={handleBlock}
                  blockedIds={blockedIds}
