@@ -163,7 +163,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="bg-white rounded-2xl shadow-sm overflow-hidden"
+        className="bg-white"
       >
         {/* Image grid */}
         <div className={`overflow-hidden ${
@@ -219,8 +219,8 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             </>
           )}
         </div>
-        <div className="p-3">
-          <div className="flex items-center gap-1.5 mb-1.5">
+        <div className="px-3 py-2">
+          <div className="flex items-center gap-1.5 mb-1">
             <UserAvatar user={post} name={post.user_name} size="xs" />
             <span className="font-semibold text-slate-900 text-[12px]">{post.user_name}</span>
             <span className="text-[11px] text-slate-400 ml-auto">{timeAgo}</span>
@@ -241,7 +241,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           {(post.caption || post.body) && (
             <div className="text-[13px] text-slate-700 leading-relaxed">{post.caption || post.body}</div>
           )}
-          <div className="flex items-center gap-1 mt-2 pt-1.5 border-t border-slate-100">
+          <div className="flex items-center gap-1 mt-1.5 pt-1 border-t border-slate-100">
             <ReactionBar postId={post.id} currentUser={currentUser} />
             <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1.5 h-7 px-2 rounded-full text-[12px] font-medium text-slate-500 hover:bg-slate-100">
               <MessageCircle className="w-3.5 h-3.5" />{commentCount > 0 && <span>{commentCount}</span>}
@@ -260,11 +260,11 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="rounded-2xl overflow-hidden bg-white border border-slate-100 shadow-sm"
+        className="bg-white"
       >
         {/* Event color bar + date chip */}
         <div className="h-1 bg-gradient-to-r from-green-500 to-teal-500" />
-        <div className="px-3 pt-3 pb-2">
+        <div className="px-3 pt-2 pb-1.5">
           <div className="flex items-start gap-3">
             {/* Date block */}
             {post.event_date && (
@@ -273,7 +273,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
                   {new Date(post.event_date).toLocaleDateString('en-US', { month: 'short' })}
                 </span>
                 <span className="text-[18px] font-extrabold leading-none">
-                {new Date(post.event_date).getDate()}
+                  {new Date(post.event_date).getDate()}
                 </span>
               </div>
             )}
@@ -284,7 +284,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
               </div>
               {post.title && <h3 className="font-bold text-[14px] text-slate-900 leading-snug mb-0.5">{post.title}</h3>}
               {post.body && <p className="text-[12px] text-slate-600 line-clamp-2">{post.body}</p>}
-              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
                 {post.event_time && (
                   <span className="flex items-center gap-1 text-[12px] text-slate-500 font-medium">
                     <Clock className="w-3 h-3" />{post.event_time}
@@ -299,7 +299,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             </div>
           </div>
           {/* Author row */}
-          <div className="flex items-center gap-2 mt-2 pt-1.5 border-t border-slate-100">
+          <div className="flex items-center gap-2 mt-1.5 pt-1 border-t border-slate-100">
             <UserAvatar user={post} name={post.user_name} size="xs" />
             <span className="text-[11px] text-slate-500">{post.user_name}</span>
             <div className="ml-auto flex items-center gap-2">
@@ -337,10 +337,10 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="rounded-2xl overflow-hidden bg-white border border-green-100 shadow-sm"
+        className="bg-white"
       >
         <div className="h-1 bg-gradient-to-r from-green-500 to-emerald-600" />
-        <div className="px-3 pt-3 pb-2">
+        <div className="px-3 pt-2 pb-1.5">
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex items-start gap-3 flex-1 min-w-0">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-base font-bold flex-shrink-0">💼</div>
@@ -387,10 +387,10 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="rounded-2xl overflow-hidden bg-white border border-blue-100 shadow-sm"
+        className="bg-white"
       >
         <div className="h-1 bg-gradient-to-r from-blue-500 to-sky-600" />
-        <div className="px-3 pt-3 pb-2">
+        <div className="px-3 pt-2 pb-1.5">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">🏠 Housing</span>
             {post.location_text && <span className="flex items-center gap-1 text-[11px] text-slate-500"><MapPin className="w-3 h-3" />{post.location_text}</span>}
@@ -416,9 +416,9 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="rounded-2xl overflow-hidden bg-white border-l-4 border-purple-500 shadow-sm"
+        className="bg-white border-l-4 border-purple-500"
       >
-        <div className="px-3 pt-3 pb-2">
+        <div className="px-3 pt-2 pb-1.5">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-xl bg-purple-100 flex items-center justify-center text-base flex-shrink-0">
               {helpCat?.emoji || '🤝'}
@@ -451,7 +451,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
               {bodyLong && <button onClick={() => setExpanded(e => !e)} className="ml-1 text-blue-600 font-semibold text-[13px]">{expanded ? 'less' : 'more'}</button>}
             </p>
           )}
-          <div className="flex items-center gap-2 mt-2 pt-1.5 border-t border-slate-100">
+          <div className="flex items-center gap-2 mt-1.5 pt-1 border-t border-slate-100">
             <UserAvatar user={post} name={post.user_name} size="xs" />
             <span className="text-[11px] text-slate-500 flex-1">{isAnonymous ? 'Anonymous' : post.user_name} · {timeAgo}</span>
             <ReactionBar postId={post.id} currentUser={currentUser} />
@@ -480,9 +480,9 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.15 }}
-        className="rounded-2xl overflow-hidden bg-slate-50 border border-slate-200"
+        className="bg-slate-50"
       >
-        <div className="px-4 py-3 flex items-start gap-3">
+        <div className="px-3 py-2 flex items-start gap-3">
           <div className="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center text-base flex-shrink-0">📰</div>
           <div className="flex-1 min-w-0">
             {post.title && <p className="font-semibold text-[14px] text-slate-800 leading-snug">{post.title}</p>}
@@ -505,7 +505,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-3xl p-4 shadow-md"
+        className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-3"
       >
         <div className="text-xs font-semibold opacity-80 uppercase tracking-wide">Community Question</div>
         <div className="text-lg font-bold mt-1 leading-snug">{post.prompt_text}</div>
@@ -554,21 +554,19 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 6 }}
+      initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-      className={`rounded-2xl border overflow-hidden ${
-        isQuestion ? 'border-blue-200 bg-gradient-to-br from-blue-50 to-white' :
-        post.post_subtype === 'alert' ? 'border-red-300' : 'border-[#EAECF0]'
+      transition={{ duration: 0.15 }}
+      className={`${
+        isQuestion ? 'bg-blue-50/60 border-l-2 border-l-blue-400' :
+        post.post_subtype === 'alert' ? 'border-l-2 border-l-red-500 bg-red-50/30' : 'bg-white'
       }`}
-      style={{
-        boxShadow: isQuestion ? '0 2px 12px rgba(37,99,235,0.12)' : (post.post_subtype === 'alert' ? '0 2px 10px rgba(220,38,38,0.12)' : '0 2px 10px rgba(0,0,0,0.07)'),
-      }}
+      style={{}}
     >
       {/* Question highlight bar */}
       {isQuestion && <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-600" />}
       {/* Header */}
-      <div className="flex items-center justify-between px-3 pt-3 pb-0">
+      <div className="flex items-center justify-between px-3 pt-2.5 pb-0">
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           {isAnonymous ? (
             <div className="flex items-center gap-2">
@@ -644,14 +642,14 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       )}
 
       {/* Content */}
-      <div className="px-3 pt-2.5 pb-1">
+      <div className="px-3 pt-1.5 pb-1">
         {post.prompt_text && (
           <div className="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl px-3 py-2 mb-2.5 border border-violet-100">
             <p className="text-xs text-violet-700 font-semibold">💭 {post.prompt_text}</p>
           </div>
         )}
         {post.title && <h3 className="font-bold text-[14px] text-[#0F1C2E] mb-1 leading-snug">{post.title}</h3>}
-        <p className={`text-[13px] text-[#344054] leading-relaxed ${!expanded ? 'line-clamp-4' : ''}`}>
+        <p className={`text-[13px] text-[#344054] leading-snug ${!expanded ? 'line-clamp-3' : ''}`}>
           {post.body}
           {bodyLong && (
             <button onClick={() => setExpanded(e => !e)} className="ml-1 text-[#2563EB] font-semibold text-[12px]">{expanded ? 'less' : 'see more'}</button>
@@ -673,7 +671,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       </div>
 
       {/* Footer */}
-      <div className="px-3 py-2 mt-0.5 border-t border-[#F2F4F7] bg-white">
+      <div className="px-3 py-1.5 mt-0 border-t border-[#F2F4F7] bg-white/70">
         <div className="flex items-center justify-between gap-2 mb-1.5">
           {/* Quick Reply Button */}
           <button 
