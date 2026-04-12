@@ -753,7 +753,19 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
         )}
         <div className="ml-auto flex items-center gap-2 text-[11px] text-slate-400">
-          {post.comments_count > 0 && (
+          {recentComments.length > 0 && (
+            <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1 hover:opacity-80">
+              <div className="flex -space-x-1.5">
+                {recentComments.slice(0, 3).map((c, i) => (
+                  <UserAvatar key={i} name={c.author_name} size="xs"
+                    className="ring-1 ring-white w-4 h-4 text-[7px]"
+                  />
+                ))}
+              </div>
+              <span className="text-[11px] text-slate-400">{post.comments_count}</span>
+            </button>
+          )}
+          {recentComments.length === 0 && post.comments_count > 0 && (
             <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-0.5 hover:text-slate-600">
               <MessageCircle className="w-3 h-3" /> {post.comments_count}
             </button>
