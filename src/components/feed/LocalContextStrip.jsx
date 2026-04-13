@@ -37,21 +37,20 @@ export default function LocalContextStrip({ activeTab, onTabChange, userCommunit
       {CHIPS.map(chip => {
         const Icon = chip.icon;
         const isActive = activeTab === chip.id;
+        const baseClass = 'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all active:scale-95 touch-manipulation';
+        const activeClass = chip.activeBg + ' text-white border-transparent shadow-sm';
+        const inactiveClass = chip.bg + ' ' + chip.color + ' ' + chip.border;
         return (
           <button
             key={chip.id}
             onClick={() => onTabChange(isActive ? 'trending' : chip.id)}
-            className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all active:scale-95 touch-manipulation ${
-              isActive
-                ? `${chip.activeBg} text-white border-transparent shadow-sm`
-                : `${chip.bg} ${chip.color} ${chip.border}`
-            }`}
+            className={baseClass + ' ' + (isActive ? activeClass : inactiveClass)}
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <Icon className="w-3.5 h-3.5" />
             {chip.label}
             {chip.id === 'communities' && userCommunityCount > 0 && (
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/25 text-white' : 'bg-blue-600 text-white'}`}>
+              <span className={isActive ? 'text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/25 text-white' : 'text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-600 text-white'}>
                 {userCommunityCount}
               </span>
             )}

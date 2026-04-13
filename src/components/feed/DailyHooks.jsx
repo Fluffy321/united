@@ -59,6 +59,7 @@ const isThursdayOrFriday = dayOfWeek === 4 || dayOfWeek === 5;
 
 export default function DailyHooks({ onPostClick }) {
   const [dismissed, setDismissed] = useState({});
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const dismiss = (key, e) => {
     e.stopPropagation();
@@ -124,40 +125,53 @@ export default function DailyHooks({ onPostClick }) {
     },
   ].filter(Boolean).filter(h => !dismissed[h.key]);
 
-  if (hooks.length === 0) return null;
+  const visibleHooks = hooks;
+  if (visibleHooks.length === 0) return null;
+
+  const hook = visibleHooks[currentIndex % visibleHooks.length];
 
   return (
-    <div className="space-y-2 mb-3">
-      {hooks.map(hook => {
+    <div className="mb-3">
+      {(() => {
         const Icon = hook.icon;
         return (
           <div
             key={hook.key}
-            className={`relative rounded-2xl bg-gradient-to-r ${hook.gradient} border ${hook.border} px-4 py-3 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform`}
+            className={`relative rounded-2xl bg-gradient-to-r ${hook.gradient} border ${hook.border} px-3 py-2.5 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform`}
             onClick={() => onPostClick(hook.postType, hook.subtype, hook.text)}
           >
-            <div className={`w-9 h-9 rounded-xl ${hook.iconBg} flex items-center justify-center flex-shrink-0`}>
-              <Icon className={`w-5 h-5 ${hook.iconColor}`} />
+            <div className={`w-8 h-8 rounded-xl ${hook.iconBg} flex items-center justify-center flex-shrink-0`}>
+              <Icon className={`w-4 h-4 ${hook.iconColor}`} />
             </div>
-            <div className="flex-1 min-w-0 pr-4">
+            <div className="flex-1 min-w-0 pr-2">
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{hook.label}</p>
-              <p className="text-[13px] font-semibold text-slate-800 leading-snug mt-0.5 line-clamp-2">{hook.text}</p>
+              <p className="text-[13px] font-semibold text-slate-800 leading-snug mt-0.5 line-clamp-1">{hook.text}</p>
             </div>
-            <button
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-white text-[11px] font-bold ${hook.ctaBg} transition-colors`}
-              onClick={e => { e.stopPropagation(); onPostClick(hook.postType, hook.subtype, hook.text); }}
-            >
-              {hook.cta}
-            </button>
-            <button
-              onClick={e => dismiss(hook.key, e)}
-              className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full text-slate-300 hover:text-slate-500 hover:bg-white/60 transition-colors text-[12px] font-bold"
-            >
-              &times;
-            </button>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {visibleHooks.length > 1 && (
+                <button
+                  onClick={e => { e.stopPropagation(); setCurrentIndex(i => (i + 1) % visibleHooks.length); }}
+                  className="w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:bg-white/60 transition-colors text-[14px]"
+                >
+                  ›
+                </button>
+              )}
+              <button
+                className={`px-3 py-1.5 rounded-full text-white text-[11px] font-bold ${hook.ctaBg} transition-colors`}
+                onClick={e => { e.stopPropagation(); onPostClick(hook.postType, hook.subtype, hook.text); }}
+              >
+                {hook.cta}
+              </button>
+              <button
+                onClick={e => { e.stopPropagation(); setDismissed(prev => ({ ...prev, [hook.key]: true })); }}
+                className="w-5 h-5 flex items-center justify-center rounded-full text-slate-300 hover:text-slate-500 hover:bg-white/60 transition-colors text-[12px] font-bold"
+              >
+                &times;
+              </button>
+            </div>
           </div>
         );
-      })}
+      })()}
     </div>
   );
 }

@@ -1,13 +1,13 @@
 import React, { useRef } from 'react';
 
 const TABS = [
-  { id: 'for_you',   label: '✨ For You',  inactive: { bg: '#F1F5F9', color: '#475569', border: '#E2E8F0' } },
-  { id: 'trending',  label: '🔥 Trending',  inactive: { bg: '#FFF7ED', color: '#C2410C', border: '#FED7AA' } },
-  { id: 'events',    label: '📅 Events',    inactive: { bg: '#FFFBEB', color: '#B45309', border: '#FDE68A' } },
-  { id: 'nearby',    label: '📍 Near You',  inactive: { bg: '#F0FDF4', color: '#166534', border: '#BBF7D0' } },
-  { id: 'chessed',   label: '❤️ Chessed',   inactive: { bg: '#FFF1F2', color: '#BE123C', border: '#FECDD3' } },
-  { id: 'learning',  label: '📚 Learning',  inactive: { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' } },
-  { id: 'social',    label: '🏀 Social',    inactive: { bg: '#FAF5FF', color: '#7E22CE', border: '#E9D5FF' } },
+  { id: 'for_you',   label: '✨ For You'  },
+  { id: 'trending',  label: '🔥 Trending'  },
+  { id: 'events',    label: '📅 Events'    },
+  { id: 'nearby',    label: '📍 Near You'  },
+  { id: 'chessed',   label: '❤️ Chessed'   },
+  { id: 'learning',  label: '📚 Learning'  },
+  { id: 'social',    label: '🏀 Social'    },
 ];
 
 export default function HomeFeedTabs({ activeTab, onChange }) {
@@ -16,19 +16,29 @@ export default function HomeFeedTabs({ activeTab, onChange }) {
   return (
     <div
       ref={scrollRef}
-      className="flex gap-2 overflow-x-auto scrollbar-hide py-2.5 px-4"
+      className="flex gap-1.5 overflow-x-auto scrollbar-hide py-2 px-3"
     >
-      {TABS.map(tab => (
-        <button
-          key={tab.id}
-          type="button"
-          onClick={() => onChange(tab.id)}
-          style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation', background: activeTab === tab.id ? 'linear-gradient(135deg, #2563EB, #7C3AED)' : tab.inactive.bg, color: activeTab === tab.id ? 'white' : tab.inactive.color, border: activeTab === tab.id ? 'none' : `1px solid ${tab.inactive.border}`, boxShadow: activeTab === tab.id ? '0 2px 8px rgba(37,99,235,0.35)' : 'none' }}
-          className="relative z-10 flex-shrink-0 min-h-[44px] px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap transition-all touch-manipulation"
-        >
-          <span className="pointer-events-none">{tab.label}</span>
-        </button>
-      ))}
+      {TABS.map(tab => {
+        const isActive = activeTab === tab.id;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onChange(tab.id)}
+            style={{
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'manipulation',
+              background: isActive ? 'linear-gradient(135deg, #2563EB, #7C3AED)' : 'rgba(255,255,255,0.08)',
+              color: isActive ? 'white' : 'rgba(255,255,255,0.6)',
+              border: isActive ? 'none' : '1px solid rgba(255,255,255,0.12)',
+              boxShadow: isActive ? '0 2px 6px rgba(37,99,235,0.4)' : 'none',
+            }}
+            className="flex-shrink-0 min-h-[34px] px-3 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap transition-all touch-manipulation"
+          >
+            <span className="pointer-events-none">{tab.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
