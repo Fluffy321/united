@@ -34,10 +34,12 @@ export default function CommunityActivityStrip({ groups = [] }) {
       style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 100%)', marginLeft: 0, marginRight: 0 }}
     >
       {groups.slice(0, 8).map((g, i) => (
-        <div
+        <button
           key={g.id}
+          type="button"
           onClick={() => navigate(createPageUrl('Communities') + `?communityId=${g.id}`)}
-          className="flex-shrink-0 flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
+          className="flex-shrink-0 flex flex-col items-center gap-1.5 active:scale-95 transition-transform touch-manipulation bg-transparent border-0 p-0"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <div
             className={`w-12 h-12 rounded-full flex items-center justify-center text-[15px] font-bold overflow-hidden ${BG_COLORS[i % BG_COLORS.length]}`}
@@ -50,7 +52,7 @@ export default function CommunityActivityStrip({ groups = [] }) {
             )}
           </div>
           <span className="text-[10px] font-semibold text-slate-600 max-w-[52px] text-center leading-tight line-clamp-2">{g.name}</span>
-        </div>
+        </button>
       ))}
     </div>
   );
