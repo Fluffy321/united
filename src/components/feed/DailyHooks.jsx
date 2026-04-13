@@ -145,7 +145,7 @@ export default function DailyHooks({ onPostClick }) {
             </div>
             <div className="flex-1 min-w-0 pr-2">
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{hook.label}</p>
-              <p className="text-[13px] font-semibold text-slate-800 leading-snug mt-0.5 line-clamp-1">{hook.text}</p>
+              <p className="text-[13px] font-semibold text-slate-800 leading-snug mt-0.5">{hook.text}</p>
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
               {visibleHooks.length > 1 && (
