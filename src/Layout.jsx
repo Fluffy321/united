@@ -207,7 +207,8 @@ export default function Layout({ children, currentPageName }) {
                       }
                     }}
 
-                    className="flex flex-col items-center justify-center py-2.5 px-3 transition-all relative"
+                    className="flex flex-col items-center justify-center py-2.5 px-3 transition-all relative touch-manipulation"
+            style={{ WebkitTapHighlightColor: 'transparent', minHeight: '44px', minWidth: '44px' }}
                   >
                     <div className="relative">
                       <Icon className={`w-5 h-5 relative z-10 transition-all duration-150 ${
