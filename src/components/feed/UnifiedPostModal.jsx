@@ -232,11 +232,11 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder={getPlaceholderBySubtype() || "What's going on?"}
-                className="flex-1 min-h-[140px] resize-none rounded-xl rounded-b-none border border-slate-150 bg-slate-50 px-4 py-3 text-[15px] focus:ring-0 focus:border-blue-300 focus:bg-white placeholder:text-slate-400 transition-all"
+                className="flex-1 min-h-[140px] resize-none rounded-3xl rounded-b-none border border-slate-150 bg-slate-50 px-4 py-3 text-[15px] focus:ring-0 focus:border-blue-300 focus:bg-white placeholder:text-slate-400 transition-all"
                 maxLength={1000}
               />
               {/* Formatting toolbar + char counter */}
-              <div className="flex items-center justify-between px-3 py-1.5 bg-slate-50 border border-t-0 border-slate-150 rounded-b-xl">
+              <div className="flex items-center justify-between px-3 py-1.5 bg-slate-50 border border-t-0 border-slate-150 rounded-b-3xl">
                 <div className="flex items-center gap-1">
                   <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormatting('bold'); }}
                     className="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors"
