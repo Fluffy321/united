@@ -51,6 +51,7 @@ export default function Feed() {
   const [interestSignals, setInterestSignals] = useState({ types: {}, subtypes: {}, keywords: [] }); // track user interactions
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [userGeo, setUserGeo] = useState(null); // { lat, lng }
   const lastScrollY = useRef(0);
   const [feedPrompts, setFeedPrompts] = useState([]);
   const [communityGroups, setCommunityGroups] = useState([]);
@@ -59,6 +60,16 @@ export default function Feed() {
   useEffect(() => {
     base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
   }, []);
+
+  // Request geolocation when user switches to nearby tab
+  useEffect(() => {
+    if (activeTab === 'nearby' && !userGeo && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => setUserGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {} // silently fail
+      );
+    }
+  }, [activeTab]);
 
   const loadPinnedPrompt = useCallback(async () => {
     try {
@@ -229,7 +240,34 @@ export default function Feed() {
     if (activeTab === 'chessed') return sorted.filter(p => p.type === 'help' || p.board === 'help');
     if (activeTab === 'learning') return sorted.filter(p => p.type === 'news' || /torah|parsha|daf|halacha|shiur/i.test(p.body || ''));
     if (activeTab === 'social') return sorted.filter(p => p.type === 'feed');
-    if (activeTab === 'nearby') return sorted.filter(p => p.location_text || p.city);
+    if (activeTab === 'nearby') {
+      const NEIGHBORHOOD_COORDS = {
+        'cedarhurst':   { lat: 40.6237, lng: -73.7257 },
+        'woodmere':     { lat: 40.6354, lng: -73.7129 },
+        'lawrence':     { lat: 40.6165, lng: -73.7293 },
+        'inwood':       { lat: 40.6093, lng: -73.7490 },
+        'hewlett':      { lat: 40.6437, lng: -73.6960 },
+        'far rockaway': { lat: 40.6054, lng: -73.7548 },
+        'five towns':   { lat: 40.6237, lng: -73.7257 },
+      };
+      const getCoords = (p) => {
+        const loc = (p.location_text || p.city || '').toLowerCase();
+        for (const [key, coords] of Object.entries(NEIGHBORHOOD_COORDS)) {
+          if (loc.includes(key)) return coords;
+        }
+        return null;
+      };
+      const dist = (a, b) => {
+        if (!a || !b) return Infinity;
+        const dx = a.lat - b.lat, dy = a.lng - b.lng;
+        return dx * dx + dy * dy;
+      };
+      const withLocation = sorted.filter(p => p.location_text || p.city);
+      if (userGeo) {
+        return [...withLocation].sort((a, b) => dist(getCoords(a), userGeo) - dist(getCoords(b), userGeo));
+      }
+      return withLocation;
+    }
     if (activeTab === 'communities') {
       const communityIds = communityGroups.map(c => c.id);
       return sorted.filter(p => communityIds.includes(p.community_id));
