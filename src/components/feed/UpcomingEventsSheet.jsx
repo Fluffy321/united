@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Calendar, Clock, MapPin, Users } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Search, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { format, isPast, parseISO } from 'date-fns';
 
 export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, joinedCommunityIds = [] }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all'); // 'all' | 'mine'
 
   useEffect(() => {
     if (!open) return;
@@ -31,9 +33,24 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
       .finally(() => setLoading(false));
   }, [open, joinedCommunityIds.join(',')]);
 
+  const filtered = useMemo(() => {
+    let list = events;
+    if (filter === 'mine') list = list.filter(e => joinedCommunityIds.includes(e.community_id));
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(e =>
+        (e.title || '').toLowerCase().includes(q) ||
+        (e.body || '').toLowerCase().includes(q) ||
+        (e.location_text || '').toLowerCase().includes(q) ||
+        (e.community_name || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [events, search, filter, joinedCommunityIds]);
+
   const groupByMonth = () => {
     const groups = {};
-    events.forEach(e => {
+    filtered.forEach(e => {
       const month = format(parseISO(e.event_date), 'MMMM yyyy');
       if (!groups[month]) groups[month] = [];
       groups[month].push(e);
@@ -51,8 +68,31 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
             <Calendar className="w-5 h-5 text-blue-600" />
             Upcoming Events
           </SheetTitle>
+          {/* Search bar */}
+          <div className="relative mt-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search events…"
+              className="w-full pl-9 pr-8 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[13px] focus:outline-none focus:border-blue-400 focus:bg-white transition-colors"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          {/* Filter pills */}
           {joinedCommunityIds.length > 0 && (
-            <p className="text-[12px] text-slate-400 mt-0.5">From your communities · sorted by date</p>
+            <div className="flex gap-2 mt-2">
+              {[{v:'all',l:'All Events'},{v:'mine',l:'My Communities'}].map(({v,l}) => (
+                <button key={v} onClick={() => setFilter(v)}
+                  className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
+                    filter === v ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200'
+                  }`}>{l}</button>
+              ))}
+            </div>
           )}
         </SheetHeader>
 
