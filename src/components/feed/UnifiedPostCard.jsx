@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2, Users, Ban } from 'lucide-react';
 import PromptCard from './PromptCard';
+import PollCard from './PollCard';
 import { Button } from "@/components/ui/button";
 import UserAvatar from '@/components/common/UserAvatar';
 import HelperBadge from '@/components/profile/HelperBadge';
@@ -140,6 +141,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   }, [post.id, post.type, post.comments_count, commentCount]);
 
   if (post.type === 'prompt') return <PromptWrapper post={post} currentUser={currentUser} />;
+  if (post.type === 'poll' || post.post_subtype === 'poll') return <PollCard post={post} currentUser={currentUser} />;
 
   const isOwner = currentUser?.id === post.user_id;
   const communityName = post.community_name || (communities && post.community_id

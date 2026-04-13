@@ -45,7 +45,8 @@
         "shul",
         "news",
         "prompt_reply",
-        "prompt"
+        "prompt",
+        "poll"
       ]
     },
     "post_subtype": {
@@ -77,6 +78,17 @@
     },
     "body": {
       "type": "string"
+    },
+    "poll_options": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Poll answer options"
+    },
+    "poll_votes_count": {
+      "type": "number",
+      "default": 0
     },
     "image_url": {
       "type": "string"

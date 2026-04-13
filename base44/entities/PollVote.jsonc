@@ -1,0 +1,23 @@
+{
+  "name": "PollVote",
+  "type": "object",
+  "properties": {
+    "post_id": {
+      "type": "string",
+      "description": "The poll post ID"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "User who voted"
+    },
+    "option_index": {
+      "type": "number",
+      "description": "Index of the chosen option"
+    }
+  },
+  "required": [
+    "post_id",
+    "user_id",
+    "option_index"
+  ]
+}

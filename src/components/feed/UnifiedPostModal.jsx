@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Loader2, MapPin, Check, Bold, Italic, List, ImagePlus, MessageCircle, HelpCircle, Calendar, Bell } from 'lucide-react';
+import { X, Loader2, MapPin, Check, Bold, Italic, List, ImagePlus, MessageCircle, HelpCircle, Calendar, Bell, BarChart2, Plus, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,7 @@ const FEED_SUBTYPES = [
   { value: 'question',   label: 'Question',   icon: HelpCircle,    active: 'bg-amber-500 text-white border-amber-500', inactive: 'bg-white text-slate-600 border-slate-200 hover:border-amber-300' },
   { value: 'event',      label: 'Event',      icon: Calendar,      active: 'bg-emerald-600 text-white border-emerald-600', inactive: 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300' },
   { value: 'alert',      label: 'Alert',      icon: Bell,          active: 'bg-red-500 text-white border-red-500', inactive: 'bg-white text-slate-600 border-slate-200 hover:border-red-300' },
+  { value: 'poll',       label: 'Poll',       icon: BarChart2,     active: 'bg-violet-600 text-white border-violet-600', inactive: 'bg-white text-slate-600 border-slate-200 hover:border-violet-300' },
 ];
 
 export default function UnifiedPostModal({ open, onOpenChange, currentUser, postType = 'feed', promptId = null, promptText = null, initialSubtype = null, initialBody = '' }) {
@@ -65,7 +66,9 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
   const [caption, setCaption] = useState('');
   const [uploadingImages, setUploadingImages] = useState(false);
   const [imageUrls, setImageUrls] = useState([]);
+  const [pollOptions, setPollOptions] = useState(['', '']);
   const textareaRef = useRef(null);
+  const isPoll = postSubtype === 'poll';
 
   useEffect(() => {
     if (open) {
@@ -141,6 +144,10 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
     setIsSubmitting(true);
     try {
       const isFeedPost = !isPromptReply && postType === 'feed';
+      if (isPoll) {
+        const validOptions = pollOptions.filter(o => o.trim());
+        if (validOptions.length < 2) { toast.error('Add at least 2 poll options'); setIsSubmitting(false); return; }
+      }
       const postData = {
         user_id: currentUser.id,
         user_name: isAnonymous ? 'Anonymous' : currentUser.display_name,
@@ -162,6 +169,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
         caption: caption.trim() || undefined,
         attachment_urls: attachedFiles.map(f => f.url),
         post_subtype: isFeedPost ? postSubtype : undefined,
+        poll_options: isPoll ? pollOptions.filter(o => o.trim()) : undefined,
       };
 
       await base44.entities.UnifiedPost.create(postData);
@@ -178,6 +186,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
       setTitle(''); setBody(''); setLocation(''); setIsAnonymous(false);
       setCategory(''); setPostSubtype('discussion'); setEventDate('');
       setEventTime(''); setAttachedFiles([]); setCaption(''); setImageUrls([]);
+      setPollOptions(['', '']);
     } catch (error) {
       toast.error('Failed to post');
     } finally {
@@ -260,6 +269,36 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
               </div>
             </div>
           </div>
+
+          {/* Poll builder */}
+          {isPoll && (
+            <div className="space-y-2">
+              <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Poll Options</p>
+              {pollOptions.map((opt, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    value={opt}
+                    onChange={e => setPollOptions(prev => prev.map((o, idx) => idx === i ? e.target.value : o))}
+                    placeholder={`Option ${i + 1}`}
+                    maxLength={80}
+                    className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[13px] focus:outline-none focus:border-violet-400 focus:bg-white transition-colors"
+                  />
+                  {pollOptions.length > 2 && (
+                    <button type="button" onClick={() => setPollOptions(prev => prev.filter((_, idx) => idx !== i))}
+                      className="w-7 h-7 flex items-center justify-center rounded-full text-red-400 hover:bg-red-50">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              {pollOptions.length < 6 && (
+                <button type="button" onClick={() => setPollOptions(prev => [...prev, ''])}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold text-violet-600 bg-violet-50 border border-violet-200 hover:bg-violet-100 transition-colors">
+                  <Plus className="w-3 h-3" /> Add option
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Quick action buttons */}
           <div className="flex gap-2 justify-center py-2">
