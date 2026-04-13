@@ -19,6 +19,7 @@ import NotificationBell from '@/components/notifications/NotificationBell';
 import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
 import SearchModal from '@/components/feed/SearchModal';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
+import DailyHooks from '@/components/feed/DailyHooks';
 import { Search, Plus, X, Bell, HandHeart, Calendar, RefreshCw, Loader2 } from 'lucide-react';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
@@ -307,6 +308,15 @@ export default function Feed() {
           }}
         />
         <QuickPromptChips
+          onPostClick={(type, subtype, prefill) => {
+            setPostModalType(type);
+            setPostModalSubtype(subtype || null);
+            setPostModalInitialBody(prefill || '');
+            setShowPostModal(true);
+          }}
+        />
+
+        <DailyHooks
           onPostClick={(type, subtype, prefill) => {
             setPostModalType(type);
             setPostModalSubtype(subtype || null);
