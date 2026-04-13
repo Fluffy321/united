@@ -241,7 +241,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder={getPlaceholderBySubtype() || "What's going on?"}
-                className="flex-1 min-h-[140px] resize-none rounded-3xl rounded-b-none border border-slate-150 bg-slate-50 px-4 py-3 text-[15px] focus:ring-0 focus:border-blue-300 focus:bg-white placeholder:text-slate-400 transition-all"
+                className="flex-1 min-h-[140px] resize-none rounded-3xl rounded-b-none border border-slate-150 bg-slate-50 px-4 py-3 text-[15px] text-slate-900 focus:ring-0 focus:border-blue-300 focus:bg-white placeholder:text-slate-400 transition-all"
                 maxLength={1000}
               />
               {/* Formatting toolbar + char counter */}
