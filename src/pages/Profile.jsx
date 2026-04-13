@@ -19,6 +19,7 @@ import BadgesSection from '@/components/profile/BadgesSection.jsx';
 import MitzvahJourneySection from '@/components/profile/MitzvahJourneySection.jsx';
 import CommunitiesSection from '@/components/profile/CommunitiesSection.jsx';
 import RecentPostsSection from '@/components/profile/RecentPostsSection.jsx';
+import SavedPostsSection from '@/components/profile/SavedPostsSection.jsx';
 import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
 import SectionCard from '@/components/profile/SectionCard.jsx';
 
@@ -29,6 +30,7 @@ export default function Profile() {
   const [showReport, setShowReport] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   const [showInterestPicker, setShowInterestPicker] = useState(false);
+  const [activeProfileTab, setActiveProfileTab] = useState('posts');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -294,8 +296,35 @@ export default function Profile() {
           {/* Mitzvah Journey */}
           {isOwnProfile && mitzvahLogs.length > 0 && <div className="mx-6"><MitzvahJourneySection logs={mitzvahLogs} /></div>}
 
-          {/* Recent Posts */}
-          <div id="recent-posts-section" className="mx-6"><RecentPostsSection posts={unifiedPosts} currentUser={currentUser} profileUser={profileUser} isOwnProfile={isOwnProfile} /></div>
+          {/* Posts / Saved Tabs */}
+          <div id="recent-posts-section" className="mx-6">
+            {isOwnProfile && (
+              <div className="flex rounded-xl bg-slate-100 p-1 mb-3">
+                <button
+                  onClick={() => setActiveProfileTab('posts')}
+                  className={`flex-1 py-1.5 rounded-lg text-[13px] font-semibold transition-all ${
+                    activeProfileTab === 'posts' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                  }`}
+                >
+                  Posts
+                </button>
+                <button
+                  onClick={() => setActiveProfileTab('saved')}
+                  className={`flex-1 py-1.5 rounded-lg text-[13px] font-semibold transition-all ${
+                    activeProfileTab === 'saved' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                  }`}
+                >
+                  🔖 Saved
+                </button>
+              </div>
+            )}
+            {(!isOwnProfile || activeProfileTab === 'posts') && (
+              <RecentPostsSection posts={unifiedPosts} currentUser={currentUser} profileUser={profileUser} isOwnProfile={isOwnProfile} />
+            )}
+            {isOwnProfile && activeProfileTab === 'saved' && (
+              <SavedPostsSection userId={currentUser?.id} />
+            )}
+          </div>
         </div>
       </div>
 

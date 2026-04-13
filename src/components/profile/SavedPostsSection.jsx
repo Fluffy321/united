@@ -1,85 +1,75 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
+import { Bookmark, Loader2 } from 'lucide-react';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 
-export default function SavedPostsSection({ currentUser }) {
-  const [savedPosts, setSavedPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [userLikes, setUserLikes] = useState([]);
+function SavedPostCard({ post }) {
+  const typeEmoji = {
+    feed: '💬', help: '🤝', event: '📅', job: '💼', housing: '🏠', news: '📰', food: '🍽️',
+  }[post.type] || '💬';
 
-  useEffect(() => {
-    loadSavedPosts();
-  }, [currentUser?.id]);
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-3 mb-2.5">
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">{typeEmoji} {post.type}</span>
+        <span className="ml-auto text-[11px] text-slate-400">
+          {formatDistanceToNow(parseISO(post.created_date), { addSuffix: true })}
+        </span>
+      </div>
+      {post.title && <p className="font-semibold text-[14px] text-slate-900 mb-0.5 leading-snug">{post.title}</p>}
+      <p className="text-[13px] text-slate-600 leading-relaxed line-clamp-3">{post.body}</p>
+      <div className="flex items-center gap-3 mt-2 text-[11px] text-slate-400">
+        <span>by {post.user_name}</span>
+        {post.likes_count > 0 && <span>❤️ {post.likes_count}</span>}
+        {post.comments_count > 0 && <span>💬 {post.comments_count}</span>}
+      </div>
+    </div>
+  );
+}
 
-  const loadSavedPosts = async () => {
-    try {
-      const bookmarks = await base44.entities.Bookmark.filter({ user_id: currentUser.id });
+export default function SavedPostsSection({ userId }) {
+  const { data: bookmarks = [], isLoading } = useQuery({
+    queryKey: ['bookmarks', userId],
+    queryFn: () => base44.entities.Bookmark.filter({ user_id: userId }, '-created_date', 50),
+    enabled: !!userId,
+    staleTime: 30000,
+  });
+
+  const { data: savedPosts = [], isLoading: loadingPosts } = useQuery({
+    queryKey: ['saved-posts', bookmarks.map(b => b.post_id).join(',')],
+    queryFn: async () => {
       const postIds = bookmarks.map(b => b.post_id);
-      
-      if (postIds.length === 0) {
-        setSavedPosts([]);
-        setLoading(false);
-        return;
-      }
+      const results = await Promise.all(
+        postIds.map(id => base44.entities.UnifiedPost.filter({ id }).then(r => r[0]).catch(() => null))
+      );
+      return results.filter(Boolean);
+    },
+    enabled: bookmarks.length > 0,
+    staleTime: 30000,
+  });
 
-      const posts = await base44.entities.UnifiedPost.list('-created_date', 100);
-      const filtered = posts.filter(p => postIds.includes(p.id));
-      setSavedPosts(filtered);
-
-      const likes = await base44.entities.Like.filter({ user_id: currentUser.id });
-      setUserLikes(likes.map(l => l.post_id));
-    } catch (e) {
-      console.error('Failed to load saved posts', e);
-    }
-    setLoading(false);
-  };
-
-  const handleLike = async (postId) => {
-    const isLiked = userLikes.includes(postId);
-    setUserLikes(prev => isLiked ? prev.filter(id => id !== postId) : [...prev, postId]);
-    
-    if (isLiked) {
-      const like = await base44.entities.Like.filter({ post_id: postId, user_id: currentUser.id });
-      if (like[0]) await base44.entities.Like.delete(like[0].id);
-    } else {
-      await base44.entities.Like.create({ post_id: postId, user_id: currentUser.id });
-    }
-  };
-
-  if (loading) {
+  if (isLoading || loadingPosts) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+        <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
       </div>
     );
   }
 
-  if (savedPosts.length === 0) {
+  if (bookmarks.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
-        <p className="text-3xl mb-3">🔖</p>
-        <p className="font-bold text-slate-900">No saved posts yet</p>
-        <p className="text-sm text-slate-500 mt-1">Posts you save will appear here</p>
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <Bookmark className="w-10 h-10 text-slate-300 mb-3" />
+        <p className="font-semibold text-slate-600">No saved posts yet</p>
+        <p className="text-[13px] text-slate-400 mt-1">Tap the bookmark icon on any post to save it here.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {savedPosts.map(post => (
-        <UnifiedPostCard
-          key={post.id}
-          post={post}
-          currentUser={currentUser}
-          liked={userLikes.includes(post.id)}
-          onLike={() => handleLike(post.id)}
-          onComment={() => {}}
-          onDelete={() => {}}
-          onBlock={() => {}}
-          onReport={() => {}}
-        />
-      ))}
+    <div>
+      {savedPosts.map(post => <SavedPostCard key={post.id} post={post} />)}
     </div>
   );
 }

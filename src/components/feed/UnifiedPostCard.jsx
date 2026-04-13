@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2, Users, Ban } from 'lucide-react';
+import { MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2, Users, Ban, Bookmark } from 'lucide-react';
 import PromptCard from './PromptCard';
 import PollCard from './PollCard';
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,49 @@ import { toast } from 'sonner';
 import { HELP_REQUEST_CATEGORIES } from '@/components/feed/RequestHelpModal';
 
 // Short-circuit for community prompts
-// (Rendered before exports so the hook rules are satisfied)
 function PromptWrapper({ post, currentUser }) {
   return <PromptCard post={post} currentUser={currentUser} />;
+}
+
+function BookmarkButton({ postId, currentUser }) {
+  const [bookmarked, setBookmarked] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    base44.entities.Bookmark.filter({ post_id: postId, user_id: currentUser.id })
+      .then(r => setBookmarked(r.length > 0))
+      .catch(() => {});
+  }, [postId, currentUser]);
+
+  const handleToggle = async (e) => {
+    e.stopPropagation();
+    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (loading) return;
+    setLoading(true);
+    if (bookmarked) {
+      const existing = await base44.entities.Bookmark.filter({ post_id: postId, user_id: currentUser.id });
+      if (existing[0]) await base44.entities.Bookmark.delete(existing[0].id);
+      setBookmarked(false);
+    } else {
+      await base44.entities.Bookmark.create({ post_id: postId, user_id: currentUser.id });
+      setBookmarked(true);
+      toast.success('Post saved!');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <button
+      onClick={handleToggle}
+      className={`flex items-center justify-center w-6 h-6 rounded transition-colors ${
+        bookmarked ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'
+      }`}
+      title={bookmarked ? 'Remove bookmark' : 'Save post'}
+    >
+      <Bookmark className={`w-3.5 h-3.5 ${bookmarked ? 'fill-current' : ''}`} />
+    </button>
+  );
 }
 
 // Unified badge style: blue for informational, dark-blue outlined for urgent
@@ -845,6 +885,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         {post.user_id !== currentUser?.id && (
           <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
         )}
+        <BookmarkButton postId={post.id} currentUser={currentUser} />
         <div className="ml-auto flex items-center gap-2 text-[11px] text-slate-400">
           {recentComments.length > 0 && (
             <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1 hover:opacity-80">
