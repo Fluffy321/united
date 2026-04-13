@@ -187,7 +187,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100%-24px)] sm:max-w-lg bg-white p-0 flex flex-col" style={{maxHeight: '92dvh'}}>
+      <DialogContent className="w-[calc(100%-24px)] sm:max-w-lg bg-white p-0 flex flex-col rounded-3xl overflow-hidden" style={{maxHeight: '92dvh'}}>
         {/* Fixed header */}
         <div className="px-4 pt-4 pb-3 border-b border-slate-100 flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
