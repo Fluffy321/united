@@ -2,9 +2,9 @@ import React from 'react';
 import { MapPin, Users, Flame } from 'lucide-react';
 
 const CHIPS = [
-  { id: 'nearby',      icon: MapPin,  label: 'Near you',             activeBg: '#059669' },
-  { id: 'communities', icon: Users,   label: 'Your communities',     activeBg: '#2563EB' },
-  { id: 'trending',    icon: Flame,   label: 'Popular in Five Towns', activeBg: '#F97316' },
+  { id: 'trending',    icon: Flame,   label: 'Popular',          activeBg: '#F97316' },
+  { id: 'communities', icon: Users,   label: 'Communities',      activeBg: '#2563EB' },
+  { id: 'nearby',      icon: MapPin,  label: 'Near you',         activeBg: '#059669' },
 ];
 
 export default function LocalContextStrip({ activeTab, onTabChange, userCommunityCount = 0 }) {
