@@ -33,62 +33,13 @@ const PLACEHOLDERS = {
 };
 
 const HELP_CATEGORIES = [
-  { 
-    value: 'advice', 
-    label: 'Advice', 
-    bgColor: '#E8F1FF',
-    textColor: '#1E40AF',
-    selectedBg: '#BFDBFE',
-    emoji: '💡'
-  },
-  { 
-    value: 'lonely', 
-    label: 'Lonely', 
-    bgColor: '#F1E6FF',
-    textColor: '#7C3AED',
-    selectedBg: '#DDD6FE',
-    emoji: '🤝'
-  },
-  { 
-    value: 'school', 
-    label: 'School', 
-    bgColor: '#FFF6D6',
-    textColor: '#B45309',
-    selectedBg: '#FDE68A',
-    emoji: '📚'
-  },
-  { 
-    value: 'jobs', 
-    label: 'Jobs', 
-    bgColor: '#E6F7EC',
-    textColor: '#15803D',
-    selectedBg: '#BBF7D0',
-    emoji: '💼'
-  },
-  { 
-    value: 'family', 
-    label: 'Family', 
-    bgColor: '#FFEBD6',
-    textColor: '#C2410C',
-    selectedBg: '#FED7AA',
-    emoji: '👨‍👩‍👧‍👦'
-  },
-  { 
-    value: 'antisemitism', 
-    label: 'Antisemitism', 
-    bgColor: '#FFE3E3',
-    textColor: '#991B1B',
-    selectedBg: '#FECACA',
-    emoji: '🛡️'
-  },
-  { 
-    value: 'other', 
-    label: 'Other', 
-    bgColor: '#F2F2F2',
-    textColor: '#374151',
-    selectedBg: '#E5E7EB',
-    emoji: '💬'
-  }
+  { value: 'advice', label: 'Advice', bgColor: '#E8F1FF', textColor: '#1E40AF', selectedBg: '#BFDBFE', emoji: '💡' },
+  { value: 'lonely', label: 'Lonely', bgColor: '#F1E6FF', textColor: '#7C3AED', selectedBg: '#DDD6FE', emoji: '🤝' },
+  { value: 'school', label: 'School', bgColor: '#FFF6D6', textColor: '#B45309', selectedBg: '#FDE68A', emoji: '📚' },
+  { value: 'jobs', label: 'Jobs', bgColor: '#E6F7EC', textColor: '#15803D', selectedBg: '#BBF7D0', emoji: '💼' },
+  { value: 'family', label: 'Family', bgColor: '#FFEBD6', textColor: '#C2410C', selectedBg: '#FED7AA', emoji: '👨‍👩‍👧‍👦' },
+  { value: 'antisemitism', label: 'Antisemitism', bgColor: '#FFE3E3', textColor: '#991B1B', selectedBg: '#FECACA', emoji: '🛡️' },
+  { value: 'other', label: 'Other', bgColor: '#F2F2F2', textColor: '#374151', selectedBg: '#E5E7EB', emoji: '💬' }
 ];
 
 const FEED_SUBTYPES = [
@@ -131,7 +82,6 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
   const isEvent = postType === 'event';
   const requiresTitle = isEvent || postType === 'job' || postType === 'housing';
   const categories = HELP_CATEGORIES || [];
-  const selectedCategory = categories.find(cat => cat.value === category);
 
   const applyFormatting = (format) => {
     if (!textareaRef.current) return;
@@ -139,27 +89,16 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selectedText = body.substring(start, end);
-    
     if (!selectedText) return;
-    
     let formattedText;
     switch (format) {
-      case 'bold':
-        formattedText = `**${selectedText}**`;
-        break;
-      case 'italic':
-        formattedText = `*${selectedText}*`;
-        break;
-      case 'bullet':
-        formattedText = selectedText.split('\n').map(line => `• ${line}`).join('\n');
-        break;
-      default:
-        return;
+      case 'bold': formattedText = `**${selectedText}**`; break;
+      case 'italic': formattedText = `*${selectedText}*`; break;
+      case 'bullet': formattedText = selectedText.split('\n').map(line => `• ${line}`).join('\n'); break;
+      default: return;
     }
-    
     const newBody = body.substring(0, start) + formattedText + body.substring(end);
     setBody(newBody);
-    
     setTimeout(() => {
       textarea.focus();
       textarea.selectionStart = textarea.selectionEnd = start + formattedText.length;
@@ -195,23 +134,11 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
   };
 
   const handleSubmit = async () => {
-    if (!body.trim()) {
-      toast.error('Please write something');
-      return;
-    }
-
-    if (requiresTitle && !title.trim()) {
-      toast.error('Title is required');
-      return;
-    }
-
-    if (isHelp && !category) {
-      toast.error('Please select a category');
-      return;
-    }
+    if (!body.trim()) { toast.error('Please write something'); return; }
+    if (requiresTitle && !title.trim()) { toast.error('Title is required'); return; }
+    if (isHelp && !category) { toast.error('Please select a category'); return; }
 
     setIsSubmitting(true);
-
     try {
       const isFeedPost = !isPromptReply && postType === 'feed';
       const postData = {
@@ -239,31 +166,18 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
 
       await base44.entities.UnifiedPost.create(postData);
 
-      // Update prompt reply count if applicable
       if (promptId) {
         const prompt = await base44.entities.DailyPrompt.filter({ id: promptId });
         if (prompt[0]) {
-          await base44.entities.DailyPrompt.update(promptId, {
-            replies_count: (prompt[0].replies_count || 0) + 1
-          });
+          await base44.entities.DailyPrompt.update(promptId, { replies_count: (prompt[0].replies_count || 0) + 1 });
         }
       }
 
       toast.success('Posted!');
       onOpenChange(false);
-      
-      // Reset form
-      setTitle('');
-      setBody('');
-      setLocation('');
-      setIsAnonymous(false);
-      setCategory('');
-      setPostSubtype('discussion');
-      setEventDate('');
-      setEventTime('');
-      setAttachedFiles([]);
-      setCaption('');
-      setImageUrls([]);
+      setTitle(''); setBody(''); setLocation(''); setIsAnonymous(false);
+      setCategory(''); setPostSubtype('discussion'); setEventDate('');
+      setEventTime(''); setAttachedFiles([]); setCaption(''); setImageUrls([]);
     } catch (error) {
       toast.error('Failed to post');
     } finally {
@@ -280,13 +194,13 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
             <h2 className="text-[17px] font-bold text-slate-900">{getModalTitle()}</h2>
           </div>
           {!isPromptReply && postType === 'feed' && (
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               {FEED_SUBTYPES.map(st => {
                 const Icon = st.icon;
                 const isActive = postSubtype === st.value;
                 return (
                   <button key={st.value} type="button" onClick={() => setPostSubtype(st.value)}
-                    className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all ${isActive ? st.active : st.inactive}`}>
+                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${isActive ? st.active : st.inactive}`}>
                     <Icon className="w-3 h-3" />{st.label}
                   </button>
                 );
@@ -297,20 +211,14 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
-          {/* Only show title for non-feed posts */}
           {requiresTitle && (
             <div>
               <Label>Title</Label>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter title..."
-                className="mt-1"
-              />
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter title..." className="mt-1" />
             </div>
           )}
 
-          {/* Avatar + Large Textarea */}
+          {/* Avatar + Textarea */}
           <div className="flex gap-3">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden mt-2">
               {currentUser?.avatar_url
@@ -331,12 +239,12 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
               <div className="flex items-center justify-between px-3 py-1.5 bg-slate-50 border border-t-0 border-slate-150 rounded-b-xl">
                 <div className="flex items-center gap-1">
                   <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormatting('bold'); }}
-                    className="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors font-bold text-sm"
+                    className="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors"
                     title="Bold (select text first)">
                     <Bold className="w-3.5 h-3.5" />
                   </button>
                   <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormatting('italic'); }}
-                    className="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors italic text-sm"
+                    className="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors"
                     title="Italic (select text first)">
                     <Italic className="w-3.5 h-3.5" />
                   </button>
@@ -373,7 +281,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
             </button>
           </div>
 
-          {/* Collapsible help categories — only show if help post */}
+          {/* Help categories */}
           {isHelp && (
             <div className="space-y-2">
               <details className="group">
@@ -382,25 +290,15 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
                   {categories.map(cat => {
                     const isSelected = category === cat.value;
                     return (
-                      <button
-                        key={cat.value}
-                        type="button"
-                        onClick={() => setCategory(cat.value)}
+                      <button key={cat.value} type="button" onClick={() => setCategory(cat.value)}
                         className="relative rounded-xl p-3 text-left transition-all duration-200 hover:scale-105 active:scale-95"
-                        style={{
-                          backgroundColor: isSelected ? cat.selectedBg : cat.bgColor,
-                          color: cat.textColor,
-                          boxShadow: isSelected ? `0 0 0 2px ${cat.textColor}40` : 'none'
-                        }}
-                      >
+                        style={{ backgroundColor: isSelected ? cat.selectedBg : cat.bgColor, color: cat.textColor, boxShadow: isSelected ? `0 0 0 2px ${cat.textColor}40` : 'none' }}>
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
                             <span className="text-lg">{cat.emoji}</span>
                             <span className="font-medium text-sm">{cat.label}</span>
                           </div>
-                          {isSelected && (
-                            <Check className="w-4 h-4 animate-in zoom-in duration-150" strokeWidth={3} />
-                          )}
+                          {isSelected && <Check className="w-4 h-4 animate-in zoom-in duration-150" strokeWidth={3} />}
                         </div>
                       </button>
                     );
@@ -430,7 +328,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
             </details>
           )}
 
-          {/* Location — collapsed dropdown */}
+          {/* Location */}
           <details className="group" data-neighborhood-toggle>
             <summary className="cursor-pointer text-sm font-medium text-slate-600 hover:text-slate-900 py-2 flex items-center gap-2">
               <MapPin className="w-4 h-4" /> Add location
@@ -447,7 +345,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
             </div>
           </details>
 
-          {/* Photo upload — compact inline */}
+          {/* Photo upload */}
           {(postType === 'feed' || postType === 'housing') && imageUrls.length > 0 && (
             <div className="flex items-center gap-2">
               {imageUrls.map((url, i) => (
@@ -463,7 +361,6 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
               )}
             </div>
           )}
-          {/* Hidden file input */}
           {(postType === 'feed' || postType === 'housing') && imageUrls.length < 3 && (
             <label className="hidden">
               <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
@@ -475,10 +372,9 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
               }} />
             </label>
           )}
-
         </div>
 
-        {/* Fixed footer — full-width gradient button */}
+        {/* Fixed footer */}
         <div className="px-4 py-3 border-t border-slate-100 flex-shrink-0 bg-white">
           <Button onClick={handleSubmit} disabled={isSubmitting || !body.trim()}
             className="w-full h-10 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
