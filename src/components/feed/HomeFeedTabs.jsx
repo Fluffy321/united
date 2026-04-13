@@ -23,9 +23,8 @@ export default function HomeFeedTabs({ activeTab, onChange }) {
           key={tab.id}
           type="button"
           onClick={() => onChange(tab.id)}
-          onTouchEnd={(e) => { e.preventDefault(); onChange(tab.id); }}
+          style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation', background: activeTab === tab.id ? 'linear-gradient(135deg, #2563EB, #7C3AED)' : tab.inactive.bg, color: activeTab === tab.id ? 'white' : tab.inactive.color, border: activeTab === tab.id ? 'none' : `1px solid ${tab.inactive.border}`, boxShadow: activeTab === tab.id ? '0 2px 8px rgba(37,99,235,0.35)' : 'none' }}
           className="relative z-10 flex-shrink-0 min-h-[44px] px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap transition-all touch-manipulation"
-          style={{ WebkitTapHighlightColor: 'transparent', background: activeTab === tab.id ? 'linear-gradient(135deg, #2563EB, #7C3AED)' : tab.inactive.bg, color: activeTab === tab.id ? 'white' : tab.inactive.color, border: activeTab === tab.id ? 'none' : `1px solid ${tab.inactive.border}`, boxShadow: activeTab === tab.id ? '0 2px 8px rgba(37,99,235,0.35)' : 'none' }}
         >
           <span className="pointer-events-none">{tab.label}</span>
         </button>
