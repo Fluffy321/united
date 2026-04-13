@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 
 const TYPE_CONFIG = {
   like: { icon: Heart, color: '#ef4444', bg: '#fef2f2', label: 'Liked your post' },
+  post_reply: { icon: MessageCircle, color: '#2563eb', bg: '#eff6ff', label: 'Replied to your post' },
+  comment_reply: { icon: MessageCircle, color: '#7c3aed', bg: '#f5f3ff', label: 'Also replied' },
   comment: { icon: MessageCircle, color: '#2563eb', bg: '#eff6ff', label: 'Commented' },
   help_offer: { icon: HandHeart, color: '#7c3aed', bg: '#f5f3ff', label: 'Help offered' },
   request_fulfilled: { icon: CheckCircle2, color: '#16a34a', bg: '#f0fdf4', label: 'Request fulfilled' },
@@ -49,12 +51,13 @@ export default function Notifications() {
     queryFn: () => base44.entities.Notification.filter({ user_id: currentUser.id }, '-created_date', 80),
     enabled: !!currentUser,
     staleTime: 30000,
+    refetchInterval: 30000,
   });
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      const unread = notifications.filter(n => !n.read);
-      await Promise.all(unread.map(n => base44.entities.Notification.update(n.id, { read: true })));
+      const unread = notifications.filter(n => !n.is_read);
+      await Promise.all(unread.map(n => base44.entities.Notification.update(n.id, { is_read: true })));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications-page', currentUser?.id] });
@@ -63,17 +66,19 @@ export default function Notifications() {
   });
 
   const markOneRead = async (notif) => {
-    if (!notif.read) {
-      await base44.entities.Notification.update(notif.id, { read: true });
+    if (!notif.is_read) {
+      await base44.entities.Notification.update(notif.id, { is_read: true });
       queryClient.invalidateQueries({ queryKey: ['notifications-page', currentUser?.id] });
       queryClient.invalidateQueries({ queryKey: ['notification-count', currentUser?.id] });
     }
-    if (notif.link) window.location.href = notif.link;
+    if (notif.post_id) {
+      window.location.href = `/PostDetail?id=${notif.post_id}`;
+    }
   };
 
   const filtered = filter === 'all' ? notifications : notifications.filter(n => n.type === filter);
   const grouped = groupByDate(filtered);
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: '#F0F6FF' }}>
@@ -160,7 +165,7 @@ export default function Notifications() {
                         onClick={() => markOneRead(notif)}
                         className="w-full flex items-start gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-blue-50"
                         style={{
-                          background: notif.read ? 'white' : '#f0f6ff',
+                          background: notif.is_read ? 'white' : '#f0f6ff',
                           borderTop: idx > 0 ? '1px solid #EFF6FF' : 'none',
                         }}
                       >
@@ -189,7 +194,7 @@ export default function Notifications() {
                         </div>
 
                         {/* Unread dot */}
-                        {!notif.read && (
+                        {!notif.is_read && (
                           <div className="w-2.5 h-2.5 rounded-full bg-[#2563eb] mt-2 flex-shrink-0" />
                         )}
                       </button>

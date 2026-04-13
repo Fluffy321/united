@@ -11,7 +11,7 @@ export default function NotificationBell({ userId }) {
   const { data: count = 0 } = useQuery({
     queryKey: ['notification-count', userId],
     queryFn: async () => {
-      const notifs = await base44.entities.Notification.filter({ user_id: userId, read: false });
+      const notifs = await base44.entities.Notification.filter({ user_id: userId, is_read: false });
       return notifs.length;
     },
     enabled: !!userId,
