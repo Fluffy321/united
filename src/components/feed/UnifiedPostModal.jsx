@@ -318,13 +318,39 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
                 : userInitials
               }
             </div>
-            <Textarea
-              ref={textareaRef}
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder={getPlaceholderBySubtype() || "What's going on?"}
-              className="flex-1 min-h-[140px] resize-none rounded-xl border border-slate-150 bg-slate-50 px-4 py-3 text-[15px] focus:ring-0 focus:border-blue-300 focus:bg-white placeholder:text-slate-400 transition-all"
-            />
+            <div className="flex-1 flex flex-col">
+              <Textarea
+                ref={textareaRef}
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder={getPlaceholderBySubtype() || "What's going on?"}
+                className="flex-1 min-h-[140px] resize-none rounded-xl rounded-b-none border border-slate-150 bg-slate-50 px-4 py-3 text-[15px] focus:ring-0 focus:border-blue-300 focus:bg-white placeholder:text-slate-400 transition-all"
+                maxLength={1000}
+              />
+              {/* Formatting toolbar + char counter */}
+              <div className="flex items-center justify-between px-3 py-1.5 bg-slate-50 border border-t-0 border-slate-150 rounded-b-xl">
+                <div className="flex items-center gap-1">
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormatting('bold'); }}
+                    className="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors font-bold text-sm"
+                    title="Bold (select text first)">
+                    <Bold className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormatting('italic'); }}
+                    className="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors italic text-sm"
+                    title="Italic (select text first)">
+                    <Italic className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormatting('bullet'); }}
+                    className="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors"
+                    title="Bullet list (select lines first)">
+                    <List className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <span className={`text-[11px] font-medium tabular-nums ${
+                  body.length > 900 ? 'text-red-500' : body.length > 700 ? 'text-amber-500' : 'text-slate-400'
+                }`}>{body.length}/1000</span>
+              </div>
+            </div>
           </div>
 
           {/* Quick action buttons */}
