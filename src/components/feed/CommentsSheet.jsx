@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, Loader2, ArrowRight } from 'lucide-react';
+import { X, Send, Loader2, ArrowRight, Heart } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,7 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
   const [newComment, setNewComment] = useState('');
   const [posting, setPosting] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
+  const [commentLikes, setCommentLikes] = useState({}); // { commentId: { count, liked } }
 
   useEffect(() => {
     if (isOpen && postId) {
@@ -19,11 +20,46 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
     }
   }, [isOpen, postId]);
 
+  const loadCommentLikes = async (loadedComments) => {
+    if (!currentUser || loadedComments.length === 0) return;
+    const ids = loadedComments.map(c => c.id);
+    // Fetch likes where post_id matches comment ids (we reuse Like entity with comment id)
+    const allLikes = await Promise.all(
+      ids.map(id => base44.entities.Like.filter({ post_id: id }))
+    );
+    const map = {};
+    ids.forEach((id, i) => {
+      map[id] = {
+        count: allLikes[i].length,
+        liked: allLikes[i].some(l => l.user_id === currentUser.id),
+      };
+    });
+    setCommentLikes(map);
+  };
+
   const loadComments = async () => {
     setLoading(true);
     const allComments = await base44.entities.Comment.filter({ post_id: postId }, '-created_date');
-    setComments(allComments.filter(c => !blockedIds.includes(c.author_id)));
+    const filtered = allComments.filter(c => !blockedIds.includes(c.author_id));
+    setComments(filtered);
     setLoading(false);
+    loadCommentLikes(filtered);
+  };
+
+  const handleLikeComment = async (commentId) => {
+    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    const current = commentLikes[commentId] || { count: 0, liked: false };
+    // Optimistic update
+    setCommentLikes(prev => ({
+      ...prev,
+      [commentId]: { count: current.liked ? current.count - 1 : current.count + 1, liked: !current.liked },
+    }));
+    if (current.liked) {
+      const existing = await base44.entities.Like.filter({ post_id: commentId, user_id: currentUser.id });
+      if (existing[0]) await base44.entities.Like.delete(existing[0].id);
+    } else {
+      await base44.entities.Like.create({ post_id: commentId, user_id: currentUser.id });
+    }
   };
 
   const handlePostComment = async () => {
@@ -128,12 +164,23 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
                     </p>
                   </div>
                   <p className="text-[13px] text-slate-700 leading-relaxed">{comment.body}</p>
-                  <button
-                    onClick={() => setReplyingTo(comment.id)}
-                    className="mt-2 text-[12px] font-semibold text-blue-600 hover:text-blue-700"
-                  >
-                    Reply
-                  </button>
+                  <div className="mt-2 flex items-center gap-3">
+                    <button
+                      onClick={() => setReplyingTo(comment.id)}
+                      className="text-[12px] font-semibold text-blue-600 hover:text-blue-700"
+                    >
+                      Reply
+                    </button>
+                    <button
+                      onClick={() => handleLikeComment(comment.id)}
+                      className={`flex items-center gap-1 text-[12px] font-semibold transition-colors ${
+                        commentLikes[comment.id]?.liked ? 'text-red-500' : 'text-slate-400 hover:text-red-400'
+                      }`}
+                    >
+                      <Heart className={`w-3.5 h-3.5 ${commentLikes[comment.id]?.liked ? 'fill-current' : ''}`} />
+                      {commentLikes[comment.id]?.count > 0 && <span>{commentLikes[comment.id].count}</span>}
+                    </button>
+                  </div>
                 </div>
               </div>
             );
