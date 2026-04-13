@@ -132,13 +132,13 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const [submittingQuickReply, setSubmittingQuickReply] = useState(false);
   const [recentComments, setRecentComments] = useState([]);
 
-  // Fetch 2 most recent comments for feed posts with activity
+  // Fetch 2 most recent comments for all post types with activity
   useEffect(() => {
-    if (post.type !== 'feed' || !post.comments_count || post.comments_count === 0) return;
+    if (!post.comments_count || post.comments_count === 0) return;
     base44.entities.Comment.filter({ post_id: post.id }, '-created_date', 2)
       .then(comments => setRecentComments(comments))
       .catch(() => {});
-  }, [post.id, post.type, post.comments_count, commentCount]);
+  }, [post.id, post.comments_count, commentCount]);
 
   if (post.type === 'prompt') return <PromptWrapper post={post} currentUser={currentUser} />;
   if (post.type === 'poll' || post.post_subtype === 'poll') return <PollCard post={post} currentUser={currentUser} />;
@@ -366,6 +366,22 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
               <EventRSVPSection postId={post.id} currentUser={currentUser} eventDate={post.event_date} />
             </div>
           )}
+          {recentComments.length > 0 && (
+            <div className="mt-2 space-y-1.5">
+              {recentComments.slice().reverse().map(c => (
+                <div key={c.id} className="flex items-start gap-1.5">
+                  <UserAvatar name={c.author_name} size="xs" className="mt-0.5 flex-shrink-0" />
+                  <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 flex-1 min-w-0">
+                    <span className="font-semibold text-[11px] text-slate-700 mr-1.5">{c.author_name?.split(' ')[0]}</span>
+                    <span className="text-[12px] text-slate-600 leading-snug line-clamp-1">{c.body}</span>
+                  </div>
+                </div>
+              ))}
+              {commentCount > 2 && (
+                <button onClick={() => setCommentsOpen(true)} className="text-[11px] font-semibold text-blue-600 pl-8">View all {commentCount} replies →</button>
+              )}
+            </div>
+          )}
           {(post.likes_count > 0 || post.comments_count > 0) && (
             <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-400">
               {post.likes_count > 0 && <span>{post.likes_count} {post.likes_count === 1 ? 'person' : 'people'} going</span>}
@@ -415,6 +431,22 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             </DropdownMenu>
           </div>
           {post.body && <p className="text-[12px] text-slate-600 leading-relaxed line-clamp-3 mb-2">{post.body}</p>}
+          {recentComments.length > 0 && (
+            <div className="mb-2 space-y-1.5">
+              {recentComments.slice().reverse().map(c => (
+                <div key={c.id} className="flex items-start gap-1.5">
+                  <UserAvatar name={c.author_name} size="xs" className="mt-0.5 flex-shrink-0" />
+                  <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 flex-1 min-w-0">
+                    <span className="font-semibold text-[11px] text-slate-700 mr-1.5">{c.author_name?.split(' ')[0]}</span>
+                    <span className="text-[12px] text-slate-600 leading-snug line-clamp-1">{c.body}</span>
+                  </div>
+                </div>
+              ))}
+              {commentCount > 2 && (
+                <button onClick={() => setCommentsOpen(true)} className="text-[11px] font-semibold text-blue-600 pl-8">View all {commentCount} replies →</button>
+              )}
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <UserAvatar user={post} name={post.user_name} size="xs" />
             <span className="text-[11px] text-slate-500 flex-1">{post.user_name} · {timeAgo}</span>
@@ -446,6 +478,22 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           </div>
           {post.title && <h3 className="font-bold text-[14px] text-slate-900 mb-0.5 leading-snug">{post.title}</h3>}
           {post.body && <p className="text-[12px] text-slate-600 leading-relaxed line-clamp-3 mb-2">{post.body}</p>}
+          {recentComments.length > 0 && (
+            <div className="mb-2 space-y-1.5">
+              {recentComments.slice().reverse().map(c => (
+                <div key={c.id} className="flex items-start gap-1.5">
+                  <UserAvatar name={c.author_name} size="xs" className="mt-0.5 flex-shrink-0" />
+                  <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 flex-1 min-w-0">
+                    <span className="font-semibold text-[11px] text-slate-700 mr-1.5">{c.author_name?.split(' ')[0]}</span>
+                    <span className="text-[12px] text-slate-600 leading-snug line-clamp-1">{c.body}</span>
+                  </div>
+                </div>
+              ))}
+              {commentCount > 2 && (
+                <button onClick={() => setCommentsOpen(true)} className="text-[11px] font-semibold text-blue-600 pl-8">View all {commentCount} replies →</button>
+              )}
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <UserAvatar user={post} name={post.user_name} size="xs" />
             <span className="text-[11px] text-slate-500 flex-1">{post.user_name} · {timeAgo}</span>
@@ -500,6 +548,22 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
               {bodyPreview}
               {bodyLong && <button onClick={() => setExpanded(e => !e)} className="ml-1 text-blue-600 font-semibold text-[13px]">{expanded ? 'less' : 'more'}</button>}
             </p>
+          )}
+          {recentComments.length > 0 && (
+            <div className="mt-2 mb-1 space-y-1.5">
+              {recentComments.slice().reverse().map(c => (
+                <div key={c.id} className="flex items-start gap-1.5">
+                  <UserAvatar name={c.author_name} size="xs" className="mt-0.5 flex-shrink-0" />
+                  <div className="bg-amber-50 rounded-xl px-2.5 py-1.5 flex-1 min-w-0">
+                    <span className="font-semibold text-[11px] text-slate-700 mr-1.5">{c.author_name?.split(' ')[0]}</span>
+                    <span className="text-[12px] text-slate-600 leading-snug line-clamp-1">{c.body}</span>
+                  </div>
+                </div>
+              ))}
+              {commentCount > 2 && (
+                <button onClick={() => setCommentsOpen(true)} className="text-[11px] font-semibold text-blue-600 pl-8">View all {commentCount} replies →</button>
+              )}
+            </div>
           )}
           <div className="flex items-center gap-2 mt-1.5 pt-1 border-t border-slate-100">
             <UserAvatar user={post} name={post.user_name} size="xs" />
