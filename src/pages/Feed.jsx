@@ -18,6 +18,7 @@ import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
 import SearchModal from '@/components/feed/SearchModal';
+import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import { Search, Plus, X, Bell, HandHeart, Calendar, RefreshCw, Loader2 } from 'lucide-react';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
@@ -42,6 +43,7 @@ export default function Feed() {
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showEventsSheet, setShowEventsSheet] = useState(false);
   const [showFAB, setShowFAB] = useState(false);
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [interestSignals, setInterestSignals] = useState({ types: {}, subtypes: {}, keywords: [] }); // track user interactions
@@ -260,7 +262,7 @@ export default function Feed() {
               <Search className="w-5 h-5 text-slate-500" />
             </button>
             <button 
-              onClick={() => setActiveTab('events')}
+              onClick={() => setShowEventsSheet(true)}
               className="w-[44px] h-[44px] flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 rounded-full transition-colors touch-manipulation" 
               title="View events"
               style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -497,6 +499,13 @@ export default function Feed() {
           {showFAB ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
         </button>
       </div>
+
+      <UpcomingEventsSheet
+        open={showEventsSheet}
+        onOpenChange={setShowEventsSheet}
+        currentUser={currentUser}
+        joinedCommunityIds={communityGroups.map(c => c.id)}
+      />
 
       <SearchModal
         open={showSearch}
