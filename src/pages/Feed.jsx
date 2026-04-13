@@ -20,6 +20,7 @@ import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
 import SearchModal from '@/components/feed/SearchModal';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
+import LocalContextStrip from '@/components/feed/LocalContextStrip';
 import { Search, Plus, X, Bell, HandHeart, Calendar, RefreshCw, Loader2 } from 'lucide-react';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
@@ -228,7 +229,11 @@ export default function Feed() {
     if (activeTab === 'chessed') return sorted.filter(p => p.type === 'help' || p.board === 'help');
     if (activeTab === 'learning') return sorted.filter(p => p.type === 'news' || /torah|parsha|daf|halacha|shiur/i.test(p.body || ''));
     if (activeTab === 'social') return sorted.filter(p => p.type === 'feed');
-    if (activeTab === 'nearby') return sorted.filter(p => p.city);
+    if (activeTab === 'nearby') return sorted.filter(p => p.location_text || p.city);
+    if (activeTab === 'communities') {
+      const communityIds = communityGroups.map(c => c.id);
+      return sorted.filter(p => communityIds.includes(p.community_id));
+    }
     if (activeTab === 'events') return sorted.filter(p => p.type === 'event' || p.board === 'events');
     return sorted.slice(0, 40);
   })();
@@ -323,6 +328,12 @@ export default function Feed() {
             setPostModalInitialBody(prefill || '');
             setShowPostModal(true);
           }}
+        />
+
+        <LocalContextStrip
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          userCommunityCount={communityGroups.length}
         />
 
         <div className="rounded-2xl mb-3 bg-blue-50/60 border border-blue-100/60 p-2.5 space-y-2">
