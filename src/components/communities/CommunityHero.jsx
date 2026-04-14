@@ -3,7 +3,7 @@ import { ArrowLeft, CheckCircle2, Star, Users, Calendar, HandHeart } from 'lucid
 import CommunityLogo from './CommunityLogo';
 import InviteLinkButton from './InviteLinkButton';
 
-export default function CommunityHero({ community, isFollowing, isAdmin, onBack, onFollow, onClaim, eventCount, mitzvahCount, actualMemberCount }) {
+export default function CommunityHero({ community, isFollowing, isAdmin, onBack, onFollow, onClaim, eventCount, mitzvahCount, actualMemberCount, postsThisWeek }) {
   const memberCount = actualMemberCount || community.follower_count || 0;
 
   return (
@@ -47,6 +47,11 @@ export default function CommunityHero({ community, isFollowing, isAdmin, onBack,
                 <HandHeart className="w-3.5 h-3.5 text-[#2563EB]" />
                 <span><strong className="text-slate-800">{mitzvahCount}</strong> mitzvah</span>
               </div>
+              {postsThisWeek > 0 && (
+                <div className="flex items-center gap-1 text-[12px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5">
+                  🔥 {postsThisWeek} posts this week
+                </div>
+              )}
             </div>
           </div>
         </div>

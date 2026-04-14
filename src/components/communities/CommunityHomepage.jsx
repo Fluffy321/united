@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import NewsletterSubscribeBox from './NewsletterSubscribeBox';
-import { Calendar, Clock, MapPin, HandHeart, Users, ChevronRight, Megaphone, Pin, UserPlus } from 'lucide-react';
+import { Calendar, Clock, MapPin, HandHeart, Users, ChevronRight, Megaphone, Pin, UserPlus, MessageCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { base44 } from '@/api/base44Client';
 
 const CATEGORY_COLORS = {
   'Food Drive':   'bg-orange-50 text-orange-700',
@@ -70,17 +71,49 @@ function MitzvahMiniCard({ op }) {
 }
 
 function FeedPostMini({ post }) {
+  const [comments, setComments] = useState([]);
+
+  useEffect(() => {
+    base44.entities.Comment.filter({ post_id: post.id }, '-created_date', 2)
+      .then(setComments)
+      .catch(() => {});
+  }, [post.id]);
+
   const timeAgo = post.created_date
     ? formatDistanceToNow(new Date(post.created_date), { addSuffix: true })
     : '';
+
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-4">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[12px] font-semibold text-slate-500">{post.author_name}</span>
+        <span className="text-[12px] font-semibold text-slate-700">{post.author_name}</span>
         <span className="text-[11px] text-slate-400">{timeAgo}</span>
       </div>
       {post.title && <h3 className="font-bold text-slate-900 text-[14px] mb-1">{post.title}</h3>}
       <p className="text-[13px] text-slate-700 leading-relaxed line-clamp-3">{post.body}</p>
+
+      {/* Inline comments */}
+      {comments.length > 0 && (
+        <div className="mt-3 space-y-1.5 border-t border-slate-100 pt-3">
+          {comments.slice().reverse().map(c => (
+            <div key={c.id} className="flex items-start gap-1.5">
+              <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-[9px] font-bold text-blue-600 flex-shrink-0 mt-0.5">
+                {c.author_name?.[0] || '?'}
+              </div>
+              <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 flex-1 min-w-0">
+                <span className="font-semibold text-[11px] text-slate-700 mr-1.5">{c.author_name?.split(' ')[0]}</span>
+                <span className="text-[12px] text-slate-600 line-clamp-1">{c.body}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-center gap-1 mt-2 text-[11px] text-slate-400">
+        <MessageCircle className="w-3 h-3" />
+        <span>{post.comments_count || 0} {post.comments_count === 1 ? 'reply' : 'replies'}</span>
+        {post.likes_count > 0 && <><span>·</span><span>❤️ {post.likes_count}</span></>}
+      </div>
     </div>
   );
 }
@@ -121,7 +154,10 @@ function StatsBar({ stats }) {
 export default function CommunityHomepage({ community, posts, events, opportunities, onTabChange, stats, members = [] }) {
   const pinnedAnnouncement = posts.find(p => p.type === 'announcement' && p.is_pinned);
   const secondAnnouncement = posts.find(p => p.type === 'announcement' && !p.is_pinned);
-  const feedPosts = posts.filter(p => p.type !== 'announcement').slice(0, 3);
+  const feedPosts = posts.filter(p => p.type !== 'announcement').slice(0, 8);
+  const postsThisWeek = community.posts_this_week || posts.filter(p => {
+    return p.created_date && (Date.now() - new Date(p.created_date).getTime()) < 7 * 24 * 60 * 60 * 1000;
+  }).length;
   const upcomingEvents = events
     .filter(e => !e.start_date || new Date(e.start_date) >= new Date())
     .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
@@ -239,10 +275,19 @@ export default function CommunityHomepage({ community, posts, events, opportunit
       {/* Community Feed Preview */}
       {feedPosts.length > 0 && (
         <div>
-          <SectionHeader
-            title="💬 Community Feed"
-            onViewAll={() => onTabChange('feed')}
-          />
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-[16px] font-bold text-slate-900">💬 Community Feed</h2>
+              {postsThisWeek > 0 && (
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5">
+                  🔥 {postsThisWeek} posts this week
+                </span>
+              )}
+            </div>
+            <button onClick={() => onTabChange('feed')} className="flex items-center gap-0.5 text-[13px] font-semibold text-[#0F5ED7]">
+              View all <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
           <div className="space-y-3">
             {feedPosts.map(p => <FeedPostMini key={p.id} post={p} />)}
           </div>
