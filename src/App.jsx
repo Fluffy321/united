@@ -16,6 +16,7 @@ import AdminAnalyticsDashboard from '@/pages/AdminAnalyticsDashboard';
 import UserSettings from '@/pages/UserSettings';
 import ThankYou from '@/pages/ThankYou';
 import PostDetail from '@/pages/PostDetail';
+import CommunityPage from '@/pages/CommunityPage';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -63,6 +64,7 @@ const AuthenticatedApp = () => {
       <Route path="/Events" element={<PageTransition><Events /></PageTransition>} />
       <Route path="/AdminAnalyticsDashboard" element={<PageTransition><AdminAnalyticsDashboard /></PageTransition>} />
       <Route path="/UserSettings" element={<PageTransition><UserSettings /></PageTransition>} />
+      <Route path="/community/:communityId" element={<PageTransition><CommunityPage /></PageTransition>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

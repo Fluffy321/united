@@ -325,8 +325,6 @@ export default function Communities() {
   const [isDemo, setIsDemo] = useState(false);
   const [featuredError, setFeaturedError] = useState(false);
 
-  const selectedCommunityId = searchParams.get('communityId') || null;
-
   const loadData = useCallback(async (user) => {
     setLoadingPhase('loading');
     try {
@@ -425,9 +423,9 @@ export default function Communities() {
     if (community) {
       base44.entities.Community.update(id, { views_count: (community.views_count || 0) + 1 }).catch(() => {});
     }
-    setSearchParams({ communityId: String(id) });
+    navigate(`/community/${id}`);
   };
-  const backToList = () => setSearchParams({});
+  const backToList = () => navigate('/Communities');
 
   const reseedFeatured = async () => {
     if (currentUser?.role !== 'admin') {
@@ -478,17 +476,7 @@ export default function Communities() {
     );
   }
 
-  if (selectedCommunityId) {
-    const community = allCommunities.find(c => c.id === selectedCommunityId);
-    if (!community && loadingPhase === 'done') { backToList(); return null; }
-    if (!community) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
-    const isFeaturedShul = FEATURED_SHULS.some(n => community.name?.toLowerCase().includes(n.toLowerCase()));
-    if (isFeaturedShul && community.type === 'Shul') {
-      return <ShulCommunityPage community={community} currentUser={currentUser} onBack={backToList} />;
-    }
-    // Use the rich mini-network view for all communities
-    return <CommunityNetworkView communityId={selectedCommunityId} currentUser={currentUser} onBack={backToList} />;
-  }
+
 
   const hasRealCommunities = (allCommunities || []).some(c => !c.id?.startsWith('demo-'));
   const isLoading = loadingPhase === 'loading' && (allCommunities || []).length === 0;
