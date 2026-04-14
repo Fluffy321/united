@@ -423,7 +423,7 @@ export default function Communities() {
     if (community) {
       base44.entities.Community.update(id, { views_count: (community.views_count || 0) + 1 }).catch(() => {});
     }
-    navigate(`/community/${id}`);
+    navigate(`/communities/${id}`);
   };
   const backToList = () => navigate('/Communities');
 

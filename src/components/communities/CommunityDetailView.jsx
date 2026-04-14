@@ -35,7 +35,15 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
 
   const { data: community, isLoading } = useQuery({
     queryKey: ['community', communityId],
-    queryFn: () => base44.entities.Community.filter({ id: communityId }).then(r => r[0]),
+    queryFn: async () => {
+      // Try direct get first, fall back to filter
+      try {
+        const result = await base44.entities.Community.get(communityId);
+        if (result) return result;
+      } catch {}
+      const results = await base44.entities.Community.filter({ id: communityId });
+      return results[0] || null;
+    },
     enabled: !!communityId
   });
 
@@ -111,10 +119,23 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
     queryClient.invalidateQueries({ queryKey: ['user-communities', currentUser?.id] });
   };
 
-  if (isLoading || !community) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" />
+      </div>
+    );
+  }
+
+  if (!community) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="text-5xl">🏘️</div>
+        <h2 className="text-xl font-bold text-slate-800">Community not found</h2>
+        <p className="text-slate-500 text-sm">This community may have been removed or the link is invalid.</p>
+        <button onClick={onBack} className="mt-2 bg-blue-600 text-white rounded-full px-6 py-2.5 font-semibold text-sm active:scale-95 transition-all">
+          Back to Communities
+        </button>
       </div>
     );
   }

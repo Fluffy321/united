@@ -64,7 +64,8 @@ const AuthenticatedApp = () => {
       <Route path="/Events" element={<PageTransition><Events /></PageTransition>} />
       <Route path="/AdminAnalyticsDashboard" element={<PageTransition><AdminAnalyticsDashboard /></PageTransition>} />
       <Route path="/UserSettings" element={<PageTransition><UserSettings /></PageTransition>} />
-      <Route path="/community/:communityId" element={<PageTransition><CommunityPage /></PageTransition>} />
+      <Route path="/community/:communityId" element={<PageTransition><LayoutWrapper currentPageName="Communities"><CommunityPage /></LayoutWrapper></PageTransition>} />
+      <Route path="/communities/:communityId" element={<PageTransition><LayoutWrapper currentPageName="Communities"><CommunityPage /></LayoutWrapper></PageTransition>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
 
 // Vanity slug → real community ID mapping
+// Add slugs here for any community you want to support via friendly URL
 const SLUG_MAP = {
   'five-towns-help': '69de6ebc518dfa52773af53c',
 };
