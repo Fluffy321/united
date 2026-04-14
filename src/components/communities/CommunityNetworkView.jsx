@@ -317,17 +317,20 @@ function CommunityPostCard({ post, currentUser, isPinned }) {
 
 // ── Tabs ──────────────────────────────────────────────────────
 const TABS = [
-  { key: 'feed',          label: '🏠 Feed' },
-  { key: 'announcements', label: '📢 Notices' },
-  { key: 'events',        label: '📅 Events' },
-  { key: 'members',       label: '👥 Members' },
-  { key: 'about',         label: 'ℹ️ About' },
+  { key: 'feed',    label: '🏠 Feed' },
+  { key: 'events',  label: '📅 Events' },
+  { key: 'members', label: '👥 Members' },
+  { key: 'about',   label: 'ℹ️ About' },
 ];
 
 // ── Feed Tab ──────────────────────────────────────────────────
 function FeedTab({ community, currentUser, posts, isLoading, onRefresh }) {
-  const pinned = posts.filter(p => p.is_pinned);
-  const regular = posts.filter(p => !p.is_pinned && p.post_type !== 'announcement').sort((a,b) => new Date(b.created_date)-new Date(a.created_date));
+  // Pinned + announcements show at top, then regular posts newest-first
+  const pinned = posts.filter(p => p.is_pinned || p.post_type === 'announcement')
+    .sort((a,b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
+  const regular = posts
+    .filter(p => !p.is_pinned && p.post_type !== 'announcement')
+    .sort((a,b) => new Date(b.created_date) - new Date(a.created_date));
 
   return (
     <div className="space-y-3">
@@ -336,12 +339,12 @@ function FeedTab({ community, currentUser, posts, isLoading, onRefresh }) {
         <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-blue-600" /></div>
       ) : (
         <>
-          {pinned.map(p => <CommunityPostCard key={p.id} post={p} currentUser={currentUser} isPinned />)}
+          {pinned.map(p => <CommunityPostCard key={p.id} post={p} currentUser={currentUser} isPinned={p.is_pinned} />)}
           {regular.length === 0 && pinned.length === 0 && (
             <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
               <div className="text-4xl mb-3">✍️</div>
               <p className="font-bold text-slate-900">No posts yet</p>
-              <p className="text-[13px] text-slate-500 mt-1">Be the first to share something!</p>
+              <p className="text-[13px] text-slate-500 mt-1">Be the first to share something with this community!</p>
             </div>
           )}
           {regular.map(p => <CommunityPostCard key={p.id} post={p} currentUser={currentUser} />)}
@@ -706,12 +709,11 @@ export default function CommunityNetworkView({ communityId, currentUser, onBack 
 
   const gradient = getGradient(community);
   const initials = getInitials(community.name);
-  const announcementCount = posts.filter(p=>p.post_type==='announcement'||p.is_pinned).length;
-  const eventCount = events.filter(e=>!e.event_date||isFuture(new Date(e.event_date))).length;
+  const eventCount = events.filter(e => !e.event_date || isFuture(new Date(e.event_date))).length;
 
   const tabsWithCounts = TABS.map(t => ({
     ...t,
-    count: t.key === 'announcements' ? announcementCount : t.key === 'events' ? eventCount : 0
+    count: t.key === 'events' ? eventCount : 0
   }));
 
   return (
@@ -788,10 +790,7 @@ export default function CommunityNetworkView({ communityId, currentUser, onBack 
       {/* Tab content */}
       <div className="max-w-2xl mx-auto px-4 py-4 pb-28">
         {activeTab === 'feed' && (
-          <FeedTab community={community} currentUser={currentUser} posts={posts.filter(p=>p.post_type!=='announcement')} isLoading={postsLoading} onRefresh={refetchPosts} />
-        )}
-        {activeTab === 'announcements' && (
-          <AnnouncementsTab community={community} currentUser={currentUser} posts={posts} isLoading={postsLoading} onRefresh={refetchPosts} />
+          <FeedTab community={community} currentUser={currentUser} posts={posts} isLoading={postsLoading} onRefresh={refetchPosts} />
         )}
         {activeTab === 'events' && (
           <EventsTab community={community} currentUser={currentUser} events={events} isLoading={eventsLoading} onRefresh={refetchEvents} />
