@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, lazy, Suspense, useCallback } from 'react';
+import React, { useEffect, useState, useRef, lazy, Suspense, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
@@ -211,6 +211,8 @@ export default function Feed() {
     return true;
   });
 
+  const joinedCommunityIds = useMemo(() => new Set(communityGroups.map(c => c.id)), [communityGroups]);
+
   const engagementScore = (p) => {
     const likes = p.likes_count || 0;
     const comments = p.comments_count || 0;
@@ -229,6 +231,9 @@ export default function Feed() {
     const bodyWords = (p.body || '').toLowerCase().split(/\s+/);
     const keywordMatches = bodyWords.filter(w => w.length > 4 && interestSignals.keywords.includes(w)).length;
     base *= (1 + typeBoost * 0.1 + subtypeBoost * 0.15 + keywordMatches * 0.05);
+
+    // Strong boost for posts from communities the user joined
+    if (p.community_id && joinedCommunityIds.has(p.community_id)) base = base * 3 + 50;
 
     return base;
   };
@@ -463,29 +468,41 @@ export default function Feed() {
               const [hot] = orderedPosts.splice(hotIndex, 1);
               orderedPosts.splice(2, 0, hot);
             }
-            return orderedPosts.map((post, index) => (
-              <React.Fragment key={post.id}>
-                <UnifiedPostCard
-                 post={post}
-                 currentUser={currentUser}
-                 liked={userLikes.includes(post.id)}
-                 onLike={handleLike}
-                 onComment={(p) => { recordInterest(p); setSelectedPost(p); setShowComments(true); }}
-                 onDelete={(id) => deleteMutation.mutate(id)}
-                 onBlock={handleBlock}
-                 blockedIds={blockedIds}
-                 onReport={handleReport}
-                 communities={communityGroups}
-                 onCommunityClick={handleCommunityClick}
-                />
-                {(index + 1) % 6 === 0 && feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length] && (
-                  <InlineFeedPrompt
-                    prompt={feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length]}
-                    onReply={(p) => { setPinnedPrompt(p); setShowPromptReply(true); }}
+            let shownCommunityDivider = false;
+            return orderedPosts.map((post, index) => {
+              const isFromJoinedCommunity = post.community_id && joinedCommunityIds.has(post.community_id);
+              const showDivider = isFromJoinedCommunity && !shownCommunityDivider && joinedCommunityIds.size > 0;
+              if (showDivider) shownCommunityDivider = true;
+              return (
+                <React.Fragment key={post.id}>
+                  {showDivider && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50/80 border-b border-indigo-100">
+                      <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wide">👥 From your communities</span>
+                    </div>
+                  )}
+                  <UnifiedPostCard
+                   post={post}
+                   currentUser={currentUser}
+                   liked={userLikes.includes(post.id)}
+                   onLike={handleLike}
+                   onComment={(p) => { recordInterest(p); setSelectedPost(p); setShowComments(true); }}
+                   onDelete={(id) => deleteMutation.mutate(id)}
+                   onBlock={handleBlock}
+                   blockedIds={blockedIds}
+                   onReport={handleReport}
+                   communities={communityGroups}
+                   onCommunityClick={handleCommunityClick}
+                   isFromJoinedCommunity={isFromJoinedCommunity}
                   />
-                )}
-              </React.Fragment>
-            ));
+                  {(index + 1) % 6 === 0 && feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length] && (
+                    <InlineFeedPrompt
+                      prompt={feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length]}
+                      onReply={(p) => { setPinnedPrompt(p); setShowPromptReply(true); }}
+                    />
+                  )}
+                </React.Fragment>
+              );
+            });
           })()}
           </div>
         )}

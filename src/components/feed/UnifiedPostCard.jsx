@@ -156,7 +156,7 @@ function InterestedButton({ post, currentUser }) {
   );
 }
 
-export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, onBlock, blockedIds = [], liked, communities, onCommunityClick }) {
+export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, onBlock, blockedIds = [], liked, communities, onCommunityClick, isFromJoinedCommunity = false }) {
   const [expanded, setExpanded] = useState(false);
   const [imgExpanded, setImgExpanded] = useState(false);
   const [helpStatus, setHelpStatus] = useState(post.help_status || 'open');
@@ -717,6 +717,10 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       }`}
       style={isHotPost ? { boxShadow: '0 2px 16px rgba(251,146,60,0.12), 0 1px 4px rgba(0,0,0,0.04)' } : undefined}
     >
+      {/* Community boost label */}
+      {isFromJoinedCommunity && !isQuestion && post.post_subtype !== 'alert' && (
+        <div className="h-0.5 bg-gradient-to-r from-indigo-400 to-violet-400" />
+      )}
       {/* Question highlight bar */}
       {isQuestion && <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-600" />}
       {/* Header */}
