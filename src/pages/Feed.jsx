@@ -240,22 +240,27 @@ export default function Feed() {
 
   const feedPosts = (() => {
     const sorted = [...visiblePosts].sort((a, b) => engagementScore(b) - engagementScore(a));
+
+    let filtered;
     if (activeTab === 'for_you') {
       const userInterests = currentUser?.interests || [];
       const userCity = currentUser?.cityPreset || '';
-      return sorted.filter(p => {
+      filtered = sorted.filter(p => {
         if (userInterests.length === 0 && !userCity) return true;
         const bodyLower = (p.body || '').toLowerCase();
         const interestMatch = userInterests.some(i => bodyLower.includes(i.toLowerCase()));
         const cityMatch = userCity && (p.city || p.location_text || '').toLowerCase().includes(userCity.toLowerCase());
         return interestMatch || cityMatch || (p.user_id === currentUser?.id);
       }).slice(0, 40);
-    }
-    if (activeTab === 'trending') return sorted.slice(0, 40);
-    if (activeTab === 'chessed') return sorted.filter(p => p.type === 'help' || p.board === 'help');
-    if (activeTab === 'learning') return sorted.filter(p => p.type === 'news' || /torah|parsha|daf|halacha|shiur/i.test(p.body || ''));
-    if (activeTab === 'social') return sorted.filter(p => p.type === 'feed');
-    if (activeTab === 'nearby') {
+    } else if (activeTab === 'trending') {
+      filtered = sorted.slice(0, 40);
+    } else if (activeTab === 'chessed') {
+      filtered = sorted.filter(p => p.type === 'help' || p.board === 'help');
+    } else if (activeTab === 'learning') {
+      filtered = sorted.filter(p => p.type === 'news' || /torah|parsha|daf|halacha|shiur/i.test(p.body || ''));
+    } else if (activeTab === 'social') {
+      filtered = sorted.filter(p => p.type === 'feed');
+    } else if (activeTab === 'nearby') {
       const NEIGHBORHOOD_COORDS = {
         'cedarhurst':   { lat: 40.6237, lng: -73.7257 },
         'woodmere':     { lat: 40.6354, lng: -73.7129 },
@@ -278,17 +283,20 @@ export default function Feed() {
         return dx * dx + dy * dy;
       };
       const withLocation = sorted.filter(p => p.location_text || p.city);
-      if (userGeo) {
-        return [...withLocation].sort((a, b) => dist(getCoords(a), userGeo) - dist(getCoords(b), userGeo));
-      }
-      return withLocation;
-    }
-    if (activeTab === 'communities') {
+      filtered = userGeo
+        ? [...withLocation].sort((a, b) => dist(getCoords(a), userGeo) - dist(getCoords(b), userGeo))
+        : withLocation;
+    } else if (activeTab === 'communities') {
       const communityIds = communityGroups.map(c => c.id);
-      return sorted.filter(p => communityIds.includes(p.community_id));
+      filtered = sorted.filter(p => communityIds.includes(p.community_id));
+    } else if (activeTab === 'events') {
+      filtered = sorted.filter(p => p.type === 'event' || p.board === 'events');
+    } else {
+      filtered = sorted.slice(0, 40);
     }
-    if (activeTab === 'events') return sorted.filter(p => p.type === 'event' || p.board === 'events');
-    return sorted.slice(0, 40);
+
+    // NEVER show empty feed — fall back to full global feed (seeded + real) if filter yields nothing
+    return filtered.length > 0 ? filtered : sorted.slice(0, 40);
   })();
 
   return (
@@ -447,19 +455,14 @@ export default function Feed() {
             {isError && cachedPosts.length > 0 && (
               <p className="text-[12px] text-slate-400 text-center">Showing cached posts — still loading...</p>
             )}
-            {feedPosts.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 text-center">
-                <p className="text-3xl mb-3">💬</p>
-                <p className="font-bold text-slate-900">Nothing here yet</p>
-                <p className="text-[13px] text-slate-400 mt-1">Be the first to post!</p>
-                <button
-                  onClick={() => { setPostModalType('feed'); setShowPostModal(true); }}
-                  className="mt-4 px-5 py-2 rounded-full text-white text-[13px] font-semibold bg-blue-600"
-                >
-                  Post Something
-                </button>
-              </div>
-            ) : (() => {
+            {(() => {
+            // Section labels injected at fixed positions
+            const SECTION_LABELS = {
+              0:  { emoji: '🔥', text: 'Trending now in Five Towns' },
+              5:  { emoji: '💬', text: 'Active discussions' },
+              12: { emoji: '👀', text: 'People are talking about this' },
+            };
+
             const hotIndex = feedPosts.findIndex(p =>
               (p.likes_count || 0) + (p.comments_count || 0) * 2 >= 20
             );
@@ -471,11 +474,18 @@ export default function Feed() {
             let shownCommunityDivider = false;
             return orderedPosts.map((post, index) => {
               const isFromJoinedCommunity = post.community_id && joinedCommunityIds.has(post.community_id);
-              const showDivider = isFromJoinedCommunity && !shownCommunityDivider && joinedCommunityIds.size > 0;
-              if (showDivider) shownCommunityDivider = true;
+              const showCommunityDivider = isFromJoinedCommunity && !shownCommunityDivider && joinedCommunityIds.size > 0;
+              if (showCommunityDivider) shownCommunityDivider = true;
+              const sectionLabel = SECTION_LABELS[index];
               return (
                 <React.Fragment key={post.id}>
-                  {showDivider && (
+                  {sectionLabel && (
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-slate-50 to-blue-50/40 border-b border-slate-100">
+                      <span className="text-base">{sectionLabel.emoji}</span>
+                      <span className="text-[12px] font-bold text-slate-700 uppercase tracking-wide">{sectionLabel.text}</span>
+                    </div>
+                  )}
+                  {showCommunityDivider && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50/80 border-b border-indigo-100">
                       <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wide">👥 From your communities</span>
                     </div>
