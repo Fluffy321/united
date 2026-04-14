@@ -1,584 +1,328 @@
-import React, { useState, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { 
-  ArrowLeft, Users, Bell, Settings, Check, Plus, Pin, 
-  Heart, MessageCircle, Share2, Send, Image, HelpCircle, 
-  Calendar, Megaphone, MoreHorizontal, MapPin, Info,
-  BookOpen, Star, Loader2, Camera, X, ChevronRight
-} from 'lucide-react';
-import { formatDistanceToNow, parseISO, format, isFuture } from 'date-fns';
+import { base44 } from '@/api/base44Client';
+import { ArrowLeft, Loader2, Pin, MapPin, Users, MessageCircle, Heart, MoreHorizontal } from 'lucide-react';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 
-// ── Shared helpers ────────────────────────────────────────────
-const AVATAR_COLORS = ['#2563EB','#7C3AED','#16A34A','#D97706','#EC4899','#0891B2','#DC2626','#059669'];
-function avatarColor(name = '') { return AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length]; }
-function getInitials(name = '') { return name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase() || '?'; }
-
-function Avatar({ name = '?', url, size = 36 }) {
-  if (url) return <img src={url} alt={name} className="rounded-full object-cover flex-shrink-0" style={{width:size,height:size}} />;
-  return (
-    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
-      style={{ width:size, height:size, background: avatarColor(name), fontSize: size * 0.36 }}>
-      {getInitials(name)}
-    </div>
-  );
+// ── Helpers ───────────────────────────────────────────────────
+function initials(name = '') {
+  return name.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase()).join('') || '?';
 }
 
-const CATEGORY_CONFIG = {
-  School:       { gradient: 'from-sky-500 to-blue-600',      badge: '🏫 School',       badgeBg: 'bg-sky-100 text-sky-700',       accent: '#0EA5E9' },
-  Shul:         { gradient: 'from-violet-600 to-purple-700', badge: '🕍 Shul',          badgeBg: 'bg-violet-100 text-violet-700', accent: '#7C3AED' },
-  Neighborhood: { gradient: 'from-teal-500 to-emerald-600', badge: '🏘️ Neighborhood',  badgeBg: 'bg-teal-100 text-teal-700',     accent: '#14B8A6' },
-  Jobs:         { gradient: 'from-orange-500 to-amber-500',  badge: '💼 Jobs',          badgeBg: 'bg-orange-100 text-orange-700', accent: '#F97316' },
-  Chessed:      { gradient: 'from-green-500 to-emerald-600', badge: '🤝 Chessed',       badgeBg: 'bg-green-100 text-green-700',   accent: '#22C55E' },
-  Learning:     { gradient: 'from-amber-500 to-orange-500',  badge: '📚 Learning',      badgeBg: 'bg-amber-100 text-amber-700',   accent: '#F59E0B' },
-  Food:         { gradient: 'from-red-500 to-orange-500',    badge: '🍽️ Food',          badgeBg: 'bg-red-100 text-red-700',       accent: '#EF4444' },
-  Social:       { gradient: 'from-pink-500 to-rose-500',     badge: '🎉 Social',        badgeBg: 'bg-pink-100 text-pink-700',     accent: '#EC4899' },
-  Sports:       { gradient: 'from-lime-500 to-green-600',    badge: '🏀 Sports',        badgeBg: 'bg-lime-100 text-lime-700',     accent: '#84CC16' },
-  Travel:       { gradient: 'from-cyan-500 to-blue-500',     badge: '✈️ Travel',        badgeBg: 'bg-cyan-100 text-cyan-700',     accent: '#06B6D4' },
-  Youth:        { gradient: 'from-purple-500 to-fuchsia-500',badge: '🧒 Youth',         badgeBg: 'bg-purple-100 text-purple-700', accent: '#A855F7' },
-  Other:        { gradient: 'from-slate-500 to-slate-700',   badge: '🌐 Community',     badgeBg: 'bg-slate-100 text-slate-700',   accent: '#64748B' },
-  // legacy types
-  Yeshiva:      { gradient: 'from-sky-600 to-indigo-600',    badge: '🏫 Yeshiva',       badgeBg: 'bg-sky-100 text-sky-700',       accent: '#0284C7' },
-  Seminary:     { gradient: 'from-pink-500 to-rose-600',     badge: '🎓 Seminary',      badgeBg: 'bg-pink-100 text-pink-700',     accent: '#F43F5E' },
-  Camp:         { gradient: 'from-amber-400 to-orange-500',  badge: '⛺ Camp',          badgeBg: 'bg-amber-100 text-amber-700',   accent: '#F59E0B' },
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  try { return formatDistanceToNow(parseISO(dateStr), { addSuffix: true }); } catch { return ''; }
+}
+
+const TYPE_CONFIG = {
+  discussion:    { label: 'Discussion',    bg: 'bg-slate-100',    text: 'text-slate-600' },
+  question:      { label: 'Question',      bg: 'bg-blue-100',     text: 'text-blue-700' },
+  help:          { label: 'Help',          bg: 'bg-orange-100',   text: 'text-orange-700' },
+  announcement:  { label: 'Announcement', bg: 'bg-purple-100',   text: 'text-purple-700' },
+  recommendation:{ label: 'Recommend',    bg: 'bg-emerald-100',  text: 'text-emerald-700' },
+  event:         { label: 'Event',         bg: 'bg-green-100',    text: 'text-green-700' },
+  general:       { label: 'Update',        bg: 'bg-slate-100',    text: 'text-slate-600' },
 };
 
-function getCategoryConfig(community) {
-  return CATEGORY_CONFIG[community.category] || CATEGORY_CONFIG[community.type] || CATEGORY_CONFIG.Other;
-}
+const POST_TYPES = ['question', 'help', 'discussion', 'announcement', 'recommendation'];
+
+const CATEGORY_GRADIENTS = {
+  School: 'from-sky-600 to-blue-700',
+  Yeshiva: 'from-sky-600 to-indigo-700',
+  Seminary: 'from-pink-500 to-rose-600',
+  Shul: 'from-violet-600 to-purple-700',
+  Camp: 'from-amber-500 to-orange-500',
+  Other: 'from-blue-600 via-indigo-600 to-violet-600',
+};
 
 function getGradient(community) {
-  return getCategoryConfig(community).gradient;
+  return CATEGORY_GRADIENTS[community.category] || CATEGORY_GRADIENTS[community.type] || CATEGORY_GRADIENTS.Other;
 }
 
 // ── Post Composer ─────────────────────────────────────────────
-const POST_TYPES = [
-  { key: 'discussion', label: 'Discussion', icon: MessageCircle, color: 'text-blue-600' },
-  { key: 'question', label: 'Question', icon: HelpCircle, color: 'text-amber-600' },
-  { key: 'photo', label: 'Photo', icon: Image, color: 'text-green-600' },
-  { key: 'help', label: 'Help Needed', icon: HelpCircle, color: 'text-orange-600' },
-  { key: 'recommendation', label: 'Recommend', icon: Star, color: 'text-purple-600' },
-];
-
 function PostComposer({ community, currentUser, onPosted }) {
-  const [open, setOpen] = useState(false);
   const [body, setBody] = useState('');
-  const [postType, setPostType] = useState('discussion');
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [postType, setPostType] = useState('question');
   const [submitting, setSubmitting] = useState(false);
-  const fileRef = useRef();
   const name = currentUser?.display_name || currentUser?.full_name || 'You';
-
-  const handleImage = (e) => {
-    const f = e.target.files[0]; if (!f) return;
-    setImageFile(f);
-    setImagePreview(URL.createObjectURL(f));
-  };
 
   const submit = async () => {
     if (!body.trim()) return;
     setSubmitting(true);
-    let image_url;
-    if (imageFile) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: imageFile });
-      image_url = file_url;
+    try {
+      await base44.entities.CommunityPost.create({
+        community_id: community.id,
+        author_name: name,
+        author_user_id: currentUser?.id || 'guest',
+        author_avatar_url: currentUser?.avatar_url,
+        body: body.trim(),
+        post_type: postType,
+        likes_count: 0,
+        comments_count: 0,
+        is_pinned: false,
+      });
+      setBody('');
+      toast.success('Posted!');
+      onPosted?.();
+    } catch {
+      toast.error('Failed to post');
     }
-    await base44.entities.CommunityPost.create({
-      community_id: community.id,
-      author_name: name,
-      author_user_id: currentUser?.id || 'guest',
-      author_avatar_url: currentUser?.avatar_url,
-      body: body.trim(),
-      post_type: postType,
-      image_url,
-      likes_count: 0,
-      comments_count: 0,
-    });
-    setBody(''); setImageFile(null); setImagePreview(null); setPostType('discussion'); setOpen(false);
     setSubmitting(false);
-    toast.success('Posted!');
-    onPosted?.();
   };
 
-  if (!open) {
-    return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-3 mb-3 shadow-sm">
-        <div className="flex items-center gap-3">
-          <Avatar name={name} url={currentUser?.avatar_url} size={38} />
-          <button
-            onClick={() => setOpen(true)}
-            className="flex-1 text-left text-[13px] text-slate-400 bg-slate-50 rounded-full px-4 py-2.5 border border-slate-200 hover:border-blue-300 transition-colors"
-          >
-            Share something with {community.name}…
-          </button>
-        </div>
-        <div className="flex items-center gap-1 mt-2 pt-2 border-t border-slate-100">
-          {POST_TYPES.slice(0,4).map(pt => {
-            const Icon = pt.icon;
-            return (
-              <button key={pt.key} onClick={() => { setPostType(pt.key); setOpen(true); }}
-                className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg hover:bg-slate-50 text-[11px] font-semibold text-slate-500 transition-colors">
-                <Icon className={`w-3.5 h-3.5 ${pt.color}`} />
-                {pt.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-3 shadow-sm">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Avatar name={name} url={currentUser?.avatar_url} size={36} />
-          <div>
-            <p className="text-[13px] font-semibold text-slate-900">{name}</p>
-            <p className="text-[11px] text-slate-400">Posting to {community.name}</p>
+    <div className="rounded-3xl bg-white p-4 shadow-sm">
+      <div className="flex gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-pink-500 font-bold text-white text-sm">
+          {initials(name)}
+        </div>
+        <div className="flex-1">
+          <textarea
+            value={body}
+            onChange={e => setBody(e.target.value)}
+            placeholder="Ask for help, share an update, or post a question..."
+            rows={3}
+            className="w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-indigo-400 bg-slate-50 focus:bg-white transition-colors"
+          />
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-2">
+              {POST_TYPES.map(t => {
+                const cfg = TYPE_CONFIG[t];
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setPostType(t)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
+                      postType === t ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {cfg.label}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={submit}
+              disabled={submitting || !body.trim()}
+              className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50 active:scale-95 transition-all"
+            >
+              {submitting ? 'Posting…' : 'Post'}
+            </button>
           </div>
-        </div>
-        <button onClick={() => setOpen(false)} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-100">
-          <X className="w-4 h-4 text-slate-400" />
-        </button>
-      </div>
-
-      {/* Type picker */}
-      <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide">
-        {POST_TYPES.map(pt => (
-          <button key={pt.key} onClick={() => setPostType(pt.key)}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
-              postType === pt.key ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'
-            }`}>
-            {pt.label}
-          </button>
-        ))}
-      </div>
-
-      <textarea
-        value={body}
-        onChange={e => setBody(e.target.value)}
-        placeholder={
-          postType === 'question' ? 'Ask the community a question…' :
-          postType === 'help' ? 'Describe what you need help with…' :
-          postType === 'recommendation' ? 'What are you recommending?' :
-          "What's on your mind?"
-        }
-        rows={3}
-        className="w-full text-[14px] bg-slate-50 border border-slate-200 rounded-xl p-3 resize-none outline-none focus:ring-2 focus:ring-blue-300 focus:bg-white transition-all"
-        autoFocus
-      />
-
-      {imagePreview && (
-        <div className="relative mt-2 rounded-xl overflow-hidden">
-          <img src={imagePreview} alt="" className="w-full max-h-40 object-cover" />
-          <button onClick={() => { setImageFile(null); setImagePreview(null); }}
-            className="absolute top-2 right-2 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center">
-            <X className="w-3 h-3 text-white" />
-          </button>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between mt-3">
-        <button onClick={() => fileRef.current?.click()}
-          className="flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-blue-600 transition-colors px-2 py-1 rounded-lg hover:bg-blue-50">
-          <Camera className="w-4 h-4" /> Photo
-        </button>
-        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
-        <div className="flex gap-2">
-          <button onClick={() => setOpen(false)} className="px-4 py-1.5 text-[12px] font-semibold text-slate-500 rounded-full border border-slate-200 hover:bg-slate-50">Cancel</button>
-          <button onClick={submit} disabled={submitting || !body.trim()}
-            className="px-5 py-1.5 text-[12px] font-bold text-white bg-blue-600 rounded-full disabled:opacity-50 active:scale-95 transition-all flex items-center gap-1.5">
-            {submitting && <Loader2 className="w-3 h-3 animate-spin" />}
-            {submitting ? 'Posting…' : 'Post'}
-          </button>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Community Post Card ───────────────────────────────────────
-const POST_TYPE_BADGES = {
-  discussion: { label: 'Discussion', bg: 'bg-blue-50', text: 'text-blue-600' },
-  question:   { label: 'Question',   bg: 'bg-amber-50', text: 'text-amber-600' },
-  photo:      { label: 'Photo',      bg: 'bg-green-50', text: 'text-green-600' },
-  help:       { label: 'Help',       bg: 'bg-orange-50', text: 'text-orange-600' },
-  recommendation: { label: 'Recommend', bg: 'bg-purple-50', text: 'text-purple-600' },
-  announcement: { label: '📢 Pinned', bg: 'bg-amber-50', text: 'text-amber-700' },
-};
+// ── Comment Thread ─────────────────────────────────────────────
+function CommentThread({ postId, currentUser, initialCount }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
-function CommunityPostCard({ post, currentUser, isPinned }) {
-  const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(post.likes_count || 0);
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState([]);
-  const [commentText, setCommentText] = useState('');
-  const [loadingComments, setLoadingComments] = useState(false);
-  const name = post.author_name || 'Community Member';
-  const badge = POST_TYPE_BADGES[post.post_type] || POST_TYPE_BADGES.discussion;
-
-  const toggleLike = () => { setLiked(l => !l); setLikes(n => liked ? n-1 : n+1); };
-
-  const loadComments = async () => {
-    if (showComments) { setShowComments(false); return; }
-    setShowComments(true);
-    setLoadingComments(true);
-    const result = await base44.entities.Comment.filter({ post_id: post.id }, 'created_date', 30);
-    setComments(result);
-    setLoadingComments(false);
-  };
+  const { data: comments = [], isLoading } = useQuery({
+    queryKey: ['community-post-comments', postId],
+    queryFn: () => base44.entities.Comment.filter({ post_id: postId }, 'created_date', 50),
+    enabled: open,
+    staleTime: 30000,
+  });
 
   const submitComment = async () => {
-    if (!commentText.trim()) return;
-    const authorName = currentUser?.display_name || currentUser?.full_name || 'Member';
-    const c = await base44.entities.Comment.create({
-      post_id: post.id,
-      author_id: currentUser?.id || 'guest',
-      author_name: authorName,
-      author_avatar_url: currentUser?.avatar_url,
-      body: commentText.trim(),
-    });
-    setComments(prev => [...prev, c]);
-    setCommentText('');
+    if (!text.trim() || !currentUser) return;
+    setSubmitting(true);
+    try {
+      await base44.entities.Comment.create({
+        post_id: postId,
+        author_id: currentUser.id,
+        author_name: currentUser.display_name || currentUser.full_name || 'Member',
+        body: text.trim(),
+      });
+      setText('');
+      queryClient.invalidateQueries({ queryKey: ['community-post-comments', postId] });
+    } catch { toast.error('Could not post reply'); }
+    setSubmitting(false);
   };
 
   return (
-    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${isPinned ? 'border-amber-200' : 'border-slate-100'}`}>
-      {isPinned && <div className="h-1 bg-gradient-to-r from-amber-400 to-orange-400" />}
-      {post.image_url && <img src={post.image_url} alt="" className="w-full object-cover max-h-64" loading="lazy" />}
-      <div className="p-4">
-        <div className="flex items-center gap-2.5 mb-2">
-          <Avatar name={name} url={post.author_avatar_url} size={36} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="text-[13px] font-semibold text-slate-900 truncate">{name}</p>
-              {isPinned && (
-                <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 flex-shrink-0">
-                  <Pin className="w-2.5 h-2.5" /> Pinned
-                </span>
-              )}
+    <div>
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800"
+      >
+        <MessageCircle className="w-4 h-4" />
+        {open ? 'Hide replies' : `Reply${initialCount > 0 ? ` (${initialCount})` : ''}`}
+      </button>
+
+      {open && (
+        <div className="mt-3 rounded-2xl bg-slate-50 p-3 space-y-2">
+          {isLoading ? (
+            <div className="flex justify-center py-2"><Loader2 className="w-4 h-4 animate-spin text-slate-400" /></div>
+          ) : comments.length === 0 ? (
+            <p className="text-xs text-slate-400 text-center py-1">No replies yet — be the first!</p>
+          ) : (
+            <div className="space-y-2">
+              {comments.map(c => (
+                <div key={c.id} className="flex gap-2">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
+                    {initials(c.author_name || '?')}
+                  </div>
+                  <div className="bg-white rounded-xl px-3 py-2 flex-1 border border-slate-100">
+                    <span className="text-xs font-semibold text-slate-800 mr-1.5">{c.author_name}</span>
+                    <span className="text-xs text-slate-600">{c.body}</span>
+                  </div>
+                </div>
+              ))}
             </div>
-            <p className="text-[11px] text-slate-400">
-              {post.created_date ? formatDistanceToNow(parseISO(post.created_date), { addSuffix: true }) : ''}
-            </p>
-          </div>
-          {badge && !isPinned && (
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${badge.bg} ${badge.text}`}>
-              {badge.label}
-            </span>
+          )}
+          {currentUser && (
+            <div className="flex gap-2 pt-1">
+              <input
+                value={text}
+                onChange={e => setText(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && submitComment()}
+                placeholder="Write a reply…"
+                className="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs outline-none focus:border-indigo-400"
+              />
+              <button
+                onClick={submitComment}
+                disabled={submitting || !text.trim()}
+                className="rounded-full bg-indigo-600 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+              >
+                Send
+              </button>
+            </div>
           )}
         </div>
-        {post.title && <p className="text-[15px] font-bold text-slate-900 mb-1 leading-snug">{post.title}</p>}
-        {post.body && <p className="text-[14px] text-slate-700 leading-relaxed">{post.body}</p>}
+      )}
+    </div>
+  );
+}
 
-        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-50">
-          <button onClick={toggleLike}
-            className={`flex items-center gap-1.5 text-[12px] font-medium transition-colors ${liked ? 'text-rose-500' : 'text-slate-400 hover:text-rose-400'}`}>
+// ── Post Card ─────────────────────────────────────────────────
+function PostCard({ post, currentUser, onPin, isAdmin }) {
+  const [liked, setLiked] = useState(false);
+  const [likes, setLikes] = useState(post.likes_count || 0);
+  const cfg = TYPE_CONFIG[post.post_type] || TYPE_CONFIG.general;
+
+  const toggleLike = async () => {
+    setLiked(l => !l);
+    setLikes(n => liked ? n - 1 : n + 1);
+    try {
+      await base44.entities.CommunityPost.update(post.id, { likes_count: liked ? likes - 1 : likes + 1 });
+    } catch {}
+  };
+
+  return (
+    <div className={`overflow-hidden rounded-3xl border bg-white shadow-sm ${
+      post.is_pinned ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-slate-200'
+    }`}>
+      {post.is_pinned && (
+        <div className="flex items-center gap-1.5 border-b border-indigo-100 bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-700">
+          <Pin className="w-3 h-3" /> Pinned post
+        </div>
+      )}
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex gap-3 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-700">
+              {post.author_avatar_url
+                ? <img src={post.author_avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
+                : initials(post.author_name || 'M')}
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-semibold text-slate-900 text-sm">{post.author_name || 'Community Member'}</span>
+                {post.is_official && (
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">Moderator</span>
+                )}
+                <span className="text-xs text-slate-400">{timeAgo(post.created_date)}</span>
+              </div>
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${cfg.bg} ${cfg.text}`}>
+                  {cfg.label}
+                </span>
+              </div>
+            </div>
+          </div>
+          {isAdmin && (
+            <button
+              onClick={() => onPin(post)}
+              title={post.is_pinned ? 'Unpin' : 'Pin'}
+              className="text-slate-400 hover:text-indigo-600 transition-colors p-1"
+            >
+              <Pin className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Content */}
+        {post.title && <h3 className="mt-3 font-bold text-slate-900">{post.title}</h3>}
+        <p className="mt-2 text-sm leading-relaxed text-slate-700">{post.body}</p>
+
+        {post.image_url && (
+          <img src={post.image_url} alt="" className="mt-3 w-full rounded-2xl object-cover max-h-60" loading="lazy" />
+        )}
+
+        {/* Footer */}
+        <div className="mt-4 flex items-center gap-4 border-t border-slate-100 pt-3">
+          <button
+            onClick={toggleLike}
+            className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${liked ? 'text-rose-500' : 'text-slate-400 hover:text-rose-400'}`}
+          >
             <Heart className={`w-4 h-4 ${liked ? 'fill-rose-500' : ''}`} />
             {likes > 0 && <span>{likes}</span>}
           </button>
-          <button onClick={loadComments}
-            className="flex items-center gap-1.5 text-[12px] font-medium text-slate-400 hover:text-blue-500 transition-colors">
-            <MessageCircle className="w-4 h-4" />
-            {post.comments_count > 0 ? post.comments_count : 'Comment'}
-          </button>
-          <button className="flex items-center gap-1.5 text-[12px] font-medium text-slate-400 hover:text-slate-600 transition-colors ml-auto">
-            <Share2 className="w-3.5 h-3.5" />
-            Share
-          </button>
+          <CommentThread postId={post.id} currentUser={currentUser} initialCount={post.comments_count || 0} />
         </div>
-
-        {showComments && (
-          <div className="mt-3 pt-3 border-t border-slate-50 space-y-2">
-            {loadingComments ? (
-              <div className="flex justify-center py-2"><Loader2 className="w-4 h-4 animate-spin text-slate-400" /></div>
-            ) : comments.length === 0 ? (
-              <p className="text-[12px] text-slate-400 text-center py-1">No comments yet — be first!</p>
-            ) : (
-              comments.map(c => (
-                <div key={c.id} className="flex gap-2">
-                  <Avatar name={c.author_name || '?'} url={c.author_avatar_url} size={28} />
-                  <div className="bg-slate-50 rounded-xl px-3 py-2 flex-1">
-                    <p className="text-[11px] font-semibold text-slate-700">{c.author_name || 'Member'}</p>
-                    <p className="text-[12px] text-slate-600">{c.body}</p>
-                  </div>
-                </div>
-              ))
-            )}
-            <div className="flex gap-2 mt-2">
-              <Avatar name={currentUser?.display_name || currentUser?.full_name || 'You'} url={currentUser?.avatar_url} size={28} />
-              <input
-                value={commentText}
-                onChange={e => setCommentText(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && submitComment()}
-                placeholder="Write a comment…"
-                className="flex-1 text-[13px] bg-slate-50 rounded-full px-4 py-2 border border-slate-200 outline-none focus:ring-2 focus:ring-blue-300"
-              />
-              <button onClick={submitComment} className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white active:scale-90 transition-transform">
-                <Send className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
 }
-
-// ── Tabs ──────────────────────────────────────────────────────
-const TABS = [
-  { key: 'feed',    label: '🏠 Feed' },
-  { key: 'events',  label: '📅 Events' },
-  { key: 'members', label: '👥 Members' },
-  { key: 'about',   label: 'ℹ️ About' },
-];
 
 // ── Feed Tab ──────────────────────────────────────────────────
-function FeedTab({ community, currentUser, posts, isLoading, onRefresh }) {
-  // Pinned + announcements show at top, then regular posts newest-first
-  const pinned = posts.filter(p => p.is_pinned || p.post_type === 'announcement')
-    .sort((a,b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
-  const regular = posts
-    .filter(p => !p.is_pinned && p.post_type !== 'announcement')
-    .sort((a,b) => new Date(b.created_date) - new Date(a.created_date));
+function FeedTab({ community, currentUser, isAdmin }) {
+  const queryClient = useQueryClient();
 
-  return (
-    <div className="space-y-3">
-      <PostComposer community={community} currentUser={currentUser} onPosted={onRefresh} />
-      {isLoading ? (
-        <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-blue-600" /></div>
-      ) : (
-        <>
-          {pinned.map(p => <CommunityPostCard key={p.id} post={p} currentUser={currentUser} isPinned={p.is_pinned} />)}
-          {regular.length === 0 && pinned.length === 0 && (
-            <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
-              <div className="text-4xl mb-3">✍️</div>
-              <p className="font-bold text-slate-900">No posts yet</p>
-              <p className="text-[13px] text-slate-500 mt-1">Be the first to share something with this community!</p>
-            </div>
-          )}
-          {regular.map(p => <CommunityPostCard key={p.id} post={p} currentUser={currentUser} />)}
-        </>
-      )}
-    </div>
-  );
-}
-
-// ── Announcements Tab ─────────────────────────────────────────
-function AnnouncementsTab({ community, currentUser, posts, isLoading, onRefresh }) {
-  const [showComposer, setShowComposer] = useState(false);
-  const [body, setBody] = useState('');
-  const [title, setTitle] = useState('');
-  const [pinIt, setPinIt] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const isAdmin = currentUser?.role === 'admin';
-
-  const announcements = posts.filter(p => p.post_type === 'announcement' || p.is_pinned).sort((a,b)=>{
-    if (a.is_pinned && !b.is_pinned) return -1;
-    if (!a.is_pinned && b.is_pinned) return 1;
-    return new Date(b.created_date)-new Date(a.created_date);
+  const { data: posts = [], isLoading } = useQuery({
+    queryKey: ['community-posts-main', community.id],
+    queryFn: () => base44.entities.CommunityPost.filter({ community_id: community.id }, '-created_date', 80),
+    staleTime: 30000,
   });
 
-  const submitAnnouncement = async () => {
-    if (!body.trim()) return;
-    setSubmitting(true);
-    await base44.entities.CommunityPost.create({
-      community_id: community.id,
-      author_name: currentUser?.display_name || currentUser?.full_name || 'Admin',
-      author_user_id: currentUser?.id,
-      author_avatar_url: currentUser?.avatar_url,
-      title: title.trim() || undefined,
-      body: body.trim(),
-      post_type: 'announcement',
-      is_pinned: pinIt,
-      likes_count: 0,
-      comments_count: 0,
-    });
-    setBody(''); setTitle(''); setPinIt(false); setShowComposer(false);
-    setSubmitting(false);
-    toast.success('Announcement posted!');
-    onRefresh();
+  const sortedPosts = useMemo(() => {
+    const pinned = posts.filter(p => p.is_pinned);
+    const regular = posts.filter(p => !p.is_pinned);
+    return [...pinned, ...regular];
+  }, [posts]);
+
+  const handlePin = async (post) => {
+    await base44.entities.CommunityPost.update(post.id, { is_pinned: !post.is_pinned });
+    queryClient.invalidateQueries({ queryKey: ['community-posts-main', community.id] });
   };
 
   return (
-    <div className="space-y-3">
-      {isAdmin && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm">
-          {!showComposer ? (
-            <button onClick={() => setShowComposer(true)}
-              className="w-full flex items-center gap-2 text-[13px] text-slate-400 hover:text-blue-600 transition-colors py-1">
-              <Megaphone className="w-4 h-4" /> Post an announcement…
-            </button>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-[13px] font-bold text-slate-800 flex items-center gap-2"><Megaphone className="w-4 h-4" /> New Announcement</p>
-              <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title (optional)"
-                className="w-full text-[13px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-blue-300" />
-              <textarea value={body} onChange={e => setBody(e.target.value)} placeholder="Write your announcement…" rows={3}
-                className="w-full text-[14px] bg-slate-50 border border-slate-200 rounded-xl p-3 resize-none outline-none focus:ring-2 focus:ring-blue-300" autoFocus />
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 text-[12px] font-semibold text-slate-600 cursor-pointer">
-                  <input type="checkbox" checked={pinIt} onChange={e => setPinIt(e.target.checked)} className="rounded" />
-                  <Pin className="w-3.5 h-3.5 text-amber-500" /> Pin this
-                </label>
-                <div className="flex gap-2">
-                  <button onClick={() => setShowComposer(false)} className="px-3 py-1.5 text-[12px] text-slate-500 rounded-full border border-slate-200">Cancel</button>
-                  <button onClick={submitAnnouncement} disabled={submitting || !body.trim()}
-                    className="px-4 py-1.5 text-[12px] font-bold text-white bg-blue-600 rounded-full disabled:opacity-50">
-                    {submitting ? 'Posting…' : 'Post'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
+    <div className="space-y-4">
+      <PostComposer
+        community={community}
+        currentUser={currentUser}
+        onPosted={() => queryClient.invalidateQueries({ queryKey: ['community-posts-main', community.id] })}
+      />
       {isLoading ? (
-        <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-blue-600" /></div>
-      ) : announcements.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
-          <div className="text-4xl mb-3">📢</div>
-          <p className="font-bold text-slate-900">No announcements yet</p>
-          <p className="text-[13px] text-slate-500 mt-1">Community updates from admins will appear here.</p>
+        <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-indigo-600" /></div>
+      ) : sortedPosts.length === 0 ? (
+        <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
+          <div className="text-4xl mb-3">✍️</div>
+          <p className="font-bold text-slate-900">No posts yet</p>
+          <p className="text-sm text-slate-500 mt-1">Be the first to share something with this community!</p>
         </div>
       ) : (
-        announcements.map(p => <CommunityPostCard key={p.id} post={p} currentUser={currentUser} isPinned={p.is_pinned} />)
-      )}
-    </div>
-  );
-}
-
-// ── Events Tab ────────────────────────────────────────────────
-function EventsTab({ community, currentUser, events, isLoading, onRefresh }) {
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title:'', description:'', event_date:'', event_time:'', location:'' });
-  const [submitting, setSubmitting] = useState(false);
-  const [rsvpIds, setRsvpIds] = useState(new Set());
-
-  const upcoming = events.filter(e => !e.event_date || isFuture(new Date(e.event_date))).sort((a,b)=>new Date(a.event_date)-new Date(b.event_date));
-  const past = events.filter(e => e.event_date && !isFuture(new Date(e.event_date))).sort((a,b)=>new Date(b.event_date)-new Date(a.event_date));
-
-  const submitEvent = async () => {
-    if (!form.title.trim() || !form.event_date) return toast.error('Title and date required');
-    setSubmitting(true);
-    await base44.entities.CommunityEvent.create({
-      community_id: community.id,
-      title: form.title.trim(),
-      description: form.description.trim() || undefined,
-      event_date: form.event_date,
-      event_time: form.event_time || undefined,
-      location: form.location.trim() || undefined,
-      organizer_id: currentUser?.id,
-      organizer_name: currentUser?.display_name || currentUser?.full_name,
-      rsvp_count: 0,
-    });
-    setForm({ title:'', description:'', event_date:'', event_time:'', location:'' });
-    setShowForm(false);
-    setSubmitting(false);
-    toast.success('Event created!');
-    onRefresh();
-  };
-
-  const rsvp = async (eventId) => {
-    if (!currentUser) return toast.error('Sign in to RSVP');
-    if (rsvpIds.has(eventId)) return;
-    setRsvpIds(prev => new Set([...prev, eventId]));
-    const ev = events.find(e=>e.id===eventId);
-    await base44.entities.CommunityEventRSVP.create({ event_id: eventId, user_id: currentUser.id, user_name: currentUser?.display_name || currentUser?.full_name }).catch(()=>{});
-    await base44.entities.CommunityEvent.update(eventId, { rsvp_count: (ev?.rsvp_count||0)+1 }).catch(()=>{});
-    toast.success("You're going! 🎉");
-  };
-
-  const EventCard = ({ ev }) => (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-      <div className="flex items-start gap-3">
-        <div className="bg-blue-50 rounded-xl p-2 text-center min-w-[52px] flex-shrink-0">
-          <p className="text-[10px] font-bold text-blue-400 uppercase">
-            {ev.event_date ? format(new Date(ev.event_date), 'MMM') : '—'}
-          </p>
-          <p className="text-[20px] font-black text-blue-700 leading-none">
-            {ev.event_date ? format(new Date(ev.event_date), 'd') : '?'}
-          </p>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-[14px] text-slate-900 leading-snug">{ev.title}</p>
-          {ev.description && <p className="text-[12px] text-slate-500 mt-0.5 line-clamp-2">{ev.description}</p>}
-          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-[11px] text-slate-500">
-            {ev.event_time && <span>🕐 {ev.event_time}</span>}
-            {ev.location && <span>📍 {ev.location}</span>}
-            {ev.rsvp_count > 0 && <span>👥 {ev.rsvp_count} going</span>}
-          </div>
-        </div>
-        <button onClick={() => rsvp(ev.id)}
-          className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all active:scale-95 ${
-            rsvpIds.has(ev.id) ? 'bg-green-100 text-green-700' : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}>
-          {rsvpIds.has(ev.id) ? '✓ Going' : 'RSVP'}
-        </button>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="space-y-3">
-      <button onClick={() => setShowForm(v=>!v)}
-        className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-dashed border-blue-300 rounded-2xl text-[13px] font-semibold text-blue-600 hover:bg-blue-50 transition-colors">
-        <Plus className="w-4 h-4" /> Create Event
-      </button>
-
-      {showForm && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-3">
-          <p className="font-bold text-[14px] text-slate-900 flex items-center gap-2"><Calendar className="w-4 h-4" /> New Event</p>
-          <input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} placeholder="Event name *"
-            className="w-full text-[13px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-300" />
-          <textarea value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder="Description (optional)" rows={2}
-            className="w-full text-[13px] bg-slate-50 border border-slate-200 rounded-xl p-3 resize-none outline-none focus:ring-2 focus:ring-blue-300" />
-          <div className="grid grid-cols-2 gap-2">
-            <input type="date" value={form.event_date} onChange={e=>setForm(f=>({...f,event_date:e.target.value}))}
-              className="text-[12px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-300" />
-            <input type="time" value={form.event_time} onChange={e=>setForm(f=>({...f,event_time:e.target.value}))}
-              className="text-[12px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-300" />
-          </div>
-          <input value={form.location} onChange={e=>setForm(f=>({...f,location:e.target.value}))} placeholder="Location (optional)"
-            className="w-full text-[13px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-300" />
-          <div className="flex gap-2 justify-end">
-            <button onClick={()=>setShowForm(false)} className="px-4 py-1.5 text-[12px] text-slate-500 rounded-full border border-slate-200">Cancel</button>
-            <button onClick={submitEvent} disabled={submitting}
-              className="px-5 py-1.5 text-[12px] font-bold text-white bg-blue-600 rounded-full disabled:opacity-50">{submitting?'Creating…':'Create'}</button>
-          </div>
-        </div>
-      )}
-
-      {isLoading ? (
-        <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-blue-600" /></div>
-      ) : (
-        <>
-          {upcoming.length === 0 && past.length === 0 && (
-            <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
-              <div className="text-4xl mb-3">📅</div>
-              <p className="font-bold text-slate-900">No events yet</p>
-              <p className="text-[13px] text-slate-500 mt-1">Create the first event for this community!</p>
-            </div>
-          )}
-          {upcoming.length > 0 && (
-            <>
-              <p className="text-[12px] font-bold text-slate-500 uppercase tracking-wide">Upcoming</p>
-              {upcoming.map(ev => <EventCard key={ev.id} ev={ev} />)}
-            </>
-          )}
-          {past.length > 0 && (
-            <>
-              <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wide mt-4">Past Events</p>
-              {past.slice(0,3).map(ev => (
-                <div key={ev.id} className="opacity-60"><EventCard ev={ev} /></div>
-              ))}
-            </>
-          )}
-        </>
+        sortedPosts.map(post => (
+          <PostCard key={post.id} post={post} currentUser={currentUser} onPin={handlePin} isAdmin={isAdmin} />
+        ))
       )}
     </div>
   );
@@ -587,83 +331,85 @@ function EventsTab({ community, currentUser, events, isLoading, onRefresh }) {
 // ── Members Tab ───────────────────────────────────────────────
 function MembersTab({ communityId }) {
   const { data: members = [], isLoading } = useQuery({
-    queryKey: ['community-members', communityId],
+    queryKey: ['community-members-main', communityId],
     queryFn: () => base44.entities.UserCommunity.filter({ community_id: communityId }, '-created_date', 100),
-    enabled: !!communityId,
     staleTime: 60000,
   });
 
-  if (isLoading) return <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-blue-600" /></div>;
+  if (isLoading) return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-indigo-600" /></div>;
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between mb-1">
-        <p className="text-[13px] font-bold text-slate-700">{members.length} members</p>
-      </div>
-      {members.length === 0 && (
-        <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
-          <div className="text-3xl mb-2">👥</div>
-          <p className="font-bold text-slate-900">No members yet</p>
+    <div className="rounded-3xl bg-white p-4 shadow-sm">
+      <p className="text-lg font-bold text-slate-900 mb-4">{members.length} Members</p>
+      {members.length === 0 ? (
+        <p className="text-sm text-slate-400 text-center py-6">No members yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {members.map(m => (
+            <div key={m.id} className="flex items-center justify-between rounded-2xl border border-slate-100 px-3 py-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-700">
+                  {initials(m.user_name || m.display_name || 'M')}
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900 text-sm">{m.user_name || m.display_name || 'Member'}</p>
+                  <p className="text-xs text-slate-400">{m.role || 'Member'}</p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
-      <div className="grid grid-cols-1 gap-2">
-        {members.map((m, i) => (
-          <div key={m.id} className="bg-white rounded-2xl border border-slate-100 px-4 py-3 flex items-center gap-3">
-            <Avatar name={m.user_name || m.display_name || 'Member'} size={40} />
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-slate-900 truncate">{m.user_name || m.display_name || 'Community Member'}</p>
-              <p className="text-[11px] text-slate-400">{m.role || 'Member'}</p>
-            </div>
-            {i < 3 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Active</span>}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
 
 // ── About Tab ─────────────────────────────────────────────────
 function AboutTab({ community }) {
-  const rows = [
-    { icon: BookOpen, label: 'Category', value: community.category || community.type },
-    { icon: MapPin, label: 'Location', value: community.location || community.neighborhood || community.city },
-    { icon: Users, label: 'Members', value: community.follower_count ? `${community.follower_count.toLocaleString()} members` : null },
-    { icon: Info, label: 'Who it\'s for', value: community.who_its_for },
-  ];
-
   return (
-    <div className="space-y-4">
+    <div className="rounded-3xl bg-white p-5 shadow-sm space-y-4">
+      <h2 className="text-lg font-bold text-slate-900">About this community</h2>
       {community.description && (
-        <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
-          <p className="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-2">About</p>
-          <p className="text-[14px] text-slate-700 leading-relaxed">{community.description}</p>
-        </div>
+        <p className="text-sm leading-relaxed text-slate-700">{community.description}</p>
       )}
-
-      <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm space-y-3">
-        <p className="text-[12px] font-bold text-slate-500 uppercase tracking-wide">Details</p>
-        {rows.filter(r=>r.value).map(r => {
-          const Icon = r.icon;
-          return (
-            <div key={r.label} className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
-                <Icon className="w-4 h-4 text-slate-500" />
-              </div>
-              <div>
-                <p className="text-[11px] text-slate-400">{r.label}</p>
-                <p className="text-[13px] font-semibold text-slate-900">{r.value}</p>
-              </div>
-            </div>
-          );
-        })}
+      <div className="grid gap-3 sm:grid-cols-2">
+        {(community.category || community.type) && (
+          <div className="rounded-2xl bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Category</p>
+            <p className="mt-1 font-semibold text-slate-900">{community.category || community.type}</p>
+          </div>
+        )}
+        {(community.location || community.neighborhood) && (
+          <div className="rounded-2xl bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Location</p>
+            <p className="mt-1 font-semibold text-slate-900">{community.location || community.neighborhood}</p>
+          </div>
+        )}
+        {community.who_its_for && (
+          <div className="rounded-2xl bg-slate-50 p-4 sm:col-span-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Who it's for</p>
+            <p className="mt-1 text-sm text-slate-700">{community.who_its_for}</p>
+          </div>
+        )}
+        {community.rules && (
+          <div className="rounded-2xl bg-amber-50 border border-amber-100 p-4 sm:col-span-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">📋 Rules</p>
+            <p className="mt-1 text-sm text-amber-900">{community.rules}</p>
+          </div>
+        )}
       </div>
-
-      {community.rules && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-          <p className="text-[12px] font-bold text-amber-700 uppercase tracking-wide mb-2">📋 Community Rules</p>
-          <p className="text-[13px] text-amber-800 leading-relaxed">{community.rules}</p>
-        </div>
-      )}
+      <div className="grid grid-cols-3 gap-3 pt-2">
+        {[
+          { label: 'Members', value: (community.follower_count || 0).toLocaleString() },
+          { label: 'Posts', value: community.post_count || 0 },
+          { label: 'This Week', value: community.posts_this_week || 0 },
+        ].map(s => (
+          <div key={s.label} className="rounded-2xl bg-indigo-50 p-3 text-center">
+            <p className="text-lg font-black text-indigo-700">{s.value}</p>
+            <p className="text-xs text-indigo-500 font-medium">{s.label}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -674,188 +420,121 @@ export default function CommunityNetworkView({ communityId, currentUser, onBack 
   const queryClient = useQueryClient();
 
   const { data: community, isLoading: loadingCommunity } = useQuery({
-    queryKey: ['community', communityId],
-    queryFn: () => base44.entities.Community.filter({ id: communityId }).then(r=>r[0]),
-    enabled: !!communityId,
-  });
-
-  const { data: membership = [] } = useQuery({
-    queryKey: ['community-membership', communityId, currentUser?.id],
-    queryFn: () => base44.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id }),
-    enabled: !!currentUser,
-  });
-
-  const { data: posts = [], isLoading: postsLoading, refetch: refetchPosts } = useQuery({
-    queryKey: ['community-posts-v2', communityId],
-    queryFn: () => base44.entities.CommunityPost.filter({ community_id: communityId }, '-created_date', 60),
-    enabled: !!communityId,
-    staleTime: 30000,
-  });
-
-  const { data: events = [], isLoading: eventsLoading, refetch: refetchEvents } = useQuery({
-    queryKey: ['community-events-v2', communityId],
-    queryFn: () => base44.entities.CommunityEvent.filter({ community_id: communityId }, '-created_date', 50),
+    queryKey: ['community-detail', communityId],
+    queryFn: () => base44.entities.Community.filter({ id: communityId }).then(r => r[0]),
     enabled: !!communityId,
     staleTime: 60000,
   });
 
-  const isMember = membership.length > 0;
+  const { data: membership = [] } = useQuery({
+    queryKey: ['community-membership-main', communityId, currentUser?.id],
+    queryFn: () => base44.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id }),
+    enabled: !!currentUser?.id,
+  });
 
-  const handleJoin = async () => {
-    if (!currentUser) return toast.error('Sign in to join');
+  const isMember = membership.length > 0;
+  const isAdmin = currentUser?.role === 'admin';
+
+  const handleJoinLeave = async () => {
+    if (!currentUser) { base44.auth.redirectToLogin(); return; }
     if (isMember) {
       await base44.entities.UserCommunity.delete(membership[0].id);
-      if (community) await base44.entities.Community.update(communityId, { follower_count: Math.max(0,(community.follower_count||1)-1) });
+      if (community) await base44.entities.Community.update(communityId, { follower_count: Math.max(0, (community.follower_count || 1) - 1) });
       toast.success('Left community');
     } else {
       await base44.entities.UserCommunity.create({ user_id: currentUser.id, community_id: communityId, role: 'Member' });
-      if (community) await base44.entities.Community.update(communityId, { follower_count: (community.follower_count||0)+1 });
+      if (community) await base44.entities.Community.update(communityId, { follower_count: (community.follower_count || 0) + 1 });
       toast.success('Joined! 🎉');
     }
-    queryClient.invalidateQueries({ queryKey: ['community-membership', communityId] });
-    queryClient.invalidateQueries({ queryKey: ['community', communityId] });
+    queryClient.invalidateQueries({ queryKey: ['community-membership-main', communityId] });
+    queryClient.invalidateQueries({ queryKey: ['community-detail', communityId] });
   };
 
   if (loadingCommunity || !community) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>;
   }
 
-  const catConfig = getCategoryConfig(community);
-  const gradient = catConfig.gradient;
-  const accent = catConfig.accent;
-  const initials = getInitials(community.name);
-  const eventCount = events.filter(e => !e.event_date || isFuture(new Date(e.event_date))).length;
+  const gradient = getGradient(community);
 
-  // Posts this week
-  const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const postsThisWeek = posts.filter(p => p.created_date && new Date(p.created_date).getTime() > oneWeekAgo).length;
-
-  const tabsWithCounts = TABS.map(t => ({
-    ...t,
-    count: t.key === 'events' ? eventCount : 0
-  }));
+  const TABS = [
+    { key: 'feed', label: 'Feed' },
+    { key: 'members', label: 'Members' },
+    { key: 'about', label: 'About' },
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Cover + Header — unique per category */}
-      <div className={`relative h-44 bg-gradient-to-br ${gradient} overflow-hidden`}>
-        {/* Decorative pattern overlay for uniqueness */}
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
-        {community.logo_url && (
-          <img src={community.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay" />
-        )}
-        {/* Accent glow */}
-        <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full opacity-20 blur-2xl bg-white" />
-        <button onClick={onBack} className="absolute top-4 left-4 w-9 h-9 bg-black/25 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40 transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        {/* Category badge in header */}
-        <div className="absolute top-4 right-4">
-          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/25 backdrop-blur-sm text-white border border-white/30">
-            {catConfig.badge}
-          </span>
-        </div>
-        {/* Posts this week pill */}
-        {postsThisWeek > 0 && (
-          <div className="absolute bottom-3 right-4">
-            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center gap-1">
-              📝 {postsThisWeek} post{postsThisWeek !== 1 ? 's' : ''} this week
-            </span>
-          </div>
-        )}
-      </div>
+    <div className="min-h-screen bg-slate-50 pb-24">
+      <div className="mx-auto max-w-3xl px-4 pt-5">
 
-      {/* Profile section */}
-      <div className="bg-white px-4 pb-4 border-b border-slate-100 shadow-sm">
-        <div className="flex items-end justify-between -mt-10 mb-3">
-          <div className="w-20 h-20 rounded-2xl border-4 border-white shadow-lg overflow-hidden flex-shrink-0"
-            style={{ boxShadow: `0 4px 20px ${accent}40` }}>
-            {community.logo_url ? (
-              <img src={community.logo_url} alt={community.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-black text-[22px]`}>
-                {initials}
+        {/* Header Card */}
+        <div className={`overflow-hidden rounded-[28px] bg-gradient-to-r ${gradient} text-white shadow-lg mb-4`}>
+          <div className="p-5">
+            <button onClick={onBack} className="mb-3 flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-medium">
+              <ArrowLeft className="w-4 h-4" /> Back
+            </button>
+
+            <div className="mb-3 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
+              {community.category || community.type || 'Community'}
+            </div>
+
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl font-bold leading-tight">{community.name}</h1>
+                {community.description_short && (
+                  <p className="mt-2 text-sm text-white/85 leading-relaxed">{community.description_short}</p>
+                )}
+                <div className="mt-4 flex flex-wrap gap-2 text-xs text-white/90">
+                  <span className="rounded-full bg-white/15 px-3 py-1 flex items-center gap-1">
+                    <Users className="w-3 h-3" /> {(community.follower_count || 0).toLocaleString()} members
+                  </span>
+                  {community.posts_this_week > 0 && (
+                    <span className="rounded-full bg-white/15 px-3 py-1">
+                      {community.posts_this_week} posts this week
+                    </span>
+                  )}
+                  {(community.neighborhood || community.location) && (
+                    <span className="rounded-full bg-white/15 px-3 py-1 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" /> {community.neighborhood || community.location}
+                    </span>
+                  )}
+                  {community.is_verified && (
+                    <span className="rounded-full bg-white/20 px-3 py-1">✅ Verified</span>
+                  )}
+                </div>
               </div>
-            )}
+              <button
+                onClick={handleJoinLeave}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold shadow-sm transition-all active:scale-95 ${
+                  isMember
+                    ? 'bg-white/20 text-white border border-white/40'
+                    : 'bg-white text-indigo-700 hover:bg-white/90'
+                }`}
+              >
+                {isMember ? '✓ Joined' : 'Join'}
+              </button>
+            </div>
           </div>
-          <button onClick={handleJoin}
-            className={`px-5 py-2 rounded-full text-[13px] font-bold transition-all active:scale-95 ${
-              isMember ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'text-white shadow-md'
-            }`}
-            style={!isMember ? { background: `linear-gradient(135deg, ${accent}, ${accent}CC)` } : {}}>
-            {isMember ? '✓ Joined' : '+ Join'}
-          </button>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap mb-1">
-          <h1 className="text-[20px] font-black text-slate-900 leading-tight">{community.name}</h1>
-          {community.is_verified && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">✅ Verified</span>}
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Colored category badge */}
-          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${catConfig.badgeBg}`}>
-            {catConfig.badge}
-          </span>
-          {(community.location || community.neighborhood) && (
-            <span className="text-[11px] text-slate-400 flex items-center gap-1">
-              <MapPin className="w-3 h-3" />{community.location || community.neighborhood}
-            </span>
-          )}
-        </div>
-
-        {community.description_short && (
-          <p className="text-[13px] text-slate-600 mt-2 leading-relaxed">{community.description_short}</p>
-        )}
-
-        {/* Stats row */}
-        <div className="flex items-center gap-3 mt-3 text-[12px] text-slate-500 flex-wrap">
-          <span><span className="font-bold text-slate-900">{(community.follower_count||0).toLocaleString()}</span> members</span>
-          <span className="text-slate-300">·</span>
-          <span style={{ color: postsThisWeek > 0 ? accent : undefined }}>
-            <span className="font-bold" style={{ color: postsThisWeek > 0 ? accent : '#0F172A' }}>
-              {postsThisWeek}
-            </span> posts this week
-          </span>
-          {eventCount > 0 && (
-            <><span className="text-slate-300">·</span>
-            <span><span className="font-bold text-blue-600">{eventCount}</span> upcoming events</span></>
-          )}
-        </div>
-      </div>
-
-      {/* Tabs — accent color matches community category */}
-      <div className="bg-white border-b border-slate-100 sticky top-0 z-20">
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="flex min-w-max px-2">
-            {tabsWithCounts.map(tab => (
-              <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-1.5 px-4 py-3.5 text-[13px] font-semibold whitespace-nowrap transition-colors relative ${
-                  activeTab === tab.key ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
-                }`}>
+        {/* Tab Bar */}
+        <div className="mb-4 rounded-2xl bg-white p-1 shadow-sm">
+          <div className="grid grid-cols-3 gap-1">
+            {TABS.map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
+                  activeTab === tab.key ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
                 {tab.label}
-                {tab.count > 0 && (
-                  <span className="text-[10px] rounded-full px-1.5 py-0.5 font-bold"
-                    style={{ background: `${accent}20`, color: accent }}>{tab.count}</span>
-                )}
-                {activeTab === tab.key && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full" style={{ background: accent }} />
-                )}
               </button>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Tab content */}
-      <div className="max-w-2xl mx-auto px-4 py-4 pb-28">
-        {activeTab === 'feed' && (
-          <FeedTab community={community} currentUser={currentUser} posts={posts} isLoading={postsLoading} onRefresh={refetchPosts} />
-        )}
-        {activeTab === 'events' && (
-          <EventsTab community={community} currentUser={currentUser} events={events} isLoading={eventsLoading} onRefresh={refetchEvents} />
-        )}
+        {/* Tab Content */}
+        {activeTab === 'feed' && <FeedTab community={community} currentUser={currentUser} isAdmin={isAdmin} />}
         {activeTab === 'members' && <MembersTab communityId={communityId} />}
         {activeTab === 'about' && <AboutTab community={community} />}
       </div>
