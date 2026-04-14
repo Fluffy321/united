@@ -13,6 +13,7 @@ import FeaturedHeroCard from '@/components/communities/FeaturedHeroCard.jsx';
 import FeaturedSecondaryCard from '@/components/communities/FeaturedSecondaryCard.jsx';
 import FeaturedCommunityBanner from '@/components/communities/FeaturedCommunityBanner';
 import DiscoverCategoryCards, { DISCOVER_CATEGORIES } from '@/components/communities/DiscoverCategoriesScreen';
+import CommunityInterestOnboarding from '@/components/communities/CommunityInterestOnboarding';
 import { toast } from 'sonner';
 
 const CACHE_KEY = 'communities_v3_cache';
@@ -630,6 +631,11 @@ export default function Communities() {
                 onJoinCommunity={joinCommunity}
                 onJoinGroup={joinGroup}
                 joiningId={joiningId}
+                currentUser={currentUser}
+                allCommunities={allCommunities}
+                onJoinedFromOnboarding={(newIds) => {
+                  setUserCommunityIds(prev => new Set([...prev, ...newIds]));
+                }}
               />
             ) : (
               <>
@@ -674,21 +680,15 @@ export default function Communities() {
   );
 }
 
-function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId }) {
+function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId, currentUser, allCommunities, onJoinedFromOnboarding }) {
   if (myCommunities.length === 0 && myGroups.length === 0) {
     return (
       <div className="space-y-4">
-        <div className="rounded-3xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', border: '1px dashed #BFDBFE' }}>
-          <div className="text-3xl mb-2">👋</div>
-          <h3 className="text-[15px] font-bold text-slate-800 mb-1">Join communities to get started</h3>
-          <p className="text-[12px] text-slate-500 mb-4">Discover communities and groups that match your interests</p>
-          <button
-            onClick={() => setActiveTab('discover')}
-            className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold active:scale-95 transition-all duration-150"
-          >
-            Explore Communities
-          </button>
-        </div>
+        <CommunityInterestOnboarding
+          currentUser={currentUser}
+          allCommunities={allCommunities}
+          onJoined={onJoinedFromOnboarding}
+        />
       </div>
     );
   }
