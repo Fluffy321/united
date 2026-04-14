@@ -25,18 +25,31 @@ function Avatar({ name = '?', url, size = 36 }) {
   );
 }
 
-const GRADIENT_MAP = {
-  School:'from-sky-500 to-blue-600', Shul:'from-violet-500 to-purple-600',
-  Neighborhood:'from-teal-500 to-emerald-600', 'Young Professionals':'from-indigo-500 to-blue-600',
-  Parenting:'from-pink-500 to-rose-500', Jobs:'from-orange-500 to-amber-500',
-  Chessed:'from-green-500 to-emerald-600', 'Learning & Torah':'from-amber-500 to-orange-500',
-  Food:'from-red-400 to-orange-400', Events:'from-purple-500 to-fuchsia-500',
-  'Israel / Travel':'from-blue-400 to-cyan-500', 'Local Interest Groups':'from-slate-500 to-slate-700',
-  Other:'from-blue-500 to-indigo-600',
+const CATEGORY_CONFIG = {
+  School:       { gradient: 'from-sky-500 to-blue-600',      badge: '🏫 School',       badgeBg: 'bg-sky-100 text-sky-700',       accent: '#0EA5E9' },
+  Shul:         { gradient: 'from-violet-600 to-purple-700', badge: '🕍 Shul',          badgeBg: 'bg-violet-100 text-violet-700', accent: '#7C3AED' },
+  Neighborhood: { gradient: 'from-teal-500 to-emerald-600', badge: '🏘️ Neighborhood',  badgeBg: 'bg-teal-100 text-teal-700',     accent: '#14B8A6' },
+  Jobs:         { gradient: 'from-orange-500 to-amber-500',  badge: '💼 Jobs',          badgeBg: 'bg-orange-100 text-orange-700', accent: '#F97316' },
+  Chessed:      { gradient: 'from-green-500 to-emerald-600', badge: '🤝 Chessed',       badgeBg: 'bg-green-100 text-green-700',   accent: '#22C55E' },
+  Learning:     { gradient: 'from-amber-500 to-orange-500',  badge: '📚 Learning',      badgeBg: 'bg-amber-100 text-amber-700',   accent: '#F59E0B' },
+  Food:         { gradient: 'from-red-500 to-orange-500',    badge: '🍽️ Food',          badgeBg: 'bg-red-100 text-red-700',       accent: '#EF4444' },
+  Social:       { gradient: 'from-pink-500 to-rose-500',     badge: '🎉 Social',        badgeBg: 'bg-pink-100 text-pink-700',     accent: '#EC4899' },
+  Sports:       { gradient: 'from-lime-500 to-green-600',    badge: '🏀 Sports',        badgeBg: 'bg-lime-100 text-lime-700',     accent: '#84CC16' },
+  Travel:       { gradient: 'from-cyan-500 to-blue-500',     badge: '✈️ Travel',        badgeBg: 'bg-cyan-100 text-cyan-700',     accent: '#06B6D4' },
+  Youth:        { gradient: 'from-purple-500 to-fuchsia-500',badge: '🧒 Youth',         badgeBg: 'bg-purple-100 text-purple-700', accent: '#A855F7' },
+  Other:        { gradient: 'from-slate-500 to-slate-700',   badge: '🌐 Community',     badgeBg: 'bg-slate-100 text-slate-700',   accent: '#64748B' },
+  // legacy types
+  Yeshiva:      { gradient: 'from-sky-600 to-indigo-600',    badge: '🏫 Yeshiva',       badgeBg: 'bg-sky-100 text-sky-700',       accent: '#0284C7' },
+  Seminary:     { gradient: 'from-pink-500 to-rose-600',     badge: '🎓 Seminary',      badgeBg: 'bg-pink-100 text-pink-700',     accent: '#F43F5E' },
+  Camp:         { gradient: 'from-amber-400 to-orange-500',  badge: '⛺ Camp',          badgeBg: 'bg-amber-100 text-amber-700',   accent: '#F59E0B' },
 };
 
+function getCategoryConfig(community) {
+  return CATEGORY_CONFIG[community.category] || CATEGORY_CONFIG[community.type] || CATEGORY_CONFIG.Other;
+}
+
 function getGradient(community) {
-  return GRADIENT_MAP[community.category] || GRADIENT_MAP[community.type] || 'from-blue-600 to-indigo-600';
+  return getCategoryConfig(community).gradient;
 }
 
 // ── Post Composer ─────────────────────────────────────────────
@@ -707,9 +720,15 @@ export default function CommunityNetworkView({ communityId, currentUser, onBack 
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
   }
 
-  const gradient = getGradient(community);
+  const catConfig = getCategoryConfig(community);
+  const gradient = catConfig.gradient;
+  const accent = catConfig.accent;
   const initials = getInitials(community.name);
   const eventCount = events.filter(e => !e.event_date || isFuture(new Date(e.event_date))).length;
+
+  // Posts this week
+  const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const postsThisWeek = posts.filter(p => p.created_date && new Date(p.created_date).getTime() > oneWeekAgo).length;
 
   const tabsWithCounts = TABS.map(t => ({
     ...t,
@@ -718,18 +737,40 @@ export default function CommunityNetworkView({ communityId, currentUser, onBack 
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Cover + Header */}
-      <div className={`relative h-40 bg-gradient-to-br ${gradient}`}>
-        {community.logo_url && <img src={community.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />}
-        <button onClick={onBack} className="absolute top-4 left-4 w-9 h-9 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40 transition-colors">
+      {/* Cover + Header — unique per category */}
+      <div className={`relative h-44 bg-gradient-to-br ${gradient} overflow-hidden`}>
+        {/* Decorative pattern overlay for uniqueness */}
+        <div className="absolute inset-0 opacity-10"
+          style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+        {community.logo_url && (
+          <img src={community.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay" />
+        )}
+        {/* Accent glow */}
+        <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full opacity-20 blur-2xl bg-white" />
+        <button onClick={onBack} className="absolute top-4 left-4 w-9 h-9 bg-black/25 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>
+        {/* Category badge in header */}
+        <div className="absolute top-4 right-4">
+          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/25 backdrop-blur-sm text-white border border-white/30">
+            {catConfig.badge}
+          </span>
+        </div>
+        {/* Posts this week pill */}
+        {postsThisWeek > 0 && (
+          <div className="absolute bottom-3 right-4">
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center gap-1">
+              📝 {postsThisWeek} post{postsThisWeek !== 1 ? 's' : ''} this week
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Profile section */}
       <div className="bg-white px-4 pb-4 border-b border-slate-100 shadow-sm">
         <div className="flex items-end justify-between -mt-10 mb-3">
-          <div className="w-20 h-20 rounded-2xl border-4 border-white shadow-lg overflow-hidden flex-shrink-0">
+          <div className="w-20 h-20 rounded-2xl border-4 border-white shadow-lg overflow-hidden flex-shrink-0"
+            style={{ boxShadow: `0 4px 20px ${accent}40` }}>
             {community.logo_url ? (
               <img src={community.logo_url} alt={community.name} className="w-full h-full object-cover" />
             ) : (
@@ -740,47 +781,67 @@ export default function CommunityNetworkView({ communityId, currentUser, onBack 
           </div>
           <button onClick={handleJoin}
             className={`px-5 py-2 rounded-full text-[13px] font-bold transition-all active:scale-95 ${
-              isMember ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-blue-600 text-white shadow-md hover:bg-blue-700'
-            }`}>
+              isMember ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'text-white shadow-md'
+            }`}
+            style={!isMember ? { background: `linear-gradient(135deg, ${accent}, ${accent}CC)` } : {}}>
             {isMember ? '✓ Joined' : '+ Join'}
           </button>
         </div>
 
-        <h1 className="text-[20px] font-black text-slate-900 leading-tight">{community.name}</h1>
-        <div className="flex items-center gap-2 mt-1 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap mb-1">
+          <h1 className="text-[20px] font-black text-slate-900 leading-tight">{community.name}</h1>
           {community.is_verified && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">✅ Verified</span>}
-          {(community.category || community.type) && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{community.category || community.type}</span>
-          )}
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Colored category badge */}
+          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${catConfig.badgeBg}`}>
+            {catConfig.badge}
+          </span>
           {(community.location || community.neighborhood) && (
-            <span className="text-[11px] text-slate-400 flex items-center gap-1"><MapPin className="w-3 h-3" />{community.location || community.neighborhood}</span>
+            <span className="text-[11px] text-slate-400 flex items-center gap-1">
+              <MapPin className="w-3 h-3" />{community.location || community.neighborhood}
+            </span>
           )}
         </div>
+
         {community.description_short && (
           <p className="text-[13px] text-slate-600 mt-2 leading-relaxed">{community.description_short}</p>
         )}
-        <div className="flex items-center gap-4 mt-3 text-[12px] text-slate-500">
-          <span className="font-bold text-slate-900">{(community.follower_count||0).toLocaleString()}</span> members
-          <span>·</span>
-          <span className="font-bold text-slate-900">{posts.length}</span> posts
-          {eventCount > 0 && <><span>·</span><span className="font-bold text-blue-600">{eventCount}</span> upcoming events</>}
+
+        {/* Stats row */}
+        <div className="flex items-center gap-3 mt-3 text-[12px] text-slate-500 flex-wrap">
+          <span><span className="font-bold text-slate-900">{(community.follower_count||0).toLocaleString()}</span> members</span>
+          <span className="text-slate-300">·</span>
+          <span style={{ color: postsThisWeek > 0 ? accent : undefined }}>
+            <span className="font-bold" style={{ color: postsThisWeek > 0 ? accent : '#0F172A' }}>
+              {postsThisWeek}
+            </span> posts this week
+          </span>
+          {eventCount > 0 && (
+            <><span className="text-slate-300">·</span>
+            <span><span className="font-bold text-blue-600">{eventCount}</span> upcoming events</span></>
+          )}
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — accent color matches community category */}
       <div className="bg-white border-b border-slate-100 sticky top-0 z-20">
         <div className="overflow-x-auto scrollbar-hide">
           <div className="flex min-w-max px-2">
             {tabsWithCounts.map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-1.5 px-4 py-3.5 text-[13px] font-semibold whitespace-nowrap transition-colors relative ${
-                  activeTab === tab.key ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
+                  activeTab === tab.key ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
                 }`}>
                 {tab.label}
                 {tab.count > 0 && (
-                  <span className="text-[10px] bg-blue-100 text-blue-700 rounded-full px-1.5 py-0.5 font-bold">{tab.count}</span>
+                  <span className="text-[10px] rounded-full px-1.5 py-0.5 font-bold"
+                    style={{ background: `${accent}20`, color: accent }}>{tab.count}</span>
                 )}
-                {activeTab === tab.key && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />}
+                {activeTab === tab.key && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full" style={{ background: accent }} />
+                )}
               </button>
             ))}
           </div>
