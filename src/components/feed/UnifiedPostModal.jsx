@@ -50,7 +50,7 @@ const FEED_SUBTYPES = [
   { value: 'poll',       label: 'Poll',       icon: BarChart2,     active: 'bg-violet-600 text-white border-violet-600', inactive: 'bg-white text-slate-600 border-slate-200 hover:border-violet-300' },
 ];
 
-export default function UnifiedPostModal({ open, onOpenChange, currentUser, postType = 'feed', promptId = null, promptText = null, initialSubtype = null, initialBody = '' }) {
+export default function UnifiedPostModal({ open, onOpenChange, currentUser, postType = 'feed', promptId = null, promptText = null, initialSubtype = null, initialBody = '', initialCommunityId = null, userCommunities = [] }) {
   const userInitials = (currentUser?.display_name || currentUser?.full_name || '?').charAt(0).toUpperCase();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -67,6 +67,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
   const [uploadingImages, setUploadingImages] = useState(false);
   const [imageUrls, setImageUrls] = useState([]);
   const [pollOptions, setPollOptions] = useState(['', '']);
+  const [selectedCommunityId, setSelectedCommunityId] = useState(initialCommunityId || '');
   const textareaRef = useRef(null);
   const isPoll = postSubtype === 'poll';
 
@@ -77,8 +78,9 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
       setPlaceholder(randomPlaceholder);
       if (initialSubtype) setPostSubtype(initialSubtype);
       if (initialBody) setBody(initialBody);
+      setSelectedCommunityId(initialCommunityId || '');
     }
-  }, [open, postType, initialSubtype, initialBody]);
+  }, [open, postType, initialSubtype, initialBody, initialCommunityId]);
 
   const isPromptReply = !!promptId;
   const isHelp = postType === 'help';
@@ -148,6 +150,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
         const validOptions = pollOptions.filter(o => o.trim());
         if (validOptions.length < 2) { toast.error('Add at least 2 poll options'); setIsSubmitting(false); return; }
       }
+      const selectedCommunity = userCommunities.find(c => c.id === selectedCommunityId);
       const postData = {
         user_id: currentUser.id,
         user_name: isAnonymous ? 'Anonymous' : currentUser.display_name,
@@ -170,6 +173,8 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
         attachment_urls: attachedFiles.map(f => f.url),
         post_subtype: isFeedPost ? postSubtype : undefined,
         poll_options: isPoll ? pollOptions.filter(o => o.trim()) : undefined,
+        community_id: selectedCommunityId || undefined,
+        community_name: selectedCommunity?.name || undefined,
       };
 
       await base44.entities.UnifiedPost.create(postData);
@@ -186,7 +191,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
       setTitle(''); setBody(''); setLocation(''); setIsAnonymous(false);
       setCategory(''); setPostSubtype('discussion'); setEventDate('');
       setEventTime(''); setAttachedFiles([]); setCaption(''); setImageUrls([]);
-      setPollOptions(['', '']);
+      setPollOptions(['', '']); setSelectedCommunityId('');
     } catch (error) {
       toast.error('Failed to post');
     } finally {
@@ -319,6 +324,34 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
               📍 Location
             </button>
           </div>
+
+          {/* Community picker — shown when user has joined communities */}
+          {userCommunities.length > 0 && !isPromptReply && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[12px] font-semibold text-slate-500">Post to:</span>
+              <button
+                type="button"
+                onClick={() => setSelectedCommunityId('')}
+                className={`px-3 py-1 rounded-full text-[12px] font-semibold border transition-all ${
+                  !selectedCommunityId ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-200 hover:border-blue-300'
+                }`}
+              >
+                📣 General Feed
+              </button>
+              {userCommunities.slice(0, 5).map(c => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelectedCommunityId(c.id === selectedCommunityId ? '' : c.id)}
+                  className={`px-3 py-1 rounded-full text-[12px] font-semibold border transition-all ${
+                    selectedCommunityId === c.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-200 hover:border-blue-300'
+                  }`}
+                >
+                  👥 {c.name}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Help categories */}
           {isHelp && (

@@ -22,11 +22,14 @@ import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
 import LocalContextStrip from '@/components/feed/LocalContextStrip';
 import { Search, Plus, X, Bell, HandHeart, Calendar, RefreshCw, Loader2 } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
 
 export default function Feed() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState('trending');
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('All Five Towns');
@@ -188,6 +191,13 @@ export default function Feed() {
   const handleReport = (contentId, contentType) => {
     setReportTarget({ id: contentId, type: contentType });
     setShowReport(true);
+  };
+
+  const handleCommunityClick = (communityId) => {
+    if (!communityId) return;
+    // Navigate to Communities tab with the community selected
+    const params = new URLSearchParams(window.location.search);
+    navigate('/Communities?communityId=' + communityId);
   };
 
   const visiblePosts = posts.filter(p => {
@@ -466,6 +476,7 @@ export default function Feed() {
                  blockedIds={blockedIds}
                  onReport={handleReport}
                  communities={communityGroups}
+                 onCommunityClick={handleCommunityClick}
                 />
                 {(index + 1) % 6 === 0 && feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length] && (
                   <InlineFeedPrompt
@@ -490,6 +501,7 @@ export default function Feed() {
         postType={postModalType}
         initialSubtype={postModalSubtype}
         initialBody={postModalInitialBody}
+        userCommunities={communityGroups}
       />
 
       <UnifiedPostModal

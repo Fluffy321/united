@@ -145,6 +145,14 @@
     "prompt_text": {
       "type": "string"
     },
+    "community_id": {
+      "type": "string",
+      "description": "Community this post belongs to (optional)"
+    },
+    "community_name": {
+      "type": "string",
+      "description": "Display name of the community for this post"
+    },
     "is_seeded": {
       "type": "boolean",
       "default": false

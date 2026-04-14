@@ -156,7 +156,7 @@ function InterestedButton({ post, currentUser }) {
   );
 }
 
-export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, onBlock, blockedIds = [], liked, communities }) {
+export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, onBlock, blockedIds = [], liked, communities, onCommunityClick }) {
   const [expanded, setExpanded] = useState(false);
   const [imgExpanded, setImgExpanded] = useState(false);
   const [helpStatus, setHelpStatus] = useState(post.help_status || 'open');
@@ -741,7 +741,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
                 <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                   <span className={`text-[10px] font-semibold ${isVeryRecent ? 'text-green-600' : 'text-[#98A2B3]'}`}>{timeAgo}</span>
                   {communityName ? (
-                    <><span className="text-[#C8D0DC] text-[10px]">·</span><span className="text-[10px] text-[#2563EB] font-semibold">📌 {communityName}</span></>
+                    <><span className="text-[#C8D0DC] text-[10px]">·</span><button onClick={() => onCommunityClick?.(post.community_id)} className="text-[10px] text-[#2563EB] font-semibold hover:underline">📌 {communityName}</button></>
                   ) : post.city ? (
                     <><span className="text-[#C8D0DC] text-[10px]">·</span><span className="text-[10px] text-[#2563EB] font-medium">{post.city}</span></>
                   ) : null}
@@ -832,9 +832,12 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             </span>
           )}
           {communityName && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-[11px] font-semibold">
-              👥 In {communityName}
-            </span>
+            <button
+              onClick={() => onCommunityClick?.(post.community_id)}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-[11px] font-semibold hover:bg-indigo-100 active:scale-95 transition-all"
+            >
+              👥 {communityName}
+            </button>
           )}
           {!communityName && post.city && post.city !== 'Five Towns' && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-semibold">
