@@ -172,13 +172,12 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const [submittingQuickReply, setSubmittingQuickReply] = useState(false);
   const [recentComments, setRecentComments] = useState([]);
 
-  // Fetch 2 most recent comments for all post types with activity
+  // Always fetch 2 most recent comments — seeded posts may have real comments even with count=0
   useEffect(() => {
-    if (!post.comments_count || post.comments_count === 0) return;
     base44.entities.Comment.filter({ post_id: post.id }, '-created_date', 2)
       .then(comments => setRecentComments(comments))
       .catch(() => {});
-  }, [post.id, post.comments_count, commentCount]);
+  }, [post.id, commentCount]);
 
   if (post.type === 'prompt') return <PromptWrapper post={post} currentUser={currentUser} />;
   if (post.type === 'poll' || post.post_subtype === 'poll') return <PollCard post={post} currentUser={currentUser} />;
@@ -856,28 +855,37 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         </div>
       </div>
 
-      {/* Inline recent comments */}
-      {recentComments.length > 0 && (
-        <div className="px-3 pb-2 space-y-1.5">
-          {recentComments.slice().reverse().map(comment => (
-            <div key={comment.id} className="flex items-start gap-1.5">
-              <UserAvatar name={comment.author_name} size="xs" className="mt-0.5 flex-shrink-0" />
-              <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 flex-1 min-w-0">
-                <span className="font-semibold text-[11px] text-slate-700 mr-1.5">{comment.author_name?.split(' ')[0]}</span>
-                <span className="text-[12px] text-slate-600 leading-snug line-clamp-1">{comment.body}</span>
+      {/* Inline recent comments — always show 1-2 if they exist, otherwise nudge */}
+      <div className="px-3 pb-2">
+        {recentComments.length > 0 ? (
+          <div className="space-y-1.5">
+            {recentComments.slice().reverse().map(comment => (
+              <div key={comment.id} className="flex items-start gap-1.5">
+                <UserAvatar name={comment.author_name} size="xs" className="mt-0.5 flex-shrink-0" />
+                <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 flex-1 min-w-0">
+                  <span className="font-semibold text-[11px] text-slate-700 mr-1.5">{comment.author_name?.split(' ')[0]}</span>
+                  <span className="text-[12px] text-slate-600 leading-snug line-clamp-1">{comment.body}</span>
+                </div>
               </div>
-            </div>
-          ))}
-          {post.comments_count > 2 && (
-            <button
-              onClick={() => setCommentsOpen(true)}
-              className="text-[12px] font-semibold text-blue-600 hover:text-blue-700 pl-8"
-            >
-              View all {post.comments_count} replies →
-            </button>
-          )}
-        </div>
-      )}
+            ))}
+            {post.comments_count > 2 && (
+              <button
+                onClick={() => setCommentsOpen(true)}
+                className="text-[12px] font-semibold text-blue-600 hover:text-blue-700 pl-8"
+              >
+                View all {post.comments_count} replies →
+              </button>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={() => setQuickReplyOpen(true)}
+            className="text-[12px] text-slate-400 hover:text-blue-500 transition-colors"
+          >
+            💬 Be the first to reply…
+          </button>
+        )}
+      </div>
 
       {/* Footer: actions + engagement on one line */}
       <div className="px-3 py-1.5 border-t border-[#F2F4F7] bg-white/70 flex items-center gap-3">
