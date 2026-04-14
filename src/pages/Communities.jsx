@@ -662,7 +662,13 @@ export default function Communities() {
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
         currentUser={currentUser}
-        onCreated={() => loadData(currentUser)}
+        onCreated={(newCommunity) => {
+          loadData(currentUser);
+          if (newCommunity?.id) {
+            // Small delay to let loadData start, then open the new community
+            setTimeout(() => setSearchParams({ communityId: newCommunity.id }), 400);
+          }
+        }}
       />
     </div>
   );
