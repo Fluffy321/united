@@ -1,0 +1,79 @@
+{
+  "name": "CommunityPost",
+  "type": "object",
+  "properties": {
+    "community_id": {
+      "type": "string"
+    },
+    "org_id": {
+      "type": "string"
+    },
+    "author_user_id": {
+      "type": "string"
+    },
+    "author_name": {
+      "type": "string"
+    },
+    "author_avatar_url": {
+      "type": "string"
+    },
+    "is_official": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_seeded": {
+      "type": "boolean",
+      "default": false
+    },
+    "post_type": {
+      "type": "string",
+      "enum": [
+        "discussion",
+        "question",
+        "photo",
+        "help",
+        "recommendation",
+        "announcement",
+        "event",
+        "general"
+      ],
+      "default": "discussion",
+      "description": "Type of community post"
+    },
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "event_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "event_time": {
+      "type": "string"
+    },
+    "location_text": {
+      "type": "string"
+    },
+    "likes_count": {
+      "type": "number",
+      "default": 0
+    },
+    "comments_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "community_id",
+    "body"
+  ]
+}

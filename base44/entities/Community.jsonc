@@ -16,8 +16,16 @@
         "Other"
       ]
     },
+    "category": {
+      "type": "string",
+      "description": "User-created community category"
+    },
     "neighborhood": {
       "type": "string"
+    },
+    "location": {
+      "type": "string",
+      "description": "Location label for user-created communities"
     },
     "address": {
       "type": "string"
@@ -37,11 +45,32 @@
     "rabbi_or_principal": {
       "type": "string"
     },
+    "description": {
+      "type": "string",
+      "description": "Full description"
+    },
     "description_short": {
       "type": "string"
     },
     "description_long": {
       "type": "string"
+    },
+    "rules": {
+      "type": "string",
+      "description": "Community rules / guidelines"
+    },
+    "who_its_for": {
+      "type": "string",
+      "description": "Who should join this community"
+    },
+    "privacy": {
+      "type": "string",
+      "enum": [
+        "public",
+        "approval"
+      ],
+      "default": "public",
+      "description": "Join mode"
     },
     "logo_url": {
       "type": "string"
@@ -74,6 +103,10 @@
       "default": 0
     },
     "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "isFeatured": {
       "type": "boolean",
       "default": false
     },
@@ -114,13 +147,11 @@
     },
     "is_eligible_for_featured": {
       "type": "boolean",
-      "default": false,
-      "description": "Has community met eligibility requirements?"
+      "default": false
     },
     "eligibility_checked_at": {
       "type": "string",
-      "format": "date-time",
-      "description": "Last time eligibility was verified"
+      "format": "date-time"
     },
     "views_count": {
       "type": "number",
@@ -144,8 +175,7 @@
     },
     "is_verified": {
       "type": "boolean",
-      "default": false,
-      "description": "Verified communities get admin controls and membership fees"
+      "default": false
     },
     "verified_type": {
       "type": "string",
@@ -156,16 +186,20 @@
         "Seminary",
         "Camp",
         "Organization"
-      ],
-      "description": "Type label in verified badge"
+      ]
     },
     "verified_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "created_by_user_id": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
     }
   },
   "required": [
-    "name",
-    "type"
+    "name"
   ]
 }

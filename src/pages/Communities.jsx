@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
 import CommunityDetailPage from '@/components/communities/CommunityDetailView';
+import CommunityNetworkView from '@/components/communities/CommunityNetworkView';
 import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
@@ -484,7 +485,8 @@ export default function Communities() {
     if (isFeaturedShul && community.type === 'Shul') {
       return <ShulCommunityPage community={community} currentUser={currentUser} onBack={backToList} />;
     }
-    return <CommunityDetailPage communityId={selectedCommunityId} currentUser={currentUser} onBack={backToList} />;
+    // Use the rich mini-network view for all communities
+    return <CommunityNetworkView communityId={selectedCommunityId} currentUser={currentUser} onBack={backToList} />;
   }
 
   const hasRealCommunities = (allCommunities || []).some(c => !c.id?.startsWith('demo-'));
