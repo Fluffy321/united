@@ -1,47 +1,32 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+// Legacy function kept for backwards compatibility — logic now lives in notifyOnCommentReply automation.
+// This is still called directly from CommentsSheet for immediate post-author notification.
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    
-    const { post_id, commenter_id, commenter_name, comment_body, post_author_id, group_name } = body;
+
+    const { post_id, commenter_id, commenter_name, post_author_id } = body;
 
     if (!post_author_id || post_author_id === commenter_id) {
       return Response.json({ success: true });
     }
 
-    // Check user's notification preferences
-    const prefs = await base44.entities.NotificationPreference.filter({ user_id: post_author_id });
-    const preference = prefs[0];
-
-    // If no preference exists, create default (replies enabled)
-    if (!preference) {
-      await base44.entities.NotificationPreference.create({
-        user_id: post_author_id,
-        replies_enabled: true,
-        group_activity_enabled: false,
-        mentions_enabled: true,
-      });
-    }
-
-    // Check if replies notifications are enabled
-    if (preference && !preference.replies_enabled) {
-      return Response.json({ success: true, skipped: true });
-    }
-
-    // Create notification
-    const notification = await base44.entities.Notification.create({
+    // Create notification using the correct Notification entity schema
+    await base44.asServiceRole.entities.Notification.create({
       user_id: post_author_id,
-      type: 'reply',
-      message: `${commenter_name} replied to your post${group_name ? ` in ${group_name}` : ''}`,
-      link: `/post/${post_id}`,
-      read: false,
+      type: 'post_reply',
+      actor_id: commenter_id,
+      actor_name: commenter_name || 'Someone',
+      post_id: post_id,
+      message: `${commenter_name || 'Someone'} replied to your post`,
+      is_read: false,
     });
 
-    return Response.json({ success: true, notification_id: notification.id });
+    return Response.json({ success: true });
   } catch (error) {
-    console.error('Error sending notification:', error);
+    console.error('sendNotificationOnComment error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
