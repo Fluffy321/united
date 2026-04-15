@@ -473,14 +473,13 @@ export default function Feed() {
             const hotIndex = feedPosts.findIndex(p =>
               (p.likes_count || 0) + (p.comments_count || 0) * 2 >= 20
             );
-            let orderedPosts = [...feedPosts].filter(Boolean);
+            let orderedPosts = [...feedPosts].filter(p => p && p.id && typeof p.id === 'string');
             if (hotIndex > 2 && hotIndex < orderedPosts.length) {
               const [hot] = orderedPosts.splice(hotIndex, 1);
               if (hot) orderedPosts.splice(2, 0, hot);
             }
             let shownCommunityDivider = false;
             return orderedPosts.map((post, index) => {
-              if (!post?.id) return null;
               const isFromJoinedCommunity = post.community_id && joinedCommunityIds.has(post.community_id);
               const showCommunityDivider = isFromJoinedCommunity && !shownCommunityDivider && joinedCommunityIds.size > 0;
               if (showCommunityDivider) shownCommunityDivider = true;
