@@ -82,16 +82,31 @@ export default function Feed() {
     } catch {}
   }, []);
 
-  const { data: posts = [], isLoading, isError } = useQuery({
+  const { data: rawPostsData = [], isLoading, isError } = useQuery({
     queryKey: ['unified-posts'],
     queryFn: async () => {
       const p = await base44.entities.UnifiedPost.list('-updated_date', 100);
-      setCachedPosts(p);
-      return p;
+      const raw = Array.isArray(p) ? p : [];
+      const safe = raw.filter(
+        (item) => item && typeof item === 'object' && typeof item.id === 'string' && item.id.trim().length > 0
+      );
+      const invalid = raw.filter(
+        (item) => !item || typeof item !== 'object' || typeof item.id !== 'string' || !item.id?.trim()
+      );
+      if (invalid.length > 0) console.log('[Feed] Invalid posts filtered out at fetch:', invalid);
+      setCachedPosts(safe);
+      return safe;
     },
     staleTime: 30000,
     refetchInterval: 60000,
   });
+
+  // Sanitize at render time too — defensive against stale/cached bad data
+  const posts = Array.isArray(rawPostsData)
+    ? rawPostsData.filter(
+        (p) => p && typeof p === 'object' && typeof p.id === 'string' && p.id.trim().length > 0
+      )
+    : [];
 
   const { data: userCommunitiesList = [] } = useQuery({
     queryKey: ['user-communities', currentUser?.id],
@@ -202,17 +217,7 @@ export default function Feed() {
     navigate('/Communities?communityId=' + communityId);
   };
 
-  const invalidPosts = (posts || []).filter(
-    (p) => !p || typeof p !== 'object' || !p.id
-  );
-  if (invalidPosts.length > 0) console.log('Invalid feed posts:', invalidPosts);
-
-  const safePosts = (posts || []).filter(
-    (p) => p && typeof p === 'object' && p.id && typeof p.id === 'string'
-  );
-
-  const visiblePosts = safePosts.filter(p => {
-    if (!p?.id) { console.log('Invalid post filtered out:', p); return false; }
+  const visiblePosts = posts.filter(p => {
     if (p.type === 'dating') return false;
     if (p.type === 'prompt' && activeTab !== 'trending' && activeTab !== 'for_you' && activeTab !== 'social') return false;
     if (blockedIds.includes(p.user_id)) return false;
