@@ -118,10 +118,16 @@ export default function Feed() {
     queryKey: ['user-communities', currentUser?.id],
     queryFn: async () => {
       if (!currentUser?.id) return [];
-      const memberships = await base44.entities.UserCommunity.filter({ user_id: currentUser.id });
-      const ids = memberships.map(m => m.community_id);
+      let memberships = [];
+      try {
+        memberships = await base44.entities.UserCommunity.filter({ user_id: currentUser.id });
+      } catch { return []; }
+      const ids = (memberships || []).map(m => m.community_id).filter(id => id && typeof id === 'string');
       if (ids.length === 0) return [];
-      return Promise.all(ids.map(id => base44.entities.Community.get(id))).catch(() => []);
+      const results = await Promise.allSettled(ids.map(id => base44.entities.Community.get(id)));
+      return results
+        .filter(r => r.status === 'fulfilled' && r.value && typeof r.value.id === 'string')
+        .map(r => r.value);
     },
     enabled: !!currentUser?.id,
   });
