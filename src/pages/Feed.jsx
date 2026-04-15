@@ -21,6 +21,7 @@ import SearchModal from '@/components/feed/SearchModal';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
 import LocalContextStrip from '@/components/feed/LocalContextStrip';
+import PostErrorBoundary from '@/components/feed/PostErrorBoundary';
 import { Search, Plus, X, Bell, HandHeart, Calendar, RefreshCw, Loader2 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -493,20 +494,22 @@ export default function Feed() {
                       <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wide">👥 From your communities</span>
                     </div>
                   )}
-                  <UnifiedPostCard
-                   post={post}
-                   currentUser={currentUser}
-                   liked={userLikes.includes(post.id)}
-                   onLike={handleLike}
-                   onComment={(p) => { recordInterest(p); setSelectedPost(p); setShowComments(true); }}
-                   onDelete={(id) => deleteMutation.mutate(id)}
-                   onBlock={handleBlock}
-                   blockedIds={blockedIds}
-                   onReport={handleReport}
-                   communities={communityGroups}
-                   onCommunityClick={handleCommunityClick}
-                   isFromJoinedCommunity={isFromJoinedCommunity}
-                  />
+                  <PostErrorBoundary key={post.id}>
+                    <UnifiedPostCard
+                     post={post}
+                     currentUser={currentUser}
+                     liked={userLikes.includes(post.id)}
+                     onLike={handleLike}
+                     onComment={(p) => { recordInterest(p); setSelectedPost(p); setShowComments(true); }}
+                     onDelete={(id) => deleteMutation.mutate(id)}
+                     onBlock={handleBlock}
+                     blockedIds={blockedIds}
+                     onReport={handleReport}
+                     communities={communityGroups}
+                     onCommunityClick={handleCommunityClick}
+                     isFromJoinedCommunity={isFromJoinedCommunity}
+                    />
+                  </PostErrorBoundary>
                   {(index + 1) % 6 === 0 && feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length] && (
                     <InlineFeedPrompt
                       prompt={feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length]}
