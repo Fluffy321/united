@@ -157,8 +157,6 @@ function InterestedButton({ post, currentUser }) {
 }
 
 export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, onBlock, blockedIds = [], liked, communities, onCommunityClick, isFromJoinedCommunity = false }) {
-  if (!post || !post.id || typeof post.id !== 'string') return null;
-
   const [expanded, setExpanded] = useState(false);
   const [imgExpanded, setImgExpanded] = useState(false);
   const [helpStatus, setHelpStatus] = useState(post.help_status || 'open');
@@ -181,6 +179,9 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       .then(comments => setRecentComments(comments))
       .catch(() => {});
   }, [post?.id, commentCount]);
+
+  // Guard: invalid post — must be after all hooks
+  if (!post || !post.id || typeof post.id !== 'string') return null;
 
   if (post.type === 'prompt') return <PromptWrapper post={post} currentUser={currentUser} />;
   if (post.type === 'poll' || post.post_subtype === 'poll') return <PollCard post={post} currentUser={currentUser} />;
