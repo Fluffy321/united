@@ -202,6 +202,7 @@ export default function Feed() {
   };
 
   const visiblePosts = posts.filter(p => {
+    if (!p?.id) return false;
     if (p.type === 'dating') return false;
     if (p.type === 'prompt' && activeTab !== 'trending' && activeTab !== 'for_you' && activeTab !== 'social') return false;
     if (blockedIds.includes(p.user_id)) return false;
