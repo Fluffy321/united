@@ -157,7 +157,8 @@ export default function Feed() {
   const deleteMutation = useMutation({
     mutationFn: async (postId) => {
       await base44.entities.UnifiedPost.delete(postId);
-      await base44.entities.Comment.delete(await base44.entities.Comment.filter({ post_id: postId }).then(c => c.map(x => x.id)));
+      const comments = await base44.entities.Comment.filter({ post_id: postId });
+      for (const c of comments) await base44.entities.Comment.delete(c.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
@@ -466,13 +467,14 @@ export default function Feed() {
             const hotIndex = feedPosts.findIndex(p =>
               (p.likes_count || 0) + (p.comments_count || 0) * 2 >= 20
             );
-            let orderedPosts = [...feedPosts];
-            if (hotIndex > 2) {
+            let orderedPosts = [...feedPosts].filter(Boolean);
+            if (hotIndex > 2 && hotIndex < orderedPosts.length) {
               const [hot] = orderedPosts.splice(hotIndex, 1);
-              orderedPosts.splice(2, 0, hot);
+              if (hot) orderedPosts.splice(2, 0, hot);
             }
             let shownCommunityDivider = false;
             return orderedPosts.map((post, index) => {
+              if (!post?.id) return null;
               const isFromJoinedCommunity = post.community_id && joinedCommunityIds.has(post.community_id);
               const showCommunityDivider = isFromJoinedCommunity && !shownCommunityDivider && joinedCommunityIds.size > 0;
               if (showCommunityDivider) shownCommunityDivider = true;
