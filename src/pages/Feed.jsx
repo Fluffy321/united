@@ -202,7 +202,11 @@ export default function Feed() {
     navigate('/Communities?communityId=' + communityId);
   };
 
-  const visiblePosts = posts.filter(p => {
+  const safePosts = (posts || []).filter(
+    (p) => p && typeof p === 'object' && p.id && typeof p.id === 'string'
+  );
+
+  const visiblePosts = safePosts.filter(p => {
     if (!p?.id) { console.log('Invalid post filtered out:', p); return false; }
     if (p.type === 'dating') return false;
     if (p.type === 'prompt' && activeTab !== 'trending' && activeTab !== 'for_you' && activeTab !== 'social') return false;
@@ -242,7 +246,7 @@ export default function Feed() {
   };
 
   const feedPosts = (() => {
-    const sorted = [...visiblePosts].sort((a, b) => engagementScore(b) - engagementScore(a));
+    const sorted = [...visiblePosts].filter(p => p && p.id).sort((a, b) => engagementScore(b) - engagementScore(a));
 
     let filtered;
     if (activeTab === 'for_you') {
