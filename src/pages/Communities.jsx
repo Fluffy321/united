@@ -325,6 +325,11 @@ export default function Communities() {
   const [isDemo, setIsDemo] = useState(false);
   const [featuredError, setFeaturedError] = useState(false);
 
+  const sanitize = (arr) =>
+    (Array.isArray(arr) ? arr : []).filter(
+      (item) => item && typeof item === 'object' && typeof item.id === 'string' && item.id.trim().length > 0
+    );
+
   const loadData = useCallback(async (user) => {
     setLoadingPhase('loading');
     try {
@@ -337,20 +342,22 @@ export default function Communities() {
 
       const [memberships, groupMembers, comms, groups] = results;
 
-      if (memberships.status === 'fulfilled') setUserCommunityIds(new Set(memberships.value.map(m => m.community_id)));
-      if (groupMembers.status === 'fulfilled') setMemberGroupIds(new Set(groupMembers.value.map(m => m.group_id)));
+      if (memberships.status === 'fulfilled') setUserCommunityIds(new Set(sanitize(memberships.value).map(m => m.community_id)));
+      if (groupMembers.status === 'fulfilled') setMemberGroupIds(new Set(sanitize(groupMembers.value).map(m => m.group_id)));
 
-      if (comms.status === 'fulfilled' && comms.value?.length > 0) {
-        setAllCommunities(comms.value);
-        setCache(comms.value);
+      const safeComms = comms.status === 'fulfilled' ? sanitize(comms.value) : [];
+      if (safeComms.length > 0) {
+        setAllCommunities(safeComms);
+        setCache(safeComms);
         setIsDemo(false);
       } else {
         setAllCommunities(DEMO_COMMUNITIES);
         setIsDemo(true);
       }
 
-      if (groups.status === 'fulfilled') setAllGroups(groups.value || []);
-    } catch {
+      if (groups.status === 'fulfilled') setAllGroups(sanitize(groups.value));
+    } catch (e) {
+      console.error('[Communities] loadData error:', e);
       const cached = getCached();
       if (cached.length === 0) { setAllCommunities(DEMO_COMMUNITIES); setIsDemo(true); }
     }

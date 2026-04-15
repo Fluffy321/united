@@ -85,7 +85,13 @@ export default function Feed() {
   const { data: rawPostsData = [], isLoading, isError } = useQuery({
     queryKey: ['unified-posts'],
     queryFn: async () => {
-      const p = await base44.entities.UnifiedPost.list('-updated_date', 100);
+      let p;
+      try {
+        p = await base44.entities.UnifiedPost.list('-updated_date', 100);
+      } catch (e) {
+        console.error('[Feed] Failed to fetch posts:', e);
+        return [];
+      }
       const raw = Array.isArray(p) ? p : [];
       const safe = raw.filter(
         (item) => item && typeof item === 'object' && typeof item.id === 'string' && item.id.trim().length > 0
