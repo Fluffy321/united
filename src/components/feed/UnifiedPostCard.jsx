@@ -157,6 +157,8 @@ function InterestedButton({ post, currentUser }) {
 }
 
 export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, onBlock, blockedIds = [], liked, communities, onCommunityClick, isFromJoinedCommunity = false }) {
+  if (!post || !post.id || typeof post.id !== 'string') return null;
+
   const [expanded, setExpanded] = useState(false);
   const [imgExpanded, setImgExpanded] = useState(false);
   const [helpStatus, setHelpStatus] = useState(post.help_status || 'open');
