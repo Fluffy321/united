@@ -202,6 +202,11 @@ export default function Feed() {
     navigate('/Communities?communityId=' + communityId);
   };
 
+  const invalidPosts = (posts || []).filter(
+    (p) => !p || typeof p !== 'object' || !p.id
+  );
+  if (invalidPosts.length > 0) console.log('Invalid feed posts:', invalidPosts);
+
   const safePosts = (posts || []).filter(
     (p) => p && typeof p === 'object' && p.id && typeof p.id === 'string'
   );
