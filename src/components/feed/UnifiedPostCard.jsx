@@ -174,7 +174,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
   // Always fetch 2 most recent comments — seeded posts may have real comments even with count=0
   useEffect(() => {
-    if (!post?.id) return;
+    if (!post?.id || typeof post.id !== 'string') return;
     base44.entities.Comment.filter({ post_id: post.id }, '-created_date', 2)
       .then(comments => setRecentComments(comments))
       .catch(() => {});
