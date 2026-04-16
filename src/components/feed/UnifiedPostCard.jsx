@@ -174,14 +174,10 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
   // Always fetch 2 most recent comments — seeded posts may have real comments even with count=0
   useEffect(() => {
-    if (!post?.id || typeof post.id !== 'string') return;
     base44.entities.Comment.filter({ post_id: post.id }, '-created_date', 2)
       .then(comments => setRecentComments(comments))
       .catch(() => {});
-  }, [post?.id, commentCount]);
-
-  // Guard: invalid post — must be after all hooks
-  if (!post || !post.id || typeof post.id !== 'string') return null;
+  }, [post.id, commentCount]);
 
   if (post.type === 'prompt') return <PromptWrapper post={post} currentUser={currentUser} />;
   if (post.type === 'poll' || post.post_subtype === 'poll') return <PollCard post={post} currentUser={currentUser} />;
