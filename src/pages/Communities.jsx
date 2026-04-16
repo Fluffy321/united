@@ -14,6 +14,8 @@ import FeaturedSecondaryCard from '@/components/communities/FeaturedSecondaryCar
 import FeaturedCommunityBanner from '@/components/communities/FeaturedCommunityBanner';
 import DiscoverCategoryCards, { DISCOVER_CATEGORIES } from '@/components/communities/DiscoverCategoriesScreen';
 import CommunityInterestOnboarding from '@/components/communities/CommunityInterestOnboarding';
+import SuggestedCommunities from '@/components/communities/SuggestedCommunities';
+import DiscoverFilters, { applyExtraFilters } from '@/components/communities/DiscoverFilters';
 import { toast } from 'sonner';
 
 const CACHE_KEY = 'communities_v3_cache';
@@ -324,6 +326,8 @@ export default function Communities() {
   const [showCategoryBrowse, setShowCategoryBrowse] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
   const [featuredError, setFeaturedError] = useState(false);
+  const [sizeFilter, setSizeFilter] = useState('all_sizes');
+  const [activityFilter, setActivityFilter] = useState('all_activity');
 
   const loadData = useCallback(async (user) => {
     setLoadingPhase('loading');
@@ -570,6 +574,16 @@ export default function Communities() {
           </div>
         </div>
 
+        {/* AI Suggested Communities */}
+        <SuggestedCommunities
+          currentUser={currentUser}
+          allCommunities={allCommunities}
+          userCommunityIds={userCommunityIds}
+          joiningId={joiningId}
+          onOpen={openCommunity}
+          onJoin={joinCommunity}
+        />
+
         {/* Tab switcher */}
         <div className="mb-6 flex bg-slate-100 rounded-2xl p-1">
           {[{ id: 'mine', label: 'My Communities' }, { id: 'discover', label: 'Discover' }].map(tab => (
@@ -646,6 +660,10 @@ export default function Communities() {
                 setShowCreateModal={setShowCreateModal}
                 hasFilter={activeCategory !== 'all' || !!searchQuery}
                 setActiveCategory={setActiveCategory}
+                sizeFilter={sizeFilter}
+                setSizeFilter={setSizeFilter}
+                activityFilter={activityFilter}
+                setActivityFilter={setActivityFilter}
               /></>
             )}
           </div>
@@ -721,9 +739,10 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
   );
 }
 
-function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory }) {
-  // Sort: featured first, then by follower count
-  const sortedCommunities = [...communities].sort((a, b) => {
+function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory, sizeFilter, setSizeFilter, activityFilter, setActivityFilter }) {
+  // Apply extra filters then sort: featured first, then by follower count
+  const filtered = applyExtraFilters(communities, sizeFilter, activityFilter);
+  const sortedCommunities = [...filtered].sort((a, b) => {
     if (a.isFeatured && !b.isFeatured) return -1;
     if (!a.isFeatured && b.isFeatured) return 1;
     return (b.follower_count || 0) - (a.follower_count || 0);
@@ -731,72 +750,76 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
 
   const noResults = sortedCommunities.length === 0 && groups.length === 0;
 
-  if (noResults) {
-    return (
-      <div className="space-y-4">
+  return (
+    <div className="space-y-6">
+      <DiscoverFilters
+        sizeFilter={sizeFilter}
+        setSizeFilter={setSizeFilter}
+        activityFilter={activityFilter}
+        setActivityFilter={setActivityFilter}
+      />
+      {noResults ? (
         <div className="rounded-3xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', border: '1px dashed #BFDBFE' }}>
           <div className="text-3xl mb-2">🔍</div>
           <h3 className="text-[15px] font-bold text-slate-800 mb-1">No results found</h3>
           <p className="text-[12px] text-slate-500 mb-4">Try a different search or explore by category</p>
           <button
-            onClick={() => setActiveCategory('all')}
+            onClick={() => { setActiveCategory('all'); setSizeFilter('all_sizes'); setActivityFilter('all_activity'); }}
             className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold active:scale-95 transition-all duration-150"
           >
             Clear Filters
           </button>
         </div>
-      </div>
-    );
-  }
+      ) : (
+        <>
+          {sortedCommunities.length > 0 && (
+            <div>
+              <div className="text-lg font-bold text-slate-900 mb-3">Communities</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {sortedCommunities.map(c => (
+                  <CommunityCard
+                    key={c.id}
+                    community={c}
+                    isJoined={userCommunityIds.has(c.id)}
+                    isJoining={joiningId === c.id}
+                    onOpen={openCommunity}
+                    onJoin={onJoin}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
-  return (
-    <div className="space-y-6">
-      {communities.length > 0 && (
-        <div>
-          <div className="text-lg font-bold text-slate-900 mb-3">Communities</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {sortedCommunities.map(c => (
-              <CommunityCard
-                key={c.id}
-                community={c}
-                isJoined={userCommunityIds.has(c.id)}
-                isJoining={joiningId === c.id}
-                onOpen={openCommunity}
-                onJoin={onJoin}
-              />
-            ))}
+          {groups.length > 0 && (
+            <div>
+              <div className="text-lg font-bold text-slate-900 mb-3">Groups</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {groups.slice(0, 12).map(g => (
+                  <GroupCard
+                    key={g.id}
+                    group={g}
+                    isMember={memberGroupIds.has(g.id)}
+                    onClick={() => setSelectedGroup(g)}
+                    onJoin={onJoinGroup}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 text-center border border-blue-100">
+            <div className="text-2xl mb-1.5">🏛️</div>
+            <h3 className="text-[14px] font-bold text-slate-900 mb-1">Start a Community</h3>
+            <p className="text-[11px] text-slate-500 mb-3">Bring your shul, school, or group online</p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold shadow hover:bg-blue-700 transition-colors"
+            >
+              Create Community
+            </button>
           </div>
-        </div>
+        </>
       )}
-
-      {groups.length > 0 && (
-        <div>
-          <div className="text-lg font-bold text-slate-900 mb-3">Groups</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {groups.slice(0, 12).map(g => (
-              <GroupCard
-                key={g.id}
-                group={g}
-                isMember={memberGroupIds.has(g.id)}
-                onClick={() => setSelectedGroup(g)}
-                onJoin={onJoinGroup}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 text-center border border-blue-100">
-        <div className="text-2xl mb-1.5">🏛️</div>
-        <h3 className="text-[14px] font-bold text-slate-900 mb-1">Start a Community</h3>
-        <p className="text-[11px] text-slate-500 mb-3">Bring your shul, school, or group online</p>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold shadow hover:bg-blue-700 transition-colors"
-        >
-          Create Community
-        </button>
-      </div>
     </div>
   );
 }
