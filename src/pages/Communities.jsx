@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Loader2, Plus, Search, X, Users, AlertCircle, Map } from 'lucide-react';
+import { Loader2, Plus, Search, X, Users, AlertCircle, Map, Calendar } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
@@ -531,6 +531,13 @@ export default function Communities() {
               title="Map view"
             >
               <Map className="w-4 h-4 text-slate-600" />
+            </button>
+            <button
+              onClick={() => navigate('/CommunityCalendar')}
+              className="p-2.5 rounded-full bg-white border border-slate-200 shadow-sm hover:bg-slate-50 active:scale-90 transition-all duration-150"
+              title="Community Calendar"
+            >
+              <Calendar className="w-4 h-4 text-slate-600" />
             </button>
             {currentUser?.role === 'admin' && (
               <button

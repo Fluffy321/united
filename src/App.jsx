@@ -17,6 +17,7 @@ import UserSettings from '@/pages/UserSettings';
 import ThankYou from '@/pages/ThankYou';
 import PostDetail from '@/pages/PostDetail';
 import CommunityPage from '@/pages/CommunityPage';
+import CommunityCalendar from '@/pages/CommunityCalendar';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -66,6 +67,7 @@ const AuthenticatedApp = () => {
       <Route path="/UserSettings" element={<PageTransition><UserSettings /></PageTransition>} />
       <Route path="/community/:communityId" element={<PageTransition><LayoutWrapper currentPageName="Communities"><CommunityPage /></LayoutWrapper></PageTransition>} />
       <Route path="/communities/:communityId" element={<PageTransition><LayoutWrapper currentPageName="Communities"><CommunityPage /></LayoutWrapper></PageTransition>} />
+      <Route path="/CommunityCalendar" element={<PageTransition><CommunityCalendar /></PageTransition>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

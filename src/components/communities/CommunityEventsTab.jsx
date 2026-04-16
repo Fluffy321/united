@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { format, parseISO, isPast, isFuture } from 'date-fns';
-import { MapPin, Clock, Users, CheckCircle, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { MapPin, Clock, Users, ChevronDown, ChevronUp, Loader2, Plus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import CreateCommunityEventModal from './CreateCommunityEventModal';
 
 const RSVP_OPTIONS = [
   { value: 'going', label: '✅ Going', activeClass: 'bg-green-100 text-green-700 border-green-300' },
@@ -174,7 +175,13 @@ function EventCard({ event, past, currentUser }) {
   );
 }
 
-export default function CommunityEventsTab({ events, currentUser }) {
+export default function CommunityEventsTab({ events: initialEvents, currentUser, communityId, isAdmin }) {
+  const [events, setEvents] = useState(initialEvents || []);
+  const [showCreate, setShowCreate] = useState(false);
+
+  // Keep in sync if parent re-fetches
+  useEffect(() => { setEvents(initialEvents || []); }, [initialEvents]);
+
   const upcoming = events.filter(e => {
     const d = e.start_date || e.event_date;
     return !d || isFuture(parseISO(d));
@@ -184,33 +191,59 @@ export default function CommunityEventsTab({ events, currentUser }) {
     return d && isPast(parseISO(d));
   });
 
-  if (events.length === 0) {
-    return (
-      <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center mb-4 mt-4">
-        <div className="text-4xl mb-3">📅</div>
-        <p className="text-[15px] font-bold text-slate-900">No events yet</p>
-        <p className="text-[13px] text-slate-500 mt-1">Upcoming events will appear here.</p>
-      </div>
-    );
-  }
+  const handleCreated = (newEvent) => {
+    setEvents(prev => [newEvent, ...prev]);
+    setShowCreate(false);
+  };
 
   return (
     <div className="space-y-4 py-4">
-      {upcoming.length > 0 && (
-        <div>
-          <p className="text-[13px] font-bold text-slate-700 mb-2">Upcoming</p>
-          <div className="space-y-3">
-            {upcoming.map(e => <EventCard key={e.id} event={e} currentUser={currentUser} />)}
-          </div>
-        </div>
+      {/* Admin: create button */}
+      {isAdmin && (
+        <button
+          onClick={() => setShowCreate(true)}
+          className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white rounded-2xl py-3 text-[14px] font-bold hover:bg-blue-700 active:scale-95 transition-all"
+        >
+          <Plus className="w-4 h-4" /> Add Event
+        </button>
       )}
-      {past.length > 0 && (
-        <div>
-          <p className="text-[13px] font-bold text-slate-400 mb-2">Past Events</p>
-          <div className="space-y-3">
-            {past.map(e => <EventCard key={e.id} event={e} past currentUser={currentUser} />)}
-          </div>
+
+      {events.length === 0 ? (
+        <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center">
+          <div className="text-4xl mb-3">📅</div>
+          <p className="text-[15px] font-bold text-slate-900">No events yet</p>
+          <p className="text-[13px] text-slate-500 mt-1">
+            {isAdmin ? 'Create your first event above.' : 'Upcoming events will appear here.'}
+          </p>
         </div>
+      ) : (
+        <>
+          {upcoming.length > 0 && (
+            <div>
+              <p className="text-[13px] font-bold text-slate-700 mb-2">Upcoming</p>
+              <div className="space-y-3">
+                {upcoming.map(e => <EventCard key={e.id} event={e} currentUser={currentUser} />)}
+              </div>
+            </div>
+          )}
+          {past.length > 0 && (
+            <div>
+              <p className="text-[13px] font-bold text-slate-400 mb-2">Past Events</p>
+              <div className="space-y-3">
+                {past.map(e => <EventCard key={e.id} event={e} past currentUser={currentUser} />)}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {showCreate && (
+        <CreateCommunityEventModal
+          communityId={communityId}
+          currentUser={currentUser}
+          onCreated={handleCreated}
+          onClose={() => setShowCreate(false)}
+        />
       )}
     </div>
   );
