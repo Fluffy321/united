@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
-import { X, Calendar, Clock, MapPin, AlignLeft, Sparkles, Loader2, Tag, ChevronDown } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, AlignLeft, Sparkles, Loader2, Tag, ChevronDown, Ticket, DollarSign, Users } from 'lucide-react';
 
 const EVENT_CATEGORIES = [
   { value: 'shabbos', label: '🕯️ Shabbos & Holidays', color: 'bg-amber-50 text-amber-700 border-amber-200' },
@@ -31,6 +31,11 @@ export default function CreateCommunityEventModal({ communityId, currentUser, on
     end_date: '',
     end_time: '',
     location: '',
+    has_tickets: false,
+    is_free: true,
+    ticket_price: '',
+    ticket_quantity: '',
+    ticket_name: '',
   });
   const [saving, setSaving] = useState(false);
   const [generatingDesc, setGeneratingDesc] = useState(false);
@@ -170,6 +175,12 @@ Return a JSON object with a "suggestions" array of exactly 3 items, each with:
         is_official: true,
         created_by: currentUser?.id,
         created_by_name: currentUser?.full_name || currentUser?.display_name,
+        has_tickets: form.has_tickets,
+        is_free: form.is_free,
+        ticket_price: form.has_tickets && !form.is_free ? parseFloat(form.ticket_price) || 0 : 0,
+        ticket_quantity: form.has_tickets && form.ticket_quantity ? parseInt(form.ticket_quantity) : null,
+        ticket_name: form.has_tickets ? (form.ticket_name.trim() || 'General Admission') : '',
+        tickets_sold: 0,
       });
       toast.success('Event created!');
       onCreated(created);
@@ -389,6 +400,89 @@ Return a JSON object with a "suggestions" array of exactly 3 items, each with:
               placeholder="e.g. 123 Main St, Woodmere"
               className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] text-slate-800 placeholder-slate-400 outline-none focus:border-blue-400"
             />
+          </div>
+
+          {/* Ticketing */}
+          <div className="border border-slate-200 rounded-2xl overflow-hidden">
+            <button
+              type="button"
+              onClick={() => set('has_tickets', !form.has_tickets)}
+              className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Ticket className="w-4 h-4 text-slate-600" />
+                <span className="text-[13px] font-semibold text-slate-700">Ticketing / Registration</span>
+              </div>
+              <div className={`w-10 h-5 rounded-full transition-colors relative ${form.has_tickets ? 'bg-blue-600' : 'bg-slate-300'}`}>
+                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${form.has_tickets ? 'left-5' : 'left-0.5'}`} />
+              </div>
+            </button>
+
+            {form.has_tickets && (
+              <div className="p-4 space-y-3">
+                {/* Free vs Paid toggle */}
+                <div className="flex rounded-xl overflow-hidden border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => set('is_free', true)}
+                    className={`flex-1 py-2 text-[12px] font-bold transition-colors ${form.is_free ? 'bg-blue-600 text-white' : 'bg-white text-slate-500'}`}
+                  >
+                    Free Registration
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => set('is_free', false)}
+                    className={`flex-1 py-2 text-[12px] font-bold transition-colors ${!form.is_free ? 'bg-amber-500 text-white' : 'bg-white text-slate-500'}`}
+                  >
+                    Paid Tickets
+                  </button>
+                </div>
+
+                {/* Ticket name */}
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Ticket Name</label>
+                  <input
+                    value={form.ticket_name}
+                    onChange={e => set('ticket_name', e.target.value)}
+                    placeholder="General Admission"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-[13px] text-slate-800 placeholder-slate-400 outline-none focus:border-blue-400"
+                  />
+                </div>
+
+                {/* Price (only for paid) */}
+                {!form.is_free && (
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-500 mb-1 flex items-center gap-1">
+                      <DollarSign className="w-3 h-3" /> Price per ticket (USD)
+                    </label>
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={form.ticket_price}
+                      onChange={e => set('ticket_price', e.target.value)}
+                      placeholder="0.00"
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-[13px] text-slate-800 placeholder-slate-400 outline-none focus:border-blue-400"
+                    />
+                  </div>
+                )}
+
+                {/* Capacity */}
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-500 mb-1 flex items-center gap-1">
+                    <Users className="w-3 h-3" /> Max Capacity (leave blank for unlimited)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.ticket_quantity}
+                    onChange={e => set('ticket_quantity', e.target.value)}
+                    placeholder="e.g. 100"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-[13px] text-slate-800 placeholder-slate-400 outline-none focus:border-blue-400"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Submit */}

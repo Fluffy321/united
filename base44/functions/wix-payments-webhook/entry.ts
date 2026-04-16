@@ -50,15 +50,51 @@ Deno.serve(async (req) => {
 
       const transactions = await base44.asServiceRole.entities.Transaction.filter({ order_id: orderId });
       if (transactions.length > 0) {
-        await base44.asServiceRole.entities.Transaction.update(transactions[0].id, {
-          status: status
-        });
+        const tx = transactions[0];
+        await base44.asServiceRole.entities.Transaction.update(tx.id, { status });
+        console.log(`Transaction ${tx.id} marked ${status}`);
 
         if (status === 'completed') {
+          // Mark ticket as purchased for event ticket transactions
+          if (tx.related_entity_type === 'CommunityEvent' && tx.related_entity_id) {
+            const rsvps = await base44.asServiceRole.entities.CommunityEventRSVP.filter({
+              event_id: tx.related_entity_id,
+              user_id: tx.user_id
+            });
+            if (rsvps.length > 0) {
+              await base44.asServiceRole.entities.CommunityEventRSVP.update(rsvps[0].id, {
+                ticket_purchased: true,
+                order_id: orderId,
+                status: 'going',
+              });
+            } else {
+              // Create RSVP if doesn't exist
+              await base44.asServiceRole.entities.CommunityEventRSVP.create({
+                event_id: tx.related_entity_id,
+                user_id: tx.user_id,
+                user_name: tx.email || 'Member',
+                status: 'going',
+                ticket_purchased: true,
+                ticket_quantity: 1,
+                order_id: orderId,
+              });
+            }
+            // Update tickets_sold count
+            const eventRecords = await base44.asServiceRole.entities.CommunityEvent.filter({ id: tx.related_entity_id });
+            if (eventRecords.length > 0) {
+              const ev = eventRecords[0];
+              const qty = rsvps[0]?.ticket_quantity || 1;
+              await base44.asServiceRole.entities.CommunityEvent.update(ev.id, {
+                tickets_sold: (ev.tickets_sold || 0) + qty
+              });
+            }
+            console.log(`Ticket confirmed for event ${tx.related_entity_id}, user ${tx.user_id}`);
+          }
+
           await base44.asServiceRole.entities.Notification.create({
-            user_id: transactions[0].user_id,
+            user_id: tx.user_id,
             type: 'payment',
-            message: `Payment of $${(transactions[0].amount / 100).toFixed(2)} received`,
+            message: `Your ticket purchase was confirmed! ✅`,
             read: false
           }).catch(() => {});
         }

@@ -1,0 +1,81 @@
+{
+  "name": "CommunityEvent",
+  "type": "object",
+  "properties": {
+    "community_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "start_time": {
+      "type": "string"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_time": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "is_seeded": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_official": {
+      "type": "boolean",
+      "default": false
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    },
+    "has_tickets": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this event requires tickets"
+    },
+    "is_free": {
+      "type": "boolean",
+      "default": true,
+      "description": "Free RSVP event or paid tickets"
+    },
+    "ticket_price": {
+      "type": "number",
+      "default": 0,
+      "description": "Price per ticket in USD"
+    },
+    "ticket_quantity": {
+      "type": "number",
+      "description": "Max tickets available (null = unlimited)"
+    },
+    "tickets_sold": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of tickets sold"
+    },
+    "ticket_name": {
+      "type": "string",
+      "description": "Label for the ticket, e.g. General Admission"
+    }
+  },
+  "required": [
+    "community_id",
+    "title"
+  ]
+}

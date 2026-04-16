@@ -22,6 +22,20 @@
         "not_attending"
       ],
       "default": "going"
+    },
+    "ticket_purchased": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether user has completed ticket purchase"
+    },
+    "ticket_quantity": {
+      "type": "number",
+      "default": 1,
+      "description": "Number of tickets purchased"
+    },
+    "order_id": {
+      "type": "string",
+      "description": "Payment order/session ID"
     }
   },
   "required": [
