@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
 
@@ -12,6 +12,7 @@ const SLUG_MAP = {
 export default function CommunityPage() {
   const { communityId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
@@ -20,12 +21,14 @@ export default function CommunityPage() {
 
   // Resolve vanity slug to real ID, or use the raw ID directly
   const resolvedId = SLUG_MAP[communityId] || communityId;
+  const demoCommunity = location.state?.demoCommunity || null;
 
   return (
     <CommunityDetailView
       communityId={resolvedId}
       currentUser={currentUser}
       onBack={() => navigate('/Communities')}
+      fallbackCommunity={demoCommunity}
     />
   );
 }

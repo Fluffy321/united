@@ -420,10 +420,10 @@ export default function Communities() {
 
   const openCommunity = (id) => {
     const community = allCommunities.find(c => c.id === id);
-    if (community) {
+    if (community && !id.startsWith('demo-')) {
       base44.entities.Community.update(id, { views_count: (community.views_count || 0) + 1 }).catch(() => {});
     }
-    navigate(`/communities/${id}`);
+    navigate(`/communities/${id}`, { state: { demoCommunity: id.startsWith('demo-') ? community : undefined } });
   };
   const backToList = () => navigate('/Communities');
 

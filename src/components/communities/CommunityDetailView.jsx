@@ -28,7 +28,7 @@ const TABS = [
   { key: 'resources', label: 'Resources' },
 ];
 
-export default function CommunityDetailView({ communityId, currentUser, onBack }) {
+export default function CommunityDetailView({ communityId, currentUser, onBack, fallbackCommunity }) {
   const [activeTab, setActiveTab] = useState('home');
   const [showClaim, setShowClaim] = useState(false);
   const queryClient = useQueryClient();
@@ -36,6 +36,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack }
   const { data: community, isLoading } = useQuery({
     queryKey: ['community', communityId],
     queryFn: async () => {
+      if (fallbackCommunity) return fallbackCommunity;
       // Try direct get first, fall back to filter
       try {
         const result = await base44.entities.Community.get(communityId);
