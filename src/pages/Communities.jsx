@@ -178,20 +178,31 @@ function MemberStack({ count = 0 }) {
   );
 }
 
-function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, featured = false }) {
+function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
+  // Guard: skip rendering if community has no id
+  if (!community?.id || !community?.name) return null;
+
   const typeKey = community.type || '';
   const catKey = community.category || TYPE_TO_CATEGORY[typeKey] || '';
   const gradient = CATEGORY_CARD_GRADIENTS[typeKey] || CATEGORY_CARD_GRADIENTS[catKey] || 'from-blue-500 to-purple-600';
-  const initials = community.name?.slice(0, 2)?.toUpperCase() || 'CO';
+  const initials = community.name.slice(0, 2).toUpperCase();
   const activity = getMockActivity(community.id);
-  const activeNow = 3 + (community.id?.charCodeAt(0) % 12);
   const badge = getActivityBadge(community.id);
   const catIcon = CATEGORY_ICONS[typeKey] || CATEGORY_ICONS[catKey] || '🏘️';
 
+  const handleCardClick = (e) => {
+    // Only navigate if the click wasn't on the join button
+    if (e.target.closest('[data-join-btn]')) return;
+    onOpen(community.id);
+  };
+
   return (
     <div
-      className="w-full rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 active:scale-[0.95] active:shadow-lg transition-all duration-200 overflow-hidden text-left cursor-pointer"
-      onClick={() => onOpen(community.id)}
+      className="w-full rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-[0.97] transition-all duration-150 overflow-hidden cursor-pointer"
+      onClick={handleCardClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onOpen(community.id); }}
     >
       <div className={`h-2 w-full bg-gradient-to-r ${gradient}`} />
 
@@ -208,12 +219,13 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, feature
             <div className="min-w-0 flex-1">
               <div className="text-[13px] font-bold text-slate-900 truncate">{community.name}</div>
               <div className="text-[11px] text-slate-500 mt-0.5">{(community.follower_count || 0).toLocaleString()} members</div>
-              <div className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${badge.color} shadow-sm`}>
+              <div className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${badge.color}`}>
                 {badge.label}
               </div>
             </div>
           </div>
           <button
+            data-join-btn="true"
             onClick={e => { e.stopPropagation(); onJoin(community); }}
             disabled={isJoining}
             className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-all active:scale-95 disabled:opacity-60 ${
@@ -231,20 +243,13 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, feature
         <div className="mt-1 text-xs text-slate-500 mb-1">
           {VALUE_PROPOSITIONS[catKey]?.[0] || VALUE_PROPOSITIONS[typeKey]?.[0] || 'Weekly events & real connections'}
         </div>
-        <div className="mt-1 text-xs text-slate-400 mb-3">
-          {community.post_count ? `${community.post_count} posts this week` : '12 new posts this week'}
-        </div>
 
-        <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center justify-between gap-2 mt-3">
           <MemberStack count={community.follower_count || 0} />
           <div className="flex items-center gap-1 text-[10px] text-slate-400">
             <span>{catIcon}</span>
             <span>{catKey || typeKey || 'Community'}</span>
           </div>
-        </div>
-
-        <div className="rounded-2xl bg-slate-50 px-3 py-2 text-[11px] text-slate-600 font-medium line-clamp-2 hover:bg-slate-100 transition-colors">
-          {activity}
         </div>
       </div>
     </div>
@@ -345,18 +350,22 @@ export default function Communities() {
       if (groupMembers.status === 'fulfilled') setMemberGroupIds(new Set(groupMembers.value.map(m => m.group_id)));
 
       if (comms.status === 'fulfilled' && comms.value?.length > 0) {
-        setAllCommunities(comms.value);
-        setCache(comms.value);
-        setIsDemo(false);
+        // Sanitize: only keep records with a valid id and name
+        const sanitized = comms.value.filter(c => c?.id && c?.name);
+        setAllCommunities(sanitized.length > 0 ? sanitized : DEMO_COMMUNITIES);
+        setCache(sanitized.length > 0 ? sanitized : []);
+        setIsDemo(sanitized.length === 0);
       } else {
-        setAllCommunities(DEMO_COMMUNITIES);
-        setIsDemo(true);
+        const cached = getCached().filter(c => c?.id && c?.name);
+        setAllCommunities(cached.length > 0 ? cached : DEMO_COMMUNITIES);
+        setIsDemo(cached.length === 0);
       }
 
       if (groups.status === 'fulfilled') setAllGroups(groups.value || []);
     } catch {
-      const cached = getCached();
+      const cached = getCached().filter(c => c?.id && c?.name);
       if (cached.length === 0) { setAllCommunities(DEMO_COMMUNITIES); setIsDemo(true); }
+      else { setAllCommunities(cached); }
     }
     setLoadingPhase('done');
   }, []);
@@ -422,13 +431,18 @@ export default function Communities() {
     } catch { toast.error('Something went wrong'); }
   };
 
-  const openCommunity = (id) => {
-    const community = allCommunities.find(c => c.id === id);
-    if (community && !id.startsWith('demo-')) {
-      base44.entities.Community.update(id, { views_count: (community.views_count || 0) + 1 }).catch(() => {});
+  const openCommunity = useCallback((id) => {
+    if (!id) return;
+    // Fire-and-forget view count increment — never block navigation
+    if (!id.startsWith('demo-')) {
+      const community = allCommunities.find(c => c.id === id);
+      if (community) {
+        base44.entities.Community.update(id, { views_count: (community.views_count || 0) + 1 }).catch(() => {});
+      }
     }
-    navigate(`/communities/${id}`, { state: { demoCommunity: id.startsWith('demo-') ? community : undefined } });
-  };
+    const demoCommunity = id.startsWith('demo-') ? allCommunities.find(c => c.id === id) : undefined;
+    navigate(`/communities/${id}`, demoCommunity ? { state: { demoCommunity } } : undefined);
+  }, [allCommunities, navigate]);
   const backToList = () => navigate('/Communities');
 
   const reseedFeatured = async () => {
@@ -482,8 +496,8 @@ export default function Communities() {
 
 
 
-  const hasRealCommunities = (allCommunities || []).some(c => !c.id?.startsWith('demo-'));
-  const isLoading = loadingPhase === 'loading' && (allCommunities || []).length === 0;
+  // Only show skeleton if we have no data at all (not even cached)
+  const isLoading = loadingPhase === 'loading' && allCommunities.length === 0;
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
@@ -625,6 +639,7 @@ export default function Communities() {
                 joiningId={joiningId}
                 currentUser={currentUser}
                 allCommunities={allCommunities}
+                isLoadingData={loadingPhase === 'loading'}
                 onJoinedFromOnboarding={(newIds) => {
                   setUserCommunityIds(prev => new Set([...prev, ...newIds]));
                 }}
@@ -679,8 +694,12 @@ export default function Communities() {
   );
 }
 
-function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId, currentUser, allCommunities, onJoinedFromOnboarding }) {
+function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId, currentUser, allCommunities, onJoinedFromOnboarding, isLoadingData }) {
+  // Don't show onboarding while data is still loading — prevents race condition flash
   if (myCommunities.length === 0 && myGroups.length === 0) {
+    if (isLoadingData) {
+      return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-blue-500" /></div>;
+    }
     return (
       <div className="space-y-4">
         <CommunityInterestOnboarding

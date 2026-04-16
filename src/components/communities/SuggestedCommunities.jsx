@@ -1,12 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 function SuggestedCard({ community, isJoined, isJoining, onOpen, onJoin }) {
-  const initials = community.name?.slice(0, 2)?.toUpperCase() || 'CO';
+  if (!community?.id || !community?.name) return null;
+  const initials = community.name.slice(0, 2).toUpperCase();
+
+  const handleClick = (e) => {
+    if (e.target.closest('[data-join-btn]')) return;
+    onOpen(community.id);
+  };
+
   return (
     <div
-      onClick={() => onOpen(community.id)}
+      onClick={handleClick}
       className="flex-shrink-0 w-52 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 active:scale-95 transition-all duration-150 cursor-pointer overflow-hidden"
     >
       <div className="h-1.5 w-full bg-gradient-to-r from-violet-500 to-indigo-500" />
@@ -30,6 +37,7 @@ function SuggestedCard({ community, isJoined, isJoining, onOpen, onJoin }) {
           </p>
         )}
         <button
+          data-join-btn="true"
           onClick={e => { e.stopPropagation(); onJoin(community); }}
           disabled={isJoining}
           className={`w-full rounded-full py-1.5 text-[11px] font-bold transition-all active:scale-95 disabled:opacity-60 ${
@@ -47,10 +55,13 @@ export default function SuggestedCommunities({ currentUser, allCommunities, user
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetched, setFetched] = useState(false);
+  // Use ref to prevent concurrent or duplicate fetches
+  const fetchingRef = useRef(false);
 
   const fetchSuggestions = async () => {
-    if (!allCommunities?.length) return;
+    if (!allCommunities?.length || fetchingRef.current) return;
     setLoading(true);
+    fetchingRef.current = true;
 
     // Build context for AI
     const myCommunities = allCommunities.filter(c => userCommunityIds.has(c.id));
@@ -66,7 +77,9 @@ export default function SuggestedCommunities({ currentUser, allCommunities, user
       `ID:${c.id} | Name:${c.name} | Type:${c.type || c.category || 'Community'} | Members:${c.follower_count || 0} | Desc:${c.description_short || c.description || ''}`
     ).join('\n');
 
-    const result = await base44.integrations.Core.InvokeLLM({
+    let result;
+    try {
+      result = await base44.integrations.Core.InvokeLLM({
       prompt: `You are a community recommendation engine for a Jewish social network app focused on the Five Towns, NY area.
 
 User context: ${userContext}
@@ -94,7 +107,13 @@ Only return IDs from the provided list. Prioritize variety across types.`,
           },
         },
       },
-    });
+      });
+    } catch {
+      setLoading(false);
+      setFetched(true);
+      fetchingRef.current = false;
+      return;
+    }
 
     const recs = result?.recommendations || [];
     const enriched = recs
@@ -109,11 +128,16 @@ Only return IDs from the provided list. Prioritize variety across types.`,
     setSuggestions(enriched);
     setLoading(false);
     setFetched(true);
+    fetchingRef.current = false;
   };
 
   useEffect(() => {
-    if (!fetched && allCommunities?.length > 0) fetchSuggestions();
-  }, [allCommunities?.length]);
+    // Only fetch once — when communities first become available
+    if (!fetched && !fetchingRef.current && allCommunities?.length > 0) {
+      fetchSuggestions();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetched, allCommunities?.length > 0]);
 
   if (!loading && fetched && suggestions.length === 0) return null;
 
@@ -126,7 +150,7 @@ Only return IDs from the provided list. Prioritize variety across types.`,
         </div>
         {fetched && !loading && (
           <button
-            onClick={fetchSuggestions}
+            onClick={() => { fetchingRef.current = false; fetchSuggestions(); }}
             className="p-1.5 rounded-full text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
             title="Refresh suggestions"
           >
