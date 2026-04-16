@@ -1,12 +1,31 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
-import { X, Calendar, Clock, MapPin, AlignLeft } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, AlignLeft, Sparkles, Loader2, Tag, ChevronDown } from 'lucide-react';
+
+const EVENT_CATEGORIES = [
+  { value: 'shabbos', label: '🕯️ Shabbos & Holidays', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { value: 'learning', label: '📚 Torah & Learning', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  { value: 'social', label: '🎉 Social & Networking', color: 'bg-pink-50 text-pink-700 border-pink-200' },
+  { value: 'volunteer', label: '🤝 Chessed & Volunteering', color: 'bg-green-50 text-green-700 border-green-200' },
+  { value: 'youth', label: '🧒 Youth & Teens', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+  { value: 'fundraiser', label: '💛 Fundraiser', color: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+  { value: 'memorial', label: '🕍 Memorial & Tribute', color: 'bg-slate-100 text-slate-600 border-slate-200' },
+  { value: 'general', label: '📌 General', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+];
+
+const SUGGESTED_TIMES = [
+  { label: 'Sunday Morning', start_time: '10:00', end_time: '12:00', note: 'High family attendance' },
+  { label: 'Tuesday Evening', start_time: '19:30', end_time: '21:00', note: 'Weeknight sweet spot' },
+  { label: 'Thursday Night', start_time: '20:00', end_time: '22:00', note: 'Popular for social events' },
+  { label: 'Friday Afternoon', start_time: '14:00', end_time: '16:00', note: 'Pre-Shabbos energy' },
+];
 
 export default function CreateCommunityEventModal({ communityId, currentUser, onCreated, onClose }) {
   const [form, setForm] = useState({
     title: '',
     description: '',
+    category: '',
     start_date: '',
     start_time: '',
     end_date: '',
@@ -14,8 +33,121 @@ export default function CreateCommunityEventModal({ communityId, currentUser, on
     location: '',
   });
   const [saving, setSaving] = useState(false);
+  const [generatingDesc, setGeneratingDesc] = useState(false);
+  const [categorizingAI, setCategorizingAI] = useState(false);
+  const [showTimeSuggestions, setShowTimeSuggestions] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState(null);
+  const [loadingAISuggestions, setLoadingAISuggestions] = useState(false);
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
+
+  // AI Feature 1: Generate description from title
+  const generateDescription = async () => {
+    if (!form.title.trim()) {
+      toast.error('Enter an event title first');
+      return;
+    }
+    setGeneratingDesc(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are helping a Jewish community in the Five Towns, NY area create an event description.
+
+Event title: "${form.title}"
+${form.category ? `Category: ${form.category}` : ''}
+${form.location ? `Location: ${form.location}` : ''}
+
+Write a warm, engaging 2-3 sentence event description for this community event. 
+Be welcoming and community-focused. Keep it concise and friendly. 
+Do not make up specific times or dates. Do not use placeholder text.`,
+      });
+      set('description', result);
+      // Also auto-categorize after generating
+      if (!form.category) autoCategorize(form.title, result);
+    } catch {
+      toast.error('Could not generate description');
+    }
+    setGeneratingDesc(false);
+  };
+
+  // AI Feature 2: Auto-categorize based on title + description
+  const autoCategorize = async (title, description) => {
+    const text = title || form.title;
+    if (!text.trim()) return;
+    setCategorizingAI(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Categorize the following community event into exactly one of these categories:
+shabbos, learning, social, volunteer, youth, fundraiser, memorial, general
+
+Event title: "${text}"
+${description || form.description ? `Description: "${description || form.description}"` : ''}
+
+Reply with ONLY the category value (one word, lowercase, from the list above).`,
+      });
+      const cat = result?.trim().toLowerCase().replace(/[^a-z]/g, '');
+      const valid = EVENT_CATEGORIES.find(c => c.value === cat);
+      if (valid) set('category', valid.value);
+    } catch {}
+    setCategorizingAI(false);
+  };
+
+  // AI Feature 3: Suggest optimal times based on event type
+  const getAITimeSuggestions = async () => {
+    if (!form.title.trim()) {
+      toast.error('Enter an event title first');
+      return;
+    }
+    setLoadingAISuggestions(true);
+    setShowTimeSuggestions(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are helping schedule a Jewish community event in the Five Towns, NY area.
+
+Event: "${form.title}"
+${form.category ? `Category: ${form.category}` : ''}
+${form.description ? `Description: "${form.description}"` : ''}
+
+Suggest 3 optimal time slots for this event based on Jewish community patterns (avoid Shabbos/Yom Tov, consider typical community schedules, minyan times, school hours, etc.).
+
+Return a JSON object with a "suggestions" array of exactly 3 items, each with:
+- "label": short name (e.g. "Sunday Morning")
+- "day_of_week": full day name
+- "start_time": HH:MM (24h)  
+- "end_time": HH:MM (24h)
+- "reason": one sentence why this time works for this event type`,
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            suggestions: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  label: { type: 'string' },
+                  day_of_week: { type: 'string' },
+                  start_time: { type: 'string' },
+                  end_time: { type: 'string' },
+                  reason: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+      });
+      setAiSuggestions(result?.suggestions || SUGGESTED_TIMES);
+    } catch {
+      setAiSuggestions(SUGGESTED_TIMES);
+    }
+    setLoadingAISuggestions(false);
+  };
+
+  const applyTimeSuggestion = (s) => {
+    set('start_time', s.start_time);
+    set('end_time', s.end_time);
+    setShowTimeSuggestions(false);
+    toast.success(`Applied: ${s.label}`);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,6 +161,7 @@ export default function CreateCommunityEventModal({ communityId, currentUser, on
         community_id: communityId,
         title: form.title.trim(),
         description: form.description.trim(),
+        category: form.category || 'general',
         start_date: form.start_date,
         start_time: form.start_time,
         end_date: form.end_date || form.start_date,
@@ -46,6 +179,8 @@ export default function CreateCommunityEventModal({ communityId, currentUser, on
     setSaving(false);
   };
 
+  const selectedCategory = EVENT_CATEGORIES.find(c => c.value === form.category);
+
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-0 sm:px-4">
       <div className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
@@ -57,23 +192,38 @@ export default function CreateCommunityEventModal({ communityId, currentUser, on
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4 max-h-[75vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4 max-h-[80vh] overflow-y-auto">
+
           {/* Title */}
           <div>
             <label className="text-[12px] font-semibold text-slate-600 mb-1 block">Event Title *</label>
             <input
               value={form.title}
               onChange={e => set('title', e.target.value)}
+              onBlur={() => { if (form.title.trim() && !form.category) autoCategorize(form.title, form.description); }}
               placeholder="e.g. Shabbos Dinner, Annual Gala"
               className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] text-slate-800 placeholder-slate-400 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
             />
           </div>
 
-          {/* Description */}
+          {/* Description with AI generate */}
           <div>
-            <label className="text-[12px] font-semibold text-slate-600 mb-1 flex items-center gap-1.5">
-              <AlignLeft className="w-3.5 h-3.5" /> Description
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[12px] font-semibold text-slate-600 flex items-center gap-1.5">
+                <AlignLeft className="w-3.5 h-3.5" /> Description
+              </label>
+              <button
+                type="button"
+                onClick={generateDescription}
+                disabled={generatingDesc}
+                className="flex items-center gap-1 text-[11px] font-semibold text-violet-600 hover:text-violet-800 bg-violet-50 hover:bg-violet-100 rounded-full px-2.5 py-1 transition-all disabled:opacity-60"
+              >
+                {generatingDesc
+                  ? <Loader2 className="w-3 h-3 animate-spin" />
+                  : <Sparkles className="w-3 h-3" />}
+                {generatingDesc ? 'Writing…' : 'AI Write'}
+              </button>
+            </div>
             <textarea
               value={form.description}
               onChange={e => set('description', e.target.value)}
@@ -83,51 +233,148 @@ export default function CreateCommunityEventModal({ communityId, currentUser, on
             />
           </div>
 
-          {/* Date & Time row */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-[12px] font-semibold text-slate-600 mb-1 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" /> Start Date *
+          {/* Category with AI auto-detect */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[12px] font-semibold text-slate-600 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5" /> Category
               </label>
-              <input
-                type="date"
-                value={form.start_date}
-                onChange={e => set('start_date', e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] text-slate-800 outline-none focus:border-blue-400"
-              />
+              {categorizingAI && (
+                <span className="flex items-center gap-1 text-[11px] text-violet-500">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Auto-detecting…
+                </span>
+              )}
             </div>
-            <div>
-              <label className="text-[12px] font-semibold text-slate-600 mb-1 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" /> Start Time
-              </label>
-              <input
-                type="time"
-                value={form.start_time}
-                onChange={e => set('start_time', e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] text-slate-800 outline-none focus:border-blue-400"
-              />
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowCategoryPicker(v => !v)}
+              className={`w-full flex items-center justify-between border rounded-xl px-3 py-2.5 text-[14px] outline-none transition-all ${
+                selectedCategory
+                  ? `${selectedCategory.color} border font-medium`
+                  : 'border-slate-200 text-slate-400'
+              }`}
+            >
+              <span>{selectedCategory ? selectedCategory.label : 'Select category…'}</span>
+              <ChevronDown className="w-4 h-4 opacity-60" />
+            </button>
+            {showCategoryPicker && (
+              <div className="mt-1.5 rounded-2xl border border-slate-100 bg-white shadow-lg overflow-hidden">
+                {EVENT_CATEGORIES.map(cat => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    onClick={() => { set('category', cat.value); setShowCategoryPicker(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-[13px] font-medium hover:bg-slate-50 transition-colors ${
+                      form.category === cat.value ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-[12px] font-semibold text-slate-600 mb-1 block">End Date</label>
-              <input
-                type="date"
-                value={form.end_date}
-                min={form.start_date}
-                onChange={e => set('end_date', e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] text-slate-800 outline-none focus:border-blue-400"
-              />
+          {/* Date & Time row with AI suggest */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[12px] font-semibold text-slate-600 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" /> Date & Time
+              </label>
+              <button
+                type="button"
+                onClick={getAITimeSuggestions}
+                disabled={loadingAISuggestions}
+                className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-full px-2.5 py-1 transition-all disabled:opacity-60"
+              >
+                {loadingAISuggestions
+                  ? <Loader2 className="w-3 h-3 animate-spin" />
+                  : <Sparkles className="w-3 h-3" />}
+                {loadingAISuggestions ? 'Thinking…' : 'Suggest Times'}
+              </button>
             </div>
-            <div>
-              <label className="text-[12px] font-semibold text-slate-600 mb-1 block">End Time</label>
-              <input
-                type="time"
-                value={form.end_time}
-                onChange={e => set('end_time', e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] text-slate-800 outline-none focus:border-blue-400"
-              />
+
+            {/* AI Time Suggestions Panel */}
+            {showTimeSuggestions && (
+              <div className="mb-3 rounded-2xl bg-blue-50 border border-blue-100 p-3">
+                <p className="text-[11px] font-bold text-blue-700 mb-2 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" /> Optimal time suggestions for your community
+                </p>
+                {loadingAISuggestions ? (
+                  <div className="flex items-center gap-2 py-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                    <span className="text-[12px] text-blue-600">Analyzing community patterns…</span>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {(aiSuggestions || []).map((s, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => applyTimeSuggestion(s)}
+                        className="w-full text-left bg-white rounded-xl px-3 py-2.5 border border-blue-100 hover:border-blue-300 hover:shadow-sm transition-all active:scale-98"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[13px] font-bold text-slate-800">{s.label || s.day_of_week}</span>
+                          <span className="text-[11px] font-semibold text-blue-600">
+                            {s.start_time} – {s.end_time}
+                          </span>
+                        </div>
+                        {s.reason && (
+                          <p className="text-[11px] text-slate-500 mt-0.5">{s.reason || s.note}</p>
+                        )}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setShowTimeSuggestions(false)}
+                      className="w-full text-center text-[11px] text-slate-400 hover:text-slate-600 pt-1"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] text-slate-500 mb-1 flex items-center gap-1"><Calendar className="w-3 h-3" /> Start Date *</label>
+                <input
+                  type="date"
+                  value={form.start_date}
+                  onChange={e => set('start_date', e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] text-slate-800 outline-none focus:border-blue-400"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] text-slate-500 mb-1 block">Start Time</label>
+                <input
+                  type="time"
+                  value={form.start_time}
+                  onChange={e => set('start_time', e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] text-slate-800 outline-none focus:border-blue-400"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] text-slate-500 mb-1 block">End Date</label>
+                <input
+                  type="date"
+                  value={form.end_date}
+                  min={form.start_date}
+                  onChange={e => set('end_date', e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] text-slate-800 outline-none focus:border-blue-400"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] text-slate-500 mb-1 block">End Time</label>
+                <input
+                  type="time"
+                  value={form.end_time}
+                  onChange={e => set('end_time', e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] text-slate-800 outline-none focus:border-blue-400"
+                />
+              </div>
             </div>
           </div>
 
