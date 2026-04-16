@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Loader2, Plus, Search, X, Users, AlertCircle, Map } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -334,6 +334,9 @@ export default function Communities() {
   const [sizeFilter, setSizeFilter] = useState('all_sizes');
   const [activityFilter, setActivityFilter] = useState('all_activity');
 
+  // Stable ref so openCommunity never needs to be recreated when communities reload
+  const allCommunitiesRef = useRef([]);
+
   const loadData = useCallback(async (user) => {
     setLoadingPhase('loading');
     try {
@@ -352,12 +355,16 @@ export default function Communities() {
       if (comms.status === 'fulfilled' && comms.value?.length > 0) {
         // Sanitize: only keep records with a valid id and name
         const sanitized = comms.value.filter(c => c?.id && c?.name);
-        setAllCommunities(sanitized.length > 0 ? sanitized : DEMO_COMMUNITIES);
+        const toSet = sanitized.length > 0 ? sanitized : DEMO_COMMUNITIES;
+        allCommunitiesRef.current = toSet;
+        setAllCommunities(toSet);
         setCache(sanitized.length > 0 ? sanitized : []);
         setIsDemo(sanitized.length === 0);
       } else {
         const cached = getCached().filter(c => c?.id && c?.name);
-        setAllCommunities(cached.length > 0 ? cached : DEMO_COMMUNITIES);
+        const toSet = cached.length > 0 ? cached : DEMO_COMMUNITIES;
+        allCommunitiesRef.current = toSet;
+        setAllCommunities(toSet);
         setIsDemo(cached.length === 0);
       }
 
@@ -431,18 +438,21 @@ export default function Communities() {
     } catch { toast.error('Something went wrong'); }
   };
 
+  // Stable callback — reads communities from ref so it never needs to be recreated.
+  // This prevents all CommunityCards from re-rendering mid-tap when allCommunities updates,
+  // which was causing the browser to cancel the click event.
   const openCommunity = useCallback((id) => {
     if (!id) return;
-    // Fire-and-forget view count increment — never block navigation
+    const communities = allCommunitiesRef.current;
     if (!id.startsWith('demo-')) {
-      const community = allCommunities.find(c => c.id === id);
+      const community = communities.find(c => c.id === id);
       if (community) {
         base44.entities.Community.update(id, { views_count: (community.views_count || 0) + 1 }).catch(() => {});
       }
     }
-    const demoCommunity = id.startsWith('demo-') ? allCommunities.find(c => c.id === id) : undefined;
+    const demoCommunity = id.startsWith('demo-') ? communities.find(c => c.id === id) : undefined;
     navigate(`/communities/${id}`, demoCommunity ? { state: { demoCommunity } } : undefined);
-  }, [allCommunities, navigate]);
+  }, [navigate]); // navigate is stable; communities come from ref
   const backToList = () => navigate('/Communities');
 
   const reseedFeatured = async () => {
@@ -458,6 +468,7 @@ export default function Communities() {
       // Silently refresh communities without resetting loading state
       const comms = await base44.entities.Community.list('-follower_count', 80);
       if (comms?.length > 0) {
+        allCommunitiesRef.current = comms;
         setAllCommunities(comms);
         setCache(comms);
         setIsDemo(false);
