@@ -241,7 +241,13 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         )}
 
         {activeTab === 'feed' && (
-          <CommunityFeedTab posts={posts} isLoading={postsLoading} />
+          <CommunityFeedTab
+            posts={posts}
+            isLoading={postsLoading}
+            community={community}
+            currentUser={currentUser}
+            onNewPost={(post) => queryClient.setQueryData(['community-posts', communityId], prev => [post, ...(prev || [])])}
+          />
         )}
 
         {activeTab === 'announcements' && (
