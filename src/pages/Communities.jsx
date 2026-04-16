@@ -574,16 +574,6 @@ export default function Communities() {
           </div>
         </div>
 
-        {/* AI Suggested Communities */}
-        <SuggestedCommunities
-          currentUser={currentUser}
-          allCommunities={allCommunities}
-          userCommunityIds={userCommunityIds}
-          joiningId={joiningId}
-          onOpen={openCommunity}
-          onJoin={joinCommunity}
-        />
-
         {/* Tab switcher */}
         <div className="mb-6 flex bg-slate-100 rounded-2xl p-1">
           {[{ id: 'mine', label: 'My Communities' }, { id: 'discover', label: 'Discover' }].map(tab => (
@@ -664,6 +654,9 @@ export default function Communities() {
                 setSizeFilter={setSizeFilter}
                 activityFilter={activityFilter}
                 setActivityFilter={setActivityFilter}
+                currentUser={currentUser}
+                allCommunities={allCommunities}
+                onJoinCommunity={joinCommunity}
               /></>
             )}
           </div>
@@ -739,7 +732,7 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
   );
 }
 
-function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory, sizeFilter, setSizeFilter, activityFilter, setActivityFilter }) {
+function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory, sizeFilter, setSizeFilter, activityFilter, setActivityFilter, currentUser, allCommunities, onJoinCommunity }) {
   // Apply extra filters then sort: featured first, then by follower count
   const filtered = applyExtraFilters(communities, sizeFilter, activityFilter);
   const sortedCommunities = [...filtered].sort((a, b) => {
@@ -752,6 +745,14 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
 
   return (
     <div className="space-y-6">
+      <SuggestedCommunities
+        currentUser={currentUser}
+        allCommunities={allCommunities}
+        userCommunityIds={userCommunityIds}
+        joiningId={joiningId}
+        onOpen={openCommunity}
+        onJoin={onJoinCommunity || onJoin}
+      />
       <DiscoverFilters
         sizeFilter={sizeFilter}
         setSizeFilter={setSizeFilter}
