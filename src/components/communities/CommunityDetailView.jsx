@@ -15,6 +15,7 @@ import MembersListTab from './MembersListTab';
 import GroupChatSection from './GroupChatSection';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import CommunityPaymentButton from './CommunityPaymentButton';
+import CommunityHealthDashboard from './CommunityHealthDashboard';
 
 const TABS = [
   { key: 'home', label: 'Home' },
@@ -89,6 +90,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
   const isFollowing = followRecord.length > 0;
   const isAdmin = currentUser?.role === 'admin';
+  const isPremium = community?.is_verified === true;
   const actualMemberCount = members.length;
 
   const handleFollow = async () => {
@@ -145,7 +147,12 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   const eventCount = events.length;
   const mitzvahCount = opportunities.filter(o => o.is_active !== false).length;
 
-  const tabsWithCounts = TABS.map(t => ({
+  // Health tab only shown to admins on verified (premium) communities
+  const visibleTabs = isAdmin && isPremium
+    ? [...TABS, { key: 'health', label: '🧠 Health' }]
+    : TABS;
+
+  const tabsWithCounts = visibleTabs.map(t => ({
     ...t,
     count: t.key === 'announcements' ? announcementCount
          : t.key === 'events' ? eventCount
@@ -276,6 +283,10 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
         {activeTab === 'resources' && (
           <CommunityResourceLibrary communityId={communityId} currentUser={currentUser} isAdmin={isAdmin} />
+        )}
+
+        {activeTab === 'health' && isAdmin && isPremium && (
+          <CommunityHealthDashboard communityId={communityId} community={community} />
         )}
       </div>
 
