@@ -18,6 +18,7 @@ export default function UserSettings() {
     email_on_follow: true,
     email_on_mention: true,
     push_notifications: true,
+    weekly_digest: true,
   });
 
   useEffect(() => {
@@ -222,6 +223,13 @@ export default function UserSettings() {
               enabled={notifications.push_notifications}
               onChange={() => toggleNotification('push_notifications')}
               icon={<Lock className="w-5 h-5" />}
+            />
+            <NotificationToggle
+              label="Weekly Community Digest"
+              description="Receive a weekly AI-generated summary of activity, events, and new members across your communities"
+              enabled={notifications.weekly_digest !== false}
+              onChange={() => toggleNotification('weekly_digest')}
+              icon={<Bell className="w-5 h-5" />}
             />
           </div>
 
