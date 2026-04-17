@@ -1,0 +1,74 @@
+{
+  "name": "CommunityListing",
+  "type": "object",
+  "properties": {
+    "community_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "subscription",
+        "product",
+        "service"
+      ],
+      "description": "subscription = recurring membership tier, product = physical/digital good, service = offered service"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD"
+    },
+    "billing_period": {
+      "type": "string",
+      "enum": [
+        "one_time",
+        "monthly",
+        "yearly"
+      ],
+      "default": "one_time"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "perks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of features/perks included"
+    },
+    "stock_quantity": {
+      "type": "number",
+      "description": "null = unlimited"
+    },
+    "orders_count": {
+      "type": "number",
+      "default": 0
+    },
+    "seller_name": {
+      "type": "string"
+    },
+    "seller_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "community_id",
+    "type",
+    "title",
+    "price"
+  ]
+}

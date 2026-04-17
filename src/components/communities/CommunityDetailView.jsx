@@ -16,6 +16,7 @@ import GroupChatSection from './GroupChatSection';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import CommunityPaymentButton from './CommunityPaymentButton';
 import CommunityHealthDashboard from './CommunityHealthDashboard';
+import CommunityStoreTab from './CommunityStoreTab';
 
 const TABS = [
   { key: 'home', label: 'Home' },
@@ -147,10 +148,10 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   const eventCount = events.length;
   const mitzvahCount = opportunities.filter(o => o.is_active !== false).length;
 
-  // Health tab only shown to admins on verified (premium) communities
-  const visibleTabs = isAdmin && isPremium
-    ? [...TABS, { key: 'health', label: '🧠 Health' }]
-    : TABS;
+  // Extra tabs for verified (premium) communities
+  let visibleTabs = [...TABS];
+  if (isPremium) visibleTabs = [...visibleTabs, { key: 'store', label: '🏪 Store' }];
+  if (isAdmin && isPremium) visibleTabs = [...visibleTabs, { key: 'health', label: '🧠 Health' }];
 
   const tabsWithCounts = visibleTabs.map(t => ({
     ...t,
@@ -177,16 +178,6 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
           return (Date.now() - d.getTime()) < 7 * 24 * 60 * 60 * 1000;
         }).length}
       />
-
-      {/* Payment strip */}
-      <div className="bg-white border-b border-slate-100 px-4 py-3">
-        <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
-          <p className="text-[13px] text-slate-600">
-            {community.is_verified ? '✅ Verified community' : '🏘️ Community page'} · Support {community.name}
-          </p>
-          <CommunityPaymentButton community={community} />
-        </div>
-      </div>
 
       {/* Scrollable tabs */}
       <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
@@ -283,6 +274,15 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
         {activeTab === 'resources' && (
           <CommunityResourceLibrary communityId={communityId} currentUser={currentUser} isAdmin={isAdmin} />
+        )}
+
+        {activeTab === 'store' && isPremium && (
+          <CommunityStoreTab
+            communityId={communityId}
+            community={community}
+            currentUser={currentUser}
+            isAdmin={isAdmin}
+          />
         )}
 
         {activeTab === 'health' && isAdmin && isPremium && (
