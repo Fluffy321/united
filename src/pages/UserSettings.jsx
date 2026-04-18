@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Save, Loader2, Bell, Lock, Eye } from 'lucide-react';
+import { Upload, Save, Loader2, Bell, Lock, Eye, MapPin, Check } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 
 export default function UserSettings() {
   const [user, setUser] = useState(null);
@@ -12,6 +13,7 @@ export default function UserSettings() {
   // Form states
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [cityPreset, setCityPreset] = useState('Five Towns');
   const [notifications, setNotifications] = useState({
     email_on_post: true,
     email_on_comment: true,
@@ -28,6 +30,7 @@ export default function UserSettings() {
         setUser(currentUser);
         setBio(currentUser.bio || '');
         setAvatarUrl(currentUser.avatar_url || '');
+        setCityPreset(currentUser.cityPreset || 'Five Towns');
         if (currentUser.notification_preferences) {
           setNotifications(currentUser.notification_preferences);
         }
@@ -71,6 +74,7 @@ export default function UserSettings() {
       await base44.auth.updateMe({
         bio,
         avatar_url: avatarUrl,
+        cityPreset,
         notification_preferences: notifications,
       });
       toast.success('Profile updated successfully');
@@ -178,6 +182,42 @@ export default function UserSettings() {
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+
+        {/* My Location Card */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-8">
+          <h2 className="text-xl font-bold text-slate-900 mb-1 flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-blue-600" /> My Location
+          </h2>
+          <p className="text-sm text-slate-500 mb-4">Your primary local network — controls what appears in your feed.</p>
+          <div className="flex flex-wrap gap-2">
+            {LOCAL_NETWORKS.map(n => {
+              const isActive = cityPreset === n.cityPreset;
+              return (
+                <button
+                  key={n.id}
+                  onClick={() => setCityPreset(n.cityPreset)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px] font-semibold transition-all active:scale-95 border ${
+                    isActive
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  <span>{n.emoji}</span>
+                  <span>{n.shortLabel}</span>
+                  {isActive && <Check className="w-3 h-3" />}
+                </button>
+              );
+            })}
+          </div>
+          <button
+            onClick={handleSaveProfile}
+            disabled={saving}
+            className="mt-4 flex items-center justify-center gap-2 px-5 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-95"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {saving ? 'Saving...' : 'Save Location'}
           </button>
         </div>
 

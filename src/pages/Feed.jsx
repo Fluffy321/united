@@ -18,8 +18,10 @@ import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
 import SearchModal from '@/components/feed/SearchModal';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
-import { Search, Plus, RefreshCw } from 'lucide-react';
+import { Search, Plus, RefreshCw, ChevronDown } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
+import { LOCAL_NETWORKS, getNetworkByPreset, matchPostNetwork } from '@/lib/localNetworks';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
 
@@ -29,7 +31,8 @@ export default function Feed() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState('trending');
-  const [selectedNeighborhood, setSelectedNeighborhood] = useState('All Five Towns');
+  const [primaryNetwork, setPrimaryNetwork] = useState(LOCAL_NETWORKS[0]);
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState('All');
   const [userLikes, setUserLikes] = useState([]);
   const [blockedIds, setBlockedIds] = useState([]);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -57,7 +60,14 @@ export default function Feed() {
   const [cachedPosts, setCachedPosts] = useState([]);
 
   useEffect(() => {
-    base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
+    base44.auth.me().then(u => {
+      setCurrentUser(u);
+      // Load saved primary network from user profile
+      if (u?.cityPreset) {
+        const net = LOCAL_NETWORKS.find(n => n.cityPreset === u.cityPreset);
+        if (net) setPrimaryNetwork(net);
+      }
+    }).catch(() => {});
   }, []);
 
   // Request geolocation when user switches to nearby tab
@@ -204,7 +214,8 @@ export default function Feed() {
     if (p.type === 'dating') return false;
     if (p.type === 'prompt' && activeTab !== 'trending' && activeTab !== 'for_you' && activeTab !== 'social') return false;
     if (blockedIds.includes(p.user_id)) return false;
-    if (selectedNeighborhood !== 'All Five Towns') {
+    // Sub-neighborhood filter within the selected network
+    if (selectedNeighborhood !== 'All') {
       const loc = (p.location_text || p.city || '').toLowerCase();
       if (loc && !loc.includes(selectedNeighborhood.toLowerCase())) return false;
     }
@@ -234,6 +245,13 @@ export default function Feed() {
 
     // Strong boost for posts from communities the user joined
     if (p.community_id && joinedCommunityIds.has(p.community_id)) base = base * 3 + 50;
+
+    // Boost local network posts
+    const postCity = (p.city || p.location_text || '').toLowerCase();
+    const networkLabel = primaryNetwork.cityPreset.toLowerCase();
+    if (postCity.includes(networkLabel) || primaryNetwork.neighborhoods.some(nb => postCity.includes(nb.toLowerCase()))) {
+      base = base * 2 + 10;
+    }
 
     return base;
   };
@@ -313,11 +331,12 @@ export default function Feed() {
         <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
           <button
             onClick={() => setShowLocationPicker(v => !v)}
-            className="flex items-center gap-1 font-semibold text-[15px] text-slate-900 active:scale-95 touch-manipulation"
+            className="flex items-center gap-1.5 font-semibold text-[15px] text-slate-900 active:scale-95 touch-manipulation"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <span>{selectedNeighborhood}</span>
-            <svg className="w-3.5 h-3.5 text-slate-400 transition-transform" style={{ transform: showLocationPicker ? 'rotate(180deg)' : 'rotate(0deg)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+            <span>{primaryNetwork.emoji}</span>
+            <span>{primaryNetwork.shortLabel}</span>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 transition-transform" style={{ transform: showLocationPicker ? 'rotate(180deg)' : 'rotate(0deg)' }} />
           </button>
           <div className="flex items-center gap-0.5">
             <button onClick={() => setShowSearch(true)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 active:bg-slate-200 transition-colors touch-manipulation" style={{ WebkitTapHighlightColor: 'transparent' }}>
@@ -329,22 +348,39 @@ export default function Feed() {
       </div>
 
       {showLocationPicker && (
-        <div className="sticky top-12 z-20 bg-white border-b border-slate-100 shadow-md">
-          <div className="max-w-2xl mx-auto px-4 py-2 flex flex-wrap gap-2">
-            {NEIGHBORHOODS.map(n => (
-              <button
-                key={n}
-                onClick={() => { setSelectedNeighborhood(n); setShowLocationPicker(false); }}
-                className={`px-3 py-1.5 rounded-full text-[13px] font-semibold transition-colors ${
-                  selectedNeighborhood === n
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
+        <div className="sticky top-12 z-20">
+          <LocationNetworkPicker
+            currentNetwork={primaryNetwork}
+            onSelect={async (net) => {
+              setPrimaryNetwork(net);
+              setSelectedNeighborhood('All');
+              // Persist to user profile
+              try { await base44.auth.updateMe({ cityPreset: net.cityPreset }); } catch {}
+            }}
+            onClose={() => setShowLocationPicker(false)}
+          />
+          {/* Sub-neighborhood filter for current network */}
+          {primaryNetwork.neighborhoods.length > 1 && (
+            <div className="bg-white border-b border-slate-100 shadow-sm">
+              <div className="max-w-2xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto scrollbar-hide">
+                <button
+                  onClick={() => setSelectedNeighborhood('All')}
+                  className={`flex-shrink-0 px-3 py-1 rounded-full text-[12px] font-semibold transition-colors ${selectedNeighborhood === 'All' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'}`}
+                >
+                  All
+                </button>
+                {primaryNetwork.neighborhoods.map(nb => (
+                  <button
+                    key={nb}
+                    onClick={() => setSelectedNeighborhood(nb)}
+                    className={`flex-shrink-0 px-3 py-1 rounded-full text-[12px] font-semibold transition-colors ${selectedNeighborhood === nb ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'}`}
+                  >
+                    {nb}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -426,7 +462,7 @@ export default function Feed() {
             {(() => {
             // Section labels injected at fixed positions
             const SECTION_LABELS = {
-              0:  { emoji: '🔥', text: 'Trending now in Five Towns' },
+              0:  { emoji: '🔥', text: `Trending in ${primaryNetwork.shortLabel}` },
               5:  { emoji: '💬', text: 'Active discussions' },
               12: { emoji: '👀', text: 'People are talking about this' },
             };
