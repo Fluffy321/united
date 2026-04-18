@@ -572,14 +572,15 @@ export default function MitzvahCircle({ isActive = true }) {
           {/* Tab: Map */}
           {activeTab === 'map' && (
             <div className="max-w-2xl mx-auto space-y-3">
-              {/* Map block */}
-              <div className="rounded-[16px] overflow-hidden border border-[#EAECF0]" style={{ height: '48vh', minHeight: 280 }}>
+              {/* Map block — reduced height */}
+              <div className="rounded-[16px] overflow-hidden border border-[#EAECF0]" style={{ height: '38vh', minHeight: 240 }}>
                 <MitzvahMapView
                   requests={requests}
                   userOrigin={userOrigin}
                   mapCenter={mapCenter}
                   mapZoom={mapZoom}
                   onSelectRequest={(r) => setSelectedRequest(r)}
+                  onHelpClick={(r) => claimMutation.mutate(r)}
                   onUseMyLocation={() => {
                     navigator.geolocation?.getCurrentPosition(
                       (pos) => setLiveLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -589,36 +590,40 @@ export default function MitzvahCircle({ isActive = true }) {
                 />
               </div>
 
-              {/* Nearby list preview */}
-              <div>
-                <p className="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-2">
-                  {requests.length} open request{requests.length !== 1 ? 's' : ''} near Five Towns
-                </p>
+              {/* 2 request cards below map */}
+              {requests.length === 0 ? (
+                <p className="text-[12px] text-slate-400 text-center py-3">No open requests right now — be the first!</p>
+              ) : (
                 <div className="space-y-2">
-                  {(requests.length > 0 ? requests : []).slice(0, 4).map(r => {
-                    const cfg = { 'Errand':'🛍️','Lost & Found':'🔍','Quick Favor':'🤝','Tutoring':'📚','Shabbat Help':'🕯️','Food':'🍽️','Ride':'🚗','Moving':'📦','Other':'💙' };
-                    const emoji = cfg[r.category] || '💙';
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
+                    {requests.length} open request{requests.length !== 1 ? 's' : ''} near Five Towns
+                  </p>
+                  {requests.slice(0, 2).map(r => {
+                    const catEmoji = { 'Errand':'🛍️','Lost & Found':'🔍','Quick Favor':'🤝','Tutoring':'📚','Shabbat Help':'🕯️','Food':'🍽️','Ride':'🚗','Moving':'📦','Other':'💙' };
+                    const emoji = catEmoji[r.category] || '💙';
                     return (
-                      <button
+                      <div
                         key={r.id}
-                        onClick={() => setSelectedRequest(r)}
-                        className="w-full flex items-center gap-3 bg-white rounded-[14px] border border-slate-100 px-3 py-2.5 text-left active:scale-[0.98] transition-all"
+                        className="w-full flex items-center gap-3 bg-white rounded-[14px] border border-slate-100 px-3 py-2.5"
                         style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}
                       >
                         <span className="text-lg flex-shrink-0">{emoji}</span>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedRequest(r)}>
                           <p className="text-[13px] font-semibold text-slate-900 truncate">{r.title}</p>
                           <p className="text-[11px] text-slate-400">{r.category}{r.locationLabel ? ` · ${r.locationLabel}` : ''}</p>
                         </div>
-                        <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full flex-shrink-0">Help</span>
-                      </button>
+                        <button
+                          onClick={() => claimMutation.mutate(r)}
+                          disabled={claimMutation.isPending}
+                          className="text-[11px] font-bold text-white bg-blue-600 px-2.5 py-1 rounded-full flex-shrink-0 active:scale-95 transition-all disabled:opacity-50"
+                        >
+                          ✋ Help
+                        </button>
+                      </div>
                     );
                   })}
-                  {requests.length === 0 && (
-                    <p className="text-[12px] text-slate-400 text-center py-3">No open requests right now — be the first!</p>
-                  )}
                 </div>
-              </div>
+              )}
             </div>
           )}
 
