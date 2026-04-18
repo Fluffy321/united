@@ -348,7 +348,7 @@ export default function Feed() {
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto px-4 pt-4 pb-32">
+      <div className="max-w-2xl mx-auto px-4 pt-2 pb-32">
         <PushNotificationPrompt />
 
         <PostBox

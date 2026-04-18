@@ -43,35 +43,31 @@ const dayOfWeek = new Date().getDay();
 const ALL_HOOKS = [
   {
     key: 'qotd',
-    emoji: '✨',
-    source: 'Question of the Day',
+    label: 'Question of the Day',
     question: DAILY_QUESTIONS[day % DAILY_QUESTIONS.length],
-    cta: 'Answer',
+    cta: 'Reply',
     postType: 'feed',
     subtype: 'question',
   },
   {
     key: 'tonight',
-    emoji: '🌙',
-    source: 'Tonight in Five Towns',
+    label: 'Tonight in Five Towns',
     question: TONIGHT_PROMPTS[(day + 1) % TONIGHT_PROMPTS.length],
-    cta: 'Share',
+    cta: 'Reply',
     postType: 'feed',
     subtype: 'discussion',
   },
   (dayOfWeek === 4 || dayOfWeek === 5) && {
     key: 'shabbos',
-    emoji: '🕍',
-    source: 'Shabbos Plans',
+    label: 'Shabbos Plans',
     question: SHABBOS_PROMPTS[day % SHABBOS_PROMPTS.length],
-    cta: 'Share',
+    cta: 'Reply',
     postType: 'feed',
     subtype: 'discussion',
   },
   {
     key: 'help',
-    emoji: '🤝',
-    source: 'Community Help',
+    label: 'Community Help',
     question: HELP_PROMPTS[(day + 2) % HELP_PROMPTS.length],
     cta: 'Post',
     postType: 'help',
@@ -89,48 +85,42 @@ export default function DailyHooks({ onPostClick }) {
   const hook = visible[index % visible.length];
 
   return (
-    <div className="mb-3 bg-white border border-slate-200 rounded-2xl overflow-hidden">
-      <div className="flex items-center justify-between px-3 pt-2.5 pb-0">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-[13px] flex-shrink-0">
-            {hook.emoji}
+    <div
+      className="bg-white border border-slate-100 rounded-xl px-3 py-2.5 mb-2 cursor-pointer active:bg-slate-50 transition-colors"
+      onClick={() => onPostClick(hook.postType, hook.subtype, hook.question)}
+    >
+      {/* Author-style row */}
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-1.5">
+          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">
+            ✨
           </div>
-          <div>
-            <p className="text-[13px] font-semibold text-slate-900">{hook.source}</p>
-            <p className="text-[10px] text-slate-400">Pinned · Five Towns</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
+          <span className="text-[11px] font-semibold text-slate-500">{hook.label}</span>
           {visible.length > 1 && (
             <button
-              onClick={() => setIndex(i => (i + 1) % visible.length)}
-              className="w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 text-[15px] transition-colors"
-              aria-label="Next"
+              onClick={e => { e.stopPropagation(); setIndex(i => (i + 1) % visible.length); }}
+              className="text-[11px] text-slate-300 hover:text-slate-500 ml-1"
             >
               ›
             </button>
           )}
-          <button
-            onClick={() => setDismissed(prev => ({ ...prev, [hook.key]: true }))}
-            className="w-6 h-6 flex items-center justify-center rounded-full text-slate-300 hover:text-slate-500 hover:bg-slate-100 text-[13px] font-bold transition-colors"
-            aria-label="Dismiss"
-          >
-            ×
-          </button>
         </div>
-      </div>
-
-      <div className="px-3 pt-2 pb-2.5">
-        <p className="text-[14px] font-semibold text-slate-800 leading-snug">{hook.question}</p>
-      </div>
-
-      <div className="px-3 pb-2.5 border-t border-slate-100 pt-2">
         <button
-          onClick={() => onPostClick(hook.postType, hook.subtype, hook.question)}
-          className="w-full h-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold transition-colors active:scale-95"
+          onClick={e => { e.stopPropagation(); setDismissed(prev => ({ ...prev, [hook.key]: true })); }}
+          className="text-slate-200 hover:text-slate-400 text-[13px] font-bold leading-none"
         >
-          {hook.cta}
+          ×
         </button>
+      </div>
+
+      {/* Question as post body */}
+      <p className="text-[14px] font-medium text-slate-800 leading-snug mb-2">{hook.question}</p>
+
+      {/* Tap-to-reply hint */}
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-7 rounded-full bg-slate-100 px-3 flex items-center">
+          <span className="text-[12px] text-slate-400">{hook.cta}…</span>
+        </div>
       </div>
     </div>
   );
