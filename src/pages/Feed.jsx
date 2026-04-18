@@ -20,7 +20,6 @@ import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
 import SearchModal from '@/components/feed/SearchModal';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
-import LocalContextStrip from '@/components/feed/LocalContextStrip';
 import { Search, Plus, X, Bell, HandHeart, Calendar, RefreshCw, Loader2 } from 'lucide-react';
 // Calendar kept for FAB event button
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -383,16 +382,8 @@ export default function Feed() {
           }}
         />
 
-        <LocalContextStrip
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          userCommunityCount={communityGroups.length}
-        />
-
-        <div className="rounded-2xl mb-3 bg-blue-50/60 border border-blue-100/60 p-2.5 space-y-2">
-          <div className="rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #4C1D95 100%)' }}>
-            <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
-          </div>
+        <div className="mb-3">
+          <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
           <CommunityActivityStrip groups={communityGroups} />
         </div>
 
