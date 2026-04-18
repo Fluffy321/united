@@ -374,9 +374,9 @@ export default function MitzvahCircle({ isActive = true }) {
       <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(180deg, #F0F6FF 0%, #FAF5FF 30%, #F8FAFC 100%)' }}>
         {/* Header */}
         <div className="sticky top-0 z-20 flex-shrink-0" style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}>
-          <div className="max-w-2xl mx-auto px-4 py-5">
-            <h1 className="text-[22px] font-bold text-white">Mitzvah Circle</h1>
-            <p className="text-[13px] text-white/70 mt-0.5">Helping the community together</p>
+          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+            <h1 className="text-[18px] font-bold text-white">Mitzvah Circle</h1>
+            <span className="text-[12px] text-white/60">Helping together</span>
           </div>
         </div>
 
@@ -384,10 +384,10 @@ export default function MitzvahCircle({ isActive = true }) {
         <MitzvahTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         {/* Main Content */}
-        <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 100px', WebkitOverflowScrolling: 'touch' }}>
+        <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 100px', WebkitOverflowScrolling: 'touch' }}>
           {/* Tab: Help Requests */}
           {activeTab === 'requests' && (
-            <div className="max-w-2xl mx-auto space-y-5">
+            <div className="max-w-2xl mx-auto space-y-3">
               {/* Quick Actions */}
               <div className="grid grid-cols-3 gap-2">
                 <button
@@ -416,78 +416,42 @@ export default function MitzvahCircle({ isActive = true }) {
                 </button>
               </div>
 
-              {/* Your Daily Mitzvah HERO */}
+              {/* Your Daily Mitzvah — compact inline bar */}
               <div
-                className="rounded-[20px] p-5 relative overflow-hidden"
-                style={{
-                  background: 'linear-gradient(135deg, #6D28D9 0%, #4F46E5 60%, #2563EB 100%)',
-                  boxShadow: '0 8px 32px rgba(109,40,217,0.45)',
-                }}
+                className="rounded-[14px] px-4 py-3 flex items-center gap-3"
+                style={{ background: 'linear-gradient(135deg, #6D28D9 0%, #4F46E5 100%)' }}
               >
-                {/* Glow orbs */}
-                <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #fff 0%, transparent 70%)' }} />
-                <div className="absolute -bottom-4 -left-4 w-24 h-24 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #fff 0%, transparent 70%)' }} />
-
-                <div className="relative">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-2xl">✡️</span>
-                    <h3 className="text-[18px] font-bold text-white">Your Daily Mitzvah</h3>
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <Flame className="w-4 h-4 text-orange-300 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <span className="text-white font-bold text-[14px]">{userStreak?.current_streak || 0} day streak</span>
+                    <span className="text-white/60 text-[11px] ml-2">Do good every day</span>
                   </div>
-                  <p className="text-white/70 text-[13px] mb-4">Do good, every single day</p>
-
-                  <div className="bg-white/15 backdrop-blur rounded-[14px] p-3.5 mb-4 flex items-center justify-between">
-                    <div>
-                      <span className="text-[12px] font-semibold text-white/80">Current Streak</span>
-                      <p className="text-[11px] text-white/60 mt-0.5">
-                        {Math.max(0, 2 - (todayMitzvahCount || 0))} more to keep it going
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Flame className="w-5 h-5 text-orange-300" />
-                      <span className="text-[28px] font-black text-white">{userStreak?.current_streak || 0}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setShowLogMitzvah(true)}
-                    className="w-full py-3 rounded-[12px] font-bold text-[14px] text-purple-700 transition-all active:scale-95 hover:shadow-lg"
-                    style={{ background: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
-                  >
-                    + Log a Mitzvah
-                  </button>
                 </div>
+                <button
+                  onClick={() => setShowLogMitzvah(true)}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full font-bold text-[12px] text-purple-700 bg-white active:scale-95 transition-all"
+                >
+                  + Log
+                </button>
               </div>
 
-              {/* Social Pulse Banner */}
+              {/* Social Pulse — slim */}
               {(todayHelpedCount > 0 || recentlyCompleted.length > 0) && (
-                <div className="rounded-2xl bg-white border border-emerald-100 shadow-sm overflow-hidden">
+                <div className="bg-white border border-slate-100 rounded-xl px-3 py-2 flex flex-col gap-1">
                   {todayHelpedCount > 0 && (
-                    <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
-                      <span className="text-xl">🙌</span>
-                      <div>
-                        <p className="text-[14px] font-bold text-emerald-800">{todayHelpedCount} {todayHelpedCount === 1 ? 'person' : 'people'} helped today</p>
-                        <p className="text-[11px] text-emerald-600">Keep the momentum going!</p>
-                      </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm">🙌</span>
+                      <p className="text-[12px] font-semibold text-emerald-700">{todayHelpedCount} {todayHelpedCount === 1 ? 'person' : 'people'} helped today</p>
                     </div>
                   )}
-                  {recentlyCompleted.length > 0 && (
-                    <div className="px-4 py-3">
-                      <p className="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-2">Recently Completed</p>
-                      <div className="space-y-2">
-                        {recentlyCompleted.slice(0, 3).map(r => (
-                          <div key={r.id} className="flex items-center gap-2">
-                            <span className="text-base">✅</span>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-[13px] font-semibold text-slate-800 truncate">{r.title}</p>
-                              {r.claimed_by_name && (
-                                <p className="text-[11px] text-emerald-600">Helped by {r.claimed_by_name}</p>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                  {recentlyCompleted.slice(0, 2).map(r => (
+                    <div key={r.id} className="flex items-center gap-1.5">
+                      <span className="text-sm">✅</span>
+                      <p className="text-[12px] text-slate-600 truncate flex-1">{r.title}</p>
+                      {r.claimed_by_name && <span className="text-[11px] text-emerald-600 flex-shrink-0">by {r.claimed_by_name}</span>}
                     </div>
-                  )}
+                  ))}
                 </div>
               )}
 
