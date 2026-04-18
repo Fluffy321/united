@@ -172,25 +172,28 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Bottom Navigation */}
       {!hideNav && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white z-50" style={{ boxShadow: '0 -1px 0 #E2E8F0, 0 -4px 20px rgba(15,23,42,0.06)' }}>
-          <div className="max-w-2xl mx-auto px-4" ref={navContainerRef}>
+        <nav
+          className="fixed bottom-0 left-0 right-0 bg-white z-50"
+          style={{ boxShadow: '0 -1px 0 #E2E8F0', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
+          <div className="max-w-2xl mx-auto" ref={navContainerRef} style={{ position: 'relative' }}>
             {/* Sliding pill highlight */}
             <div
               style={{
                 position: 'absolute',
-                top: '6px',
+                top: '5px',
                 left: pillStyle.left,
-                width: '40px',
-                height: '28px',
+                width: '36px',
+                height: '24px',
                 transform: 'translateX(-50%)',
-                background: 'rgba(37,99,235,0.12)',
-                borderRadius: '12px',
+                background: 'rgba(37,99,235,0.10)',
+                borderRadius: '10px',
                 opacity: pillStyle.opacity,
                 transition: 'left 180ms ease, opacity 120ms ease',
                 pointerEvents: 'none',
               }}
             />
-            <div className="flex items-center justify-center gap-2 px-2">
+            <div className="flex items-center justify-around px-1">
               {navItems.map((item) => {
                 const isActive = currentPageName === item.page;
                 const Icon = item.icon;
@@ -206,36 +209,40 @@ export default function Layout({ children, currentPageName }) {
                         navigate(createPageUrl(item.page));
                       }
                     }}
-
-                    className="flex flex-col items-center justify-center py-2.5 px-3 transition-all relative touch-manipulation"
-            style={{ WebkitTapHighlightColor: 'transparent', minHeight: '44px', minWidth: '44px' }}
+                    className="flex flex-col items-center justify-center transition-all relative touch-manipulation"
+                    style={{ WebkitTapHighlightColor: 'transparent', minHeight: '48px', minWidth: '52px', paddingTop: 8, paddingBottom: 6 }}
                   >
                     <div className="relative">
-                      <Icon className={`w-5 h-5 relative z-10 transition-all duration-150 ${
-                        isActive
-                          ? 'stroke-[2.5px] text-[#2563EB]'
-                          : 'stroke-[1.75px] text-[#6B7280]'
-                      }`} />
+                      <Icon
+                        style={{ width: 20, height: 20 }}
+                        className={`relative z-10 transition-all duration-150 ${
+                          isActive ? 'text-[#2563EB]' : 'text-[#94A3B8]'
+                        }`}
+                        strokeWidth={isActive ? 2.4 : 1.8}
+                      />
                       {item.page === 'Messages' && unreadMessages > 0 && (
                         <span className="absolute -top-1 -right-2 min-w-[14px] h-3.5 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
                           {unreadMessages > 9 ? '9+' : unreadMessages}
                         </span>
                       )}
                     </div>
-                    <span className={`text-[10px] mt-1 relative z-10 transition-all duration-150 ${
-                      isActive ? 'font-bold text-[#2563EB]' : 'font-medium text-[#6B7280]'
-                    }`}>
+                    <span
+                      className="relative z-10 transition-all duration-150"
+                      style={{
+                        fontSize: 10,
+                        marginTop: 3,
+                        fontWeight: isActive ? 600 : 400,
+                        color: isActive ? '#2563EB' : '#94A3B8',
+                        letterSpacing: '0.01em',
+                      }}
+                    >
                       {item.name}
                     </span>
                   </button>
                 );
               })}
-
-
             </div>
           </div>
-
-
         </nav>
       )}
     </div>
