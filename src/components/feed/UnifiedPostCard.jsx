@@ -723,26 +723,25 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       {/* Question highlight bar */}
       {isQuestion && <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-600" />}
       {/* Header */}
-      <div className="flex items-center justify-between px-3 pt-2.5 pb-0">
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+      <div className="flex items-center justify-between px-3 pt-2 pb-0">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           {isAnonymous ? (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-sm flex-shrink-0 font-semibold">?</div>
+              <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-sm flex-shrink-0 font-semibold">?</div>
               <div>
-                <span className="font-semibold text-[#0F1C2E] text-[14px]">Anonymous</span>
-                <p className="text-[11px] text-[#98A2B3] mt-0.5">{timeAgo}</p>
+                <span className="font-semibold text-[#0F1C2E] text-[13px]">Anonymous</span>
+                <p className="text-[10px] text-[#98A2B3]">{timeAgo}</p>
               </div>
             </div>
           ) : (
             <Link to={createPageUrl('Profile') + `?id=${post.user_id}`} className="flex items-center gap-2 min-w-0">
-              <UserAvatar user={post} name={post.user_name} size="xs" />
+              <UserAvatar user={post} name={post.user_name} size="xs" className="w-7 h-7" />
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
+                <div className="flex items-center gap-1 flex-wrap">
                   <span className="font-semibold text-[#0F1C2E] text-[13px] truncate">{post.user_name}</span>
                   {post.helper_badge && post.helper_badge !== 'none' && <HelperBadge badge={post.helper_badge} size="sm" />}
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                  <span className={`text-[10px] font-semibold ${isVeryRecent ? 'text-green-600' : 'text-[#98A2B3]'}`}>{timeAgo}</span>
+                  <span className="text-[#C8D0DC] text-[10px]">·</span>
+                  <span className={`text-[10px] font-medium ${isVeryRecent ? 'text-green-600' : 'text-[#98A2B3]'}`}>{timeAgo}</span>
                   {communityName ? (
                     <><span className="text-[#C8D0DC] text-[10px]">·</span><button onClick={() => onCommunityClick?.(post.community_id)} className="text-[10px] text-[#2563EB] font-semibold hover:underline">📌 {communityName}</button></>
                   ) : post.city ? (
@@ -808,13 +807,13 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       )}
 
       {/* Content */}
-      <div className="px-3 pt-1.5 pb-1">
+      <div className="px-3 pt-1 pb-0.5">
         {post.prompt_text && (
-          <div className="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl px-3 py-2 mb-2.5 border border-violet-100">
-            <p className="text-xs text-violet-700 font-semibold">💭 {post.prompt_text}</p>
+          <div className="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-lg px-2.5 py-1.5 mb-1.5 border border-violet-100">
+            <p className="text-[11px] text-violet-700 font-semibold">💭 {post.prompt_text}</p>
           </div>
         )}
-        {post.title && <h3 className="font-bold text-[14px] text-[#0F1C2E] mb-1 leading-snug">{post.title}</h3>}
+        {post.title && <h3 className="font-bold text-[14px] text-[#0F1C2E] mb-0.5 leading-snug">{post.title}</h3>}
         <p className={`text-[13px] text-[#344054] leading-snug ${!expanded ? 'line-clamp-3' : ''}`}>
           {post.body}
           {bodyLong && (
@@ -823,113 +822,69 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         </p>
         {/* Image */}
         {post.image_url && (
-          <div className="mt-2 -mx-3 cursor-pointer relative" onClick={() => setImgExpanded(e => !e)}>
-          <img src={post.image_url} alt="" className={`w-full object-cover rounded-xl transition-all ${imgExpanded ? 'max-h-[400px]' : 'max-h-48'}`} loading="lazy" />
+          <div className="mt-1.5 -mx-3 cursor-pointer relative" onClick={() => setImgExpanded(e => !e)}>
+            <img src={post.image_url} alt="" className={`w-full object-cover rounded-xl transition-all ${imgExpanded ? 'max-h-[400px]' : 'max-h-44'}`} loading="lazy" />
           </div>
         )}
-        {/* Context labels */}
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          {post.location_text && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 text-[11px] font-semibold">
-              <MapPin className="w-3 h-3" />{post.location_text}
-            </span>
-          )}
-          {communityName && (
-            <button
-              onClick={() => onCommunityClick?.(post.community_id)}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-[11px] font-semibold hover:bg-indigo-100 active:scale-95 transition-all"
-            >
-              👥 {communityName}
-            </button>
-          )}
-          {!communityName && post.city && post.city !== 'Five Towns' && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-semibold">
-              📍 From {post.city}
-            </span>
-          )}
-          {!communityName && (post.city === 'Five Towns' || !post.city) && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100 text-[11px] font-semibold">
-              📍 From Five Towns
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Inline recent comments — always show 1-2 if they exist, otherwise nudge */}
-      <div className="px-3 pb-2">
-        {recentComments.length > 0 ? (
-          <div className="space-y-1.5">
-            {recentComments.slice().reverse().map(comment => (
-              <div key={comment.id} className="flex items-start gap-1.5">
-                <UserAvatar name={comment.author_name} size="xs" className="mt-0.5 flex-shrink-0" />
-                <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 flex-1 min-w-0">
-                  <span className="font-semibold text-[11px] text-slate-700 mr-1.5">{comment.author_name?.split(' ')[0]}</span>
-                  <span className="text-[12px] text-slate-600 leading-snug line-clamp-1">{comment.body}</span>
-                </div>
-              </div>
-            ))}
-            {post.comments_count > 2 && (
+        {/* Context labels — only show location if not obvious */}
+        {(post.location_text || (communityName)) && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {post.location_text && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-medium">
+                <MapPin className="w-2.5 h-2.5" />{post.location_text}
+              </span>
+            )}
+            {communityName && (
               <button
-                onClick={() => setCommentsOpen(true)}
-                className="text-[12px] font-semibold text-blue-600 hover:text-blue-700 pl-8"
+                onClick={() => onCommunityClick?.(post.community_id)}
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-medium hover:bg-indigo-100 active:scale-95 transition-all"
               >
-                View all {post.comments_count} replies →
+                👥 {communityName}
               </button>
             )}
           </div>
-        ) : (
-          <button
-            onClick={() => setQuickReplyOpen(true)}
-            className="text-[12px] text-slate-400 hover:text-blue-500 transition-colors"
-          >
-            💬 Be the first to reply…
-          </button>
         )}
       </div>
 
-      {/* Footer: actions + engagement on one line */}
-      <div className="px-3 py-1.5 border-t border-[#F2F4F7] bg-white/70 flex items-center gap-3">
+      {/* Inline recent comment (just 1, compact) */}
+      {recentComments.length > 0 && (
+        <div className="px-3 pt-1">
+          <button onClick={() => setCommentsOpen(true)} className="w-full text-left">
+            <div className="flex items-center gap-1.5">
+              <UserAvatar name={recentComments[0].author_name} size="xs" className="flex-shrink-0" />
+              <span className="text-[11px] text-slate-500 line-clamp-1">
+                <span className="font-semibold text-slate-700">{recentComments[0].author_name?.split(' ')[0]}</span>
+                {' '}{recentComments[recentComments.length - 1].body}
+              </span>
+              {post.comments_count > 1 && (
+                <span className="flex-shrink-0 text-[10px] text-blue-500 font-medium ml-auto">+{post.comments_count - 1} more</span>
+              )}
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Footer: compact action row */}
+      <div className="px-3 py-1.5 mt-1 border-t border-[#F2F4F7] flex items-center gap-2">
         <button
           onClick={() => setQuickReplyOpen(!quickReplyOpen)}
-          className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+          className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-blue-600 transition-colors"
         >
-          <MessageCircle className="w-3 h-3" />
-          Reply
+          <MessageCircle className="w-3.5 h-3.5" />
+          {post.comments_count > 0 ? post.comments_count : 'Reply'}
         </button>
         <ReactionBar postId={post.id} currentUser={currentUser} />
         {post.user_id !== currentUser?.id && (
           <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
         )}
-        <BookmarkButton postId={post.id} currentUser={currentUser} />
-        <div className="ml-auto flex items-center gap-2 text-[11px] text-slate-400">
-          {recentComments.length > 0 && (
-            <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1 hover:opacity-80">
-              <div className="flex -space-x-1.5">
-                {recentComments.slice(0, 3).map((c, i) => (
-                  <UserAvatar key={i} name={c.author_name} size="xs"
-                    className="ring-1 ring-white w-4 h-4 text-[7px]"
-                  />
-                ))}
-              </div>
-              <span className="text-[11px] text-slate-400">{post.comments_count}</span>
-            </button>
-          )}
-          {recentComments.length === 0 && post.comments_count > 0 && (
-            <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-0.5 hover:text-slate-600">
-              <MessageCircle className="w-3 h-3" /> {post.comments_count}
-            </button>
-          )}
-          {post.likes_count > 0 && (
-            <span className="flex items-center gap-0.5">
-              <span className="text-[10px]">❤️</span> {post.likes_count}
-            </span>
-          )}
+        <div className="ml-auto">
+          <BookmarkButton postId={post.id} currentUser={currentUser} />
         </div>
       </div>
 
       {quickReplyOpen && (
-        <div className="mt-3 pt-3 border-t border-slate-100">
-          <div className="flex items-end gap-2">
+        <div className="px-3 pt-1.5 pb-2">
+          <div className="flex items-center gap-2">
             <input
               type="text"
               placeholder="Add a quick reply..."
