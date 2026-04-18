@@ -20,8 +20,7 @@ import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
 import SearchModal from '@/components/feed/SearchModal';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
-import { Search, Plus, X, Bell, HandHeart, Calendar, RefreshCw, Loader2 } from 'lucide-react';
-// Calendar kept for FAB event button
+import { Search, Plus, RefreshCw } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
@@ -49,7 +48,6 @@ export default function Feed() {
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showEventsSheet, setShowEventsSheet] = useState(false);
-  const [showFAB, setShowFAB] = useState(false);
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [interestSignals, setInterestSignals] = useState({ types: {}, subtypes: {}, keywords: [] }); // track user interactions
   const [pullDistance, setPullDistance] = useState(0);
@@ -548,38 +546,14 @@ export default function Feed() {
         currentUser={currentUser}
       />
 
-      <div className={`fixed bottom-24 right-6 z-40 flex flex-col items-end gap-3 transition-transform duration-300 ${isScrollingDown ? 'translate-x-32' : 'translate-x-0'}`}>
-        {showFAB && (
-          <>
-            {[
-              { label: 'Post Alert', icon: Bell, type: 'alert', color: 'bg-red-500' },
-              { label: 'Ask for Help', icon: HandHeart, type: 'help', color: 'bg-orange-500' },
-              { label: 'Create Event', icon: Calendar, type: 'event', color: 'bg-blue-500' },
-            ].map(({ label, icon: Icon, type, color }) => (
-              <button
-                key={type}
-                onClick={() => {
-                  setShowFAB(false);
-                  if (type === 'alert') { setShowAlertModal(true); return; }
-                  setPostModalType(type);
-                  setShowPostModal(true);
-                }}
-                className={`flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-full text-white text-[13px] font-semibold shadow-lg ${color}`}
-              >
-                <Icon className="w-4 h-4" />
-                {label}
-              </button>
-            ))}
-          </>
-        )}
-        <button
-          onClick={() => setShowFAB(v => !v)}
-          className="w-11 h-11 rounded-full text-white flex items-center justify-center shadow-md active:scale-95 transition-all"
-          style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)', boxShadow: '0 2px 8px rgba(37,99,235,0.3)' }}
-        >
-          {showFAB ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-        </button>
-      </div>
+      <button
+        onClick={() => { setPostModalType('feed'); setPostModalSubtype(null); setPostModalInitialBody(''); setShowPostModal(true); }}
+        className={`fixed bottom-[72px] right-5 z-40 w-12 h-12 rounded-full text-white flex items-center justify-center active:scale-95 transition-all duration-200 ${isScrollingDown ? 'opacity-0 pointer-events-none translate-y-2' : 'opacity-100 translate-y-0'}`}
+        style={{ background: '#1E40AF', boxShadow: '0 2px 10px rgba(30,64,175,0.35)' }}
+        aria-label="Create post"
+      >
+        <Plus className="w-5 h-5" />
+      </button>
 
       <UpcomingEventsSheet
         open={showEventsSheet}
