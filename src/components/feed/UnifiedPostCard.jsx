@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2, Users, Ban, Bookmark } from 'lucide-react';
+import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import PromptCard from './PromptCard';
 import PollCard from './PollCard';
 import { Button } from "@/components/ui/button";
@@ -745,7 +746,10 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
                   {communityName ? (
                     <><span className="text-[#C8D0DC] text-[10px]">·</span><button onClick={() => onCommunityClick?.(post.community_id)} className="text-[10px] text-[#2563EB] font-semibold hover:underline">📌 {communityName}</button></>
                   ) : post.city ? (
-                    <><span className="text-[#C8D0DC] text-[10px]">·</span><span className="text-[10px] text-[#2563EB] font-medium">{post.city}</span></>
+                    (() => {
+                      const net = LOCAL_NETWORKS.find(n => n.cityPreset === post.city);
+                      return <><span className="text-[#C8D0DC] text-[10px]">·</span><span className="text-[10px] text-slate-500 font-medium">{net ? `${net.emoji} ${net.shortLabel}` : post.city}</span></>;
+                    })()
                   ) : null}
                 </div>
               </div>
@@ -826,12 +830,12 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             <img src={post.image_url} alt="" className={`w-full object-cover rounded-xl transition-all ${imgExpanded ? 'max-h-[400px]' : 'max-h-44'}`} loading="lazy" />
           </div>
         )}
-        {/* Context labels — only show location if not obvious */}
-        {(post.location_text || (communityName)) && (
+        {/* Context labels — location tag always shown */}
+        {(post.location_text || post.city || communityName) && (
           <div className="flex flex-wrap gap-1 mt-1">
-            {post.location_text && (
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-medium">
-                <MapPin className="w-2.5 h-2.5" />{post.location_text}
+            {(post.location_text || post.city) && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-medium">
+                <MapPin className="w-2.5 h-2.5" />{post.location_text ? `${post.location_text}, ${post.city || ''}` : post.city}
               </span>
             )}
             {communityName && (

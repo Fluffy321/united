@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Loader2, MapPin, Check, Bold, Italic, List, ImagePlus, MessageCircle, HelpCircle, Calendar, Bell, BarChart2, Plus, Trash2 } from 'lucide-react';
+import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -55,6 +56,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [location, setLocation] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [category, setCategory] = useState('');
   const [postSubtype, setPostSubtype] = useState('discussion');
@@ -79,8 +81,10 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
       if (initialSubtype) setPostSubtype(initialSubtype);
       if (initialBody) setBody(initialBody);
       setSelectedCommunityId(initialCommunityId || '');
+      // Default city to user's primary network
+      setSelectedCity(currentUser?.cityPreset || 'Five Towns');
     }
-  }, [open, postType, initialSubtype, initialBody, initialCommunityId]);
+  }, [open, postType, initialSubtype, initialBody, initialCommunityId, currentUser]);
 
   const isPromptReply = !!promptId;
   const isHelp = postType === 'help';
@@ -162,7 +166,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
         location_text: location.trim() || undefined,
         is_anonymous: isAnonymous,
         category: category || undefined,
-        city: currentUser.city || 'Five Towns',
+        city: selectedCity || currentUser?.cityPreset || 'Five Towns',
         event_date: eventDate || undefined,
         event_time: eventTime || undefined,
         prompt_id: promptId || undefined,
@@ -192,6 +196,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
       setCategory(''); setPostSubtype('discussion'); setEventDate('');
       setEventTime(''); setAttachedFiles([]); setCaption(''); setImageUrls([]);
       setPollOptions(['', '']); setSelectedCommunityId('');
+      setSelectedCity(currentUser?.cityPreset || 'Five Towns');
     } catch (error) {
       toast.error('Failed to post');
     } finally {
@@ -400,22 +405,41 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
             </details>
           )}
 
-          {/* Location */}
-          <details className="group" data-neighborhood-toggle>
-            <summary className="cursor-pointer text-sm font-medium text-slate-600 hover:text-slate-900 py-2 flex items-center gap-2">
-              <MapPin className="w-4 h-4" /> Add location
-            </summary>
-            <div className="flex flex-wrap gap-2 pt-2">
-              {['Cedarhurst', 'Woodmere', 'Lawrence', 'Inwood', 'Hewlett'].map(n => (
-                <button key={n} type="button" onClick={() => setLocation(location === n ? '' : n)}
-                  className={`px-3 py-1 rounded-full text-[12px] font-semibold border transition-all ${
-                    location === n ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-400'
-                  }`}>
-                  {n}
+          {/* Location — City tag */}
+          <div>
+            <p className="text-[12px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Posting from</p>
+            <div className="flex flex-wrap gap-1.5">
+              {LOCAL_NETWORKS.map(n => (
+                <button
+                  key={n.id}
+                  type="button"
+                  onClick={() => setSelectedCity(n.cityPreset)}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all active:scale-95 ${
+                    selectedCity === n.cityPreset
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-blue-400'
+                  }`}
+                >
+                  <span>{n.emoji}</span>
+                  <span>{n.shortLabel}</span>
+                  {selectedCity === n.cityPreset && <Check className="w-3 h-3" />}
                 </button>
               ))}
             </div>
-          </details>
+            {/* Sub-neighborhood for Five Towns */}
+            {selectedCity === 'Five Towns' && (
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {['Cedarhurst', 'Woodmere', 'Lawrence', 'Inwood', 'Hewlett'].map(n => (
+                  <button key={n} type="button" onClick={() => setLocation(location === n ? '' : n)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                      location === n ? 'bg-slate-800 text-white border-slate-800' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-slate-400'
+                    }`}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Photo upload */}
           {(postType === 'feed' || postType === 'housing') && imageUrls.length > 0 && (

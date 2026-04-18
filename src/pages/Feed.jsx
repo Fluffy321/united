@@ -263,13 +263,18 @@ export default function Feed() {
     if (activeTab === 'for_you') {
       const userInterests = currentUser?.interests || [];
       const userCity = currentUser?.cityPreset || '';
-      filtered = sorted.filter(p => {
-        if (userInterests.length === 0 && !userCity) return true;
+      // Local posts first, then interest-matched, then rest — always mixed, never empty
+      const localPosts = sorted.filter(p => userCity && p.city === userCity);
+      const interestPosts = sorted.filter(p => {
         const bodyLower = (p.body || '').toLowerCase();
-        const interestMatch = userInterests.some(i => bodyLower.includes(i.toLowerCase()));
-        const cityMatch = userCity && (p.city || p.location_text || '').toLowerCase().includes(userCity.toLowerCase());
-        return interestMatch || cityMatch || (p.user_id === currentUser?.id);
-      }).slice(0, 40);
+        return userInterests.some(i => bodyLower.includes(i.toLowerCase())) && p.city !== userCity;
+      });
+      const seen = new Set();
+      const merged = [...localPosts, ...interestPosts, ...sorted].filter(p => {
+        if (seen.has(p.id)) return false;
+        seen.add(p.id); return true;
+      });
+      filtered = merged.slice(0, 40);
     } else if (activeTab === 'trending') {
       filtered = sorted.slice(0, 40);
     } else if (activeTab === 'chessed') {
@@ -279,19 +284,14 @@ export default function Feed() {
     } else if (activeTab === 'social') {
       filtered = sorted.filter(p => p.type === 'feed');
     } else if (activeTab === 'nearby') {
-      const NEIGHBORHOOD_COORDS = {
-        'cedarhurst':   { lat: 40.6237, lng: -73.7257 },
-        'woodmere':     { lat: 40.6354, lng: -73.7129 },
-        'lawrence':     { lat: 40.6165, lng: -73.7293 },
-        'inwood':       { lat: 40.6093, lng: -73.7490 },
-        'hewlett':      { lat: 40.6437, lng: -73.6960 },
-        'far rockaway': { lat: 40.6054, lng: -73.7548 },
-        'five towns':   { lat: 40.6237, lng: -73.7257 },
-      };
-      const getCoords = (p) => {
-        const loc = (p.location_text || p.city || '').toLowerCase();
-        for (const [key, coords] of Object.entries(NEIGHBORHOOD_COORDS)) {
-          if (loc.includes(key)) return coords;
+      // Build coord map from all LOCAL_NETWORKS centers + neighborhoods
+      const getPostCoords = (p) => {
+        const postCity = p.city || '';
+        const net = LOCAL_NETWORKS.find(n => n.cityPreset === postCity);
+        if (net) return net.center;
+        const locLower = (p.location_text || '').toLowerCase();
+        for (const n of LOCAL_NETWORKS) {
+          if (n.neighborhoods.some(nb => locLower.includes(nb.toLowerCase()))) return n.center;
         }
         return null;
       };
@@ -300,10 +300,14 @@ export default function Feed() {
         const dx = a.lat - b.lat, dy = a.lng - b.lng;
         return dx * dx + dy * dy;
       };
-      const withLocation = sorted.filter(p => p.location_text || p.city);
-      filtered = userGeo
-        ? [...withLocation].sort((a, b) => dist(getCoords(a), userGeo) - dist(getCoords(b), userGeo))
-        : withLocation;
+      // Fallback origin: user's primary network center
+      const origin = userGeo || primaryNetwork.center;
+      // Sort all posts by distance; local network posts get priority
+      filtered = [...sorted].sort((a, b) => {
+        const da = dist(getPostCoords(a), origin);
+        const db = dist(getPostCoords(b), origin);
+        return da - db;
+      });
     } else if (activeTab === 'communities') {
       const communityIds = communityGroups.map(c => c.id);
       filtered = sorted.filter(p => communityIds.includes(p.community_id));
@@ -462,7 +466,9 @@ export default function Feed() {
             {(() => {
             // Section labels injected at fixed positions
             const SECTION_LABELS = {
-              0:  { emoji: '🔥', text: `Trending in ${primaryNetwork.shortLabel}` },
+              0: activeTab === 'nearby'
+                ? { emoji: '📍', text: `Near You — ${primaryNetwork.shortLabel}` }
+                : { emoji: '🔥', text: `Trending in ${primaryNetwork.shortLabel}` },
               5:  { emoji: '💬', text: 'Active discussions' },
               12: { emoji: '👀', text: 'People are talking about this' },
             };
