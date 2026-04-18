@@ -22,6 +22,7 @@ import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
 import LocalContextStrip from '@/components/feed/LocalContextStrip';
 import { Search, Plus, X, Bell, HandHeart, Calendar, RefreshCw, Loader2 } from 'lucide-react';
+// Calendar kept for FAB event button
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
@@ -313,32 +314,19 @@ export default function Feed() {
         </div>
       )}
 
-      <div className="sticky top-0 z-[60] bg-white" style={{ borderBottom: '1px solid #E8ECF4', boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div className="sticky top-0 z-[60] bg-white/95 backdrop-blur-sm" style={{ borderBottom: '1px solid #F1F5F9' }}>
+        <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
           <button
             onClick={() => setShowLocationPicker(v => !v)}
-            className="flex items-center gap-1 font-bold text-[16px] tracking-[-0.01em] text-slate-900 hover:text-blue-600 transition-colors active:scale-95 touch-manipulation min-h-[44px] px-1"
+            className="flex items-center gap-1 font-semibold text-[15px] text-slate-900 active:scale-95 touch-manipulation"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <span>{selectedNeighborhood}</span>
-            <svg className="w-4 h-4 text-slate-400 mt-0.5 transition-transform" style={{ transform: showLocationPicker ? 'rotate(180deg)' : 'rotate(0deg)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+            <svg className="w-3.5 h-3.5 text-slate-400 transition-transform" style={{ transform: showLocationPicker ? 'rotate(180deg)' : 'rotate(0deg)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
           </button>
-          <div className="flex items-center gap-1.5">
-            <button 
-              onClick={() => setShowSearch(true)}
-              className="w-[44px] h-[44px] flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 rounded-full transition-colors touch-manipulation" 
-              title="Search posts"
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-            >
-              <Search className="w-5 h-5 text-slate-500" />
-            </button>
-            <button 
-              onClick={() => setShowEventsSheet(true)}
-              className="w-[44px] h-[44px] flex items-center justify-center hover:bg-slate-100 active:bg-slate-200 rounded-full transition-colors touch-manipulation" 
-              title="View events"
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-            >
-              <Calendar className="w-5 h-5 text-slate-500" />
+          <div className="flex items-center gap-0.5">
+            <button onClick={() => setShowSearch(true)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 active:bg-slate-200 transition-colors touch-manipulation" style={{ WebkitTapHighlightColor: 'transparent' }}>
+              <Search className="w-4.5 h-4.5 text-slate-500" style={{ width: 18, height: 18 }} />
             </button>
             <NotificationBell userId={currentUser?.id} />
           </div>
