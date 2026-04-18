@@ -607,8 +607,9 @@ export default function MitzvahCircle({ isActive = true }) {
 
           {/* Tab: Map */}
           {activeTab === 'map' && (
-            <div className="max-w-2xl mx-auto">
-              <div className="rounded-[16px] overflow-hidden border border-[#EAECF0]" style={{ height: '65vh', minHeight: 340 }}>
+            <div className="max-w-2xl mx-auto space-y-3">
+              {/* Map block */}
+              <div className="rounded-[16px] overflow-hidden border border-[#EAECF0]" style={{ height: '48vh', minHeight: 280 }}>
                 <MitzvahMapView
                   requests={requests}
                   userOrigin={userOrigin}
@@ -623,7 +624,37 @@ export default function MitzvahCircle({ isActive = true }) {
                   }}
                 />
               </div>
-              <p className="text-[12px] text-slate-400 mt-2 text-center">{requests.length} open request{requests.length !== 1 ? 's' : ''} near Five Towns</p>
+
+              {/* Nearby list preview */}
+              <div>
+                <p className="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-2">
+                  {requests.length} open request{requests.length !== 1 ? 's' : ''} near Five Towns
+                </p>
+                <div className="space-y-2">
+                  {(requests.length > 0 ? requests : []).slice(0, 4).map(r => {
+                    const cfg = { 'Errand':'🛍️','Lost & Found':'🔍','Quick Favor':'🤝','Tutoring':'📚','Shabbat Help':'🕯️','Food':'🍽️','Ride':'🚗','Moving':'📦','Other':'💙' };
+                    const emoji = cfg[r.category] || '💙';
+                    return (
+                      <button
+                        key={r.id}
+                        onClick={() => setSelectedRequest(r)}
+                        className="w-full flex items-center gap-3 bg-white rounded-[14px] border border-slate-100 px-3 py-2.5 text-left active:scale-[0.98] transition-all"
+                        style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}
+                      >
+                        <span className="text-lg flex-shrink-0">{emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold text-slate-900 truncate">{r.title}</p>
+                          <p className="text-[11px] text-slate-400">{r.category}{r.locationLabel ? ` · ${r.locationLabel}` : ''}</p>
+                        </div>
+                        <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full flex-shrink-0">Help</span>
+                      </button>
+                    );
+                  })}
+                  {requests.length === 0 && (
+                    <p className="text-[12px] text-slate-400 text-center py-3">No open requests right now — be the first!</p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

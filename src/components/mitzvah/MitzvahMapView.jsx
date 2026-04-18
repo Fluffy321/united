@@ -149,17 +149,25 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       {/* Filter bar */}
-      <div className="absolute top-3 left-0 right-0 z-[500] px-3">
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+      <div className="absolute top-2.5 left-0 right-0 z-[500]" style={{ paddingLeft: 12, paddingRight: 12 }}>
+        <div
+          className="scrollbar-hide"
+          style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, WebkitOverflowScrolling: 'touch' }}
+        >
           {ALL_FILTERS.map(f => (
             <button
               key={f}
               onClick={() => setActiveFilter(f)}
-              className="flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-bold transition-all"
-              style={activeFilter === f
-                ? { background: '#0F172A', color: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.25)' }
-                : { background: 'white', color: '#374151', border: '1px solid #E2E8F0', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }
-              }
+              className="flex-shrink-0 text-[11px] font-bold transition-all touch-manipulation"
+              style={{
+                padding: '5px 10px',
+                borderRadius: 999,
+                whiteSpace: 'nowrap',
+                ...(activeFilter === f
+                  ? { background: '#0F172A', color: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.25)' }
+                  : { background: 'white', color: '#374151', border: '1px solid #E2E8F0', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }
+                )
+              }}
             >
               {CATEGORY_CONFIG[f]?.emoji} {f}
             </button>
@@ -179,11 +187,11 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
       {/* Use My Location button */}
       <button
         onClick={onUseMyLocation}
-        className="absolute bottom-4 right-3 z-[500] flex items-center gap-1.5 px-3 py-2.5 rounded-full font-bold text-[13px] shadow-lg transition-all active:scale-95"
-        style={{ background: 'white', color: '#2563EB', border: '1.5px solid #BFDBFE', boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }}
+        title="Use my location"
+        className="absolute bottom-3 right-3 z-[500] flex items-center justify-center w-9 h-9 rounded-full transition-all active:scale-95"
+        style={{ background: 'white', color: '#2563EB', border: '1.5px solid #BFDBFE', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }}
       >
         <Navigation className="w-4 h-4" />
-        My Location
       </button>
 
       <MapContainer
