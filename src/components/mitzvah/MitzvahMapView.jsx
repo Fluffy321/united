@@ -1,4 +1,4 @@
-import React, { useEffect, useImperativeHandle, forwardRef, useState, useRef } from 'react';
+import React, { useEffect, forwardRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
@@ -6,13 +6,22 @@ import L from 'leaflet';
 import { X, MapPin, Navigation, Clock, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
-// Fix default marker icons
+// Fix default marker icons (required for Leaflet in bundled apps)
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
+
+// Fallback seed pins shown when no real requests have coordinates
+const SEED_PINS = [
+  { id: 'seed-1', title: 'Shabbat Meal Needed', description: 'Looking for Shabbat hospitality this week.', category: 'Shabbat Help', approxLat: 40.6223, approxLng: -73.7246, created_date: new Date().toISOString() },
+  { id: 'seed-2', title: 'Grocery Errand', description: 'Need help picking up groceries from Gourmet Glatt.', category: 'Errand', approxLat: 40.6323, approxLng: -73.7129, created_date: new Date().toISOString() },
+  { id: 'seed-3', title: 'Ride to Airport', description: 'Need a ride to JFK on Sunday morning.', category: 'Ride', approxLat: 40.6157, approxLng: -73.7296, created_date: new Date().toISOString() },
+  { id: 'seed-4', title: 'Math Tutoring', description: 'Looking for a math tutor for 8th grader.', category: 'Tutoring', approxLat: 40.6434, approxLng: -73.6946, created_date: new Date().toISOString() },
+  { id: 'seed-5', title: 'Moving Help', description: 'Need extra hands for a small move this Thursday.', category: 'Quick Favor', approxLat: 40.6229, approxLng: -73.7501, created_date: new Date().toISOString() },
+];
 
 const CATEGORY_CONFIG = {
   'Errand':       { color: '#2563eb', emoji: '🛍️' },
@@ -42,6 +51,18 @@ const createCustomIcon = (color, selected = false) => L.divIcon({
   iconAnchor: [selected ? 18 : 14, selected ? 36 : 28],
 });
 
+function BoundsFitter({ pins }) {
+  const map = useMap();
+  useEffect(() => {
+    if (pins.length === 0) return;
+    const bounds = L.latLngBounds(pins.map(p => [p.approxLat, p.approxLng]));
+    if (bounds.isValid()) {
+      map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14, animate: false });
+    }
+  }, []); // only on mount
+  return null;
+}
+
 function MapInner({ center, zoom, requests, userOrigin, onSelectRequest, mapRef, selectedRequestId, activeFilter }) {
   const map = useMap();
 
@@ -50,14 +71,20 @@ function MapInner({ center, zoom, requests, userOrigin, onSelectRequest, mapRef,
     return () => { if (mapRef) mapRef.current = null; };
   }, [map, mapRef]);
 
-  useEffect(() => {
-    if (center) map.setView(center, zoom, { animate: false });
-  }, [center, zoom]);
+  // Normalize: accept approxLat/approxLng or lat/lng or location_lat/location_lng
+  const withCoords = requests.map(r => ({
+    ...r,
+    approxLat: r.approxLat || r.lat || r.location_lat,
+    approxLng: r.approxLng || r.lng || r.location_lng,
+  }));
 
-  const filtered = requests.filter(r =>
+  const filtered = withCoords.filter(r =>
     r.approxLat && r.approxLng && !r.is_hidden &&
     (activeFilter === 'All' || r.category === activeFilter)
   );
+
+  // Use seed pins only when no real pins are visible
+  const displayPins = filtered.length > 0 ? filtered : SEED_PINS;
 
   return (
     <>
@@ -65,6 +92,8 @@ function MapInner({ center, zoom, requests, userOrigin, onSelectRequest, mapRef,
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+
+      <BoundsFitter pins={displayPins} />
 
       {userOrigin && (
         <Marker
@@ -79,7 +108,7 @@ function MapInner({ center, zoom, requests, userOrigin, onSelectRequest, mapRef,
       )}
 
       <MarkerClusterGroup chunkedLoading>
-        {filtered.map(req => {
+        {displayPins.map(req => {
           const cfg = CATEGORY_CONFIG[req.category] || CATEGORY_CONFIG['Other'];
           return (
             <Marker
@@ -103,6 +132,12 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
   const effectiveZoom = mapZoom ?? 12;
   const [activeFilter, setActiveFilter] = useState('All');
   const [selectedReq, setSelectedReq] = useState(null);
+
+  // Count real pins
+  const realPinCount = requests.filter(r =>
+    (r.approxLat || r.lat || r.location_lat) && (r.approxLng || r.lng || r.location_lng) && !r.is_hidden
+  ).length;
+  const usingSeeds = realPinCount === 0;
 
   const handlePinClick = (req) => {
     setSelectedReq(req);
@@ -131,6 +166,15 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
           ))}
         </div>
       </div>
+
+      {/* Seed notice */}
+      {usingSeeds && (
+        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[500] px-3 py-1.5 rounded-full text-[11px] font-semibold text-slate-600 pointer-events-none"
+          style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid #E2E8F0', boxShadow: '0 1px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' }}
+        >
+          📍 Showing sample requests — be the first to post!
+        </div>
+      )}
 
       {/* Use My Location button */}
       <button
