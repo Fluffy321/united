@@ -10,11 +10,8 @@ const DAILY_QUESTIONS = [
   "Who in the community deserves a shoutout?",
   "What are you looking forward to this week?",
   "Favorite local restaurant — go!",
-  "What's one thing you wish more people knew about you?",
   "Best advice you ever received?",
   "What made you smile today?",
-  "How do you unwind after a long week?",
-  "What's your favorite thing to do on Sunday mornings?",
 ];
 
 const SHABBOS_PROMPTS = [
@@ -42,9 +39,8 @@ function getDayOfYear() {
 
 const day = getDayOfYear();
 const dayOfWeek = new Date().getDay();
-const isThursdayOrFriday = dayOfWeek === 4 || dayOfWeek === 5;
 
-const HOOKS = [
+const ALL_HOOKS = [
   {
     key: 'qotd',
     emoji: '✨',
@@ -57,13 +53,13 @@ const HOOKS = [
   {
     key: 'tonight',
     emoji: '🌙',
-    source: "Tonight in Five Towns",
+    source: 'Tonight in Five Towns',
     question: TONIGHT_PROMPTS[(day + 1) % TONIGHT_PROMPTS.length],
     cta: 'Share',
     postType: 'feed',
     subtype: 'discussion',
   },
-  isThursdayOrFriday && {
+  (dayOfWeek === 4 || dayOfWeek === 5) && {
     key: 'shabbos',
     emoji: '🕍',
     source: 'Shabbos Plans',
@@ -87,17 +83,16 @@ export default function DailyHooks({ onPostClick }) {
   const [dismissed, setDismissed] = useState({});
   const [index, setIndex] = useState(0);
 
-  const visible = HOOKS.filter(h => !dismissed[h.key]);
+  const visible = ALL_HOOKS.filter(h => !dismissed[h.key]);
   if (visible.length === 0) return null;
 
   const hook = visible[index % visible.length];
 
   return (
     <div className="mb-3 bg-white border border-slate-200 rounded-2xl overflow-hidden">
-      {/* Pseudo author row */}
       <div className="flex items-center justify-between px-3 pt-2.5 pb-0">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-[13px] flex-shrink-0">
             {hook.emoji}
           </div>
           <div>
@@ -110,6 +105,7 @@ export default function DailyHooks({ onPostClick }) {
             <button
               onClick={() => setIndex(i => (i + 1) % visible.length)}
               className="w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 text-[15px] transition-colors"
+              aria-label="Next"
             >
               ›
             </button>
@@ -117,35 +113,24 @@ export default function DailyHooks({ onPostClick }) {
           <button
             onClick={() => setDismissed(prev => ({ ...prev, [hook.key]: true }))}
             className="w-6 h-6 flex items-center justify-center rounded-full text-slate-300 hover:text-slate-500 hover:bg-slate-100 text-[13px] font-bold transition-colors"
+            aria-label="Dismiss"
           >
             ×
           </button>
         </div>
       </div>
 
-      {/* Question body */}
       <div className="px-3 pt-2 pb-2.5">
         <p className="text-[14px] font-semibold text-slate-800 leading-snug">{hook.question}</p>
       </div>
 
-      {/* Action row — mirrors post card footer */}
-      <div className="px-3 pb-2.5 border-t border-slate-100 pt-2 flex items-center gap-2">
+      <div className="px-3 pb-2.5 border-t border-slate-100 pt-2">
         <button
           onClick={() => onPostClick(hook.postType, hook.subtype, hook.question)}
-          className="flex-1 h-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold transition-colors active:scale-95"
+          className="w-full h-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold transition-colors active:scale-95"
         >
           {hook.cta}
         </button>
-        {visible.length > 1 && (
-          <div className="flex gap-1 ml-1">
-            {visible.map((h, i) => (
-              <span
-                key={h.key}
-                className={`w-1.5 h-1.5 rounded-full transition-colors ${i === index % visible.length ? 'bg-blue-500' : 'bg-slate-200'}`}
-              />
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

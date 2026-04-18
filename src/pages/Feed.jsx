@@ -4,10 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import PostBox from '@/components/feed/PostBox';
-import QuickPromptChips from '@/components/feed/QuickPromptChips';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 import HomeFeedTabs from '@/components/feed/HomeFeedTabs';
-import CommunityActivityStrip from '@/components/feed/CommunityActivityStrip';
 import ReactionBar from '@/components/feed/ReactionBar';
 import EventsForYou from '@/components/feed/EventsForYou';
 import EventsFeedSection from '@/components/feed/EventsFeedSection';
@@ -362,14 +360,8 @@ export default function Feed() {
             setShowPostModal(true);
           }}
         />
-        <QuickPromptChips
-          onPostClick={(type, subtype, prefill) => {
-            setPostModalType(type);
-            setPostModalSubtype(subtype || null);
-            setPostModalInitialBody(prefill || '');
-            setShowPostModal(true);
-          }}
-        />
+
+        <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
 
         <DailyHooks
           onPostClick={(type, subtype, prefill) => {
@@ -379,11 +371,6 @@ export default function Feed() {
             setShowPostModal(true);
           }}
         />
-
-        <div className="mb-3">
-          <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
-          <CommunityActivityStrip groups={communityGroups} />
-        </div>
 
         {activeTab === 'events' && !isLoading && (
           <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #F0F9FF 0%, #FAF5FF 100%)', border: '1px solid #C7D7FD', boxShadow: '0 2px 12px rgba(37,99,235,0.06)', marginBottom: 12, padding: 0 }}>
