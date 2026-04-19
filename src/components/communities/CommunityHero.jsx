@@ -275,7 +275,13 @@ export default function CommunityHero({
               </button>
             </>
           )}
-          <InviteLinkButton type="community" id={community.id} name={community.name} />
+          {isFollowing && (
+            <InviteLinkButton
+              communityId={community.id}
+              communityName={community.name}
+              currentUser={currentUser}
+            />
+          )}
         </div>
       </div>
     </>

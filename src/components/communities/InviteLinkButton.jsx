@@ -1,112 +1,114 @@
 import React, { useState } from 'react';
-import { Link2, Share2, MessageCircle, Check } from 'lucide-react';
-import { createPageUrl } from '@/utils';
+import { Link2, Check, Copy, Loader2, X, RefreshCw } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
-/**
- * InviteLinkButton
- * type: 'community' | 'group'
- * id: the community or group id
- * name: for the share text
- */
-export default function InviteLinkButton({ type, id, name, className = '' }) {
-  const [copied, setCopied] = useState(false);
+function generateCode() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+export default function InviteLinkButton({ communityId, communityName, currentUser }) {
   const [open, setOpen] = useState(false);
+  const [link, setLink] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const inviteUrl = `${window.location.origin}${createPageUrl('InviteJoin')}?type=${type}&id=${id}`;
-  const shareText = `Join me in "${name}" on Kehilla! 🌟`;
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(inviteUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const shareWhatsApp = () => {
-    window.open(`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + inviteUrl)}`, '_blank');
-  };
-
-  const shareSMS = () => {
-    window.open(`sms:?body=${encodeURIComponent(shareText + '\n' + inviteUrl)}`, '_blank');
-  };
-
-  const shareNative = () => {
-    if (navigator.share) {
-      navigator.share({ title: `Join ${name}`, text: shareText, url: inviteUrl });
-    } else {
-      setOpen(true);
+  const generateLink = async () => {
+    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    setLoading(true);
+    try {
+      const code = generateCode();
+      await base44.entities.InviteLink.create({
+        code,
+        community_id: communityId,
+        community_name: communityName,
+        inviter_id: currentUser.id,
+        inviter_name: currentUser.display_name || currentUser.full_name || 'A member',
+        uses_count: 0,
+        is_active: true,
+      });
+      const url = `${window.location.origin}/join?code=${code}`;
+      setLink(url);
+    } catch {
+      toast.error('Could not generate invite link');
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="relative">
+  const copyLink = () => {
+    navigator.clipboard.writeText(link);
+    setCopied(true);
+    toast.success('Invite link copied!');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleOpen = () => {
+    setOpen(true);
+    if (!link) generateLink();
+  };
+
+  if (!open) {
+    return (
       <button
-        onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors active:scale-95 ${className}`}
+        onClick={handleOpen}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-[13px] font-semibold hover:bg-slate-200 transition-colors"
       >
-        <Share2 className="w-3.5 h-3.5" />
+        <Link2 className="w-3.5 h-3.5" />
         Invite
       </button>
+    );
+  }
 
-      {open && (
-        <>
-          {/* Backdrop */}
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center" onClick={() => setOpen(false)}>
+      <div
+        className="w-full max-w-md bg-white rounded-t-3xl p-6 pb-10"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[18px] font-bold text-slate-900">Invite to {communityName}</h3>
+          <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+            <X className="w-4 h-4 text-slate-500" />
+          </button>
+        </div>
 
-          {/* Sheet */}
-          <div
-            className="absolute right-0 mt-2 w-72 bg-white rounded-2xl border border-slate-100 p-4 z-50"
-            style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.12)' }}
-          >
-            <p className="text-[13px] font-bold text-slate-800 mb-1">Invite people to join</p>
-            <p className="text-[11px] text-slate-400 mb-3 truncate">{inviteUrl}</p>
+        <p className="text-[13px] text-slate-500 mb-5">
+          Share this link with friends. When they sign in, they'll automatically join.
+        </p>
 
-            <div className="space-y-2">
-              {/* Copy Link */}
-              <button
-                onClick={handleCopy}
-                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors text-left"
-              >
-                {copied
-                  ? <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  : <Link2 className="w-4 h-4 text-slate-500 flex-shrink-0" />}
-                <span className="text-[13px] font-semibold text-slate-700">
-                  {copied ? 'Copied!' : 'Copy Link'}
-                </span>
-              </button>
-
-              {/* WhatsApp */}
-              <button
-                onClick={shareWhatsApp}
-                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-green-50 transition-colors text-left"
-                style={{ background: '#F0FDF4' }}
-              >
-                <span className="text-lg leading-none">💬</span>
-                <span className="text-[13px] font-semibold text-green-700">Share on WhatsApp</span>
-              </button>
-
-              {/* SMS / Text */}
-              <button
-                onClick={shareSMS}
-                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 transition-colors text-left"
-              >
-                <MessageCircle className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                <span className="text-[13px] font-semibold text-blue-700">Send as Text</span>
-              </button>
-
-              {/* Native Share (Instagram, etc.) */}
-              {typeof navigator !== 'undefined' && navigator.share && (
-                <button
-                  onClick={shareNative}
-                  className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors text-left"
-                >
-                  <span className="text-lg leading-none">📤</span>
-                  <span className="text-[13px] font-semibold text-slate-700">More options…</span>
-                </button>
-              )}
-            </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
           </div>
-        </>
-      )}
+        ) : (
+          <>
+            <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-2xl mb-4">
+              <p className="flex-1 text-[13px] text-slate-600 font-mono truncate">{link}</p>
+              <button
+                onClick={copyLink}
+                className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-xl bg-blue-600 text-white"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+
+            <button
+              onClick={copyLink}
+              className="w-full py-3.5 rounded-2xl bg-blue-600 text-white font-bold text-[15px] flex items-center justify-center gap-2"
+            >
+              {copied ? <><Check className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy Invite Link</>}
+            </button>
+
+            <button
+              onClick={() => { setLink(''); generateLink(); }}
+              className="w-full mt-2 py-2.5 text-[13px] font-medium text-slate-500 flex items-center justify-center gap-1"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Generate new link
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

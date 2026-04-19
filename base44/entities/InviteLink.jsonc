@@ -1,0 +1,44 @@
+{
+  "name": "InviteLink",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "Unique invite code (e.g. ABC123)"
+    },
+    "community_id": {
+      "type": "string"
+    },
+    "community_name": {
+      "type": "string"
+    },
+    "inviter_id": {
+      "type": "string"
+    },
+    "inviter_name": {
+      "type": "string"
+    },
+    "uses_count": {
+      "type": "number",
+      "default": 0
+    },
+    "max_uses": {
+      "type": "number",
+      "description": "null = unlimited"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "null = never expires"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "code",
+    "community_id",
+    "inviter_id"
+  ]
+}

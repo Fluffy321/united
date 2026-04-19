@@ -43,13 +43,14 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
     setSubmitting(true);
     await base44.entities.ClaimRequest.create({
       community_id: community.id,
+      community_name: community.name,
+      requester_id: currentUser?.id,
       requester_name: name.trim(),
       requester_email: email.trim(),
-      requester_user_id: currentUser?.id,
-      requester_phone: phone.trim() || undefined,
-      requester_role: role.trim(),
-      proof_text_or_link: proof.trim() || undefined,
-      status: 'PENDING'
+      org_email: email.trim(),
+      role_at_org: role.trim(),
+      notes: proof.trim() || undefined,
+      status: 'pending',
     });
     // If they uploaded a logo, save it immediately
     if (logoUrl && logoUrl !== community?.logo_url) {

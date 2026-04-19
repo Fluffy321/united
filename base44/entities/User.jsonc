@@ -1,0 +1,92 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user"
+      ],
+      "default": "user"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "cityPreset": {
+      "type": "string"
+    },
+    "neighborhood": {
+      "type": "string"
+    },
+    "primary_shul": {
+      "type": "string"
+    },
+    "schools": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "help_intent": {
+      "type": "string",
+      "enum": [
+        "help_others",
+        "get_help",
+        "both"
+      ],
+      "description": "User's primary intent on the platform"
+    },
+    "age_range": {
+      "type": "string",
+      "enum": [
+        "13-17",
+        "18+"
+      ]
+    },
+    "onboarding_complete": {
+      "type": "boolean",
+      "default": false
+    },
+    "notifications_enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "message_settings": {
+      "type": "object",
+      "description": "Messaging privacy settings",
+      "properties": {
+        "allowMessagesFrom": {
+          "type": "string",
+          "enum": [
+            "everyone",
+            "communities",
+            "connections",
+            "nobody"
+          ],
+          "default": "communities"
+        },
+        "searchable": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    }
+  },
+  "required": []
+}

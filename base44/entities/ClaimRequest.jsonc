@@ -1,0 +1,53 @@
+{
+  "name": "ClaimRequest",
+  "type": "object",
+  "properties": {
+    "community_id": {
+      "type": "string"
+    },
+    "community_name": {
+      "type": "string"
+    },
+    "requester_id": {
+      "type": "string"
+    },
+    "requester_name": {
+      "type": "string"
+    },
+    "requester_email": {
+      "type": "string"
+    },
+    "org_email": {
+      "type": "string",
+      "description": "Email at the organization domain, e.g. rabbi@shulname.org"
+    },
+    "role_at_org": {
+      "type": "string",
+      "description": "e.g. Rabbi, Principal, Administrator"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "reviewed_by": {
+      "type": "string"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "community_id",
+    "requester_id",
+    "requester_email"
+  ]
+}
