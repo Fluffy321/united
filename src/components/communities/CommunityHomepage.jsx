@@ -97,8 +97,8 @@ function ActivityTicker({ posts, events, members }) {
 // ─── Pinned admin announcements carousel ────────────────────────────────────
 function PinnedCarousel({ announcements }) {
   const pinned = announcements.slice(0, 3);
-  if (pinned.length === 0) return null;
   const [idx, setIdx] = useState(0);
+  if (pinned.length === 0) return null;
 
   return (
     <div>
