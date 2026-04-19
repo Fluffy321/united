@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2, Megaphone, Calendar, Loader2 } from 'lucide-react';
+import { ArrowLeft, Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2, Megaphone, Calendar, Loader2, AtSign } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow, parseISO, isToday, isYesterday, format } from 'date-fns';
@@ -14,15 +14,18 @@ const TYPE_CONFIG = {
   request_fulfilled: { icon: CheckCircle2, color: '#16a34a', bg: '#f0fdf4', label: 'Request fulfilled' },
   announcement: { icon: Megaphone, color: '#d97706', bg: '#fffbeb', label: 'Announcement' },
   event: { icon: Calendar, color: '#0891b2', bg: '#ecfeff', label: 'Event reminder' },
+  new_message: { icon: MessageCircle, color: '#2563eb', bg: '#eff6ff', label: 'New message' },
+  mention: { icon: AtSign, color: '#7c3aed', bg: '#f5f3ff', label: 'Mentioned you' },
   default: { icon: Bell, color: '#64748b', bg: '#f8fafc', label: 'Notification' },
 };
 
 const FILTER_TABS = [
   { id: 'all', label: 'All' },
-  { id: 'like', label: 'Likes' },
-  { id: 'comment', label: 'Comments' },
-  { id: 'help_offer', label: 'Help' },
-  { id: 'announcement', label: 'Community' },
+  { id: 'new_message', label: '💬 Messages' },
+  { id: 'like', label: '❤️ Likes' },
+  { id: 'comment', label: '💭 Comments' },
+  { id: 'mention', label: '@ Mentions' },
+  { id: 'announcement', label: '📣 Community' },
 ];
 
 function groupByDate(notifications) {
@@ -71,8 +74,10 @@ export default function Notifications() {
       queryClient.invalidateQueries({ queryKey: ['notifications-page', currentUser?.id] });
       queryClient.invalidateQueries({ queryKey: ['notification-count', currentUser?.id] });
     }
-    if (notif.post_id) {
-      window.location.href = `/PostDetail?id=${notif.post_id}`;
+    if (notif.type === 'new_message' && notif.conversation_id) {
+      navigate(`/Messages?conversation=${notif.conversation_id}`);
+    } else if (notif.post_id) {
+      navigate(`/PostDetail?id=${notif.post_id}`);
     }
   };
 

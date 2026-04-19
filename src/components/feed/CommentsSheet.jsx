@@ -91,6 +91,28 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
         });
       }
 
+      // Detect @mentions in comment body and notify each mentioned user
+      const mentionMatches = newComment.trim().match(/@(\w+)/g);
+      if (mentionMatches) {
+        // Look up participants in this thread to resolve @name -> user_id
+        const threadAuthors = comments.filter(c => c.author_id && c.author_id !== currentUser.id);
+        for (const match of mentionMatches) {
+          const mentionName = match.slice(1).toLowerCase();
+          const mentioned = threadAuthors.find(c =>
+            (c.author_name || '').toLowerCase().replace(/\s+/g, '').startsWith(mentionName)
+          );
+          if (mentioned?.author_id) {
+            base44.functions.invoke('notifyOnMention', {
+              mentioned_user_id: mentioned.author_id,
+              actor_id: currentUser.id,
+              actor_name: currentUser.full_name || currentUser.display_name,
+              post_id: postId,
+              context_text: newComment.trim(),
+            }).catch(() => {});
+          }
+        }
+      }
+
       toast.success('Comment posted!');
     } catch (error) {
       toast.error('Failed to post comment');

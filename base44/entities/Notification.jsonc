@@ -10,7 +10,12 @@
       "type": "string",
       "enum": [
         "post_reply",
-        "comment_reply"
+        "comment_reply",
+        "like",
+        "new_message",
+        "mention",
+        "announcement",
+        "event"
       ],
       "description": "Type of notification"
     },
@@ -28,11 +33,15 @@
     },
     "comment_id": {
       "type": "string",
-      "description": "Associated comment ID (for reply notifications)"
+      "description": "Associated comment ID"
+    },
+    "conversation_id": {
+      "type": "string",
+      "description": "Associated conversation ID (for message notifications)"
     },
     "message": {
       "type": "string",
-      "description": "Notification message"
+      "description": "Notification message text"
     },
     "is_read": {
       "type": "boolean",
@@ -43,6 +52,6 @@
     "user_id",
     "type",
     "actor_id",
-    "post_id"
+    "message"
   ]
 }
