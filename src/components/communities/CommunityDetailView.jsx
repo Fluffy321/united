@@ -314,6 +314,9 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
           const d = new Date(p.created_date);
           return (Date.now() - d.getTime()) < 7 * 24 * 60 * 60 * 1000;
         }).length}
+        members={members}
+        currentUser={currentUser}
+        onTabChange={setActiveTab}
       />
 
       {/* Scrollable tabs */}
@@ -353,6 +356,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             onTabChange={setActiveTab}
             stats={communityStats}
             members={members}
+            currentUser={currentUser}
           />
         )}
 
