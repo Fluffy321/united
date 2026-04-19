@@ -1,11 +1,148 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MapPin, Phone, Globe, Clock, BookOpen, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import CommunityHero from './CommunityHero';
 import ClaimModal from './ClaimModal';
 import BasicInfoSection from './BasicInfoSection';
+
+// Type-aware claim copy
+const CLAIM_COPY = {
+  School: { question: 'Is this your school?', cta: 'Claim this school' },
+  Shul: { question: 'Is this your shul?', cta: 'Claim this shul' },
+  Yeshiva: { question: 'Is this your yeshiva?', cta: 'Claim this yeshiva' },
+  Seminary: { question: 'Is this your seminary?', cta: 'Claim this seminary' },
+  Organization: { question: 'Is this your organization?', cta: 'Claim this organization' },
+  Camp: { question: 'Is this your camp?', cta: 'Claim this camp' },
+};
+
+function AboutTab({ community, onClaim }) {
+  const type = community.type || community.verified_type || 'Other';
+  const claim = CLAIM_COPY[type] || { question: 'Is this your community?', cta: 'Claim this page' };
+  const isSchoolType = ['School', 'Yeshiva', 'Seminary'].includes(type);
+  const isShul = type === 'Shul';
+
+  return (
+    <div className="space-y-3 pt-4">
+      {/* Description */}
+      {(community.description_long || community.description_short) && (
+        <div className="bg-white rounded-2xl border border-slate-100 p-4">
+          <p className="text-sm text-slate-700 leading-relaxed">{community.description_long || community.description_short}</p>
+        </div>
+      )}
+
+      {/* Type-specific info */}
+      {isShul && (
+        <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
+          {community.rabbi_or_principal && (
+            <div className="flex items-center gap-2 text-sm text-slate-700">
+              <span className="text-slate-400">👤</span>
+              <span><strong>Rabbi:</strong> {community.rabbi_or_principal}</span>
+            </div>
+          )}
+          {community.hours && (
+            <div className="space-y-1">
+              <p className="text-[12px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" /> Services Schedule
+              </p>
+              <p className="text-sm text-slate-600 whitespace-pre-line">{community.hours}</p>
+            </div>
+          )}
+          {!community.hours && (
+            <div className="space-y-1">
+              <p className="text-[12px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" /> Services
+              </p>
+              <div className="space-y-1.5">
+                {['Shacharis', 'Mincha/Maariv', 'Shabbos'].map(s => (
+                  <div key={s} className="bg-slate-50 rounded-lg px-3 py-2 text-[12px] text-slate-500">{s} — see website for times</div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {isSchoolType && (
+        <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-2.5">
+          {community.rabbi_or_principal && (
+            <div className="flex items-center gap-2 text-sm text-slate-700">
+              <span className="text-slate-400">👤</span>
+              <span><strong>Head of School:</strong> {community.rabbi_or_principal}</span>
+            </div>
+          )}
+          {community.hours && (
+            <div className="flex items-start gap-2 text-sm text-slate-700">
+              <Clock className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+              <span><strong>Office Hours:</strong> {community.hours}</span>
+            </div>
+          )}
+          {community.website && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {['Parent Portal', 'Apply Now', 'Tuition Info'].map(link => (
+                <a key={link} href={community.website?.startsWith('http') ? community.website : `https://${community.website}`}
+                  target="_blank" rel="noreferrer"
+                  className="text-[12px] font-semibold text-blue-600 bg-blue-50 border border-blue-100 rounded-full px-3 py-1 hover:bg-blue-100 transition-colors"
+                >
+                  {link} →
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Contact info */}
+      {(community.address || community.phone || community.website) && (
+        <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-2">
+          {community.address && (
+            <a href={`https://maps.google.com/?q=${encodeURIComponent(community.address)}`} target="_blank" rel="noreferrer"
+              className="flex items-start gap-2.5 text-sm text-slate-600 hover:text-blue-600 transition-colors">
+              <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+              <span>{community.address}</span>
+            </a>
+          )}
+          {community.phone && (
+            <a href={`tel:${community.phone}`} className="flex items-center gap-2.5 text-sm text-slate-600 hover:text-blue-600 transition-colors">
+              <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span>{community.phone}</span>
+            </a>
+          )}
+          {community.website && (
+            <a href={community.website?.startsWith('http') ? community.website : `https://${community.website}`}
+              target="_blank" rel="noreferrer"
+              className="flex items-center gap-2.5 text-sm text-slate-600 hover:text-blue-600 transition-colors">
+              <Globe className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span className="break-all">{community.website.replace(/^https?:\/\/(www\.)?/, '')}</span>
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Rules */}
+      {community.rules && (
+        <div className="bg-white rounded-2xl border border-slate-100 p-4">
+          <p className="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+            <BookOpen className="w-3.5 h-3.5" /> Community Guidelines
+          </p>
+          <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{community.rules}</p>
+        </div>
+      )}
+
+      {/* Claim CTA */}
+      {!community.is_claimed && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+          <p className="text-sm font-semibold text-amber-800 mb-1">{claim.question}</p>
+          <p className="text-xs text-amber-700 mb-2">Manage announcements, events, and your community hub — free.</p>
+          <button onClick={onClaim} className="text-xs font-bold text-[#0F5ED7] underline">
+            {claim.cta} →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 import CommunityHomepage from './CommunityHomepage';
 import CommunityFeedTab from './CommunityFeedTab';
 import CommunityAnnouncementsTab from './CommunityAnnouncementsTab';
@@ -144,7 +281,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     );
   }
 
-  const announcementCount = posts.filter(p => p.type === 'announcement').length;
+  const announcementCount = posts.filter(p => p.type === 'announcement' || p.post_type === 'announcement').length;
   const eventCount = events.length;
   const mitzvahCount = opportunities.filter(o => o.is_active !== false).length;
 
@@ -220,18 +357,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         )}
 
         {activeTab === 'about' && (
-          <div className="space-y-3 pt-4">
-            <BasicInfoSection community={community} />
-            {!community.is_claimed && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <p className="text-sm font-semibold text-amber-800 mb-1">Is this your shul?</p>
-                <p className="text-xs text-amber-700 mb-2">This is your official community hub. Manage announcements, events, and mitzvah opportunities — free.</p>
-                <button onClick={() => setShowClaim(true)} className="text-xs font-bold text-[#0F5ED7] underline">
-                  Claim this page →
-                </button>
-              </div>
-            )}
-          </div>
+          <AboutTab community={community} onClaim={() => setShowClaim(true)} />
         )}
 
         {activeTab === 'members' && (
@@ -249,7 +375,11 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         )}
 
         {activeTab === 'announcements' && (
-          <CommunityAnnouncementsTab posts={posts} isLoading={postsLoading} />
+          <CommunityAnnouncementsTab
+            announcements={posts.filter(p => p.type === 'announcement' || p.post_type === 'announcement')}
+            allPosts={posts}
+            community={community}
+          />
         )}
 
         {activeTab === 'events' && (

@@ -3,8 +3,20 @@ import { ArrowLeft, CheckCircle2, Star, Users, Calendar, HandHeart } from 'lucid
 import CommunityLogo from './CommunityLogo';
 import InviteLinkButton from './InviteLinkButton';
 
+const TYPE_LABEL_PLURAL = {
+  Shul: 'Shuls',
+  School: 'Schools',
+  Yeshiva: 'Schools & Yeshivas',
+  Seminary: 'Schools & Yeshivas',
+  Camp: 'Camps',
+  Organization: 'Organizations',
+  Other: 'Communities',
+};
+
 export default function CommunityHero({ community, isFollowing, isAdmin, onBack, onFollow, onClaim, eventCount, mitzvahCount, actualMemberCount, postsThisWeek }) {
-  const memberCount = actualMemberCount || community.follower_count || 0;
+  // Always use the live member count from the Members query (passed as actualMemberCount)
+  const memberCount = actualMemberCount > 0 ? actualMemberCount : (community.follower_count || 0);
+  const typeLabel = TYPE_LABEL_PLURAL[community?.type] || TYPE_LABEL_PLURAL[community?.verified_type] || 'Communities';
 
   return (
     <div style={{ background: 'linear-gradient(160deg, #EEF4FF 0%, #F5F7FB 100%)', borderBottom: '1px solid #E0EDFF' }}>
@@ -16,7 +28,7 @@ export default function CommunityHero({ community, isFollowing, isAdmin, onBack,
         >
           <ArrowLeft className="w-4 h-4 text-[#0F1C2E]" />
         </button>
-        <span className="text-[13px] text-slate-400 font-medium">Shuls</span>
+        <span className="text-[13px] text-slate-400 font-medium">{typeLabel}</span>
       </div>
 
       {/* Hero content */}
@@ -43,10 +55,12 @@ export default function CommunityHero({ community, isFollowing, isAdmin, onBack,
                 <Calendar className="w-3.5 h-3.5 text-[#2563EB]" />
                 <span><strong className="text-slate-800">{eventCount}</strong> events</span>
               </div>
-              <div className="flex items-center gap-1 text-[12px] text-slate-500 font-medium">
-                <HandHeart className="w-3.5 h-3.5 text-[#2563EB]" />
-                <span><strong className="text-slate-800">{mitzvahCount}</strong> mitzvah</span>
-              </div>
+              {mitzvahCount > 0 && (
+                <div className="flex items-center gap-1 text-[12px] text-slate-500 font-medium">
+                  <HandHeart className="w-3.5 h-3.5 text-[#2563EB]" />
+                  <span><strong className="text-slate-800">{mitzvahCount}</strong> chesed done</span>
+                </div>
+              )}
               {postsThisWeek > 0 && (
                 <div className="flex items-center gap-1 text-[12px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5">
                   🔥 {postsThisWeek} posts this week

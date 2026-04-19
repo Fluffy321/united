@@ -55,11 +55,13 @@ function AnnouncementCard({ post, isPinned }) {
 }
 
 export default function CommunityAnnouncementsTab({ announcements, allPosts, community }) {
+  const safeAnnouncements = announcements || [];
+  const safeAllPosts = allPosts || [];
   // Show pinned/announcements first, then recent admin posts
-  const pinned = announcements.filter(p => p.is_pinned);
-  const adminPosts = announcements.filter(p => !p.is_pinned);
+  const pinned = safeAnnouncements.filter(p => p.is_pinned);
+  const adminPosts = safeAnnouncements.filter(p => !p.is_pinned);
   // Also show any posts with "announcement" type from all posts
-  const extraAnnounce = allPosts.filter(p => p.post_type === 'announcement' && !announcements.find(a => a.id === p.id));
+  const extraAnnounce = safeAllPosts.filter(p => p.post_type === 'announcement' && !safeAnnouncements.find(a => a.id === p.id));
 
   const all = [...pinned, ...adminPosts, ...extraAnnounce];
 
