@@ -364,7 +364,7 @@ export default function Feed() {
             <ChevronDown className="w-3 h-3 text-blue-400 transition-transform" style={{ transform: showLocationPicker ? 'rotate(180deg)' : 'rotate(0deg)' }} />
           </button>
           <div className="flex items-center gap-0.5">
-            <button onClick={() => setShowSearch(true)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 active:bg-slate-200 transition-colors touch-manipulation" style={{ WebkitTapHighlightColor: 'transparent' }}>
+            <button onClick={() => navigate('/search')} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 active:bg-slate-200 transition-colors touch-manipulation" style={{ WebkitTapHighlightColor: 'transparent' }}>
               <Search className="w-4.5 h-4.5 text-slate-500" style={{ width: 18, height: 18 }} />
             </button>
             <NotificationBell userId={currentUser?.id} />

@@ -602,13 +602,13 @@ export default function Communities() {
         ) : null}
 
         {/* Search */}
-        <div className="mb-4">
-          <div className="relative">
+        <div className="mb-4 flex gap-2">
+          <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search communities…"
+              placeholder="Filter communities…"
               className="w-full pl-11 pr-9 py-3 rounded-2xl border border-slate-200 bg-white text-[14px] text-slate-800 placeholder-slate-400 outline-none shadow-sm focus:ring-2 focus:ring-blue-400"
             />
             {searchQuery && (
@@ -617,6 +617,10 @@ export default function Communities() {
               </button>
             )}
           </div>
+          <button onClick={() => navigate('/search')}
+            className="px-4 py-3 rounded-2xl border border-slate-200 bg-white text-[13px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-1.5 flex-shrink-0">
+            <Search className="w-3.5 h-3.5" /> All
+          </button>
         </div>
 
         {/* Tab switcher */}

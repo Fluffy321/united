@@ -31,6 +31,7 @@ import CommunityGuidelines from '@/pages/CommunityGuidelines';
 import DMCAPolicy from '@/pages/DMCAPolicy';
 import PrivacyRights from '@/pages/PrivacyRights';
 import YahrzeitManager from '@/pages/YahrzeitManager';
+import SearchPage from '@/pages/Search';
 import RefuahList from '@/pages/RefuahList';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -96,6 +97,7 @@ const AuthenticatedApp = () => {
       <Route path="/privacy-rights" element={<PageTransition><PrivacyRights /></PageTransition>} />
       <Route path="/yahrzeits" element={<PageTransition><YahrzeitManager /></PageTransition>} />
       <Route path="/tehillim" element={<PageTransition><RefuahList /></PageTransition>} />
+      <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

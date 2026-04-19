@@ -1,0 +1,28 @@
+{
+  "name": "SavedSearch",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "query": {
+      "type": "string"
+    },
+    "filters": {
+      "type": "object",
+      "description": "JSON filters: community_id, post_type, date_range"
+    },
+    "notify_on_new": {
+      "type": "boolean",
+      "default": true
+    },
+    "last_notified_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_id",
+    "query"
+  ]
+}
