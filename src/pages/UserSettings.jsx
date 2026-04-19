@@ -273,11 +273,19 @@ export default function UserSettings() {
             />
           </div>
 
+          {/* Safety policy link */}
+          <a
+            href="/MinorSafetyPolicy"
+            className="flex items-center gap-2 text-[13px] text-blue-600 font-semibold mt-2 hover:underline"
+          >
+            🛡️ How we protect young users on JUnited →
+          </a>
+
           {/* Save Notification Preferences */}
           <button
             onClick={handleSaveProfile}
             disabled={saving}
-            className="w-full mt-8 flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-95"
+            className="w-full mt-6 flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-95"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saving ? 'Saving...' : 'Save Preferences'}

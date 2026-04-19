@@ -54,7 +54,8 @@ const HELP_INTENTS = [
   { id: 'both', label: 'Both — give and receive', emoji: '💛', desc: 'I\'m here to help and be helped' },
 ];
 
-const STEPS = ['welcome', 'profile', 'location', 'shul', 'schools', 'interests', 'intent', 'communities', 'notifications'];
+const BASE_STEPS = ['welcome', 'age', 'profile', 'location', 'shul', 'schools', 'interests', 'intent', 'communities', 'notifications'];
+const MINOR_STEPS = ['welcome', 'age', 'profile', 'location', 'shul', 'schools', 'interests', 'intent', 'communities', 'supervised', 'notifications'];
 
 const slideVariants = {
   initial: { opacity: 0, x: 40 },
@@ -87,6 +88,65 @@ function WelcomeStep({ userName }) {
             <span className="text-[14px] font-semibold text-slate-700">{text}</span>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function AgeGateStep({ dob, setDob, onBlocked }) {
+  const [error, setError] = useState('');
+
+  const handleChange = (val) => {
+    setDob(val);
+    setError('');
+    if (!val) return;
+    const birth = new Date(val);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    if (age < 13) {
+      setError('blocked');
+    } else if (age > 120) {
+      setError('invalid');
+    }
+  };
+
+  if (error === 'blocked') {
+    return (
+      <div className="pb-8 text-center pt-8">
+        <div className="text-6xl mb-5">🔒</div>
+        <h2 className="text-[22px] font-bold text-slate-900 mb-3">Sorry, you must be 13 or older</h2>
+        <p className="text-[15px] text-slate-500 leading-relaxed max-w-xs mx-auto">
+          JUnited requires users to be at least 13 years old to join, in compliance with child safety regulations.
+        </p>
+        <p className="text-[13px] text-slate-400 mt-4">
+          If you believe this is an error, please ask a parent or guardian to contact us.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pb-8">
+      <div className="text-4xl mb-4 text-center">🎂</div>
+      <h2 className="text-[22px] font-bold text-slate-900 mb-1 text-center">When were you born?</h2>
+      <p className="text-[14px] text-slate-400 mb-6 text-center">Required to ensure a safe experience for all ages.</p>
+      <label className="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-2 block">Date of Birth *</label>
+      <input
+        type="date"
+        value={dob}
+        onChange={e => handleChange(e.target.value)}
+        max={new Date().toISOString().split('T')[0]}
+        className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-[15px] focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
+      />
+      {error === 'invalid' && (
+        <p className="text-red-500 text-[13px] mt-2">Please enter a valid date of birth.</p>
+      )}
+      <div className="mt-4 bg-blue-50 border border-blue-100 rounded-2xl p-4">
+        <p className="text-[12px] text-blue-700 leading-relaxed">
+          🔒 <strong>Your privacy matters.</strong> Your date of birth is used only to verify eligibility and enable age-appropriate features. It is never shown publicly.
+        </p>
       </div>
     </div>
   );
@@ -457,6 +517,32 @@ function CommunitiesStep({ suggestions, selected, onToggle, loading }) {
   );
 }
 
+function MinorSupervisedStep({ parentEmail, setParentEmail }) {
+  return (
+    <div className="pb-8">
+      <div className="text-4xl mb-4 text-center">👨‍👩‍👧</div>
+      <h2 className="text-[22px] font-bold text-slate-900 mb-1">Parent supervision (optional)</h2>
+      <p className="text-[14px] text-slate-400 mb-2 leading-relaxed">
+        Since you're 13–17, a parent or guardian can optionally monitor your account activity, friends, and reports.
+      </p>
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
+        <p className="text-[13px] text-amber-800 leading-relaxed">
+          ⚠️ <strong>Transparency notice:</strong> If you add a parent email, they will be able to see your activity summary, connections, and flagged content. This is disclosed to you now and shown in your account settings.
+        </p>
+      </div>
+      <label className="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-2 block">Parent / Guardian Email (optional)</label>
+      <input
+        type="email"
+        value={parentEmail}
+        onChange={e => setParentEmail(e.target.value)}
+        placeholder="parent@example.com"
+        className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-[15px] focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
+      />
+      <p className="text-[12px] text-slate-400 mt-2">You can skip this and add it later in Settings.</p>
+    </div>
+  );
+}
+
 function NotificationsStep({ enabled, setEnabled }) {
   const handleEnable = async () => {
     if (!('Notification' in window)) { setEnabled(true); return; }
@@ -500,6 +586,11 @@ function NotificationsStep({ enabled, setEnabled }) {
 
 export default function OnboardingFlow({ user, onComplete }) {
   const [step, setStep] = useState(0);
+
+  // Age gate
+  const [dob, setDob] = useState('');
+  const [isMinor, setIsMinor] = useState(false);
+  const [parentEmail, setParentEmail] = useState('');
 
   // Profile
   const [displayName, setDisplayName] = useState(user.display_name || user.full_name || '');
@@ -606,6 +697,8 @@ export default function OnboardingFlow({ user, onComplete }) {
   const handleFinish = async () => {
     setFinishing(true);
     try {
+      const age = getAge(dob);
+      const minor = age !== null && age < 18;
       await base44.auth.updateMe({
         display_name: displayName.trim() || user.full_name,
         avatar_url: avatarUrl,
@@ -618,6 +711,15 @@ export default function OnboardingFlow({ user, onComplete }) {
         help_intent: intent,
         notifications_enabled: notificationsEnabled,
         onboarding_complete: true,
+        date_of_birth: dob || undefined,
+        is_minor: minor,
+        age_range: minor ? '13-17' : '18+',
+        parent_email: minor && parentEmail.trim() ? parentEmail.trim() : undefined,
+        minor_profile_hidden: minor ? true : false,
+        // Minors: default DMs to connections-only
+        message_settings: minor
+          ? { allowMessagesFrom: 'connections', searchable: false }
+          : undefined,
       });
 
       // Auto-join selected communities
@@ -643,14 +745,38 @@ export default function OnboardingFlow({ user, onComplete }) {
     onComplete();
   };
 
+  // Compute age from dob
+  const getAge = (dobStr) => {
+    if (!dobStr) return null;
+    const birth = new Date(dobStr);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  };
+
+  const isBlocked = dob && getAge(dob) < 13;
+
   const canAdvance = () => {
-    if (step === 1) return displayName.trim().length >= 2;
-    if (step === 2) return !!city;
+    if (step === 1) {
+      // Age gate step: need valid DOB and not blocked
+      if (!dob) return false;
+      const age = getAge(dob);
+      return age >= 13 && age <= 120;
+    }
+    if (step === 2) return displayName.trim().length >= 2;
+    if (step === 3) return !!city;
     return true;
   };
 
   const next = async () => {
-    if (step === 6) {
+    // After age gate, compute and store minor status
+    if (step === 1 && dob) {
+      const age = getAge(dob);
+      setIsMinor(age < 18);
+    }
+    if (step === 7) {
       // Load suggestions before showing communities step
       await loadSuggestions();
     }
@@ -663,15 +789,16 @@ export default function OnboardingFlow({ user, onComplete }) {
 
   const back = () => setStep(s => Math.max(0, s - 1));
 
+  const STEPS = isMinor ? MINOR_STEPS : BASE_STEPS;
   const isLastStep = step === STEPS.length - 1;
-  const isSkippable = [3, 4, 5, 6, 7].includes(step); // shul, schools, interests, intent, communities
+  const isSkippable = [4, 5, 6, 7, 8, 9, 10].includes(step); // shul, schools, interests, intent, communities, supervised, notifications
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#F0F6FF' }}>
       {/* Progress bar */}
       <div className="px-5 pt-10 pb-2">
         <div className="flex items-center gap-1.5">
-          {STEPS.map((_, i) => (
+          {STEPS.map((_s, i) => (
             <div
               key={i}
               className="flex-1 h-1.5 rounded-full transition-all duration-300"
@@ -697,6 +824,9 @@ export default function OnboardingFlow({ user, onComplete }) {
           >
             {step === 0 && <WelcomeStep userName={displayName || user.full_name} />}
             {step === 1 && (
+              <AgeGateStep dob={dob} setDob={setDob} />
+            )}
+            {step === 2 && (
               <ProfileStep
                 displayName={displayName}
                 setDisplayName={setDisplayName}
@@ -705,7 +835,7 @@ export default function OnboardingFlow({ user, onComplete }) {
                 uploading={avatarUploading}
               />
             )}
-            {step === 2 && (
+            {step === 3 && (
               <LocationStep
                 city={city}
                 setCity={setCity}
@@ -713,13 +843,13 @@ export default function OnboardingFlow({ user, onComplete }) {
                 setNeighborhood={setNeighborhood}
               />
             )}
-            {step === 3 && <ShulStep shul={shul} setShul={setShul} />}
-            {step === 4 && <SchoolsStep schools={schools} setSchools={setSchools} />}
-            {step === 5 && (
+            {step === 4 && <ShulStep shul={shul} setShul={setShul} />}
+            {step === 5 && <SchoolsStep schools={schools} setSchools={setSchools} />}
+            {step === 6 && (
               <InterestsStep selected={selectedInterests} onToggle={toggleInterest} />
             )}
-            {step === 6 && <IntentStep intent={intent} setIntent={setIntent} />}
-            {step === 7 && (
+            {step === 7 && <IntentStep intent={intent} setIntent={setIntent} />}
+            {step === 8 && (
               <CommunitiesStep
                 suggestions={suggestedCommunities}
                 selected={selectedCommunities}
@@ -727,12 +857,22 @@ export default function OnboardingFlow({ user, onComplete }) {
                 loading={suggestionsLoading}
               />
             )}
-            {step === 8 && (
+            {step === 9 && !isMinor && (
               <NotificationsStep
                 enabled={notificationsEnabled}
                 setEnabled={setNotificationsEnabled}
               />
             )}
+            {step === 9 && isMinor && (
+              <MinorSupervisedStep parentEmail={parentEmail} setParentEmail={setParentEmail} />
+            )}
+            {step === 10 && isMinor && (
+              <NotificationsStep
+                enabled={notificationsEnabled}
+                setEnabled={setNotificationsEnabled}
+              />
+            )}
+
           </motion.div>
         </AnimatePresence>
       </div>

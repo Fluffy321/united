@@ -59,6 +59,25 @@
         "18+"
       ]
     },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date",
+      "description": "User's date of birth (YYYY-MM-DD)"
+    },
+    "is_minor": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if user is between 13-17 years old"
+    },
+    "parent_email": {
+      "type": "string",
+      "description": "Parent/guardian email for supervised minor accounts"
+    },
+    "minor_profile_hidden": {
+      "type": "boolean",
+      "default": true,
+      "description": "Minor profiles hidden from public search by default"
+    },
     "onboarding_complete": {
       "type": "boolean",
       "default": false

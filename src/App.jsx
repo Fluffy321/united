@@ -20,6 +20,7 @@ import CommunityPage from '@/pages/CommunityPage';
 import CommunityCalendar from '@/pages/CommunityCalendar';
 import DiscoverCommunitiesFeed from '@/pages/DiscoverCommunitiesFeed';
 import JoinByCommunityCode from '@/pages/JoinByCommunityCode';
+import MinorSafetyPolicy from '@/pages/MinorSafetyPolicy';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -72,6 +73,7 @@ const AuthenticatedApp = () => {
       <Route path="/CommunityCalendar" element={<PageTransition><CommunityCalendar /></PageTransition>} />
       <Route path="/DiscoverCommunitiesFeed" element={<PageTransition><DiscoverCommunitiesFeed /></PageTransition>} />
       <Route path="/join" element={<PageTransition><JoinByCommunityCode /></PageTransition>} />
+      <Route path="/MinorSafetyPolicy" element={<PageTransition><MinorSafetyPolicy /></PageTransition>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
