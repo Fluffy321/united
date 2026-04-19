@@ -6,6 +6,7 @@ import { Toaster } from 'sonner';
 import SwipeableTabs from '@/components/common/SwipeableTabs';
 import AIChatBubble from '@/components/common/AIChatBubble';
 import PWAInstallPrompt from '@/components/common/PWAInstallPrompt';
+import CookieConsentBanner from '@/components/common/CookieConsentBanner';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 
@@ -145,6 +146,7 @@ export default function Layout({ children, currentPageName }) {
 
       <Toaster position="top-center" richColors />
       <PWAInstallPrompt />
+      <CookieConsentBanner />
 
       {/* Main Content */}
       <main className="min-h-screen overflow-visible">

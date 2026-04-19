@@ -1,0 +1,255 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronLeft, Download, Trash2, Loader2, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
+
+export default function PrivacyRights() {
+  const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const [exportDone, setExportDone] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [analyticsOptOut, setAnalyticsOptOut] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('junited_cookie_consent') || '{}');
+      return stored.analytics === false;
+    } catch { return false; }
+  });
+
+  React.useEffect(() => {
+    base44.auth.me().then(u => { setUser(u); setLoadingUser(false); }).catch(() => setLoadingUser(false));
+  }, []);
+
+  const handleExport = async () => {
+    if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
+    setExporting(true);
+    try {
+      // Collect all user data
+      const [posts, comments, communities, mitzvahLogs] = await Promise.all([
+        base44.entities.UnifiedPost.filter({ user_id: user.id }, '-created_date', 200),
+        base44.entities.Comment.filter({ author_id: user.id }, '-created_date', 200),
+        base44.entities.UserCommunity.filter({ user_id: user.id }),
+        base44.entities.MitzvahLog ? base44.entities.MitzvahLog.filter({ user_id: user.id }, '-created_date', 200) : Promise.resolve([]),
+      ]);
+
+      const exportData = {
+        export_date: new Date().toISOString(),
+        account: {
+          id: user.id,
+          full_name: user.full_name,
+          email: user.email,
+          role: user.role,
+          bio: user.bio,
+          avatar_url: user.avatar_url,
+          cityPreset: user.cityPreset,
+          created_date: user.created_date,
+        },
+        posts,
+        comments,
+        communities,
+        mitzvah_logs: mitzvahLogs,
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `junited-data-export-${user.id}-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setExportDone(true);
+      toast.success('Data exported successfully');
+    } catch (err) {
+      toast.error('Export failed. Please try again or contact privacy@junited.app');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') { toast.error('Type DELETE to confirm'); return; }
+    setDeletingAccount(true);
+    try {
+      await base44.functions.invoke('deleteUserAccount', { user_id: user.id });
+      toast.success('Account scheduled for deletion. You will be logged out.');
+      setTimeout(() => base44.auth.logout('/'), 2000);
+    } catch (err) {
+      toast.error('Deletion request failed. Email privacy@junited.app for manual deletion.');
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
+  const handleAnalyticsToggle = () => {
+    const newOptOut = !analyticsOptOut;
+    setAnalyticsOptOut(newOptOut);
+    try {
+      const stored = JSON.parse(localStorage.getItem('junited_cookie_consent') || '{}');
+      stored.analytics = !newOptOut;
+      stored.timestamp = new Date().toISOString();
+      localStorage.setItem('junited_cookie_consent', JSON.stringify(stored));
+    } catch {}
+    window.__junited_analytics_enabled = !newOptOut;
+    toast.success(newOptOut ? 'Analytics opted out' : 'Analytics opted in');
+  };
+
+  if (loadingUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 pb-16">
+      <div className="max-w-2xl mx-auto px-4 pt-6">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <Link to="/" className="p-2 rounded-full hover:bg-slate-100 transition-colors">
+            <ChevronLeft className="w-5 h-5 text-slate-600" />
+          </Link>
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-blue-600" />
+            <h1 className="text-2xl font-bold text-slate-900">Your Privacy Rights</h1>
+          </div>
+        </div>
+
+        {!user && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-[13px] text-amber-800">
+            Sign in to access your privacy rights tools.{' '}
+            <button onClick={() => base44.auth.redirectToLogin(window.location.href)} className="font-bold underline">Sign in →</button>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {/* Download data */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <Download className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h2 className="font-bold text-slate-900 mb-1">Download My Data</h2>
+                <p className="text-[13px] text-slate-500 mb-3 leading-relaxed">
+                  Export a complete copy of your JUnited data — posts, comments, community memberships, and mitzvah logs — in JSON format.
+                </p>
+                {exportDone ? (
+                  <div className="flex items-center gap-2 text-[13px] text-green-700 font-semibold">
+                    <CheckCircle className="w-4 h-4" /> Downloaded successfully
+                  </div>
+                ) : (
+                  <button onClick={handleExport} disabled={exporting || !user}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-[13px] font-semibold hover:bg-blue-700 disabled:opacity-50 active:scale-95 transition-all">
+                    {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                    {exporting ? 'Exporting...' : 'Export My Data'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Correct my data */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                <span className="text-xl">✏️</span>
+              </div>
+              <div className="flex-1">
+                <h2 className="font-bold text-slate-900 mb-1">Correct My Data</h2>
+                <p className="text-[13px] text-slate-500 mb-3">Update your profile information, name, bio, avatar, and location at any time.</p>
+                <Link to="/UserSettings"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-600 text-white text-[13px] font-semibold hover:bg-green-700 active:scale-95 transition-all">
+                  Go to Settings
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Stop analytics processing */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
+                <span className="text-xl">📊</span>
+              </div>
+              <div className="flex-1">
+                <h2 className="font-bold text-slate-900 mb-1">Stop Analytics Processing</h2>
+                <p className="text-[13px] text-slate-500 mb-3">Opt out of optional analytics cookies. Essential cookies (required for login and security) cannot be disabled.</p>
+                <div className="flex items-center gap-3">
+                  <button onClick={handleAnalyticsToggle}
+                    className={`relative w-10 h-6 rounded-full transition-colors ${analyticsOptOut ? 'bg-slate-300' : 'bg-blue-600'}`}>
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${analyticsOptOut ? 'translate-x-1' : 'translate-x-5'}`} />
+                  </button>
+                  <span className="text-[13px] text-slate-600">
+                    Analytics: <strong>{analyticsOptOut ? 'Opted out' : 'Opted in'}</strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Delete account */}
+          <div className="bg-white rounded-2xl border border-red-100 p-5 shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5 text-red-500" />
+              </div>
+              <div className="flex-1">
+                <h2 className="font-bold text-slate-900 mb-1">Delete My Account</h2>
+                <p className="text-[13px] text-slate-500 mb-3 leading-relaxed">
+                  Your account is soft-deleted for 30 days (you can recover it by logging in), then permanently purged. Posts others engaged with will show "[Deleted User]" as author.
+                </p>
+                {!showDeleteConfirm ? (
+                  <button onClick={() => setShowDeleteConfirm(true)} disabled={!user}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-[13px] font-semibold hover:bg-red-700 disabled:opacity-50 active:scale-95 transition-all">
+                    <Trash2 className="w-3.5 h-3.5" /> Delete My Account
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-3 text-[13px] text-red-700">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <span>This cannot be undone after 30 days. Type <strong>DELETE</strong> to confirm.</span>
+                    </div>
+                    <input
+                      value={deleteConfirmText}
+                      onChange={e => setDeleteConfirmText(e.target.value)}
+                      placeholder='Type "DELETE" to confirm'
+                      className="w-full px-3 py-2.5 rounded-xl border border-red-300 bg-red-50 text-[14px] focus:outline-none focus:border-red-500 text-red-900 placeholder-red-300"
+                    />
+                    <div className="flex gap-2">
+                      <button onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
+                        className="flex-1 py-2 rounded-xl border border-slate-200 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                        Cancel
+                      </button>
+                      <button onClick={handleDeleteAccount} disabled={deletingAccount || deleteConfirmText !== 'DELETE'}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-red-600 text-white text-[13px] font-semibold hover:bg-red-700 disabled:opacity-50 active:scale-95 transition-all">
+                        {deletingAccount ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                        {deletingAccount ? 'Processing...' : 'Confirm Delete'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Additional contact */}
+          <div className="bg-slate-100 rounded-xl p-4 text-center text-[13px] text-slate-600">
+            <p className="font-semibold text-slate-800 mb-1">Need help with another privacy request?</p>
+            <p>Email <a href="mailto:privacy@junited.app" className="text-blue-600 underline font-semibold">privacy@junited.app</a>. We respond within 30 days.</p>
+            <div className="flex justify-center gap-4 mt-3 text-blue-600">
+              <Link to="/privacy" className="underline text-[12px]">Privacy Policy</Link>
+              <Link to="/terms" className="underline text-[12px]">Terms of Service</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

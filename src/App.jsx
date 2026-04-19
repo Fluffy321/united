@@ -25,6 +25,11 @@ import BusinessDirectory from '@/pages/BusinessDirectory';
 import BusinessListingPage from '@/pages/BusinessListing';
 import CreateBusinessListing from '@/pages/CreateBusinessListing';
 import SupportJUnited from '@/pages/SupportJUnited';
+import TermsOfService from '@/pages/TermsOfService';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import CommunityGuidelines from '@/pages/CommunityGuidelines';
+import DMCAPolicy from '@/pages/DMCAPolicy';
+import PrivacyRights from '@/pages/PrivacyRights';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -82,6 +87,11 @@ const AuthenticatedApp = () => {
       <Route path="/BusinessListing" element={<PageTransition><BusinessListingPage /></PageTransition>} />
       <Route path="/CreateBusinessListing" element={<PageTransition><CreateBusinessListing /></PageTransition>} />
       <Route path="/SupportJUnited" element={<PageTransition><SupportJUnited /></PageTransition>} />
+      <Route path="/terms" element={<PageTransition><TermsOfService /></PageTransition>} />
+      <Route path="/privacy" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
+      <Route path="/guidelines" element={<PageTransition><CommunityGuidelines /></PageTransition>} />
+      <Route path="/dmca" element={<PageTransition><DMCAPolicy /></PageTransition>} />
+      <Route path="/privacy-rights" element={<PageTransition><PrivacyRights /></PageTransition>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
