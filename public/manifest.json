@@ -1,0 +1,32 @@
+{
+  "name": "JUnited",
+  "short_name": "JUnited",
+  "description": "The Jewish community app — connect, help, and belong",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#2563EB",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "lifestyle", "education"],
+  "lang": "en-US",
+  "shortcuts": [
+    {
+      "name": "Feed",
+      "url": "/Feed",
+      "description": "View your community feed"
+    },
+    {
+      "name": "Mitzvah Circle",
+      "url": "/MitzvahCircle",
+      "description": "Help someone today"
+    }
+  ]
+}

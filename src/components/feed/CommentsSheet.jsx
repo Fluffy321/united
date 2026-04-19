@@ -5,10 +5,13 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
+const INITIAL_COMMENT_COUNT = 5;
+
 export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, currentUser, blockedIds = [] }) {
   const navigate = useNavigate();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [posting, setPosting] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
@@ -16,6 +19,7 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
 
   useEffect(() => {
     if (isOpen && postId) {
+      setShowAll(false);
       loadComments();
     }
   }, [isOpen, postId]);
@@ -145,7 +149,16 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
             <p className="text-[12px] text-slate-400 mt-1">Be the first to start a discussion!</p>
           </div>
         ) : (
-          comments.map(comment => {
+          <>
+          {!showAll && comments.length > INITIAL_COMMENT_COUNT && (
+            <button
+              onClick={() => setShowAll(true)}
+              className="w-full text-[13px] font-semibold text-blue-600 py-2 hover:text-blue-700 transition-colors"
+            >
+              Show all {comments.length} comments
+            </button>
+          )}
+          {(showAll ? comments : comments.slice(0, INITIAL_COMMENT_COUNT)).map(comment => {
             const repliedTo = comment.reply_to_comment_id ? comments.find(c => c.id === comment.reply_to_comment_id) : null;
             return (
               <div key={comment.id} className="space-y-2">
@@ -206,7 +219,16 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
                 </div>
               </div>
             );
-          })
+          })}
+          {showAll && comments.length > INITIAL_COMMENT_COUNT && (
+            <button
+              onClick={() => setShowAll(false)}
+              className="w-full text-[12px] text-slate-400 py-2 hover:text-slate-600 transition-colors"
+            >
+              Show fewer
+            </button>
+          )}
+          </>
         )}
       </div>
 

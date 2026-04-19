@@ -472,8 +472,9 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
               <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                 const file = e.target.files[0]; if (!file) return;
                 setUploadingImages(true);
-                const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                setImageUrls(prev => [...prev, file_url]);
+                const { uploadImage } = await import('@/lib/imageUpload');
+                const { url } = await uploadImage(file);
+                setImageUrls(prev => [...prev, url]);
                 setUploadingImages(false); e.target.value = '';
               }} />
             </label>

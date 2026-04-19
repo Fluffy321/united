@@ -5,6 +5,7 @@ import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
 import SwipeableTabs from '@/components/common/SwipeableTabs';
 import AIChatBubble from '@/components/common/AIChatBubble';
+import PWAInstallPrompt from '@/components/common/PWAInstallPrompt';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 
@@ -143,6 +144,7 @@ export default function Layout({ children, currentPageName }) {
       `}</style>
 
       <Toaster position="top-center" richColors />
+      <PWAInstallPrompt />
 
       {/* Main Content */}
       <main className="min-h-screen overflow-visible">

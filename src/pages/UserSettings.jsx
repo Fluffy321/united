@@ -49,16 +49,16 @@ export default function UserSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Avatar must be smaller than 5MB');
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Avatar must be smaller than 10MB');
       return;
     }
 
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setAvatarUrl(file_url);
+      const { uploadThumbnail } = await import('@/lib/imageUpload');
+      const { url } = await uploadThumbnail(file);
+      setAvatarUrl(url);
       toast.success('Avatar uploaded');
     } catch (error) {
       console.error('Upload failed:', error);

@@ -58,6 +58,10 @@ export default function Feed() {
   const [communityGroups, setCommunityGroups] = useState([]);
   const [cachedPosts, setCachedPosts] = useState([]);
   const [loadTimedOut, setLoadTimedOut] = useState(false);
+  const [page, setPage] = useState(0);
+  const [allPosts, setAllPosts] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const PAGE_SIZE = 30;
   const [showNetworkBanner, setShowNetworkBanner] = useState(() => !localStorage.getItem('junited_network_banner_dismissed'));
 
   useEffect(() => {
@@ -88,15 +92,25 @@ export default function Feed() {
     } catch {}
   }, []);
 
-  const { data: posts = [], isLoading, isError } = useQuery({
-    queryKey: ['unified-posts'],
+  const { data: posts = [], isLoading, isError, refetch } = useQuery({
+    queryKey: ['unified-posts', page],
     queryFn: async () => {
-      const p = await base44.entities.UnifiedPost.list('-updated_date', 100);
-      setCachedPosts(p);
+      const p = await base44.entities.UnifiedPost.list('-updated_date', PAGE_SIZE, page * PAGE_SIZE);
+      if (page === 0) {
+        setAllPosts(p);
+        setCachedPosts(p);
+      } else {
+        setAllPosts(prev => {
+          const existingIds = new Set(prev.map(x => x.id));
+          const newOnes = p.filter(x => !existingIds.has(x.id));
+          return [...prev, ...newOnes];
+        });
+      }
+      setHasMore(p.length === PAGE_SIZE);
       return p;
     },
     staleTime: 30000,
-    refetchInterval: 60000,
+    refetchInterval: page === 0 ? 60000 : false,
   });
 
   const { data: userCommunitiesList = [] } = useQuery({
@@ -217,7 +231,7 @@ export default function Feed() {
     navigate('/Communities?communityId=' + communityId);
   };
 
-  const visiblePosts = posts.filter(p => {
+  const visiblePosts = allPosts.filter(p => {
     if (p.type === 'dating') return false;
     if (p.type === 'prompt' && activeTab !== 'trending' && activeTab !== 'for_you' && activeTab !== 'social') return false;
     if (blockedIds.includes(p.user_id)) return false;
@@ -458,6 +472,7 @@ export default function Feed() {
             {isError && (
               <p className="text-[12px] text-slate-400 text-center px-4 py-2">Showing cached posts — pull down to refresh.</p>
             )}
+
             {(() => {
             // Section labels injected at fixed positions
             const SECTION_LABELS = {
@@ -520,6 +535,18 @@ export default function Feed() {
               );
             });
           })()}
+            {/* Load more */}
+            {hasMore && (
+              <div className="p-4 text-center">
+                <button
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={isLoading}
+                  className="px-6 py-2 rounded-full bg-slate-100 text-slate-700 text-[13px] font-semibold hover:bg-slate-200 transition-colors disabled:opacity-50"
+                >
+                  {isLoading ? 'Loading…' : 'Load more posts'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
