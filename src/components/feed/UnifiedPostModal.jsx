@@ -181,7 +181,17 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
         community_name: selectedCommunity?.name || undefined,
       };
 
-      await base44.entities.UnifiedPost.create(postData);
+      const created = await base44.entities.UnifiedPost.create(postData);
+
+      // Fire-and-forget AI moderation scan (non-blocking)
+      if (created?.id && body.trim().length > 10) {
+        base44.functions.invoke('moderateContent', {
+          text: [title, body].filter(Boolean).join(' '),
+          content_id: created.id,
+          content_type: 'unified_post',
+          author_id: currentUser.id,
+        }).catch(() => {});
+      }
 
       if (promptId) {
         const prompt = await base44.entities.DailyPrompt.filter({ id: promptId });

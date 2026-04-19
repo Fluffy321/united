@@ -1,0 +1,87 @@
+{
+  "name": "Report",
+  "type": "object",
+  "properties": {
+    "reporter_id": {
+      "type": "string"
+    },
+    "reported_content_id": {
+      "type": "string"
+    },
+    "content_type": {
+      "type": "string",
+      "enum": [
+        "post",
+        "unified_post",
+        "community_post",
+        "comment",
+        "user",
+        "message"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "harassment",
+        "inappropriate",
+        "spam",
+        "misinformation",
+        "lashon_hara",
+        "shidduch_concern",
+        "self_harm",
+        "doxxing",
+        "antisemitism",
+        "other"
+      ]
+    },
+    "details": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium"
+    },
+    "ai_flagged": {
+      "type": "boolean",
+      "default": false
+    },
+    "community_id": {
+      "type": "string",
+      "description": "Which community the content belongs to"
+    },
+    "target_user_id": {
+      "type": "string",
+      "description": "User who created the reported content"
+    },
+    "target_user_name": {
+      "type": "string"
+    },
+    "content_preview": {
+      "type": "string",
+      "description": "Short preview of the reported content"
+    },
+    "resolved": {
+      "type": "boolean",
+      "default": false
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "reporter_id",
+    "reported_content_id",
+    "content_type",
+    "reason"
+  ]
+}
