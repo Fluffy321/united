@@ -374,6 +374,8 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             isLoading={postsLoading}
             community={community}
             currentUser={currentUser}
+            isAdmin={isAdmin}
+            members={members}
             onNewPost={(post) => queryClient.setQueryData(['community-posts', communityId], prev => [post, ...(prev || [])])}
           />
         )}
@@ -383,6 +385,8 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             announcements={posts.filter(p => p.type === 'announcement' || p.post_type === 'announcement')}
             allPosts={posts}
             community={community}
+            currentUser={currentUser}
+            memberCount={actualMemberCount}
           />
         )}
 
