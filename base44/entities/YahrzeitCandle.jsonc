@@ -1,0 +1,19 @@
+{
+  "name": "YahrzeitCandle",
+  "type": "object",
+  "properties": {
+    "yahrzeit_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "yahrzeit_id",
+    "user_id"
+  ]
+}

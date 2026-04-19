@@ -1,0 +1,62 @@
+{
+  "name": "Yahrzeit",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "deceased_name": {
+      "type": "string",
+      "description": "Name of the deceased (e.g. Aharon ben Shlomo)"
+    },
+    "relationship": {
+      "type": "string",
+      "description": "e.g. grandfather, father, mother"
+    },
+    "hebrew_month": {
+      "type": "number",
+      "description": "Hebrew month 1-13 (Tishrei=1)"
+    },
+    "hebrew_day": {
+      "type": "number",
+      "description": "Day of Hebrew month 1-30"
+    },
+    "share_with_community": {
+      "type": "boolean",
+      "default": false
+    },
+    "community_id": {
+      "type": "string",
+      "description": "Community to share with if share_with_community=true"
+    },
+    "virtual_candle_count": {
+      "type": "number",
+      "default": 0
+    },
+    "reminder_sent_3day": {
+      "type": "boolean",
+      "default": false
+    },
+    "reminder_sent_1day": {
+      "type": "boolean",
+      "default": false
+    },
+    "reminder_sent_day_of": {
+      "type": "boolean",
+      "default": false
+    },
+    "last_reminder_year": {
+      "type": "number",
+      "description": "Gregorian year of last reminder cycle to avoid duplicates"
+    }
+  },
+  "required": [
+    "user_id",
+    "deceased_name",
+    "hebrew_month",
+    "hebrew_day"
+  ]
+}

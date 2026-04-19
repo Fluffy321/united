@@ -1,0 +1,43 @@
+{
+  "name": "RefuahRequest",
+  "type": "object",
+  "properties": {
+    "author_id": {
+      "type": "string"
+    },
+    "author_name": {
+      "type": "string"
+    },
+    "patient_name": {
+      "type": "string",
+      "description": "Name for tehillim (e.g. Chana bat Sarah)"
+    },
+    "relationship": {
+      "type": "string",
+      "description": "e.g. my mother, a friend, community member"
+    },
+    "community_id": {
+      "type": "string"
+    },
+    "davening_count": {
+      "type": "number",
+      "default": 0
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "renewed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "author_id",
+    "patient_name"
+  ]
+}

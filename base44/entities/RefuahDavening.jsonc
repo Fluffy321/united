@@ -1,0 +1,16 @@
+{
+  "name": "RefuahDavening",
+  "type": "object",
+  "properties": {
+    "request_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "user_id"
+  ]
+}

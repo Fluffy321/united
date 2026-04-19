@@ -30,6 +30,8 @@ import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import CommunityGuidelines from '@/pages/CommunityGuidelines';
 import DMCAPolicy from '@/pages/DMCAPolicy';
 import PrivacyRights from '@/pages/PrivacyRights';
+import YahrzeitManager from '@/pages/YahrzeitManager';
+import RefuahList from '@/pages/RefuahList';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -92,6 +94,8 @@ const AuthenticatedApp = () => {
       <Route path="/guidelines" element={<PageTransition><CommunityGuidelines /></PageTransition>} />
       <Route path="/dmca" element={<PageTransition><DMCAPolicy /></PageTransition>} />
       <Route path="/privacy-rights" element={<PageTransition><PrivacyRights /></PageTransition>} />
+      <Route path="/yahrzeits" element={<PageTransition><YahrzeitManager /></PageTransition>} />
+      <Route path="/tehillim" element={<PageTransition><RefuahList /></PageTransition>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
