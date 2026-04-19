@@ -33,13 +33,13 @@ export default function StreakCard({ streak }) {
     <div className="max-w-2xl mx-auto px-4 pt-4">
       <div className="bg-white rounded-2xl border border-slate-100 p-6 text-center">
         <Flame className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-        <h3 className="text-lg font-bold text-slate-900 mb-1">Start your streak!</h3>
-        <p className="text-sm text-slate-600 mb-4">Log your first mitzvah today</p>
+        <h3 className="text-lg font-bold text-slate-900 mb-1">One small mitzvah today?</h3>
+        <p className="text-sm text-slate-600 mb-4">Start your week of chesed — every act counts.</p>
         <button
           onClick={() => navigate(createPageUrl('MitzvahCircle'))}
           className="w-full py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Log Your First Mitzvah
+          Find a Mitzvah Nearby
         </button>
       </div>
     </div>

@@ -52,8 +52,8 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
         {user.age_range === '13-17' &&
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">👤 Teen</span>
         }
-        {user.is_verified &&
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-100 text-green-700">✓ Verified</span>
+        {user.is_verified && user.verified_type &&
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-100 text-green-700">✓ Verified {user.verified_type}</span>
         }
         {(user.current_streak || 0) > 0 &&
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-orange-100 text-orange-700">🔥 {user.current_streak} Day Streak</span>

@@ -702,7 +702,8 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const updatedAgeMs = post.updated_date ? nowMs - new Date(post.updated_date).getTime() : postAgeMs;
   const isActiveNow = !post.is_seeded && updatedAgeMs < 15 * 60 * 1000 && post.comments_count > 0;
   const hasNewReplies = !post.is_seeded && updatedAgeMs < 2 * 60 * 60 * 1000 && post.comments_count > 0 && !isActiveNow;
-  const isHotPost = (post.likes_count || 0) + (post.comments_count || 0) * 2 >= 20;
+  const postAgeHours = (nowMs - new Date(post.created_date).getTime()) / 3600000;
+  const isHotPost = postAgeHours < 48 && (post.likes_count || 0) + (post.comments_count || 0) * 2 >= 20;
 
   return (
     <motion.div
@@ -870,14 +871,14 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
       {/* Footer: compact action row */}
       <div className="px-3 py-1.5 mt-1 border-t border-[#F2F4F7] flex items-center gap-2">
+        <ReactionBar postId={post.id} currentUser={currentUser} />
         <button
-          onClick={() => setQuickReplyOpen(!quickReplyOpen)}
+          onClick={() => setCommentsOpen(true)}
           className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-blue-600 transition-colors"
         >
           <MessageCircle className="w-3.5 h-3.5" />
           {post.comments_count > 0 ? post.comments_count : 'Reply'}
         </button>
-        <ReactionBar postId={post.id} currentUser={currentUser} />
         {post.user_id !== currentUser?.id && (
           <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
         )}
@@ -886,33 +887,6 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         </div>
       </div>
 
-      {quickReplyOpen && (
-        <div className="px-3 pt-1.5 pb-2">
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Add a quick reply..."
-              value={quickReplyText}
-              onChange={(e) => setQuickReplyText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleQuickReply();
-                }
-              }}
-              className="flex-1 px-3 py-2 rounded-full border border-slate-200 bg-slate-50 text-[13px] placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:bg-white transition-colors"
-              disabled={submittingQuickReply}
-            />
-            <button
-              onClick={handleQuickReply}
-              disabled={!quickReplyText.trim() || submittingQuickReply}
-              className="h-8 px-4 rounded-full text-[12px] font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
-            >
-              {submittingQuickReply ? '…' : 'Send'}
-            </button>
-          </div>
-        </div>
-      )}
       <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
     </motion.div>
   );

@@ -49,12 +49,16 @@ export default function ShulPage() {
   useEffect(() => {
     if (!shulId) {
       const loadFirstShul = async () => {
-        const shuls = await base44.entities.Shul.filter({ verified: true });
-        if (shuls.length > 0) {
-          navigate(createPageUrl('ShulPage') + `?shulId=${shuls[0].id}`, { replace: true });
-        } else {
-          navigate(createPageUrl('Communities'), { replace: true });
-        }
+        try {
+          const shuls = await base44.entities.Shul.list('-created_date', 5);
+          const verified = shuls.filter(s => s.verified || s.is_verified);
+          if (verified.length > 0) {
+            navigate(createPageUrl('ShulPage') + `?shulId=${verified[0].id}`, { replace: true });
+          } else if (shuls.length > 0) {
+            navigate(createPageUrl('ShulPage') + `?shulId=${shuls[0].id}`, { replace: true });
+          }
+          // else: stay on ShulPage and show empty state — no silent redirect
+        } catch {}
       };
       loadFirstShul();
     }
@@ -122,10 +126,21 @@ export default function ShulPage() {
     setActiveTab(newTab);
   };
 
-  if (!shul || !currentUser) {
+  if (!currentUser || (!shul && shulId)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" />
+      </div>
+    );
+  }
+
+  if (!shul && !shulId) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-6 text-center">
+        <div className="text-5xl mb-4">🕍</div>
+        <h2 className="text-[20px] font-bold text-slate-800 mb-2">No Shuls Yet</h2>
+        <p className="text-slate-500 text-[14px] mb-6">Shul directory is coming soon. Check back after communities are set up.</p>
+        <button onClick={() => navigate('/Communities')} className="px-6 py-2.5 rounded-full bg-blue-600 text-white font-semibold text-[14px]">Browse Communities</button>
       </div>
     );
   }
