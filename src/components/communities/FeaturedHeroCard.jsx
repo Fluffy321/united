@@ -29,13 +29,14 @@ export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, 
             )}
 
             <div className="min-w-0 flex-1">
-              <h2 className="truncate text-3xl font-bold leading-tight">{community.name}</h2>
+              <h2 className="text-2xl font-bold leading-tight line-clamp-2">{community.name}</h2>
               <p className="mt-2 line-clamp-2 text-sm text-white/85">
                 {community.featured_tagline || community.description_short || 'Featured community'}
               </p>
               <div className="mt-3 flex items-center gap-5 text-sm text-white/80">
                 <span>👥 {(community.follower_count || 0).toLocaleString()}</span>
-                <span>📈 {community.posts_this_week || 0} posts</span>
+                {(community.posts_this_week || 0) > 0 && <span>📈 {community.posts_this_week} posts this week</span>}
+                {!(community.posts_this_week > 0) && community.follower_count > 0 && <span>✨ Growing fast</span>}
               </div>
             </div>
           </div>

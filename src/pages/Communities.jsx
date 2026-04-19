@@ -103,10 +103,16 @@ const VALUE_PROPOSITIONS = {
   'School': ['Connect with school community', 'Share resources & updates', 'Parent networking'],
 };
 
-function getActivityBadge(id) {
-  const n = id ? id.charCodeAt(0) % 3 : 0;
-  if (n === 0) return { label: '🔥 Hot', color: 'bg-red-50 text-red-600' };
-  if (n === 1) return { label: '🟢 Active', color: 'bg-green-50 text-green-700' };
+function getActivityBadge(community) {
+  const joinsThisWeek = community.joins_this_week || 0;
+  const postsThisWeek = community.posts_this_week || 0;
+  const commentsThisWeek = community.comments_this_week || 0;
+  const totalActivity = joinsThisWeek * 2 + postsThisWeek + commentsThisWeek;
+
+  // "Hot" requires actual recent activity (not a static hash of the ID)
+  if (totalActivity >= 10) return { label: '🔥 Hot', color: 'bg-red-50 text-red-600' };
+  if (totalActivity >= 3 || joinsThisWeek > 0) return { label: '🟢 Active', color: 'bg-green-50 text-green-700' };
+  // Brand-new communities (created within 7 days)
   return { label: '✨ New', color: 'bg-violet-50 text-violet-600' };
 }
 
@@ -187,7 +193,7 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
   const gradient = CATEGORY_CARD_GRADIENTS[typeKey] || CATEGORY_CARD_GRADIENTS[catKey] || 'from-blue-500 to-purple-600';
   const initials = community.name.slice(0, 2).toUpperCase();
   const activity = getMockActivity(community.id);
-  const badge = getActivityBadge(community.id);
+  const badge = getActivityBadge(community);
   const catIcon = CATEGORY_ICONS[typeKey] || CATEGORY_ICONS[catKey] || '🏘️';
 
   const handleCardClick = (e) => {
@@ -217,7 +223,7 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <div className="text-[13px] font-bold text-slate-900 truncate">{community.name}</div>
+              <div className="text-[13px] font-bold text-slate-900 line-clamp-2 leading-snug">{community.name}</div>
               <div className="text-[11px] text-slate-500 mt-0.5">{(community.follower_count || 0).toLocaleString()} members</div>
               <div className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${badge.color}`}>
                 {badge.label}
@@ -727,6 +733,11 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
     }
     return (
       <div className="space-y-4">
+        <div className="text-center px-4 py-5 bg-blue-50 border border-blue-100 rounded-2xl mb-2">
+          <div className="text-3xl mb-2">🏘️</div>
+          <p className="text-[14px] font-semibold text-slate-800 mb-1">You haven't joined any communities yet</p>
+          <p className="text-[12px] text-slate-500">Tap <strong>Discover</strong> to find schools, shuls, and neighborhoods near you.</p>
+        </div>
         <CommunityInterestOnboarding
           currentUser={currentUser}
           allCommunities={allCommunities}
