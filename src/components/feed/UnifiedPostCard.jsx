@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2, Users, Ban, Bookmark } from 'lucide-react';
+import PostImage from '@/components/common/PostImage';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import PromptCard from './PromptCard';
 import PollCard from './PollCard';
@@ -779,8 +780,12 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
               </>
             );
           })()}
-          {post.post_subtype && SUBTYPE_CONFIGS[post.post_subtype] ? (
-            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${SUBTYPE_CONFIGS[post.post_subtype].color}`}>
+          {post.post_subtype && SUBTYPE_CONFIGS[post.post_subtype] && post.post_subtype !== 'discussion' ? (
+            <span className={`j-chip ${
+              post.post_subtype === 'question' ? 'j-chip-location' :
+              post.post_subtype === 'alert' ? 'j-chip-urgent' :
+              'j-chip-muted'
+            }`}>
               {SUBTYPE_CONFIGS[post.post_subtype].label}
             </span>
           ) : null}
@@ -825,10 +830,10 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             <button onClick={() => setExpanded(e => !e)} className="ml-1 text-[#2563EB] font-semibold text-[12px]">{expanded ? 'less' : 'see more'}</button>
           )}
         </p>
-        {/* Image */}
+        {/* Image — 4:3 with blur-up and lightbox */}
         {post.image_url && (
-          <div className="mt-1.5 -mx-3 cursor-pointer relative" onClick={() => setImgExpanded(e => !e)}>
-            <img src={post.image_url} alt="" className={`w-full object-cover rounded-xl transition-all ${imgExpanded ? 'max-h-[400px]' : 'max-h-44'}`} loading="lazy" />
+          <div className="mt-1.5 -mx-3">
+            <PostImage src={post.image_url} alt="" />
           </div>
         )}
         {/* Context labels — location tag always shown */}
@@ -862,22 +867,25 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
                 {' '}{recentComments[recentComments.length - 1].body}
               </span>
               {post.comments_count > 1 && (
-                <span className="flex-shrink-0 text-[10px] text-blue-500 font-medium ml-auto">+{post.comments_count - 1} more</span>
+                <span className="flex-shrink-0 text-[11px] text-slate-400 font-medium ml-auto">+{post.comments_count - 1} more</span>
               )}
             </div>
           </button>
         </div>
       )}
 
-      {/* Footer: compact action row */}
+      {/* Footer: compact action row — no duplicate comment icon */}
       <div className="px-3 py-1.5 mt-1 border-t border-[#F2F4F7] flex items-center gap-2">
         <ReactionBar postId={post.id} currentUser={currentUser} />
         <button
           onClick={() => setCommentsOpen(true)}
           className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-blue-600 transition-colors"
         >
-          <MessageCircle className="w-3.5 h-3.5" />
-          {post.comments_count > 0 ? post.comments_count : 'Reply'}
+          {post.comments_count > 0 ? (
+            <span className="j-chip j-chip-muted">{post.comments_count} {post.comments_count === 1 ? 'reply' : 'replies'}</span>
+          ) : (
+            <span className="j-chip j-chip-muted">Reply</span>
+          )}
         </button>
         {post.user_id !== currentUser?.id && (
           <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />

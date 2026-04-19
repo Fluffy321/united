@@ -2,85 +2,252 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Google Fonts: Fraunces (serif display) + Inter (sans body) ─── */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 221 39% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 221 39% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 221 39% 11%;
-    --primary: 221 83% 53%;
+    /* ── JUnited Brand Palette ── */
+    --j-navy:       #0F1C2E;
+    --j-navy-80:    rgba(15,28,46,0.80);
+    --j-gold:       #C9A84C;
+    --j-gold-light: #F5E9C8;
+    --j-gold-dark:  #9B7A2A;
+    --j-cream:      #FAFAF7;
+    --j-white:      #FFFFFF;
+
+    /* ── Semantic color tokens ── */
+    --c-location:  #2563EB;   /* blue  — location chips, nav */
+    --c-hot:       #D97706;   /* amber — trending/hot posts  */
+    --c-help:      #16A34A;   /* green — chesed / help       */
+    --c-urgent:    #DC2626;   /* red   — alerts / urgent     */
+    --c-featured:  #7C3AED;   /* purple — featured / premium */
+    --c-muted:     #64748B;   /* slate — meta / secondary    */
+
+    /* ── Shadcn design tokens (light mode) ── */
+    --background:         0 0% 98%;        /* #FAFAFA — off-white cream */
+    --foreground:         220 40% 13%;     /* #0F1C2E navy */
+    --card:               0 0% 100%;
+    --card-foreground:    220 40% 13%;
+    --popover:            0 0% 100%;
+    --popover-foreground: 220 40% 13%;
+    --primary:            220 85% 45%;     /* deep blue */
     --primary-foreground: 0 0% 100%;
-    --secondary: 214 95% 93%;
-    --secondary-foreground: 221 83% 40%;
-    --muted: 214 60% 95%;
-    --muted-foreground: 215 25% 50%;
-    --accent: 271 76% 53%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84.2% 60.2%;
+    --secondary:          43 70% 91%;      /* warm gold-tinted */
+    --secondary-foreground: 220 40% 20%;
+    --muted:              220 20% 94%;
+    --muted-foreground:   220 15% 46%;
+    --accent:             43 55% 55%;      /* warm gold accent */
+    --accent-foreground:  0 0% 100%;
+    --destructive:        0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
-    --chart-1: 221 83% 53%;
-    --chart-2: 271 76% 53%;
-    --chart-3: 330 81% 60%;
-    --chart-4: 43 96% 56%;
-    --chart-5: 142 71% 45%;
+    --border:             220 20% 90%;
+    --input:              220 20% 90%;
+    --ring:               220 85% 45%;
+    --chart-1: 220 85% 45%;
+    --chart-2: 43 55% 55%;
+    --chart-3: 142 71% 40%;
+    --chart-4: 0 84% 60%;
+    --chart-5: 271 76% 50%;
     --radius: 0.75rem;
-    --sidebar-background: 221 83% 53%;
+    --sidebar-background: 220 40% 13%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 221 83% 53%;
-    --sidebar-accent: 221 60% 45%;
+    --sidebar-primary: 43 55% 55%;
+    --sidebar-primary-foreground: 220 40% 13%;
+    --sidebar-accent: 220 30% 20%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 221 60% 45%;
-    --sidebar-ring: 214 95% 93%;
+    --sidebar-border: 220 25% 22%;
+    --sidebar-ring: 43 55% 55%;
+
+    /* ── Typography ── */
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body:    'Inter', system-ui, sans-serif;
   }
 
   .dark {
-    --background: 221 39% 8%;
-    --foreground: 214 95% 93%;
-    --card: 221 39% 11%;
-    --card-foreground: 214 95% 93%;
-    --popover: 221 39% 11%;
-    --popover-foreground: 214 95% 93%;
-    --primary: 221 83% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 221 39% 18%;
-    --secondary-foreground: 214 95% 93%;
-    --muted: 221 39% 18%;
-    --muted-foreground: 215 25% 65%;
-    --accent: 221 39% 18%;
-    --accent-foreground: 214 95% 93%;
-    --destructive: 0 62.8% 30.6%;
+    --background:         220 35% 8%;      /* zinc-900-ish navy */
+    --foreground:         43 30% 90%;       /* warm off-white */
+    --card:               220 35% 11%;
+    --card-foreground:    43 30% 90%;
+    --popover:            220 35% 11%;
+    --popover-foreground: 43 30% 90%;
+    --primary:            43 55% 55%;       /* gold is primary in dark */
+    --primary-foreground: 220 40% 10%;
+    --secondary:          220 30% 18%;
+    --secondary-foreground: 43 30% 80%;
+    --muted:              220 30% 16%;
+    --muted-foreground:   220 15% 55%;
+    --accent:             43 55% 50%;
+    --accent-foreground:  220 40% 10%;
+    --destructive:        0 62% 38%;
     --destructive-foreground: 0 0% 98%;
-    --border: 221 39% 20%;
-    --input: 221 39% 20%;
-    --ring: 221 83% 60%;
-    --chart-1: 221 83% 60%;
-    --chart-2: 199 89% 55%;
-    --chart-3: 172 66% 45%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --sidebar-background: 221 39% 11%;
-    --sidebar-foreground: 214 95% 93%;
-    --sidebar-primary: 221 83% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 221 39% 18%;
-    --sidebar-accent-foreground: 214 95% 93%;
-    --sidebar-border: 221 39% 20%;
-    --sidebar-ring: 221 83% 60%;
+    --border:             220 25% 18%;
+    --input:              220 25% 18%;
+    --ring:               43 55% 55%;
+    --chart-1: 43 55% 55%;
+    --chart-2: 220 85% 65%;
+    --chart-3: 142 60% 45%;
+    --chart-4: 0 72% 60%;
+    --chart-5: 271 60% 65%;
+    --sidebar-background: 220 35% 8%;
+    --sidebar-foreground: 43 30% 85%;
+    --sidebar-primary: 43 55% 55%;
+    --sidebar-primary-foreground: 220 40% 10%;
+    --sidebar-accent: 220 30% 16%;
+    --sidebar-accent-foreground: 43 30% 80%;
+    --sidebar-border: 220 25% 16%;
+    --sidebar-ring: 43 55% 55%;
   }
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
   }
 
-  body {
+  html, body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
   }
+
+  /* Display headings use serif */
+  .font-display, .j-display {
+    font-family: var(--font-display);
+  }
+
+  /* Hebrew/Yiddish words render in serif */
+  .hebrew-word {
+    font-family: var(--font-display);
+    font-style: italic;
+    color: var(--j-gold-dark);
+  }
+}
+
+/* ─── JUnited Design Utilities ─────────────────────────────────────── */
+
+/* Typography scale */
+.j-text-display  { font-family: var(--font-display); font-size: 24px; font-weight: 900; letter-spacing: -0.3px; line-height: 1.2; }
+.j-text-title    { font-size: 18px; font-weight: 700; line-height: 1.3; }
+.j-text-body     { font-size: 14px; font-weight: 400; line-height: 1.55; }
+.j-text-meta     { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; color: var(--c-muted); }
+
+/* Semantic chip system */
+.j-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; line-height: 1.6;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.j-chip-location { background: #EFF6FF; color: var(--c-location); border-color: #BFDBFE; }
+.j-chip-hot      { background: #FFFBEB; color: var(--c-hot);      border-color: #FDE68A; }
+.j-chip-help     { background: #F0FDF4; color: var(--c-help);     border-color: #BBF7D0; }
+.j-chip-urgent   { background: #FEF2F2; color: var(--c-urgent);   border-color: #FECACA; }
+.j-chip-featured { background: #F5F3FF; color: var(--c-featured); border-color: #DDD6FE; }
+.j-chip-muted    { background: #F8FAFC; color: var(--c-muted);    border-color: #E2E8F0; }
+.j-chip-gold     { background: var(--j-gold-light); color: var(--j-gold-dark); border-color: var(--j-gold); }
+
+/* Gold accent buttons */
+.j-btn-gold {
+  background: linear-gradient(135deg, var(--j-gold), var(--j-gold-dark));
+  color: #fff; font-weight: 700; border-radius: 999px;
+  transition: opacity 120ms ease, transform 100ms ease;
+}
+.j-btn-gold:active { transform: scale(0.97); }
+.j-btn-gold:hover  { opacity: 0.9; }
+
+/* Card */
+.j-card {
+  background: white; border-radius: 16px;
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 2px 8px rgba(15,28,46,0.05);
+}
+.dark .j-card { background: hsl(var(--card)); }
+
+/* Post image component — 4:3 with blur-up */
+.j-post-image {
+  position: relative;
+  width: 100%;
+  padding-bottom: 75%; /* 4:3 ratio */
+  overflow: hidden;
+  background: #E2E8F0;
+}
+.j-post-image img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 300ms ease;
+}
+.j-post-image:hover img { transform: scale(1.03); }
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #F1F5F9 25%, #E8EEF6 50%, #F1F5F9 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.6s infinite linear;
+  border-radius: 8px;
+}
+.dark .skeleton {
+  background: linear-gradient(90deg, hsl(220 35% 14%) 25%, hsl(220 30% 18%) 50%, hsl(220 35% 14%) 75%);
+  background-size: 1200px 100%;
+}
+
+/* Tab fade-in animation */
+@keyframes tabFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tab-fade-in { animation: tabFade 150ms ease-out both; }
+
+/* Reaction pop animation */
+@keyframes reactionPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.45); }
+  70%  { transform: scale(0.88); }
+  100% { transform: scale(1); }
+}
+.reaction-pop { animation: reactionPop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Bottom nav active pill */
+.nav-pill-active {
+  position: relative;
+}
+.nav-pill-active::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px; height: 22px;
+  background: rgba(37,99,235,0.12);
+  border-radius: 10px;
+}
+
+/* Scrollbar hide */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Leaflet map buttons */
+.leaflet-control-zoom {
+  border: none !important; box-shadow: none !important;
+  background: transparent !important;
+  display: flex !important; flex-direction: column !important; gap: 6px !important;
+}
+.leaflet-control-zoom a,
+.leaflet-control-zoom a:first-child,
+.leaflet-control-zoom a:last-child {
+  width: 38px !important; height: 38px !important; line-height: 38px !important;
+  border-radius: 999px !important; background: #FFFFFF !important;
+  color: #0F172A !important; border: 1px solid rgba(15,23,42,0.12) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10) !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  font-size: 18px !important; margin: 4px 0 !important;
 }

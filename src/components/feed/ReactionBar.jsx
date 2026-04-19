@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Heart } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 export default function ReactionBar({ postId, currentUser }) {
   const queryClient = useQueryClient();
   const isRealUser = !!currentUser && currentUser.id !== 'guest';
+  const [popping, setPopping] = useState(false);
 
   const { data: reactions = [] } = useQuery({
     queryKey: ['post-reactions', postId],
@@ -51,17 +52,27 @@ export default function ReactionBar({ postId, currentUser }) {
   const totalLikes = reactions.filter(r => r.reaction_type === 'like').length;
   const isLiked = userReactions.some(r => r.reaction_type === 'like');
 
+  const handleClick = () => {
+    if (!isLiked) {
+      setPopping(true);
+      setTimeout(() => setPopping(false), 350);
+    }
+    toggleLikeMutation.mutate();
+  };
+
   return (
     <button
-      onClick={() => toggleLikeMutation.mutate()}
+      onClick={handleClick}
       disabled={toggleLikeMutation.isPending}
-      className={`flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium transition-all ${
+      className={`flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium transition-colors ${
         isLiked
-          ? 'bg-red-50 text-red-500 scale-105'
+          ? 'bg-red-50 text-red-500'
           : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
       }`}
     >
-      <Heart className={`w-4 h-4 transition-all ${isLiked ? 'fill-red-500 stroke-red-500' : ''}`} />
+      <Heart
+        className={`w-4 h-4 ${isLiked ? 'fill-red-500 stroke-red-500' : ''} ${popping ? 'animate-reaction-pop' : 'transition-all duration-150'}`}
+      />
       {totalLikes > 0 && <span className="font-semibold">{totalLikes}</span>}
     </button>
   );

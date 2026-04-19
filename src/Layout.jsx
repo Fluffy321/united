@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, User, HandHeart, Newspaper, Users, MessageCircle, Loader2, Calendar } from 'lucide-react';
+import { Home, User, Users, MessageCircle, Loader2 } from 'lucide-react';
+import { MitzvahIcon } from '@/components/common/JIcons';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
 import SwipeableTabs from '@/components/common/SwipeableTabs';
@@ -17,39 +18,14 @@ const MitzvahCircle = lazy(() => import('@/pages/MitzvahCircle'));
 const Profile = lazy(() => import('@/pages/Profile'));
 
 const navItems = [
-  { name: 'Feed', icon: Home, page: 'Feed', color: 'blue' },
-  { name: 'Mitzvah', icon: HandHeart, page: 'MitzvahCircle', color: 'purple' },
-  { name: 'Communities', icon: Users, page: 'Communities', color: 'teal' },
-  { name: 'Messages', icon: MessageCircle, page: 'Messages', color: 'blue' },
-  { name: 'Profile', icon: User, page: 'Profile', color: 'slate' },
+  { name: 'Feed', icon: Home, page: 'Feed' },
+  { name: 'Mitzvah', icon: null, page: 'MitzvahCircle', isMitzvah: true },
+  { name: 'Communities', icon: Users, page: 'Communities' },
+  { name: 'Messages', icon: MessageCircle, page: 'Messages', showBadge: true },
+  { name: 'Profile', icon: User, page: 'Profile' },
 ];
 
-const colorStyles = {
-        blue: {
-          active: 'text-[#0F5ED7]',
-          inactive: 'text-slate-400'
-        },
-        cyan: {
-          active: 'text-[#0F5ED7]',
-          inactive: 'text-slate-400'
-        },
-        orange: {
-          active: 'text-[#0F5ED7]',
-          inactive: 'text-slate-400'
-        },
-        purple: {
-          active: 'text-[#0F5ED7]',
-          inactive: 'text-slate-400'
-        },
-        teal: {
-          active: 'text-[#0F5ED7]',
-          inactive: 'text-slate-400'
-        },
-        slate: {
-          active: 'text-[#0F5ED7]',
-          inactive: 'text-slate-400'
-        }
-      };
+/* colorStyles removed — now uses direct active/inactive logic per item */
 
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
@@ -181,26 +157,12 @@ export default function Layout({ children, currentPageName }) {
           style={{ boxShadow: '0 -1px 0 #E2E8F0', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
           <div className="max-w-2xl mx-auto" ref={navContainerRef} style={{ position: 'relative' }}>
-            {/* Sliding pill highlight */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '5px',
-                left: pillStyle.left,
-                width: '36px',
-                height: '24px',
-                transform: 'translateX(-50%)',
-                background: 'rgba(37,99,235,0.10)',
-                borderRadius: '10px',
-                opacity: pillStyle.opacity,
-                transition: 'left 180ms ease, opacity 120ms ease',
-                pointerEvents: 'none',
-              }}
-            />
+            {/* Active highlight now rendered per-button */}
             <div className="flex items-center justify-around px-1">
               {navItems.map((item) => {
                 const isActive = currentPageName === item.page;
                 const Icon = item.icon;
+                const showBadge = item.showBadge && unreadMessages > 0;
                 return (
                   <button
                     key={item.page}
@@ -213,18 +175,38 @@ export default function Layout({ children, currentPageName }) {
                         navigate(createPageUrl(item.page));
                       }
                     }}
-                    className="flex flex-col items-center justify-center transition-all relative touch-manipulation"
-                    style={{ WebkitTapHighlightColor: 'transparent', minHeight: '48px', minWidth: '52px', paddingTop: 8, paddingBottom: 6 }}
+                    className="flex flex-col items-center justify-center relative touch-manipulation"
+                    style={{ WebkitTapHighlightColor: 'transparent', minHeight: '52px', minWidth: '52px', paddingTop: 6, paddingBottom: 6 }}
                   >
-                    <div className="relative">
-                      <Icon
-                        style={{ width: 20, height: 20 }}
-                        className={`relative z-10 transition-all duration-150 ${
-                          isActive ? 'text-[#2563EB]' : 'text-[#94A3B8]'
-                        }`}
-                        strokeWidth={isActive ? 2.4 : 1.8}
+                    {/* Active pill background */}
+                    {isActive && (
+                      <span
+                        className="absolute top-1 rounded-xl"
+                        style={{ left: '50%', transform: 'translateX(-50%)', width: 40, height: 26, background: 'rgba(37,99,235,0.12)', pointerEvents: 'none' }}
                       />
-                      {item.page === 'Messages' && unreadMessages > 0 && (
+                    )}
+                    {/* Active dot above icon */}
+                    {isActive && (
+                      <span
+                        className="absolute top-0.5 rounded-full bg-[#2563EB]"
+                        style={{ left: '50%', transform: 'translateX(-50%)', width: 4, height: 4 }}
+                      />
+                    )}
+                    <div className="relative z-10">
+                      {item.isMitzvah ? (
+                        <MitzvahIcon
+                          size={20}
+                          strokeWidth={isActive ? 2.2 : 1.8}
+                          className={`transition-all duration-150 ${isActive ? 'text-[#2563EB]' : 'text-[#94A3B8]'}`}
+                        />
+                      ) : (
+                        <Icon
+                          style={{ width: 20, height: 20 }}
+                          className={`transition-all duration-150 ${isActive ? 'text-[#2563EB]' : 'text-[#94A3B8]'}`}
+                          strokeWidth={isActive ? 2.4 : 1.8}
+                        />
+                      )}
+                      {showBadge && (
                         <span className="absolute -top-1 -right-2 min-w-[14px] h-3.5 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
                           {unreadMessages > 9 ? '9+' : unreadMessages}
                         </span>
@@ -233,9 +215,8 @@ export default function Layout({ children, currentPageName }) {
                     <span
                       className="relative z-10 transition-all duration-150"
                       style={{
-                        fontSize: 10,
-                        marginTop: 3,
-                        fontWeight: isActive ? 600 : 400,
+                        fontSize: 10, marginTop: 3,
+                        fontWeight: isActive ? 700 : 400,
                         color: isActive ? '#2563EB' : '#94A3B8',
                         letterSpacing: '0.01em',
                       }}

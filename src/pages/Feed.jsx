@@ -18,6 +18,7 @@ import SearchModal from '@/components/feed/SearchModal';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
 import { Search, Plus, RefreshCw, ChevronDown } from 'lucide-react';
+import SkeletonCard from '@/components/common/SkeletonCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
 import { LOCAL_NETWORKS, getNetworkByPreset, matchPostNetwork } from '@/lib/localNetworks';
@@ -62,7 +63,7 @@ export default function Feed() {
   const [allPosts, setAllPosts] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 30;
-  const [showNetworkBanner, setShowNetworkBanner] = useState(() => !localStorage.getItem('junited_network_banner_dismissed'));
+  const [showNetworkBanner, setShowNetworkBanner] = useState(() => !localStorage.getItem('junited_network_banner_v2_dismissed'));
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -417,7 +418,7 @@ export default function Feed() {
           <div className="flex items-center gap-2 mb-2 px-3 py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-medium">
             <span className="text-lg">{primaryNetwork.emoji}</span>
             <span className="flex-1">You're viewing <strong>{primaryNetwork.shortLabel}</strong> — tap the chip above to switch networks.</span>
-            <button onClick={() => { setShowNetworkBanner(false); localStorage.setItem('junited_network_banner_dismissed', '1'); }} className="text-white/70 hover:text-white text-lg leading-none font-bold flex-shrink-0">×</button>
+            <button onClick={() => { setShowNetworkBanner(false); localStorage.setItem('junited_network_banner_v2_dismissed', '1'); }} className="text-white/70 hover:text-white text-lg leading-none font-bold flex-shrink-0">×</button>
           </div>
         )}
 
@@ -444,19 +445,9 @@ export default function Feed() {
         )}
 
         {activeTab !== 'events' && isLoading && !loadTimedOut && (
-          <div className="space-y-3">
+          <div className="space-y-3 tab-fade-in">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white rounded-[16px] p-4">
-                <div className="flex items-center gap-2.5 mb-3">
-                  <div className="skeleton w-8 h-8 rounded-full" />
-                  <div className="flex-1 space-y-1.5">
-                    <div className="skeleton h-3 w-24 rounded" />
-                    <div className="skeleton h-2.5 w-16 rounded" />
-                  </div>
-                </div>
-                <div className="skeleton h-3 w-full rounded mb-2" />
-                <div className="skeleton h-3 w-4/5 rounded" />
-              </div>
+              <SkeletonCard key={i} hasImage={i === 1} />
             ))}
           </div>
         )}
@@ -468,7 +459,7 @@ export default function Feed() {
           </div>
         )}
         {activeTab !== 'events' && (!isLoading || loadTimedOut) && feedPosts.length > 0 && (
-          <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-white">
+          <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-white tab-fade-in">
             {isError && (
               <p className="text-[12px] text-slate-400 text-center px-4 py-2">Showing cached posts — pull down to refresh.</p>
             )}
