@@ -1,0 +1,127 @@
+{
+  "name": "BusinessListing",
+  "type": "object",
+  "properties": {
+    "owner_id": {
+      "type": "string",
+      "description": "User ID of the business owner"
+    },
+    "owner_name": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "description": "Business name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "restaurant",
+        "mikvah",
+        "judaica",
+        "tutor",
+        "synagogue_supply",
+        "caterer",
+        "bakery",
+        "grocery",
+        "other"
+      ],
+      "description": "Business category"
+    },
+    "tagline": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "hours": {
+      "type": "string"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "cover_image_url": {
+      "type": "string"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of photo URLs"
+    },
+    "kosher_cert": {
+      "type": "string",
+      "description": "Kosher certification body (e.g. OU, Star-K, CRC)"
+    },
+    "menu_url": {
+      "type": "string",
+      "description": "Link to menu (for restaurants)"
+    },
+    "is_verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "free",
+        "premium"
+      ],
+      "default": "free",
+      "description": "Free or paid premium tier"
+    },
+    "plan_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "plan_order_id": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "rating_avg": {
+      "type": "number",
+      "default": 0
+    },
+    "review_count": {
+      "type": "number",
+      "default": 0
+    },
+    "neighborhood": {
+      "type": "string"
+    },
+    "community_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Communities this listing surfaces in"
+    }
+  },
+  "required": [
+    "owner_id",
+    "name",
+    "category"
+  ]
+}

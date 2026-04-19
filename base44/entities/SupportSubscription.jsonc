@@ -1,0 +1,64 @@
+{
+  "name": "SupportSubscription",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "tier": {
+      "type": "string",
+      "enum": [
+        "supporter",
+        "champion",
+        "patron"
+      ],
+      "description": "Monthly contribution tier"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Monthly amount in USD"
+    },
+    "billing": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "annual"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "cancelled",
+        "expired"
+      ],
+      "default": "active"
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "subscription_id": {
+      "type": "string",
+      "description": "Wix subscription ID for lifecycle tracking"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_id",
+    "tier",
+    "amount"
+  ]
+}

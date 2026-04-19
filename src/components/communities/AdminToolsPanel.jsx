@@ -1,23 +1,14 @@
 import React, { useState, useRef } from 'react';
-import { Loader2, Plus, Sparkles, Bell, Pin, BarChart2, Users, FileText, Upload, Save } from 'lucide-react';
+import { Loader2, Plus, Sparkles, Bell, Pin, BarChart2, Users, FileText, Upload, Save, Heart } from 'lucide-react';
 import FeaturedEligibilityChecker from './FeaturedEligibilityChecker';
+import VerifiedCommunityUpgrade from '@/components/monetization/VerifiedCommunityUpgrade';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import CommunityLogo from './CommunityLogo';
-
-const PREMIUM_FEATURES = [
-  { icon: Bell, label: 'Push Notifications', desc: 'Notify all followers instantly' },
-  { icon: Pin, label: 'Pin Announcements', desc: 'Keep important posts at the top' },
-  { icon: FileText, label: 'Bulletin Uploads', desc: 'Share PDFs & flyers' },
-  { icon: Users, label: 'Multi-Admin Roles', desc: 'Invite staff as editors or admins' },
-  { icon: BarChart2, label: 'Analytics', desc: 'Views, follows, and engagement metrics' },
-  { icon: Sparkles, label: 'Featured Placement', desc: 'Highlighted in the directory' },
-];
 
 export default function AdminToolsPanel({ community, org, currentUser, onPostCreated, onLogoUpdated, onInfoUpdated }) {
   const [tab, setTab] = useState('posts');
@@ -50,13 +41,14 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
       hours: infoHours.trim() || undefined,
       description_short: infoDescShort.trim() || undefined,
       description_long: infoDescLong.trim() || undefined,
+      donation_url: infoDonationUrl.trim() || undefined,
     });
     toast.success('Info saved!');
     setSavingInfo(false);
     onInfoUpdated?.();
   };
 
-  const isPremium = org?.plan === 'PREMIUM';
+  const [infoDonationUrl, setInfoDonationUrl] = useState(community?.donation_url || '');
 
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -103,7 +95,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
   return (
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
       <div className="flex border-b border-slate-100 overflow-x-auto scrollbar-hide">
-        {['posts', 'events', 'info', 'logo', 'premium'].map(t => (
+        {['posts', 'events', 'info', 'logo', 'verified'].map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -204,6 +196,13 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
               <Label className="text-xs font-semibold text-slate-600 mb-1 block">Full Description <span className="text-slate-400 font-normal">(optional, shown on About tab)</span></Label>
               <Textarea value={infoDescLong} onChange={e => setInfoDescLong(e.target.value)} placeholder="More detailed info about your community, programs, mission, etc." className="resize-none" rows={5} />
             </div>
+            <div>
+              <Label className="text-xs font-semibold text-slate-600 mb-1 block flex items-center gap-1.5">
+                <Heart className="w-3.5 h-3.5 text-rose-500" /> Donation Link <span className="text-slate-400 font-normal">(Stripe, PayPal, Chesed Fund, etc.)</span>
+              </Label>
+              <Input value={infoDonationUrl} onChange={e => setInfoDonationUrl(e.target.value)} placeholder="https://chesed.fund/your-org" />
+              <p className="text-[10px] text-slate-400 mt-1">JUnited takes no cut. Donors go directly to your payment provider.</p>
+            </div>
             <Button className="w-full bg-[#0F5ED7] hover:bg-[#0D4EB8]" onClick={handleSaveInfo} disabled={savingInfo}>
               {savingInfo ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-1" />Save Info</>}
             </Button>
@@ -240,44 +239,15 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
           </div>
         )}
 
-        {/* Premium Tab */}
-        {tab === 'premium' && (
+        {/* Verified Tab */}
+        {tab === 'verified' && (
           <div className="space-y-4">
-            {isPremium ? (
-              <div className="text-center py-4">
-                <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-2" />
-                <p className="font-bold text-slate-900">You're on Premium 🎉</p>
-                <p className="text-sm text-slate-500">All features unlocked</p>
-              </div>
-            ) : (
-              <>
-                <div className="bg-gradient-to-br from-[#0F5ED7] to-[#7B3FE4] rounded-2xl p-4 text-white mb-4">
-                  <p className="font-bold text-lg mb-1">Upgrade to Premium</p>
-                  <p className="text-sm text-blue-100 mb-3">Unlock advanced tools for your community</p>
-                  <div className="text-2xl font-black">$29<span className="text-base font-normal text-blue-200">/mo</span></div>
-                </div>
-                <div className="space-y-2">
-                  {PREMIUM_FEATURES.map(({ icon: Icon, label, desc }) => (
-                    <div key={label} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
-                      <Icon className="w-5 h-5 text-[#0F5ED7] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">{label}</p>
-                        <p className="text-xs text-slate-500">{desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <Button className="w-full bg-gradient-to-r from-[#0F5ED7] to-[#7B3FE4] text-white font-bold h-11 rounded-xl">
-                  <Sparkles className="w-4 h-4 mr-2" />Upgrade to Premium
-                </Button>
-
-                {/* Featured placement — requires eligibility check */}
-                <div className="mt-4 border-t border-slate-100 pt-4">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">✨ Featured Placement</p>
-                  <FeaturedEligibilityChecker community={community} />
-                </div>
-              </>
-            )}
+            <VerifiedCommunityUpgrade community={community} currentUser={currentUser} />
+            {/* Featured placement */}
+            <div className="border-t border-slate-100 pt-4">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">✨ Featured Placement</p>
+              <FeaturedEligibilityChecker community={community} />
+            </div>
           </div>
         )}
       </div>

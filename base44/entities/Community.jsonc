@@ -17,15 +17,13 @@
       ]
     },
     "category": {
-      "type": "string",
-      "description": "User-created community category"
+      "type": "string"
     },
     "neighborhood": {
       "type": "string"
     },
     "location": {
-      "type": "string",
-      "description": "Location label for user-created communities"
+      "type": "string"
     },
     "address": {
       "type": "string"
@@ -46,8 +44,7 @@
       "type": "string"
     },
     "description": {
-      "type": "string",
-      "description": "Full description"
+      "type": "string"
     },
     "description_short": {
       "type": "string"
@@ -56,12 +53,10 @@
       "type": "string"
     },
     "rules": {
-      "type": "string",
-      "description": "Community rules / guidelines"
+      "type": "string"
     },
     "who_its_for": {
-      "type": "string",
-      "description": "Who should join this community"
+      "type": "string"
     },
     "privacy": {
       "type": "string",
@@ -69,8 +64,7 @@
         "public",
         "approval"
       ],
-      "default": "public",
-      "description": "Join mode"
+      "default": "public"
     },
     "logo_url": {
       "type": "string"
@@ -112,38 +106,31 @@
     },
     "isMainFeatured": {
       "type": "boolean",
-      "default": false,
-      "description": "Hero/main featured slot"
+      "default": false
     },
     "featuredRank": {
-      "type": "number",
-      "description": "Sort order for featured communities"
+      "type": "number"
     },
     "featured_slot_type": {
       "type": "string",
       "enum": [
         "hero",
         "secondary"
-      ],
-      "description": "Hero (main) or secondary slot if featured"
+      ]
     },
     "featured_until": {
       "type": "string",
-      "format": "date-time",
-      "description": "When featured status expires"
+      "format": "date-time"
     },
     "featured_tagline": {
-      "type": "string",
-      "description": "Short tagline for featured cards"
+      "type": "string"
     },
     "featured_accent_color": {
-      "type": "string",
-      "description": "Hex color for featured card accent"
+      "type": "string"
     },
     "featured_priority": {
       "type": "number",
-      "default": 0,
-      "description": "Higher = shown first"
+      "default": 0
     },
     "is_eligible_for_featured": {
       "type": "boolean",
@@ -197,6 +184,42 @@
     },
     "created_by_name": {
       "type": "string"
+    },
+    "verified_plan": {
+      "type": "string",
+      "enum": [
+        "none",
+        "small",
+        "medium",
+        "large"
+      ],
+      "default": "none",
+      "description": "Paid Verified Community plan tier"
+    },
+    "verified_plan_billing": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "annual"
+      ],
+      "description": "Billing cycle for verified plan"
+    },
+    "verified_plan_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When current plan period expires"
+    },
+    "verified_plan_order_id": {
+      "type": "string",
+      "description": "Last checkout session / order ID for this plan"
+    },
+    "verified_accent_color": {
+      "type": "string",
+      "description": "Custom accent color for verified communities (hex)"
+    },
+    "donation_url": {
+      "type": "string",
+      "description": "External donate link (Stripe, PayPal, Chesed Fund, etc.)"
     }
   },
   "required": [

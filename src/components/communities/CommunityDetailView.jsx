@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2, MapPin, Phone, Globe, Clock, BookOpen, Users } from 'lucide-react';
+import { Loader2, MapPin, Phone, Globe, Clock, BookOpen, Users, Heart, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import CommunityHero from './CommunityHero';
 import ClaimModal from './ClaimModal';
@@ -127,6 +127,27 @@ function AboutTab({ community, onClaim }) {
             <BookOpen className="w-3.5 h-3.5" /> Community Guidelines
           </p>
           <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{community.rules}</p>
+        </div>
+      )}
+
+      {/* Donate button */}
+      {community.donation_url && (
+        <a
+          href={community.donation_url}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-rose-600 text-white font-bold text-[14px] active:scale-95 transition-all"
+        >
+          <Heart className="w-4 h-4 fill-white" />
+          Donate to {community.name}
+        </a>
+      )}
+
+      {/* Verified community callout */}
+      {community.verified_plan && community.verified_plan !== 'none' && (
+        <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2.5 text-[13px] text-blue-700 font-medium">
+          <Shield className="w-4 h-4 flex-shrink-0" />
+          Verified {community.type || 'Community'} on JUnited
         </div>
       )}
 

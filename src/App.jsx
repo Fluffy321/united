@@ -21,6 +21,10 @@ import CommunityCalendar from '@/pages/CommunityCalendar';
 import DiscoverCommunitiesFeed from '@/pages/DiscoverCommunitiesFeed';
 import JoinByCommunityCode from '@/pages/JoinByCommunityCode';
 import MinorSafetyPolicy from '@/pages/MinorSafetyPolicy';
+import BusinessDirectory from '@/pages/BusinessDirectory';
+import BusinessListingPage from '@/pages/BusinessListing';
+import CreateBusinessListing from '@/pages/CreateBusinessListing';
+import SupportJUnited from '@/pages/SupportJUnited';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -74,6 +78,10 @@ const AuthenticatedApp = () => {
       <Route path="/DiscoverCommunitiesFeed" element={<PageTransition><DiscoverCommunitiesFeed /></PageTransition>} />
       <Route path="/join" element={<PageTransition><JoinByCommunityCode /></PageTransition>} />
       <Route path="/MinorSafetyPolicy" element={<PageTransition><MinorSafetyPolicy /></PageTransition>} />
+      <Route path="/BusinessDirectory" element={<PageTransition><BusinessDirectory /></PageTransition>} />
+      <Route path="/BusinessListing" element={<PageTransition><BusinessListingPage /></PageTransition>} />
+      <Route path="/CreateBusinessListing" element={<PageTransition><CreateBusinessListing /></PageTransition>} />
+      <Route path="/SupportJUnited" element={<PageTransition><SupportJUnited /></PageTransition>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
