@@ -299,8 +299,8 @@ function MitzvahCircleModule({ opportunities, onTabChange }) {
 
 // ─── Photos strip ────────────────────────────────────────────────────────────
 function PhotosStrip({ posts }) {
-  const photos = posts.filter(p => p.image_url || (p.image_urls?.length > 0)).slice(0, 8);
   const [lightbox, setLightbox] = useState(null);
+  const photos = posts.filter(p => p.image_url || (p.image_urls?.length > 0)).slice(0, 8);
 
   if (photos.length === 0) return null;
 
