@@ -97,22 +97,28 @@ export default function Feed() {
     queryKey: ['unified-posts', page],
     queryFn: async () => {
       const p = await base44.entities.UnifiedPost.list('-updated_date', PAGE_SIZE, page * PAGE_SIZE);
-      if (page === 0) {
-        setAllPosts(p);
-        setCachedPosts(p);
-      } else {
-        setAllPosts(prev => {
-          const existingIds = new Set(prev.map(x => x.id));
-          const newOnes = p.filter(x => !existingIds.has(x.id));
-          return [...prev, ...newOnes];
-        });
-      }
-      setHasMore(p.length === PAGE_SIZE);
       return p;
     },
     staleTime: 30000,
     refetchInterval: page === 0 ? 60000 : false,
   });
+
+  // Merge paged results into allPosts without causing infinite loops
+  useEffect(() => {
+    if (!posts || posts.length === 0) return;
+    if (page === 0) {
+      setAllPosts(posts);
+      setCachedPosts(posts);
+    } else {
+      setAllPosts(prev => {
+        const existingIds = new Set(prev.map(x => x.id));
+        const newOnes = posts.filter(x => !existingIds.has(x.id));
+        if (newOnes.length === 0) return prev; // no change, avoid re-render
+        return [...prev, ...newOnes];
+      });
+    }
+    setHasMore(posts.length === PAGE_SIZE);
+  }, [posts, page]);
 
   const { data: userCommunitiesList = [] } = useQuery({
     queryKey: ['user-communities', currentUser?.id],
