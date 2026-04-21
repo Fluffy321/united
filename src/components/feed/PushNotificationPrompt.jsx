@@ -11,10 +11,10 @@ export default function PushNotificationPrompt() {
     if (typeof Notification === 'undefined') return;
     if (Notification.permission === 'granted') return;
     if (localStorage.getItem(STORAGE_KEY) === '1') return;
-    // Small delay so it doesn't flash on initial paint
-    const show = setTimeout(() => setVisible(true), 800);
-    // Auto-dismiss after 6s
-    const hide = setTimeout(() => dismiss(), 6800);
+    // Show briefly then auto-dismiss — mark as seen immediately so it never blocks feed again
+    localStorage.setItem(STORAGE_KEY, '1');
+    const show = setTimeout(() => setVisible(true), 1200);
+    const hide = setTimeout(() => setVisible(false), 5000);
     return () => { clearTimeout(show); clearTimeout(hide); };
   }, []);
 

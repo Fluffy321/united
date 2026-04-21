@@ -410,12 +410,12 @@ export default function Feed() {
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto px-4 pt-2 pb-32">
+      <div className="max-w-2xl mx-auto px-4 pt-1 pb-32">
         <PushNotificationPrompt />
 
         {/* One-time network banner for new users */}
         {showNetworkBanner && (
-          <div className="flex items-center gap-2 mb-2 px-3 py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-medium">
+          <div className="flex items-center gap-2 mb-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-[12px] font-medium">
             <span className="text-lg">{primaryNetwork.emoji}</span>
             <span className="flex-1">You're viewing <strong>{primaryNetwork.shortLabel}</strong> — tap the chip above to switch networks.</span>
             <button onClick={() => { setShowNetworkBanner(false); localStorage.setItem('junited_network_banner_v2_dismissed', '1'); }} className="text-white/70 hover:text-white text-lg leading-none font-bold flex-shrink-0">×</button>
@@ -423,16 +423,6 @@ export default function Feed() {
         )}
 
         <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
-
-        <DailyHooks
-          onPostClick={(type, subtype, prefill) => {
-            setPostModalType(type);
-            setPostModalSubtype(subtype || null);
-            setPostModalInitialBody(prefill || '');
-            setShowPostModal(true);
-          }}
-        />
-
         {activeTab === 'events' && !isLoading && (
           <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #F0F9FF 0%, #FAF5FF 100%)', border: '1px solid #C7D7FD', boxShadow: '0 2px 12px rgba(37,99,235,0.06)', marginBottom: 12, padding: 0 }}>
           <EventsForYou currentUser={currentUser} events={visiblePosts.filter(p => p.type === 'event')} />
@@ -460,6 +450,15 @@ export default function Feed() {
         )}
         {activeTab !== 'events' && (!isLoading || loadTimedOut) && feedPosts.length > 0 && (
           <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-white tab-fade-in">
+            {/* Question of the Day — embedded as first "post" in the feed card */}
+            <DailyHooks
+              onPostClick={(type, subtype, prefill) => {
+                setPostModalType(type);
+                setPostModalSubtype(subtype || null);
+                setPostModalInitialBody(prefill || '');
+                setShowPostModal(true);
+              }}
+            />
             {isError && (
               <p className="text-[12px] text-slate-400 text-center px-4 py-2">Showing cached posts — pull down to refresh.</p>
             )}
