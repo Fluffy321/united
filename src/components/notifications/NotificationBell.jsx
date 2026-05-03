@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { appParams } from '@/lib/app-params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -12,7 +13,7 @@ export default function NotificationBell({ userId }) {
 
   // Real-time subscription for instant bell updates
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !appParams.hasBackendConfig) return;
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
       if (event.type === 'create' && event.data?.user_id === userId) {
         queryClient.invalidateQueries({ queryKey: ['notification-count', userId] });
@@ -30,7 +31,7 @@ export default function NotificationBell({ userId }) {
       const notifs = await base44.entities.Notification.filter({ user_id: userId, is_read: false });
       return notifs.length;
     },
-    enabled: !!userId,
+    enabled: !!userId && appParams.hasBackendConfig,
     refetchInterval: 30000,
     staleTime: 15000,
   });

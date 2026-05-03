@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search, X, Clock, TrendingUp, Bookmark, BookmarkCheck, Filter, ChevronLeft, Users, Calendar, FileText, User, Loader2, Bell } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { appParams } from '@/lib/app-params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,6 +16,52 @@ const POST_TYPES = [
   { value: 'job', label: 'Jobs' },
   { value: 'housing', label: 'Housing' },
 ];
+
+const DEMO_RESULTS = {
+  posts: [
+    {
+      id: 'demo-post-1',
+      title: 'Shabbos hospitality available',
+      body: 'A local family has room for guests this week. Reply through the app once messaging is connected.',
+      author_name: 'Local demo',
+      community_name: 'Five Towns',
+      created_date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      likes_count: 6,
+      comments_count: 2,
+    },
+    {
+      id: 'demo-post-2',
+      title: 'Tehillim group tonight',
+      body: 'Community Tehillim gathering after Maariv.',
+      author_name: 'Local demo',
+      community_name: 'JUnited',
+      created_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      likes_count: 12,
+      comments_count: 4,
+    },
+  ],
+  communities: [
+    { id: 'demo-community-1', name: 'Five Towns Community', type: 'Neighborhood', follower_count: 128 },
+    { id: 'demo-community-2', name: 'Chesed Volunteers', type: 'Group', follower_count: 47 },
+  ],
+  events: [
+    { id: 'demo-event-1', title: 'Community Dinner', start_date: new Date().toISOString().slice(0, 10), location: 'Main shul social hall' },
+  ],
+  people: [
+    { id: 'demo-person-1', full_name: 'Demo Member', bio: 'Local placeholder profile' },
+  ],
+};
+
+const searchDemoResults = (query) => {
+  const needle = query.toLowerCase();
+  const matches = (value) => String(value || '').toLowerCase().includes(needle);
+  return {
+    posts: DEMO_RESULTS.posts.filter(post => matches(post.title) || matches(post.body) || matches(post.community_name)),
+    communities: DEMO_RESULTS.communities.filter(community => matches(community.name) || matches(community.type)),
+    events: DEMO_RESULTS.events.filter(event => matches(event.title) || matches(event.location)),
+    people: DEMO_RESULTS.people.filter(person => matches(person.full_name) || matches(person.bio)),
+  };
+};
 
 function ResultSection({ title, icon: Icon, count, children }) {
   if (!count) return null;
@@ -122,16 +169,27 @@ export default function SearchPage() {
   useEffect(() => {
     if (debouncedQuery.trim().length < 2) { setResults(null); return; }
     setSearching(true);
+    if (!appParams.hasBackendConfig) {
+      setResults(searchDemoResults(debouncedQuery));
+      setSearching(false);
+      const updated = [debouncedQuery, ...recentSearches.filter(s => s !== debouncedQuery)].slice(0, 8);
+      setRecentSearches(updated);
+      try { localStorage.setItem('junited_recent_searches', JSON.stringify(updated)); } catch {}
+      return;
+    }
     base44.functions.invoke('universalSearch', { query: debouncedQuery, filters, user_id: user?.id })
       .then(res => {
-        setResults(res.data.results);
+        setResults(res.data?.results || { posts: [], communities: [], events: [], people: [] });
         setSearching(false);
         // Save to recent
         const updated = [debouncedQuery, ...recentSearches.filter(s => s !== debouncedQuery)].slice(0, 8);
         setRecentSearches(updated);
         try { localStorage.setItem('junited_recent_searches', JSON.stringify(updated)); } catch {}
       })
-      .catch(() => setSearching(false));
+      .catch(() => {
+        setResults({ posts: [], communities: [], events: [], people: [] });
+        setSearching(false);
+      });
   }, [debouncedQuery, filters, user?.id]);
 
   const { data: savedSearches = [], refetch: refetchSaved } = useQuery({

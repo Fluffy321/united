@@ -1,6 +1,6 @@
 import React from 'react';
-import { Calendar, Clock, MapPin, Plus, Users, ChevronRight } from 'lucide-react';
-import { formatDistanceToNow, format, parseISO, isPast, isToday, isTomorrow } from 'date-fns';
+import { Clock, MapPin, Plus, Users, ChevronRight } from 'lucide-react';
+import { format, parseISO, isPast, isToday, isTomorrow } from 'date-fns';
 import EventRSVPSection from '@/components/events/EventRSVPSection';
 import { useState } from 'react';
 import { motion } from 'framer-motion';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Users, Sparkles } from 'lucide-react';
+import { Trophy, Sparkles } from 'lucide-react';
 import UserAvatar from '@/components/common/UserAvatar';
 
 export default function CommunityWinsCard({ weeklyStats, recentMitzvah }) {

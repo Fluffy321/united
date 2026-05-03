@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Users, Calendar, MessageSquare, X, Send, Loader2, Eye, Edit3 } from 'lucide-react';
+import { Mail, Calendar, MessageSquare, X, Send, Loader2, Eye, Edit3 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 

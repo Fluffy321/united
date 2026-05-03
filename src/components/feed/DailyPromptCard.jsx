@@ -1,7 +1,5 @@
 import React from 'react';
 import { Sparkles, MessageCircle } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 export default function DailyPromptCard({ prompt, onReply }) {
   if (!prompt) return null;

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
 
 export default function HappeningTodayCard({ event, onView }) {
   return (

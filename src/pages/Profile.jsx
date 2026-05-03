@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Settings } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import ReportModal from '@/components/common/ReportModal';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
-import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns';
+import { parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import ModernProfileHeader from '@/components/profile/ModernProfileHeader.jsx';
 import ModernStatsRow from '@/components/profile/ModernStatsRow.jsx';
 import ModernActionButtons from '@/components/profile/ModernActionButtons.jsx';
@@ -21,7 +21,6 @@ import CommunitiesSection from '@/components/profile/CommunitiesSection.jsx';
 import RecentPostsSection from '@/components/profile/RecentPostsSection.jsx';
 import SavedPostsSection from '@/components/profile/SavedPostsSection.jsx';
 import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
-import SectionCard from '@/components/profile/SectionCard.jsx';
 
 export default function Profile() {
   const [searchParams] = useSearchParams();

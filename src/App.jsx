@@ -5,7 +5,7 @@ import NavigationTracker from '@/lib/NavigationTracker'
 import ThemeProvider from '@/components/theme/ThemeProvider'
 import PageTransition from '@/components/common/PageTransition'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -41,6 +41,24 @@ const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
+
+const LoginRedirect = () => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const fromUrl = params.get('from_url');
+  let target = '/';
+
+  if (fromUrl) {
+    try {
+      const parsed = new URL(fromUrl, window.location.origin);
+      target = `${parsed.pathname}${parsed.search || ''}`;
+    } catch {
+      target = '/';
+    }
+  }
+
+  return <Navigate to={target} replace />;
+};
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -98,6 +116,7 @@ const AuthenticatedApp = () => {
       <Route path="/yahrzeits" element={<PageTransition><YahrzeitManager /></PageTransition>} />
       <Route path="/tehillim" element={<PageTransition><RefuahList /></PageTransition>} />
       <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
+      <Route path="/login" element={<LoginRedirect />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

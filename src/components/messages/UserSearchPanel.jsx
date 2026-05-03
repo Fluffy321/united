@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Search, Loader2, MessageCircle, Users, Bot } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { canMessage, checkSpamLimits, recordNewChat } from '@/lib/messagingPermissions';
-import { AI_AGENT, buildAIConversation, isAIConversation } from '@/lib/aiAgent';
+import { AI_AGENT, buildAIConversation } from '@/lib/aiAgent';
 import { toast } from 'sonner';
 
 export default function UserSearchPanel({ currentUser, onConversationOpened }) {

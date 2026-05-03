@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, ChevronUp, ChevronDown, MessageCircle, Loader2, Send } from 'lucide-react';
+import { ChevronUp, MessageCircle, Loader2, Send } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { formatDistanceToNow, parseISO } from 'date-fns';

@@ -1,486 +1,578 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2, Camera, LogOut, Shield, Bell, UserCircle, X, Trash2 } from 'lucide-react';
-import {
-  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel
-} from '@/components/ui/alert-dialog';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import UserAvatar from '@/components/common/UserAvatar';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { base44 } from '@/api/base44Client';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import {
+  ArrowLeft,
+  Bell,
+  Camera,
+  ChevronRight,
+  Globe2,
+  HeartHandshake,
+  Loader2,
+  Lock,
+  LogOut,
+  Mail,
+  MapPin,
+  Moon,
+  Save,
+  Search,
+  Shield,
+  Trash2,
+  UserRound,
+  Users,
+} from 'lucide-react';
 import { toast } from 'sonner';
-import CitySelector from '@/components/common/CitySelector';
-import NotificationSettings from '@/components/settings/NotificationSettings';
+import { base44 } from '@/api/base44Client';
+import { createPageUrl } from '@/utils';
 
-const INTERESTS = [
-  "Torah & Learning", "Sports", "Music", "Art", "Tech", 
-  "Food", "Travel", "Volunteering", "Fashion", "Gaming",
-  "Fitness", "Reading", "Photography", "Movies", "Outdoors"
+const interestOptions = [
+  'Torah & Learning',
+  'Chesed',
+  'Shuls',
+  'Schools',
+  'Events',
+  'Parents',
+  'Singles',
+  'Neighborhoods',
+  'Food',
+  'Business',
+  'Volunteering',
+  'Youth Programs',
 ];
+
+const sections = [
+  { id: 'profile', label: 'Profile', icon: UserRound },
+  { id: 'community', label: 'Community', icon: Users },
+  { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'privacy', label: 'Privacy', icon: Shield },
+  { id: 'app', label: 'App', icon: Moon },
+  { id: 'account', label: 'Account', icon: Lock },
+];
+
+const defaultSettings = {
+  notification_settings: {
+    messages: true,
+    comments: true,
+    communityPosts: true,
+    eventReminders: true,
+    chesedRequests: true,
+    weeklyDigest: false,
+  },
+  message_settings: {
+    allowMessagesFrom: 'communities',
+    searchable: true,
+    showOnlineStatus: true,
+  },
+  app_settings: {
+    compactCards: false,
+    reduceMotion: false,
+    hebrewDates: true,
+    quietMode: false,
+  },
+  community_settings: {
+    primaryNeighborhood: 'Five Towns',
+    showSuggestedCommunities: true,
+    showPublicProfileToCommunities: true,
+    autoFollowJoinedCommunities: true,
+  },
+};
 
 export default function Settings() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [displayName, setDisplayName] = useState('');
-  const [cityPreset, setCityPreset] = useState('');
-  const [cityCustom, setCityCustom] = useState('');
-  const [cityState, setCityState] = useState('');
-  const [bio, setBio] = useState('');
-  const [interests, setInterests] = useState([]);
-  const [avatarFile, setAvatarFile] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [activeSection, setActiveSection] = useState('profile');
   const [isSaving, setIsSaving] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleteInput, setDeleteInput] = useState('');
-  const [notifications, setNotifications] = useState({
-    messages: true,
-    comments: true,
-    likes: false,
-    prompts: true
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteText, setDeleteText] = useState('');
+  const [form, setForm] = useState({
+    display_name: '',
+    bio: '',
+    cityPreset: 'Five Towns',
+    email: '',
+    avatar_url: '',
+    interests: [],
+    ...defaultSettings,
   });
 
   useEffect(() => {
-    loadUser();
+    let mounted = true;
+
+    base44.auth.me().then((user) => {
+      if (!mounted) return;
+      setCurrentUser(user);
+      setForm({
+        display_name: user.display_name || user.full_name || 'Local Demo User',
+        bio: user.bio || 'Building stronger Jewish community connections.',
+        cityPreset: user.cityPreset || 'Five Towns',
+        email: user.email || 'demo@junited.local',
+        avatar_url: user.avatar_url || '',
+        interests: user.interests || ['Chesed', 'Events', 'Community'],
+        notification_settings: {
+          ...defaultSettings.notification_settings,
+          ...(user.notification_settings || {}),
+        },
+        message_settings: {
+          ...defaultSettings.message_settings,
+          ...(user.message_settings || {}),
+        },
+        app_settings: {
+          ...defaultSettings.app_settings,
+          ...(user.app_settings || {}),
+        },
+        community_settings: {
+          ...defaultSettings.community_settings,
+          ...(user.community_settings || {}),
+          primaryNeighborhood: user.cityPreset || defaultSettings.community_settings.primaryNeighborhood,
+        },
+      });
+    });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const loadUser = async () => {
-    const user = await base44.auth.me();
+  const activeLabel = useMemo(
+    () => sections.find((section) => section.id === activeSection)?.label || 'Settings',
+    [activeSection]
+  );
 
-    setCurrentUser(user);
-    setDisplayName(user.display_name || user.full_name?.split(' ')[0] || '');
-    setCityPreset(user.cityPreset || 'Lawrence');
-    setCityCustom(user.cityCustom || '');
-    setCityState(user.cityState || '');
-    setBio(user.bio || '');
-    setInterests(user.interests || []);
-    setAvatarPreview(user.avatar_url);
-    setNotifications(user.notification_settings || {
-      messages: true,
-      comments: true,
-      likes: false,
-      prompts: true
-    });
+  const updateForm = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+
+  const updateNested = (group, key, value) => {
+    setForm((current) => ({
+      ...current,
+      [group]: {
+        ...current[group],
+        [key]: value,
+      },
+    }));
   };
 
   const toggleInterest = (interest) => {
-    setInterests(prev => 
-      prev.includes(interest) 
-        ? prev.filter(i => i !== interest)
-        : prev.length < 5 ? [...prev, interest] : prev
-    );
+    setForm((current) => {
+      const exists = current.interests.includes(interest);
+      const nextInterests = exists
+        ? current.interests.filter((item) => item !== interest)
+        : [...current.interests, interest].slice(0, 6);
+      return { ...current, interests: nextInterests };
+    });
   };
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please upload a valid image file (JPG or PNG)');
-        return;
-      }
-      
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image must be smaller than 5MB');
-        return;
-      }
-
-      setAvatarFile(file);
-      setAvatarPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleSaveProfile = async () => {
-    if (!avatarPreview && !avatarFile) {
-      toast.error('Profile photo is required');
+  const handleAvatarChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please choose an image file');
       return;
     }
-
-    setIsSaving(true);
-
-    try {
-      let avatarUrl = currentUser?.avatar_url;
-      if (avatarFile) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file: avatarFile });
-        avatarUrl = file_url;
-      }
-
-      await base44.auth.updateMe({
-        display_name: displayName.trim(),
-        cityPreset,
-        cityCustom,
-        cityState,
-        bio: bio.trim(),
-        interests,
-        avatar_url: avatarUrl
-      });
-
-      setIsSaving(false);
-      toast.success('Profile updated');
-      loadUser();
-    } catch (error) {
-      toast.error('Failed to update profile');
-      setIsSaving(false);
-    }
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    updateForm('avatar_url', file_url);
   };
 
-  const handleSaveNotifications = async () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    await base44.auth.updateMe({ notification_settings: notifications });
+    try {
+      await base44.auth.updateMe({
+        display_name: form.display_name.trim(),
+        bio: form.bio.trim(),
+        cityPreset: form.cityPreset,
+        avatar_url: form.avatar_url,
+        interests: form.interests,
+        notification_settings: form.notification_settings,
+        message_settings: form.message_settings,
+        app_settings: form.app_settings,
+        community_settings: form.community_settings,
+      });
+      toast.success('Settings saved');
+    } catch {
+      toast.error('Could not save settings');
+    }
     setIsSaving(false);
-    toast.success('Notification settings updated');
   };
 
   const handleLogout = () => {
     base44.auth.logout();
+    toast.success('Logged out locally');
   };
 
   const handleDeleteAccount = async () => {
-    if (deleteInput !== 'DELETE') return;
-    setShowDeleteDialog(false);
+    if (deleteText !== 'DELETE') return;
     setIsSaving(true);
     try {
       await base44.functions.invoke('deleteUserAccount', { userId: currentUser.id });
-      toast.success('Account deleted. Logging out...');
-      setTimeout(() => base44.auth.logout(), 1500);
-    } catch (error) {
-      toast.error('Failed to delete account. Please contact support.');
-      setIsSaving(false);
+      setShowDeleteConfirm(false);
+      toast.success('Account deletion requested');
+    } catch {
+      toast.error('Could not delete account');
     }
+    setIsSaving(false);
   };
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <Loader2 className="h-7 w-7 animate-spin text-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Link to={createPageUrl('Profile')}>
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
-          <h1 className="text-xl font-bold text-slate-900">Settings</h1>
+    <main className="min-h-screen bg-slate-50 pb-10">
+      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-3">
+            <Link
+              to={createPageUrl('Profile')}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Account</p>
+              <h1 className="text-xl font-bold text-slate-950">Settings</h1>
+            </div>
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-60"
+          >
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Save
+          </button>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <Tabs defaultValue="profile">
-          <TabsList className="w-full mb-6">
-            <TabsTrigger value="profile" className="flex-1 gap-2">
-              <UserCircle className="w-4 h-4" />
-              Profile
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex-1 gap-2">
-              <Bell className="w-4 h-4" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="privacy" className="flex-1 gap-2">
-              <Shield className="w-4 h-4" />
-              Privacy
-            </TabsTrigger>
-          </TabsList>
+      <div className="mx-auto grid max-w-6xl gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[280px_1fr]">
+        <aside className="space-y-4">
+          <ProfileSummary form={form} onAvatarChange={handleAvatarChange} />
 
-          <TabsContent value="profile" className="space-y-6">
-            {/* Profile Photo */}
-            <div className="bg-white rounded-xl p-6">
-              <div className="flex flex-col items-center gap-4">
-                {avatarPreview ? (
-                  <div className="relative">
-                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-slate-200 shadow-lg">
-                      <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
-                    </div>
-                    <button
-                      onClick={() => document.getElementById('avatar-upload').click()}
-                      className="absolute bottom-0 right-0 w-10 h-10 bg-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-700 transition-colors"
-                    >
-                      <Camera className="w-5 h-5" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <div className="w-32 h-32 rounded-full bg-slate-200 flex items-center justify-center mb-4">
-                      <UserCircle className="w-16 h-16 text-slate-400" />
-                    </div>
-                    <p className="text-sm text-red-600 font-medium mb-2">Profile photo required</p>
-                  </div>
-                )}
-
-                <input 
-                  type="file" 
-                  accept="image/jpeg,image/jpg,image/png" 
-                  id="avatar-upload" 
-                  className="hidden" 
-                  onChange={handleAvatarChange} 
-                />
-                
-                <Button 
-                  variant="outline" 
-                  className="gap-2"
-                  onClick={() => document.getElementById('avatar-upload').click()}
+          <nav className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            {sections.map((section) => {
+              const Icon = section.icon;
+              const active = activeSection === section.id;
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id)}
+                  className={`flex w-full items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 text-left text-sm font-bold last:border-b-0 transition ${
+                    active ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
                 >
-                  <Camera className="w-4 h-4" />
-                  {avatarPreview ? 'Change Photo' : 'Upload Photo'}
-                </Button>
+                  <span className="flex items-center gap-3">
+                    <Icon className="h-4 w-4" />
+                    {section.label}
+                  </span>
+                  <ChevronRight className="h-4 w-4 opacity-50" />
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
 
-                <p className="text-xs text-slate-500 text-center max-w-xs">
-                  Use a clear photo of yourself. JPG or PNG, max 5MB.
-                </p>
-              </div>
-            </div>
+        <section className="space-y-5">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-bold text-blue-700">{activeLabel}</p>
+            <h2 className="mt-1 text-2xl font-bold text-slate-950">{sectionTitle(activeSection)}</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{sectionDescription(activeSection)}</p>
+          </div>
 
-            <div className="bg-white rounded-xl p-6 space-y-4">
-              <div>
-                <Label>Display Name</Label>
-                <Input 
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-
-              <CitySelector 
-                cityPreset={cityPreset}
-                cityCustom={cityCustom}
-                cityState={cityState}
-                onChange={({ cityPreset: cp, cityCustom: cc, cityState: cs }) => {
-                  setCityPreset(cp || '');
-                  setCityCustom(cc || '');
-                  setCityState(cs || '');
-                }}
-              />
-
-              <div>
-                <Label>Bio</Label>
-                <Textarea 
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="Tell us about yourself..."
-                  className="mt-1 resize-none"
-                  maxLength={200}
-                />
-                <p className="text-xs text-slate-400 mt-1 text-right">{bio.length}/200</p>
+          {activeSection === 'profile' && (
+            <SettingsCard title="Profile Information" icon={UserRound}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField label="Display name" value={form.display_name} onChange={(value) => updateForm('display_name', value)} />
+                <TextField label="Email" value={form.email} onChange={(value) => updateForm('email', value)} disabled />
+                <TextField label="Neighborhood" value={form.cityPreset} onChange={(value) => updateForm('cityPreset', value)} icon={MapPin} />
+                <TextField label="Profile photo URL" value={form.avatar_url} onChange={(value) => updateForm('avatar_url', value)} />
+                <label className="block sm:col-span-2">
+                  <span className="mb-1.5 block text-sm font-bold text-slate-700">Bio</span>
+                  <textarea
+                    value={form.bio}
+                    onChange={(event) => updateForm('bio', event.target.value)}
+                    rows={4}
+                    maxLength={220}
+                    className="w-full resize-none rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  />
+                  <p className="mt-1 text-right text-xs text-slate-400">{form.bio.length}/220</p>
+                </label>
               </div>
 
-              <div>
-                <Label>Interests (up to 5)</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {INTERESTS.map(interest => (
-                    <Badge 
-                      key={interest}
-                      variant={interests.includes(interest) ? "default" : "outline"}
-                      className={`cursor-pointer transition-all ${
-                        interests.includes(interest) 
-                          ? 'bg-indigo-600 hover:bg-indigo-700' 
-                          : 'hover:bg-slate-100'
-                      }`}
-                      onClick={() => toggleInterest(interest)}
-                    >
-                      {interest}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <Button 
-                onClick={handleSaveProfile}
-                disabled={isSaving}
-                className="w-full bg-indigo-600 hover:bg-indigo-700"
-              >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
-              </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="notifications">
-            <div className="bg-white rounded-xl p-6">
-              <NotificationSettings userId={currentUser.id} />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="privacy">
-            <div className="bg-white rounded-xl p-6 space-y-6">
-              <div>
-                <h3 className="font-semibold text-slate-900 mb-1">Who can message you?</h3>
-                <p className="text-sm text-slate-400 mb-3">Others will need to send a request if they don't meet this criteria.</p>
-                <div className="space-y-2">
-                  {[
-                    { value: 'everyone', label: 'Anyone', desc: 'Anyone on the app can message you' },
-                    { value: 'communities', label: 'People in my communities', desc: 'Only members of shared groups' },
-                    { value: 'connections', label: 'Only connections', desc: 'Only people you\'re connected with' },
-                    { value: 'nobody', label: 'Nobody', desc: 'No one can message you' },
-                  ].map(opt => {
-                    const current = (currentUser.message_settings?.allowMessagesFrom) || 'communities';
-                    const isSelected = current === opt.value;
+              <div className="mt-5">
+                <p className="mb-2 text-sm font-bold text-slate-700">Interests up to 6</p>
+                <div className="flex flex-wrap gap-2">
+                  {interestOptions.map((interest) => {
+                    const active = form.interests.includes(interest);
                     return (
                       <button
-                        key={opt.value}
-                        onClick={async () => {
-                          const updated = { ...(currentUser.message_settings || {}), allowMessagesFrom: opt.value };
-                          await base44.auth.updateMe({ message_settings: updated });
-                          loadUser();
-                          toast.success('Messaging preference updated');
-                        }}
-                        className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
-                          isSelected ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 hover:bg-slate-50'
+                        key={interest}
+                        onClick={() => toggleInterest(interest)}
+                        className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
+                          active
+                            ? 'border-blue-200 bg-blue-50 text-blue-700'
+                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${isSelected ? 'border-indigo-500 bg-indigo-500' : 'border-slate-300'}`} />
-                          <div>
-                            <p className={`text-sm font-semibold ${isSelected ? 'text-indigo-700' : 'text-slate-800'}`}>{opt.label}</p>
-                            <p className="text-xs text-slate-400">{opt.desc}</p>
-                          </div>
-                        </div>
+                        {interest}
                       </button>
                     );
                   })}
                 </div>
               </div>
+            </SettingsCard>
+          )}
 
-              <div className="flex items-center justify-between py-3 border-t border-slate-100">
-                <div>
-                  <p className="font-semibold text-slate-900 text-sm">Show my profile in search</p>
-                  <p className="text-xs text-slate-400">Allow others to find you by searching</p>
-                </div>
-                <Switch
-                  checked={currentUser.message_settings?.searchable !== false}
-                  onCheckedChange={async (val) => {
-                    const updated = { ...(currentUser.message_settings || {}), searchable: val };
-                    await base44.auth.updateMe({ message_settings: updated });
-                    loadUser();
-                    toast.success(val ? 'Profile visible in search' : 'Profile hidden from search');
-                  }}
+          {activeSection === 'community' && (
+            <SettingsCard title="Community Preferences" icon={HeartHandshake}>
+              <div className="space-y-3">
+                <TextField
+                  label="Primary neighborhood"
+                  value={form.community_settings.primaryNeighborhood}
+                  onChange={(value) => updateNested('community_settings', 'primaryNeighborhood', value)}
+                  icon={MapPin}
+                />
+                <ToggleRow
+                  icon={Users}
+                  title="Show suggested communities"
+                  description="Recommend shuls, schools, chesed groups, and neighborhood boards."
+                  checked={form.community_settings.showSuggestedCommunities}
+                  onChange={(value) => updateNested('community_settings', 'showSuggestedCommunities', value)}
+                />
+                <ToggleRow
+                  icon={Search}
+                  title="Show profile to shared communities"
+                  description="Let members of your joined communities discover your profile."
+                  checked={form.community_settings.showPublicProfileToCommunities}
+                  onChange={(value) => updateNested('community_settings', 'showPublicProfileToCommunities', value)}
+                />
+                <ToggleRow
+                  icon={HeartHandshake}
+                  title="Follow joined communities automatically"
+                  description="Add new joined communities to your Feed and notifications."
+                  checked={form.community_settings.autoFollowJoinedCommunities}
+                  onChange={(value) => updateNested('community_settings', 'autoFollowJoinedCommunities', value)}
                 />
               </div>
+            </SettingsCard>
+          )}
 
-              <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Your Information</h3>
-                <p className="text-sm text-slate-500">
-                  Your age range ({currentUser.age_range || '18+'}) is visible on your profile and messages for safety purposes.
-                </p>
+          {activeSection === 'notifications' && (
+            <SettingsCard title="Notification Settings" icon={Bell}>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <ToggleRow icon={Mail} title="Messages" description="New direct messages." checked={form.notification_settings.messages} onChange={(value) => updateNested('notification_settings', 'messages', value)} />
+                <ToggleRow icon={Bell} title="Comments" description="Replies to your posts." checked={form.notification_settings.comments} onChange={(value) => updateNested('notification_settings', 'comments', value)} />
+                <ToggleRow icon={Users} title="Community posts" description="Updates from joined groups." checked={form.notification_settings.communityPosts} onChange={(value) => updateNested('notification_settings', 'communityPosts', value)} />
+                <ToggleRow icon={Globe2} title="Event reminders" description="Upcoming local events." checked={form.notification_settings.eventReminders} onChange={(value) => updateNested('notification_settings', 'eventReminders', value)} />
+                <ToggleRow icon={HeartHandshake} title="Chesed requests" description="Nearby help requests." checked={form.notification_settings.chesedRequests} onChange={(value) => updateNested('notification_settings', 'chesedRequests', value)} />
+                <ToggleRow icon={Mail} title="Weekly digest" description="A calm weekly summary." checked={form.notification_settings.weeklyDigest} onChange={(value) => updateNested('notification_settings', 'weeklyDigest', value)} />
               </div>
+            </SettingsCard>
+          )}
 
-              <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Data & Privacy</h3>
-                <p className="text-sm text-slate-500">
-                  Your data is stored securely. Contact support for data requests.
-                </p>
-              </div>
-
-              {currentUser?.role === 'admin' && (
-                <div className="pt-4 border-t">
-                  <h3 className="font-semibold text-slate-900 mb-2">Admin Tools</h3>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={async () => {
-                      setIsSaving(true);
-                      try {
-                        await base44.functions.invoke('seedLaunchContent');
-                        toast.success('Seeded 40 items successfully!');
-                      } catch (error) {
-                        toast.error('Failed to seed content');
-                      }
-                      setIsSaving(false);
-                    }}
-                    disabled={isSaving}
+          {activeSection === 'privacy' && (
+            <SettingsCard title="Privacy & Safety" icon={Shield}>
+              <div className="space-y-4">
+                <label className="block">
+                  <span className="mb-1.5 block text-sm font-bold text-slate-700">Who can message you?</span>
+                  <select
+                    value={form.message_settings.allowMessagesFrom}
+                    onChange={(event) => updateNested('message_settings', 'allowMessagesFrom', event.target.value)}
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                   >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : '🌱 Seed Launch Content'}
-                  </Button>
-                </div>
-              )}
-
-              <div className="pt-4 border-t">
-                <a 
-                  href="https://united.community/guidelines" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-                >
-                  📋 Community Guidelines & Safety Rules
-                </a>
+                    <option value="everyone">Anyone</option>
+                    <option value="communities">People in my communities</option>
+                    <option value="connections">Only connections</option>
+                    <option value="nobody">Nobody</option>
+                  </select>
+                </label>
+                <ToggleRow icon={Search} title="Show profile in search" description="Allow others to find you by name." checked={form.message_settings.searchable} onChange={(value) => updateNested('message_settings', 'searchable', value)} />
+                <ToggleRow icon={Users} title="Show online status" description="Let community members see when you are active." checked={form.message_settings.showOnlineStatus} onChange={(value) => updateNested('message_settings', 'showOnlineStatus', value)} />
               </div>
-            </div>
+            </SettingsCard>
+          )}
 
-            <div className="mt-6 space-y-3">
-              <Button 
-                variant="outline" 
-                onClick={handleLogout}
-                className="w-full text-red-600 border-red-200 hover:bg-red-50 gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Log Out
-              </Button>
+          {activeSection === 'app' && (
+            <SettingsCard title="App Preferences" icon={Moon}>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <ToggleRow icon={Moon} title="Quiet mode" description="Reduce attention-grabbing alerts." checked={form.app_settings.quietMode} onChange={(value) => updateNested('app_settings', 'quietMode', value)} />
+                <ToggleRow icon={Users} title="Compact cards" description="Show denser Feed and community cards." checked={form.app_settings.compactCards} onChange={(value) => updateNested('app_settings', 'compactCards', value)} />
+                <ToggleRow icon={Shield} title="Reduce motion" description="Limit animations and transitions." checked={form.app_settings.reduceMotion} onChange={(value) => updateNested('app_settings', 'reduceMotion', value)} />
+                <ToggleRow icon={Globe2} title="Hebrew dates" description="Show Hebrew dates where available." checked={form.app_settings.hebrewDates} onChange={(value) => updateNested('app_settings', 'hebrewDates', value)} />
+              </div>
+            </SettingsCard>
+          )}
 
-              <Button
-                variant="outline"
-                onClick={() => { setDeleteInput(''); setShowDeleteDialog(true); }}
-                disabled={isSaving}
-                className="w-full text-red-700 border-red-300 hover:bg-red-50 gap-2"
-              >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                Delete Account
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
+          {activeSection === 'account' && (
+            <SettingsCard title="Account Actions" icon={Lock}>
+              <div className="space-y-3">
+                <InfoRow title="Account type" value={currentUser.role === 'admin' ? 'Admin' : 'Local demo member'} />
+                <InfoRow title="User ID" value={currentUser.id} />
+                <button
+                  onClick={handleLogout}
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Log out locally
+                </button>
+                <button
+                  onClick={() => {
+                    setDeleteText('');
+                    setShowDeleteConfirm(true);
+                  }}
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition hover:bg-red-100"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete account
+                </button>
+              </div>
+            </SettingsCard>
+          )}
+        </section>
       </div>
 
-      {/* Delete Account Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-red-700">Delete your account?</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3">
-              <p>This will <strong>permanently delete</strong> your account, all your posts, messages, and community history. This cannot be undone.</p>
-              <p className="text-slate-700 font-medium">Type <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-red-700">DELETE</span> to confirm:</p>
-              <input
-                type="text"
-                value={deleteInput}
-                onChange={e => setDeleteInput(e.target.value)}
-                placeholder="Type DELETE here"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-red-400 mt-1"
-                autoComplete="off"
-              />
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <button
-              onClick={handleDeleteAccount}
-              disabled={deleteInput !== 'DELETE'}
-              className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold disabled:opacity-40 hover:bg-red-700 transition-colors"
-            >
-              Permanently Delete
-            </button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[90] flex items-end bg-slate-950/40 p-0 sm:items-center sm:justify-center sm:p-4">
+          <div className="w-full rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-md sm:rounded-3xl">
+            <h2 className="text-lg font-bold text-slate-950">Delete account?</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              This is a serious action. Type DELETE to enable the button.
+            </p>
+            <input
+              value={deleteText}
+              onChange={(event) => setDeleteText(event.target.value)}
+              placeholder="Type DELETE"
+              className="mt-4 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+            />
+            <div className="mt-5 flex gap-3">
+              <button onClick={() => setShowDeleteConfirm(false)} className="h-11 flex-1 rounded-xl bg-slate-100 text-sm font-bold text-slate-700">
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteText !== 'DELETE' || isSaving}
+                className="h-11 flex-1 rounded-xl bg-red-600 text-sm font-bold text-white disabled:opacity-40"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}
+
+function sectionTitle(section) {
+  const titles = {
+    profile: 'Your public profile',
+    community: 'How communities work for you',
+    notifications: 'What should get your attention',
+    privacy: 'Control who can find and contact you',
+    app: 'Make the app feel comfortable',
+    account: 'Login and account actions',
+  };
+  return titles[section];
+}
+
+function sectionDescription(section) {
+  const descriptions = {
+    profile: 'This is what people see when you post, join a community, or send a message.',
+    community: 'Tune the app around your neighborhood and the types of groups you care about.',
+    notifications: 'Keep important messages on, and turn down the noise where you want calm.',
+    privacy: 'Messaging and search settings help you stay reachable without feeling exposed.',
+    app: 'Small quality-of-life preferences for how JUnited looks and behaves.',
+    account: 'Basic local account controls while the app is still running in demo mode.',
+  };
+  return descriptions[section];
+}
+
+function ProfileSummary({ form, onAvatarChange }) {
+  const initials = (form.display_name || 'User')
+    .split(' ')
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          {form.avatar_url ? (
+            <img src={form.avatar_url} alt="" className="h-16 w-16 rounded-2xl object-cover" />
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-950 text-lg font-black text-white">
+              {initials}
+            </div>
+          )}
+          <label className="absolute -bottom-2 -right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm">
+            <Camera className="h-4 w-4" />
+            <input type="file" accept="image/*" className="hidden" onChange={onAvatarChange} />
+          </label>
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-base font-bold text-slate-950">{form.display_name}</p>
+          <p className="truncate text-sm text-slate-500">{form.cityPreset}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SettingsCard({ title, icon: Icon, children }) {
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-950">
+        <Icon className="h-5 w-5 text-blue-600" />
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+function TextField({ label, value, onChange, disabled = false, icon: Icon }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-sm font-bold text-slate-700">{label}</span>
+      <div className="relative">
+        {Icon && <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />}
+        <input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          disabled={disabled}
+          className={`h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-400 ${Icon ? 'pl-10' : ''}`}
+        />
+      </div>
+    </label>
+  );
+}
+
+function ToggleRow({ icon: Icon, title, description, checked, onChange }) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold text-slate-950">{title}</p>
+        <p className="mt-0.5 text-xs leading-5 text-slate-500">{description}</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        className={`relative h-7 w-12 shrink-0 rounded-full transition ${checked ? 'bg-blue-600' : 'bg-slate-200'}`}
+      >
+        <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition ${checked ? 'left-6' : 'left-1'}`} />
+      </button>
+    </div>
+  );
+}
+
+function InfoRow({ title, value }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3">
+      <p className="text-sm font-bold text-slate-700">{title}</p>
+      <p className="truncate text-sm text-slate-500">{value}</p>
     </div>
   );
 }

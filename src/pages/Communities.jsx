@@ -1,885 +1,509 @@
-import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Loader2, Plus, Search, X, Users, AlertCircle, Map, Calendar, Compass } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
-import ProfileSetup from '@/components/profile/ProfileSetup';
-import CommunityDetailView from '@/components/communities/CommunityDetailView';
-import CommunityDetailPage from '@/components/communities/CommunityDetailView';
-import CommunityNetworkView from '@/components/communities/CommunityNetworkView';
-import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
-import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
-import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
-import FeaturedHeroCard from '@/components/communities/FeaturedHeroCard.jsx';
-import FeaturedSecondaryCard from '@/components/communities/FeaturedSecondaryCard.jsx';
-import FeaturedCommunityBanner from '@/components/communities/FeaturedCommunityBanner';
-import DiscoverCategoryCards, { DISCOVER_CATEGORIES } from '@/components/communities/DiscoverCategoriesScreen';
-import CommunityInterestOnboarding from '@/components/communities/CommunityInterestOnboarding';
-import SuggestedCommunities from '@/components/communities/SuggestedCommunities';
-import DiscoverFilters, { applyExtraFilters } from '@/components/communities/DiscoverFilters';
-import { toast } from 'sonner';
+import React, { useMemo, useState } from 'react';
+import { CalendarDays, Compass, HeartHandshake, MessageCircle, Plus, Search, Sparkles, Users } from 'lucide-react';
+import CommunityHubCard from '@/components/communities/CommunityHubCard';
+import CommunityHubDetail from '@/components/communities/CommunityHubDetail';
+import CreateCommunityForm from '@/components/communities/CreateCommunityForm';
 
-const CACHE_KEY = 'communities_v3_cache';
-const FEATURED_SHULS = ["Young Israel Woodmere", "Chabad of Woodmere", "Beth Shalom", "Shaaray Tefila"];
+const categories = ['All', 'Shuls', 'Schools', 'Chesed', 'Learning', 'Events', 'Singles', 'Parents', 'Neighborhoods'];
 
-const CATEGORIES = [
-  { key: 'all', label: 'All', value: null },
-  { key: 'schools', label: '🏫 Schools & Yeshivas', value: 'Schools & Yeshivas' },
-  { key: 'chessed', label: '🤝 Chessed & Volunteering', value: 'Chessed & Volunteering' },
-  { key: 'travel', label: '✈️ Travel', value: 'Travel' },
-  { key: 'careers', label: '💼 Careers & Networking', value: 'Careers & Networking' },
-  { key: 'learning', label: '📚 Learning & Torah', value: 'Learning & Torah' },
-  { key: 'social', label: '🎉 Social & Events', value: 'Social & Events' },
-  { key: 'programs', label: '🧒 Programs & Youth', value: 'Programs & Youth' },
-  { key: 'sports', label: '🏀 Sports & Fitness', value: 'Sports & Fitness' },
-  { key: 'food', label: '🍽️ Food & Lifestyle', value: 'Food & Lifestyle' },
-  { key: 'local', label: '🌍 Local Communities', value: 'Local Communities' },
+const categoryHighlights = {
+  Shuls: 'border-violet-200 bg-violet-50 text-violet-800',
+  Schools: 'border-sky-200 bg-sky-50 text-sky-800',
+  Chesed: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+  Learning: 'border-amber-200 bg-amber-50 text-amber-800',
+  Events: 'border-rose-200 bg-rose-50 text-rose-800',
+  Singles: 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800',
+  Parents: 'border-orange-200 bg-orange-50 text-orange-800',
+  Neighborhoods: 'border-cyan-200 bg-cyan-50 text-cyan-800',
+};
+
+const initialCommunities = [
+  {
+    id: 'five-towns-shul-network',
+    name: 'Five Towns Shul Network',
+    category: 'Shuls',
+    privacy: 'Public',
+    location: 'Five Towns',
+    featured: true,
+    joined: true,
+    memberCount: 1248,
+    recentActivity: 'Daily minyan update posted 18 minutes ago',
+    description: 'A shared board for minyanim, shiurim, shul announcements, kiddush details, and neighborhood needs.',
+    rules: ['Use respectful language.', 'Post shul times with dates.', 'No fundraising posts without admin approval.'],
+    roles: [
+      { name: 'Rabbi Stein', role: 'Admin' },
+      { name: 'Miriam Cohen', role: 'Moderator' },
+      { name: 'Avi Rosen', role: 'Member' },
+    ],
+    posts: [
+      { id: 'p1', type: 'Announcement', author: 'Rabbi Stein', title: 'Motzei Shabbos learning schedule', body: 'New winter schedule is posted for Avos Ubanim and the late Maariv minyan.', time: '18m ago', likes: 42, comments: 8, pinned: true, liked: false },
+      { id: 'p2', type: 'Question', author: 'Miriam Cohen', title: 'Need a weekday Daf Yomi slot?', body: 'A few people asked for a later Daf group. Reply if 9:15 PM works better.', time: '2h ago', likes: 18, comments: 14, pinned: false, liked: true },
+    ],
+    events: ['Community melave malka - Saturday 8:30 PM', 'Parent-child learning - Sunday 10:00 AM'],
+    announcements: ['New shul bulletin is available.', 'Please update your neighborhood in settings.'],
+    resources: ['Minyan times PDF', 'Local eruv status', 'Gemach directory'],
+  },
+  {
+    id: 'chesed-response-circle',
+    name: 'Chesed Response Circle',
+    category: 'Chesed',
+    privacy: 'Private',
+    location: 'Woodmere',
+    featured: true,
+    joined: true,
+    memberCount: 684,
+    recentActivity: 'Three volunteer slots filled today',
+    description: 'Coordinated help for meals, rides, hospital visits, errands, and urgent community support.',
+    rules: ['Protect family privacy.', 'Only share confirmed needs.', 'Mark requests complete when covered.'],
+    roles: [
+      { name: 'Rachel Bloom', role: 'Admin' },
+      { name: 'Moshe Klein', role: 'Moderator' },
+      { name: 'Esti Feld', role: 'Member' },
+    ],
+    posts: [
+      { id: 'p3', type: 'Chesed request', author: 'Rachel Bloom', title: 'Meals needed for Thursday night', body: 'Two dinner slots remain open. Dairy or pareve both work.', time: '35m ago', likes: 31, comments: 6, pinned: true, liked: false },
+      { id: 'p4', type: 'Announcement', author: 'Moshe Klein', title: 'Ride team update', body: 'Please include pickup window and whether a car seat is needed.', time: '4h ago', likes: 11, comments: 2, pinned: false, liked: false },
+    ],
+    events: ['Volunteer orientation - Tuesday 8:00 PM'],
+    announcements: ['New meal train template added.'],
+    resources: ['Meal train checklist', 'Hospital bikur cholim guide', 'Emergency contacts'],
+  },
+  {
+    id: 'haftr-parent-board',
+    name: 'HAFTR Parent Board',
+    category: 'Schools',
+    privacy: 'Private',
+    location: 'Lawrence',
+    featured: false,
+    joined: false,
+    memberCount: 512,
+    recentActivity: 'Carpool question active today',
+    description: 'A parent-run board for reminders, carpools, school forms, supplies, and grade-level questions.',
+    rules: ['Keep student details private.', 'No teacher criticism threads.', 'Use grade labels when helpful.'],
+    roles: [
+      { name: 'Leah Weiss', role: 'Admin' },
+      { name: 'Daniel Price', role: 'Moderator' },
+    ],
+    posts: [
+      { id: 'p5', type: 'Question', author: 'Leah Weiss', title: 'Afternoon carpool from Cedarhurst', body: 'Looking for one seat on Mondays and Wednesdays.', time: '1h ago', likes: 7, comments: 11, pinned: false, liked: false },
+      { id: 'p6', type: 'Announcement', author: 'Daniel Price', title: 'Science fair reminder', body: 'Boards are due Monday morning before first period.', time: '6h ago', likes: 22, comments: 3, pinned: true, liked: false },
+    ],
+    events: ['Parent meeting - Wednesday 8:15 PM'],
+    announcements: ['Dismissal form deadline is Friday.'],
+    resources: ['School calendar', 'Uniform gemach info', 'Carpool spreadsheet'],
+  },
+  {
+    id: 'daily-learning-beis',
+    name: 'Daily Learning Beis',
+    category: 'Learning',
+    privacy: 'Public',
+    location: 'Online and Five Towns',
+    featured: true,
+    joined: false,
+    memberCount: 438,
+    recentActivity: 'New learning post 12 minutes ago',
+    description: 'Daily Torah posts, Daf Yomi discussion, halacha Q&A, and short shiur recommendations.',
+    rules: ['Cite sources when possible.', 'Keep debate respectful.', 'Ask practical halacha to your rav.'],
+    roles: [
+      { name: 'Rabbi Adler', role: 'Admin' },
+      { name: 'Eli Bar', role: 'Moderator' },
+    ],
+    posts: [
+      { id: 'p7', type: 'Learning post', author: 'Rabbi Adler', title: 'Short thought on the parsha', body: 'Today we are looking at how small acts of consistency shape a home.', time: '12m ago', likes: 55, comments: 9, pinned: true, liked: true },
+      { id: 'p8', type: 'Question', author: 'Eli Bar', title: 'Best Mishnah app for review?', body: 'Looking for something simple for 10-minute daily review blocks.', time: '3h ago', likes: 9, comments: 17, pinned: false, liked: false },
+    ],
+    events: ['Guest shiur - Thursday 9:00 PM', 'Daf review - Sunday 7:45 AM'],
+    announcements: ['New source sheet posted weekly.'],
+    resources: ['Weekly source sheet', 'Daf Yomi links', 'Halacha review list'],
+  },
+  {
+    id: 'simcha-events-board',
+    name: 'Simcha & Events Board',
+    category: 'Events',
+    privacy: 'Public',
+    location: 'Five Towns',
+    featured: false,
+    joined: true,
+    memberCount: 803,
+    recentActivity: 'New event posted this morning',
+    description: 'Mazel tov posts, communal events, setup help, rides, and local celebration details.',
+    rules: ['Confirm public details before posting.', 'No private addresses unless approved.', 'Keep simcha threads kind and useful.'],
+    roles: [
+      { name: 'Shira Feld', role: 'Admin' },
+      { name: 'Noam Cohen', role: 'Member' },
+    ],
+    posts: [
+      { id: 'p9', type: 'Event', author: 'Shira Feld', title: 'Community sheva brachos help', body: 'Setup volunteers needed at 6:00 PM. Please comment if available.', time: '45m ago', likes: 27, comments: 5, pinned: false, liked: false },
+      { id: 'p10', type: 'Announcement', author: 'Noam Cohen', title: 'Mazel tov to the Levy family', body: 'Bar mitzvah details are in the event thread.', time: '7h ago', likes: 61, comments: 12, pinned: false, liked: true },
+    ],
+    events: ['Community sheva brachos - Monday 7:30 PM', 'Chanukah concert planning - next week'],
+    announcements: ['Event volunteer signups are open.'],
+    resources: ['Local halls list', 'Setup checklist', 'Simcha vendor notes'],
+  },
+  {
+    id: 'jewish-singles-circle',
+    name: 'Jewish Singles Circle',
+    category: 'Singles',
+    privacy: 'Private',
+    location: 'Nassau and Queens',
+    featured: false,
+    joined: false,
+    memberCount: 276,
+    recentActivity: 'Moderator added an event',
+    description: 'A moderated space for appropriate singles events, introductions, learning nights, and social opportunities.',
+    rules: ['Moderated posts only.', 'Respect privacy.', 'No screenshots or forwarding.'],
+    roles: [
+      { name: 'Tamar Klein', role: 'Admin' },
+      { name: 'Ari Katz', role: 'Moderator' },
+    ],
+    posts: [
+      { id: 'p11', type: 'Event', author: 'Tamar Klein', title: 'Board game night signup', body: 'Limited spots available. Details shared after approval.', time: '5h ago', likes: 14, comments: 4, pinned: true, liked: false },
+    ],
+    events: ['Board game night - Motzei Shabbos', 'Learning and coffee - Wednesday'],
+    announcements: ['New member approvals happen twice a week.'],
+    resources: ['Event guidelines', 'Moderator contact'],
+  },
+  {
+    id: 'young-parents-five-towns',
+    name: 'Young Parents Five Towns',
+    category: 'Parents',
+    privacy: 'Public',
+    location: 'Cedarhurst and Woodmere',
+    featured: false,
+    joined: false,
+    memberCount: 344,
+    recentActivity: 'Park meetup thread active',
+    description: 'Playdates, Shabbos hosting, babysitting leads, school questions, and new family introductions.',
+    rules: ['No medical advice threads.', 'Keep babysitter info respectful.', 'Use first names only for children.'],
+    roles: [
+      { name: 'Naomi Adler', role: 'Admin' },
+      { name: 'Ben Torah', role: 'Moderator' },
+    ],
+    posts: [
+      { id: 'p12', type: 'Question', author: 'Naomi Adler', title: 'Sunday park meetup?', body: 'Thinking 10:30 AM at Andrew J. Parise Park if weather holds.', time: '1h ago', likes: 23, comments: 16, pinned: false, liked: false },
+    ],
+    events: ['Park meetup - Sunday 10:30 AM', 'New families meal train - next month'],
+    announcements: ['Winter indoor play list updated.'],
+    resources: ['Babysitter leads', 'Park list', 'Parent resource doc'],
+  },
+  {
+    id: 'cedarhurst-neighborhood-watch',
+    name: 'Cedarhurst Neighborhood Board',
+    category: 'Neighborhoods',
+    privacy: 'Public',
+    location: 'Cedarhurst',
+    featured: false,
+    joined: false,
+    memberCount: 591,
+    recentActivity: 'Lost item returned today',
+    description: 'Local alerts, lost and found, road closures, store updates, and helpful neighborhood information.',
+    rules: ['No lashon hara.', 'Verify safety alerts.', 'Keep business posts limited and relevant.'],
+    roles: [
+      { name: 'Yoni Green', role: 'Admin' },
+      { name: 'Chani Davis', role: 'Moderator' },
+    ],
+    posts: [
+      { id: 'p13', type: 'Announcement', author: 'Yoni Green', title: 'Road work on Central Ave', body: 'Expect delays near Central Ave until 3:00 PM.', time: '28m ago', likes: 19, comments: 7, pinned: false, liked: false },
+    ],
+    events: ['Neighborhood cleanup - Sunday 11:00 AM'],
+    announcements: ['Lost siddur was returned.'],
+    resources: ['Local emergency numbers', 'Eruv map', 'Municipal links'],
+  },
 ];
 
-const TYPE_TO_CATEGORY = {
-  School: 'Schools & Yeshivas',
-  Yeshiva: 'Schools & Yeshivas',
-  Seminary: 'Schools & Yeshivas',
-  Shul: 'Local Communities',
-  Camp: 'Programs & Youth',
-  Other: null,
-};
-
-const DEMO_COMMUNITIES = [
-  { id: 'demo-1', name: 'Young Israel Woodmere', type: 'Shul', follower_count: 420, description_short: 'Heart of the Five Towns community.', is_verified: true, neighborhood: 'Woodmere', description: 'Heart of the Five Towns community.' },
-  { id: 'demo-2', name: 'HAFTR Day School', type: 'School', follower_count: 310, description_short: 'Leading Jewish day school K–12.', is_verified: true, neighborhood: 'Lawrence', description: 'Leading Jewish day school K–12.' },
-  { id: 'demo-3', name: 'Chabad of Woodmere', type: 'Shul', follower_count: 280, description_short: 'Open to everyone. Shabbat & holidays.', neighborhood: 'Woodmere', description: 'Open to everyone. Shabbat & holidays.' },
-  { id: 'demo-4', name: 'Five Towns Chessed Network', type: 'Other', follower_count: 175, description_short: 'Connecting volunteers with those in need.', neighborhood: 'Five Towns', description: 'Connecting volunteers with those in need.' },
-  { id: 'demo-5', name: 'Hebrew Academy Long Beach', type: 'School', follower_count: 195, description_short: 'Torah and academic excellence since 1952.', neighborhood: 'Long Beach', description: 'Torah and academic excellence since 1952.' },
-  { id: 'demo-6', name: 'Woodmere Minyan', type: 'Shul', follower_count: 140, description_short: 'Multiple daily minyanim.', neighborhood: 'Woodmere', description: 'Multiple daily minyanim.' },
-];
-
-const TYPE_GRADIENTS = {
-  Shul:     'from-blue-600 to-indigo-600',
-  School:   'from-purple-600 to-violet-600',
-  Yeshiva:  'from-indigo-600 to-blue-700',
-  Seminary: 'from-pink-500 to-rose-600',
-  Camp:     'from-green-500 to-teal-600',
-  Other:    'from-orange-500 to-amber-600',
-};
-
-const ACTIVITY_LABELS = [
-  'Just posted a new update',
-  'Shabbos event coming up',
-  'New members joined today',
-  'Someone posted a help request',
-  'Shared a learning resource',
-  'Hosting a community event',
-  'New discussion started',
-  'Mitzvah opportunity posted',
-];
-
-const CATEGORY_ICONS = {
-  'Schools & Yeshivas': '🏫',
-  'Chessed & Volunteering': '🤝',
-  'Travel': '✈️',
-  'Careers & Networking': '💼',
-  'Learning & Torah': '📚',
-  'Social & Events': '🎉',
-  'Programs & Youth': '🧒',
-  'Sports & Fitness': '🏀',
-  'Food & Lifestyle': '🍽️',
-  'Local Communities': '🌍',
-  School: '🏫', Yeshiva: '🏫', Seminary: '🎓',
-  Shul: '🕍', Camp: '⛺', Other: '🌐',
-};
-
-const VALUE_PROPOSITIONS = {
-  'Schools & Yeshivas': ['Connect with alumni & families', 'Share resources & study tips', 'Network with educators'],
-  'Chessed & Volunteering': ['Help others & build community', 'Find volunteering opportunities', 'Make a real difference'],
-  'Travel': ['Plan trips together', 'Share travel tips & deals', 'Meet fellow travelers'],
-  'Careers & Networking': ['Find jobs & network', 'Share career opportunities', 'Grow professionally'],
-  'Learning & Torah': ['Daily Torah discussions', 'Deepen your knowledge', 'Learn with others'],
-  'Social & Events': ['Weekly events & real connections', 'Meet people & have fun', 'Build lasting friendships'],
-  'Programs & Youth': ['Programs for all ages', 'Activities & mentorship', 'Youth engagement'],
-  'Sports & Fitness': ['Join leagues & activities', 'Find workout partners', 'Stay active together'],
-  'Food & Lifestyle': ['Kosher dining & recipes', 'Share lifestyle tips', 'Food events & gatherings'],
-  'Local Communities': ['Connect with your neighborhood', 'Local updates & events', 'Build community bonds'],
-  'Shul': ['Shabbos meals & rides', 'Daily minyanim & programming', 'Community connection'],
-  'School': ['Connect with school community', 'Share resources & updates', 'Parent networking'],
-};
-
-function getActivityBadge(community) {
-  const joinsThisWeek = community.joins_this_week || 0;
-  const postsThisWeek = community.posts_this_week || 0;
-  const commentsThisWeek = community.comments_this_week || 0;
-  const totalActivity = joinsThisWeek * 2 + postsThisWeek + commentsThisWeek;
-
-  // "Hot" requires actual recent activity (not a static hash of the ID)
-  if (totalActivity >= 10) return { label: '🔥 Hot', color: 'bg-red-50 text-red-600' };
-  if (totalActivity >= 3 || joinsThisWeek > 0) return { label: '🟢 Active', color: 'bg-green-50 text-green-700' };
-  // Brand-new communities (created within 7 days)
-  return { label: '✨ New', color: 'bg-violet-50 text-violet-600' };
-}
-
-function getInitials(name = '') {
-  return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
-}
-
-function getMockActivity(id) {
-  const idx = id ? id.charCodeAt(0) % ACTIVITY_LABELS.length : 0;
-  return ACTIVITY_LABELS[idx];
-}
-
-function StackedAvatars({ count = 0 }) {
-  const colors = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899'];
-  const shown = Math.min(count > 0 ? Math.min(count, 4) : 3, 4);
-  return (
-    <div className="flex items-center">
-      {[...Array(shown)].map((_, i) => (
-        <div key={i} className="w-5 h-5 rounded-full border-2 border-white -ml-1.5 first:ml-0 flex-shrink-0"
-          style={{ background: colors[i % colors.length], zIndex: shown - i }} />
-      ))}
-      {count > 4 && <span className="text-[10px] font-bold text-slate-400 ml-1">+{count - 4}</span>}
-    </div>
-  );
-}
-
-function getCached() {
-  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '[]'); } catch { return []; }
-}
-function setCache(list) {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(list)); } catch {}
-}
-
-const CATEGORY_GRADIENTS = {
-  'Schools & Yeshivas':    'from-sky-500 to-blue-600',
-  'Chessed & Volunteering':'from-emerald-500 to-green-600',
-  'Travel':                'from-cyan-500 to-teal-500',
-  'Careers & Networking':  'from-indigo-500 to-violet-600',
-  'Learning & Torah':      'from-amber-400 to-orange-500',
-  'Social & Events':       'from-pink-500 to-rose-500',
-  'Programs & Youth':      'from-purple-500 to-fuchsia-500',
-  'Sports & Fitness':      'from-lime-500 to-green-500',
-  'Food & Lifestyle':      'from-red-400 to-orange-500',
-  'Local Communities':     'from-blue-500 to-indigo-500',
-};
-
-const CATEGORY_CARD_GRADIENTS = {
-  School:    'from-sky-500 to-blue-600',
-  Yeshiva:   'from-sky-500 to-blue-600',
-  Seminary:  'from-sky-500 to-blue-600',
-  Shul:      'from-violet-500 to-purple-600',
-  Community: 'from-indigo-500 to-blue-600',
-  Travel:    'from-cyan-500 to-teal-500',
-  Chessed:   'from-emerald-500 to-green-600',
-  Camp:      'from-amber-400 to-orange-500',
-  Other:     'from-blue-500 to-purple-600',
-};
-
-function MemberStack({ count = 0 }) {
-  const colors = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899'];
-  const shown = Math.min(count > 0 ? 3 : 2, 3);
-  return (
-    <div className="flex -space-x-2">
-      {[...Array(shown)].map((_, i) => (
-        <div key={i} className="h-6 w-6 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
-          style={{ background: colors[i % colors.length], zIndex: shown - i }} />
-      ))}
-    </div>
-  );
-}
-
-function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
-  // Guard: skip rendering if community has no id
-  if (!community?.id || !community?.name) return null;
-
-  const typeKey = community.type || '';
-  const catKey = community.category || TYPE_TO_CATEGORY[typeKey] || '';
-  const gradient = CATEGORY_CARD_GRADIENTS[typeKey] || CATEGORY_CARD_GRADIENTS[catKey] || 'from-blue-500 to-purple-600';
-  const initials = community.name.slice(0, 2).toUpperCase();
-  const activity = getMockActivity(community.id);
-  const badge = getActivityBadge(community);
-  const catIcon = CATEGORY_ICONS[typeKey] || CATEGORY_ICONS[catKey] || '🏘️';
-
-  const handleCardClick = (e) => {
-    // Only navigate if the click wasn't on the join button
-    if (e.target.closest('[data-join-btn]')) return;
-    onOpen(community.id);
+function buildCommunity(data) {
+  return {
+    ...data,
+    id: `${data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`,
+    featured: false,
+    joined: true,
+    memberCount: 1,
+    recentActivity: 'Created just now',
+    roles: [{ name: 'You', role: 'Admin' }],
+    posts: [
+      {
+        id: `post-${Date.now()}`,
+        type: 'Announcement',
+        author: 'You',
+        title: 'Welcome to the community',
+        body: 'This space is ready for announcements, questions, resources, and events.',
+        time: 'Just now',
+        likes: 0,
+        comments: 0,
+        pinned: true,
+        liked: false,
+      },
+    ],
+    events: [],
+    announcements: ['Community created. Add your first real announcement when ready.'],
+    resources: ['Community guidelines'],
   };
-
-  return (
-    <div
-      className="w-full rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-[0.97] transition-all duration-150 overflow-hidden cursor-pointer"
-      onClick={handleCardClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onOpen(community.id); }}
-    >
-      <div className={`h-2 w-full bg-gradient-to-r ${gradient}`} />
-
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex items-start gap-2.5 flex-1 min-w-0">
-            {community.logo_url ? (
-              <img src={community.logo_url} alt={community.name} className="h-11 w-11 rounded-2xl object-cover shrink-0" />
-            ) : (
-              <div className={`h-11 w-11 rounded-2xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center font-bold text-[12px] shadow-sm shrink-0`}>
-                {initials}
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="text-[13px] font-bold text-slate-900 line-clamp-2 leading-snug">{community.name}</div>
-              <div className="text-[11px] text-slate-500 mt-0.5">{(community.follower_count || 0).toLocaleString()} members</div>
-              <div className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${badge.color}`}>
-                {badge.label}
-              </div>
-            </div>
-          </div>
-          <button
-            data-join-btn="true"
-            onClick={e => { e.stopPropagation(); onJoin(community); }}
-            disabled={isJoining}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-all active:scale-95 disabled:opacity-60 ${
-              isJoined ? 'bg-slate-100 text-slate-600' : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {isJoining ? '…' : isJoined ? '✓ Joined' : 'Join'}
-          </button>
-        </div>
-
-        {community.description_short && (
-          <div className="text-[11px] text-slate-600 line-clamp-2 mb-2">{community.description_short}</div>
-        )}
-
-        <div className="mt-1 text-xs text-slate-500 mb-1">
-          {VALUE_PROPOSITIONS[catKey]?.[0] || VALUE_PROPOSITIONS[typeKey]?.[0] || 'Weekly events & real connections'}
-        </div>
-
-        <div className="flex items-center justify-between gap-2 mt-3">
-          <MemberStack count={community.follower_count || 0} />
-          <div className="flex items-center gap-1 text-[10px] text-slate-400">
-            <span>{catIcon}</span>
-            <span>{catKey || typeKey || 'Community'}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function GroupCard({ group, isMember, onClick, onJoin }) {
-  const initials = getInitials(group.name);
-  const catGrad = {
-    'Local Life': 'from-teal-500 to-cyan-600',
-    'Chessed':    'from-rose-500 to-pink-600',
-    'Social':     'from-amber-500 to-orange-600',
-    'Learning':   'from-indigo-500 to-violet-600',
-    'Institutional': 'from-slate-500 to-slate-700',
-  }[group.category] || 'from-blue-500 to-indigo-600';
-  const activity = getMockActivity(group.id);
-
-  return (
-    <div
-      onClick={onClick}
-      className="w-full rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-[0.97] active:shadow-xl transition-all duration-150 overflow-hidden text-left flex flex-col cursor-pointer"
-    >
-      <div className={`h-2 bg-gradient-to-r ${catGrad}`} />
-
-      <div className="p-3.5 flex flex-col gap-2.5 flex-1">
-        <div className="flex items-start gap-2.5">
-          {group.cover_image_url ? (
-            <img src={group.cover_image_url} alt="" className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
-          ) : (
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ${catGrad}`}>
-              <span className="text-white font-black text-[13px]">{initials}</span>
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-[13px] text-slate-900 leading-snug truncate">{group.name}</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">{group.category || 'Group'}</p>
-          </div>
-        </div>
-
-        <p className="text-[11px] text-slate-400 line-clamp-1">{activity}</p>
-
-        <div className="flex items-center justify-between">
-          <StackedAvatars count={group.member_count || 0} />
-          <span className="text-[10px] text-slate-400">{(group.member_count || 0).toLocaleString()} members</span>
-        </div>
-
-        {isMember ? (
-          <button className="w-full rounded-full py-1.5 text-[12px] font-bold bg-green-50 text-green-700 border border-green-200 active:scale-95 transition-all duration-150">✓ Joined</button>
-        ) : (
-          <button
-            onClick={e => { e.stopPropagation(); onJoin(group); }}
-            className="w-full rounded-full py-1.5 text-[12px] font-bold text-white active:scale-95 transition-all duration-150"
-            style={{ background: 'linear-gradient(135deg, #0EA5E9, #2563EB)' }}
-          >
-            Join
-          </button>
-        )}
-      </div>
-    </div>
-  );
 }
 
 export default function Communities() {
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [currentUser, setCurrentUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('mine');
-  const [allCommunities, setAllCommunities] = useState(() => getCached());
-  const [allGroups, setAllGroups] = useState([]);
-  const [userCommunityIds, setUserCommunityIds] = useState(new Set());
-  const [memberGroupIds, setMemberGroupIds] = useState(new Set());
-  const [loadingPhase, setLoadingPhase] = useState('loading');
-  const [joiningId, setJoiningId] = useState(null);
-  const [selectedGroup, setSelectedGroup] = useState(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [reseedingFeatured, setReseedingFeatured] = useState(false);
-  const [showCategoryBrowse, setShowCategoryBrowse] = useState(false);
-  const [isDemo, setIsDemo] = useState(false);
-  const [featuredError, setFeaturedError] = useState(false);
-  const [sizeFilter, setSizeFilter] = useState('all_sizes');
-  const [activityFilter, setActivityFilter] = useState('all_activity');
+  const [communities, setCommunities] = useState(initialCommunities);
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('All');
+  const [selectedCommunityId, setSelectedCommunityId] = useState(null);
+  const [showCreate, setShowCreate] = useState(false);
 
-  // Stable ref so openCommunity never needs to be recreated when communities reload
-  const allCommunitiesRef = useRef([]);
+  const selectedCommunity = useMemo(
+    () => communities.find((community) => community.id === selectedCommunityId),
+    [communities, selectedCommunityId]
+  );
 
-  const loadData = useCallback(async (user) => {
-    setLoadingPhase('loading');
-    try {
-      const results = await Promise.allSettled([
-        user ? base44.entities.UserCommunity.filter({ user_id: user.id }) : Promise.resolve([]),
-        user ? base44.entities.GroupMember.filter({ user_id: user.id }) : Promise.resolve([]),
-        base44.entities.Community.list('-follower_count', 80),
-        base44.entities.CommunityGroup.list('-member_count', 50),
-      ]);
+  const filteredCommunities = useMemo(() => {
+    const cleanQuery = query.trim().toLowerCase();
 
-      const [memberships, groupMembers, comms, groups] = results;
+    return communities.filter((community) => {
+      const matchesQuery =
+        !cleanQuery ||
+        community.name.toLowerCase().includes(cleanQuery) ||
+        community.description.toLowerCase().includes(cleanQuery) ||
+        community.location.toLowerCase().includes(cleanQuery);
+      const matchesCategory = category === 'All' || community.category === category;
+      return matchesQuery && matchesCategory;
+    });
+  }, [category, communities, query]);
 
-      if (memberships.status === 'fulfilled') setUserCommunityIds(new Set(memberships.value.map(m => m.community_id)));
-      if (groupMembers.status === 'fulfilled') setMemberGroupIds(new Set(groupMembers.value.map(m => m.group_id)));
+  const featuredCommunities = filteredCommunities.filter((community) => community.featured);
+  const joinedCommunities = filteredCommunities.filter((community) => community.joined);
+  const suggestedCommunities = filteredCommunities.filter((community) => !community.joined);
+  const joinedCount = communities.filter((community) => community.joined).length;
+  const totalMembers = communities.reduce((sum, community) => sum + community.memberCount, 0);
+  const totalPosts = communities.reduce((sum, community) => sum + community.posts.length, 0);
+  const totalEvents = communities.reduce((sum, community) => sum + community.events.length, 0);
 
-      if (comms.status === 'fulfilled' && comms.value?.length > 0) {
-        // Sanitize: only keep records with a valid id and name
-        const sanitized = comms.value.filter(c => c?.id && c?.name);
-        const toSet = sanitized.length > 0 ? sanitized : DEMO_COMMUNITIES;
-        allCommunitiesRef.current = toSet;
-        setAllCommunities(toSet);
-        setCache(sanitized.length > 0 ? sanitized : []);
-        setIsDemo(sanitized.length === 0);
-      } else {
-        const cached = getCached().filter(c => c?.id && c?.name);
-        const toSet = cached.length > 0 ? cached : DEMO_COMMUNITIES;
-        allCommunitiesRef.current = toSet;
-        setAllCommunities(toSet);
-        setIsDemo(cached.length === 0);
-      }
-
-      if (groups.status === 'fulfilled') setAllGroups(groups.value || []);
-    } catch {
-      const cached = getCached().filter(c => c?.id && c?.name);
-      if (cached.length === 0) { setAllCommunities(DEMO_COMMUNITIES); setIsDemo(true); }
-      else { setAllCommunities(cached); }
-    }
-    setLoadingPhase('done');
-  }, []);
-
-  useEffect(() => {
-    base44.auth.me()
-      .then(user => { setCurrentUser(user); loadData(user); })
-      .catch(() => loadData(null));
-  }, [loadData]);
-
-  const mainFeatured = useMemo(() => !featuredError ? ((allCommunities || []).find(c => c.isMainFeatured === true) || null) : null, [allCommunities, featuredError]);
-  const secondaryFeatured = useMemo(() => {
-    if (featuredError) return [];
-    return (allCommunities || []).filter(c => c.isFeatured === true && c.isMainFeatured !== true).sort((a, b) => (a.featuredRank || 999) - (b.featuredRank || 999)).slice(0, 3);
-  }, [allCommunities, featuredError]);
-  const myCommunities = useMemo(() => (allCommunities || []).filter(c => userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
-  const myGroups = useMemo(() => (allGroups || []).filter(g => memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
-  const discoverCommunities = useMemo(() => (allCommunities || []).filter(c => !userCommunityIds.has(c.id)), [allCommunities, userCommunityIds]);
-  const discoverGroups = useMemo(() => (allGroups || []).filter(g => !memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
-
-  const filterItems = useCallback((items) => {
-    let result = items;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(c => c.name?.toLowerCase().includes(q) || c.neighborhood?.toLowerCase().includes(q));
-    }
-    if (activeCategory !== 'all') {
-      const discoverCat = DISCOVER_CATEGORIES.find(c => c.key === activeCategory)?.filterValue;
-      const legacyCat = CATEGORIES.find(c => c.key === activeCategory)?.value;
-      const cat = discoverCat || legacyCat;
-      if (cat) {
-        result = result.filter(c => {
-          const itemCat = c.category || TYPE_TO_CATEGORY[c.type] || null;
-          return itemCat === cat;
-        });
-      }
-    }
-    return result;
-  }, [searchQuery, activeCategory]);
-
-  const joinCommunity = async (community) => {
-    if (!currentUser) { toast.error('Sign in to join communities'); return; }
-    setJoiningId(community.id);
-    try {
-      await base44.entities.UserCommunity.create({ user_id: currentUser.id, community_id: community.id, role: 'Member' });
-      await base44.entities.Community.update(community.id, {
-        follower_count: (community.follower_count || 0) + 1,
-        joins_this_week: (community.joins_this_week || 0) + 1
-      });
-      setUserCommunityIds(prev => new Set([...prev, community.id]));
-      toast.success(`Joined ${community.name}!`);
-    } catch { toast.error('Something went wrong'); }
-    setJoiningId(null);
+  const toggleJoin = (communityId) => {
+    setCommunities((current) =>
+      current.map((community) => {
+        if (community.id !== communityId) return community;
+        const joined = !community.joined;
+        return {
+          ...community,
+          joined,
+          memberCount: Math.max(0, community.memberCount + (joined ? 1 : -1)),
+          recentActivity: joined ? 'You joined just now' : 'You left this community',
+        };
+      })
+    );
   };
 
-  const joinGroup = async (group) => {
-    if (!currentUser) { toast.error('Sign in to join groups'); return; }
-    try {
-      await base44.entities.GroupMember.create({ group_id: group.id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
-      await base44.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
-      setMemberGroupIds(prev => new Set([...prev, group.id]));
-      toast.success(`Joined ${group.name}!`);
-    } catch { toast.error('Something went wrong'); }
+  const toggleLikePost = (communityId, postId) => {
+    setCommunities((current) =>
+      current.map((community) => {
+        if (community.id !== communityId) return community;
+        return {
+          ...community,
+          posts: community.posts.map((post) => {
+            if (post.id !== postId) return post;
+            return {
+              ...post,
+              liked: !post.liked,
+              likes: Math.max(0, post.likes + (post.liked ? -1 : 1)),
+            };
+          }),
+        };
+      })
+    );
   };
 
-  // Stable callback — reads communities from ref so it never needs to be recreated.
-  // This prevents all CommunityCards from re-rendering mid-tap when allCommunities updates,
-  // which was causing the browser to cancel the click event.
-  const openCommunity = useCallback((id) => {
-    if (!id) return;
-    const communities = allCommunitiesRef.current;
-    if (!id.startsWith('demo-')) {
-      const community = communities.find(c => c.id === id);
-      if (community) {
-        base44.entities.Community.update(id, { views_count: (community.views_count || 0) + 1 }).catch(() => {});
-      }
-    }
-    const demoCommunity = id.startsWith('demo-') ? communities.find(c => c.id === id) : undefined;
-    navigate(`/communities/${id}`, demoCommunity ? { state: { demoCommunity } } : undefined);
-  }, [navigate]); // navigate is stable; communities come from ref
-  const backToList = () => navigate('/Communities');
-
-  const reseedFeatured = async () => {
-    if (currentUser?.role !== 'admin') {
-      toast.error('Admin access required');
-      return;
-    }
-    setReseedingFeatured(true);
-    try {
-      const result = await base44.functions.invoke('reseedFeaturedCommunities', {});
-      toast.success(`Reseeded featured communities: ${result?.data?.main_featured || 'done'}`);
-      setFeaturedError(false);
-      // Silently refresh communities without resetting loading state
-      const comms = await base44.entities.Community.list('-follower_count', 80);
-      if (comms?.length > 0) {
-        allCommunitiesRef.current = comms;
-        setAllCommunities(comms);
-        setCache(comms);
-        setIsDemo(false);
-      }
-    } catch (error) {
-      console.error('[reseedFeatured] error:', error?.message || error);
-      toast.error('Failed to reseed featured communities');
-      // Do NOT change any page state on failure — preserve existing data
-    } finally {
-      setReseedingFeatured(false);
-    }
+  const createCommunity = (community) => {
+    const newCommunity = buildCommunity(community);
+    setCommunities((current) => [newCommunity, ...current]);
+    setSelectedCommunityId(newCommunity.id);
+    setShowCreate(false);
   };
 
-  if (currentUser?.is_profile_complete === false) {
-    return <ProfileSetup user={currentUser} onComplete={() => base44.auth.me().then(setCurrentUser)} />;
-  }
-
-  if (selectedGroup) {
+  if (selectedCommunity) {
     return (
-      <CommunityGroupPage
-        group={selectedGroup}
-        currentUser={currentUser}
-        isMember={memberGroupIds.has(selectedGroup.id)}
-        isPendingRequest={false}
-        onJoin={joinGroup}
-        onLeave={async (g) => {
-          const members = await base44.entities.GroupMember.filter({ group_id: g.id, user_id: currentUser.id });
-          if (members[0]) await base44.entities.GroupMember.delete(members[0].id);
-          setMemberGroupIds(prev => { const s = new Set(prev); s.delete(g.id); return s; });
-        }}
-        onBack={() => setSelectedGroup(null)}
-        onMemberApproved={(gid) => setMemberGroupIds(prev => new Set([...prev, gid]))}
+      <CommunityHubDetail
+        community={selectedCommunity}
+        onBack={() => setSelectedCommunityId(null)}
+        onToggleJoin={() => toggleJoin(selectedCommunity.id)}
+        onToggleLike={(postId) => toggleLikePost(selectedCommunity.id, postId)}
       />
     );
   }
 
-
-
-  // Only show skeleton if we have no data at all (not even cached)
-  const isLoading = loadingPhase === 'loading' && allCommunities.length === 0;
-
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      <style>{`
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-up { animation: fadeUp 180ms ease both; }
-        .fade-up-delay { animation: fadeUp 180ms ease 80ms both; }
-        @keyframes heroEnter { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .hero-enter { animation: heroEnter 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-      `}</style>
-      <div className="max-w-2xl mx-auto px-4 pt-6">
+    <main className="min-h-screen bg-[#F7F9FC] pb-28">
+      <section className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-6 sm:pt-8">
+        <div className="mb-5 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+          <div className="grid gap-0 lg:grid-cols-[1fr_360px]">
+            <div className="p-5 sm:p-7">
+              <p className="mb-2 flex items-center gap-2 text-sm font-bold text-blue-700">
+                <Sparkles className="h-4 w-4" />
+                Jewish Community Hub
+              </p>
+              <h1 className="text-3xl font-bold tracking-normal text-slate-950 sm:text-4xl">Communities</h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+                Find the groups that make Jewish life feel closer: shuls, schools, chesed, learning, events, family boards, and neighborhood updates.
+              </p>
 
-        {/* Header */}
-        <div className="flex items-center justify-between gap-3 mb-5">
-          <h1 className="text-3xl font-bold text-slate-900">Communities</h1>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate('/CommunityMap')}
-              className="p-2.5 rounded-full bg-white border border-slate-200 shadow-sm hover:bg-slate-50 active:scale-90 transition-all duration-150"
-              title="Map view"
-            >
-              <Map className="w-4 h-4 text-slate-600" />
-            </button>
-            <button
-              onClick={() => navigate('/CommunityCalendar')}
-              className="p-2.5 rounded-full bg-white border border-slate-200 shadow-sm hover:bg-slate-50 active:scale-90 transition-all duration-150"
-              title="Community Calendar"
-            >
-              <Calendar className="w-4 h-4 text-slate-600" />
-            </button>
-            <button
-              onClick={() => navigate('/DiscoverCommunitiesFeed')}
-              className="p-2.5 rounded-full bg-white border border-slate-200 shadow-sm hover:bg-slate-50 active:scale-90 transition-all duration-150"
-              title="Discover Feed"
-            >
-              <Compass className="w-4 h-4 text-slate-600" />
-            </button>
-            {currentUser?.role === 'admin' && (
+              <div className="mt-5 flex flex-wrap gap-2">
+                <PulsePill icon={HeartHandshake} label="Chesed active today" />
+                <PulsePill icon={MessageCircle} label={`${totalPosts} fresh threads`} />
+                <PulsePill icon={CalendarDays} label={`${totalEvents} upcoming events`} />
+              </div>
+            </div>
+
+            <div className="border-t border-slate-200 bg-slate-50/70 p-5 lg:border-l lg:border-t-0 sm:p-6">
+              <div className="grid grid-cols-2 gap-3">
+                <MetricCard label="Communities" value={communities.length} tone="blue" />
+                <MetricCard label="Joined by you" value={joinedCount} tone="emerald" />
+                <MetricCard label="Members" value={totalMembers.toLocaleString()} tone="amber" />
+                <MetricCard label="Categories" value={categories.length - 1} tone="rose" />
+              </div>
               <button
-                onClick={reseedFeatured}
-                disabled={reseedingFeatured}
-                className="rounded-full bg-amber-600 text-white px-4 py-2.5 text-[13px] font-semibold shadow-sm hover:bg-amber-700 disabled:opacity-50 active:scale-95 transition-all duration-150"
-                title="Reseed featured communities (admin only)"
+                onClick={() => setShowCreate(true)}
+                className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.98]"
               >
-                {reseedingFeatured ? '⟳ ...' : '⟳ Reseed'}
+                <Plus className="h-4 w-4" />
+                Create Community
               </button>
-            )}
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="rounded-full bg-blue-600 text-white px-4 py-2.5 text-[13px] font-semibold shadow-sm hover:bg-blue-700 active:scale-95 transition-all duration-150"
-            >
-              + Create
-            </button>
+            </div>
           </div>
         </div>
 
-        {/* Featured Communities - 1 Hero + up to 4 Secondary */}
-        {mainFeatured || secondaryFeatured.length > 0 ? (
-          <div className="mb-8 space-y-4">
-            {mainFeatured && (
-              <FeaturedHeroCard
-                community={mainFeatured}
-                isJoined={userCommunityIds.has(mainFeatured.id)}
-                isJoining={joiningId === mainFeatured.id}
-                onOpen={openCommunity}
-                onJoin={joinCommunity}
+        <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+          <div className="flex flex-col gap-3">
+            <label className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search by name, topic, or neighborhood"
+                className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
               />
-            )}
-            {secondaryFeatured.length > 0 && (
-              <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
-                {secondaryFeatured.map(c => (
-                  <div key={c.id} className="flex-shrink-0 w-80">
-                    <FeaturedSecondaryCard
-                      community={c}
-                      isJoined={userCommunityIds.has(c.id)}
-                      isJoining={joiningId === c.id}
-                      onOpen={openCommunity}
-                      onJoin={joinCommunity}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : null}
+            </label>
 
-        {/* Search */}
-        <div className="mb-4 flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-            <input
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Filter communities…"
-              className="w-full pl-11 pr-9 py-3 rounded-2xl border border-slate-200 bg-white text-[14px] text-slate-800 placeholder-slate-400 outline-none shadow-sm focus:ring-2 focus:ring-blue-400"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2">
-                <X className="w-4 h-4 text-slate-400" />
-              </button>
-            )}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              {categories.map((item) => (
+                <button
+                  key={item}
+                  onClick={() => setCategory(item)}
+                  className={`h-10 shrink-0 rounded-xl border px-3 text-sm font-semibold transition ${
+                    category === item
+                      ? 'border-slate-950 bg-slate-950 text-white'
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {item}
+                  {item !== 'All' && (
+                    <span className={`ml-2 rounded-full px-1.5 py-0.5 text-[10px] ${category === item ? 'bg-white/15 text-white' : categoryHighlights[item] || 'bg-slate-100 text-slate-500'}`}>
+                      {communities.filter((community) => community.category === item).length}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
-          <button onClick={() => navigate('/search')}
-            className="px-4 py-3 rounded-2xl border border-slate-200 bg-white text-[13px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-1.5 flex-shrink-0">
-            <Search className="w-3.5 h-3.5" /> All
-          </button>
         </div>
 
-        {/* Tab switcher */}
-        <div className="mb-6 flex bg-slate-100 rounded-2xl p-1">
-          {[{ id: 'mine', label: 'My Communities' }, { id: 'discover', label: 'Discover' }].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-150 active:scale-95 ${
-                activeTab === tab.id
-                  ? 'bg-white text-blue-600 shadow'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {allCommunities.length === 0 && (
-          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4 text-[11px] text-amber-800">
-            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> No communities yet — seed communities to see data.
-          </div>
-        )}
-
-        {/* Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white rounded-3xl p-4 space-y-3">
-                <div className="skeleton w-11 h-11 rounded-2xl" />
-                <div className="skeleton h-3 w-24 rounded" />
-                <div className="skeleton h-2.5 w-16 rounded" />
-                <div className="skeleton h-8 w-full rounded-full" />
-              </div>
-            ))}
+        {filteredCommunities.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
+            <Users className="mx-auto mb-3 h-8 w-8 text-slate-400" />
+            <h2 className="text-lg font-bold text-slate-900">No communities found</h2>
+            <p className="mt-1 text-sm text-slate-500">Try another search, switch categories, or create a new community.</p>
           </div>
         ) : (
-          <div className="fade-up">
-            {activeTab === 'mine' ? (
-              <MineTab
-                myCommunities={filterItems(myCommunities)}
-                myGroups={filterItems(myGroups)}
-                openCommunity={openCommunity}
-                setSelectedGroup={setSelectedGroup}
-                setActiveTab={setActiveTab}
-                userCommunityIds={userCommunityIds}
-                memberGroupIds={memberGroupIds}
-                onJoinCommunity={joinCommunity}
-                onJoinGroup={joinGroup}
-                joiningId={joiningId}
-                currentUser={currentUser}
-                allCommunities={allCommunities}
-                isLoadingData={loadingPhase === 'loading'}
-                onJoinedFromOnboarding={(newIds) => {
-                  setUserCommunityIds(prev => new Set([...prev, ...newIds]));
-                }}
+          <div className="space-y-8">
+            {featuredCommunities.length > 0 && (
+              <CommunitySection
+                title="Featured Communities"
+                subtitle="High-signal hubs with strong activity this week."
+                communities={featuredCommunities}
+                onOpen={setSelectedCommunityId}
+                onToggleJoin={toggleJoin}
+                featured
               />
-            ) : (
-              <>
-                {!searchQuery && (
-                  <DiscoverCategoryCards
-                    activeCategory={activeCategory}
-                    onSelectCategory={(key) => setActiveCategory(key)}
-                  />
-                )}
-              <DiscoverTabContent
-                communities={filterItems(discoverCommunities)}
-                groups={filterItems(discoverGroups)}
-                openCommunity={openCommunity}
-                setSelectedGroup={setSelectedGroup}
-                onJoin={joinCommunity}
-                onJoinGroup={joinGroup}
-                joiningId={joiningId}
-                userCommunityIds={userCommunityIds}
-                memberGroupIds={memberGroupIds}
-                setShowCreateModal={setShowCreateModal}
-                hasFilter={activeCategory !== 'all' || !!searchQuery}
-                setActiveCategory={setActiveCategory}
-                sizeFilter={sizeFilter}
-                setSizeFilter={setSizeFilter}
-                activityFilter={activityFilter}
-                setActivityFilter={setActivityFilter}
-                currentUser={currentUser}
-                allCommunities={allCommunities}
-                onJoinCommunity={joinCommunity}
-              /></>
+            )}
+
+            {joinedCommunities.length > 0 && (
+              <CommunitySection
+                title="Joined Communities"
+                subtitle="Your current boards, groups, and local circles."
+                communities={joinedCommunities}
+                onOpen={setSelectedCommunityId}
+                onToggleJoin={toggleJoin}
+              />
+            )}
+
+            {suggestedCommunities.length > 0 && (
+              <CommunitySection
+                title="Suggested Communities"
+                subtitle="Good places to join next based on the local hub."
+                communities={suggestedCommunities}
+                onOpen={setSelectedCommunityId}
+                onToggleJoin={toggleJoin}
+              />
             )}
           </div>
         )}
-      </div>
+      </section>
 
-      <CreateCommunityModal
-        open={showCreateModal}
-        onOpenChange={setShowCreateModal}
-        currentUser={currentUser}
-        onCreated={(newCommunity) => {
-          loadData(currentUser);
-          if (newCommunity?.id) {
-            // Small delay to let loadData start, then open the new community
-            setTimeout(() => setSearchParams({ communityId: newCommunity.id }), 400);
-          }
-        }}
-      />
-    </div>
-  );
-}
-
-function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId, currentUser, allCommunities, onJoinedFromOnboarding, isLoadingData }) {
-  // Don't show onboarding while data is still loading — prevents race condition flash
-  if (myCommunities.length === 0 && myGroups.length === 0) {
-    if (isLoadingData) {
-      return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-blue-500" /></div>;
-    }
-    return (
-      <div className="space-y-4">
-        <div className="text-center px-4 py-5 bg-blue-50 border border-blue-100 rounded-2xl mb-2">
-          <div className="text-3xl mb-2">🏘️</div>
-          <p className="text-[14px] font-semibold text-slate-800 mb-1">You haven't joined any communities yet</p>
-          <p className="text-[12px] text-slate-500">Tap <strong>Discover</strong> to find schools, shuls, and neighborhoods near you.</p>
-        </div>
-        <CommunityInterestOnboarding
-          currentUser={currentUser}
-          allCommunities={allCommunities}
-          onJoined={onJoinedFromOnboarding}
+      {showCreate && (
+        <CreateCommunityForm
+          categories={categories.filter((item) => item !== 'All')}
+          onCreate={createCommunity}
+          onClose={() => setShowCreate(false)}
         />
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {myCommunities.length > 0 && (
-        <div>
-          <div className="text-lg font-bold text-slate-900 mb-3">My Communities</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {myCommunities.map(c => (
-              <CommunityCard
-                key={c.id}
-                community={c}
-                isJoined={userCommunityIds.has(c.id)}
-                isJoining={joiningId === c.id}
-                onOpen={openCommunity}
-                onJoin={onJoinCommunity}
-              />
-            ))}
-          </div>
-        </div>
       )}
-
-      {myGroups.length > 0 && (
-        <div>
-          <div className="text-lg font-bold text-slate-900 mb-3">My Groups</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {myGroups.map(g => (
-              <GroupCard
-                key={g.id}
-                group={g}
-                isMember={memberGroupIds.has(g.id)}
-                onClick={() => setSelectedGroup(g)}
-                onJoin={onJoinGroup}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+    </main>
   );
 }
 
-function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory, sizeFilter, setSizeFilter, activityFilter, setActivityFilter, currentUser, allCommunities, onJoinCommunity }) {
-  // Apply extra filters then sort: featured first, then by follower count
-  const filtered = applyExtraFilters(communities, sizeFilter, activityFilter);
-  const sortedCommunities = [...filtered].sort((a, b) => {
-    if (a.isFeatured && !b.isFeatured) return -1;
-    if (!a.isFeatured && b.isFeatured) return 1;
-    return (b.follower_count || 0) - (a.follower_count || 0);
-  });
+function CommunitySection({ title, subtitle, communities, onOpen, onToggleJoin, featured = false }) {
+  return (
+    <section>
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-slate-950">{title}</h2>
+          <p className="text-sm leading-6 text-slate-500">{subtitle}</p>
+        </div>
+        <div className="hidden items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-slate-500 ring-1 ring-slate-200 sm:flex">
+          <Compass className="h-3.5 w-3.5" />
+          {communities.length}
+        </div>
+      </div>
 
-  const noResults = sortedCommunities.length === 0 && groups.length === 0;
+      <div className={`grid gap-4 ${featured ? 'lg:grid-cols-2' : 'sm:grid-cols-2 xl:grid-cols-3'}`}>
+        {communities.map((community) => (
+          <CommunityHubCard
+            key={community.id}
+            community={community}
+            featured={featured}
+            onOpen={() => onOpen(community.id)}
+            onToggleJoin={() => onToggleJoin(community.id)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PulsePill({ icon: Icon, label }) {
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm">
+      <Icon className="h-3.5 w-3.5 text-blue-600" />
+      {label}
+    </span>
+  );
+}
+
+function MetricCard({ label, value, tone }) {
+  const tones = {
+    blue: 'bg-blue-50 text-blue-700',
+    emerald: 'bg-emerald-50 text-emerald-700',
+    amber: 'bg-amber-50 text-amber-700',
+    rose: 'bg-rose-50 text-rose-700',
+  };
 
   return (
-    <div className="space-y-6">
-      <SuggestedCommunities
-        currentUser={currentUser}
-        allCommunities={allCommunities}
-        userCommunityIds={userCommunityIds}
-        joiningId={joiningId}
-        onOpen={openCommunity}
-        onJoin={onJoinCommunity || onJoin}
-      />
-      <DiscoverFilters
-        sizeFilter={sizeFilter}
-        setSizeFilter={setSizeFilter}
-        activityFilter={activityFilter}
-        setActivityFilter={setActivityFilter}
-      />
-      {noResults ? (
-        <div className="rounded-3xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', border: '1px dashed #BFDBFE' }}>
-          <div className="text-3xl mb-2">🔍</div>
-          <h3 className="text-[15px] font-bold text-slate-800 mb-1">No results found</h3>
-          <p className="text-[12px] text-slate-500 mb-4">Try a different search or explore by category</p>
-          <button
-            onClick={() => { setActiveCategory('all'); setSizeFilter('all_sizes'); setActivityFilter('all_activity'); }}
-            className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold active:scale-95 transition-all duration-150"
-          >
-            Clear Filters
-          </button>
-        </div>
-      ) : (
-        <>
-          {sortedCommunities.length > 0 && (
-            <div>
-              <div className="text-lg font-bold text-slate-900 mb-3">Communities</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {sortedCommunities.map(c => (
-                  <CommunityCard
-                    key={c.id}
-                    community={c}
-                    isJoined={userCommunityIds.has(c.id)}
-                    isJoining={joiningId === c.id}
-                    onOpen={openCommunity}
-                    onJoin={onJoin}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {groups.length > 0 && (
-            <div>
-              <div className="text-lg font-bold text-slate-900 mb-3">Groups</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {groups.slice(0, 12).map(g => (
-                  <GroupCard
-                    key={g.id}
-                    group={g}
-                    isMember={memberGroupIds.has(g.id)}
-                    onClick={() => setSelectedGroup(g)}
-                    onJoin={onJoinGroup}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 text-center border border-blue-100">
-            <div className="text-2xl mb-1.5">🏛️</div>
-            <h3 className="text-[14px] font-bold text-slate-900 mb-1">Start a Community</h3>
-            <p className="text-[11px] text-slate-500 mb-3">Bring your shul, school, or group online</p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold shadow hover:bg-blue-700 transition-colors"
-            >
-              Create Community
-            </button>
-          </div>
-        </>
-      )}
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <p className={`inline-flex rounded-full px-2 py-1 text-xs font-bold ${tones[tone]}`}>{label}</p>
+      <p className="mt-3 text-2xl font-bold text-slate-950">{value}</p>
     </div>
   );
 }

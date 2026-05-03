@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, ArrowLeft, Search, X } from 'lucide-react';
+import { ArrowLeft, Search, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import UserAvatar from '@/components/common/UserAvatar';
 

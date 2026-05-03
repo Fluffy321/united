@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X, Loader2, Heart, Ticket, Users, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
@@ -191,7 +190,7 @@ export default function PaymentModal({
         </button>
 
         <p className="text-center text-[11px] text-slate-400 mt-3">
-          🔒 Secure checkout powered by Base44 Payments
+          Secure checkout will be connected next
         </p>
       </div>
     </div>

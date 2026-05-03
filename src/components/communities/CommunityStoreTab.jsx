@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import {
-  Plus, Star, ShoppingBag, Repeat, Wrench, X, DollarSign,
+  Plus, ShoppingBag, Repeat, Wrench, X, DollarSign,
   Loader2, ImageIcon, CheckCircle, Trash2, Package
 } from 'lucide-react';
 import { toast } from 'sonner';

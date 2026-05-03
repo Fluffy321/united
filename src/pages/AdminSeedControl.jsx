@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Loader2, Play, Trash2, CheckCircle2 } from 'lucide-react';
+import { Loader2, Play, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminSeedControl() {

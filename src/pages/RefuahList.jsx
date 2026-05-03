@@ -1,9 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, Plus, Heart, RefreshCw, Loader2, HeartHandshake } from 'lucide-react';
+import { ChevronLeft, Plus, RefreshCw, Loader2, HeartHandshake } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { appParams } from '@/lib/app-params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+
+const DEMO_REFUAH_REQUESTS = [
+  {
+    id: 'demo-refuah-1',
+    patient_name: 'Chana bat Sarah',
+    relationship: 'community member',
+    author_id: 'demo-user',
+    author_name: 'Local demo',
+    expires_at: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+    davening_count: 18,
+  },
+  {
+    id: 'demo-refuah-2',
+    patient_name: 'Moshe ben Leah',
+    relationship: 'friend',
+    author_id: 'demo-user-2',
+    author_name: 'Local demo',
+    expires_at: new Date(Date.now() + 11 * 24 * 60 * 60 * 1000).toISOString(),
+    davening_count: 7,
+  },
+];
 
 function AddRefuahForm({ onSave, onCancel, communityId }) {
   const [form, setForm] = useState({ patient_name: '', relationship: '' });
@@ -17,6 +39,20 @@ function AddRefuahForm({ onSave, onCancel, communityId }) {
     setSaving(true);
     const expires = new Date();
     expires.setDate(expires.getDate() + 30);
+    if (!appParams.hasBackendConfig) {
+      onSave({
+        id: `local-refuah-${Date.now()}`,
+        ...form,
+        author_id: user?.id || 'local-demo',
+        author_name: user?.full_name || 'Local demo',
+        community_id: communityId || undefined,
+        expires_at: expires.toISOString(),
+        davening_count: 0,
+      });
+      toast.success('Added locally for this demo session');
+      setSaving(false);
+      return;
+    }
     try {
       await base44.entities.RefuahRequest.create({
         ...form,
@@ -102,23 +138,32 @@ function RefuahCard({ request, currentUser, onDaven, onRenew, isDavening }) {
 export default function RefuahList({ communityId }) {
   const [user, setUser] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [localRequests, setLocalRequests] = useState(DEMO_REFUAH_REQUESTS);
   const queryClient = useQueryClient();
 
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
+  useEffect(() => {
+    if (!appParams.hasBackendConfig) {
+      setUser({ id: 'local-demo', full_name: 'Local demo' });
+      return;
+    }
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['refuah-requests', communityId],
-    queryFn: () => {
+    queryFn: async () => {
+      if (!appParams.hasBackendConfig) return localRequests;
       const filter = { is_active: true };
       if (communityId) filter.community_id = communityId;
       return base44.entities.RefuahRequest.filter(filter, '-created_date', 100);
     },
+    enabled: appParams.hasBackendConfig,
   });
 
   const { data: myDavenings = [] } = useQuery({
     queryKey: ['my-davenings', user?.id],
     queryFn: () => base44.entities.RefuahDavening.filter({ user_id: user.id }),
-    enabled: !!user,
+    enabled: !!user && appParams.hasBackendConfig,
   });
 
   const daveningSet = new Set(myDavenings.map(d => d.request_id));
@@ -126,6 +171,11 @@ export default function RefuahList({ communityId }) {
   const handleDaven = async (request) => {
     if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
     if (daveningSet.has(request.id)) return;
+    if (!appParams.hasBackendConfig) {
+      setLocalRequests(items => items.map(item => item.id === request.id ? { ...item, davening_count: (item.davening_count || 0) + 1 } : item));
+      toast.success('Marked locally for this demo session');
+      return;
+    }
     await base44.entities.RefuahDavening.create({ request_id: request.id, user_id: user.id });
     await base44.entities.RefuahRequest.update(request.id, { davening_count: (request.davening_count || 0) + 1 });
     queryClient.invalidateQueries({ queryKey: ['my-davenings'] });
@@ -136,12 +186,18 @@ export default function RefuahList({ communityId }) {
   const handleRenew = async (request) => {
     const expires = new Date();
     expires.setDate(expires.getDate() + 30);
+    if (!appParams.hasBackendConfig) {
+      setLocalRequests(items => items.map(item => item.id === request.id ? { ...item, expires_at: expires.toISOString(), renewed_at: new Date().toISOString() } : item));
+      toast.success('Renewed locally for this demo session');
+      return;
+    }
     await base44.entities.RefuahRequest.update(request.id, { expires_at: expires.toISOString(), renewed_at: new Date().toISOString() });
     queryClient.invalidateQueries({ queryKey: ['refuah-requests'] });
     toast.success('Renewed for 30 more days');
   };
 
-  const activeRequests = requests.filter(r => new Date(r.expires_at) > new Date());
+  const displayedRequests = appParams.hasBackendConfig ? requests : localRequests;
+  const activeRequests = displayedRequests.filter(r => new Date(r.expires_at) > new Date());
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
@@ -185,7 +241,11 @@ export default function RefuahList({ communityId }) {
 
             {showForm && (
               <AddRefuahForm communityId={communityId}
-                onSave={() => { setShowForm(false); queryClient.invalidateQueries({ queryKey: ['refuah-requests'] }); }}
+                onSave={(created) => {
+                  if (created) setLocalRequests(items => [created, ...items]);
+                  setShowForm(false);
+                  queryClient.invalidateQueries({ queryKey: ['refuah-requests'] });
+                }}
                 onCancel={() => setShowForm(false)} />
             )}
 

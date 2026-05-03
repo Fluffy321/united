@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Star, MapPin, Phone, Globe, ArrowLeft, Loader2, Shield, ChevronRight, Utensils, BookOpen, ShoppingBag, GraduationCap, Droplets, Package } from 'lucide-react';
+import { Search, Plus, Star, MapPin, ArrowLeft, Loader2, Shield, Utensils, BookOpen, ShoppingBag, GraduationCap, Droplets, Package } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 

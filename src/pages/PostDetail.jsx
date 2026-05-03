@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2, Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, Flag, Trash2, Ban } from 'lucide-react';
+import { ArrowLeft, Loader2, Heart, MessageCircle, Bookmark } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
@@ -7,12 +7,8 @@ import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 import ReportModal from '@/components/common/ReportModal';
 import { toast } from 'sonner';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
+
 
 export default function PostDetail() {
   const [searchParams] = useSearchParams();

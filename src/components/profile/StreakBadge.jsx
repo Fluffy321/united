@@ -1,6 +1,5 @@
 import React from 'react';
 import { Flame } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 
 const BADGE_CONFIG = {
   none: { emoji: '⚪', label: 'No Streak', color: 'bg-slate-100 text-slate-600' },

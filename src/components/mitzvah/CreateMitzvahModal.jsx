@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
-import CitySelector from '@/components/common/CitySelector';
 
 const CATEGORIES = ['Errand', 'Lost & Found', 'Quick Favor', 'Tutoring', 'Shabbat Help', 'Other'];
 

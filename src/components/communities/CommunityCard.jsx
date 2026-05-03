@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 
 function ActivityBadge({ community }) {
   const w = community.joins_this_week || 0;
@@ -15,7 +15,7 @@ function ActivityBadge({ community }) {
   );
   return null;
 }
-import { Loader2, Pin, PinOff, ChevronRight } from 'lucide-react';
+import { Pin, PinOff, ChevronRight } from 'lucide-react';
 
 const CATEGORY_EMOJI = {
   'Local Life': '📍', 'Local': '📍',

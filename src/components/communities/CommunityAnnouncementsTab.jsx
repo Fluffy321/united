@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
-import { Pin, Megaphone, Eye, CheckCircle2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Pin, Eye, CheckCircle2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 
 const AVATAR_COLORS = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899','#0891B2'];

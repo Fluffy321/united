@@ -2,13 +2,12 @@ import React, { useState, useRef } from 'react';
 import {
   FileText, Link as LinkIcon, Upload, Plus, Trash2, Download,
   ExternalLink, Loader2, Search, X, File, Image, FileSpreadsheet,
-  FileVideo, Music, Archive, BookOpen, Filter
+  FileVideo, Music, Archive, BookOpen
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
-import UserAvatar from '@/components/common/UserAvatar';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const CATEGORIES = ['General', 'Guidelines', 'Forms', 'Templates', 'FAQs', 'Budget', 'Events', 'Calendar', 'Other'];

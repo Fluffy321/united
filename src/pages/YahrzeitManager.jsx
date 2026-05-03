@@ -1,12 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, Plus, Flame, Heart, Loader2, Trash2, Users } from 'lucide-react';
+import { ChevronLeft, Plus, Loader2, Trash2, Users } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { appParams } from '@/lib/app-params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { HEBREW_MONTHS } from '@/lib/hebrewDate';
 
 const RELATIONSHIPS = ['Father', 'Mother', 'Grandfather', 'Grandmother', 'Husband', 'Wife', 'Son', 'Daughter', 'Brother', 'Sister', 'Other'];
+const DEMO_USER = { id: 'local-demo', full_name: 'Local demo' };
+const DEMO_YAHRZEITS = [
+  {
+    id: 'demo-yahrzeit-1',
+    deceased_name: 'Aharon ben Shlomo',
+    relationship: 'Grandfather',
+    hebrew_month: 1,
+    hebrew_day: 12,
+    share_with_community: true,
+    virtual_candle_count: 4,
+  },
+  {
+    id: 'demo-yahrzeit-2',
+    deceased_name: 'Miriam bat Rachel',
+    relationship: 'Mother',
+    hebrew_month: 7,
+    hebrew_day: 3,
+    share_with_community: false,
+    virtual_candle_count: 11,
+  },
+];
 
 function AddYahrzeitForm({ onSave, onCancel }) {
   const [form, setForm] = useState({ deceased_name: '', relationship: '', hebrew_month: 7, hebrew_day: 1, share_with_community: false });
@@ -19,8 +41,17 @@ function AddYahrzeitForm({ onSave, onCancel }) {
     if (!form.deceased_name.trim()) { toast.error('Name is required'); return; }
     setSaving(true);
     try {
-      const expires = new Date();
-      expires.setDate(expires.getDate() + 365); // remind each year
+      if (!appParams.hasBackendConfig) {
+        onSave({
+          id: `local-yahrzeit-${Date.now()}`,
+          ...form,
+          user_id: user?.id || DEMO_USER.id,
+          user_name: user?.full_name || DEMO_USER.full_name,
+          virtual_candle_count: 0,
+        });
+        toast.success('Yahrzeit saved locally for this demo session');
+        return;
+      }
       await base44.entities.Yahrzeit.create({
         ...form,
         user_id: user.id,
@@ -126,21 +157,28 @@ function YahrzeitCard({ yahrzeit, onDelete, onLightCandle, candleLit }) {
 export default function YahrzeitManager() {
   const [user, setUser] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [litCandles, setLitCandles] = useState(new Set());
+  const [localYahrzeits, setLocalYahrzeits] = useState(DEMO_YAHRZEITS);
+  const [localLitCandles, setLocalLitCandles] = useState(new Set());
   const queryClient = useQueryClient();
 
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
+  useEffect(() => {
+    if (!appParams.hasBackendConfig) {
+      setUser(DEMO_USER);
+      return;
+    }
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
 
   const { data: yahrzeits = [], isLoading } = useQuery({
     queryKey: ['yahrzeits', user?.id],
-    queryFn: () => base44.entities.Yahrzeit.filter({ user_id: user.id }, 'hebrew_month'),
-    enabled: !!user,
+    queryFn: () => appParams.hasBackendConfig ? base44.entities.Yahrzeit.filter({ user_id: user.id }, 'hebrew_month') : localYahrzeits,
+    enabled: !!user && appParams.hasBackendConfig,
   });
 
   const { data: litByMe = [] } = useQuery({
     queryKey: ['candles-lit', user?.id],
     queryFn: () => base44.entities.YahrzeitCandle.filter({ user_id: user.id }),
-    enabled: !!user,
+    enabled: !!user && appParams.hasBackendConfig,
   });
 
   const litSet = new Set(litByMe.map(c => c.yahrzeit_id));
@@ -148,6 +186,12 @@ export default function YahrzeitManager() {
   const handleLightCandle = async (yahrzeit) => {
     if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
     if (litSet.has(yahrzeit.id)) return; // already lit
+    if (!appParams.hasBackendConfig) {
+      setLocalLitCandles(prev => new Set(prev).add(yahrzeit.id));
+      setLocalYahrzeits(items => items.map(item => item.id === yahrzeit.id ? { ...item, virtual_candle_count: (item.virtual_candle_count || 0) + 1 } : item));
+      toast.success('Candle lit locally for this demo session');
+      return;
+    }
     try {
       await base44.entities.YahrzeitCandle.create({ yahrzeit_id: yahrzeit.id, user_id: user.id, user_name: user.full_name });
       await base44.entities.Yahrzeit.update(yahrzeit.id, { virtual_candle_count: (yahrzeit.virtual_candle_count || 0) + 1 });
@@ -158,10 +202,18 @@ export default function YahrzeitManager() {
   };
 
   const handleDelete = async (id) => {
+    if (!appParams.hasBackendConfig) {
+      setLocalYahrzeits(items => items.filter(item => item.id !== id));
+      toast.success('Removed locally');
+      return;
+    }
     await base44.entities.Yahrzeit.delete(id);
     queryClient.invalidateQueries({ queryKey: ['yahrzeits'] });
     toast.success('Removed');
   };
+
+  const displayedYahrzeits = appParams.hasBackendConfig ? yahrzeits : localYahrzeits;
+  const displayedLitSet = appParams.hasBackendConfig ? litSet : localLitCandles;
 
   if (!user) {
     return (
@@ -192,8 +244,8 @@ export default function YahrzeitManager() {
           <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-blue-600" /></div>
         ) : (
           <div className="space-y-3">
-            {yahrzeits.map(y => (
-              <YahrzeitCard key={y.id} yahrzeit={y} onDelete={handleDelete} onLightCandle={handleLightCandle} candleLit={litSet.has(y.id)} />
+            {displayedYahrzeits.map(y => (
+              <YahrzeitCard key={y.id} yahrzeit={y} onDelete={handleDelete} onLightCandle={handleLightCandle} candleLit={displayedLitSet.has(y.id)} />
             ))}
 
             {!showForm && (
@@ -204,10 +256,14 @@ export default function YahrzeitManager() {
             )}
 
             {showForm && (
-              <AddYahrzeitForm onSave={() => { setShowForm(false); queryClient.invalidateQueries({ queryKey: ['yahrzeits'] }); }} onCancel={() => setShowForm(false)} />
+              <AddYahrzeitForm onSave={(created) => {
+                if (created) setLocalYahrzeits(items => [created, ...items]);
+                setShowForm(false);
+                queryClient.invalidateQueries({ queryKey: ['yahrzeits'] });
+              }} onCancel={() => setShowForm(false)} />
             )}
 
-            {yahrzeits.length === 0 && !showForm && (
+            {displayedYahrzeits.length === 0 && !showForm && (
               <div className="text-center py-12 text-slate-400">
                 <p className="text-4xl mb-3">🕯️</p>
                 <p className="font-semibold text-slate-600">No yahrzeits added yet</p>

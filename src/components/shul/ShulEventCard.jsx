@@ -1,6 +1,5 @@
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function ShulEventCard({ post, currentUser, isAdmin }) {

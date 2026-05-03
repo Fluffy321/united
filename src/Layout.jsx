@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, User, Users, MessageCircle, Loader2 } from 'lucide-react';
 import { MitzvahIcon } from '@/components/common/JIcons';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
 import SwipeableTabs from '@/components/common/SwipeableTabs';
-import AIChatBubble from '@/components/common/AIChatBubble';
 import PWAInstallPrompt from '@/components/common/PWAInstallPrompt';
 import CookieConsentBanner from '@/components/common/CookieConsentBanner';
 import { base44 } from '@/api/base44Client';
@@ -103,6 +102,7 @@ export default function Layout({ children, currentPageName }) {
 
   const handleTabChange = (newIndex) => {
     if (newIndex >= 0 && newIndex < swipeablePages.length) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
       navigate(createPageUrl(swipeablePages[newIndex]));
     }
   };
@@ -169,6 +169,9 @@ export default function Layout({ children, currentPageName }) {
                     ref={el => { navItemRefs.current[item.page] = el; }}
                     onClick={() => {
                       const pageIndex = swipeablePages.indexOf(item.page);
+                      if (item.page !== currentPageName) {
+                        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                      }
                       if (pageIndex !== -1) {
                         handleTabChange(pageIndex);
                       } else {

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Calendar, MessageSquare, RefreshCw } from 'lucide-react';
+import { Calendar, RefreshCw } from 'lucide-react';
 import RssErrorBlock from '@/components/updates/RssErrorBlock';
-import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow, isToday, isTomorrow, format } from 'date-fns';

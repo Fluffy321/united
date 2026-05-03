@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 // Each tab is mounted on first view and kept mounted (display:none when inactive).
 // This prevents all 4 pages from running their effects simultaneously on load,

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle2, Star, Settings, Share2, Plus } from 'lucide-react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import CommunityLogo from './CommunityLogo';
 import InviteLinkButton from './InviteLinkButton';
 import { toast } from 'sonner';

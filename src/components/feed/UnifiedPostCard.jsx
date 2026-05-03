@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, MoreHorizontal, Flag, Trash2, Calendar, MapPin, Clock, CheckCircle2, Users, Ban, Bookmark } from 'lucide-react';
+import { MessageCircle, MoreHorizontal, Flag, Trash2, MapPin, Clock, CheckCircle2, Ban, Bookmark } from 'lucide-react';
 import PostImage from '@/components/common/PostImage';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import PromptCard from './PromptCard';
 import PollCard from './PollCard';
-import { Button } from "@/components/ui/button";
 import UserAvatar from '@/components/common/UserAvatar';
 import HelperBadge from '@/components/profile/HelperBadge';
 import MessageButton from '@/components/common/MessageButton';
@@ -22,6 +21,7 @@ import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
+import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import { HELP_REQUEST_CATEGORIES } from '@/components/feed/RequestHelpModal';
 
@@ -35,7 +35,7 @@ function BookmarkButton({ postId, currentUser }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser || !appParams.hasBackendConfig) return;
     base44.entities.Bookmark.filter({ post_id: postId, user_id: currentUser.id })
       .then(r => setBookmarked(r.length > 0))
       .catch(() => {});
@@ -46,6 +46,12 @@ function BookmarkButton({ postId, currentUser }) {
     if (!currentUser) { base44.auth.redirectToLogin(); return; }
     if (loading) return;
     setLoading(true);
+    if (!appParams.hasBackendConfig) {
+      setBookmarked(value => !value);
+      setLoading(false);
+      toast.success(bookmarked ? 'Post unsaved locally' : 'Post saved locally');
+      return;
+    }
     if (bookmarked) {
       const existing = await base44.entities.Bookmark.filter({ post_id: postId, user_id: currentUser.id });
       if (existing[0]) await base44.entities.Bookmark.delete(existing[0].id);
@@ -176,6 +182,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
   // Always fetch 2 most recent comments — seeded posts may have real comments even with count=0
   useEffect(() => {
+    if (!appParams.hasBackendConfig) return;
     base44.entities.Comment.filter({ post_id: post.id }, '-created_date', 2)
       .then(comments => setRecentComments(comments))
       .catch(() => {});
@@ -218,6 +225,12 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
 
   const handleFulfilled = async () => {
     setFulfilling(true);
+    if (!appParams.hasBackendConfig) {
+      setHelpStatus('fulfilled');
+      setFulfilling(false);
+      toast.success('Marked fulfilled locally for this demo session');
+      return;
+    }
     await base44.entities.UnifiedPost.update(post.id, { help_status: 'fulfilled' });
     setHelpStatus('fulfilled');
     setFulfilling(false);
@@ -227,6 +240,19 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   const handleQuickReply = async () => {
     if (!quickReplyText.trim() || !currentUser) return;
     setSubmittingQuickReply(true);
+    if (!appParams.hasBackendConfig) {
+      setRecentComments(prev => [{
+        id: `local-comment-${Date.now()}`,
+        author_name: currentUser.display_name || currentUser.full_name || 'Local demo',
+        body: quickReplyText.trim(),
+      }, ...prev].slice(0, 2));
+      setCommentCount(prev => prev + 1);
+      setQuickReplyText('');
+      setQuickReplyOpen(false);
+      setSubmittingQuickReply(false);
+      toast.success('Reply added locally for this demo session');
+      return;
+    }
     try {
       await base44.entities.Comment.create({
         post_id: post.id,

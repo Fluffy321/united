@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Loader2, AlertTriangle, Flag } from 'lucide-react';
+import { Loader2, Flag } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { base44 } from '@/api/base44Client';
-import { toast } from 'sonner';
 
 const REASONS = [
   { value: 'harassment', label: '😡 Harassment or bullying' },

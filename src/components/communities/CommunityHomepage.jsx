@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Calendar, Clock, MapPin, HandHeart, ChevronRight, Pin, MessageCircle, TrendingUp, Image as ImageIcon, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapPin, ChevronRight, Pin, MessageCircle } from 'lucide-react';
 import ZmanimWidget from '@/components/jewish/ZmanimWidget';
 import ParshaWidget from '@/components/jewish/ParshaWidget';
-import { formatDistanceToNow, format, isToday, isSunday } from 'date-fns';
+import { isSunday } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';

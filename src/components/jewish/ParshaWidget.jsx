@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, ExternalLink } from 'lucide-react';
-import { getParsha, getTodayHebrew } from '@/lib/hebrewDate';
+import { getParsha } from '@/lib/hebrewDate';
 
 export default function ParshaWidget() {
   const [parsha, setParsha] = useState(null);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, SlidersHorizontal, MapPin } from 'lucide-react';
+import { X } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Errand', 'Quick Favor', 'Lost & Found', 'Tutoring', 'Shabbat Help', 'Other'];
 

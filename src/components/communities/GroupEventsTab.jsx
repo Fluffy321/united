@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, Plus, Users, ChevronDown, ChevronUp, Loader2, X, CheckCircle2 } from 'lucide-react';
+import { Clock, MapPin, Plus, Users, ChevronDown, ChevronUp, Loader2, X, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { format, parseISO, isPast } from 'date-fns';
 import { toast } from 'sonner';

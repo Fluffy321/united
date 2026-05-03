@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronRight, MapPin, Sparkles, Users, Check, Loader2,
-  Camera, Bell, HandHeart, BookOpen, School, Star
+  Camera, Bell, HandHeart, School, Star
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';

@@ -1,5 +1,4 @@
 import React from 'react';
-import { SlidersHorizontal } from 'lucide-react';
 
 export default function MitzvahTabHeader({ activeTab, filters, onFilterClick, rightActionNode }) {
   return (

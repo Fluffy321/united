@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Loader2, Plus, Sparkles, Bell, Pin, BarChart2, Users, FileText, Upload, Save, Heart } from 'lucide-react';
+import { Loader2, Plus, Upload, Save, Heart } from 'lucide-react';
 import FeaturedEligibilityChecker from './FeaturedEligibilityChecker';
 import VerifiedCommunityUpgrade from '@/components/monetization/VerifiedCommunityUpgrade';
 import { Button } from '@/components/ui/button';

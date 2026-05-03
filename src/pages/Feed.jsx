@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useRef, lazy, Suspense, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 import HomeFeedTabs from '@/components/feed/HomeFeedTabs';
-import ReactionBar from '@/components/feed/ReactionBar';
 import EventsForYou from '@/components/feed/EventsForYou';
 import EventsFeedSection from '@/components/feed/EventsFeedSection';
 import InlineFeedPrompt from '@/components/feed/InlineFeedPrompt';
@@ -21,9 +21,58 @@ import { Search, Plus, RefreshCw, ChevronDown } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
-import { LOCAL_NETWORKS, getNetworkByPreset, matchPostNetwork } from '@/lib/localNetworks';
+import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
+const DEMO_POSTS = [
+  {
+    id: 'demo-feed-1',
+    type: 'feed',
+    title: 'Welcome to your local JUnited demo',
+    body: 'This app is running locally. Add your real backend URL in .env.local when you are ready to connect live data.',
+    author_name: 'Local demo',
+    user_id: 'local-demo',
+    community_id: 'demo-community',
+    community_name: 'Five Towns',
+    city: 'Five Towns',
+    location_text: 'Five Towns',
+    created_date: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    updated_date: new Date().toISOString(),
+    likes_count: 12,
+    comments_count: 3,
+  },
+  {
+    id: 'demo-feed-2',
+    type: 'help',
+    body: 'Looking for volunteers to help deliver Shabbos meals this week.',
+    author_name: 'Chesed team',
+    user_id: 'local-demo-2',
+    community_id: 'demo-community',
+    community_name: 'Chesed Volunteers',
+    city: 'Five Towns',
+    location_text: 'Woodmere',
+    created_date: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    updated_date: new Date().toISOString(),
+    likes_count: 8,
+    comments_count: 5,
+  },
+  {
+    id: 'demo-feed-3',
+    type: 'event',
+    body: 'Community dinner tonight in the social hall.',
+    author_name: 'Events demo',
+    user_id: 'local-demo-3',
+    community_id: 'demo-community',
+    community_name: 'Five Towns',
+    city: 'Five Towns',
+    location_text: 'Lawrence',
+    created_date: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+    updated_date: new Date().toISOString(),
+    event_date: new Date().toISOString(),
+    likes_count: 19,
+    comments_count: 6,
+  },
+];
 
 export default function Feed() {
   const queryClient = useQueryClient();
@@ -66,6 +115,10 @@ export default function Feed() {
   const [showNetworkBanner, setShowNetworkBanner] = useState(() => !localStorage.getItem('junited_network_banner_v2_dismissed'));
 
   useEffect(() => {
+    if (!appParams.hasBackendConfig) {
+      setCurrentUser({ id: 'local-demo', full_name: 'Local demo', cityPreset: 'Five Towns', interests: ['chesed', 'events'] });
+      return;
+    }
     base44.auth.me().then(u => {
       setCurrentUser(u);
       // Load saved primary network from user profile
@@ -87,6 +140,10 @@ export default function Feed() {
   }, [activeTab]);
 
   const loadPinnedPrompt = useCallback(async () => {
+    if (!appParams.hasBackendConfig) {
+      setFeedPrompts([]);
+      return;
+    }
     try {
       const prompts = await base44.entities.DailyPrompt.list('-created_date', 5);
       if (prompts?.length > 0) setFeedPrompts(prompts);
@@ -96,6 +153,7 @@ export default function Feed() {
   const { data: posts = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['unified-posts', page],
     queryFn: async () => {
+      if (!appParams.hasBackendConfig) return page === 0 ? DEMO_POSTS : [];
       const p = await base44.entities.UnifiedPost.list('-updated_date', PAGE_SIZE, page * PAGE_SIZE);
       return p;
     },
@@ -120,7 +178,7 @@ export default function Feed() {
     setHasMore(posts.length === PAGE_SIZE);
   }, [posts, page]);
 
-  const { data: userCommunitiesList = [] } = useQuery({
+  const { data: userCommunitiesList } = useQuery({
     queryKey: ['user-communities', currentUser?.id],
     queryFn: async () => {
       if (!currentUser?.id) return [];
@@ -133,23 +191,30 @@ export default function Feed() {
         .filter(r => r.status === 'fulfilled' && r.value && typeof r.value.id === 'string')
         .map(r => r.value);
     },
-    enabled: !!currentUser?.id,
+    enabled: !!currentUser?.id && appParams.hasBackendConfig,
   });
 
-  const { data: userBlocksList = [] } = useQuery({
+  const { data: userBlocksList } = useQuery({
     queryKey: ['user-blocks', currentUser?.id],
     queryFn: async () => {
       if (!currentUser?.id) return [];
       return base44.entities.Block.filter({ blocker_id: currentUser.id });
     },
-    enabled: !!currentUser?.id,
+    enabled: !!currentUser?.id && appParams.hasBackendConfig,
   });
 
   useEffect(() => {
+    if (!userBlocksList) return;
     setBlockedIds(userBlocksList.map(b => b.blocked_id));
   }, [userBlocksList]);
 
   useEffect(() => {
+    if (!userCommunitiesList) {
+      if (!appParams.hasBackendConfig) {
+        setCommunityGroups([{ id: 'demo-community', name: 'Five Towns', type: 'Neighborhood' }]);
+      }
+      return;
+    }
     setCommunityGroups(userCommunitiesList.filter(c => c));
   }, [userCommunitiesList]);
 
@@ -214,11 +279,20 @@ export default function Feed() {
     if (!currentUser) { base44.auth.redirectToLogin(); return; }
     const post = posts.find(p => p.id === postId);
     if (post) recordInterest(post);
+    if (!appParams.hasBackendConfig) {
+      setUserLikes(prev => prev.includes(postId) ? prev.filter(id => id !== postId) : [...prev, postId]);
+      return;
+    }
     likeMutation.mutate(postId);
   };
 
   const handleBlock = async (userId) => {
     if (!currentUser) return;
+    if (!appParams.hasBackendConfig) {
+      setBlockedIds(prev => [...prev, userId]);
+      toast.success('User blocked locally for this demo session');
+      return;
+    }
     try {
       await base44.entities.Block.create({ blocker_id: currentUser.id, blocked_id: userId });
       setBlockedIds(prev => [...prev, userId]);
@@ -387,7 +461,9 @@ export default function Feed() {
               setPrimaryNetwork(net);
               setSelectedNeighborhood('All');
               // Persist to user profile
-              try { await base44.auth.updateMe({ cityPreset: net.cityPreset }); } catch {}
+              if (appParams.hasBackendConfig) {
+                try { await base44.auth.updateMe({ cityPreset: net.cityPreset }); } catch {}
+              }
             }}
             onClose={() => setShowLocationPicker(false)}
           />

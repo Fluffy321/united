@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import {
   Loader2, Brain, TrendingUp, TrendingDown, Minus, AlertTriangle,
-  CheckCircle, Lightbulb, Hash, Shield, RefreshCw, Users, FileText, Calendar, Heart
+  CheckCircle, Lightbulb, Hash, Shield, RefreshCw, FileText, Calendar, Heart
 } from 'lucide-react';
 
 const COLOR_MAP = {

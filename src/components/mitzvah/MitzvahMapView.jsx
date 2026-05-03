@@ -3,8 +3,7 @@ import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { X, MapPin, Navigation, Clock, ChevronRight } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { X, Navigation } from 'lucide-react';
 
 // Fix default marker icons (required for Leaflet in bundled apps)
 delete L.Icon.Default.prototype._getIconUrl;

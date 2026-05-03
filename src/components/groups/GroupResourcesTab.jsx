@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Link, Upload, Lock, ExternalLink, Download, Loader2, X } from 'lucide-react';
+import { FileText, Link, Upload, ExternalLink, Download, Loader2, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import FileUploadZone from '@/components/common/FileUploadZone';
-import { AttachmentPreview } from '@/components/common/FileAttachmentPreview';
 
 export default function GroupResourcesTab({ group, currentUser, isMember, isAdmin }) {
   const [resources, setResources] = useState([]);

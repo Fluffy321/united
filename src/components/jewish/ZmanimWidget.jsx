@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Sunrise, Sunset, Clock } from 'lucide-react';
+import { Sun } from 'lucide-react';
 import { getZmanim, formatZmanTime, getTodayHebrew } from '@/lib/hebrewDate';
 
 const ZMANIM_LABELS = [

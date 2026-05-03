@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Bell, BarChart2, Pin, Users, Sparkles, Check, Loader2, Star } from 'lucide-react';
+import { Shield, Bell, BarChart2, Pin, Users, Sparkles, Check, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Sparkles } from 'lucide-react';
+import { Award } from 'lucide-react';
 import UserAvatar from '@/components/common/UserAvatar';
 import { Badge } from '@/components/ui/badge';
 

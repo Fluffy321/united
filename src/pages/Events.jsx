@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { tabActive, tabInactive, btnPrimary, btnSecondary, badgeBlue, gradientStyle } from '@/lib/theme';
+import React, { useState } from 'react';
+import { tabActive, tabInactive, btnPrimary, badgeBlue, gradientStyle } from '@/lib/theme';
 import { Calendar, MapPin, Clock, Plus, ChevronLeft, Users, Ticket } from 'lucide-react';
 import PaymentModal from '@/components/payments/PaymentModal';
 import EventSummaryButton from '@/components/events/EventSummaryButton';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { format, parseISO, isAfter, isBefore, startOfToday } from 'date-fns';
+import { format, parseISO, isBefore, startOfToday } from 'date-fns';
 import { toast } from 'sonner';
 import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
 

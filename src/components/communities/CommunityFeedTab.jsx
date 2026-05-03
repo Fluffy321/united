@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
-import { MessageSquare, Send, X, Image, Link, ArrowUp, MoreHorizontal, ChevronDown } from 'lucide-react';
+import { MessageSquare, Send, X, Image, ArrowUp, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';

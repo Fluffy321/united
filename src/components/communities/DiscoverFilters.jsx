@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Zap, TrendingUp } from 'lucide-react';
+import { Users, Zap } from 'lucide-react';
 
 export const SIZE_OPTIONS = [
   { key: 'all_sizes', label: 'Any Size' },

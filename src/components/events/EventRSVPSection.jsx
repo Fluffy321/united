@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Loader2, Check, AlertCircle } from 'lucide-react';
+import { Users, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 
 const RSVP_STATUSES = [
@@ -23,6 +24,15 @@ export default function EventRSVPSection({ postId, currentUser, eventDate }) {
 
   const loadRSVPData = async () => {
     setLoading(true);
+    if (!appParams.hasBackendConfig) {
+      setRsvpCounts({ going: 3, interested: 2, not_going: 0 });
+      setAttendees([
+        { id: 'demo-rsvp-1', user_name: 'Local demo' },
+        { id: 'demo-rsvp-2', user_name: 'Community member' },
+      ]);
+      setLoading(false);
+      return;
+    }
     try {
       const allRSVPs = await base44.entities.RSVP.filter({ post_id: postId });
       
@@ -52,6 +62,18 @@ export default function EventRSVPSection({ postId, currentUser, eventDate }) {
     }
 
     setUpdating(true);
+    if (!appParams.hasBackendConfig) {
+      setUserStatus(prev => prev === status ? null : status);
+      setRsvpCounts(prev => {
+        const next = { ...prev };
+        if (userStatus) next[userStatus] = Math.max(0, next[userStatus] - 1);
+        if (status !== userStatus) next[status] = (next[status] || 0) + 1;
+        return next;
+      });
+      toast.success(status === userStatus ? 'RSVP removed locally' : 'RSVP saved locally');
+      setUpdating(false);
+      return;
+    }
     try {
       // Remove existing RSVP if any
       if (userStatus) {

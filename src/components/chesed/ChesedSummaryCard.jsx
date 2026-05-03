@@ -1,5 +1,4 @@
 import React from 'react';
-import { Clock, CheckCircle2, Calendar, TrendingUp } from 'lucide-react';
 
 export default function ChesedSummaryCard({ logs }) {
   const now = new Date();

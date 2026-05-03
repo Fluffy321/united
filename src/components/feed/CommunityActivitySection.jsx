@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, Loader2, Heart, MessageCircle, HandHeart, Calendar } from 'lucide-react';
+import { ChevronRight, Heart, MessageCircle, HandHeart, Calendar } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';

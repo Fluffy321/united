@@ -136,7 +136,7 @@ Only return IDs from the provided list. Prioritize variety across types.`,
     if (!fetched && !fetchingRef.current && allCommunities?.length > 0) {
       fetchSuggestions();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [fetched, allCommunities?.length > 0]);
 
   if (!loading && fetched && suggestions.length === 0) return null;

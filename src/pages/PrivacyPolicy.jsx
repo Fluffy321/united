@@ -51,7 +51,7 @@ export default function PrivacyPolicy() {
           <Section title="3. Who We Share Your Information With">
             <p><strong>We do not sell your personal data.</strong> We may share information with:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Service providers:</strong> Hosting (Base44), email delivery (Resend), payment processing (Base44 Payments / Wix). These providers are contractually bound to protect your data.</li>
+              <li><strong>Service providers:</strong> Hosting (hosting provider), email delivery (Resend), payment processing (payment provider / Wix). These providers are contractually bound to protect your data.</li>
               <li><strong>Other users:</strong> Content you post publicly is visible to other Platform users. Your name and profile photo appear alongside your posts.</li>
               <li><strong>Legal requirements:</strong> We may disclose information if required by law, court order, or to protect the safety of users.</li>
             </ul>

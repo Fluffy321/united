@@ -1,7 +1,6 @@
 import React from 'react';
 import { Clock, Calendar, HandHeart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { format, parseISO } from 'date-fns';
 
 export default function HappeningTonightSection({ events, mitzvahRequests, onViewEvent, onHelpMitzvah }) {
   const allItems = [

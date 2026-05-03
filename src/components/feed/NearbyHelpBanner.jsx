@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Navigation, ChevronRight, X, Loader2, Hand } from 'lucide-react';
+import { MapPin, Navigation, X, Loader2, Hand } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { formatDistanceToNow } from 'date-fns';
 

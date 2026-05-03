@@ -1,5 +1,5 @@
 import React from 'react';
-import { HandHeart, Calendar, MapPin, Users, Sparkles } from 'lucide-react';
+import { Calendar, MapPin, Users, Sparkles } from 'lucide-react';
 
 const CATEGORY_COLORS = {
   'Food Drive':     'bg-orange-50 text-orange-700',

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { X, AlertTriangle, CheckCircle } from 'lucide-react';
+import { X, CheckCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const TYPE_EMOJI = {

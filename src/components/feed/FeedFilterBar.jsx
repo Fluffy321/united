@@ -1,5 +1,5 @@
 import React from 'react';
-import { Filter, X } from 'lucide-react';
+import { Filter } from 'lucide-react';
 
 const CATEGORY_FILTERS = [
   { id: 'all', label: '📰 All Posts', icon: null },

@@ -1,20 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Loader2, MapPin, Check, Bold, Italic, List, ImagePlus, MessageCircle, HelpCircle, Calendar, Bell, BarChart2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, MapPin, Check, Bold, Italic, List, MessageCircle, HelpCircle, Calendar, Bell, BarChart2, Plus, Trash2 } from 'lucide-react';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
-import FileUploadZone from '@/components/common/FileUploadZone';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 

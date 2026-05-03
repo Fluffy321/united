@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Download, Clock, Filter } from 'lucide-react';
+import { Plus, Download, Clock } from 'lucide-react';
 import ChesedSummaryCard from './ChesedSummaryCard';
 import ChesedLogItem from './ChesedLogItem';
 import LogHoursModal from './LogHoursModal';

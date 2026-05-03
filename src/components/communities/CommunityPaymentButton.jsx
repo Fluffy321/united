@@ -64,7 +64,7 @@ export default function CommunityPaymentButton({ community }) {
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">Support {community.name}</h2>
-                <p className="text-[12px] text-slate-500 mt-0.5">Secure payment via Base44 Payments</p>
+                <p className="text-[12px] text-slate-500 mt-0.5">Secure payment integration coming next</p>
               </div>
               <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
@@ -141,7 +141,7 @@ export default function CommunityPaymentButton({ community }) {
             </button>
 
             <p className="text-center text-[11px] text-slate-400">
-              🔒 Powered by Base44 Payments · Secure & encrypted
+              Secure payment integration coming next
             </p>
           </div>
         </div>

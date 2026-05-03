@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Loader2, Calendar, MapPin, Clock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { formatDistanceToNow } from 'date-fns';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import { toast } from 'sonner';
 

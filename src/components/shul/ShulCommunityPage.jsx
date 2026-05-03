@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2, MapPin, Users, ChevronLeft, Bell, Calendar, FileText, Users2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapPin, Users, ChevronLeft, Bell, Calendar, FileText, Users2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import CommunityPostCard from '@/components/communities/CommunityPostCard';

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Users, Ticket, CheckCircle, Clock, X, Download } from 'lucide-react';
+import { Users, CheckCircle, Clock, X, Download } from 'lucide-react';
 
 export default function EventAttendeesAdmin({ event, onClose }) {
   const { data: rsvps = [], isLoading } = useQuery({

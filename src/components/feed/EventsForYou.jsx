@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Calendar, MapPin, Sparkles, Clock } from 'lucide-react';
-import { format, parseISO, startOfToday, isBefore } from 'date-fns';
+import { format, parseISO, startOfToday } from 'date-fns';
 import EventRSVPSection from '@/components/events/EventRSVPSection';
 import EventSummaryButton from '@/components/events/EventSummaryButton';
 

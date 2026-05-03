@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2, MapPin, Phone, Globe, Clock, BookOpen, Users, Heart, Shield } from 'lucide-react';
+import { Loader2, MapPin, Phone, Globe, Clock, BookOpen, Heart, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import CommunityHero from './CommunityHero';
 import ClaimModal from './ClaimModal';
-import BasicInfoSection from './BasicInfoSection';
 
 // Type-aware claim copy
 const CLAIM_COPY = {
@@ -172,7 +171,6 @@ import CommunityMitzvahTab from './CommunityMitzvahTab';
 import MembersListTab from './MembersListTab';
 import GroupChatSection from './GroupChatSection';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
-import CommunityPaymentButton from './CommunityPaymentButton';
 import CommunityHealthDashboard from './CommunityHealthDashboard';
 import CommunityStoreTab from './CommunityStoreTab';
 

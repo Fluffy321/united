@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Loader2, Pin, MapPin, Users, MessageCircle, Heart, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, Loader2, Pin, MapPin, Users, MessageCircle, Heart } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 

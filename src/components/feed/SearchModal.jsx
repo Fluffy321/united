@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, X, FileText, HandHeart, Users, User, Calendar } from 'lucide-react';
+import { Search, X, FileText, Users, User, Calendar } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';

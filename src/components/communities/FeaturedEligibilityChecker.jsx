@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, AlertCircle, CheckCircle2, Clock, Users, BarChart3, Zap } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Zap } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
@@ -104,7 +104,7 @@ export default function FeaturedEligibilityChecker({ community, onEligibilityChe
           <button
             onClick={() => {
               toast.info('Featured checkout coming soon');
-              // Integrate with Base44 Payments
+              // Integrate with payment provider
             }}
             className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold py-3 rounded-full hover:from-blue-700 hover:to-blue-800 transition-all active:scale-95"
           >

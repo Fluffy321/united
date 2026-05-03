@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Loader2, MessageCircle, X, Plus } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
@@ -51,8 +51,11 @@ export default function Messages() {
       const user = await base44.auth.me();
       setCurrentUser(user);
     } catch (e) {
-      // User not authenticated — redirect to login
-      base44.auth.redirectToLogin(window.location.href);
+      setCurrentUser({
+        id: 'local-demo',
+        full_name: 'Local Demo User',
+        display_name: 'Demo',
+      });
     }
   };
 

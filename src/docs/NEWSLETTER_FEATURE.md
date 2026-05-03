@@ -8,7 +8,7 @@ Premium feature allowing group admins to draft and send periodic email newslette
 ### 1. Backend Function: `sendGroupNewsletter`
 **Location:** `functions/sendGroupNewsletter.js`
 
-**Purpose:** Sends newsletter emails to group members using Base44 Payments email integration.
+**Purpose:** Sends newsletter emails to group members using payment provider email integration.
 
 **Parameters:**
 - `groupId`: Community group ID
