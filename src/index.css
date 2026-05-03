@@ -111,7 +111,37 @@
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overscroll-behavior: none;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: auto;
+    min-height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  html {
+    height: 100%;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  body {
+    background: #F6F8FB;
+    min-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   /* Display headings use serif */
@@ -124,6 +154,61 @@
     font-family: var(--font-display);
     font-style: italic;
     color: var(--j-gold-dark);
+  }
+}
+
+@layer utilities {
+  .mobile-page {
+    width: 100%;
+    max-width: 430px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .mobile-page-wide {
+    width: 100%;
+    max-width: 430px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .mobile-safe-bottom {
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-card {
+    border-radius: 22px;
+    border: 1px solid rgba(203, 213, 225, 0.75);
+    background: #FFFFFF;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  .mobile-touch {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .mobile-scroll-x {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-page,
+    .mobile-page-wide {
+      max-width: 672px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .mobile-page-wide {
+      max-width: 1120px;
+    }
   }
 }
 

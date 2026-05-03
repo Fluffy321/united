@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, User, Users, MessageCircle, Loader2 } from 'lucide-react';
 import { MitzvahIcon } from '@/components/common/JIcons';
@@ -31,10 +31,6 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const isChatOpen = currentPageName === 'Messages' && new URLSearchParams(location.search).get('chat') === '1';
   const hideNav = ['Settings', 'ShulPage'].includes(currentPageName) || isChatOpen;
-  const hideBottomPadding = false;
-  const navContainerRef = useRef(null);
-  const navItemRefs = useRef({});
-  const [pillStyle, setPillStyle] = useState({ left: 0, opacity: 0 });
   const [currentUser, setCurrentUser] = useState(null);
 
   const [isScrollingDown, setIsScrollingDown] = useState(false);
@@ -80,22 +76,6 @@ export default function Layout({ children, currentPageName }) {
     refetchOnWindowFocus: false
   });
 
-  useEffect(() => {
-    const recalculate = () => {
-      const activeItem = navItemRefs.current[currentPageName];
-      const container = navContainerRef.current;
-      if (!activeItem || !container) return;
-      const itemRect = activeItem.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
-      const left = itemRect.left - containerRect.left + itemRect.width / 2;
-      setPillStyle({ left, opacity: 1 });
-    };
-
-    recalculate();
-    window.addEventListener('resize', recalculate);
-    return () => window.removeEventListener('resize', recalculate);
-  }, [currentPageName]);
-  
   const swipeablePages = ['Feed', 'MitzvahCircle', 'Communities', 'Profile'];
   const currentIndex = swipeablePages.indexOf(currentPageName);
   const isSwipeable = currentIndex !== -1;
@@ -108,10 +88,10 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: '#F8FAFC' }}>
+    <div className="min-h-screen" style={{ background: '#F6F8FB' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', system-ui, sans-serif; background: #F8FAFC; -webkit-font-smoothing: antialiased; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: #F6F8FB; -webkit-font-smoothing: antialiased; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
@@ -153,12 +133,15 @@ export default function Layout({ children, currentPageName }) {
       {/* Bottom Navigation */}
       {!hideNav && (
         <nav
-          className="fixed bottom-0 left-0 right-0 bg-white z-50"
-          style={{ boxShadow: '0 -1px 0 #E2E8F0', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+          className="fixed inset-x-0 bottom-0 z-50 px-3 pb-2"
+          style={{ paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))' }}
         >
-          <div className="max-w-2xl mx-auto" ref={navContainerRef} style={{ position: 'relative' }}>
+          <div
+            className="mobile-page overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/95 shadow-[0_18px_40px_rgba(15,23,42,0.18)] backdrop-blur-xl"
+            style={{ position: 'relative' }}
+          >
             {/* Active highlight now rendered per-button */}
-            <div className="flex items-center justify-around px-1">
+            <div className="flex items-center justify-around px-1 py-1.5">
               {navItems.map((item) => {
                 const isActive = currentPageName === item.page;
                 const Icon = item.icon;
@@ -166,7 +149,6 @@ export default function Layout({ children, currentPageName }) {
                 return (
                   <button
                     key={item.page}
-                    ref={el => { navItemRefs.current[item.page] = el; }}
                     onClick={() => {
                       const pageIndex = swipeablePages.indexOf(item.page);
                       if (item.page !== currentPageName) {
@@ -178,20 +160,15 @@ export default function Layout({ children, currentPageName }) {
                         navigate(createPageUrl(item.page));
                       }
                     }}
-                    className="flex flex-col items-center justify-center relative touch-manipulation"
-                    style={{ WebkitTapHighlightColor: 'transparent', minHeight: '52px', minWidth: '52px', paddingTop: 6, paddingBottom: 6 }}
+                    className={`relative flex flex-1 flex-col items-center justify-center rounded-[18px] touch-manipulation transition-all duration-150 ${
+                      isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-400 active:bg-slate-100'
+                    }`}
+                    style={{ minHeight: '58px', minWidth: '54px', paddingTop: 7, paddingBottom: 7 }}
                   >
-                    {/* Active pill background */}
-                    {isActive && (
-                      <span
-                        className="absolute top-1 rounded-xl"
-                        style={{ left: '50%', transform: 'translateX(-50%)', width: 40, height: 26, background: 'rgba(37,99,235,0.12)', pointerEvents: 'none' }}
-                      />
-                    )}
                     {/* Active dot above icon */}
                     {isActive && (
                       <span
-                        className="absolute top-0.5 rounded-full bg-[#2563EB]"
+                        className="absolute top-1.5 rounded-full bg-[#2563EB]"
                         style={{ left: '50%', transform: 'translateX(-50%)', width: 4, height: 4 }}
                       />
                     )}
@@ -200,12 +177,12 @@ export default function Layout({ children, currentPageName }) {
                         <MitzvahIcon
                           size={20}
                           strokeWidth={isActive ? 2.2 : 1.8}
-                          className={`transition-all duration-150 ${isActive ? 'text-[#2563EB]' : 'text-[#94A3B8]'}`}
+                          className={`transition-all duration-150 ${isActive ? 'text-[#2563EB]' : 'text-slate-400'}`}
                         />
                       ) : (
                         <Icon
-                          style={{ width: 20, height: 20 }}
-                          className={`transition-all duration-150 ${isActive ? 'text-[#2563EB]' : 'text-[#94A3B8]'}`}
+                          style={{ width: 21, height: 21 }}
+                          className={`transition-all duration-150 ${isActive ? 'text-[#2563EB]' : 'text-slate-400'}`}
                           strokeWidth={isActive ? 2.4 : 1.8}
                         />
                       )}
@@ -218,10 +195,9 @@ export default function Layout({ children, currentPageName }) {
                     <span
                       className="relative z-10 transition-all duration-150"
                       style={{
-                        fontSize: 10, marginTop: 3,
+                        fontSize: 10, marginTop: 4,
                         fontWeight: isActive ? 700 : 400,
                         color: isActive ? '#2563EB' : '#94A3B8',
-                        letterSpacing: '0.01em',
                       }}
                     >
                       {item.name}

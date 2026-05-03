@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 
 export default function CreateCommunityForm({ categories, onCreate, onClose }) {
   const [name, setName] = useState('');
@@ -29,35 +29,43 @@ export default function CreateCommunityForm({ categories, onCreate, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end bg-slate-950/40 p-0 sm:items-center sm:justify-center sm:p-4">
-      <form onSubmit={submit} className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-6">
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-slate-950">Create Community</h2>
-            <p className="mt-1 text-sm text-slate-500">Set up the basics. This uses mock data for now.</p>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm">
+      <form onSubmit={submit} className="flex max-h-[calc(100dvh-24px)] w-full max-w-[500px] flex-col overflow-hidden rounded-[22px] bg-white shadow-2xl">
+        <div className="shrink-0 bg-gradient-to-br from-blue-700 via-slate-900 to-emerald-700 px-4 py-3 text-white sm:px-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">
+                <Sparkles className="h-3.5 w-3.5" />
+                New hub
+              </p>
+              <h2 className="text-lg font-black leading-tight text-white sm:text-xl">Create Community</h2>
+              <p className="mt-0.5 max-w-md text-[12px] font-semibold leading-4 text-white/90">
+                Make a focused space for shul, school, chesed, learning, or local updates.
+              </p>
+            </div>
+            <button type="button" onClick={onClose} className="mobile-touch rounded-xl bg-white/12 p-2 text-white transition hover:bg-white/20">
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full p-2 text-slate-500 hover:bg-slate-100">
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid min-h-0 flex-1 gap-2.5 overflow-hidden px-4 py-3 sm:grid-cols-2 sm:px-5">
           <label className="block sm:col-span-2">
-            <span className="mb-1.5 block text-sm font-bold text-slate-700">Community name</span>
+            <span className="mb-1 block text-[12px] font-black text-slate-900">Community name</span>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Example: Woodmere Parent Circle"
-              className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              className="h-10 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-950 outline-none placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm font-bold text-slate-700">Category</span>
+            <span className="mb-1 block text-[12px] font-black text-slate-900">Category</span>
             <select
               value={category}
               onChange={(event) => setCategory(event.target.value)}
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              className="h-10 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             >
               {categories.map((item) => (
                 <option key={item} value={item}>{item}</option>
@@ -66,11 +74,11 @@ export default function CreateCommunityForm({ categories, onCreate, onClose }) {
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm font-bold text-slate-700">Privacy</span>
+            <span className="mb-1 block text-[12px] font-black text-slate-900">Privacy</span>
             <select
               value={privacy}
               onChange={(event) => setPrivacy(event.target.value)}
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              className="h-10 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             >
               <option value="Public">Public</option>
               <option value="Private">Private</option>
@@ -78,45 +86,45 @@ export default function CreateCommunityForm({ categories, onCreate, onClose }) {
           </label>
 
           <label className="block sm:col-span-2">
-            <span className="mb-1.5 block text-sm font-bold text-slate-700">Location or neighborhood optional</span>
+            <span className="mb-1 block text-[12px] font-black text-slate-900">Location or neighborhood</span>
             <input
               value={location}
               onChange={(event) => setLocation(event.target.value)}
               placeholder="Example: Cedarhurst, Woodmere, Online"
-              className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              className="h-10 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-950 outline-none placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </label>
 
           <label className="block sm:col-span-2">
-            <span className="mb-1.5 block text-sm font-bold text-slate-700">Description</span>
+            <span className="mb-1 block text-[12px] font-black text-slate-900">Description</span>
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               placeholder="What is this community for?"
-              rows={4}
-              className="w-full resize-none rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              rows={2}
+              className="h-[68px] w-full resize-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold leading-5 text-slate-950 outline-none placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </label>
 
           <label className="block sm:col-span-2">
-            <span className="mb-1.5 block text-sm font-bold text-slate-700">Rules one per line</span>
+            <span className="mb-1 block text-[12px] font-black text-slate-900">Rules one per line</span>
             <textarea
               value={rulesText}
               onChange={(event) => setRulesText(event.target.value)}
-              rows={4}
-              className="w-full resize-none rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              rows={2}
+              className="h-[68px] w-full resize-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold leading-5 text-slate-950 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </label>
         </div>
 
-        <div className="mt-6 flex gap-3">
-          <button type="button" onClick={onClose} className="h-11 flex-1 rounded-xl bg-slate-100 text-sm font-bold text-slate-700">
+        <div className="flex shrink-0 gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3 sm:px-5">
+          <button type="button" onClick={onClose} className="h-10 flex-1 rounded-xl border border-slate-300 bg-white text-sm font-black text-slate-800 transition hover:bg-slate-100">
             Cancel
           </button>
           <button
             type="submit"
             disabled={!canCreate}
-            className="h-11 flex-1 rounded-xl bg-blue-600 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-10 flex-1 rounded-xl bg-blue-700 text-sm font-black text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 disabled:shadow-none"
           >
             Create
           </button>

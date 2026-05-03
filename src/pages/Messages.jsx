@@ -212,16 +212,16 @@ export default function Messages() {
   }
 
   return (
-    <div className="flex flex-col relative" style={{ height: 'calc(100dvh - 60px)', background: '#F4F7FB' }}>
-      <div className="flex flex-1 min-h-0">
+    <div className="relative flex min-h-screen flex-col bg-[#F6F8FB] mobile-safe-bottom">
+      <div className="mobile-page-wide flex flex-1 min-h-0 px-3 pt-3 lg:px-0">
         {/* Conversation List */}
-        <div className={`flex flex-col w-full lg:w-96 lg:border-r border-slate-200 bg-white ${
+        <div className={`flex flex-col w-full overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm lg:w-96 lg:rounded-r-none lg:border-r ${
         selectedConversation ? 'hidden lg:flex' : 'flex'}`
         }>
           <div className="px-4 pt-4 pb-0 border-b border-slate-100 flex-shrink-0">
-            <h1 className="text-[20px] font-bold text-slate-900 mb-3">Messages</h1>
+            <h1 className="text-[22px] font-bold text-slate-950 mb-3">Messages</h1>
             {/* Filter pills */}
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+            <div className="mobile-scroll-x flex gap-2 pb-2">
               {[
                 { key: 'all', label: 'All' },
                 { key: 'unread', label: 'Unread' },
@@ -231,10 +231,9 @@ export default function Messages() {
                 <button
                   key={f.key}
                   onClick={() => setActiveFilter(f.key)}
-                  className={`flex-shrink-0 rounded-full px-4 py-1.5 text-[13px] font-semibold transition-all duration-150 active:scale-95 ${
-                    activeFilter === f.key ? 'text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                  className={`flex-shrink-0 rounded-2xl border px-4 py-2 text-[13px] font-bold transition-all duration-150 active:scale-95 ${
+                    activeFilter === f.key ? 'border-blue-600 bg-blue-600 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
                   }`}
-                  style={activeFilter === f.key ? { background: 'linear-gradient(135deg, #2563EB, #7C3AED)' } : {}}
                 >
                   {f.label}
                 </button>
@@ -291,7 +290,7 @@ export default function Messages() {
         </div>
 
         {/* Chat View */}
-        <div className={`flex-1 flex flex-col min-h-0 ${
+        <div className={`flex-1 flex flex-col min-h-0 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm lg:rounded-l-none lg:border-l-0 ${
         selectedConversation ? 'flex' : 'hidden lg:flex lg:items-center lg:justify-center'}`
         }>
           {selectedConversation ?

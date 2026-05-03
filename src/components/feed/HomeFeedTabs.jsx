@@ -11,7 +11,7 @@ const TABS = [
 
 export default function HomeFeedTabs({ activeTab, onChange }) {
   return (
-    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide py-2 px-1">
+    <div className="mobile-scroll-x -mx-1 flex gap-2 px-1 py-2.5">
       {TABS.map(tab => {
         const isActive = activeTab === tab.id;
         return (
@@ -19,11 +19,13 @@ export default function HomeFeedTabs({ activeTab, onChange }) {
             key={tab.id}
             type="button"
             onClick={() => onChange(tab.id)}
-            className="flex-shrink-0 px-3.5 py-1 rounded-full text-[12px] font-semibold whitespace-nowrap transition-all touch-manipulation active:scale-95"
+            className={`mobile-touch flex-shrink-0 rounded-2xl border px-4 text-[13px] font-bold whitespace-nowrap transition-all touch-manipulation active:scale-95 ${
+              isActive
+                ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                : 'border-slate-200 bg-white text-slate-600 shadow-sm'
+            }`}
             style={{
               WebkitTapHighlightColor: 'transparent',
-              background: isActive ? '#1E40AF' : '#F1F5F9',
-              color: isActive ? '#fff' : '#64748B',
             }}
           >
             {tab.label}

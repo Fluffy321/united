@@ -216,26 +216,26 @@ export default function Settings() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-10">
+    <main className="min-h-screen overflow-x-hidden bg-slate-50 mobile-safe-bottom">
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
+        <div className="mobile-page-wide flex min-w-0 items-center justify-between gap-2 px-3 py-3 sm:px-6">
+          <div className="flex min-w-0 items-center gap-2">
             <Link
               to={createPageUrl('Profile')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Account</p>
-              <h1 className="text-xl font-bold text-slate-950">Settings</h1>
+              <h1 className="truncate text-xl font-bold text-slate-950">Settings</h1>
             </div>
           </div>
 
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-60"
+            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-blue-600 px-3 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-60 sm:px-4"
           >
             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Save
@@ -243,11 +243,11 @@ export default function Settings() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-6xl gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[280px_1fr]">
-        <aside className="space-y-4">
+      <div className="mobile-page-wide grid min-w-0 gap-4 px-3 py-4 sm:px-6 lg:grid-cols-[280px_1fr]">
+        <aside className="min-w-0 space-y-3">
           <ProfileSummary form={form} onAvatarChange={handleAvatarChange} />
 
-          <nav className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <nav className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:grid-cols-3 lg:block lg:p-0">
             {sections.map((section) => {
               const Icon = section.icon;
               const active = activeSection === section.id;
@@ -255,25 +255,25 @@ export default function Settings() {
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id)}
-                  className={`flex w-full items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 text-left text-sm font-bold last:border-b-0 transition ${
+                  className={`flex min-w-0 items-center justify-between gap-2 rounded-xl px-3 py-3 text-left text-sm font-bold transition lg:w-full lg:rounded-none lg:border-b lg:border-slate-100 lg:last:border-b-0 ${
                     active ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <span className="flex items-center gap-3">
-                    <Icon className="h-4 w-4" />
-                    {section.label}
+                  <span className="flex min-w-0 items-center gap-2">
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{section.label}</span>
                   </span>
-                  <ChevronRight className="h-4 w-4 opacity-50" />
+                  <ChevronRight className="hidden h-4 w-4 opacity-50 lg:block" />
                 </button>
               );
             })}
           </nav>
         </aside>
 
-        <section className="space-y-5">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="min-w-0 space-y-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
             <p className="text-sm font-bold text-blue-700">{activeLabel}</p>
-            <h2 className="mt-1 text-2xl font-bold text-slate-950">{sectionTitle(activeSection)}</h2>
+            <h2 className="mt-1 text-xl font-bold leading-tight text-slate-950 sm:text-2xl">{sectionTitle(activeSection)}</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{sectionDescription(activeSection)}</p>
           </div>
 
@@ -494,9 +494,9 @@ function ProfileSummary({ form, onAvatarChange }) {
     .toUpperCase();
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
       <div className="flex items-center gap-3">
-        <div className="relative">
+        <div className="relative shrink-0">
           {form.avatar_url ? (
             <img src={form.avatar_url} alt="" className="h-16 w-16 rounded-2xl object-cover" />
           ) : (
@@ -520,9 +520,9 @@ function ProfileSummary({ form, onAvatarChange }) {
 
 function SettingsCard({ title, icon: Icon, children }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-950">
-        <Icon className="h-5 w-5 text-blue-600" />
+    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <h3 className="mb-4 flex min-w-0 items-center gap-2 text-base font-bold text-slate-950 sm:text-lg">
+        <Icon className="h-5 w-5 shrink-0 text-blue-600" />
         {title}
       </h3>
       {children}
@@ -532,7 +532,7 @@ function SettingsCard({ title, icon: Icon, children }) {
 
 function TextField({ label, value, onChange, disabled = false, icon: Icon }) {
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className="mb-1.5 block text-sm font-bold text-slate-700">{label}</span>
       <div className="relative">
         {Icon && <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />}
@@ -540,7 +540,7 @@ function TextField({ label, value, onChange, disabled = false, icon: Icon }) {
           value={value}
           onChange={(event) => onChange(event.target.value)}
           disabled={disabled}
-          className={`h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-400 ${Icon ? 'pl-10' : ''}`}
+          className={`h-11 w-full min-w-0 rounded-xl border border-slate-200 px-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-400 ${Icon ? 'pl-10' : ''}`}
         />
       </div>
     </label>
@@ -549,12 +549,12 @@ function TextField({ label, value, onChange, disabled = false, icon: Icon }) {
 
 function ToggleRow({ icon: Icon, title, description, checked, onChange }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+    <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold text-slate-950">{title}</p>
+        <p className="text-sm font-bold leading-tight text-slate-950">{title}</p>
         <p className="mt-0.5 text-xs leading-5 text-slate-500">{description}</p>
       </div>
       <button
@@ -570,9 +570,9 @@ function ToggleRow({ icon: Icon, title, description, checked, onChange }) {
 
 function InfoRow({ title, value }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3">
-      <p className="text-sm font-bold text-slate-700">{title}</p>
-      <p className="truncate text-sm text-slate-500">{value}</p>
+    <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3">
+      <p className="shrink-0 text-sm font-bold text-slate-700">{title}</p>
+      <p className="min-w-0 truncate text-right text-sm text-slate-500">{value}</p>
     </div>
   );
 }

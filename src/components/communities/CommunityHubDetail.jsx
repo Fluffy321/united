@@ -28,8 +28,8 @@ const roleStyles = {
 
 export default function CommunityHubDetail({ community, onBack, onToggleJoin, onToggleLike }) {
   return (
-    <main className="min-h-screen bg-[#F7F9FC] pb-28">
-      <section className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-6 sm:pt-8">
+    <main className="min-h-screen bg-[#F7F9FC] mobile-safe-bottom">
+      <section className="mobile-page-wide px-3 pt-3 sm:px-6 sm:pt-8">
         <button
           onClick={onBack}
           className="mb-4 inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
@@ -38,8 +38,8 @@ export default function CommunityHubDetail({ community, onBack, onToggleJoin, on
           Back
         </button>
 
-        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-          <div className="bg-white px-5 py-7 sm:px-7">
+        <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
+          <div className="bg-white px-4 py-5 sm:px-7 sm:py-7">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0">
                 <div className="mb-3 flex flex-wrap gap-2">
@@ -63,7 +63,7 @@ export default function CommunityHubDetail({ community, onBack, onToggleJoin, on
               </button>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <div className="mt-5 grid gap-2 sm:grid-cols-3">
               <Metric icon={Users} label="Members" value={community.memberCount.toLocaleString()} />
               <Metric icon={MessageCircle} label="Posts" value={community.posts.length} />
               <Metric icon={Shield} label="Roles" value={community.roles.length} />
@@ -71,7 +71,7 @@ export default function CommunityHubDetail({ community, onBack, onToggleJoin, on
           </div>
 
           <div className="grid gap-0 lg:grid-cols-[1fr_320px]">
-            <div className="space-y-5 border-b border-slate-200 p-5 lg:border-b-0 lg:border-r sm:p-7">
+            <div className="space-y-4 border-b border-slate-200 p-4 lg:border-b-0 lg:border-r sm:p-7">
               <Panel title="Posts Feed" icon={MessageCircle}>
                 <div className="space-y-3">
                   {community.posts.map((post) => (
@@ -100,7 +100,7 @@ export default function CommunityHubDetail({ community, onBack, onToggleJoin, on
               </Panel>
             </div>
 
-            <aside className="space-y-5 p-5 sm:p-7">
+            <aside className="space-y-4 p-4 sm:p-7">
               <Panel title="About" icon={Users}>
                 <p className="text-sm leading-6 text-slate-600">{community.description}</p>
               </Panel>

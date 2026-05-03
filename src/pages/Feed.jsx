@@ -72,6 +72,85 @@ const DEMO_POSTS = [
     likes_count: 19,
     comments_count: 6,
   },
+  {
+    id: 'demo-feed-4',
+    type: 'feed',
+    title: 'Lost and found near Central Avenue',
+    body: 'A small siddur was left after mincha. Message the office if it is yours.',
+    author_name: 'Shul office',
+    user_id: 'local-demo-4',
+    community_id: 'demo-community',
+    community_name: 'Five Towns',
+    city: 'Five Towns',
+    location_text: 'Cedarhurst',
+    created_date: new Date(Date.now() - 11 * 60 * 60 * 1000).toISOString(),
+    updated_date: new Date().toISOString(),
+    likes_count: 6,
+    comments_count: 2,
+  },
+  {
+    id: 'demo-feed-5',
+    type: 'news',
+    title: 'Tonight: short halacha chabura',
+    body: 'Quick 20 minute learning after maariv, focused on practical Shabbos questions.',
+    author_name: 'Learning group',
+    user_id: 'local-demo-5',
+    community_id: 'demo-community',
+    community_name: 'Five Towns',
+    city: 'Five Towns',
+    location_text: 'Woodmere',
+    created_date: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString(),
+    updated_date: new Date().toISOString(),
+    likes_count: 14,
+    comments_count: 4,
+  },
+  {
+    id: 'demo-feed-6',
+    type: 'help',
+    body: 'Can someone recommend a reliable car service for an early JFK pickup?',
+    author_name: 'Neighbor',
+    user_id: 'local-demo-6',
+    community_id: 'demo-community',
+    community_name: 'Five Towns',
+    city: 'Five Towns',
+    location_text: 'Lawrence',
+    created_date: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(),
+    updated_date: new Date().toISOString(),
+    likes_count: 4,
+    comments_count: 9,
+  },
+  {
+    id: 'demo-feed-7',
+    type: 'event',
+    body: 'Parent meetup at the park after school, weather permitting.',
+    author_name: 'Parents board',
+    user_id: 'local-demo-7',
+    community_id: 'demo-community',
+    community_name: 'Five Towns',
+    city: 'Five Towns',
+    location_text: 'Hewlett',
+    created_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    updated_date: new Date().toISOString(),
+    event_date: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(),
+    likes_count: 11,
+    comments_count: 7,
+  },
+  {
+    id: 'demo-feed-8',
+    type: 'feed',
+    title: 'New family moving in',
+    body: 'A new family is moving to the neighborhood this week. Looking for ideas to help them feel welcomed.',
+    author_name: 'Welcome committee',
+    user_id: 'local-demo-8',
+    community_id: 'demo-community',
+    community_name: 'Five Towns',
+    city: 'Five Towns',
+    location_text: 'Inwood',
+    created_date: new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString(),
+    updated_date: new Date().toISOString(),
+    likes_count: 22,
+    comments_count: 10,
+  },
 ];
 
 export default function Feed() {
@@ -424,7 +503,7 @@ export default function Feed() {
   })();
 
   return (
-    <div className="min-h-screen relative" style={{ background: '#F8FAFC' }}>
+    <div className="min-h-screen relative" style={{ background: '#F6F8FB' }}>
       {pullDistance > 0 && (
         <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[40] pointer-events-none">
           <div className={`transition-all ${isRefreshing ? 'animate-spin' : ''}`} style={{ transform: `rotate(${pullDistance * 3}deg)` }}>
@@ -433,11 +512,11 @@ export default function Feed() {
         </div>
       )}
 
-      <div className="sticky top-0 z-[60] bg-white/95 backdrop-blur-sm" style={{ borderBottom: '1px solid #F1F5F9' }}>
-        <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
+      <div className="sticky top-0 z-[60] bg-[#F6F8FB]/95 backdrop-blur-xl">
+        <div className="mobile-page px-3 pt-2 pb-2 flex items-center justify-between">
           <button
             onClick={() => setShowLocationPicker(v => !v)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-semibold text-[13px] active:scale-95 touch-manipulation"
+            className="mobile-touch flex items-center gap-1.5 rounded-2xl bg-white px-3.5 py-2.5 text-blue-700 font-bold text-[13px] active:scale-95 touch-manipulation shadow-sm border border-blue-100"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <span>{primaryNetwork.emoji}</span>
@@ -445,7 +524,7 @@ export default function Feed() {
             <ChevronDown className="w-3 h-3 text-blue-400 transition-transform" style={{ transform: showLocationPicker ? 'rotate(180deg)' : 'rotate(0deg)' }} />
           </button>
           <div className="flex items-center gap-0.5">
-            <button onClick={() => navigate('/search')} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 active:bg-slate-200 transition-colors touch-manipulation" style={{ WebkitTapHighlightColor: 'transparent' }}>
+            <button onClick={() => navigate('/search')} className="mobile-touch flex items-center justify-center rounded-2xl bg-white shadow-sm border border-slate-100 active:bg-slate-100 transition-colors touch-manipulation" style={{ WebkitTapHighlightColor: 'transparent' }}>
               <Search className="w-4.5 h-4.5 text-slate-500" style={{ width: 18, height: 18 }} />
             </button>
             <NotificationBell userId={currentUser?.id} />
@@ -454,7 +533,7 @@ export default function Feed() {
       </div>
 
       {showLocationPicker && (
-        <div className="sticky top-12 z-20">
+        <div className="sticky top-[60px] z-20">
           <LocationNetworkPicker
             currentNetwork={primaryNetwork}
             onSelect={async (net) => {
@@ -470,7 +549,7 @@ export default function Feed() {
           {/* Sub-neighborhood filter for current network */}
           {primaryNetwork.neighborhoods.length > 1 && (
             <div className="bg-white border-b border-slate-100 shadow-sm">
-              <div className="max-w-2xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto scrollbar-hide">
+              <div className="mobile-page px-3 py-2 flex gap-2 overflow-x-auto scrollbar-hide">
                 <button
                   onClick={() => setSelectedNeighborhood('All')}
                   className={`flex-shrink-0 px-3 py-1 rounded-full text-[12px] font-semibold transition-colors ${selectedNeighborhood === 'All' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600'}`}
@@ -492,12 +571,12 @@ export default function Feed() {
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto px-4 pt-1 pb-32">
+      <div className="mobile-page px-3 pt-1 mobile-safe-bottom">
         <PushNotificationPrompt />
 
         {/* One-time network banner for new users */}
         {showNetworkBanner && (
-          <div className="flex items-center gap-2 mb-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-[12px] font-medium">
+          <div className="mb-3 flex items-center gap-2 rounded-2xl bg-blue-600 px-3.5 py-3 text-white text-[12px] font-medium shadow-sm">
             <span className="text-lg">{primaryNetwork.emoji}</span>
             <span className="flex-1">You're viewing <strong>{primaryNetwork.shortLabel}</strong> — tap the chip above to switch networks.</span>
             <button onClick={() => { setShowNetworkBanner(false); localStorage.setItem('junited_network_banner_v2_dismissed', '1'); }} className="text-white/70 hover:text-white text-lg leading-none font-bold flex-shrink-0">×</button>
@@ -531,7 +610,7 @@ export default function Feed() {
           </div>
         )}
         {activeTab !== 'events' && (!isLoading || loadTimedOut) && feedPosts.length > 0 && (
-          <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-white tab-fade-in">
+          <div className="divide-y divide-slate-100 border border-slate-200 rounded-[22px] overflow-hidden bg-white tab-fade-in shadow-sm">
             {/* Question of the Day — embedded as first "post" in the feed card */}
             <DailyHooks
               onPostClick={(type, subtype, prefill) => {
@@ -672,11 +751,11 @@ export default function Feed() {
 
       <button
         onClick={() => { setPostModalType('feed'); setPostModalSubtype(null); setPostModalInitialBody(''); setShowPostModal(true); }}
-        className={`fixed bottom-[72px] right-5 z-40 w-12 h-12 rounded-full text-white flex items-center justify-center active:scale-95 transition-all duration-200 ${isScrollingDown ? 'opacity-0 pointer-events-none translate-y-2' : 'opacity-100 translate-y-0'}`}
-        style={{ background: '#1E40AF', boxShadow: '0 2px 10px rgba(30,64,175,0.35)' }}
+        className={`fixed bottom-[96px] right-5 z-40 h-14 w-14 rounded-2xl text-white flex items-center justify-center active:scale-95 transition-all duration-200 ${isScrollingDown ? 'opacity-0 pointer-events-none translate-y-2' : 'opacity-100 translate-y-0'}`}
+        style={{ background: '#1E40AF', boxShadow: '0 16px 30px rgba(30,64,175,0.32)' }}
         aria-label="Create post"
       >
-        <Plus className="w-5 h-5" />
+        <Plus className="w-6 h-6" />
       </button>
 
       <UpcomingEventsSheet

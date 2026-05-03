@@ -40,7 +40,7 @@ export default function NotificationBell({ userId }) {
     <button
       onClick={() => navigate(createPageUrl('Notifications'))}
 
-      className={`relative flex items-center justify-center w-[44px] h-[44px] rounded-full hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer touch-manipulation ${pulse ? 'animate-bounce' : ''}`}
+      className={`relative flex h-[44px] w-[44px] items-center justify-center rounded-2xl border border-slate-100 bg-white shadow-sm transition-colors active:bg-slate-100 cursor-pointer touch-manipulation ${pulse ? 'animate-bounce' : ''}`}
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       <Bell className={`w-5 h-5 transition-colors ${pulse ? 'text-blue-600' : 'text-[#374151]'}`} strokeWidth={1.75} style={{ pointerEvents: 'none' }} />

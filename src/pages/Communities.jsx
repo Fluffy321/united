@@ -327,29 +327,34 @@ export default function Communities() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F7F9FC] pb-28">
-      <section className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-6 sm:pt-8">
-        <div className="mb-5 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-          <div className="grid gap-0 lg:grid-cols-[1fr_360px]">
-            <div className="p-5 sm:p-7">
-              <p className="mb-2 flex items-center gap-2 text-sm font-bold text-blue-700">
+    <main className="min-h-screen bg-[#F7F9FC] mobile-safe-bottom">
+      <section className="mx-auto w-full max-w-[980px] px-3 pt-3 sm:px-5 sm:pt-6">
+        <div className="mb-4 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+          <div className="grid gap-0 lg:grid-cols-[1fr_310px]">
+            <div className="relative overflow-hidden p-4 sm:p-6">
+              <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-blue-50" />
+              <p className="relative mb-2 flex items-center gap-2 text-[13px] font-black text-blue-700">
                 <Sparkles className="h-4 w-4" />
                 Jewish Community Hub
               </p>
-              <h1 className="text-3xl font-bold tracking-normal text-slate-950 sm:text-4xl">Communities</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+              <h1 className="relative text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">Communities</h1>
+              <p className="relative mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-700">
                 Find the groups that make Jewish life feel closer: shuls, schools, chesed, learning, events, family boards, and neighborhood updates.
               </p>
 
-              <div className="mt-5 flex flex-wrap gap-2">
+              <div className="relative mt-4 flex flex-wrap gap-2">
                 <PulsePill icon={HeartHandshake} label="Chesed active today" />
                 <PulsePill icon={MessageCircle} label={`${totalPosts} fresh threads`} />
                 <PulsePill icon={CalendarDays} label={`${totalEvents} upcoming events`} />
               </div>
             </div>
 
-            <div className="border-t border-slate-200 bg-slate-50/70 p-5 lg:border-l lg:border-t-0 sm:p-6">
-              <div className="grid grid-cols-2 gap-3">
+            <div className="border-t border-slate-200 bg-gradient-to-br from-slate-50 via-white to-emerald-50 p-4 lg:border-l lg:border-t-0 sm:p-5">
+              <div className="mb-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                <p className="text-[12px] font-black uppercase tracking-wide text-slate-800">Start something useful</p>
+                <p className="mt-1 text-[13px] font-medium leading-5 text-slate-700">Create a board for minyan updates, school carpools, chesed requests, or neighborhood news.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
                 <MetricCard label="Communities" value={communities.length} tone="blue" />
                 <MetricCard label="Joined by you" value={joinedCount} tone="emerald" />
                 <MetricCard label="Members" value={totalMembers.toLocaleString()} tone="amber" />
@@ -357,7 +362,7 @@ export default function Communities() {
               </div>
               <button
                 onClick={() => setShowCreate(true)}
-                className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.98]"
+                className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-700 to-emerald-700 px-4 text-sm font-black text-white shadow-sm transition hover:brightness-95 active:scale-[0.98]"
               >
                 <Plus className="h-4 w-4" />
                 Create Community
@@ -366,7 +371,7 @@ export default function Communities() {
           </div>
         </div>
 
-        <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="mb-5 rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
           <div className="flex flex-col gap-3">
             <label className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -378,7 +383,7 @@ export default function Communities() {
               />
             </label>
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <div className="mobile-scroll-x flex items-center gap-2 pb-1">
               {categories.map((item) => (
                 <button
                   key={item}
@@ -408,7 +413,7 @@ export default function Communities() {
             <p className="mt-1 text-sm text-slate-500">Try another search, switch categories, or create a new community.</p>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-7">
             {featuredCommunities.length > 0 && (
               <CommunitySection
                 title="Featured Communities"
@@ -468,7 +473,7 @@ function CommunitySection({ title, subtitle, communities, onOpen, onToggleJoin, 
         </div>
       </div>
 
-      <div className={`grid gap-4 ${featured ? 'lg:grid-cols-2' : 'sm:grid-cols-2 xl:grid-cols-3'}`}>
+      <div className={`grid gap-3 ${featured ? 'lg:grid-cols-2' : 'sm:grid-cols-2 xl:grid-cols-3'}`}>
         {communities.map((community) => (
           <CommunityHubCard
             key={community.id}
@@ -485,7 +490,7 @@ function CommunitySection({ title, subtitle, communities, onOpen, onToggleJoin, 
 
 function PulsePill({ icon: Icon, label }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm">
+    <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-800 shadow-sm">
       <Icon className="h-3.5 w-3.5 text-blue-600" />
       {label}
     </span>
@@ -501,9 +506,9 @@ function MetricCard({ label, value, tone }) {
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
-      <p className={`inline-flex rounded-full px-2 py-1 text-xs font-bold ${tones[tone]}`}>{label}</p>
-      <p className="mt-3 text-2xl font-bold text-slate-950">{value}</p>
+    <div className="rounded-2xl border border-slate-200 bg-white p-3">
+      <p className={`inline-flex rounded-full px-2 py-1 text-[11px] font-black ${tones[tone]}`}>{label}</p>
+      <p className="mt-2 text-xl font-black text-slate-950">{value}</p>
     </div>
   );
 }
