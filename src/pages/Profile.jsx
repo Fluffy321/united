@@ -223,8 +223,8 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-[#F6F8FB] mobile-safe-bottom">
+      <div className="mobile-page">
 
         {/* Modern Header */}
         <ModernProfileHeader
@@ -257,14 +257,14 @@ export default function Profile() {
         />
 
         {/* Content Sections */}
-        <div className="space-y-4 pb-28">
+        <div className="space-y-3 pb-4">
 
           {/* Streak Card */}
-          {isOwnProfile && <div className="px-6"><StreakCard streak={userStreak} /></div>}
+          {isOwnProfile && <div className="px-3"><StreakCard streak={userStreak} /></div>}
 
           {/* Interests Section */}
           {isOwnProfile && (
-            <div className="mx-6">
+            <div className="mx-3">
               <InterestsSection 
                 interests={profileUser.interests || []} 
                 onAddInterest={() => setShowInterestPicker(true)}
@@ -274,7 +274,7 @@ export default function Profile() {
 
           {/* Impact or Get Started */}
           {isOwnProfile && (
-            <div id="impact-section" className="mx-6">
+            <div id="impact-section" className="mx-3">
               {hasActivity ? (
                 <ImpactSection points={mitzvahPoints} weeklyCount={weeklyMitzvahCount} streak={userStreak} />
               ) : (
@@ -284,33 +284,33 @@ export default function Profile() {
           )}
 
           {/* Weekly Summary */}
-          {isOwnProfile && <div className="mx-6"><WeeklySummaryCard mitzvahCount={weeklyMitzvahCount} /></div>}
+          {isOwnProfile && <div className="mx-3"><WeeklySummaryCard mitzvahCount={weeklyMitzvahCount} /></div>}
 
           {/* Communities Section */}
-          {userCommunities.length > 0 && <div id="communities-section" className="mx-6"><CommunitiesSection userCommunities={userCommunities} /></div>}
+          {userCommunities.length > 0 && <div id="communities-section" className="mx-3"><CommunitiesSection userCommunities={userCommunities} /></div>}
 
           {/* Badges Section */}
-          {isOwnProfile && <div className="mx-6"><BadgesSection user={profileUser} /></div>}
+          {isOwnProfile && <div className="mx-3"><BadgesSection user={profileUser} /></div>}
 
           {/* Mitzvah Journey */}
-          {isOwnProfile && mitzvahLogs.length > 0 && <div className="mx-6"><MitzvahJourneySection logs={mitzvahLogs} /></div>}
+          {isOwnProfile && mitzvahLogs.length > 0 && <div className="mx-3"><MitzvahJourneySection logs={mitzvahLogs} /></div>}
 
           {/* Posts / Saved Tabs */}
-          <div id="recent-posts-section" className="mx-6">
+          <div id="recent-posts-section" className="mx-3">
             {isOwnProfile && (
-              <div className="flex rounded-xl bg-slate-100 p-1 mb-3">
+              <div className="mb-3 flex rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
                 <button
                   onClick={() => setActiveProfileTab('posts')}
-                  className={`flex-1 py-1.5 rounded-lg text-[13px] font-semibold transition-all ${
-                    activeProfileTab === 'posts' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                  className={`flex-1 rounded-xl py-2 text-[13px] font-black transition-all ${
+                    activeProfileTab === 'posts' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500'
                   }`}
                 >
                   Posts
                 </button>
                 <button
                   onClick={() => setActiveProfileTab('saved')}
-                  className={`flex-1 py-1.5 rounded-lg text-[13px] font-semibold transition-all ${
-                    activeProfileTab === 'saved' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                  className={`flex-1 rounded-xl py-2 text-[13px] font-black transition-all ${
+                    activeProfileTab === 'saved' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500'
                   }`}
                 >
                   🔖 Saved

@@ -134,37 +134,37 @@ export default function ConversationList({ conversations, currentUser, selectedI
       >
       <button
         onClick={() => onSelect(conv)}
-        className={`w-full rounded-2xl px-4 py-4 cursor-pointer flex items-center gap-3.5 text-left border transition-all duration-150 ${
+        className={`w-full rounded-[20px] px-3 py-3 cursor-pointer flex items-center gap-3 text-left border transition-all duration-150 ${
           isAIChat && isSelected
-            ? 'border-violet-300 shadow-lg shadow-violet-100'
+            ? 'border-blue-200 shadow-sm'
             : isAIChat
-            ? 'border-violet-200 hover:shadow-lg hover:border-violet-300 active:scale-[0.98]'
+            ? 'border-blue-100 hover:shadow-md hover:border-blue-200 active:scale-[0.98]'
             : isSelected
-            ? 'bg-blue-50 border-blue-200 shadow-md shadow-blue-100'
+            ? 'bg-blue-50 border-blue-200 shadow-sm'
             : unread > 0
-            ? 'bg-white border-blue-100 shadow-sm hover:shadow-lg hover:border-blue-200 active:scale-[0.98]'
+            ? 'bg-white border-blue-100 shadow-sm hover:shadow-md hover:border-blue-200 active:scale-[0.98]'
             : 'bg-white border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 active:scale-[0.98]'
         }`}
         style={isAIChat ? {
           background: isSelected
-            ? 'linear-gradient(135deg, #EDE9FE, #F5F3FF)'
-            : 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 50%, #FAF5FF 100%)'
+            ? 'linear-gradient(135deg, #EFF6FF, #F8FAFC)'
+            : 'linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 100%)'
         } : {}}
       >
         {/* Avatar */}
         <div
           className={`relative flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-white shadow-md ${
             isAIChat
-              ? 'w-[60px] h-[60px] rounded-2xl'
+              ? 'w-12 h-12 rounded-2xl'
               : other.isCommunity
-              ? 'w-[60px] h-[60px] rounded-2xl'
-              : 'w-[60px] h-[60px] rounded-full'
+              ? 'w-12 h-12 rounded-2xl'
+              : 'w-12 h-12 rounded-full'
           }`}
           style={{ background: isAIChat
-            ? 'linear-gradient(135deg, #7C3AED, #6366F1, #8B5CF6)'
+            ? 'linear-gradient(135deg, #2563EB, #0F172A)'
             : other.isCommunity
             ? 'linear-gradient(135deg, #0EA5E9, #2563EB)'
-            : 'linear-gradient(135deg, #2563EB, #7C3AED)'
+            : 'linear-gradient(135deg, #2563EB, #0F172A)'
           }}
         >
           {isAIChat
@@ -194,12 +194,12 @@ export default function ConversationList({ conversations, currentUser, selectedI
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-0.5">
             <div className="flex flex-col min-w-0 flex-1">
-              <span className={`font-bold text-[15px] truncate flex items-center gap-1.5 leading-snug ${
+              <span className={`font-black text-[15px] truncate flex items-center gap-1.5 leading-snug ${
                 unread > 0 ? 'text-slate-900' : 'text-slate-700'
               }`}>
                 {other.name}
                 {isAIChat && (
-                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: 'linear-gradient(135deg, #7C3AED, #6366F1)', color: 'white' }}>
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-slate-950 text-white">
                     AI
                   </span>
                 )}
@@ -248,7 +248,7 @@ export default function ConversationList({ conversations, currentUser, selectedI
             </p>
           ) : (
             <p className={`text-[13px] truncate leading-snug ${
-              unread > 0 ? 'text-slate-800 font-semibold' : 'text-slate-400 font-normal'
+              unread > 0 ? 'text-slate-800 font-semibold' : 'text-slate-500 font-medium'
             }`}>
               {conv.last_message || getPreview(conv.id)}
             </p>

@@ -5,20 +5,20 @@ const StatCard = ({ icon: Icon, label, value, color, onClick }) => {
   return (
     <button
       onClick={onClick}
-      className={`flex-1 px-4 py-4 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 text-center group ${onClick ? 'cursor-pointer' : 'cursor-default'}`}
+      className={`flex-1 rounded-[18px] border border-slate-200 bg-white px-3 py-3 text-center shadow-sm transition-all duration-200 active:scale-95 group ${onClick ? 'cursor-pointer hover:shadow-md' : 'cursor-default'}`}
     >
-      <div className={`${color} rounded-lg w-8 h-8 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform`}>
+      <div className={`${color} rounded-2xl w-9 h-9 flex items-center justify-center mx-auto mb-2 group-hover:scale-105 transition-transform`}>
         <Icon className="w-4 h-4 text-white" />
       </div>
-      <p className="text-2xl font-black text-slate-900">{value}</p>
-      <p className="text-xs text-slate-500 font-medium mt-1">{label}</p>
+      <p className="text-xl font-black text-slate-950">{value}</p>
+      <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">{label}</p>
     </button>
   );
 };
 
 export default function ModernStatsRow({ following = 0, posts = 0, impact = 0, onPostsClick, onImpactClick, onFollowingClick }) {
   return (
-    <div className="px-6 py-6">
+    <div className="px-3 py-3">
       <div className="grid grid-cols-3 gap-3">
         <StatCard
           icon={Users}

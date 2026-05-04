@@ -367,12 +367,20 @@ export default function MitzvahCircle({ isActive = true }) {
 
   return (
     <>
-      <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(180deg, #F0F6FF 0%, #FAF5FF 30%, #F8FAFC 100%)' }}>
+      <div className="min-h-screen flex flex-col bg-[#F6F8FB]">
         {/* Header */}
-        <div className="sticky top-0 z-20 flex-shrink-0" style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}>
-          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-            <h1 className="text-[18px] font-bold text-white">Mitzvah Circle</h1>
-            <span className="text-[12px] text-white/60">Helping together</span>
+        <div className="sticky top-0 z-20 flex-shrink-0 bg-[#F6F8FB]/95 backdrop-blur-xl">
+          <div className="mobile-page px-3 py-2 flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-wide text-blue-600">Community help</p>
+              <h1 className="text-[22px] font-black tracking-normal text-slate-950">Mitzvah Circle</h1>
+            </div>
+            <button
+              onClick={() => setShowLogMitzvah(true)}
+              className="mobile-touch rounded-2xl border border-emerald-100 bg-white px-3 text-[13px] font-black text-emerald-700 shadow-sm active:scale-95"
+            >
+              Log
+            </button>
           </div>
         </div>
 
@@ -380,70 +388,88 @@ export default function MitzvahCircle({ isActive = true }) {
         <MitzvahTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         {/* Main Content */}
-        <div ref={listScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 100px', WebkitOverflowScrolling: 'touch' }}>
+        <div ref={listScrollRef} className="mobile-safe-bottom" style={{ flex: 1, overflowY: 'auto', padding: '12px 0 0', WebkitOverflowScrolling: 'touch' }}>
           {/* Tab: Help Requests */}
           {activeTab === 'requests' && (
-            <div className="max-w-2xl mx-auto space-y-3">
+            <div className="mobile-page px-3 space-y-3">
+              <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
+                <div className="relative p-4">
+                  <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-[42px] bg-blue-50" />
+                  <div className="relative">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
+                          <HandHeart className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-[15px] font-black text-slate-950">Help nearby</p>
+                          <p className="text-[12px] font-semibold text-slate-500">{requests.length} open request{requests.length !== 1 ? 's' : ''}</p>
+                        </div>
+                      </div>
+                      <div className="rounded-2xl bg-emerald-50 px-3 py-2 text-right">
+                        <p className="text-[16px] font-black text-emerald-700">{todayHelpedCount}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600">helped today</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-2.5">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Flame className="h-4 w-4 shrink-0 text-amber-500" />
+                        <p className="truncate text-[13px] font-bold text-slate-800">{userStreak?.current_streak || 0} day streak</p>
+                      </div>
+                      <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="shrink-0 rounded-xl bg-slate-950 px-3 py-2 text-[12px] font-black text-white active:scale-95"
+                      >
+                        Request Help
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Quick Actions */}
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="rounded-[14px] p-4 flex flex-col items-center gap-2 hover:opacity-90 transition-opacity active:scale-95"
-                  style={{ background: 'linear-gradient(135deg, #2563EB, #1D4ED8)', boxShadow: '0 4px 14px rgba(37,99,235,0.35)' }}
+                  className="rounded-[18px] border border-blue-100 bg-white p-3 flex flex-col items-center gap-2 text-blue-700 shadow-sm transition active:scale-95"
                 >
-                  <Plus className="w-5 h-5 text-white" />
-                  <span className="text-[12px] font-bold text-white text-center">Request Help</span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-50">
+                    <Plus className="w-4 h-4" />
+                  </span>
+                  <span className="text-[12px] font-black text-center">Request</span>
                 </button>
                 <button
                   onClick={() => setShowFilterDrawer(true)}
-                  className="rounded-[14px] p-4 flex flex-col items-center gap-2 hover:opacity-90 transition-opacity active:scale-95"
-                  style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)', boxShadow: '0 4px 14px rgba(22,163,74,0.35)' }}
+                  className="rounded-[18px] border border-emerald-100 bg-white p-3 flex flex-col items-center gap-2 text-emerald-700 shadow-sm transition active:scale-95"
                 >
-                  <HandHeart className="w-5 h-5 text-white" />
-                  <span className="text-[12px] font-bold text-white text-center">Offer Help</span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50">
+                    <HandHeart className="w-4 h-4" />
+                  </span>
+                  <span className="text-[12px] font-black text-center">Offer</span>
                 </button>
                 <button
                   onClick={() => setShowAlertModal(true)}
-                  className="rounded-[14px] p-4 flex flex-col items-center gap-2 hover:opacity-90 transition-opacity active:scale-95"
-                  style={{ background: 'linear-gradient(135deg, #DC2626, #B91C1C)', boxShadow: '0 4px 14px rgba(220,38,38,0.35)' }}
+                  className="rounded-[18px] border border-rose-100 bg-white p-3 flex flex-col items-center gap-2 text-rose-700 shadow-sm transition active:scale-95"
                 >
-                  <AlertCircle className="w-5 h-5 text-white" />
-                  <span className="text-[12px] font-bold text-white text-center">Alert</span>
-                </button>
-              </div>
-
-              {/* Your Daily Mitzvah — compact inline bar */}
-              <div
-                className="rounded-[14px] px-4 py-3 flex items-center gap-3"
-                style={{ background: 'linear-gradient(135deg, #6D28D9 0%, #4F46E5 100%)' }}
-              >
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                  <Flame className="w-4 h-4 text-orange-300 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <span className="text-white font-bold text-[14px]">{userStreak?.current_streak || 0} day streak</span>
-                    <span className="text-white/60 text-[11px] ml-2">Do good every day</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowLogMitzvah(true)}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-full font-bold text-[12px] text-purple-700 bg-white active:scale-95 transition-all"
-                >
-                  + Log
+                  <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-rose-50">
+                    <AlertCircle className="w-4 h-4" />
+                  </span>
+                  <span className="text-[12px] font-black text-center">Alert</span>
                 </button>
               </div>
 
               {/* Social Pulse — slim */}
               {(todayHelpedCount > 0 || recentlyCompleted.length > 0) && (
-                <div className="bg-white border border-slate-100 rounded-xl px-3 py-2 flex flex-col gap-1">
+                <div className="rounded-[18px] border border-emerald-100 bg-emerald-50/70 px-3 py-2.5 shadow-sm">
                   {todayHelpedCount > 0 && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm">🙌</span>
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-sm">🙌</span>
                       <p className="text-[12px] font-semibold text-emerald-700">{todayHelpedCount} {todayHelpedCount === 1 ? 'person' : 'people'} helped today</p>
                     </div>
                   )}
                   {recentlyCompleted.slice(0, 2).map(r => (
-                    <div key={r.id} className="flex items-center gap-1.5">
-                      <span className="text-sm">✅</span>
+                    <div key={r.id} className="mt-1.5 flex items-center gap-2">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-sm">✓</span>
                       <p className="text-[12px] text-slate-600 truncate flex-1">{r.title}</p>
                       {r.claimed_by_name && <span className="text-[11px] text-emerald-600 flex-shrink-0">by {r.claimed_by_name}</span>}
                     </div>
@@ -452,10 +478,10 @@ export default function MitzvahCircle({ isActive = true }) {
               )}
 
               {/* Help Requests Section */}
-              <div>
+              <div className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <h2 className="text-[16px] font-bold text-slate-900">Help Requests</h2>
+                    <h2 className="text-[17px] font-black text-slate-950">Help Requests</h2>
                     <p className="text-[12px] text-slate-500 mt-0.5">{requests.length} {requests.length === 1 ? 'person needs' : 'people need'} help</p>
                   </div>
                   <button
@@ -475,7 +501,7 @@ export default function MitzvahCircle({ isActive = true }) {
                     {[...Array(4)].map((_, i) => (
                       <div key={i} className="bg-white rounded-[16px] border border-[#EAECF0] p-4">
                         <div className="flex items-start gap-3">
-                          <div className="skeleton w-10 h-10 rounded-xl flex-shrink-0" />
+                          <div className="skeleton w-10 h-10 rounded-2xl flex-shrink-0" />
                           <div className="flex-1 space-y-2">
                             <div className="skeleton h-3.5 w-40 rounded" />
                             <div className="skeleton h-3 w-full rounded" />
@@ -485,7 +511,7 @@ export default function MitzvahCircle({ isActive = true }) {
                     ))}
                   </div>
                 ) : requests.length === 0 ? (
-                   <div className="text-center py-10 rounded-[16px] border" style={{ background: 'rgba(255,255,255,0.6)', borderColor: '#BFDBFE' }}>
+                   <div className="text-center py-10 rounded-[18px] border border-dashed border-blue-200 bg-blue-50/50">
                      <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
                        <HandHeart className="w-6 h-6 text-blue-600" />
                      </div>
@@ -505,14 +531,14 @@ export default function MitzvahCircle({ isActive = true }) {
                        const catStyle = CAT_ICONS[request.category] || { icon: HelpCircle, color: '#64748B', bg: '#F8FAFC' };
                        const CatIcon = catStyle.icon;
                        return (
-                       <div key={request.id} className="bg-white rounded-[16px] border border-[#EAECF0] p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedRequest(request)}>
+                       <div key={request.id} className="rounded-[18px] border border-slate-200 bg-white p-4 cursor-pointer shadow-sm transition active:scale-[0.99]" onClick={() => setSelectedRequest(request)}>
                          <div className="flex items-start gap-3 mb-2">
-                           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: catStyle.bg }}>
+                           <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: catStyle.bg }}>
                              <CatIcon className="w-5 h-5" style={{ color: catStyle.color }} />
                            </div>
-                           <div className="flex-1">
-                             <p className="text-[14px] font-semibold text-slate-900">{request.title}</p>
-                             <p className="text-[12px] text-slate-500 mt-0.5 line-clamp-2">{request.description}</p>
+                           <div className="flex-1 min-w-0">
+                             <p className="text-[14px] font-black text-slate-950">{request.title}</p>
+                             <p className="text-[12px] font-medium leading-5 text-slate-500 mt-0.5 line-clamp-2">{request.description}</p>
                            </div>
                            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0" style={{ background: catStyle.bg, color: catStyle.color }}>
                              {request.category}
@@ -536,11 +562,11 @@ export default function MitzvahCircle({ isActive = true }) {
                              <span className="text-[11px] text-slate-400">{request.views_count} views</span>
                            )}
                          </div>
-                         <div className="flex justify-end mt-2">
+                         <div className="flex justify-end mt-3">
                            <button
                              onClick={(e) => { e.stopPropagation(); handleClaim(e, request); }}
                              disabled={claimMutation.isPending}
-                             className="h-8 px-4 rounded-full bg-blue-600 text-white text-[13px] font-bold shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
+                             className="h-9 px-4 rounded-full bg-slate-950 text-white text-[13px] font-black shadow-sm active:scale-95 disabled:opacity-50"
                            >
                              {claimMutation.isPending ? 'Joining...' : "✋ I'll Help"}
                            </button>
@@ -553,11 +579,12 @@ export default function MitzvahCircle({ isActive = true }) {
               </div>
 
               {/* Request Help CTA */}
-              <div className="rounded-[16px] p-4 text-center" style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)', border: '1px solid #BFDBFE' }}>
-                <p className="text-[13px] text-slate-700 mb-3">Need help with something?</p>
+              <div className="rounded-[22px] border border-blue-100 bg-blue-50 p-4 text-center shadow-sm">
+                <p className="text-[14px] font-black text-slate-950 mb-1">Need help with something?</p>
+                <p className="mb-3 text-[12px] font-medium text-slate-600">Post a request and let the community show up.</p>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="w-full py-2.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold transition-colors"
+                  className="w-full py-2.5 px-3 rounded-xl bg-blue-600 text-white text-[12px] font-black transition active:scale-[0.98]"
                 >
                   Post a Request
                 </button>
@@ -567,9 +594,9 @@ export default function MitzvahCircle({ isActive = true }) {
 
           {/* Tab: Map */}
           {activeTab === 'map' && (
-            <div className="max-w-2xl mx-auto space-y-3">
+            <div className="mobile-page px-3 space-y-3">
               {/* Map block — reduced height */}
-              <div className="rounded-[16px] overflow-hidden border border-[#EAECF0]" style={{ height: '38vh', minHeight: 240 }}>
+              <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm" style={{ height: '38vh', minHeight: 240 }}>
                 <MitzvahMapView
                   requests={requests}
                   userOrigin={userOrigin}
@@ -591,7 +618,7 @@ export default function MitzvahCircle({ isActive = true }) {
                 <p className="text-[12px] text-slate-400 text-center py-3">No open requests right now — be the first!</p>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
+                  <p className="text-[11px] font-black text-slate-400 uppercase tracking-wide">
                     {requests.length} open request{requests.length !== 1 ? 's' : ''} near Five Towns
                   </p>
                   {requests.slice(0, 2).map(r => {
@@ -600,18 +627,17 @@ export default function MitzvahCircle({ isActive = true }) {
                     return (
                       <div
                         key={r.id}
-                        className="w-full flex items-center gap-3 bg-white rounded-[14px] border border-slate-100 px-3 py-2.5"
-                        style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}
+                        className="w-full flex items-center gap-3 rounded-[18px] border border-slate-200 bg-white px-3 py-3 shadow-sm"
                       >
-                        <span className="text-lg flex-shrink-0">{emoji}</span>
+                        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-lg">{emoji}</span>
                         <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedRequest(r)}>
-                          <p className="text-[13px] font-semibold text-slate-900 truncate">{r.title}</p>
-                          <p className="text-[11px] text-slate-400">{r.category}{r.locationLabel ? ` · ${r.locationLabel}` : ''}</p>
+                          <p className="text-[13px] font-black text-slate-950 truncate">{r.title}</p>
+                          <p className="text-[11px] font-medium text-slate-400">{r.category}{r.locationLabel ? ` · ${r.locationLabel}` : ''}</p>
                         </div>
                         <button
                           onClick={() => claimMutation.mutate(r)}
                           disabled={claimMutation.isPending}
-                          className="text-[11px] font-bold text-white bg-blue-600 px-2.5 py-1 rounded-full flex-shrink-0 active:scale-95 transition-all disabled:opacity-50"
+                          className="text-[11px] font-black text-white bg-slate-950 px-3 py-1.5 rounded-full flex-shrink-0 active:scale-95 transition-all disabled:opacity-50"
                         >
                           ✋ Help
                         </button>
@@ -624,10 +650,10 @@ export default function MitzvahCircle({ isActive = true }) {
           )}
 
           {/* Tab: My Mitzvah Log */}
-          {activeTab === 'log' && <MyMitzvahLogTab currentUser={currentUser} />}
+          {activeTab === 'log' && <div className="mobile-page px-3"><MyMitzvahLogTab currentUser={currentUser} /></div>}
 
           {/* Tab: Completed Mitzvahs */}
-          {activeTab === 'completed' && <CompletedMitzvahs currentUser={currentUser} />}
+          {activeTab === 'completed' && <div className="mobile-page px-3"><CompletedMitzvahs currentUser={currentUser} /></div>}
         </div>
 
           {/* Modals rendered at root level */}

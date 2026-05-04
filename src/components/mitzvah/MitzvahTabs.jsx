@@ -9,17 +9,17 @@ export default function MitzvahTabs({ activeTab, onTabChange }) {
   ];
 
   return (
-    <div className="bg-white sticky top-0 z-10 border-b border-[#E8ECF4]">
-      <div className="max-w-2xl mx-auto px-4">
-        <div className="flex gap-1">
+    <div className="sticky top-[58px] z-10 bg-[#F6F8FB]/95 py-2 backdrop-blur-xl">
+      <div className="mobile-page px-3">
+        <div className="mobile-scroll-x flex gap-1 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`px-4 py-3 text-[14px] font-semibold transition-colors border-b-2 ${
+              className={`shrink-0 rounded-xl px-3.5 py-2 text-[13px] font-bold transition-all ${
                 activeTab === tab.id
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-600 hover:text-slate-900'
+                  ? 'bg-slate-950 text-white shadow-sm'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
               {tab.label}

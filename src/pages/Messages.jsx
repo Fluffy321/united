@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Inbox, Loader2, MessageCircle, Plus, Sparkles, Users } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
@@ -211,6 +211,16 @@ export default function Messages() {
 
   }
 
+  const visibleConversations = allConversations.filter(conv => {
+    if (conv.is_archived) return false;
+    if (activeFilter === 'unread') return (conv.unread_count?.[currentUser?.id] || 0) > 0;
+    if (activeFilter === 'communities') return !!conv.community_id;
+    if (activeFilter === 'requests') return !!conv.request_id;
+    return true;
+  });
+  const unreadTotal = allConversations.reduce((sum, conv) => sum + (conv.unread_count?.[currentUser?.id] || 0), 0);
+  const communityTotal = allConversations.filter((conv) => conv.community_id || conv.is_community_chat).length;
+
   return (
     <div className="relative flex min-h-[100dvh] flex-col bg-[#F6F8FB] mobile-safe-bottom">
       <div className="mobile-page-wide flex flex-1 min-h-[calc(100dvh-112px)] px-3 pt-3 sm:px-4 sm:pt-4">
@@ -218,8 +228,45 @@ export default function Messages() {
         <div className={`flex flex-col w-full overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm ${
         selectedConversation ? 'hidden lg:flex lg:w-80 lg:rounded-r-none lg:border-r' : 'flex'}`
         }>
-          <div className="px-4 pt-4 pb-0 border-b border-slate-100 flex-shrink-0">
-            <h1 className="text-[22px] font-bold text-slate-950 mb-3">Messages</h1>
+          <div className="flex-shrink-0 border-b border-slate-100 bg-white p-3">
+            <div className="mb-3 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+              <div className="relative p-4">
+                <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-[42px] bg-blue-50" />
+                <div className="relative flex items-start justify-between gap-3">
+                  <div>
+                    <p className="mb-1 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wide text-blue-600">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Inbox hub
+                    </p>
+                    <h1 className="text-[22px] font-black tracking-normal text-slate-950">Messages</h1>
+                    <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">Chats, requests, and community updates in one place.</p>
+                  </div>
+                  <button
+                    onClick={() => setShowNewMessage(true)}
+                    className="mobile-touch shrink-0 rounded-2xl bg-slate-950 px-3 text-[13px] font-black text-white shadow-sm active:scale-95"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="relative mt-3 grid grid-cols-3 gap-2">
+                  <div className="rounded-2xl bg-slate-50 px-3 py-2">
+                    <MessageCircle className="mb-1 h-4 w-4 text-blue-600" />
+                    <p className="text-[15px] font-black text-slate-950">{allConversations.length}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Chats</p>
+                  </div>
+                  <div className="rounded-2xl bg-blue-50 px-3 py-2">
+                    <Inbox className="mb-1 h-4 w-4 text-blue-700" />
+                    <p className="text-[15px] font-black text-blue-800">{unreadTotal}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-blue-600">Unread</p>
+                  </div>
+                  <div className="rounded-2xl bg-emerald-50 px-3 py-2">
+                    <Users className="mb-1 h-4 w-4 text-emerald-700" />
+                    <p className="text-[15px] font-black text-emerald-800">{communityTotal}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600">Groups</p>
+                  </div>
+                </div>
+              </div>
+            </div>
             {/* Filter pills */}
             <div className="mobile-scroll-x flex gap-2 pb-2">
               {[
@@ -232,20 +279,20 @@ export default function Messages() {
                   key={f.key}
                   onClick={() => setActiveFilter(f.key)}
                   className={`flex-shrink-0 rounded-2xl border px-4 py-2 text-[13px] font-bold transition-all duration-150 active:scale-95 ${
-                    activeFilter === f.key ? 'border-blue-600 bg-blue-600 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                    activeFilter === f.key ? 'border-slate-950 bg-slate-950 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
                   }`}
                 >
                   {f.label}
                 </button>
               ))}
             </div>
-            <div className="flex mt-1">
+            <div className="mt-1 flex rounded-2xl border border-slate-200 bg-slate-50 p-1">
               {['inbox', 'requests'].map((tab) =>
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2.5 text-[13px] font-semibold border-b-2 transition-colors capitalize ${
-                activeTab === tab ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-400 border-transparent'}`
+                className={`flex-1 rounded-xl py-2 text-[13px] font-black transition-all capitalize ${
+                activeTab === tab ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`
                 }>
                   {tab === 'inbox' ? 'Inbox' : 'Requests'}
                 </button>
@@ -272,13 +319,7 @@ export default function Messages() {
               </div> :
 
             <ConversationList
-              conversations={allConversations.filter(conv => {
-                if (conv.is_archived) return false;
-                if (activeFilter === 'unread') return (conv.unread_count?.[currentUser?.id] || 0) > 0;
-                if (activeFilter === 'communities') return !!conv.community_id;
-                if (activeFilter === 'requests') return !!conv.request_id;
-                return true;
-              })}
+              conversations={visibleConversations}
               currentUser={currentUser}
               selectedId={selectedConversation?.id}
               onSelect={openConversation}
