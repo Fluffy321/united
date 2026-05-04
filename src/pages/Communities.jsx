@@ -328,9 +328,9 @@ export default function Communities() {
 
   return (
     <main className="min-h-screen bg-[#F7F9FC] mobile-safe-bottom">
-      <section className="mx-auto w-full max-w-[980px] px-3 pt-3 sm:px-5 sm:pt-6">
+      <section className="mobile-page-wide px-3 pt-3 sm:px-4 sm:pt-4">
         <div className="mb-4 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
-          <div className="grid gap-0 lg:grid-cols-[1fr_310px]">
+          <div className="grid gap-0 sm:grid-cols-[1fr_240px]">
             <div className="relative overflow-hidden p-4 sm:p-6">
               <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-blue-50" />
               <p className="relative mb-2 flex items-center gap-2 text-[13px] font-black text-blue-700">
@@ -349,7 +349,7 @@ export default function Communities() {
               </div>
             </div>
 
-            <div className="border-t border-slate-200 bg-gradient-to-br from-slate-50 via-white to-emerald-50 p-4 lg:border-l lg:border-t-0 sm:p-5">
+            <div className="border-t border-slate-200 bg-gradient-to-br from-slate-50 via-white to-emerald-50 p-4 sm:border-l sm:border-t-0 sm:p-4">
               <div className="mb-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
                 <p className="text-[12px] font-black uppercase tracking-wide text-slate-800">Start something useful</p>
                 <p className="mt-1 text-[13px] font-medium leading-5 text-slate-700">Create a board for minyan updates, school carpools, chesed requests, or neighborhood news.</p>
@@ -473,7 +473,7 @@ function CommunitySection({ title, subtitle, communities, onOpen, onToggleJoin, 
         </div>
       </div>
 
-      <div className={`grid gap-3 ${featured ? 'lg:grid-cols-2' : 'sm:grid-cols-2 xl:grid-cols-3'}`}>
+      <div className="grid gap-3 sm:grid-cols-2">
         {communities.map((community) => (
           <CommunityHubCard
             key={community.id}

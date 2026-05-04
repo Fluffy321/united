@@ -205,11 +205,7 @@
     }
   }
 
-  @media (min-width: 1024px) {
-    .mobile-page-wide {
-      max-width: 1120px;
-    }
-  }
+  /* Bottom-nav pages intentionally share one width so tabs do not jump sizes. */
 }
 
 /* ─── JUnited Design Utilities ─────────────────────────────────────── */

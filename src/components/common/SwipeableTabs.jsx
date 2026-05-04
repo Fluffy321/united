@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 // Each tab is mounted on first view and kept mounted (display:none when inactive).
-// This prevents all 4 pages from running their effects simultaneously on load,
+// This prevents all main pages from running their effects simultaneously on load,
 // which caused race conditions and broken render states.
 export default function SwipeableTabs({ activeIndex, children }) {
   const [everSeen, setEverSeen] = useState(() => new Set([activeIndex]));
@@ -19,7 +19,7 @@ export default function SwipeableTabs({ activeIndex, children }) {
   const childArray = React.Children.toArray(children);
 
   return (
-    <div className="w-full" style={{ minHeight: '100%' }}>
+    <div className="w-full" style={{ minHeight: '100dvh' }}>
       {childArray.map((child, i) => {
         if (!everSeen.has(i)) return null; // not mounted yet — no effects run
         return (
@@ -27,7 +27,7 @@ export default function SwipeableTabs({ activeIndex, children }) {
             key={i}
             style={{
               display: i === activeIndex ? 'block' : 'none',
-              minHeight: '100%',
+              minHeight: '100dvh',
             }}
           >
             {child}

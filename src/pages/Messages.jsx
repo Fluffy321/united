@@ -212,11 +212,11 @@ export default function Messages() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-[#F6F8FB] mobile-safe-bottom">
-      <div className="mobile-page-wide flex flex-1 min-h-0 px-3 pt-3 lg:px-0">
+    <div className="relative flex min-h-[100dvh] flex-col bg-[#F6F8FB] mobile-safe-bottom">
+      <div className="mobile-page-wide flex flex-1 min-h-[calc(100dvh-112px)] px-3 pt-3 sm:px-4 sm:pt-4">
         {/* Conversation List */}
-        <div className={`flex flex-col w-full overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm lg:w-96 lg:rounded-r-none lg:border-r ${
-        selectedConversation ? 'hidden lg:flex' : 'flex'}`
+        <div className={`flex flex-col w-full overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm ${
+        selectedConversation ? 'hidden lg:flex lg:w-80 lg:rounded-r-none lg:border-r' : 'flex'}`
         }>
           <div className="px-4 pt-4 pb-0 border-b border-slate-100 flex-shrink-0">
             <h1 className="text-[22px] font-bold text-slate-950 mb-3">Messages</h1>
@@ -290,8 +290,8 @@ export default function Messages() {
         </div>
 
         {/* Chat View */}
-        <div className={`flex-1 flex flex-col min-h-0 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm lg:rounded-l-none lg:border-l-0 ${
-        selectedConversation ? 'flex' : 'hidden lg:flex lg:items-center lg:justify-center'}`
+        <div className={`flex-1 flex-col min-h-0 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm ${
+        selectedConversation ? 'flex lg:rounded-l-none lg:border-l-0' : 'hidden'}`
         }>
           {selectedConversation ?
           <ChatView

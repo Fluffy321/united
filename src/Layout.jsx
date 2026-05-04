@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 const Feed = lazy(() => import('@/pages/Feed'));
 const Communities = lazy(() => import('@/pages/Communities'));
 const MitzvahCircle = lazy(() => import('@/pages/MitzvahCircle'));
+const Messages = lazy(() => import('@/pages/Messages'));
 const Profile = lazy(() => import('@/pages/Profile'));
 
 const navItems = [
@@ -76,7 +77,7 @@ export default function Layout({ children, currentPageName }) {
     refetchOnWindowFocus: false
   });
 
-  const swipeablePages = ['Feed', 'MitzvahCircle', 'Communities', 'Profile'];
+  const swipeablePages = ['Feed', 'MitzvahCircle', 'Communities', 'Messages', 'Profile'];
   const currentIndex = swipeablePages.indexOf(currentPageName);
   const isSwipeable = currentIndex !== -1;
 
@@ -107,8 +108,8 @@ export default function Layout({ children, currentPageName }) {
       {/* Main Content */}
       <main className="min-h-screen overflow-visible">
         {isSwipeable ? (
-          <SwipeableTabs 
-            tabs={['Feed', 'Mitzvah', 'Communities', 'Profile']}
+          <SwipeableTabs
+            tabs={['Feed', 'Mitzvah', 'Communities', 'Messages', 'Profile']}
             activeIndex={currentIndex}
             onIndexChange={handleTabChange}
           >
@@ -120,6 +121,9 @@ export default function Layout({ children, currentPageName }) {
             </Suspense>
             <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
               <Communities />
+            </Suspense>
+            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+              <Messages />
             </Suspense>
             <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
               <Profile />
