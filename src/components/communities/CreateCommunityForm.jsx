@@ -36,11 +36,11 @@ export default function CreateCommunityForm({ categories, onCreate, onClose }) {
             <div>
               <p className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">
                 <Sparkles className="h-3.5 w-3.5" />
-                New hub
+                New network
               </p>
-              <h2 className="text-lg font-black leading-tight text-white sm:text-xl">Create Community</h2>
+              <h2 className="text-lg font-black leading-tight text-white sm:text-xl">Create a Community</h2>
               <p className="mt-0.5 max-w-md text-[12px] font-semibold leading-4 text-white/90">
-                Make a focused space for shul, school, chesed, learning, or local updates.
+                Make a focused social space for a hobby, lifestyle, value, shul circle, neighborhood, or local need.
               </p>
             </div>
             <button type="button" onClick={onClose} className="mobile-touch rounded-xl bg-white/12 p-2 text-white transition hover:bg-white/20">
@@ -55,7 +55,7 @@ export default function CreateCommunityForm({ categories, onCreate, onClose }) {
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Example: Woodmere Parent Circle"
+	              placeholder="Example: Woodmere Runners, Shabbos Hosts, Sephardi Homes"
               className="h-10 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-950 outline-none placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </label>
@@ -100,7 +100,7 @@ export default function CreateCommunityForm({ categories, onCreate, onClose }) {
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="What is this community for?"
+	              placeholder="Who should join, what will they get, and what kind of posts belong here?"
               rows={2}
               className="h-[68px] w-full resize-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold leading-5 text-slate-950 outline-none placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />

@@ -16,9 +16,9 @@ import {
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
-const CATEGORIES = ['Errand', 'Lost & Found', 'Quick Favor', 'Tutoring', 'Shabbat Help', 'Other'];
+const CATEGORIES = ['Ride', 'Errand', 'Lost & Found', 'Quick Favor', 'Tutoring', 'Shabbat Help', 'Other'];
 
-export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) {
+export default function CreateMitzvahModal({ open, onOpenChange, currentUser, initialValues = null }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -27,6 +27,14 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userCommunities, setUserCommunities] = useState([]);
+
+  useEffect(() => {
+    if (!open) return;
+    setTitle(initialValues?.title || '');
+    setDescription(initialValues?.description || '');
+    setCategory(initialValues?.category || '');
+    setLocationLabel(initialValues?.locationLabel || '');
+  }, [open, initialValues]);
 
   useEffect(() => {
     if (open && currentUser?.id) {

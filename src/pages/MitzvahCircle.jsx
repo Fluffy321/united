@@ -13,6 +13,7 @@ import RequestDetailOverlay from '@/components/mitzvah/RequestDetailOverlay';
 import MitzvahTabs from '@/components/mitzvah/MitzvahTabs';
 import MyMitzvahLogTab from '@/components/mitzvah/MyMitzvahLogTab';
 import CompletedMitzvahs from '@/components/mitzvah/CompletedMitzvahs';
+import CarpoolBoard from '@/components/mitzvah/CarpoolBoard';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -63,6 +64,7 @@ export default function MitzvahCircle({ isActive = true }) {
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [showLogMitzvah, setShowLogMitzvah] = useState(false);
   const [activeTab, setActiveTab] = useState('requests');
+  const [createPreset, setCreatePreset] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -146,6 +148,13 @@ export default function MitzvahCircle({ isActive = true }) {
     return list;
   }, [rawRequests, filters, userOrigin]);
 
+  const rideRequests = useMemo(() => {
+    return requests.filter((request) => {
+      const text = `${request.title || ''} ${request.description || ''}`.toLowerCase();
+      return request.category === 'Ride' || /ride|carpool|pickup|dropoff|drive|driver|seats?/.test(text);
+    });
+  }, [requests]);
+
 
 
   const handleFilterApply = (newFilters) => {
@@ -157,6 +166,23 @@ export default function MitzvahCircle({ isActive = true }) {
       );
     }
     setFilters(newFilters);
+  };
+
+  const openCreateModal = (preset = null) => {
+    setCreatePreset(preset);
+    setShowCreateModal(true);
+  };
+
+  const handleCreateCarpool = (type) => {
+    const isOffer = type === 'offer';
+    openCreateModal({
+      category: 'Ride',
+      title: isOffer ? 'Offering carpool seats' : 'Need a ride',
+      description: isOffer
+        ? 'Route:\nPickup window:\nSeats available:\nCar seats / bags:\nNotes:'
+        : 'Pickup area:\nDestination:\nPickup window:\nRiders / bags:\nNotes:',
+      locationLabel: currentUser?.cityPreset || currentUser?.cityCustom || 'Five Towns'
+    });
   };
 
   const claimMutation = useMutation({
@@ -417,7 +443,7 @@ export default function MitzvahCircle({ isActive = true }) {
                         <p className="truncate text-[13px] font-bold text-slate-800">{userStreak?.current_streak || 0} day streak</p>
                       </div>
                       <button
-                        onClick={() => setShowCreateModal(true)}
+                        onClick={() => openCreateModal()}
                         className="shrink-0 rounded-xl bg-slate-950 px-3 py-2 text-[12px] font-black text-white active:scale-95"
                       >
                         Request Help
@@ -430,7 +456,7 @@ export default function MitzvahCircle({ isActive = true }) {
               {/* Quick Actions */}
               <div className="grid grid-cols-3 gap-2">
                 <button
-                  onClick={() => setShowCreateModal(true)}
+                  onClick={() => openCreateModal()}
                   className="rounded-[18px] border border-blue-100 bg-white p-3 flex flex-col items-center gap-2 text-blue-700 shadow-sm transition active:scale-95"
                 >
                   <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-50">
@@ -457,6 +483,17 @@ export default function MitzvahCircle({ isActive = true }) {
                   <span className="text-[12px] font-black text-center">Alert</span>
                 </button>
               </div>
+
+              <button
+                onClick={() => setActiveTab('carpool')}
+                className="flex w-full items-center justify-between rounded-[20px] border border-sky-100 bg-sky-50 px-4 py-3 text-left shadow-sm active:scale-[0.99]"
+              >
+                <span>
+                  <span className="block text-[14px] font-black text-slate-950">Carpool board</span>
+                  <span className="block text-[12px] font-semibold text-sky-700">Offer rides, request pickups, and plan the route</span>
+                </span>
+                <span className="rounded-full bg-white px-3 py-1 text-[11px] font-black text-sky-700">{rideRequests.length} rides</span>
+              </button>
 
               {/* Social Pulse — slim */}
               {(todayHelpedCount > 0 || recentlyCompleted.length > 0) && (
@@ -583,13 +620,25 @@ export default function MitzvahCircle({ isActive = true }) {
                 <p className="text-[14px] font-black text-slate-950 mb-1">Need help with something?</p>
                 <p className="mb-3 text-[12px] font-medium text-slate-600">Post a request and let the community show up.</p>
                 <button
-                  onClick={() => setShowCreateModal(true)}
+                  onClick={() => openCreateModal()}
                   className="w-full py-2.5 px-3 rounded-xl bg-blue-600 text-white text-[12px] font-black transition active:scale-[0.98]"
                 >
                   Post a Request
                 </button>
               </div>
             </div>
+          )}
+
+          {/* Tab: Carpool */}
+          {activeTab === 'carpool' && (
+            <CarpoolBoard
+              rideRequests={rideRequests}
+              signupsByRequest={signupsByRequest}
+              onCreateRide={handleCreateCarpool}
+              onSelectRide={setSelectedRequest}
+              onClaimRide={handleClaim}
+              isClaiming={claimMutation.isPending}
+            />
           )}
 
           {/* Tab: Map */}
@@ -661,9 +710,13 @@ export default function MitzvahCircle({ isActive = true }) {
           open={showCreateModal}
           onOpenChange={(open) => {
            setShowCreateModal(open);
-           if (!open) queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+           if (!open) {
+             setCreatePreset(null);
+             queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
+           }
           }}
           currentUser={currentUser}
+          initialValues={createPreset}
           />
 
           <FilterDrawer

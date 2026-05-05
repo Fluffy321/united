@@ -3,24 +3,30 @@ import { CalendarDays, Lock, MessageSquare, Radio, ShieldCheck, Sparkles, Users 
 
 const categoryStyles = {
   Shuls: 'bg-violet-50 text-violet-700 border-violet-100',
-  Schools: 'bg-sky-50 text-sky-700 border-sky-100',
   Chesed: 'bg-emerald-50 text-emerald-700 border-emerald-100',
   Learning: 'bg-amber-50 text-amber-700 border-amber-100',
   Events: 'bg-rose-50 text-rose-700 border-rose-100',
   Singles: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100',
   Parents: 'bg-orange-50 text-orange-700 border-orange-100',
   Neighborhoods: 'bg-cyan-50 text-cyan-700 border-cyan-100',
+  Hobbies: 'bg-lime-50 text-lime-700 border-lime-100',
+  Lifestyle: 'bg-teal-50 text-teal-700 border-teal-100',
+  Values: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+  'Buy/Sell': 'bg-stone-50 text-stone-700 border-stone-100',
 };
 
 const categoryAccent = {
   Shuls: 'from-violet-500 to-indigo-500',
-  Schools: 'from-sky-500 to-blue-500',
   Chesed: 'from-emerald-500 to-teal-500',
   Learning: 'from-amber-400 to-orange-500',
   Events: 'from-rose-500 to-pink-500',
   Singles: 'from-fuchsia-500 to-violet-500',
   Parents: 'from-orange-400 to-amber-500',
   Neighborhoods: 'from-cyan-500 to-blue-500',
+  Hobbies: 'from-lime-500 to-emerald-500',
+  Lifestyle: 'from-teal-500 to-cyan-500',
+  Values: 'from-indigo-500 to-blue-500',
+  'Buy/Sell': 'from-stone-500 to-slate-700',
 };
 
 function initials(name) {
@@ -60,7 +66,7 @@ export default function CommunityHubCard({ community, onOpen, onToggleJoin, feat
             </div>
           </div>
 
-          <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-bold ${categoryStyles[community.category]}`}>
+          <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-bold ${categoryStyles[community.category] || 'bg-slate-50 text-slate-700 border-slate-100'}`}>
             {community.category}
           </span>
         </div>

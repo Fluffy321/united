@@ -1,21 +1,46 @@
 import React, { useMemo, useState } from 'react';
-import { CalendarDays, Compass, HeartHandshake, MessageCircle, Plus, Search, Sparkles, Users } from 'lucide-react';
+import { Bell, CalendarDays, CheckCircle2, Compass, HeartHandshake, MessageCircle, Plus, Radio, Search, ShieldCheck, Sparkles, Star, Users } from 'lucide-react';
 import CommunityHubCard from '@/components/communities/CommunityHubCard';
 import CommunityHubDetail from '@/components/communities/CommunityHubDetail';
 import CreateCommunityForm from '@/components/communities/CreateCommunityForm';
 
-const categories = ['All', 'Shuls', 'Schools', 'Chesed', 'Learning', 'Events', 'Singles', 'Parents', 'Neighborhoods'];
+const categories = ['All', 'Shuls', 'Chesed', 'Learning', 'Events', 'Singles', 'Parents', 'Neighborhoods', 'Hobbies', 'Lifestyle', 'Values', 'Buy/Sell'];
 
 const categoryHighlights = {
   Shuls: 'border-violet-200 bg-violet-50 text-violet-800',
-  Schools: 'border-sky-200 bg-sky-50 text-sky-800',
   Chesed: 'border-emerald-200 bg-emerald-50 text-emerald-800',
   Learning: 'border-amber-200 bg-amber-50 text-amber-800',
   Events: 'border-rose-200 bg-rose-50 text-rose-800',
   Singles: 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800',
   Parents: 'border-orange-200 bg-orange-50 text-orange-800',
   Neighborhoods: 'border-cyan-200 bg-cyan-50 text-cyan-800',
+  Hobbies: 'border-lime-200 bg-lime-50 text-lime-800',
+  Lifestyle: 'border-teal-200 bg-teal-50 text-teal-800',
+  Values: 'border-indigo-200 bg-indigo-50 text-indigo-800',
+  'Buy/Sell': 'border-stone-200 bg-stone-50 text-stone-800',
 };
+
+const launchTemplates = [
+  { title: 'Hobby circles', category: 'Hobbies', body: 'Basketball, running, cooking, music, photography, chess, book clubs, and creative groups.' },
+  { title: 'Lifestyle groups', category: 'Lifestyle', body: 'Newly married, young parents, empty nesters, singles, commuters, remote workers, and newcomers.' },
+  { title: 'Religious values', category: 'Values', body: 'Halacha-minded homes, Sephardi minhagim, baalei teshuva support, tznius, learning, and Shabbos growth.' },
+  { title: 'Shul circles', category: 'Shuls', body: 'Daily minyan people, shiur groups, Shabbos plans, kiddush volunteers, newcomer welcomes, and local updates.' },
+];
+
+const networkLoops = [
+  'Daily prompts that start real conversations',
+  'Interest matching for people nearby',
+  'Shul-connected groups without making shuls the whole app',
+  'Join buttons that turn lurkers into members',
+  'Pinned posts for what matters this week',
+  'Moderator tools for warm, focused spaces',
+];
+
+const conversationStarters = [
+  { title: 'What are you looking for this week?', body: 'A chavrusa, meal invite, basketball run, babysitter lead, ride, or good local recommendation.' },
+  { title: 'People near you', body: 'Surface members with shared interests, similar life stage, and overlapping shul or neighborhood circles.' },
+  { title: 'Small groups that stick', body: 'A cooking circle, Daf review pod, new families table, walking group, singles event crew, or marketplace lane.' },
+];
 
 const initialCommunities = [
   {
@@ -69,28 +94,28 @@ const initialCommunities = [
     resources: ['Meal train checklist', 'Hospital bikur cholim guide', 'Emergency contacts'],
   },
   {
-    id: 'haftr-parent-board',
-    name: 'HAFTR Parent Board',
-    category: 'Schools',
+    id: 'five-towns-parent-exchange',
+    name: 'Five Towns Parent Exchange',
+    category: 'Parents',
     privacy: 'Private',
     location: 'Lawrence',
     featured: false,
     joined: false,
     memberCount: 512,
     recentActivity: 'Carpool question active today',
-    description: 'A parent-run board for reminders, carpools, school forms, supplies, and grade-level questions.',
-    rules: ['Keep student details private.', 'No teacher criticism threads.', 'Use grade labels when helpful.'],
+    description: 'A parent-run social space for carpools, playdates, babysitting leads, Shabbos plans, supplies, and practical local questions.',
+    rules: ['Keep children private.', 'No teacher criticism threads.', 'Use neighborhood or age labels when helpful.'],
     roles: [
       { name: 'Leah Weiss', role: 'Admin' },
       { name: 'Daniel Price', role: 'Moderator' },
     ],
     posts: [
       { id: 'p5', type: 'Question', author: 'Leah Weiss', title: 'Afternoon carpool from Cedarhurst', body: 'Looking for one seat on Mondays and Wednesdays.', time: '1h ago', likes: 7, comments: 11, pinned: false, liked: false },
-      { id: 'p6', type: 'Announcement', author: 'Daniel Price', title: 'Science fair reminder', body: 'Boards are due Monday morning before first period.', time: '6h ago', likes: 22, comments: 3, pinned: true, liked: false },
+      { id: 'p6', type: 'Question', author: 'Daniel Price', title: 'Best rainy-day indoor ideas?', body: 'Looking for local places that work well with younger kids on Sunday afternoons.', time: '6h ago', likes: 22, comments: 3, pinned: true, liked: false },
     ],
-    events: ['Parent meeting - Wednesday 8:15 PM'],
-    announcements: ['Dismissal form deadline is Friday.'],
-    resources: ['School calendar', 'Uniform gemach info', 'Carpool spreadsheet'],
+    events: ['Parent coffee meetup - Wednesday 8:15 PM'],
+    announcements: ['Babysitter recommendation thread refreshed.'],
+    resources: ['Babysitter leads', 'Rainy day ideas', 'Carpool board'],
   },
   {
     id: 'daily-learning-beis',
@@ -173,7 +198,7 @@ const initialCommunities = [
     joined: false,
     memberCount: 344,
     recentActivity: 'Park meetup thread active',
-    description: 'Playdates, Shabbos hosting, babysitting leads, school questions, and new family introductions.',
+    description: 'Playdates, Shabbos hosting, babysitting leads, parent questions, and new family introductions.',
     rules: ['No medical advice threads.', 'Keep babysitter info respectful.', 'Use first names only for children.'],
     roles: [
       { name: 'Naomi Adler', role: 'Admin' },
@@ -209,6 +234,102 @@ const initialCommunities = [
     announcements: ['Lost siddur was returned.'],
     resources: ['Local emergency numbers', 'Eruv map', 'Municipal links'],
   },
+  {
+    id: 'five-towns-pickleball',
+    name: 'Five Towns Pickleball & Sports',
+    category: 'Hobbies',
+    privacy: 'Public',
+    location: 'Cedarhurst and Lawrence',
+    featured: true,
+    joined: false,
+    memberCount: 219,
+    recentActivity: 'Two courts reserved for Thursday night',
+    description: 'Pickup games, walking groups, basketball runs, pickleball meetups, and casual fitness with local Jewish friends.',
+    rules: ['Post times and skill level clearly.', 'Keep games inclusive.', 'Confirm attendance if you reserve a spot.'],
+    roles: [
+      { name: 'Josh Miller', role: 'Admin' },
+      { name: 'Ari Stein', role: 'Moderator' },
+    ],
+    posts: [
+      { id: 'p14', type: 'Event', author: 'Josh Miller', title: 'Thursday pickleball ladder', body: 'Beginner-friendly court opens at 8:15 PM. Bring a paddle if you have one.', time: '22m ago', likes: 16, comments: 9, pinned: true, liked: false },
+      { id: 'p15', type: 'Question', author: 'Ari Stein', title: 'Sunday morning basketball?', body: 'Looking for 8 more for a low-pressure run after Shacharis.', time: '3h ago', likes: 8, comments: 12, pinned: false, liked: false },
+    ],
+    events: ['Pickleball ladder - Thursday 8:15 PM', 'Sunday basketball - 9:30 AM'],
+    announcements: ['Winter indoor gym list updated.'],
+    resources: ['Court signup sheet', 'Local gym list', 'Beginner rules'],
+  },
+  {
+    id: 'shabbos-table-hosts',
+    name: 'Shabbos Table Hosts',
+    category: 'Lifestyle',
+    privacy: 'Private',
+    location: 'Five Towns',
+    featured: false,
+    joined: true,
+    memberCount: 367,
+    recentActivity: 'Four guests matched for this Shabbos',
+    description: 'A warm place to host, be hosted, welcome newcomers, arrange meals, and make Shabbos feel less anonymous.',
+    rules: ['Hosts approve details privately.', 'Do not post exact addresses.', 'Keep family preferences respectful.'],
+    roles: [
+      { name: 'Tova Green', role: 'Admin' },
+      { name: 'Dovid Katz', role: 'Moderator' },
+    ],
+    posts: [
+      { id: 'p16', type: 'Chesed request', author: 'Tova Green', title: 'Two guests looking for lunch', body: 'New couple in Woodmere would love a Shabbos lunch invite this week.', time: '41m ago', likes: 24, comments: 7, pinned: true, liked: true },
+      { id: 'p17', type: 'Announcement', author: 'Dovid Katz', title: 'Host preference form updated', body: 'Added allergies, walking distance, and kids-at-table fields.', time: '5h ago', likes: 13, comments: 2, pinned: false, liked: false },
+    ],
+    events: ['Newcomer melave malka - next month'],
+    announcements: ['Host matching opens every Tuesday.'],
+    resources: ['Host preference form', 'Guest matching guidelines', 'Allergy checklist'],
+  },
+  {
+    id: 'modern-orthodox-home-builders',
+    name: 'Modern Orthodox Home Builders',
+    category: 'Values',
+    privacy: 'Private',
+    location: 'Online and Five Towns',
+    featured: false,
+    joined: false,
+    memberCount: 302,
+    recentActivity: 'New discussion on kids and screens',
+    description: 'Thoughtful discussion for families trying to build committed, warm, Torah-centered homes in modern life.',
+    rules: ['Assume sincerity.', 'No judging other families.', 'Practical halacha goes to your rav.'],
+    roles: [
+      { name: 'Rabbi Adler', role: 'Admin' },
+      { name: 'Maya Rosen', role: 'Moderator' },
+    ],
+    posts: [
+      { id: 'p18', type: 'Question', author: 'Maya Rosen', title: 'Phones at the Shabbos table?', body: 'What boundaries have actually worked in your home?', time: '55m ago', likes: 33, comments: 21, pinned: false, liked: false },
+      { id: 'p19', type: 'Learning post', author: 'Rabbi Adler', title: 'Small rituals that shape a home', body: 'A short source-based note on consistency, warmth, and shared responsibility.', time: '2h ago', likes: 48, comments: 6, pinned: true, liked: true },
+    ],
+    events: ['Parent values roundtable - Tuesday 8:30 PM'],
+    announcements: ['Monthly topic: technology and kedusha.'],
+    resources: ['Family discussion guide', 'Recommended shiurim', 'Shabbos table prompts'],
+  },
+  {
+    id: 'jewish-marketplace-fivetowns',
+    name: 'Five Towns Jewish Marketplace',
+    category: 'Buy/Sell',
+    privacy: 'Public',
+    location: 'Five Towns',
+    featured: false,
+    joined: false,
+    memberCount: 731,
+    recentActivity: 'Three listings added today',
+    description: 'A moderated community marketplace for furniture, baby gear, seforim, gemach items, rentals, and local recommendations.',
+    rules: ['No unsafe items.', 'Mark sold quickly.', 'No duplicate business spam.'],
+    roles: [
+      { name: 'Chani Davis', role: 'Admin' },
+      { name: 'Yoni Green', role: 'Moderator' },
+    ],
+    posts: [
+      { id: 'p20', type: 'Announcement', author: 'Chani Davis', title: 'Pesach appliance gemach list', body: 'Updated pickup times and contact people are in resources.', time: '1h ago', likes: 18, comments: 5, pinned: true, liked: false },
+      { id: 'p21', type: 'Question', author: 'Yoni Green', title: 'Looking for folding chairs', body: 'Need 12 chairs for a vort next week. Borrow or buy.', time: '4h ago', likes: 6, comments: 8, pinned: false, liked: false },
+    ],
+    events: [],
+    announcements: ['Marketplace rules refreshed.'],
+    resources: ['Gemach directory', 'Listing guidelines', 'Pickup etiquette'],
+  },
 ];
 
 function buildCommunity(data) {
@@ -220,13 +341,13 @@ function buildCommunity(data) {
     memberCount: 1,
     recentActivity: 'Created just now',
     roles: [{ name: 'You', role: 'Admin' }],
-    posts: [
-      {
+	    posts: [
+	      {
         id: `post-${Date.now()}`,
         type: 'Announcement',
         author: 'You',
-        title: 'Welcome to the community',
-        body: 'This space is ready for announcements, questions, resources, and events.',
+	        title: 'Welcome to the community',
+	        body: 'This space is ready for a focused feed, announcements, questions, resources, events, and member introductions.',
         time: 'Just now',
         likes: 0,
         comments: 0,
@@ -269,6 +390,12 @@ export default function Communities() {
   const featuredCommunities = filteredCommunities.filter((community) => community.featured);
   const joinedCommunities = filteredCommunities.filter((community) => community.joined);
   const suggestedCommunities = filteredCommunities.filter((community) => !community.joined);
+  const activityFeed = useMemo(() => {
+    return communities
+      .flatMap((community) => community.posts.map((post) => ({ ...post, communityId: community.id, communityName: community.name, communityCategory: community.category })))
+      .sort((a, b) => Number(b.pinned) - Number(a.pinned))
+      .slice(0, 8);
+  }, [communities]);
   const joinedCount = communities.filter((community) => community.joined).length;
   const totalMembers = communities.reduce((sum, community) => sum + community.memberCount, 0);
   const totalPosts = communities.reduce((sum, community) => sum + community.posts.length, 0);
@@ -335,30 +462,30 @@ export default function Communities() {
               <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-blue-50" />
               <p className="relative mb-2 flex items-center gap-2 text-[13px] font-black text-blue-700">
                 <Sparkles className="h-4 w-4" />
-                Jewish Community Hub
+                Jewish social networks
               </p>
               <h1 className="relative text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">Communities</h1>
               <p className="relative mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-700">
-                Find the groups that make Jewish life feel closer: shuls, schools, chesed, learning, events, family boards, and neighborhood updates.
+                Create and join focused local networks around hobbies, lifestyles, interests, religious values, neighborhoods, and shul-connected circles.
               </p>
 
               <div className="relative mt-4 flex flex-wrap gap-2">
-                <PulsePill icon={HeartHandshake} label="Chesed active today" />
-                <PulsePill icon={MessageCircle} label={`${totalPosts} fresh threads`} />
+                <PulsePill icon={HeartHandshake} label="Purpose-built groups" />
+                <PulsePill icon={MessageCircle} label={`${totalPosts} active threads`} />
                 <PulsePill icon={CalendarDays} label={`${totalEvents} upcoming events`} />
               </div>
             </div>
 
             <div className="border-t border-slate-200 bg-gradient-to-br from-slate-50 via-white to-emerald-50 p-4 sm:border-l sm:border-t-0 sm:p-4">
               <div className="mb-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-                <p className="text-[12px] font-black uppercase tracking-wide text-slate-800">Start something useful</p>
-                <p className="mt-1 text-[13px] font-medium leading-5 text-slate-700">Create a board for minyan updates, school carpools, chesed requests, or neighborhood news.</p>
+                <p className="text-[12px] font-black uppercase tracking-wide text-slate-800">Start a real network</p>
+                <p className="mt-1 text-[13px] font-medium leading-5 text-slate-700">Launch a group people return to for conversation, plans, introductions, resources, and daily belonging.</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <MetricCard label="Communities" value={communities.length} tone="blue" />
                 <MetricCard label="Joined by you" value={joinedCount} tone="emerald" />
                 <MetricCard label="Members" value={totalMembers.toLocaleString()} tone="amber" />
-                <MetricCard label="Categories" value={categories.length - 1} tone="rose" />
+	                <MetricCard label="Networks" value={categories.length - 1} tone="rose" />
               </div>
               <button
                 onClick={() => setShowCreate(true)}
@@ -371,7 +498,72 @@ export default function Communities() {
           </div>
         </div>
 
-        <div className="mb-5 rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
+	        <div className="mb-5 grid gap-3 lg:grid-cols-[1fr_360px]">
+	          <section className="rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
+	            <div className="mb-3 flex items-center justify-between gap-3">
+	              <div>
+	                <h2 className="text-[17px] font-black text-slate-950">Community pulse</h2>
+	                <p className="text-[12px] font-medium text-slate-500">A live-feeling feed across the networks people belong to.</p>
+	              </div>
+	              <Radio className="h-5 w-5 text-blue-600" />
+	            </div>
+	            <div className="space-y-2">
+	              {activityFeed.map((post) => (
+	                <button
+	                  key={`${post.communityId}-${post.id}`}
+	                  onClick={() => setSelectedCommunityId(post.communityId)}
+	                  className="flex w-full items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2.5 text-left transition hover:bg-white active:scale-[0.99]"
+	                >
+	                  <span className={`mt-0.5 shrink-0 rounded-full border px-2 py-1 text-[10px] font-black ${categoryHighlights[post.communityCategory] || 'border-slate-200 bg-white text-slate-600'}`}>
+	                    {post.communityCategory}
+	                  </span>
+	                  <span className="min-w-0 flex-1">
+	                    <span className="block truncate text-[13px] font-black text-slate-950">{post.title}</span>
+	                    <span className="block truncate text-[12px] font-semibold text-slate-500">{post.communityName} · {post.time} · {post.comments} replies</span>
+	                  </span>
+	                </button>
+	              ))}
+	            </div>
+	          </section>
+
+	          <section className="rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
+	            <div className="mb-3 flex items-center gap-2">
+	              <ShieldCheck className="h-5 w-5 text-emerald-700" />
+	              <div>
+	                <h2 className="text-[17px] font-black text-slate-950">Social network engine</h2>
+	                <p className="text-[12px] font-medium text-slate-500">Make people discover, join, post, and come back.</p>
+	              </div>
+	            </div>
+	            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+	              {networkLoops.map((tool) => (
+	                <div key={tool} className="flex items-center gap-2 rounded-2xl bg-emerald-50 px-3 py-2 text-[12px] font-bold text-emerald-800">
+	                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+	                  {tool}
+	                </div>
+	              ))}
+	            </div>
+	          </section>
+	        </div>
+
+	        <section className="mb-5 rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
+	          <div className="mb-3 flex items-center justify-between gap-3">
+	            <div>
+	              <h2 className="text-[17px] font-black text-slate-950">Conversation starters</h2>
+	              <p className="text-[12px] font-medium text-slate-500">Built-in reasons for members to post before a group feels empty.</p>
+	            </div>
+	            <Bell className="h-5 w-5 text-blue-600" />
+	          </div>
+	          <div className="grid gap-2 md:grid-cols-3">
+	            {conversationStarters.map((starter) => (
+	              <div key={starter.title} className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+	                <p className="text-[14px] font-black text-slate-950">{starter.title}</p>
+	                <p className="mt-1 text-[12px] font-medium leading-5 text-slate-600">{starter.body}</p>
+	              </div>
+	            ))}
+	          </div>
+	        </section>
+
+	        <div className="mb-5 rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
           <div className="flex flex-col gap-3">
             <label className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -402,7 +594,35 @@ export default function Communities() {
                   )}
                 </button>
               ))}
-            </div>
+	        </div>
+
+	        <section className="mb-5 rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
+	          <div className="mb-3 flex items-center justify-between gap-3">
+	            <div>
+	              <h2 className="text-[17px] font-black text-slate-950">Launch templates</h2>
+	              <p className="text-[12px] font-medium text-slate-500">Fast paths for the communities people actually want to join.</p>
+	            </div>
+	            <Star className="h-5 w-5 text-amber-500" />
+	          </div>
+	          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+	            {launchTemplates.map((template) => (
+	              <button
+	                key={template.title}
+	                onClick={() => {
+	                  setCategory(template.category);
+	                  setQuery('');
+	                }}
+	                className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-left transition hover:bg-white active:scale-[0.99]"
+	              >
+	                <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-black ${categoryHighlights[template.category] || 'border-slate-200 bg-white text-slate-600'}`}>
+	                  {template.category}
+	                </span>
+	                <p className="mt-2 text-[14px] font-black text-slate-950">{template.title}</p>
+	                <p className="mt-1 text-[12px] font-medium leading-5 text-slate-600">{template.body}</p>
+	              </button>
+	            ))}
+	          </div>
+	        </section>
           </div>
         </div>
 

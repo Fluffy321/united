@@ -3,6 +3,7 @@ import React from 'react';
 export default function MitzvahTabs({ activeTab, onTabChange }) {
   const tabs = [
     { id: 'requests', label: 'Help Requests' },
+    { id: 'carpool', label: 'Carpool' },
     { id: 'map', label: 'Map' },
     { id: 'log', label: 'My Log' },
     { id: 'completed', label: 'Completed' }
