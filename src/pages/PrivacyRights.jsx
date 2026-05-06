@@ -74,16 +74,7 @@ export default function PrivacyRights() {
 
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== 'DELETE') { toast.error('Type DELETE to confirm'); return; }
-    setDeletingAccount(true);
-    try {
-      await base44.functions.invoke('deleteUserAccount', { user_id: user.id });
-      toast.success('Account scheduled for deletion. You will be logged out.');
-      setTimeout(() => base44.auth.logout('/'), 2000);
-    } catch (err) {
-      toast.error('Deletion request failed. Email privacy@junited.app for manual deletion.');
-    } finally {
-      setDeletingAccount(false);
-    }
+    toast.info('Account deletion is coming soon. Your account was not deleted.');
   };
 
   const handleAnalyticsToggle = () => {
@@ -203,12 +194,15 @@ export default function PrivacyRights() {
               <div className="flex-1">
                 <h2 className="font-bold text-slate-900 mb-1">Delete My Account</h2>
                 <p className="text-[13px] text-slate-500 mb-3 leading-relaxed">
-                  Your account is soft-deleted for 30 days (you can recover it by logging in), then permanently purged. Posts others engaged with will show "[Deleted User]" as author.
+                  Account deletion is not connected yet. Until the backend is added, this screen cannot permanently delete your account or data.
                 </p>
+                <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold text-amber-800">
+                  Coming Soon: real deletion still needs backend support.
+                </div>
                 {!showDeleteConfirm ? (
                   <button onClick={() => setShowDeleteConfirm(true)} disabled={!user}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-[13px] font-semibold hover:bg-red-700 disabled:opacity-50 active:scale-95 transition-all">
-                    <Trash2 className="w-3.5 h-3.5" /> Delete My Account
+                    <Trash2 className="w-3.5 h-3.5" /> Delete My Account (Coming Soon)
                   </button>
                 ) : (
                   <div className="space-y-3">
@@ -227,10 +221,10 @@ export default function PrivacyRights() {
                         className="flex-1 py-2 rounded-xl border border-slate-200 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
                         Cancel
                       </button>
-                      <button onClick={handleDeleteAccount} disabled={deletingAccount || deleteConfirmText !== 'DELETE'}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-red-600 text-white text-[13px] font-semibold hover:bg-red-700 disabled:opacity-50 active:scale-95 transition-all">
+                      <button onClick={handleDeleteAccount} disabled
+                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-slate-300 text-white text-[13px] font-semibold cursor-not-allowed disabled:opacity-70">
                         {deletingAccount ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                        {deletingAccount ? 'Processing...' : 'Confirm Delete'}
+                        Deletion Coming Soon
                       </button>
                     </div>
                   </div>

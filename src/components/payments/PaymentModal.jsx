@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, Loader2, Heart, Ticket, Users, CreditCard } from 'lucide-react';
+import { X, Heart, Ticket, Users, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
 
 const DONATION_PRESETS = [10, 25, 50, 100];
 
@@ -68,6 +69,9 @@ export default function PaymentModal({
   const displayAmount = isNaN(finalAmount) ? 0 : finalAmount;
 
   const handlePay = async () => {
+    toast.info('Checkout is coming soon. No money was processed.');
+    return;
+
     if (!displayAmount || displayAmount < 1) {
       toast.error('Please enter a valid amount (minimum $1)');
       return;
@@ -113,8 +117,15 @@ export default function PaymentModal({
           </button>
         </div>
 
-        <h2 className="text-[18px] font-bold text-slate-900 mb-1">{cfg.title}</h2>
-        <p className="text-[13px] text-slate-500 mb-5">{cfg.subtitle}</p>
+        <div className="mb-1 flex items-center gap-2">
+          <h2 className="text-[18px] font-bold text-slate-900">{cfg.title}</h2>
+          <StatusBadge>Coming Soon</StatusBadge>
+        </div>
+        <p className="text-[13px] text-slate-500 mb-4">{cfg.subtitle}</p>
+
+        <FeatureStatusNotice className="mb-4" title="Checkout is not live yet">
+          No money will be processed from this screen. This is a placeholder until the real payment system is connected.
+        </FeatureStatusNotice>
 
         {propDescription && (
           <div className="bg-slate-50 rounded-xl p-3 mb-4 text-[13px] text-slate-700 font-medium">
@@ -172,14 +183,10 @@ export default function PaymentModal({
 
         <Button
           onClick={handlePay}
-          disabled={isLoading || displayAmount < 1}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-[14px]"
+          disabled
+          className="w-full bg-slate-300 text-white font-bold py-3 rounded-xl text-[14px] cursor-not-allowed"
         >
-          {isLoading ? (
-            <><Loader2 className="w-4 h-4 animate-spin mr-2" />Processing...</>
-          ) : (
-            `${cfg.buttonLabel} · $${displayAmount.toFixed(2)}`
-          )}
+          Checkout Coming Soon
         </Button>
 
         <button
@@ -190,7 +197,7 @@ export default function PaymentModal({
         </button>
 
         <p className="text-center text-[11px] text-slate-400 mt-3">
-          Secure checkout will be connected next
+          Demo only · no card is charged
         </p>
       </div>
     </div>

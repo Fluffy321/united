@@ -11,6 +11,9 @@ const SUPABASE_ENTITY_TABLES = {
   Message: 'messages',
 };
 
+const PUBLIC_PROFILE_ENTITIES = new Set(['User', 'Profile']);
+const PUBLIC_PROFILE_SELECT = 'id,display_name,avatar_url,username,public_community,city,bio,is_profile_complete,created_at,updated_at';
+
 const demoUser = {
   id: 'local-demo',
   full_name: 'Local Demo User',
@@ -355,16 +358,23 @@ const toAppRow = (row = {}) => ({
   ...row,
   created_date: row.created_date || row.created_at,
   updated_date: row.updated_date || row.updated_at,
-  full_name: row.full_name || row.display_name || row.email,
+  full_name: row.full_name || row.display_name || 'User',
+  cityPreset: row.cityPreset || row.city,
 });
 
 const toDbPatch = (data = {}) => {
   const patch = { ...data };
   if (patch.created_date && !patch.created_at) patch.created_at = patch.created_date;
   if (patch.updated_date && !patch.updated_at) patch.updated_at = patch.updated_date;
+  if (patch.cityPreset && !patch.city) patch.city = patch.cityPreset;
+  if (patch.community_settings?.primaryNeighborhood && !patch.public_community) {
+    patch.public_community = patch.community_settings.primaryNeighborhood;
+  }
   delete patch.created_date;
   delete patch.updated_date;
   delete patch.full_name;
+  delete patch.email;
+  delete patch.cityPreset;
   return patch;
 };
 
@@ -414,6 +424,8 @@ const normalizeRealtimeEvent = (event = {}) => {
 
 const createSupabaseEntityApi = (entityName) => {
   const table = SUPABASE_ENTITY_TABLES[entityName];
+  const readTable = PUBLIC_PROFILE_ENTITIES.has(entityName) ? 'public_profiles' : table;
+  const readSelect = PUBLIC_PROFILE_ENTITIES.has(entityName) ? PUBLIC_PROFILE_SELECT : '*';
   const localApi = createEntityApi(entityName);
 
   if (!table || !supabase) return localApi;
@@ -421,7 +433,7 @@ const createSupabaseEntityApi = (entityName) => {
   return {
     async list(sort, limit = 100, offset = 0) {
       return runWithLocalFallback(async () => {
-        let query = supabase.from(table).select('*').range(offset, offset + limit - 1);
+        let query = supabase.from(readTable).select(readSelect).range(offset, offset + limit - 1);
         if (sort) {
           const ascending = !sort.startsWith('-');
           query = query.order(toDbField(sort.replace(/^-/, '')), { ascending });
@@ -434,7 +446,7 @@ const createSupabaseEntityApi = (entityName) => {
 
     async filter(filter = {}, sort, limit = 100) {
       return runWithLocalFallback(async () => {
-        let query = supabase.from(table).select('*').limit(limit);
+        let query = supabase.from(readTable).select(readSelect).limit(limit);
         Object.entries(filter || {}).forEach(([key, value]) => {
           const dbKey = toDbField(key);
           if (Array.isArray(value)) query = query.contains(dbKey, value);
@@ -452,7 +464,7 @@ const createSupabaseEntityApi = (entityName) => {
 
     async get(id) {
       return runWithLocalFallback(async () => {
-        const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
+        const { data, error } = await supabase.from(readTable).select(readSelect).eq('id', id).single();
         if (error) throw error;
         return toAppRow(data);
       }, () => localApi.get(id), entityName);
@@ -567,7 +579,7 @@ const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
       .slice(0, 12),
     events,
     people: allPeople
-      .filter((person) => includesSearchText(person, ['full_name', 'display_name', 'email', 'bio'], query))
+      .filter((person) => includesSearchText(person, ['full_name', 'display_name', 'username', 'bio', 'public_community', 'city'], query))
       .slice(0, 12),
   };
 };
@@ -584,11 +596,15 @@ const getSupabaseUser = async () => {
     .maybeSingle();
 
   if (profileError) throw profileError;
-  if (profile) return toAppRow(profile);
+  if (profile) {
+    return toAppRow({
+      ...profile,
+      email: data.user.email,
+    });
+  }
 
   const createdProfile = {
     id: data.user.id,
-    email: data.user.email,
     display_name: data.user.email?.split('@')[0] || 'User',
   };
 
@@ -599,7 +615,17 @@ const getSupabaseUser = async () => {
     .single();
 
   if (createError) throw createError;
-  return toAppRow(created);
+
+  await supabase.from('account_private').upsert({
+    id: data.user.id,
+    email: data.user.email,
+    updated_at: new Date().toISOString(),
+  });
+
+  return toAppRow({
+    ...created,
+    email: data.user.email,
+  });
 };
 
 export const base44 = {
@@ -618,7 +644,10 @@ export const base44 = {
           .select()
           .single();
         if (error) throw error;
-        return toAppRow(data);
+        return toAppRow({
+          ...data,
+          email: user.email,
+        });
       }
       Object.assign(demoUser, patch);
       return demoUser;
@@ -658,8 +687,12 @@ export const base44 = {
       if (data.user) {
         await supabase.from('profiles').upsert({
           id: data.user.id,
-          email: data.user.email,
           display_name: displayName || data.user.email?.split('@')[0] || 'User',
+          updated_at: new Date().toISOString(),
+        });
+        await supabase.from('account_private').upsert({
+          id: data.user.id,
+          email: data.user.email,
           updated_at: new Date().toISOString(),
         });
       }
@@ -705,13 +738,25 @@ export const base44 = {
         return {
           data: {
             url: null,
+            checkoutUrl: null,
+            paymentLive: false,
             error: 'Payments are not connected yet.',
           },
         };
       }
 
+      if (name === 'deleteUserAccount') {
+        throw new Error('Account deletion is not connected yet.');
+      }
+
       console.info(`Local function stub: ${name}`, payload);
-      return { data: { results: { posts: [], communities: [], events: [], people: [] } } };
+      return {
+        data: {
+          demoOnly: true,
+          message: `${name} is not connected yet.`,
+          results: { posts: [], communities: [], events: [], people: [] },
+        },
+      };
     },
   },
 

@@ -92,6 +92,9 @@ export default function BusinessListingPage() {
   };
 
   const handleUpgradeToPremium = async () => {
+    toast.info('Business upgrades are coming soon. No money was processed.');
+    return;
+
     if (!currentUser) { base44.auth.redirectToLogin(); return; }
     setUpgradeLoading(true);
     try {
@@ -235,15 +238,18 @@ export default function BusinessListingPage() {
               <p className="font-bold text-slate-900 text-[14px]">Upgrade to Premium</p>
             </div>
             <p className="text-[12px] text-slate-600 mb-3">
-              Priority placement · Photo gallery · Menu link · Verified badge — $29/mo
+              Priority placement · Photo gallery · Menu link · Verified badge — $29/mo · Coming Soon
             </p>
+            <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold text-amber-800">
+              Premium checkout is not live yet. No money will be processed.
+            </div>
             <button
               onClick={handleUpgradeToPremium}
-              disabled={upgradeLoading}
-              className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-[13px] flex items-center justify-center gap-2 disabled:opacity-60"
+              disabled
+              className="w-full py-2.5 rounded-xl bg-slate-300 text-white font-bold text-[13px] flex items-center justify-center gap-2 cursor-not-allowed"
             >
-              {upgradeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              Upgrade to Premium
+              <Sparkles className="w-4 h-4" />
+              Premium Checkout Coming Soon
             </button>
           </div>
         )}

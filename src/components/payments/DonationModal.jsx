@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Heart, X, Loader2 } from 'lucide-react';
+import { Heart, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
 
 const PRESET_AMOUNTS = [10, 25, 50, 100];
 
@@ -13,6 +14,9 @@ export default function DonationModal({ open, onOpenChange }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDonate = async () => {
+    toast.info('Donations are coming soon. No money was processed.');
+    return;
+
     const amount = customAmount ? parseFloat(customAmount) : selectedAmount;
     if (!amount || amount < 1) {
       toast.error('Please enter a valid amount');
@@ -42,16 +46,23 @@ export default function DonationModal({ open, onOpenChange }) {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <Heart className="w-6 h-6 text-red-500" />
-            <h2 className="text-xl font-bold text-slate-900">Support Our Community</h2>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Support Our Community</h2>
+              <StatusBadge>Coming Soon</StatusBadge>
+            </div>
           </div>
           <button onClick={() => onOpenChange(false)} className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-slate-400" />
           </button>
         </div>
 
-        <p className="text-sm text-slate-600 mb-6">
+        <p className="text-sm text-slate-600 mb-4">
           Your donation helps us continue providing essential community services.
         </p>
+
+        <FeatureStatusNotice className="mb-5" title="Donations are not live yet">
+          No money will be processed from this screen.
+        </FeatureStatusNotice>
 
         <div className="space-y-4 mb-6">
           <label className="text-sm font-semibold text-slate-900">Select Amount</label>
@@ -94,8 +105,8 @@ export default function DonationModal({ open, onOpenChange }) {
           </p>
         </div>
 
-        <Button onClick={handleDonate} disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3">
-          {isLoading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Processing...</> : 'Continue to Payment'}
+        <Button onClick={handleDonate} disabled className="w-full bg-slate-300 text-white font-semibold py-3 cursor-not-allowed">
+          Donation Checkout Coming Soon
         </Button>
 
         <button onClick={() => onOpenChange(false)} className="w-full mt-3 py-3 text-slate-600 font-semibold hover:bg-slate-50 rounded-lg transition-colors">

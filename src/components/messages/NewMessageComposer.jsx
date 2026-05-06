@@ -37,7 +37,8 @@ export default function NewMessageComposer({ currentUser, onConversationSelect, 
 
   const filteredMembers = members.filter(m =>
     m.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    m.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    m.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleSelectMember = async (member) => {

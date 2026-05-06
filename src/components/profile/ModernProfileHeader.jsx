@@ -45,7 +45,9 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
           <h1 className="text-xl font-black text-slate-900 leading-tight truncate">
             {user.display_name || user.full_name?.split(' ')[0] || 'User'}
           </h1>
-          <p className="text-sm text-slate-500 font-semibold">@{user.username || user.email?.split('@')[0]}</p>
+          <p className="text-sm text-slate-500 font-semibold">
+            @{user.username || user.display_name?.toLowerCase().replace(/[^a-z0-9]+/g, '') || `member${String(user.id || '').slice(0, 6)}`}
+          </p>
           {(user.cityPreset || user.location_text) && (
             <p className="mt-1 flex items-center gap-1 text-[12px] font-medium text-slate-500">
               <MapPin className="h-3.5 w-3.5 text-blue-600" />

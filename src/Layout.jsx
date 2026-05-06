@@ -107,6 +107,11 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main Content */}
       <main className="min-h-screen overflow-visible">
+        <div className="mx-auto max-w-2xl px-3 pt-3">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold leading-5 text-amber-900">
+            Safety note: some tools are still demo-only while Supabase is being finished. Payment, AI, account deletion, and Chesed verification screens are labeled and will not process money or permanently save demo records yet.
+          </div>
+        </div>
         {isSwipeable ? (
           <SwipeableTabs
             tabs={['Feed', 'Mitzvah', 'Communities', 'Messages', 'Profile']}

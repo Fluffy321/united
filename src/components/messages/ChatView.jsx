@@ -288,7 +288,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         
         <div className="flex-1">
           <span className="font-semibold text-slate-900 text-[16px]">{other.name}</span>
-          {isAI && <p className="text-[11px] text-indigo-500 font-medium">AI Assistant • Always available</p>}
+          {isAI && <p className="text-[11px] text-amber-600 font-bold">AI Assistant • Coming Soon</p>}
           {isCommunityChat && <p className="text-[11px] text-blue-500 font-medium">{other.memberCount?.toLocaleString()} members • Community Chat</p>}
         </div>
 
@@ -352,7 +352,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
                     <Bot className="w-8 h-8 text-white" />
                   </div>
                   <p className="font-semibold text-slate-800">United AI Assistant</p>
-                  <p className="text-sm text-slate-500 max-w-xs mx-auto">Ask me about local events, shuls, schools, chesed opportunities, or anything about the Five Towns community!</p>
+                  <p className="text-sm text-slate-500 max-w-xs mx-auto">AI chat is not connected yet. This space is a preview only.</p>
                   <div className="flex flex-wrap gap-2 justify-center mt-4 mb-4">
                     {[
                       "What's happening this Shabbat?",
@@ -462,6 +462,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           <textarea
             rows={1}
             placeholder="Type a message…"
+            disabled={isAI}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => {
@@ -475,9 +476,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           />
           <button
             onClick={handleSend}
-            disabled={(!newMessage.trim() && !pendingAttachment) || isSending}
+            disabled={isAI || (!newMessage.trim() && !pendingAttachment) || isSending}
             className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 disabled:opacity-40 active:scale-95 transition-all"
-            style={{ background: '#2563EB' }}
+            style={{ background: isAI ? '#CBD5E1' : '#2563EB' }}
           >
             {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>

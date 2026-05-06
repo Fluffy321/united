@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
 
 const STORAGE_KEY = 'junited_advanced_mitzvah_marketplace_v1';
 
@@ -223,6 +224,7 @@ function RequestCard({ request, offers, currentUser, onOffer, onAcceptPaid, onAc
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-700">{request.category}</span>
             <StatusPill status={request.status} />
+            <StatusBadge>Demo Only</StatusBadge>
           </div>
           <h2 className="text-[17px] font-black leading-snug text-slate-950">{request.title}</h2>
           <p className="mt-1 text-[13px] font-medium leading-5 text-slate-600">{request.description}</p>
@@ -248,6 +250,7 @@ function RequestCard({ request, offers, currentUser, onOffer, onAcceptPaid, onAc
         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
           <p className="text-[12px] font-bold leading-5 text-amber-900">
             Payment placeholder: this task is structured for future in-app payment. Stripe can later create a checkout or escrow flow from this request id.
+            No money is processed in this demo.
           </p>
         </div>
       )}
@@ -282,7 +285,7 @@ function RequestCard({ request, offers, currentUser, onOffer, onAcceptPaid, onAc
         {canAcceptPaid && (
           <button onClick={() => onAcceptPaid(request)} className="inline-flex h-10 items-center gap-2 rounded-xl bg-amber-500 px-4 text-[13px] font-black text-white active:scale-[0.98]">
             <HandCoins className="h-4 w-4" />
-            Accept Paid Task
+            Accept Demo Paid Task
           </button>
         )}
         {myOffer && myOffer.status === 'offered' && (
@@ -305,7 +308,7 @@ function RequestCard({ request, offers, currentUser, onOffer, onAcceptPaid, onAc
         {canVerify && (
           <button onClick={() => onVerify(request.id)} className="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-[13px] font-black text-white active:scale-[0.98]">
             <ShieldCheck className="h-4 w-4" />
-            Verify Completion
+            Verify Completion (Demo)
           </button>
         )}
       </div>
@@ -494,6 +497,10 @@ function ChesedHoursDashboard({ logs, onGenerateText }) {
 
   return (
     <section className="space-y-4">
+      <FeatureStatusNotice title="Demo Only: Chesed hours are saved in this browser">
+        These hours are useful for testing the workflow, but they are not permanent school/community records yet. A real Supabase verification system still needs to be connected.
+      </FeatureStatusNotice>
+
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
           <p className="text-[11px] font-black uppercase text-slate-500">Total</p>
@@ -527,7 +534,7 @@ function ChesedHoursDashboard({ logs, onGenerateText }) {
         <div className="grid gap-2 sm:grid-cols-3">
           <button onClick={exportCsv} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-[13px] font-black text-slate-700 active:scale-[0.98]"><Download className="h-4 w-4" />Export CSV</button>
           <button onClick={printSummary} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-[13px] font-black text-slate-700 active:scale-[0.98]"><Printer className="h-4 w-4" />Print Summary</button>
-          <button onClick={generate} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 text-[13px] font-black text-white active:scale-[0.98]"><Sparkles className="h-4 w-4" />Generate Text</button>
+          <button onClick={generate} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 text-[13px] font-black text-white active:scale-[0.98]"><Sparkles className="h-4 w-4" />Generate Demo Text</button>
         </div>
       </div>
 
@@ -794,16 +801,17 @@ export default function MitzvahCircle() {
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="relative p-4 sm:p-5">
             <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-blue-50" />
-            <div className="relative">
+          <div className="relative">
               <p className="mb-2 flex items-center gap-2 text-[12px] font-black uppercase text-blue-600">
                 <HandHeart className="h-4 w-4" />
                 Community help marketplace
+                <StatusBadge>Demo Only</StatusBadge>
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <h1 className="text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">Mitzvah / Chesed Help</h1>
                   <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-600">
-                    Post requests, offer help, accept paid tasks, verify completion, and turn verified service into chesed hours reports.
+                    Post requests, offer help, accept paid tasks, verify completion, and turn verified service into chesed hours reports. This page is currently a demo and saves data in this browser.
                   </p>
                 </div>
                 <button onClick={() => setShowCreate(true)} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white shadow-sm active:scale-[0.98]">
@@ -820,6 +828,10 @@ export default function MitzvahCircle() {
             </div>
           </div>
         </div>
+
+        <FeatureStatusNotice className="mt-3" title="Demo Only">
+          Requests, offers, paid task acceptance, verification, exports, and Chesed hours on this page are mock data for now. No payment is processed and these records are not permanently saved to Supabase yet.
+        </FeatureStatusNotice>
 
         <div className="sticky top-0 z-20 -mx-3 mt-3 bg-[#F6F8FB]/95 px-3 py-2 backdrop-blur sm:-mx-4 sm:px-4">
           <div className="mobile-scroll-x flex gap-2 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">

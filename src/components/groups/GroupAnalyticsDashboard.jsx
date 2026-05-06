@@ -65,13 +65,14 @@ export default function GroupAnalyticsDashboard({ group, currentUser, isAdmin })
         </div>
         <h3 className="text-xl font-bold text-slate-900 mb-2">Premium Analytics Dashboard</h3>
         <p className="text-slate-600 text-center max-w-md mb-6">
-          Unlock powerful engagement insights including active members, popular discussions, event attendance, and resource analytics.
+          Preview powerful engagement insights including active members, popular discussions, event attendance, and resource analytics. Premium checkout is not live yet.
         </p>
         <button
           onClick={handleUpgrade}
-          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg transition-all active:scale-95"
+          disabled
+          className="px-6 py-3 bg-slate-300 text-white font-semibold rounded-full cursor-not-allowed"
         >
-          Upgrade to Premium - $9.99/month
+          Premium Checkout Coming Soon
         </button>
       </div>
     );
@@ -274,26 +275,7 @@ export default function GroupAnalyticsDashboard({ group, currentUser, isAdmin })
   );
 
   async function handleUpgrade() {
-    try {
-      const user = await base44.auth.me();
-      const response = await base44.functions.invoke('create-checkout', {
-        amount: 999,
-        currency: 'usd',
-        metadata: {
-          user_id: user.id,
-          product_type: 'premium_subscription',
-          group_id: group?.id,
-        },
-        success_url: `${window.location.origin}/ThankYou`,
-        cancel_url: window.location.origin,
-      });
-      if (response.data?.checkout_url) {
-        window.open(response.data.checkout_url, '_blank');
-        toast.success('Redirecting to checkout...');
-      }
-    } catch (error) {
-      toast.error('Failed to start checkout');
-    }
+    toast.info('Premium checkout is coming soon. No money was processed.');
   }
 }
 
