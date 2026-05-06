@@ -1,4 +1,24 @@
+import { createClient } from '@supabase/supabase-js';
+
 const STORAGE_PREFIX = 'junited_local_entity_';
+const SUPABASE_ENTITY_TABLES = {
+  User: 'profiles',
+  Profile: 'profiles',
+  Community: 'communities',
+  UnifiedPost: 'posts',
+  Post: 'posts',
+  Conversation: 'conversations',
+  Message: 'messages',
+};
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const isSupabaseEnabled = import.meta.env.VITE_SUPABASE_ENABLED === 'true';
+const configuredAuthRedirectUrl = import.meta.env.VITE_AUTH_REDIRECT_URL;
+const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+const shouldUseSupabase = isSupabaseEnabled && !!supabase;
 
 const demoUser = {
   id: 'local-demo',
@@ -340,19 +360,281 @@ const entities = new Proxy({}, {
   },
 });
 
+const toAppRow = (row = {}) => ({
+  ...row,
+  created_date: row.created_date || row.created_at,
+  updated_date: row.updated_date || row.updated_at,
+  full_name: row.full_name || row.display_name || row.email,
+});
+
+const toDbPatch = (data = {}) => {
+  const patch = { ...data };
+  if (patch.created_date && !patch.created_at) patch.created_at = patch.created_date;
+  if (patch.updated_date && !patch.updated_at) patch.updated_at = patch.updated_date;
+  delete patch.created_date;
+  delete patch.updated_date;
+  delete patch.full_name;
+  return patch;
+};
+
+const toDbField = (field) => {
+  if (field === 'created_date') return 'created_at';
+  if (field === 'updated_date') return 'updated_at';
+  return field;
+};
+
+const shouldFallbackToLocal = (error) => {
+  const text = `${error?.message || ''} ${error?.details || ''}`.toLowerCase();
+  return (
+    text.includes('not signed in') ||
+    text.includes('permission denied') ||
+    text.includes('row-level security') ||
+    text.includes('relation') ||
+    text.includes('does not exist')
+  );
+};
+
+const runWithLocalFallback = async (action, fallback, label) => {
+  try {
+    return await action();
+  } catch (error) {
+    if (shouldFallbackToLocal(error)) {
+      console.warn(`Using local ${label} data because Supabase is not ready yet.`, error);
+      return fallback();
+    }
+    throw error;
+  }
+};
+
+const createSupabaseEntityApi = (entityName) => {
+  const table = SUPABASE_ENTITY_TABLES[entityName];
+  const localApi = createEntityApi(entityName);
+
+  if (!table || !supabase) return localApi;
+
+  return {
+    async list(sort, limit = 100, offset = 0) {
+      return runWithLocalFallback(async () => {
+        let query = supabase.from(table).select('*').range(offset, offset + limit - 1);
+        if (sort) {
+          const ascending = !sort.startsWith('-');
+          query = query.order(toDbField(sort.replace(/^-/, '')), { ascending });
+        }
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []).map(toAppRow);
+      }, () => localApi.list(sort, limit, offset), entityName);
+    },
+
+    async filter(filter = {}, sort, limit = 100) {
+      return runWithLocalFallback(async () => {
+        let query = supabase.from(table).select('*').limit(limit);
+        Object.entries(filter || {}).forEach(([key, value]) => {
+          const dbKey = toDbField(key);
+          if (Array.isArray(value)) query = query.contains(dbKey, value);
+          else query = query.eq(dbKey, value);
+        });
+        if (sort) {
+          const ascending = !sort.startsWith('-');
+          query = query.order(toDbField(sort.replace(/^-/, '')), { ascending });
+        }
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []).map(toAppRow);
+      }, () => localApi.filter(filter, sort, limit), entityName);
+    },
+
+    async get(id) {
+      return runWithLocalFallback(async () => {
+        const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
+        if (error) throw error;
+        return toAppRow(data);
+      }, () => localApi.get(id), entityName);
+    },
+
+    async create(data) {
+      return runWithLocalFallback(async () => {
+        const { data: created, error } = await supabase
+          .from(table)
+          .insert(toDbPatch(data))
+          .select()
+          .single();
+        if (error) throw error;
+        return toAppRow(created);
+      }, () => localApi.create(data), entityName);
+    },
+
+    async bulkCreate(items = []) {
+      return runWithLocalFallback(async () => {
+        const { data, error } = await supabase
+          .from(table)
+          .insert(items.map(toDbPatch))
+          .select();
+        if (error) throw error;
+        return (data || []).map(toAppRow);
+      }, () => localApi.bulkCreate(items), entityName);
+    },
+
+    async update(id, patch) {
+      return runWithLocalFallback(async () => {
+        const { data, error } = await supabase
+          .from(table)
+          .update({ ...toDbPatch(patch), updated_at: new Date().toISOString() })
+          .eq('id', id)
+          .select()
+          .single();
+        if (error) throw error;
+        return toAppRow(data);
+      }, () => localApi.update(id, patch), entityName);
+    },
+
+    async delete(idOrIds) {
+      return runWithLocalFallback(async () => {
+        const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+        const { error } = await supabase.from(table).delete().in('id', ids);
+        if (error) throw error;
+        return true;
+      }, () => localApi.delete(idOrIds), entityName);
+    },
+
+    subscribe(callback) {
+      const channel = supabase
+        .channel(`${table}-changes`)
+        .on('postgres_changes', { event: '*', schema: 'public', table }, callback)
+        .subscribe();
+      return () => supabase.removeChannel(channel);
+    },
+  };
+};
+
+const supabaseEntities = new Proxy({}, {
+  get(target, entityName) {
+    if (!target[entityName]) target[entityName] = createSupabaseEntityApi(entityName);
+    return target[entityName];
+  },
+});
+
+const activeEntities = shouldUseSupabase ? supabaseEntities : entities;
+
+const getAuthRedirectUrl = () => {
+  if (configuredAuthRedirectUrl) return configuredAuthRedirectUrl;
+  if (typeof window === 'undefined') return undefined;
+  return `${window.location.origin}/login`;
+};
+
+const getSupabaseUser = async () => {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw error;
+  if (!data.user) throw new Error('Not signed in');
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', data.user.id)
+    .maybeSingle();
+
+  if (profileError) throw profileError;
+  if (profile) return toAppRow(profile);
+
+  const createdProfile = {
+    id: data.user.id,
+    email: data.user.email,
+    display_name: data.user.email?.split('@')[0] || 'User',
+  };
+
+  const { data: created, error: createError } = await supabase
+    .from('profiles')
+    .insert(createdProfile)
+    .select()
+    .single();
+
+  if (createError) throw createError;
+  return toAppRow(created);
+};
+
 export const base44 = {
   auth: {
     async me() {
+      if (shouldUseSupabase) return getSupabaseUser();
       return demoUser;
     },
     async updateMe(patch) {
+      if (shouldUseSupabase) {
+        const user = await getSupabaseUser();
+        const { data, error } = await supabase
+          .from('profiles')
+          .update({ ...toDbPatch(patch), updated_at: new Date().toISOString() })
+          .eq('id', user.id)
+          .select()
+          .single();
+        if (error) throw error;
+        return toAppRow(data);
+      }
       Object.assign(demoUser, patch);
       return demoUser;
     },
-    logout() {
+    async signInWithPassword({ email, password }) {
+      if (!shouldUseSupabase) return { user: demoUser };
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      return data;
+    },
+    async signin({ email, password }) {
+      return this.signInWithPassword({ email, password });
+    },
+    async signIn({ email, password }) {
+      return this.signInWithPassword({ email, password });
+    },
+    async login({ email, password }) {
+      return this.signInWithPassword({ email, password });
+    },
+    async signUp({ email, password, displayName }) {
+      if (!shouldUseSupabase) {
+        Object.assign(demoUser, { email, display_name: displayName || email });
+        return { user: demoUser };
+      }
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            display_name: displayName || email?.split('@')[0],
+          },
+          emailRedirectTo: getAuthRedirectUrl(),
+        },
+      });
+      if (error) throw error;
+
+      if (data.user) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          email: data.user.email,
+          display_name: displayName || data.user.email?.split('@')[0] || 'User',
+          updated_at: new Date().toISOString(),
+        });
+      }
+
+      return data;
+    },
+    async signup({ email, password, displayName, fullName, name }) {
+      return this.signUp({
+        email,
+        password,
+        displayName: displayName || fullName || name,
+      });
+    },
+    async logout() {
+      if (shouldUseSupabase) {
+        await supabase.auth.signOut();
+        return true;
+      }
       return true;
     },
     redirectToLogin(fromUrl = '/') {
+      if (shouldUseSupabase && typeof window !== 'undefined') {
+        window.location.href = `/login?from_url=${encodeURIComponent(fromUrl || window.location.href)}`;
+        return;
+      }
       console.info('Login is not connected yet. Returning to local app mode.');
       if (typeof window !== 'undefined') {
         const target = new URL(fromUrl || '/', window.location.origin);
@@ -361,7 +643,7 @@ export const base44 = {
     },
   },
 
-  entities,
+  entities: activeEntities,
 
   functions: {
     async invoke(name, payload = {}) {
@@ -372,7 +654,15 @@ export const base44 = {
 
   integrations: {
     Core: {
-      async UploadFile({ file }) {
+      async UploadFile({ file, bucket = 'post-images' }) {
+        if (shouldUseSupabase && file) {
+          const safeName = file.name?.replace(/[^a-z0-9._-]/gi, '-') || 'upload';
+          const path = `${Date.now()}-${safeName}`;
+          const { error } = await supabase.storage.from(bucket).upload(path, file);
+          if (error) throw error;
+          const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+          return { file_url: data.publicUrl };
+        }
         return { file_url: file ? URL.createObjectURL(file) : '' };
       },
       async InvokeLLM() {

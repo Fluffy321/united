@@ -33,6 +33,7 @@ import PrivacyRights from '@/pages/PrivacyRights';
 import YahrzeitManager from '@/pages/YahrzeitManager';
 import SearchPage from '@/pages/Search';
 import RefuahList from '@/pages/RefuahList';
+import Login from '@/pages/Login';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -42,26 +43,9 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
-const LoginRedirect = () => {
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const fromUrl = params.get('from_url');
-  let target = '/';
-
-  if (fromUrl) {
-    try {
-      const parsed = new URL(fromUrl, window.location.origin);
-      target = `${parsed.pathname}${parsed.search || ''}`;
-    } catch {
-      target = '/';
-    }
-  }
-
-  return <Navigate to={target} replace />;
-};
-
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const location = useLocation();
+  const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -77,7 +61,10 @@ const AuthenticatedApp = () => {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     }
-    // auth_required and other errors: allow access as guest
+    if (location.pathname !== '/login') {
+      const fromUrl = `${location.pathname}${location.search || ''}`;
+      return <Navigate to={`/login?from_url=${encodeURIComponent(fromUrl)}`} replace />;
+    }
   }
 
   // Render the main app
@@ -116,7 +103,7 @@ const AuthenticatedApp = () => {
       <Route path="/yahrzeits" element={<PageTransition><YahrzeitManager /></PageTransition>} />
       <Route path="/tehillim" element={<PageTransition><RefuahList /></PageTransition>} />
       <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
-      <Route path="/login" element={<LoginRedirect />} />
+      <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
