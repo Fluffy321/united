@@ -397,6 +397,21 @@ const runWithLocalFallback = async (action, fallback, label) => {
   }
 };
 
+const normalizeRealtimeEvent = (event = {}) => {
+  const eventType = String(event.eventType || '').toLowerCase();
+  const typeMap = {
+    insert: 'create',
+    update: 'update',
+    delete: 'delete',
+  };
+
+  return {
+    type: typeMap[eventType] || eventType || event.type,
+    data: event.new || event.old || event.data,
+    raw: event,
+  };
+};
+
 const createSupabaseEntityApi = (entityName) => {
   const table = SUPABASE_ENTITY_TABLES[entityName];
   const localApi = createEntityApi(entityName);
@@ -491,7 +506,9 @@ const createSupabaseEntityApi = (entityName) => {
     subscribe(callback) {
       const channel = supabase
         .channel(`${table}-changes`)
-        .on('postgres_changes', { event: '*', schema: 'public', table }, callback)
+        .on('postgres_changes', { event: '*', schema: 'public', table }, (event) => {
+          callback(normalizeRealtimeEvent(event));
+        })
         .subscribe();
       return () => supabase.removeChannel(channel);
     },
