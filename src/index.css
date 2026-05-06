@@ -178,6 +178,16 @@
     padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
   }
 
+  .app-floating-banner {
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (min-width: 1024px) {
+    .app-floating-banner {
+      bottom: 24px;
+    }
+  }
+
   .mobile-card {
     border-radius: 12px;
     border: 1px solid rgba(203, 213, 225, 0.9);

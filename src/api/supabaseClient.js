@@ -22,5 +22,6 @@ export const getSupabaseConfigStatus = () => ({
   hasAnonKey: Boolean(supabaseAnonKey),
   isSupabaseEnabled,
   shouldUseSupabase,
+  supabaseUrl: supabaseUrl || null,
   authRedirectUrl: configuredAuthRedirectUrl || null,
 });

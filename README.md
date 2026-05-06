@@ -86,14 +86,42 @@ The real Supabase setup now lives in:
 src/api/supabaseClient.js
 ```
 
+Current migration status:
+
+- Supabase auth is connected through the compatibility bridge.
+- Supabase tables are used when `VITE_SUPABASE_ENABLED=true`.
+- If a Supabase table is missing or blocked by row-level security, the bridge falls back to local demo data instead of crashing.
+- Search has an in-app fallback, so it does not depend on the old Base44 `universalSearch` function.
+- Payments, email sending, AI replies, and several notification jobs are still placeholders until separate services are connected.
+
+## Deployment
+
+There is no deployment-specific config file yet.
+
+For a normal Vite deployment, the build command is:
+
+```bash
+npm run build
+```
+
+The output folder is:
+
+```text
+dist
+```
+
+Wherever you deploy it, add the same Supabase environment variables from `.env.local` to that hosting provider.
+
 ## Useful Commands
 
 ```bash
 npm run dev
 npm run build
+npm run lint
 ```
 
 `npm run build` checks whether the app can be prepared for production.
+`npm run lint` checks for code issues.
 
 ## What To Test Manually
 

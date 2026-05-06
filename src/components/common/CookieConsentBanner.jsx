@@ -33,7 +33,7 @@ export default function CookieConsentBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-[72px] left-0 right-0 z-[200] px-3 pb-2">
+    <div className="app-floating-banner fixed left-0 right-0 z-[200] px-3 pb-2">
       <div className="max-w-2xl mx-auto bg-slate-900 text-white rounded-2xl shadow-2xl overflow-hidden">
         <div className="px-4 py-4">
           <div className="flex items-start justify-between gap-3 mb-3">
@@ -41,7 +41,7 @@ export default function CookieConsentBanner() {
               <Cookie className="w-5 h-5 text-amber-400 flex-shrink-0" />
               <p className="font-semibold text-[15px]">We use cookies</p>
             </div>
-            <button onClick={handleRejectOptional} className="p-1 rounded-full hover:bg-white/10 transition-colors flex-shrink-0">
+            <button onClick={handleRejectOptional} aria-label="Close cookie banner" className="p-1 rounded-full hover:bg-white/10 transition-colors flex-shrink-0">
               <X className="w-4 h-4 text-slate-400" />
             </button>
           </div>

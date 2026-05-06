@@ -524,6 +524,54 @@ const supabaseEntities = new Proxy({}, {
 
 const activeEntities = shouldUseSupabase ? supabaseEntities : entities;
 
+const includesSearchText = (row = {}, fields = [], query = '') => {
+  const needle = String(query || '').trim().toLowerCase();
+  if (!needle) return false;
+  return fields.some((field) => String(row[field] || '').toLowerCase().includes(needle));
+};
+
+const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
+  const [postsResult, communitiesResult, peopleResult] = await Promise.allSettled([
+    activeEntities.UnifiedPost.list('-created_date', 120),
+    activeEntities.Community.list('-follower_count', 80),
+    activeEntities.User.list('-created_date', 80),
+  ]);
+
+  const allPosts = postsResult.status === 'fulfilled' ? postsResult.value : [];
+  const allCommunities = communitiesResult.status === 'fulfilled' ? communitiesResult.value : [];
+  const allPeople = peopleResult.status === 'fulfilled' ? peopleResult.value : [];
+
+  const postMatches = allPosts
+    .filter((post) => {
+      if (filters.post_type && post.type !== filters.post_type) return false;
+      if (filters.community_id && post.community_id !== filters.community_id) return false;
+      if (filters.date_from && post.created_date < filters.date_from) return false;
+      if (filters.date_to && post.created_date > filters.date_to) return false;
+      return includesSearchText(post, ['title', 'body', 'community_name', 'author_name', 'location_text'], query);
+    })
+    .slice(0, 20);
+
+  const events = postMatches
+    .filter((post) => post.type === 'event')
+    .map((post) => ({
+      ...post,
+      start_date: post.start_date || post.event_date || post.created_date,
+      location: post.location || post.location_text || post.city,
+    }))
+    .slice(0, 10);
+
+  return {
+    posts: postMatches.filter((post) => post.type !== 'event').slice(0, 20),
+    communities: allCommunities
+      .filter((community) => includesSearchText(community, ['name', 'description', 'type', 'city', 'neighborhood'], query))
+      .slice(0, 12),
+    events,
+    people: allPeople
+      .filter((person) => includesSearchText(person, ['full_name', 'display_name', 'email', 'bio'], query))
+      .slice(0, 12),
+  };
+};
+
 const getSupabaseUser = async () => {
   const { data, error } = await supabase.auth.getUser();
   if (error) throw error;
@@ -649,6 +697,19 @@ export const base44 = {
 
   functions: {
     async invoke(name, payload = {}) {
+      if (name === 'universalSearch') {
+        return { data: { results: await runUniversalSearch(payload) } };
+      }
+
+      if (name === 'create-checkout') {
+        return {
+          data: {
+            url: null,
+            error: 'Payments are not connected yet.',
+          },
+        };
+      }
+
       console.info(`Local function stub: ${name}`, payload);
       return { data: { results: { posts: [], communities: [], events: [], people: [] } } };
     },
