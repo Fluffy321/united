@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { getAuthRedirectUrl, shouldUseSupabase, supabase } from '@/api/supabaseClient';
 
 const STORAGE_PREFIX = 'junited_local_entity_';
 const SUPABASE_ENTITY_TABLES = {
@@ -10,15 +10,6 @@ const SUPABASE_ENTITY_TABLES = {
   Conversation: 'conversations',
   Message: 'messages',
 };
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const isSupabaseEnabled = import.meta.env.VITE_SUPABASE_ENABLED === 'true';
-const configuredAuthRedirectUrl = import.meta.env.VITE_AUTH_REDIRECT_URL;
-const supabase = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
-const shouldUseSupabase = isSupabaseEnabled && !!supabase;
 
 const demoUser = {
   id: 'local-demo',
@@ -515,12 +506,6 @@ const supabaseEntities = new Proxy({}, {
 });
 
 const activeEntities = shouldUseSupabase ? supabaseEntities : entities;
-
-const getAuthRedirectUrl = () => {
-  if (configuredAuthRedirectUrl) return configuredAuthRedirectUrl;
-  if (typeof window === 'undefined') return undefined;
-  return `${window.location.origin}/login`;
-};
 
 const getSupabaseUser = async () => {
   const { data, error } = await supabase.auth.getUser();
