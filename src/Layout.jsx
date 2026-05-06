@@ -89,7 +89,7 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: '#F6F8FB' }}>
+    <div className="min-h-screen bg-[#F6F8FB] text-slate-950">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', system-ui, sans-serif; background: #F6F8FB; -webkit-font-smoothing: antialiased; }
@@ -141,7 +141,7 @@ export default function Layout({ children, currentPageName }) {
           style={{ paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))' }}
         >
           <div
-            className="mobile-page overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/95 shadow-[0_18px_40px_rgba(15,23,42,0.18)] backdrop-blur-xl"
+            className="mobile-page overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-[0_12px_30px_rgba(15,23,42,0.14)] backdrop-blur-xl"
             style={{ position: 'relative' }}
           >
             {/* Active highlight now rendered per-button */}
@@ -164,7 +164,7 @@ export default function Layout({ children, currentPageName }) {
                         navigate(createPageUrl(item.page));
                       }
                     }}
-                    className={`relative flex flex-1 flex-col items-center justify-center rounded-[18px] touch-manipulation transition-all duration-150 ${
+                    className={`relative flex flex-1 flex-col items-center justify-center rounded-xl touch-manipulation transition-all duration-150 ${
                       isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-400 active:bg-slate-100'
                     }`}
                     style={{ minHeight: '58px', minWidth: '54px', paddingTop: 7, paddingBottom: 7 }}
