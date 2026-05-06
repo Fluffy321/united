@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
+import { storageService } from '@/services';
 
 /**
  * PWA Install Prompt — shows the native "Add to Home Screen" prompt
@@ -20,7 +21,7 @@ export default function PWAInstallPrompt() {
       return;
     }
 
-    const dismissed = localStorage.getItem('junited_pwa_dismissed');
+    const dismissed = storageService.getItem('junited_pwa_dismissed');
     if (dismissed) return;
 
     // iOS detection
@@ -58,7 +59,7 @@ export default function PWAInstallPrompt() {
 
   const handleDismiss = () => {
     setShowBanner(false);
-    localStorage.setItem('junited_pwa_dismissed', '1');
+    storageService.setItem('junited_pwa_dismissed', '1');
   };
 
   if (!showBanner || isInstalled) return null;

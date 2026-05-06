@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart, Check } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService, paymentsService } from '@/services';
 import { toast } from 'sonner';
 import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
 
@@ -41,17 +41,17 @@ export default function SupportJUnited() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    dataService.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const handleSupport = async () => {
     toast.info('Support payments are coming soon. No money was processed.');
     return;
 
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setLoading(true);
     try {
-      const res = await base44.functions.invoke('create-checkout', {
+      const res = await paymentsService.createCheckout( {
         checkoutType: 'support_junited',
         billing,
         tier: selectedTier,

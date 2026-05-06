@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
@@ -49,7 +49,7 @@ export default function ShulPage() {
     if (!shulId) {
       const loadFirstShul = async () => {
         try {
-          const shuls = await base44.entities.Shul.list('-created_date', 5);
+          const shuls = await dataService.entities.Shul.list('-created_date', 5);
           const verified = shuls.filter(s => s.verified || s.is_verified);
           if (verified.length > 0) {
             navigate(createPageUrl('ShulPage') + `?shulId=${verified[0].id}`, { replace: true });
@@ -64,33 +64,33 @@ export default function ShulPage() {
   }, [shulId, navigate]);
 
   const loadData = async () => {
-    const user = await base44.auth.me();
+    const user = await dataService.auth.me();
     setCurrentUser(user);
     if (shulId) {
-      const shuls = await base44.entities.Shul.filter({ id: shulId });
+      const shuls = await dataService.entities.Shul.filter({ id: shulId });
       if (shuls.length > 0) setShul(shuls[0]);
-      const memberships = await base44.entities.ShulMember.filter({ shul_id: shulId, user_id: user.id });
+      const memberships = await dataService.entities.ShulMember.filter({ shul_id: shulId, user_id: user.id });
       if (memberships.length > 0) setMembership(memberships[0]);
     }
   };
 
   const { data: posts = [] } = useQuery({
     queryKey: ['shul-posts', shulId],
-    queryFn: () => base44.entities.ShulPost.filter({ shul_id: shulId }, '-created_date', 50),
+    queryFn: () => dataService.entities.ShulPost.filter({ shul_id: shulId }, '-created_date', 50),
     enabled: !!shulId,
     staleTime: 30000
   });
 
   const { data: members = [] } = useQuery({
     queryKey: ['shul-members', shulId],
-    queryFn: () => base44.entities.ShulMember.filter({ shul_id: shulId }),
+    queryFn: () => dataService.entities.ShulMember.filter({ shul_id: shulId }),
     enabled: !!shulId,
     staleTime: 30000
   });
 
   const joinMutation = useMutation({
     mutationFn: async () => {
-      return base44.entities.ShulMember.create({
+      return dataService.entities.ShulMember.create({
         shul_id: shul.id,
         shul_name: shul.name,
         user_id: currentUser.id,
@@ -99,7 +99,7 @@ export default function ShulPage() {
       });
     },
     onSuccess: async (newMembership) => {
-      await base44.entities.Shul.update(shul.id, { member_count: (shul.member_count || 0) + 1 });
+      await dataService.entities.Shul.update(shul.id, { member_count: (shul.member_count || 0) + 1 });
       setMembership(newMembership);
       setShul(prev => ({ ...prev, member_count: (prev.member_count || 0) + 1 }));
       queryClient.invalidateQueries({ queryKey: ['shul-members'] });
@@ -109,7 +109,7 @@ export default function ShulPage() {
 
   const toggleNotificationsMutation = useMutation({
     mutationFn: () =>
-      base44.entities.ShulMember.update(membership.id, {
+      dataService.entities.ShulMember.update(membership.id, {
         notifications_enabled: !membership.notifications_enabled
       }),
     onSuccess: (updated) => {

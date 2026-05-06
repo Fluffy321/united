@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Loader2, CheckCircle2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 export default function NewsletterSubscribeBox({ community }) {
@@ -17,7 +17,7 @@ export default function NewsletterSubscribeBox({ community }) {
     setLoading(true);
     try {
       // Check if already subscribed
-      const existing = await base44.entities.NewsletterSubscriber.filter({
+      const existing = await dataService.entities.NewsletterSubscriber.filter({
         email: trimmed,
         community_id: community.id
       });
@@ -26,7 +26,7 @@ export default function NewsletterSubscribeBox({ community }) {
         setDone(true);
         return;
       }
-      await base44.entities.NewsletterSubscriber.create({
+      await dataService.entities.NewsletterSubscriber.create({
         email: trimmed,
         community_id: community.id,
         community_name: community.name,

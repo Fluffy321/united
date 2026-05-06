@@ -1,5 +1,5 @@
 import React from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,21 +10,21 @@ export default function MessageRequestsTab({ currentUser, onAccepted }) {
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['message-requests', currentUser.id],
-    queryFn: () => base44.entities.MessageRequest.filter({ recipient_id: currentUser.id, status: 'pending' }, '-created_date', 50),
+    queryFn: () => dataService.entities.MessageRequest.filter({ recipient_id: currentUser.id, status: 'pending' }, '-created_date', 50),
     enabled: !!currentUser,
   });
 
   const handleAccept = async (req) => {
     // Create a real conversation
-    const existing = await base44.entities.Conversation.filter({ id: req.sender_id });
-    const conv = await base44.entities.Conversation.create({
+    const existing = await dataService.entities.Conversation.filter({ id: req.sender_id });
+    const conv = await dataService.entities.Conversation.create({
       participant_ids: [req.sender_id, currentUser.id],
       participant_names: [req.sender_name, currentUser.full_name || currentUser.display_name],
       participant_ages: [null, currentUser.age_range || '18+'],
       request_type: 'general',
       unread_count: { [currentUser.id]: 0 },
     });
-    await base44.entities.MessageRequest.update(req.id, { status: 'accepted' });
+    await dataService.entities.MessageRequest.update(req.id, { status: 'accepted' });
     queryClient.invalidateQueries({ queryKey: ['message-requests', currentUser.id] });
     queryClient.invalidateQueries({ queryKey: ['conversations', currentUser.id] });
     toast.success(`Accepted message request from ${req.sender_name}`);
@@ -32,7 +32,7 @@ export default function MessageRequestsTab({ currentUser, onAccepted }) {
   };
 
   const handleDecline = async (req) => {
-    await base44.entities.MessageRequest.update(req.id, { status: 'declined' });
+    await dataService.entities.MessageRequest.update(req.id, { status: 'declined' });
     queryClient.invalidateQueries({ queryKey: ['message-requests', currentUser.id] });
     toast.success('Request declined');
   };

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, User, Loader2, HeartHandshake, MessageCircle, Users } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function Login() {
@@ -36,14 +36,14 @@ export default function Login() {
 
     try {
       if (mode === 'signup') {
-        await base44.auth.signUp({ email, password, displayName });
+        await dataService.auth.signUp({ email, password, displayName });
         setMessage('Check your email to confirm your account, then come back and sign in.');
       } else {
-        const signIn = base44.auth.signInWithPassword || base44.auth.signin || base44.auth.signIn || base44.auth.login;
+        const signIn = dataService.auth.signInWithPassword || dataService.auth.signin || dataService.auth.signIn || dataService.auth.login;
         if (typeof signIn !== 'function') {
           throw new Error('Sign in is not connected yet. Please refresh the page and try again.');
         }
-        await signIn.call(base44.auth, { email, password });
+        await signIn.call(dataService.auth, { email, password });
         await checkAppState();
         navigate(target, { replace: true });
       }

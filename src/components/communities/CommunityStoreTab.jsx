@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import {
   Plus, ShoppingBag, Repeat, Wrench, X, DollarSign,
   Loader2, ImageIcon, CheckCircle, Trash2, Package
@@ -36,7 +36,7 @@ function ListingModal({ communityId, currentUser, listing, onClose, onSaved }) {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await dataService.integrations.Core.UploadFile({ file });
       setForm(f => ({ ...f, image_url: file_url }));
     } catch { toast.error('Upload failed'); }
     setUploading(false);
@@ -60,8 +60,8 @@ function ListingModal({ communityId, currentUser, listing, onClose, onSaved }) {
     };
     try {
       const saved = isEdit
-        ? await base44.entities.CommunityListing.update(listing.id, payload)
-        : await base44.entities.CommunityListing.create(payload);
+        ? await dataService.entities.CommunityListing.update(listing.id, payload)
+        : await dataService.entities.CommunityListing.create(payload);
       toast.success(isEdit ? 'Listing updated!' : 'Listing created!');
       onSaved(saved);
     } catch { toast.error('Failed to save listing'); }
@@ -212,7 +212,7 @@ function ListingCard({ listing, isAdmin, currentUser, onDelete }) {
 
   const handleDelete = async () => {
     if (!confirm('Delete this listing?')) return;
-    await base44.entities.CommunityListing.delete(listing.id);
+    await dataService.entities.CommunityListing.delete(listing.id);
     onDelete(listing.id);
     toast.success('Listing deleted');
   };
@@ -347,7 +347,7 @@ export default function CommunityStoreTab({ communityId, community, currentUser,
 
   const { data: listings = [], isLoading } = useQuery({
     queryKey: ['community-listings', communityId],
-    queryFn: () => base44.entities.CommunityListing.filter({ community_id: communityId, is_active: true }, 'created_date', 100),
+    queryFn: () => dataService.entities.CommunityListing.filter({ community_id: communityId, is_active: true }, 'created_date', 100),
     enabled: !!communityId,
   });
 

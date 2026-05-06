@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import UserAvatar from '@/components/common/UserAvatar';
@@ -21,7 +21,7 @@ export default function GroupChatSection({ communityId, currentUser }) {
 
   const { data: messages = [], isLoading, refetch } = useQuery({
     queryKey: ['community-chat', communityId],
-    queryFn: () => base44.entities.CommunityGroupChat.filter(
+    queryFn: () => dataService.entities.CommunityGroupChat.filter(
       { community_id: communityId },
       '-created_date',
       50
@@ -37,7 +37,7 @@ export default function GroupChatSection({ communityId, currentUser }) {
 
   useEffect(() => {
     if (!communityId) return;
-    const unsubscribe = base44.entities.CommunityGroupChat.subscribe((event) => {
+    const unsubscribe = dataService.entities.CommunityGroupChat.subscribe((event) => {
       if (event.data?.community_id === communityId) {
         refetch();
       }
@@ -51,7 +51,7 @@ export default function GroupChatSection({ communityId, currentUser }) {
 
     setSending(true);
     try {
-      await base44.entities.CommunityGroupChat.create({
+      await dataService.entities.CommunityGroupChat.create({
         community_id: communityId,
         author_id: currentUser.id,
         author_name: currentUser.display_name || currentUser.full_name,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Users, MapPin, Send, Calendar, UserCheck, Loader2, Check, X, Clock, Megaphone, UserPlus, MessageSquare, BarChart3 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import InviteLinkButton from './InviteLinkButton';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
@@ -47,10 +47,10 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
     setLoading(true);
     const isAdmin = group.created_by_user_id === currentUser?.id;
     Promise.all([
-      base44.entities.GroupPost.filter({ group_id: group.id, post_type: 'post' }, '-created_date', 30),
-      base44.entities.GroupPost.filter({ group_id: group.id, post_type: 'announcement' }, '-created_date', 30),
-      base44.entities.GroupMember.filter({ group_id: group.id }, '-created_date', 100),
-      isAdmin ? base44.entities.GroupJoinRequest.filter({ group_id: group.id, status: 'pending' }) : Promise.resolve([]),
+      dataService.entities.GroupPost.filter({ group_id: group.id, post_type: 'post' }, '-created_date', 30),
+      dataService.entities.GroupPost.filter({ group_id: group.id, post_type: 'announcement' }, '-created_date', 30),
+      dataService.entities.GroupMember.filter({ group_id: group.id }, '-created_date', 100),
+      isAdmin ? dataService.entities.GroupJoinRequest.filter({ group_id: group.id, status: 'pending' }) : Promise.resolve([]),
     ]).then(([p, a, m, r]) => {
       setPosts(p);
       setAnnouncements(a);
@@ -63,7 +63,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
   const handlePost = async () => {
     if (!newPost.trim() && !postAttachment) return;
     setPosting(true);
-    const post = await base44.entities.GroupPost.create({
+    const post = await dataService.entities.GroupPost.create({
       group_id: group.id,
       user_id: currentUser.id,
       user_name: currentUser.full_name,
@@ -71,7 +71,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
       post_type: 'post',
       attachment: postAttachment || null,
     });
-    await base44.entities.CommunityGroup.update(group.id, { post_count: (group.post_count || 0) + 1 });
+    await dataService.entities.CommunityGroup.update(group.id, { post_count: (group.post_count || 0) + 1 });
     setPosts(prev => [post, ...prev]);
     setNewPost('');
     setPostAttachment(null);
@@ -82,7 +82,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
   const handleAnnouncement = async () => {
     if (!newAnnouncement.trim()) return;
     setPostingAnnouncement(true);
-    const ann = await base44.entities.GroupPost.create({
+    const ann = await dataService.entities.GroupPost.create({
       group_id: group.id,
       user_id: currentUser.id,
       user_name: currentUser.full_name,
@@ -97,9 +97,9 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
 
   const handleApprove = async (req) => {
     setProcessingRequest(req.id);
-    await base44.entities.GroupMember.create({ group_id: group.id, user_id: req.user_id, user_name: req.user_name, role: 'member' });
-    await base44.entities.GroupJoinRequest.update(req.id, { status: 'approved' });
-    await base44.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
+    await dataService.entities.GroupMember.create({ group_id: group.id, user_id: req.user_id, user_name: req.user_name, role: 'member' });
+    await dataService.entities.GroupJoinRequest.update(req.id, { status: 'approved' });
+    await dataService.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
     setJoinRequests(prev => prev.filter(r => r.id !== req.id));
     setMembers(prev => [...prev, { id: req.id, user_id: req.user_id, user_name: req.user_name, role: 'member' }]);
     onMemberApproved?.(group.id);
@@ -109,7 +109,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
 
   const handleDeny = async (req) => {
     setProcessingRequest(req.id);
-    await base44.entities.GroupJoinRequest.update(req.id, { status: 'denied' });
+    await dataService.entities.GroupJoinRequest.update(req.id, { status: 'denied' });
     setJoinRequests(prev => prev.filter(r => r.id !== req.id));
     setProcessingRequest(null);
     toast.success('Request denied');

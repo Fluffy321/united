@@ -1,11 +1,11 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 
 export default function WeeklyImpactCard() {
   const { data: stats } = useQuery({
     queryKey: ['weekly-impact'],
-    queryFn: () => base44.entities.WeeklyStats.list('-created_date', 1),
+    queryFn: () => dataService.entities.WeeklyStats.list('-created_date', 1),
     staleTime: 3600000,
     select: (d) => d[0],
   });

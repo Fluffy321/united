@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Heart } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { postsService } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -14,7 +14,7 @@ export default function ReactionBar({ postId, currentUser }) {
 
   const { data: reactions = [] } = useQuery({
     queryKey: ['post-reactions', postId],
-    queryFn: () => base44.entities.Reaction.filter({ post_id: postId }, '-created_date', 100),
+    queryFn: () => postsService.listReactions(postId, 100),
     enabled: !!postId && appParams.hasBackendConfig,
     staleTime: 300000,
     gcTime: 600000,
@@ -24,7 +24,7 @@ export default function ReactionBar({ postId, currentUser }) {
 
   const { data: userReactions = [] } = useQuery({
     queryKey: ['user-reactions', postId, currentUser?.id],
-    queryFn: () => base44.entities.Reaction.filter({ post_id: postId, user_id: currentUser.id }, undefined, 100),
+    queryFn: () => postsService.listUserReactions(postId, currentUser.id, 100),
     enabled: !!postId && isRealUser && appParams.hasBackendConfig,
     staleTime: 300000,
     gcTime: 600000,
@@ -36,9 +36,9 @@ export default function ReactionBar({ postId, currentUser }) {
     mutationFn: async () => {
       const existing = userReactions.find(r => r.reaction_type === 'like');
       if (existing) {
-        await base44.entities.Reaction.delete(existing.id);
+        await postsService.deleteReaction(existing.id);
       } else {
-        await base44.entities.Reaction.create({
+        await postsService.createReaction({
           post_id: postId,
           user_id: currentUser.id,
           reaction_type: 'like',

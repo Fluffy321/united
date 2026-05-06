@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Save, Loader2, Bell, Lock, Eye, MapPin, Check } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 
@@ -26,7 +26,7 @@ export default function UserSettings() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const currentUser = await base44.auth.me();
+        const currentUser = await dataService.auth.me();
         setUser(currentUser);
         setBio(currentUser.bio || '');
         setAvatarUrl(currentUser.avatar_url || '');
@@ -71,7 +71,7 @@ export default function UserSettings() {
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      await base44.auth.updateMe({
+      await dataService.auth.updateMe({
         bio,
         avatar_url: avatarUrl,
         cityPreset,

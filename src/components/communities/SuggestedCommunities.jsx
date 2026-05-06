@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Loader2, RefreshCw } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 
 function SuggestedCard({ community, isJoined, isJoining, onOpen, onJoin }) {
   if (!community?.id || !community?.name) return null;
@@ -79,7 +79,7 @@ export default function SuggestedCommunities({ currentUser, allCommunities, user
 
     let result;
     try {
-      result = await base44.integrations.Core.InvokeLLM({
+      result = await dataService.integrations.Core.InvokeLLM({
       prompt: `You are a community recommendation engine for a Jewish social network app focused on the Five Towns, NY area.
 
 User context: ${userContext}

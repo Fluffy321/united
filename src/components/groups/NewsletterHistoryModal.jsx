@@ -1,6 +1,6 @@
 import React from 'react';
 import { Mail, X, Calendar, Users, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 
@@ -8,7 +8,7 @@ export default function NewsletterHistoryModal({ groupId, onClose }) {
   const { data: newsletters, isLoading } = useQuery({
     queryKey: ['newsletter-history', groupId],
     queryFn: async () => {
-      const logs = await base44.entities.NewsletterLog.filter({ group_id: groupId }, '-sent_date', 20);
+      const logs = await dataService.entities.NewsletterLog.filter({ group_id: groupId }, '-sent_date', 20);
       return logs;
     },
     enabled: !!groupId,

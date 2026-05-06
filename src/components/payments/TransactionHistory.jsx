@@ -1,13 +1,13 @@
 import React from 'react';
 import { Loader2, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { format, parseISO } from 'date-fns';
 
 export default function TransactionHistory({ userId }) {
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ['user-transactions', userId],
-    queryFn: () => base44.entities.Transaction.filter({ user_id: userId }, '-created_date', 50),
+    queryFn: () => dataService.entities.Transaction.filter({ user_id: userId }, '-created_date', 50),
     enabled: !!userId,
     staleTime: 300000
   });

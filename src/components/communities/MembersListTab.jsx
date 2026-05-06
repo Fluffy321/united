@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { Loader2, Users, MessageCircle, Search, ChevronDown, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -135,16 +135,16 @@ export default function MembersListTab({ communityId }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    dataService.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   useEffect(() => {
     if (!communityId) return;
     setLoading(true);
     Promise.all([
-      base44.entities.UserCommunity.filter({ community_id: communityId }, '-created_date', 200),
-      base44.entities.SubGroup.filter({ community_id: communityId, is_active: true }),
-      base44.entities.SubGroupMember.filter({ community_id: communityId, status: 'approved' }),
+      dataService.entities.UserCommunity.filter({ community_id: communityId }, '-created_date', 200),
+      dataService.entities.SubGroup.filter({ community_id: communityId, is_active: true }),
+      dataService.entities.SubGroupMember.filter({ community_id: communityId, status: 'approved' }),
     ])
       .then(([mem, sg, sgm]) => {
         setMembers(mem);
@@ -193,17 +193,17 @@ export default function MembersListTab({ communityId }) {
   }, [membersWithSubgroups, search, segment, selectedSubgroup, sortKey]);
 
   const startConversation = async (member) => {
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setMessagingId(member.user_id);
     try {
-      const allConvs = await base44.entities.Conversation.list('-updated_date', 100);
+      const allConvs = await dataService.entities.Conversation.list('-updated_date', 100);
       const existing = allConvs.find(c =>
         c.participant_ids?.includes(currentUser.id) &&
         c.participant_ids?.includes(member.user_id) &&
         c.participant_ids?.length === 2
       );
       if (existing) { navigate(`/Messages?conversation=${existing.id}`); return; }
-      const conv = await base44.entities.Conversation.create({
+      const conv = await dataService.entities.Conversation.create({
         participant_ids: [currentUser.id, member.user_id],
         participant_names: [currentUser.full_name || 'You', member.user_name || 'Member'],
         last_message: null, unread_count: {}, request_type: 'general',

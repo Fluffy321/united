@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 
 const REASONS = [
   { value: 'harassment', label: '😡 Harassment or bullying' },
@@ -43,7 +43,7 @@ export default function ReportModal({ open, onOpenChange, contentId, contentType
     if (!reason) return;
     setIsSubmitting(true);
 
-    await base44.entities.Report.create({
+    await dataService.entities.Report.create({
       reporter_id: currentUser?.id || 'anonymous',
       reported_content_id: contentId,
       content_type: contentType,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, Upload } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const CATEGORIES = [
@@ -28,7 +28,7 @@ export default function CreateBusinessListing() {
   });
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => base44.auth.redirectToLogin());
+    dataService.auth.me().then(setCurrentUser).catch(() => dataService.auth.redirectToLogin());
   }, []);
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
@@ -38,7 +38,7 @@ export default function CreateBusinessListing() {
     if (!file) return;
     setLogoUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await dataService.integrations.Core.UploadFile({ file });
       set('logo_url', file_url);
     } catch { toast.error('Upload failed'); }
     setLogoUploading(false);
@@ -49,7 +49,7 @@ export default function CreateBusinessListing() {
     if (!form.category) { toast.error('Please select a category'); return; }
     setSubmitting(true);
     try {
-      const listing = await base44.entities.BusinessListing.create({
+      const listing = await dataService.entities.BusinessListing.create({
         ...form,
         owner_id: currentUser.id,
         owner_name: currentUser.full_name,

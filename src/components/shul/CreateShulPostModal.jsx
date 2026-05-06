@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 export default function CreateShulPostModal({ open, onOpenChange, shul, currentUser, onSuccess }) {
@@ -27,7 +27,7 @@ export default function CreateShulPostModal({ open, onOpenChange, shul, currentU
 
     setIsSubmitting(true);
     try {
-      await base44.entities.ShulPost.create({
+      await dataService.entities.ShulPost.create({
         shul_id: shul.id,
         shul_name: shul.name,
         user_id: currentUser.id,

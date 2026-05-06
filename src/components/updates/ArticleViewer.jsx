@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ExternalLink, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function ArticleViewer({ item, onClose }) {
@@ -12,7 +12,7 @@ export default function ArticleViewer({ item, onClose }) {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const { data } = await base44.functions.invoke('fetchArticle', { url: item.link });
+        const { data } = await dataService.functions.invoke('fetchArticle', { url: item.link });
         setArticleData(data);
       } catch (_) {}
       setLoading(false);

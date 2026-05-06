@@ -1,4 +1,4 @@
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 
 const MAX_NEW_CHATS_PER_DAY = 10;
 const COOLDOWN_BETWEEN_NEW_CHATS_MS = 30 * 1000;
@@ -39,8 +39,8 @@ export function recordNewChat(senderId) {
  */
 export async function shareCommunity(senderId, recipientId) {
   const [senderMemberships, recipientMemberships] = await Promise.all([
-    base44.entities.GroupMember.filter({ user_id: senderId }),
-    base44.entities.GroupMember.filter({ user_id: recipientId }),
+    dataService.entities.GroupMember.filter({ user_id: senderId }),
+    dataService.entities.GroupMember.filter({ user_id: recipientId }),
   ]);
   const senderGroupIds = new Set(senderMemberships.map(m => m.group_id));
   return recipientMemberships.some(m => senderGroupIds.has(m.group_id));
@@ -50,7 +50,7 @@ export async function shareCommunity(senderId, recipientId) {
  * Check whether sender and recipient are connections (UserConnection).
  */
 export async function areConnections(senderId, recipientId) {
-  const conns = await base44.entities.UserConnection.filter({ user_id: senderId, connected_user_id: recipientId });
+  const conns = await dataService.entities.UserConnection.filter({ user_id: senderId, connected_user_id: recipientId });
   return conns.length > 0;
 }
 
@@ -59,7 +59,7 @@ export async function areConnections(senderId, recipientId) {
  * Returns { canMessage: boolean }
  */
 export async function canMessage(sender, recipientId) {
-  const recipientArr = await base44.entities.User.filter({ id: recipientId });
+  const recipientArr = await dataService.entities.User.filter({ id: recipientId });
   const recipient = recipientArr[0];
   if (!recipient) return { canMessage: false };
 

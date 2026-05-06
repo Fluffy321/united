@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { base44 } from '@/api/base44Client';
+import { dataService, messagesService } from '@/services';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import FileAttachmentButton from '@/components/common/FileAttachmentButton';
@@ -56,7 +56,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       return;
     }
     if (isAI) {
-      // Load from localStorage for AI chats
+      // Load saved AI chat messages through the storage service.
       const saved = loadAIMessages(currentUser.id);
       setMessages(saved);
       setIsLoading(false);
@@ -68,7 +68,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     loadMitzvahContext();
 
     // Subscribe to new messages in this conversation
-    const unsubscribe = base44.entities.Message.subscribe((event) => {
+    const unsubscribe = messagesService.subscribeToMessages((event) => {
       if (event.type === 'create' && event.data.conversation_id === conversation.id) {
         setMessages(prev => {
           // Avoid duplicates
@@ -87,7 +87,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
 
   const loadMessages = async (silent = false) => {
     if (!silent) setIsLoading(true);
-    const data = await base44.entities.Message.filter({ conversation_id: conversation.id }, 'created_date');
+    const data = await messagesService.listMessages(conversation.id, 'created_date');
     setMessages(data);
     if (!silent) setIsLoading(false);
   };
@@ -96,7 +96,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     try {
       if (!conversation?.id) return;
       const unreadCount = { ...conversation.unread_count, [currentUser.id]: 0 };
-      await base44.entities.Conversation.update(conversation.id, { unread_count: unreadCount });
+      await messagesService.updateConversation(conversation.id, { unread_count: unreadCount });
     } catch (error) {
       console.error('Failed to mark conversation as read:', error);
     }
@@ -105,11 +105,11 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const loadMitzvahContext = async () => {
     if (conversation.request_id) {
       try {
-        const [request] = await base44.entities.MitzvahRequest.filter({ id: conversation.request_id });
+        const [request] = await dataService.entities.MitzvahRequest.filter({ id: conversation.request_id });
         setMitzvahRequest(request || null);
 
         if (request) {
-          const [offer] = await base44.entities.HelpOffer.filter({ request_id: request.id });
+          const [offer] = await dataService.entities.HelpOffer.filter({ request_id: request.id });
           setHelpOffer(offer || null);
         }
       } catch (error) {
@@ -123,7 +123,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     
     setIsProcessing(true);
     try {
-      await base44.entities.HelpOffer.update(helpOffer.id, {
+      await dataService.entities.HelpOffer.update(helpOffer.id, {
         completed_by_helper: true
       });
       
@@ -141,13 +141,13 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     setIsProcessing(true);
     try {
       // Update request status
-      await base44.entities.MitzvahRequest.update(mitzvahRequest.id, {
+      await dataService.entities.MitzvahRequest.update(mitzvahRequest.id, {
         status: 'Completed',
         completed_at: new Date().toISOString()
       });
 
       // Award points
-      await base44.entities.MitzvahAction.create({
+      await dataService.entities.MitzvahAction.create({
         user_id: mitzvahRequest.claimed_by_user_id,
         user_name: mitzvahRequest.claimed_by_name,
         request_id: mitzvahRequest.id,
@@ -155,13 +155,13 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         points_awarded: 10
       });
 
-      const [points] = await base44.entities.MitzvahPoints.filter({ user_id: mitzvahRequest.claimed_by_user_id });
+      const [points] = await dataService.entities.MitzvahPoints.filter({ user_id: mitzvahRequest.claimed_by_user_id });
       if (points) {
-        await base44.entities.MitzvahPoints.update(points.id, {
+        await dataService.entities.MitzvahPoints.update(points.id, {
           total_points: points.total_points + 10
         });
       } else {
-        await base44.entities.MitzvahPoints.create({
+        await dataService.entities.MitzvahPoints.create({
           user_id: mitzvahRequest.claimed_by_user_id,
           user_name: mitzvahRequest.claimed_by_name,
           total_points: 10
@@ -169,7 +169,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       }
 
       // Update offer
-      await base44.entities.HelpOffer.update(helpOffer.id, { status: 'completed' });
+      await dataService.entities.HelpOffer.update(helpOffer.id, { status: 'completed' });
 
       toast.success('Mitzvah completed! Helper earned 10 points ✨');
       loadMitzvahContext();
@@ -229,7 +229,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     setIsSending(true);
 
     try {
-      const msg = await base44.entities.Message.create({
+      const msg = await messagesService.createMessage({
         conversation_id: conversation.id,
         sender_id: currentUser.id,
         sender_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],
@@ -247,7 +247,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         [other.id]: (conversation.unread_count?.[other.id] || 0) + 1
       };
 
-      await base44.entities.Conversation.update(conversation.id, {
+      await messagesService.updateConversation(conversation.id, {
         last_message: text || (attachment ? `📎 ${attachment.name}` : ''),
         last_message_at: new Date().toISOString(),
         unread_count: unreadCount

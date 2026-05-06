@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, UserPlus, Clock } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -21,7 +21,7 @@ export default function MinyanStatusWidget({ shulId, currentUser }) {
   const { data: attendance = [] } = useQuery({
     queryKey: ['minyan-attendance', shulId, today],
     queryFn: async () => {
-      const all = await base44.entities.MinyanAttendance.filter({ 
+      const all = await dataService.entities.MinyanAttendance.filter({ 
         shul_id: shulId, 
         date: today 
       });
@@ -37,10 +37,10 @@ export default function MinyanStatusWidget({ shulId, currentUser }) {
       );
       
       if (existing) {
-        await base44.entities.MinyanAttendance.delete(existing.id);
+        await dataService.entities.MinyanAttendance.delete(existing.id);
         return { removed: true };
       } else {
-        await base44.entities.MinyanAttendance.create({
+        await dataService.entities.MinyanAttendance.create({
           shul_id: shulId,
           date: today,
           minyan_type: minyanType,

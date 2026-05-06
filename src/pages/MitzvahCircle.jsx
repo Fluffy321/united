@@ -19,7 +19,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService, notificationsService, storageService } from '@/services';
 import { toast } from 'sonner';
 import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
 
@@ -40,18 +40,18 @@ const CATEGORIES = [
 
 const STATUSES = {
   OPEN: 'Open',
-  OFFERED: 'Volunteer Offered',
+  OFFERED: 'Offered',
   ACCEPTED: 'Accepted',
   IN_PROGRESS: 'In Progress',
   PENDING: 'Completed Pending Verification',
-  VERIFIED: 'Verified Completed',
+  VERIFIED: 'Verified',
   CANCELLED: 'Cancelled',
 };
 
 const CURRENT_USER_ID = 'local-demo';
 
 const initialState = {
-  requests: [
+  mitzvah_requests: [
     {
       id: 'req-simcha-setup',
       title: 'Help setting up for a simcha',
@@ -114,7 +114,7 @@ const initialState = {
       createdAt: '2026-05-03T18:45:00.000Z',
     },
   ],
-  offers: [
+  mitzvah_offers: [
     {
       id: 'offer-tech-avi',
       requestId: 'req-tech-help',
@@ -134,7 +134,9 @@ const initialState = {
       createdAt: '2026-05-04T12:00:00.000Z',
     },
   ],
-  chesedLogs: [
+  mitzvah_completions: [],
+  verification_requests: [],
+  chesed_hours_logs: [
     {
       id: 'log-food-delivery',
       volunteerId: CURRENT_USER_ID,
@@ -164,22 +166,63 @@ const initialState = {
   ],
 };
 
+const normalizeRequestStatus = (status) => ({
+  'Volunteer Offered': STATUSES.OFFERED,
+  'Verified Completed': STATUSES.VERIFIED,
+}[status] || status);
+
+const normalizeWorkflowState = (savedState) => ({
+  mitzvah_requests: (savedState?.mitzvah_requests || savedState?.requests || initialState.mitzvah_requests)
+    .map((request) => ({
+      ...request,
+      poster_id: getPosterId(request),
+      poster_name: getPosterName(request),
+      status: normalizeRequestStatus(request.status),
+      status_history: request.status_history || request.statusHistory || [],
+    })),
+  mitzvah_offers: (savedState?.mitzvah_offers || savedState?.offers || initialState.mitzvah_offers)
+    .map((offer) => ({
+      ...offer,
+      volunteer_id: getVolunteerId(offer),
+      volunteer_name: getVolunteerName(offer),
+      status_history: offer.status_history || offer.statusHistory || [],
+    })),
+  mitzvah_completions: (savedState?.mitzvah_completions || initialState.mitzvah_completions)
+    .map((completion) => ({ ...completion, status_history: completion.status_history || completion.statusHistory || [] })),
+  verification_requests: (savedState?.verification_requests || initialState.verification_requests)
+    .map((request) => ({ ...request, status_history: request.status_history || request.statusHistory || [] })),
+  chesed_hours_logs: (savedState?.chesed_hours_logs || savedState?.chesedLogs || initialState.chesed_hours_logs)
+    .map((log) => ({ ...log, volunteer_id: log.volunteer_id || log.volunteerId, verifier_id: log.verifier_id || log.verifierId })),
+});
+
 const readState = () => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : initialState;
-  } catch {
-    return initialState;
-  }
+  return normalizeWorkflowState(storageService.getJson(STORAGE_KEY, initialState));
 };
 
 const saveState = (state) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  storageService.setJson(STORAGE_KEY, state);
 };
 
 const formatMoney = (amount) => `$${Number(amount || 0).toFixed(0)}`;
+const nowISO = () => new Date().toISOString();
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const makeId = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+const getPosterId = (request) => request.poster_id || request.postedById;
+const getPosterName = (request) => request.poster_name || request.postedBy;
+const getVolunteerId = (offer) => offer.volunteer_id || offer.volunteerId;
+const getVolunteerName = (offer) => offer.volunteer_name || offer.volunteerName;
+
+const addStatusHistory = (record, status, actor, action) => [
+  ...(record.status_history || record.statusHistory || []),
+  {
+    status,
+    action,
+    actor_id: actor?.id || null,
+    actor_name: actor?.full_name || actor?.name || 'System',
+    timestamp: nowISO(),
+  },
+];
 
 const normalizeDate = (value) => {
   if (!value) return '';
@@ -206,19 +249,26 @@ function StatusPill({ status }) {
   );
 }
 
-function RequestCard({ request, offers, currentUser, onOffer, onAcceptPaid, onAcceptOffer, onStart, onComplete, onVerify }) {
-  const isPoster = request.postedById === currentUser.id;
+function RequestCard({ request, offers, completions, verificationRequests, currentUser, onOffer, onAcceptPaid, onAcceptOffer, onStart, onComplete, onVerify }) {
+  const posterId = getPosterId(request);
+  const posterName = getPosterName(request);
+  const isPoster = posterId === currentUser.id;
   const acceptedOffer = offers.find((offer) => offer.id === request.acceptedOfferId);
-  const myOffer = offers.find((offer) => offer.requestId === request.id && offer.volunteerId === currentUser.id);
+  const acceptedVolunteerId = acceptedOffer ? getVolunteerId(acceptedOffer) : null;
+  const myOffer = offers.find((offer) => offer.requestId === request.id && getVolunteerId(offer) === currentUser.id);
+  const completion = completions.find((item) => item.id === request.completionId || item.requestId === request.id);
+  const verificationRequest = verificationRequests.find((item) => item.id === request.verificationRequestId || item.completionId === completion?.id);
+  const isAcceptedVolunteer = acceptedVolunteerId === currentUser.id;
   const canOffer = !isPoster && request.status === STATUSES.OPEN && !myOffer;
   const canAcceptPaid = canOffer && request.type === 'paid';
-  const canStart = acceptedOffer?.volunteerId === currentUser.id && request.status === STATUSES.ACCEPTED;
-  const canComplete = acceptedOffer?.volunteerId === currentUser.id && request.status === STATUSES.IN_PROGRESS;
-  const canVerify = isPoster && request.status === STATUSES.PENDING;
+  const canStart = isAcceptedVolunteer && request.status === STATUSES.ACCEPTED;
+  const canComplete = isAcceptedVolunteer && request.status === STATUSES.IN_PROGRESS;
+  const canVerify = isPoster && acceptedVolunteerId !== currentUser.id && request.status === STATUSES.PENDING;
+  const blockedSelfVerify = isPoster && acceptedVolunteerId === currentUser.id && request.status === STATUSES.PENDING;
   const pendingOffers = offers.filter((offer) => offer.requestId === request.id && offer.status === 'offered');
 
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <article className="app-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -243,7 +293,7 @@ function RequestCard({ request, offers, currentUser, onOffer, onAcceptPaid, onAc
         <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2"><MapPin className="h-3.5 w-3.5" />{request.neighborhood}</div>
         <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2"><Clock className="h-3.5 w-3.5" />{request.estimatedHours} hrs</div>
         <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2"><AlertCircle className="h-3.5 w-3.5" />{request.urgency}</div>
-        <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2"><Users className="h-3.5 w-3.5" />{request.postedBy}</div>
+        <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2"><Users className="h-3.5 w-3.5" />{posterName}</div>
       </div>
 
       {request.type === 'paid' && (
@@ -252,6 +302,27 @@ function RequestCard({ request, offers, currentUser, onOffer, onAcceptPaid, onAc
             Payment placeholder: this task is structured for future in-app payment. Stripe can later create a checkout or escrow flow from this request id.
             No money is processed in this demo.
           </p>
+        </div>
+      )}
+
+      {(completion || verificationRequest || acceptedOffer) && (
+        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <p className="mb-2 text-[11px] font-black uppercase text-slate-500">Structured workflow records</p>
+          <div className="grid gap-2 text-[12px] font-bold text-slate-600 sm:grid-cols-3">
+            {acceptedOffer && <span className="rounded-lg bg-white px-2.5 py-2">mitzvah_offers: {acceptedOffer.status}</span>}
+            {completion && <span className="rounded-lg bg-white px-2.5 py-2">mitzvah_completions: {completion.status}</span>}
+            {verificationRequest && <span className="rounded-lg bg-white px-2.5 py-2">verification_requests: {verificationRequest.status}</span>}
+          </div>
+          {verificationRequest?.status === 'pending' && (
+            <p className="mt-2 rounded-lg bg-purple-50 px-2.5 py-2 text-[12px] font-bold text-purple-800">
+              Pending verification from {verificationRequest.verifier_name || verificationRequest.verifierName}. Hours are not logged until the poster verifies.
+            </p>
+          )}
+          {request.status_history?.length > 0 && (
+            <p className="mt-2 text-[12px] font-semibold text-slate-500">
+              Latest status: {request.status_history[request.status_history.length - 1].action}
+            </p>
+          )}
         </div>
       )}
 
@@ -266,7 +337,7 @@ function RequestCard({ request, offers, currentUser, onOffer, onAcceptPaid, onAc
               </div>
               <button
                 onClick={() => onAcceptOffer(request.id, offer.id)}
-                className="shrink-0 rounded-lg bg-blue-600 px-3 py-2 text-[12px] font-black text-white active:scale-[0.98]"
+                className="app-button-primary min-h-9 shrink-0 rounded-lg px-3 py-0 text-[12px]"
               >
                 Accept
               </button>
@@ -277,13 +348,13 @@ function RequestCard({ request, offers, currentUser, onOffer, onAcceptPaid, onAc
 
       <div className="mt-4 flex flex-wrap gap-2">
         {canOffer && (
-          <button onClick={() => onOffer(request)} className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 text-[13px] font-black text-white active:scale-[0.98]">
+          <button onClick={() => onOffer(request)} className="app-button-primary h-10 bg-slate-950 px-4 text-[13px] hover:bg-slate-900">
             <HandHeart className="h-4 w-4" />
             Offer to Help
           </button>
         )}
         {canAcceptPaid && (
-          <button onClick={() => onAcceptPaid(request)} className="inline-flex h-10 items-center gap-2 rounded-xl bg-amber-500 px-4 text-[13px] font-black text-white active:scale-[0.98]">
+          <button onClick={() => onAcceptPaid(request)} className="app-button-primary h-10 bg-amber-500 px-4 text-[13px] hover:bg-amber-600">
             <HandCoins className="h-4 w-4" />
             Accept Demo Paid Task
           </button>
@@ -294,22 +365,27 @@ function RequestCard({ request, offers, currentUser, onOffer, onAcceptPaid, onAc
           </span>
         )}
         {canStart && (
-          <button onClick={() => onStart(request.id)} className="inline-flex h-10 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-[13px] font-black text-white active:scale-[0.98]">
+          <button onClick={() => onStart(request.id)} className="app-button-primary h-10 bg-indigo-600 px-4 text-[13px] hover:bg-indigo-700">
             <UserCheck className="h-4 w-4" />
             Start Task
           </button>
         )}
         {canComplete && (
-          <button onClick={() => onComplete(request.id)} className="inline-flex h-10 items-center gap-2 rounded-xl bg-purple-600 px-4 text-[13px] font-black text-white active:scale-[0.98]">
+          <button onClick={() => onComplete(request.id)} className="app-button-primary h-10 bg-purple-600 px-4 text-[13px] hover:bg-purple-700">
             <CheckCircle2 className="h-4 w-4" />
             Mark Completed
           </button>
         )}
         {canVerify && (
-          <button onClick={() => onVerify(request.id)} className="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-[13px] font-black text-white active:scale-[0.98]">
+          <button onClick={() => onVerify(request.id)} className="app-button-primary h-10 bg-emerald-600 px-4 text-[13px] hover:bg-emerald-700">
             <ShieldCheck className="h-4 w-4" />
             Verify Completion (Demo)
           </button>
+        )}
+        {blockedSelfVerify && (
+          <span className="inline-flex h-10 items-center rounded-xl border border-red-200 bg-red-50 px-4 text-[13px] font-black text-red-700">
+            Cannot verify your own hours
+          </span>
         )}
       </div>
     </article>
@@ -608,7 +684,11 @@ export default function MitzvahCircle() {
   }, [state]);
 
   useEffect(() => {
-    base44.auth.me()
+    const userTimeout = new Promise((resolve) => {
+      window.setTimeout(() => resolve({ display_name: 'Demo', full_name: 'Demo' }), 1500);
+    });
+
+    Promise.race([dataService.auth.me(), userTimeout])
       .then((user) => setCurrentUser({
         id: CURRENT_USER_ID,
         full_name: user.display_name || user.full_name || 'Demo',
@@ -619,96 +699,310 @@ export default function MitzvahCircle() {
 
   const backend = {
     createRequest: async (payload) => {
+      const createdAt = nowISO();
       const request = {
         ...payload,
         id: makeId('req'),
+        poster_id: currentUser.id,
+        poster_name: currentUser.full_name,
         postedById: currentUser.id,
         postedBy: currentUser.full_name,
         amount: payload.type === 'paid' ? Number(payload.amount || 0) : 0,
         status: STATUSES.OPEN,
-        createdAt: new Date().toISOString(),
+        createdAt,
+        updatedAt: createdAt,
+        status_history: addStatusHistory({}, STATUSES.OPEN, currentUser, 'Request created'),
       };
-      setState((current) => ({ ...current, requests: [request, ...current.requests] }));
+      setState((current) => ({ ...current, mitzvah_requests: [request, ...current.mitzvah_requests] }));
       return request;
     },
     createOffer: async (request, note = 'I am available to help with this request.') => {
+      if (getPosterId(request) === currentUser.id) {
+        throw new Error('You cannot offer to help on your own request.');
+      }
+      const createdAt = nowISO();
       const offer = {
         id: makeId('offer'),
         requestId: request.id,
+        volunteer_id: currentUser.id,
+        volunteer_name: currentUser.full_name,
         volunteerId: currentUser.id,
         volunteerName: currentUser.full_name,
         note,
         status: 'offered',
-        createdAt: new Date().toISOString(),
+        createdAt,
+        updatedAt: createdAt,
+        status_history: addStatusHistory({}, 'offered', currentUser, 'Volunteer offered to help'),
       };
       setState((current) => ({
         ...current,
-        offers: [offer, ...current.offers],
-        requests: current.requests.map((item) => item.id === request.id ? { ...item, status: STATUSES.OFFERED } : item),
+        mitzvah_offers: current.mitzvah_offers.some((item) => item.requestId === request.id && getVolunteerId(item) === currentUser.id)
+          ? current.mitzvah_offers
+          : [offer, ...current.mitzvah_offers],
+        mitzvah_requests: current.mitzvah_requests.map((item) => item.id === request.id ? {
+          ...item,
+          status: STATUSES.OFFERED,
+          updatedAt: createdAt,
+          status_history: addStatusHistory(item, STATUSES.OFFERED, currentUser, 'Volunteer offer received'),
+        } : item),
       }));
+      notificationsService.notifyMitzvahOffer({
+        posterId: getPosterId(request),
+        volunteerId: currentUser.id,
+        volunteerName: currentUser.full_name,
+        requestId: request.id,
+        requestTitle: request.title,
+      }).catch(() => {});
       return offer;
     },
     acceptPaidTask: async (request) => {
+      if (getPosterId(request) === currentUser.id) {
+        throw new Error('You cannot accept your own paid task.');
+      }
+      const createdAt = nowISO();
       const offer = {
         id: makeId('offer'),
         requestId: request.id,
+        volunteer_id: currentUser.id,
+        volunteer_name: currentUser.full_name,
         volunteerId: currentUser.id,
         volunteerName: currentUser.full_name,
         note: `Accepted paid task. Payment placeholder amount: ${formatMoney(request.amount)}.`,
         status: 'accepted',
-        createdAt: new Date().toISOString(),
+        createdAt,
+        updatedAt: createdAt,
+        status_history: addStatusHistory({}, 'accepted', currentUser, 'Volunteer accepted paid task'),
       };
       setState((current) => ({
         ...current,
-        offers: [offer, ...current.offers],
-        requests: current.requests.map((item) => item.id === request.id ? { ...item, status: STATUSES.ACCEPTED, acceptedOfferId: offer.id } : item),
+        mitzvah_offers: [offer, ...current.mitzvah_offers],
+        mitzvah_requests: current.mitzvah_requests.map((item) => item.id === request.id ? {
+          ...item,
+          status: STATUSES.ACCEPTED,
+          acceptedOfferId: offer.id,
+          accepted_volunteer_id: currentUser.id,
+          accepted_volunteer_name: currentUser.full_name,
+          updatedAt: createdAt,
+          status_history: addStatusHistory(item, STATUSES.ACCEPTED, currentUser, 'Paid task accepted by helper'),
+        } : item),
       }));
       return offer;
     },
     acceptOffer: async (requestId, offerId) => {
+      const request = state.mitzvah_requests.find((item) => item.id === requestId);
+      const acceptedOffer = state.mitzvah_offers.find((item) => item.id === offerId);
+      if (!request || !acceptedOffer) throw new Error('Request or offer was not found.');
+      if (getPosterId(request) !== currentUser.id) throw new Error('Only the poster can accept a volunteer.');
+      const acceptedAt = nowISO();
       setState((current) => ({
         ...current,
-        offers: current.offers.map((offer) => offer.requestId === requestId ? { ...offer, status: offer.id === offerId ? 'accepted' : 'not_selected' } : offer),
-        requests: current.requests.map((request) => request.id === requestId ? { ...request, status: STATUSES.ACCEPTED, acceptedOfferId: offerId } : request),
+        mitzvah_offers: current.mitzvah_offers.map((offer) => offer.requestId === requestId ? {
+          ...offer,
+          status: offer.id === offerId ? 'accepted' : 'not_selected',
+          updatedAt: acceptedAt,
+          status_history: addStatusHistory(offer, offer.id === offerId ? 'accepted' : 'not_selected', currentUser, offer.id === offerId ? 'Poster accepted offer' : 'Poster chose another volunteer'),
+        } : offer),
+        mitzvah_requests: current.mitzvah_requests.map((request) => request.id === requestId ? {
+          ...request,
+          status: STATUSES.ACCEPTED,
+          acceptedOfferId: offerId,
+          accepted_volunteer_id: getVolunteerId(acceptedOffer),
+          accepted_volunteer_name: getVolunteerName(acceptedOffer),
+          updatedAt: acceptedAt,
+          status_history: addStatusHistory(request, STATUSES.ACCEPTED, currentUser, 'Poster accepted volunteer'),
+        } : request),
       }));
+      notificationsService.notifyMitzvahAccepted({
+        volunteerId: getVolunteerId(acceptedOffer),
+        posterId: currentUser.id,
+        posterName: currentUser.full_name,
+        requestId,
+        requestTitle: request.title,
+      }).catch(() => {});
     },
     startTask: async (requestId) => {
+      const request = state.mitzvah_requests.find((item) => item.id === requestId);
+      const acceptedOffer = state.mitzvah_offers.find((item) => item.id === request?.acceptedOfferId);
+      if (!request || getVolunteerId(acceptedOffer) !== currentUser.id) throw new Error('Only the accepted volunteer can start this task.');
+      const startedAt = nowISO();
       setState((current) => ({
         ...current,
-        requests: current.requests.map((request) => request.id === requestId ? { ...request, status: STATUSES.IN_PROGRESS } : request),
+        mitzvah_requests: current.mitzvah_requests.map((request) => request.id === requestId ? {
+          ...request,
+          status: STATUSES.IN_PROGRESS,
+          startedAt,
+          updatedAt: startedAt,
+          status_history: addStatusHistory(request, STATUSES.IN_PROGRESS, currentUser, 'Accepted volunteer started task'),
+        } : request),
       }));
     },
     markCompleted: async (requestId) => {
-      setState((current) => ({
-        ...current,
-        requests: current.requests.map((request) => request.id === requestId ? { ...request, status: STATUSES.PENDING, completedAt: new Date().toISOString() } : request),
-      }));
-    },
-    verifyCompletion: async (requestId) => {
+      const existingRequest = state.mitzvah_requests.find((item) => item.id === requestId);
+      const existingOffer = state.mitzvah_offers.find((item) => item.id === existingRequest?.acceptedOfferId);
+      if (!existingRequest || getVolunteerId(existingOffer) !== currentUser.id) {
+        throw new Error('Only the accepted volunteer can mark this complete.');
+      }
+      if (state.mitzvah_completions.some((item) => item.requestId === requestId && item.volunteer_id === currentUser.id)) {
+        throw new Error('This task was already marked complete and is waiting for verification.');
+      }
+      const completionId = makeId('completion');
+      const verificationRequestId = makeId('verification');
       setState((current) => {
-        const request = current.requests.find((item) => item.id === requestId);
-        const offer = current.offers.find((item) => item.id === request?.acceptedOfferId);
+        const request = current.mitzvah_requests.find((item) => item.id === requestId);
+        const offer = current.mitzvah_offers.find((item) => item.id === request?.acceptedOfferId);
         if (!request || !offer) return current;
+        if (current.mitzvah_completions.some((item) => item.requestId === requestId && item.volunteer_id === getVolunteerId(offer))) return current;
 
-        const log = {
-          id: makeId('log'),
+        const completedAt = nowISO();
+        const completion = {
+          id: completionId,
+          requestId,
+          offerId: offer.id,
+          volunteer_id: getVolunteerId(offer),
+          volunteer_name: getVolunteerName(offer),
+          poster_id: getPosterId(request),
+          poster_name: getPosterName(request),
           volunteerId: offer.volunteerId,
           volunteerName: offer.volunteerName,
-          taskTitle: request.title,
-          category: request.category,
-          dateCompleted: todayISO(),
+          requesterId: request.postedById,
+          requesterName: request.postedBy,
           hoursCompleted: Number(request.estimatedHours || 0),
-          verifierName: currentUser.full_name,
-          verificationStatus: 'Verified',
-          description: request.description,
-          requestId: request.id,
-          createdAt: new Date().toISOString(),
+          volunteerNotes: `Completed: ${request.title}`,
+          requesterNotes: '',
+          status: 'pending_verification',
+          completedAt,
+          createdAt: completedAt,
+          updatedAt: completedAt,
+          status_history: addStatusHistory({}, 'pending_verification', currentUser, 'Volunteer marked task complete'),
+        };
+        const verificationRequest = {
+          id: verificationRequestId,
+          completionId: completion.id,
+          requestId,
+          volunteer_id: getVolunteerId(offer),
+          volunteer_name: getVolunteerName(offer),
+          poster_id: getPosterId(request),
+          poster_name: getPosterName(request),
+          verifier_id: getPosterId(request),
+          verifier_name: getPosterName(request),
+          volunteerId: getVolunteerId(offer),
+          volunteerName: getVolunteerName(offer),
+          verifierId: getPosterId(request),
+          verifierName: getPosterName(request),
+          status: 'pending',
+          message: `${getVolunteerName(offer)} marked "${request.title}" complete. Please verify so chesed hours can be logged.`,
+          requestedAt: completedAt,
+          createdAt: completedAt,
+          updatedAt: completedAt,
+          status_history: addStatusHistory({}, 'pending', currentUser, 'Verification requested from poster'),
         };
 
         return {
           ...current,
-          chesedLogs: [log, ...current.chesedLogs],
-          requests: current.requests.map((item) => item.id === requestId ? { ...item, status: STATUSES.VERIFIED, verifiedAt: new Date().toISOString() } : item),
+          mitzvah_completions: [completion, ...current.mitzvah_completions],
+          verification_requests: [verificationRequest, ...current.verification_requests],
+          mitzvah_requests: current.mitzvah_requests.map((requestItem) => requestItem.id === requestId ? {
+            ...requestItem,
+            status: STATUSES.PENDING,
+            completedAt,
+            completionId: completion.id,
+            verificationRequestId: verificationRequest.id,
+            updatedAt: completedAt,
+            status_history: addStatusHistory(requestItem, STATUSES.PENDING, currentUser, 'Task completed and waiting for poster verification'),
+          } : requestItem),
+        };
+      });
+      notificationsService.notifyVerificationRequest({
+        posterId: getPosterId(existingRequest),
+        volunteerId: currentUser.id,
+        volunteerName: currentUser.full_name,
+        requestId,
+        requestTitle: existingRequest.title,
+        verificationRequestId,
+      }).catch(() => {});
+    },
+    verifyCompletion: async (requestId) => {
+      const existingRequest = state.mitzvah_requests.find((item) => item.id === requestId);
+      const existingOffer = state.mitzvah_offers.find((item) => item.id === existingRequest?.acceptedOfferId);
+      if (!existingRequest || getPosterId(existingRequest) !== currentUser.id) {
+        throw new Error('Only the poster can verify completion.');
+      }
+      if (getVolunteerId(existingOffer) === currentUser.id) {
+        throw new Error('A user cannot verify their own hours.');
+      }
+      if (state.chesed_hours_logs.some((log) => log.requestId === requestId || log.request_id === requestId)) {
+        throw new Error('These hours were already logged.');
+      }
+      setState((current) => {
+        const request = current.mitzvah_requests.find((item) => item.id === requestId);
+        const offer = current.mitzvah_offers.find((item) => item.id === request?.acceptedOfferId);
+        const completion = current.mitzvah_completions.find((item) => item.id === request?.completionId || item.requestId === requestId);
+        const verificationRequest = current.verification_requests.find((item) => item.id === request?.verificationRequestId || item.completionId === completion?.id);
+        if (!request || !offer || !completion || !verificationRequest) return current;
+        if (getPosterId(request) !== currentUser.id || getVolunteerId(offer) === currentUser.id) return current;
+        if (current.chesed_hours_logs.some((log) => log.completionId === completion.id || log.completion_id === completion.id)) return current;
+
+        const verifiedAt = nowISO();
+
+        const log = {
+          id: makeId('log'),
+          requestId: request.id,
+          request_id: request.id,
+          completionId: completion.id,
+          completion_id: completion.id,
+          verificationRequestId: verificationRequest.id,
+          verification_request_id: verificationRequest.id,
+          volunteer_id: getVolunteerId(offer),
+          volunteer_name: getVolunteerName(offer),
+          poster_id: getPosterId(request),
+          poster_name: getPosterName(request),
+          verifier_id: currentUser.id,
+          verifier_name: currentUser.full_name,
+          volunteerId: getVolunteerId(offer),
+          volunteerName: getVolunteerName(offer),
+          taskTitle: request.title,
+          category: request.category,
+          dateCompleted: todayISO(),
+          hoursCompleted: Number(completion.hoursCompleted || request.estimatedHours || 0),
+          verifierId: currentUser.id,
+          verifierName: currentUser.full_name,
+          verificationStatus: 'Verified',
+          description: request.description,
+          createdAt: verifiedAt,
+          updatedAt: verifiedAt,
+          status_history: addStatusHistory({}, 'verified', currentUser, 'Poster verified completion and hours were logged'),
+        };
+
+        return {
+          ...current,
+          chesed_hours_logs: [log, ...current.chesed_hours_logs],
+          mitzvah_completions: current.mitzvah_completions.map((item) => item.id === completion.id ? {
+            ...item,
+            status: 'verified',
+            verifier_id: currentUser.id,
+            verifier_name: currentUser.full_name,
+            verifiedAt,
+            updatedAt: verifiedAt,
+            status_history: addStatusHistory(item, 'verified', currentUser, 'Poster verified completion'),
+          } : item),
+          verification_requests: current.verification_requests.map((item) => item.id === verificationRequest.id ? {
+            ...item,
+            status: 'verified',
+            verifier_id: currentUser.id,
+            verifier_name: currentUser.full_name,
+            respondedAt: verifiedAt,
+            updatedAt: verifiedAt,
+            status_history: addStatusHistory(item, 'verified', currentUser, 'Poster responded to verification request'),
+          } : item),
+          mitzvah_requests: current.mitzvah_requests.map((item) => item.id === requestId ? {
+            ...item,
+            status: STATUSES.VERIFIED,
+            verifier_id: currentUser.id,
+            verifier_name: currentUser.full_name,
+            verifiedAt,
+            updatedAt: verifiedAt,
+            status_history: addStatusHistory(item, STATUSES.VERIFIED, currentUser, 'Poster verified task and created Chesed hours log'),
+          } : item),
         };
       });
     },
@@ -716,59 +1010,83 @@ export default function MitzvahCircle() {
 
   const filteredRequests = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return state.requests.filter((request) => {
+    return state.mitzvah_requests.filter((request) => {
       const matchesQuery = !needle || [request.title, request.description, request.category, request.neighborhood, request.postedBy]
         .some((value) => String(value || '').toLowerCase().includes(needle));
       const matchesCategory = categoryFilter === 'All' || request.category === categoryFilter;
       return matchesQuery && matchesCategory;
     });
-  }, [state.requests, query, categoryFilter]);
+  }, [state.mitzvah_requests, query, categoryFilter]);
 
   const openRequests = filteredRequests.filter((request) => ![STATUSES.VERIFIED, STATUSES.CANCELLED].includes(request.status));
-  const myOffers = state.offers
-    .filter((offer) => offer.volunteerId === currentUser?.id)
-    .map((offer) => ({ offer, request: state.requests.find((request) => request.id === offer.requestId) }))
+  const myOffers = state.mitzvah_offers
+    .filter((offer) => getVolunteerId(offer) === currentUser?.id)
+    .map((offer) => ({ offer, request: state.mitzvah_requests.find((request) => request.id === offer.requestId) }))
     .filter((item) => item.request);
-  const myPosted = filteredRequests.filter((request) => request.postedById === currentUser?.id);
-  const myLogs = state.chesedLogs.filter((log) => log.volunteerId === currentUser?.id);
+  const myPosted = filteredRequests.filter((request) => getPosterId(request) === currentUser?.id);
+  const myLogs = state.chesed_hours_logs.filter((log) => (log.volunteer_id || log.volunteerId) === currentUser?.id);
 
   const totals = useMemo(() => {
-    const verifiedHours = state.chesedLogs
+    const verifiedHours = state.chesed_hours_logs
       .filter((log) => log.verificationStatus === 'Verified')
       .reduce((sum, log) => sum + Number(log.hoursCompleted || 0), 0);
-    const openCount = state.requests.filter((request) => request.status === STATUSES.OPEN).length;
-    const paidCount = state.requests.filter((request) => request.type === 'paid').length;
+    const openCount = state.mitzvah_requests.filter((request) => request.status === STATUSES.OPEN).length;
+    const paidCount = state.mitzvah_requests.filter((request) => request.type === 'paid').length;
     return { verifiedHours, openCount, paidCount };
   }, [state]);
 
   const handleOffer = async (request) => {
-    await backend.createOffer(request);
-    toast.success('Offer sent to the poster.');
+    try {
+      await backend.createOffer(request);
+      toast.success('Offer sent to the poster.');
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   const handleAcceptPaid = async (request) => {
-    await backend.acceptPaidTask(request);
-    toast.success('Paid task accepted. Payment is still a placeholder.');
+    try {
+      await backend.acceptPaidTask(request);
+      toast.success('Paid task accepted. Payment is still a placeholder.');
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   const handleAcceptOffer = async (requestId, offerId) => {
-    await backend.acceptOffer(requestId, offerId);
-    toast.success('Volunteer accepted. The task is ready to begin.');
+    try {
+      await backend.acceptOffer(requestId, offerId);
+      toast.success('Volunteer accepted. The task is ready to begin.');
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   const handleStart = async (requestId) => {
-    await backend.startTask(requestId);
-    toast.success('Task marked in progress.');
+    try {
+      await backend.startTask(requestId);
+      toast.success('Task marked in progress.');
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   const handleComplete = async (requestId) => {
-    await backend.markCompleted(requestId);
-    toast.success('Completion sent to the poster for verification.');
+    try {
+      await backend.markCompleted(requestId);
+      toast.success('Completion sent to the poster for verification.');
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   const handleVerify = async (requestId) => {
-    await backend.verifyCompletion(requestId);
-    toast.success('Completion verified. Chesed hours were logged automatically.');
+    try {
+      await backend.verifyCompletion(requestId);
+      toast.success('Completion verified. Chesed hours were logged automatically.');
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   const generateHelperText = ({ totalHours, verifiedHours, logs }) => {
@@ -782,7 +1100,7 @@ export default function MitzvahCircle() {
 
   if (isLoadingUser || !currentUser) {
     return (
-      <main className="flex min-h-[100dvh] items-center justify-center bg-[#F6F8FB]">
+      <main className="app-page flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </main>
     );
@@ -796,9 +1114,9 @@ export default function MitzvahCircle() {
   ];
 
   return (
-    <main className="min-h-[100dvh] bg-[#F6F8FB] mobile-safe-bottom">
+    <main className="app-page mobile-safe-bottom">
       <section className="mobile-page-wide px-3 pt-3 sm:px-4 sm:pt-4">
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="app-card overflow-hidden">
           <div className="relative p-4 sm:p-5">
             <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-blue-50" />
           <div className="relative">
@@ -811,10 +1129,10 @@ export default function MitzvahCircle() {
                 <div>
                   <h1 className="text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">Mitzvah / Chesed Help</h1>
                   <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-600">
-                    Post requests, offer help, accept paid tasks, verify completion, and turn verified service into chesed hours reports. This page is currently a demo and saves data in this browser.
+                    Post requests, offer help, accept helpers, complete tasks, verify completion, and turn verified service into chesed hours reports. This page is currently a structured Supabase-style demo and saves data in this browser.
                   </p>
                 </div>
-                <button onClick={() => setShowCreate(true)} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white shadow-sm active:scale-[0.98]">
+                <button onClick={() => setShowCreate(true)} className="app-button-primary h-11">
                   <Plus className="h-4 w-4" />
                   Post Request
                 </button>
@@ -830,11 +1148,11 @@ export default function MitzvahCircle() {
         </div>
 
         <FeatureStatusNotice className="mt-3" title="Demo Only">
-          Requests, offers, paid task acceptance, verification, exports, and Chesed hours on this page are mock data for now. No payment is processed and these records are not permanently saved to Supabase yet.
+          This now follows the real table flow: mitzvah_requests, mitzvah_offers, mitzvah_completions, verification_requests, and chesed_hours_logs. No payment is processed, and this browser demo is not permanently saved to Supabase yet.
         </FeatureStatusNotice>
 
         <div className="sticky top-0 z-20 -mx-3 mt-3 bg-[#F6F8FB]/95 px-3 py-2 backdrop-blur sm:-mx-4 sm:px-4">
-          <div className="mobile-scroll-x flex gap-2 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+          <div className="app-card mobile-scroll-x flex gap-2 p-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -850,14 +1168,14 @@ export default function MitzvahCircle() {
         </div>
 
         {(activeTab === 'open' || activeTab === 'posted') && (
-          <div className="mb-3 grid gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:grid-cols-[1fr_220px]">
+          <div className="app-card mb-3 grid gap-2 p-3 sm:grid-cols-[1fr_220px]">
             <label className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search requests" className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-sm font-medium outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search requests" className="app-input h-11 pl-10 pr-3 text-sm" />
             </label>
             <label className="relative">
               <ListFilter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-sm font-black text-slate-700 outline-none">
+              <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} className="app-input h-11 pl-10 pr-3 text-sm font-black">
                 <option>All</option>
                 {CATEGORIES.map((category) => <option key={category}>{category}</option>)}
               </select>
@@ -871,7 +1189,9 @@ export default function MitzvahCircle() {
               <RequestCard
                 key={request.id}
                 request={request}
-                offers={state.offers}
+                offers={state.mitzvah_offers}
+                completions={state.mitzvah_completions}
+                verificationRequests={state.verification_requests}
                 currentUser={currentUser}
                 onOffer={handleOffer}
                 onAcceptPaid={handleAcceptPaid}
@@ -892,7 +1212,9 @@ export default function MitzvahCircle() {
                 </div>
                 <RequestCard
                   request={request}
-                  offers={state.offers}
+                  offers={state.mitzvah_offers}
+                  completions={state.mitzvah_completions}
+                  verificationRequests={state.verification_requests}
                   currentUser={currentUser}
                   onOffer={handleOffer}
                   onAcceptPaid={handleAcceptPaid}
@@ -910,7 +1232,9 @@ export default function MitzvahCircle() {
               <RequestCard
                 key={request.id}
                 request={request}
-                offers={state.offers}
+                offers={state.mitzvah_offers}
+                completions={state.mitzvah_completions}
+                verificationRequests={state.verification_requests}
                 currentUser={currentUser}
                 onOffer={handleOffer}
                 onAcceptPaid={handleAcceptPaid}

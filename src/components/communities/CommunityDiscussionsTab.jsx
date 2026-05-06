@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { MessageSquare, Heart, ChevronDown, ChevronUp, Send, Plus, X } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const AVATAR_COLORS = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899','#0891B2'];
@@ -27,7 +27,7 @@ function DiscussionThread({ discussion, currentUser }) {
 
   const toggle = async () => {
     if (!expanded && !loadedComments) {
-      const result = await base44.entities.DiscussionComment.filter({ discussion_id: discussion.id }, 'created_date', 20);
+      const result = await dataService.entities.DiscussionComment.filter({ discussion_id: discussion.id }, 'created_date', 20);
       setComments(result);
       setLoadedComments(true);
     }
@@ -36,7 +36,7 @@ function DiscussionThread({ discussion, currentUser }) {
 
   const submitReply = async () => {
     if (!replyText.trim()) return;
-    const c = await base44.entities.DiscussionComment.create({
+    const c = await dataService.entities.DiscussionComment.create({
       discussion_id: discussion.id,
       user_id: currentUser?.id || 'guest',
       user_name: currentUser?.display_name || currentUser?.full_name || 'You',
@@ -131,7 +131,7 @@ function NewDiscussionComposer({ community, currentUser, onNewDiscussion }) {
   const submit = async () => {
     if (!title.trim() || !body.trim()) return;
     setSubmitting(true);
-    const d = await base44.entities.GroupDiscussion.create({
+    const d = await dataService.entities.GroupDiscussion.create({
       group_id: community.id,
       user_id: currentUser?.id || 'guest',
       user_name: currentUser?.display_name || currentUser?.full_name || 'Anonymous',

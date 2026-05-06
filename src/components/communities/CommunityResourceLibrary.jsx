@@ -4,7 +4,7 @@ import {
   ExternalLink, Loader2, Search, X, File, Image, FileSpreadsheet,
   FileVideo, Music, Archive, BookOpen
 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -79,11 +79,11 @@ function AddResourceSheet({ open, onClose, communityId, currentUser, onAdded }) 
       let fileUrl = null;
       let fileName = null;
       if (resourceType === 'document' && file) {
-        const res = await base44.integrations.Core.UploadFile({ file });
+        const res = await dataService.integrations.Core.UploadFile({ file });
         fileUrl = res.file_url;
         fileName = file.name;
       }
-      await base44.entities.CommunityResource.create({
+      await dataService.entities.CommunityResource.create({
         community_id: communityId,
         title: title.trim(),
         description: description.trim(),
@@ -328,12 +328,12 @@ export default function CommunityResourceLibrary({ communityId, currentUser, isA
 
   const { data: resources = [], isLoading } = useQuery({
     queryKey: ['community-resources', communityId],
-    queryFn: () => base44.entities.CommunityResource.filter({ community_id: communityId }, '-created_date', 100),
+    queryFn: () => dataService.entities.CommunityResource.filter({ community_id: communityId }, '-created_date', 100),
     enabled: !!communityId,
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.CommunityResource.delete(id),
+    mutationFn: (id) => dataService.entities.CommunityResource.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['community-resources', communityId] });
       toast.success('Resource deleted');

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Search } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import CommunityListCard from './CommunityListCard';
@@ -16,13 +16,13 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
     setJoiningId(community.id);
     try {
       if (isJoined) {
-        const records = await base44.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: community.id });
-        if (records[0]) await base44.entities.UserCommunity.delete(records[0].id);
-        await base44.entities.Community.update(community.id, { follower_count: Math.max(0, (community.follower_count || 0) - 1) });
+        const records = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: community.id });
+        if (records[0]) await dataService.entities.UserCommunity.delete(records[0].id);
+        await dataService.entities.Community.update(community.id, { follower_count: Math.max(0, (community.follower_count || 0) - 1) });
         toast.success('Left community');
       } else {
-        await base44.entities.UserCommunity.create({ user_id: currentUser.id, community_id: community.id, role: 'Member' });
-        await base44.entities.Community.update(community.id, { follower_count: (community.follower_count || 0) + 1 });
+        await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: community.id, role: 'Member' });
+        await dataService.entities.Community.update(community.id, { follower_count: (community.follower_count || 0) + 1 });
         toast.success('Joined!');
       }
       onJoinChange();

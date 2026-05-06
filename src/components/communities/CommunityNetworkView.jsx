@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { ArrowLeft, Loader2, Pin, MapPin, Users, MessageCircle, Heart } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
@@ -51,7 +51,7 @@ function PostComposer({ community, currentUser, onPosted }) {
     if (!body.trim()) return;
     setSubmitting(true);
     try {
-      await base44.entities.CommunityPost.create({
+      await dataService.entities.CommunityPost.create({
         community_id: community.id,
         author_name: name,
         author_user_id: currentUser?.id || 'guest',
@@ -125,7 +125,7 @@ function CommentThread({ postId, currentUser, initialCount }) {
 
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ['community-post-comments', postId],
-    queryFn: () => base44.entities.Comment.filter({ post_id: postId }, 'created_date', 50),
+    queryFn: () => dataService.entities.Comment.filter({ post_id: postId }, 'created_date', 50),
     enabled: open,
     staleTime: 30000,
   });
@@ -134,7 +134,7 @@ function CommentThread({ postId, currentUser, initialCount }) {
     if (!text.trim() || !currentUser) return;
     setSubmitting(true);
     try {
-      await base44.entities.Comment.create({
+      await dataService.entities.Comment.create({
         post_id: postId,
         author_id: currentUser.id,
         author_name: currentUser.display_name || currentUser.full_name || 'Member',
@@ -211,7 +211,7 @@ function PostCard({ post, currentUser, onPin, isAdmin }) {
     setLiked(l => !l);
     setLikes(n => liked ? n - 1 : n + 1);
     try {
-      await base44.entities.CommunityPost.update(post.id, { likes_count: liked ? likes - 1 : likes + 1 });
+      await dataService.entities.CommunityPost.update(post.id, { likes_count: liked ? likes - 1 : likes + 1 });
     } catch {}
   };
 
@@ -289,7 +289,7 @@ function FeedTab({ community, currentUser, isAdmin }) {
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['community-posts-main', community.id],
-    queryFn: () => base44.entities.CommunityPost.filter({ community_id: community.id }, '-created_date', 80),
+    queryFn: () => dataService.entities.CommunityPost.filter({ community_id: community.id }, '-created_date', 80),
     staleTime: 30000,
   });
 
@@ -300,7 +300,7 @@ function FeedTab({ community, currentUser, isAdmin }) {
   }, [posts]);
 
   const handlePin = async (post) => {
-    await base44.entities.CommunityPost.update(post.id, { is_pinned: !post.is_pinned });
+    await dataService.entities.CommunityPost.update(post.id, { is_pinned: !post.is_pinned });
     queryClient.invalidateQueries({ queryKey: ['community-posts-main', community.id] });
   };
 
@@ -332,7 +332,7 @@ function FeedTab({ community, currentUser, isAdmin }) {
 function MembersTab({ communityId }) {
   const { data: members = [], isLoading } = useQuery({
     queryKey: ['community-members-main', communityId],
-    queryFn: () => base44.entities.UserCommunity.filter({ community_id: communityId }, '-created_date', 100),
+    queryFn: () => dataService.entities.UserCommunity.filter({ community_id: communityId }, '-created_date', 100),
     staleTime: 60000,
   });
 
@@ -421,14 +421,14 @@ export default function CommunityNetworkView({ communityId, currentUser, onBack 
 
   const { data: community, isLoading: loadingCommunity } = useQuery({
     queryKey: ['community-detail', communityId],
-    queryFn: () => base44.entities.Community.filter({ id: communityId }).then(r => r[0]),
+    queryFn: () => dataService.entities.Community.filter({ id: communityId }).then(r => r[0]),
     enabled: !!communityId,
     staleTime: 60000,
   });
 
   const { data: membership = [] } = useQuery({
     queryKey: ['community-membership-main', communityId, currentUser?.id],
-    queryFn: () => base44.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id }),
+    queryFn: () => dataService.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id }),
     enabled: !!currentUser?.id,
   });
 
@@ -436,14 +436,14 @@ export default function CommunityNetworkView({ communityId, currentUser, onBack 
   const isAdmin = currentUser?.role === 'admin';
 
   const handleJoinLeave = async () => {
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     if (isMember) {
-      await base44.entities.UserCommunity.delete(membership[0].id);
-      if (community) await base44.entities.Community.update(communityId, { follower_count: Math.max(0, (community.follower_count || 1) - 1) });
+      await dataService.entities.UserCommunity.delete(membership[0].id);
+      if (community) await dataService.entities.Community.update(communityId, { follower_count: Math.max(0, (community.follower_count || 1) - 1) });
       toast.success('Left community');
     } else {
-      await base44.entities.UserCommunity.create({ user_id: currentUser.id, community_id: communityId, role: 'Member' });
-      if (community) await base44.entities.Community.update(communityId, { follower_count: (community.follower_count || 0) + 1 });
+      await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: communityId, role: 'Member' });
+      if (community) await dataService.entities.Community.update(communityId, { follower_count: (community.follower_count || 0) + 1 });
       toast.success('Joined! 🎉');
     }
     queryClient.invalidateQueries({ queryKey: ['community-membership-main', communityId] });

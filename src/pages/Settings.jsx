@@ -21,7 +21,7 @@ import {
   Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { createPageUrl } from '@/utils';
 
 const interestOptions = [
@@ -95,7 +95,7 @@ export default function Settings() {
   useEffect(() => {
     let mounted = true;
 
-    base44.auth.me().then((user) => {
+    dataService.auth.me().then((user) => {
       if (!mounted) return;
       setCurrentUser(user);
       setForm({
@@ -164,14 +164,14 @@ export default function Settings() {
       toast.error('Please choose an image file');
       return;
     }
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await dataService.integrations.Core.UploadFile({ file });
     updateForm('avatar_url', file_url);
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await base44.auth.updateMe({
+      await dataService.auth.updateMe({
         display_name: form.display_name.trim(),
         bio: form.bio.trim(),
         cityPreset: form.cityPreset,
@@ -190,7 +190,7 @@ export default function Settings() {
   };
 
   const handleLogout = () => {
-    base44.auth.logout();
+    dataService.auth.logout();
     toast.success('Logged out locally');
   };
 

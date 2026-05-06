@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const CATEGORIES = ['Errand', 'Lost & Found', 'Quick Favor', 'Tutoring', 'Shabbat Help', 'Other'];
@@ -30,9 +30,9 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
 
   useEffect(() => {
     if (open && currentUser?.id) {
-      base44.entities.UserCommunity.filter({ user_id: currentUser.id }).then(memberships => {
+      dataService.entities.UserCommunity.filter({ user_id: currentUser.id }).then(memberships => {
         const communityIds = memberships.map(m => m.community_id);
-        Promise.all(communityIds.map(id => base44.entities.Community.filter({ id }))).then(results => {
+        Promise.all(communityIds.map(id => dataService.entities.Community.filter({ id }))).then(results => {
           const communities = results.filter(r => r.length > 0).map(r => r[0]);
           setUserCommunities(communities);
         });
@@ -69,17 +69,17 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser }) 
         requestData.approxLng = currentUser.location_lng;
       }
 
-      const newRequest = await base44.entities.MitzvahRequest.create(requestData);
+      const newRequest = await dataService.entities.MitzvahRequest.create(requestData);
 
       // Instant community-wide notification
       try {
-        await base44.functions.invoke('notifyNewHelpRequest', { requestId: newRequest.id });
+        await dataService.functions.invoke('notifyNewHelpRequest', { requestId: newRequest.id });
       } catch (e) { console.warn('notify failed', e); }
 
       // Also notify nearby users if location available
       if (requestData.approxLat && requestData.approxLng) {
         try {
-          await base44.functions.invoke('notifyNearbyUsers', {
+          await dataService.functions.invoke('notifyNearbyUsers', {
             requestId: newRequest.id,
             requestTitle: title.trim(),
             locationLabel: requestData.locationLabel,

@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 
 const INTERESTS = [
   "Torah & Learning", "Sports", "Music", "Art", "Tech", 
@@ -46,11 +46,11 @@ export default function CreatePostModal({ open, onOpenChange, currentUser, promp
     
     let imageUrl = null;
     if (imageFile) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: imageFile });
+      const { file_url } = await dataService.integrations.Core.UploadFile({ file: imageFile });
       imageUrl = file_url;
     }
 
-    await base44.entities.Post.create({
+    await dataService.entities.Post.create({
       content: content.trim(),
       image_url: imageUrl,
       author_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],

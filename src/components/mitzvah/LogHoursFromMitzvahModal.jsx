@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { Minus, Plus, Loader2, HandHeart } from 'lucide-react';
 
@@ -40,7 +40,7 @@ export default function LogHoursFromMitzvahModal({ open, onOpenChange, request, 
       let logId = signup?.chesed_log_id;
 
       if (!logId) {
-        const newLog = await base44.entities.ChesedLog.create({
+        const newLog = await dataService.entities.ChesedLog.create({
           user_id: currentUser.id,
           user_name: currentUser.full_name || currentUser.display_name,
           title: request.title,
@@ -60,7 +60,7 @@ export default function LogHoursFromMitzvahModal({ open, onOpenChange, request, 
 
         // Link log back to signup
         if (signup?.id) {
-          await base44.entities.MitzvahSignup.update(signup.id, {
+          await dataService.entities.MitzvahSignup.update(signup.id, {
             chesed_log_id: logId,
             status: 'COMPLETED',
             completed_at: new Date().toISOString(),
@@ -68,9 +68,9 @@ export default function LogHoursFromMitzvahModal({ open, onOpenChange, request, 
         }
       } else {
         // Update existing log — reset verification if it was verified
-        const existingLogs = await base44.entities.ChesedLog.filter({ id: logId });
+        const existingLogs = await dataService.entities.ChesedLog.filter({ id: logId });
         const wasVerified = existingLogs[0]?.verification_status === 'Verified';
-        await base44.entities.ChesedLog.update(logId, {
+        await dataService.entities.ChesedLog.update(logId, {
           date,
           hours,
           notes: notes.trim() || undefined,
@@ -82,7 +82,7 @@ export default function LogHoursFromMitzvahModal({ open, onOpenChange, request, 
       }
 
       // Mark the mitzvah request completed
-      await base44.entities.MitzvahRequest.update(request.id, {
+      await dataService.entities.MitzvahRequest.update(request.id, {
         status: 'completed',
         completed_at: new Date().toISOString(),
       });

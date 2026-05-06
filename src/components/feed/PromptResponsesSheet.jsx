@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2, MessageCircle } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
@@ -19,7 +19,7 @@ export default function PromptResponsesSheet({ post, currentUser, open, onOpenCh
   const loadResponses = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.Comment.filter({ post_id: post.id }, '-created_date', 50);
+      const data = await dataService.entities.Comment.filter({ post_id: post.id }, '-created_date', 50);
       setResponses(data);
     } catch (e) {}
     setLoading(false);
@@ -29,14 +29,14 @@ export default function PromptResponsesSheet({ post, currentUser, open, onOpenCh
     if (!reply.trim() || !currentUser) return;
     setSubmitting(true);
     try {
-      await base44.entities.Comment.create({
+      await dataService.entities.Comment.create({
         post_id: post.id,
         author_id: currentUser.id,
         author_name: currentUser.display_name || currentUser.full_name,
         author_avatar_url: currentUser.avatar_url,
         body: reply.trim(),
       });
-      await base44.entities.UnifiedPost.update(post.id, { comments_count: (post.comments_count || 0) + 1 });
+      await dataService.entities.UnifiedPost.update(post.id, { comments_count: (post.comments_count || 0) + 1 });
       setReply('');
       await loadResponses();
       onResponseAdded?.();
@@ -49,13 +49,13 @@ export default function PromptResponsesSheet({ post, currentUser, open, onOpenCh
   const handleMessage = async (authorId) => {
     if (!currentUser || authorId === currentUser.id) return;
     try {
-      const convs = await base44.entities.Conversation.list('-updated_date', 50);
+      const convs = await dataService.entities.Conversation.list('-updated_date', 50);
       const existing = convs.find(c =>
         c.participant_ids?.includes(currentUser.id) && c.participant_ids?.includes(authorId)
       );
       if (existing) { navigate(createPageUrl('Messages') + `?conversation=${existing.id}`); return; }
-      const [other] = await base44.entities.User.filter({ id: authorId });
-      const conv = await base44.entities.Conversation.create({
+      const [other] = await dataService.entities.User.filter({ id: authorId });
+      const conv = await dataService.entities.Conversation.create({
         participant_ids: [currentUser.id, authorId],
         participant_names: [currentUser.display_name || currentUser.full_name, other?.display_name || other?.full_name],
         participant_ages: [currentUser.age_range || '18+', other?.age_range || '18+'],

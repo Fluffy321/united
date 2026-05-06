@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, MessageCircle, Loader2, ArrowLeft, Heart, Users, HandHeart, Calendar, FileText } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import UserAvatar from '@/components/common/UserAvatar';
@@ -54,11 +54,11 @@ function SubGroupStrip({ userId }) {
 
   useEffect(() => {
     if (!userId) return;
-    base44.entities.SubGroupMember.filter({ user_id: userId, status: 'approved' })
+    dataService.entities.SubGroupMember.filter({ user_id: userId, status: 'approved' })
       .then(async (memberships) => {
         if (!memberships.length) { setLoading(false); return; }
         const ids = memberships.map(m => m.subgroup_id);
-        const all = await Promise.allSettled(ids.map(id => base44.entities.SubGroup.get(id)));
+        const all = await Promise.allSettled(ids.map(id => dataService.entities.SubGroup.get(id)));
         setSubgroups(all.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value));
       })
       .catch(() => {})
@@ -137,14 +137,14 @@ export default function PublicProfile() {
 
     const fetchAll = async () => {
       try {
-        const [me] = await Promise.allSettled([base44.auth.me()]);
+        const [me] = await Promise.allSettled([dataService.auth.me()]);
         if (me.status === 'fulfilled') setCurrentUser(me.value);
       } catch {}
 
       const [usersRes, postsRes, mitzvahRes] = await Promise.allSettled([
-        base44.entities.User.filter({ id: userId }),
-        base44.entities.UnifiedPost.filter({ user_id: userId }, '-created_date', 20),
-        base44.entities.MitzvahLog.filter({ user_id: userId }, '-created_date', 100),
+        dataService.entities.User.filter({ id: userId }),
+        dataService.entities.UnifiedPost.filter({ user_id: userId }, '-created_date', 20),
+        dataService.entities.MitzvahLog.filter({ user_id: userId }, '-created_date', 100),
       ]);
 
       if (usersRes.status === 'fulfilled' && usersRes.value[0]) {
@@ -163,10 +163,10 @@ export default function PublicProfile() {
   }, [userId]);
 
   const handleMessage = async () => {
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setMessagingLoading(true);
     try {
-      const allConvs = await base44.entities.Conversation.list('-updated_date', 100);
+      const allConvs = await dataService.entities.Conversation.list('-updated_date', 100);
       const existing = allConvs.find(c =>
         c.participant_ids?.includes(currentUser.id) &&
         c.participant_ids?.includes(profileUser.id) &&
@@ -176,7 +176,7 @@ export default function PublicProfile() {
         navigate(`/Messages?conversation=${existing.id}`);
         return;
       }
-      const conv = await base44.entities.Conversation.create({
+      const conv = await dataService.entities.Conversation.create({
         participant_ids: [currentUser.id, profileUser.id],
         participant_names: [
           currentUser.display_name || currentUser.full_name?.split(' ')[0] || 'You',
@@ -262,7 +262,7 @@ export default function PublicProfile() {
               )}
               {!isMe && !currentUser && (
                 <button
-                  onClick={() => base44.auth.redirectToLogin()}
+                  onClick={() => dataService.auth.redirectToLogin()}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-600 text-white text-[13px] font-bold"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />

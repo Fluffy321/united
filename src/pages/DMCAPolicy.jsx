@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, FileText, Send, Loader2, CheckCircle } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 export default function DMCAPolicy() {
@@ -31,7 +31,7 @@ export default function DMCAPolicy() {
     setSubmitting(true);
     try {
       // Send notification email to copyright team
-      await base44.integrations.Core.SendEmail({
+      await dataService.integrations.Core.SendEmail({
         to: 'dmca@junited.app',
         subject: `DMCA Takedown Request from ${form.claimant_name}`,
         body: `
@@ -54,7 +54,7 @@ Statements:
       });
 
       // Send confirmation to claimant
-      await base44.integrations.Core.SendEmail({
+      await dataService.integrations.Core.SendEmail({
         to: form.claimant_email,
         from_name: 'JUnited Trust & Safety',
         subject: 'DMCA Takedown Request Received — JUnited',

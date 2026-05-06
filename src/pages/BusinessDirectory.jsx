@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Star, MapPin, ArrowLeft, Loader2, Shield, Utensils, BookOpen, ShoppingBag, GraduationCap, Droplets, Package } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 
 const CATEGORIES = [
@@ -84,15 +84,15 @@ export default function BusinessDirectory() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    dataService.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const { data: listings = [], isLoading } = useQuery({
     queryKey: ['business-listings', category],
     queryFn: () =>
       category === 'all'
-        ? base44.entities.BusinessListing.filter({ is_active: true }, '-created_date', 50)
-        : base44.entities.BusinessListing.filter({ is_active: true, category }, '-created_date', 50),
+        ? dataService.entities.BusinessListing.filter({ is_active: true }, '-created_date', 50)
+        : dataService.entities.BusinessListing.filter({ is_active: true, category }, '-created_date', 50),
     staleTime: 60000,
   });
 

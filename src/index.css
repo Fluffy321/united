@@ -160,6 +160,187 @@
 }
 
 @layer utilities {
+  .app-page {
+    min-height: 100dvh;
+    background: #F6F8FB;
+    color: #0F172A;
+  }
+
+  .app-shell {
+    width: 100%;
+    max-width: 430px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .app-shell-wide {
+    width: 100%;
+    max-width: 672px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .app-card {
+    border-radius: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    background: #FFFFFF;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  }
+
+  .app-card-soft {
+    border-radius: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+  }
+
+  .app-card-hover {
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 120ms ease;
+  }
+
+  .app-card-hover:hover {
+    border-color: rgba(147, 197, 253, 0.8);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.10);
+  }
+
+  .app-card-hover:active {
+    transform: scale(0.99);
+  }
+
+  .app-button-primary {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 14px;
+    background: #2563EB;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #FFFFFF;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.20);
+    transition: opacity 140ms ease, transform 100ms ease, background 140ms ease;
+  }
+
+  .app-button-primary:hover {
+    background: #1D4ED8;
+  }
+
+  .app-button-primary:active {
+    transform: scale(0.98);
+  }
+
+  .app-button-primary:disabled {
+    opacity: 0.5;
+    transform: none;
+  }
+
+  .app-button-secondary {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 14px;
+    border: 1px solid #E2E8F0;
+    background: #FFFFFF;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #334155;
+    transition: border-color 140ms ease, background 140ms ease, transform 100ms ease;
+  }
+
+  .app-button-secondary:hover {
+    border-color: #BFDBFE;
+    background: #F8FAFC;
+  }
+
+  .app-button-secondary:active {
+    transform: scale(0.98);
+  }
+
+  .app-icon-button {
+    display: inline-flex;
+    height: 44px;
+    width: 44px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    border: 1px solid #E2E8F0;
+    background: #FFFFFF;
+    color: #334155;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+    transition: background 140ms ease, border-color 140ms ease, transform 100ms ease;
+  }
+
+  .app-icon-button:hover {
+    border-color: #BFDBFE;
+    background: #F8FAFC;
+  }
+
+  .app-icon-button:active {
+    transform: scale(0.96);
+  }
+
+  .app-input {
+    min-height: 48px;
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid #E2E8F0;
+    background: #FFFFFF;
+    padding: 0 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #0F172A;
+    outline: none;
+    transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+  }
+
+  .app-input:focus {
+    border-color: #2563EB;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  }
+
+  .app-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 999px;
+    border: 1px solid #E2E8F0;
+    background: #FFFFFF;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #475569;
+    white-space: nowrap;
+  }
+
+  .app-chip-active {
+    border-color: #2563EB;
+    background: #EFF6FF;
+    color: #1D4ED8;
+  }
+
+  .app-gradient-panel {
+    border-radius: 16px;
+    border: 1px solid #C7D7FD;
+    background: linear-gradient(135deg, #F0F9FF 0%, #FAF5FF 100%);
+    box-shadow: 0 2px 12px rgba(37, 99, 235, 0.06);
+  }
+
+  .app-bottom-nav {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-fab {
+    background: #1E40AF;
+    box-shadow: 0 16px 30px rgba(30, 64, 175, 0.32);
+  }
+
   .mobile-page {
     width: 100%;
     max-width: 430px;
@@ -211,6 +392,10 @@
   }
 
   @media (min-width: 768px) {
+    .app-shell {
+      max-width: 672px;
+    }
+
     .mobile-page,
     .mobile-page-wide {
       max-width: 672px;

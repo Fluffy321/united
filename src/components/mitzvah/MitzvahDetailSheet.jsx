@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Hand, MessageCircle, CheckCircle2, Clock, MapPin, AlertCircle, X, Flag } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -47,7 +47,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
     setIsProcessing(true);
     try {
       // Check if help offer already exists
-      const existingOffers = await base44.entities.HelpOffer.filter({ 
+      const existingOffers = await dataService.entities.HelpOffer.filter({ 
         request_id: request.id,
         helper_user_id: currentUser.id 
       });
@@ -60,7 +60,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
 
       // Get or create conversation
       let conversation;
-      const existingConversations = await base44.entities.Conversation.filter({
+      const existingConversations = await dataService.entities.Conversation.filter({
         participant_ids: { $all: [currentUser.id, request.created_by_user_id] },
         request_id: request.id
       });
@@ -68,8 +68,8 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
       if (existingConversations.length > 0) {
         conversation = existingConversations[0];
       } else {
-        const [requester] = await base44.entities.User.filter({ id: request.created_by_user_id });
-        conversation = await base44.entities.Conversation.create({
+        const [requester] = await dataService.entities.User.filter({ id: request.created_by_user_id });
+        conversation = await dataService.entities.Conversation.create({
           participant_ids: [currentUser.id, request.created_by_user_id],
           participant_names: [currentUser.display_name, requester.display_name],
           participant_ages: [currentUser.age_range, requester.age_range],
@@ -80,7 +80,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
       }
 
       // Create help offer
-      await base44.entities.HelpOffer.create({
+      await dataService.entities.HelpOffer.create({
         request_id: request.id,
         helper_user_id: currentUser.id,
         helper_name: currentUser.display_name,
@@ -89,14 +89,14 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
       });
 
       // Update request status
-      await base44.entities.MitzvahRequest.update(request.id, {
+      await dataService.entities.MitzvahRequest.update(request.id, {
         status: 'in_progress',
         claimed_by_user_id: currentUser.id,
         claimed_by_name: currentUser.display_name
       });
 
       // Send auto message
-      await base44.entities.Message.create({
+      await dataService.entities.Message.create({
         conversation_id: conversation.id,
         sender_id: currentUser.id,
         sender_name: currentUser.display_name,
@@ -107,14 +107,14 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
       });
 
       // Update conversation
-      await base44.entities.Conversation.update(conversation.id, {
+      await dataService.entities.Conversation.update(conversation.id, {
         last_message: `Hi! I'm available to help...`,
         last_message_at: new Date().toISOString()
       });
 
       // Send notification
       try {
-        await base44.functions.invoke('sendMitzvahNotification', {
+        await dataService.functions.invoke('sendMitzvahNotification', {
           type: 'help_accepted',
           recipientId: request.created_by_user_id,
           helperName: currentUser.display_name,
@@ -138,13 +138,13 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
   const handleMarkComplete = async () => {
     setIsProcessing(true);
     try {
-      const [offer] = await base44.entities.HelpOffer.filter({
+      const [offer] = await dataService.entities.HelpOffer.filter({
         request_id: request.id,
         helper_user_id: currentUser.id
       });
 
       if (offer) {
-        await base44.entities.HelpOffer.update(offer.id, {
+        await dataService.entities.HelpOffer.update(offer.id, {
           completed_by_helper: true
         });
         toast.success('Marked as completed. Waiting for requester confirmation.');
@@ -159,13 +159,13 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
     setIsProcessing(true);
     try {
       // Update request
-      await base44.entities.MitzvahRequest.update(request.id, {
+      await dataService.entities.MitzvahRequest.update(request.id, {
         status: 'completed',
         completed_at: new Date().toISOString()
       });
 
       // Award points
-      await base44.entities.MitzvahAction.create({
+      await dataService.entities.MitzvahAction.create({
         user_id: request.claimed_by_user_id,
         user_name: request.claimed_by_name,
         request_id: request.id,
@@ -173,13 +173,13 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
         points_awarded: 10
       });
 
-      const [points] = await base44.entities.MitzvahPoints.filter({ user_id: request.claimed_by_user_id });
+      const [points] = await dataService.entities.MitzvahPoints.filter({ user_id: request.claimed_by_user_id });
       if (points) {
-        await base44.entities.MitzvahPoints.update(points.id, {
+        await dataService.entities.MitzvahPoints.update(points.id, {
           total_points: points.total_points + 10
         });
       } else {
-        await base44.entities.MitzvahPoints.create({
+        await dataService.entities.MitzvahPoints.create({
           user_id: request.claimed_by_user_id,
           user_name: request.claimed_by_name,
           total_points: 10
@@ -187,14 +187,14 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
       }
 
       // Update offer
-      const [offer] = await base44.entities.HelpOffer.filter({ request_id: request.id });
+      const [offer] = await dataService.entities.HelpOffer.filter({ request_id: request.id });
       if (offer) {
-        await base44.entities.HelpOffer.update(offer.id, { status: 'completed' });
+        await dataService.entities.HelpOffer.update(offer.id, { status: 'completed' });
       }
 
       // Send completion notification to helper
       try {
-        await base44.functions.invoke('sendMitzvahNotification', {
+        await dataService.functions.invoke('sendMitzvahNotification', {
           type: 'mitzvah_completed',
           recipientId: request.claimed_by_user_id,
           helperName: request.claimed_by_name,
@@ -216,7 +216,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
   const handleCancel = async () => {
     setIsProcessing(true);
     try {
-      await base44.entities.MitzvahRequest.update(request.id, {
+      await dataService.entities.MitzvahRequest.update(request.id, {
         status: 'cancelled'
       });
       toast.success('Request cancelled');
@@ -231,7 +231,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
   const handleReopen = async () => {
     setIsProcessing(true);
     try {
-      await base44.entities.MitzvahRequest.update(request.id, {
+      await dataService.entities.MitzvahRequest.update(request.id, {
         status: 'open',
         claimed_by_user_id: null,
         claimed_by_name: null
@@ -247,7 +247,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
 
   const handleReport = async () => {
     try {
-      await base44.entities.Report.create({
+      await dataService.entities.Report.create({
         reporter_id: currentUser.id,
         reported_content_id: request.id,
         content_type: 'request',
@@ -263,7 +263,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
 
   const handleReportUser = async () => {
     try {
-      await base44.entities.Report.create({
+      await dataService.entities.Report.create({
         reporter_id: currentUser.id,
         reported_content_id: request.created_by_user_id,
         content_type: 'user',
@@ -279,7 +279,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
 
   const handleMessage = async () => {
     const otherUserId = isRequester ? request.claimed_by_user_id : request.created_by_user_id;
-    const [conversation] = await base44.entities.Conversation.filter({
+    const [conversation] = await dataService.entities.Conversation.filter({
       participant_ids: { $all: [currentUser.id, otherUserId] },
       request_id: request.id
     });

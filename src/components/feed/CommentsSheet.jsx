@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, Loader2, ArrowRight, Heart } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService, postsService } from '@/services';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -29,7 +29,7 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
     const ids = loadedComments.map(c => c.id);
     // Fetch likes where post_id matches comment ids (we reuse Like entity with comment id)
     const allLikes = await Promise.all(
-      ids.map(id => base44.entities.Like.filter({ post_id: id }))
+      ids.map(id => dataService.entities.Like.filter({ post_id: id }))
     );
     const map = {};
     ids.forEach((id, i) => {
@@ -43,7 +43,7 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
 
   const loadComments = async () => {
     setLoading(true);
-    const allComments = await base44.entities.Comment.filter({ post_id: postId }, '-created_date');
+    const allComments = await postsService.listComments(postId, '-created_date');
     const filtered = allComments.filter(c => !blockedIds.includes(c.author_id));
     setComments(filtered);
     setLoading(false);
@@ -51,7 +51,7 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
   };
 
   const handleLikeComment = async (commentId) => {
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     const current = commentLikes[commentId] || { count: 0, liked: false };
     // Optimistic update
     setCommentLikes(prev => ({
@@ -59,10 +59,10 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
       [commentId]: { count: current.liked ? current.count - 1 : current.count + 1, liked: !current.liked },
     }));
     if (current.liked) {
-      const existing = await base44.entities.Like.filter({ post_id: commentId, user_id: currentUser.id });
-      if (existing[0]) await base44.entities.Like.delete(existing[0].id);
+      const existing = await dataService.entities.Like.filter({ post_id: commentId, user_id: currentUser.id });
+      if (existing[0]) await dataService.entities.Like.delete(existing[0].id);
     } else {
-      await base44.entities.Like.create({ post_id: commentId, user_id: currentUser.id });
+      await dataService.entities.Like.create({ post_id: commentId, user_id: currentUser.id });
     }
   };
 
@@ -71,7 +71,7 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
     
     setPosting(true);
     try {
-      const comment = await base44.entities.Comment.create({
+      const comment = await postsService.createComment({
         post_id: postId,
         author_id: currentUser.id,
         author_name: currentUser.full_name,
@@ -86,7 +86,7 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
 
       // Send notification to post author
       if (postAuthorId !== currentUser.id) {
-        await base44.functions.invoke('sendNotificationOnComment', {
+        await dataService.functions.invoke('sendNotificationOnComment', {
           post_id: postId,
           commenter_id: currentUser.id,
           commenter_name: currentUser.full_name,
@@ -106,7 +106,7 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
             (c.author_name || '').toLowerCase().replace(/\s+/g, '').startsWith(mentionName)
           );
           if (mentioned?.author_id) {
-            base44.functions.invoke('notifyOnMention', {
+            dataService.functions.invoke('notifyOnMention', {
               mentioned_user_id: mentioned.author_id,
               actor_id: currentUser.id,
               actor_name: currentUser.full_name || currentUser.display_name,

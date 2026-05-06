@@ -11,12 +11,7 @@ export default function PromptCard({ post, currentUser }) {
     <>
       <button
         onClick={() => setShowSheet(true)}
-        className="w-full rounded-2xl p-4 text-left"
-        style={{
-          background: 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
-          border: '1px solid #DDD6FE',
-          boxShadow: '0 2px 12px rgba(124,58,237,0.08)'
-        }}
+        className="w-full rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-purple-100 p-4 text-left shadow-sm"
       >
         <div className="flex items-center gap-1.5 mb-2">
           <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />

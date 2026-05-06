@@ -1,4 +1,4 @@
-import { base44 } from '@/api/base44Client';
+import { dataService, storageService } from '@/services';
 
 export const AI_AGENT = {
   id: 'united-ai-assistant',
@@ -40,15 +40,11 @@ export function buildAIConversation(currentUser) {
 const AI_MESSAGES_KEY = (userId) => `ai_messages_${userId}`;
 
 export function loadAIMessages(userId) {
-  try {
-    return JSON.parse(localStorage.getItem(AI_MESSAGES_KEY(userId)) || '[]');
-  } catch {
-    return [];
-  }
+  return storageService.getJson(AI_MESSAGES_KEY(userId), []);
 }
 
 export function saveAIMessages(userId, messages) {
-  localStorage.setItem(AI_MESSAGES_KEY(userId), JSON.stringify(messages.slice(-100)));
+  storageService.setJson(AI_MESSAGES_KEY(userId), messages.slice(-100));
 }
 
 let lastAIRequestTime = 0;
@@ -74,7 +70,7 @@ export async function getAIReply(userMessage, currentUser, messageHistory = []) 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       lastAIRequestTime = Date.now();
-      const reply = await base44.integrations.Core.InvokeLLM({
+      const reply = await dataService.integrations.Core.InvokeLLM({
         prompt: `You are the United AI Assistant — a friendly, knowledgeable helper embedded in the "United" app, a Jewish community platform for the Five Towns area (Cedarhurst, Lawrence, Woodmere, Hewlett, Inwood, NY).
 
 You help community members with:

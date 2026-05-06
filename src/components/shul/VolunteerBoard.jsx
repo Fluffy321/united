@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HandHeart, Plus, Users, Check } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
@@ -18,7 +18,7 @@ export default function VolunteerBoard({ shulId, currentUser, isAdmin }) {
   const { data: opportunities = [] } = useQuery({
     queryKey: ['volunteer-opps', shulId],
     queryFn: async () => {
-      return await base44.entities.VolunteerOpportunity.filter({ 
+      return await dataService.entities.VolunteerOpportunity.filter({ 
         shul_id: shulId, 
         is_active: true 
       });
@@ -27,7 +27,7 @@ export default function VolunteerBoard({ shulId, currentUser, isAdmin }) {
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      return await base44.entities.VolunteerOpportunity.create({
+      return await dataService.entities.VolunteerOpportunity.create({
         ...data,
         shul_id: shulId,
         created_by: currentUser.id
@@ -153,18 +153,18 @@ function VolunteerCard({ opportunity, currentUser }) {
   const { data: signups = [] } = useQuery({
     queryKey: ['volunteer-signups', opportunity.id],
     queryFn: async () => {
-      return await base44.entities.VolunteerSignup.filter({ opportunity_id: opportunity.id });
+      return await dataService.entities.VolunteerSignup.filter({ opportunity_id: opportunity.id });
     }
   });
 
   const signupMutation = useMutation({
     mutationFn: async () => {
-      await base44.entities.VolunteerSignup.create({
+      await dataService.entities.VolunteerSignup.create({
         opportunity_id: opportunity.id,
         user_id: currentUser.id,
         user_name: currentUser.full_name
       });
-      await base44.entities.VolunteerOpportunity.update(opportunity.id, {
+      await dataService.entities.VolunteerOpportunity.update(opportunity.id, {
         slots_filled: (opportunity.slots_filled || 0) + 1
       });
     },

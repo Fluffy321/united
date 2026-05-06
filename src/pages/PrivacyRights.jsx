@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Download, Trash2, Loader2, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService, storageService } from '@/services';
 import { toast } from 'sonner';
 
 export default function PrivacyRights() {
@@ -13,26 +13,24 @@ export default function PrivacyRights() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [analyticsOptOut, setAnalyticsOptOut] = useState(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('junited_cookie_consent') || '{}');
-      return stored.analytics === false;
-    } catch { return false; }
+    const stored = storageService.getJson('junited_cookie_consent', {});
+    return stored.analytics === false;
   });
 
   React.useEffect(() => {
-    base44.auth.me().then(u => { setUser(u); setLoadingUser(false); }).catch(() => setLoadingUser(false));
+    dataService.auth.me().then(u => { setUser(u); setLoadingUser(false); }).catch(() => setLoadingUser(false));
   }, []);
 
   const handleExport = async () => {
-    if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
+    if (!user) { dataService.auth.redirectToLogin(window.location.href); return; }
     setExporting(true);
     try {
       // Collect all user data
       const [posts, comments, communities, mitzvahLogs] = await Promise.all([
-        base44.entities.UnifiedPost.filter({ user_id: user.id }, '-created_date', 200),
-        base44.entities.Comment.filter({ author_id: user.id }, '-created_date', 200),
-        base44.entities.UserCommunity.filter({ user_id: user.id }),
-        base44.entities.MitzvahLog ? base44.entities.MitzvahLog.filter({ user_id: user.id }, '-created_date', 200) : Promise.resolve([]),
+        dataService.entities.UnifiedPost.filter({ user_id: user.id }, '-created_date', 200),
+        dataService.entities.Comment.filter({ author_id: user.id }, '-created_date', 200),
+        dataService.entities.UserCommunity.filter({ user_id: user.id }),
+        dataService.entities.MitzvahLog ? dataService.entities.MitzvahLog.filter({ user_id: user.id }, '-created_date', 200) : Promise.resolve([]),
       ]);
 
       const exportData = {
@@ -80,12 +78,10 @@ export default function PrivacyRights() {
   const handleAnalyticsToggle = () => {
     const newOptOut = !analyticsOptOut;
     setAnalyticsOptOut(newOptOut);
-    try {
-      const stored = JSON.parse(localStorage.getItem('junited_cookie_consent') || '{}');
-      stored.analytics = !newOptOut;
-      stored.timestamp = new Date().toISOString();
-      localStorage.setItem('junited_cookie_consent', JSON.stringify(stored));
-    } catch {}
+    const stored = storageService.getJson('junited_cookie_consent', {});
+    stored.analytics = !newOptOut;
+    stored.timestamp = new Date().toISOString();
+    storageService.setJson('junited_cookie_consent', stored);
     window.__junited_analytics_enabled = !newOptOut;
     toast.success(newOptOut ? 'Analytics opted out' : 'Analytics opted in');
   };
@@ -115,7 +111,7 @@ export default function PrivacyRights() {
         {!user && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-[13px] text-amber-800">
             Sign in to access your privacy rights tools.{' '}
-            <button onClick={() => base44.auth.redirectToLogin(window.location.href)} className="font-bold underline">Sign in →</button>
+            <button onClick={() => dataService.auth.redirectToLogin(window.location.href)} className="font-bold underline">Sign in →</button>
           </div>
         )}
 

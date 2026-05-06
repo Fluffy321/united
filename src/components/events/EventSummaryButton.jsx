@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Sparkles, AlertCircle, Copy, Check } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 export default function EventSummaryButton({ event }) {
@@ -35,7 +35,7 @@ Location: ${event.location_text || 'TBD'}
 
 Highlight the main purpose, key activity, and why someone should attend.`;
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await dataService.integrations.Core.InvokeLLM({
         prompt,
         add_context_from_internet: false,
       });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 import ReportModal from '@/components/common/ReportModal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -39,14 +39,14 @@ export default function Profile() {
 
   const loadProfile = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await dataService.auth.me();
       setCurrentUser(user);
       
       const profileId = searchParams.get('id');
       
       if (profileId && profileId !== user.id) {
         try {
-          const users = await base44.entities.User.filter({ id: profileId });
+          const users = await dataService.entities.User.filter({ id: profileId });
           if (users[0]) {
             setProfileUser(users[0]);
             setIsOwnProfile(false);
@@ -64,13 +64,13 @@ export default function Profile() {
       }
     } catch (e) {
       console.warn('Profile: not authenticated', e?.message);
-      base44.auth.redirectToLogin();
+      dataService.auth.redirectToLogin();
     }
   };
 
   const { data: unifiedPosts = [] } = useQuery({
     queryKey: ['user-posts', profileUser?.id],
-    queryFn: () => base44.entities.UnifiedPost.filter({ user_id: profileUser.id }, '-created_date', 10),
+    queryFn: () => dataService.entities.UnifiedPost.filter({ user_id: profileUser.id }, '-created_date', 10),
     enabled: !!profileUser,
     gcTime: 0
   });
@@ -78,7 +78,7 @@ export default function Profile() {
   const { data: userStreak } = useQuery({
     queryKey: ['user-streak', profileUser?.id],
     queryFn: async () => {
-      const existing = await base44.entities.UserStreak.filter({ user_id: profileUser.id });
+      const existing = await dataService.entities.UserStreak.filter({ user_id: profileUser.id });
       return existing[0] || null;
     },
     enabled: !!profileUser,
@@ -90,7 +90,7 @@ export default function Profile() {
   const { data: mitzvahLogs = [] } = useQuery({
     queryKey: ['mitzvah-logs', profileUser?.id],
     queryFn: async () => {
-      const logs = await base44.entities.MitzvahLog.filter({ user_id: profileUser.id }, '-created_date', 50);
+      const logs = await dataService.entities.MitzvahLog.filter({ user_id: profileUser.id }, '-created_date', 50);
       return logs;
     },
     enabled: !!profileUser && isOwnProfile,
@@ -102,8 +102,8 @@ export default function Profile() {
   const { data: weeklyMitzvahCount = 0 } = useQuery({
     queryKey: ['weekly-mitzvah-count', profileUser?.id],
     queryFn: async () => {
-      const actions = await base44.entities.MitzvahAction.filter({ user_id: profileUser.id }, '-created_date', 100);
-      const logs = await base44.entities.MitzvahLog.filter({ user_id: profileUser.id }, '-created_date', 100);
+      const actions = await dataService.entities.MitzvahAction.filter({ user_id: profileUser.id }, '-created_date', 100);
+      const logs = await dataService.entities.MitzvahLog.filter({ user_id: profileUser.id }, '-created_date', 100);
       
       const weekActions = actions.filter(a => {
         const date = parseISO(a.created_date);
@@ -126,7 +126,7 @@ export default function Profile() {
   const { data: mitzvahPoints = 0 } = useQuery({
     queryKey: ['mitzvah-points', profileUser?.id],
     queryFn: async () => {
-      const points = await base44.entities.MitzvahPoints.filter({ user_id: profileUser.id });
+      const points = await dataService.entities.MitzvahPoints.filter({ user_id: profileUser.id });
       return points.length > 0 ? points[0].total_points : 0;
     },
     enabled: !!profileUser,
@@ -138,10 +138,10 @@ export default function Profile() {
   const { data: userCommunities = [] } = useQuery({
     queryKey: ['user-communities', profileUser?.id],
     queryFn: async () => {
-      const comms = await base44.entities.UserCommunity.filter({ user_id: profileUser.id }, '-created_date', 50);
+      const comms = await dataService.entities.UserCommunity.filter({ user_id: profileUser.id }, '-created_date', 50);
       // Update user's communities_joined_count
       if (comms.length > 0 && (!profileUser.communities_joined_count || profileUser.communities_joined_count !== comms.length)) {
-        base44.auth.updateMe({ communities_joined_count: comms.length }).catch(() => {});
+        dataService.auth.updateMe({ communities_joined_count: comms.length }).catch(() => {});
       }
       return comms;
     },
@@ -152,7 +152,7 @@ export default function Profile() {
   });
 
   const handleMessage = async () => {
-    const conversations = await base44.entities.Conversation.list();
+    const conversations = await dataService.entities.Conversation.list();
     const existing = conversations.find(c => 
       c.participant_ids?.includes(currentUser.id) && c.participant_ids?.includes(profileUser.id)
     );
@@ -160,7 +160,7 @@ export default function Profile() {
     if (existing) {
       navigate(createPageUrl('Messages') + `?conversation=${existing.id}`);
     } else {
-      const conv = await base44.entities.Conversation.create({
+      const conv = await dataService.entities.Conversation.create({
         participant_ids: [currentUser.id, profileUser.id],
         participant_names: [
           currentUser.display_name || currentUser.full_name?.split(' ')[0],
@@ -174,7 +174,7 @@ export default function Profile() {
   };
 
   const handleBlock = async () => {
-    await base44.entities.Block.create({
+    await dataService.entities.Block.create({
       blocker_id: currentUser.id,
       blocked_id: profileUser.id
     });

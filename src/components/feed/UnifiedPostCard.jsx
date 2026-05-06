@@ -20,7 +20,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import { HELP_REQUEST_CATEGORIES } from '@/components/feed/RequestHelpModal';
@@ -36,14 +36,14 @@ function BookmarkButton({ postId, currentUser }) {
 
   useEffect(() => {
     if (!currentUser || !appParams.hasBackendConfig) return;
-    base44.entities.Bookmark.filter({ post_id: postId, user_id: currentUser.id })
+    dataService.entities.Bookmark.filter({ post_id: postId, user_id: currentUser.id })
       .then(r => setBookmarked(r.length > 0))
       .catch(() => {});
   }, [postId, currentUser]);
 
   const handleToggle = async (e) => {
     e.stopPropagation();
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     if (loading) return;
     setLoading(true);
     if (!appParams.hasBackendConfig) {
@@ -53,11 +53,11 @@ function BookmarkButton({ postId, currentUser }) {
       return;
     }
     if (bookmarked) {
-      const existing = await base44.entities.Bookmark.filter({ post_id: postId, user_id: currentUser.id });
-      if (existing[0]) await base44.entities.Bookmark.delete(existing[0].id);
+      const existing = await dataService.entities.Bookmark.filter({ post_id: postId, user_id: currentUser.id });
+      if (existing[0]) await dataService.entities.Bookmark.delete(existing[0].id);
       setBookmarked(false);
     } else {
-      await base44.entities.Bookmark.create({ post_id: postId, user_id: currentUser.id });
+      await dataService.entities.Bookmark.create({ post_id: postId, user_id: currentUser.id });
       setBookmarked(true);
       toast.success('Post saved!');
     }
@@ -118,12 +118,12 @@ function InterestedButton({ post, currentUser }) {
   const handleInterested = async () => {
     try {
       // Find or create a conversation with the poster
-      const convs = await base44.entities.Conversation.list('-updated_date', 50);
+      const convs = await dataService.entities.Conversation.list('-updated_date', 50);
       let conv = convs.find(c =>
         c.participant_ids?.includes(currentUser.id) && c.participant_ids?.includes(post.user_id)
       );
       if (!conv) {
-        conv = await base44.entities.Conversation.create({
+        conv = await dataService.entities.Conversation.create({
           participant_ids: [currentUser.id, post.user_id],
           participant_names: [
             currentUser.display_name || currentUser.full_name?.split(' ')[0],
@@ -135,7 +135,7 @@ function InterestedButton({ post, currentUser }) {
           request_type: 'general',
         });
       }
-      await base44.entities.Message.create({
+      await dataService.entities.Message.create({
         conversation_id: conv.id,
         sender_id: currentUser.id,
         sender_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],
@@ -183,7 +183,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   // Always fetch 2 most recent comments — seeded posts may have real comments even with count=0
   useEffect(() => {
     if (!appParams.hasBackendConfig) return;
-    base44.entities.Comment.filter({ post_id: post.id }, '-created_date', 2)
+    dataService.entities.Comment.filter({ post_id: post.id }, '-created_date', 2)
       .then(comments => setRecentComments(comments))
       .catch(() => {});
   }, [post.id, commentCount]);
@@ -231,7 +231,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       toast.success('Marked fulfilled locally for this demo session');
       return;
     }
-    await base44.entities.UnifiedPost.update(post.id, { help_status: 'fulfilled' });
+    await dataService.entities.UnifiedPost.update(post.id, { help_status: 'fulfilled' });
     setHelpStatus('fulfilled');
     setFulfilling(false);
     toast.success('Marked as fulfilled! 🎉');
@@ -254,7 +254,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       return;
     }
     try {
-      await base44.entities.Comment.create({
+      await dataService.entities.Comment.create({
         post_id: post.id,
         author_id: currentUser.id,
         author_name: currentUser.display_name || currentUser.full_name?.split(' ')[0] || 'User',

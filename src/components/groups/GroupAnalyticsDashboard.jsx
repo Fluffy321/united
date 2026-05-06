@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Users, MessageSquare, Calendar, Download, TrendingUp, Clock, Star, Lock, Mail, History } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import NewsletterComposer from './NewsletterComposer';
@@ -23,7 +23,7 @@ export default function GroupAnalyticsDashboard({ group, currentUser, isAdmin })
 
   const checkPremiumStatus = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await dataService.auth.me();
       const subscription = user.subscription_status || 'free';
       setIsPremium(subscription === 'premium');
     } catch (e) {
@@ -35,7 +35,7 @@ export default function GroupAnalyticsDashboard({ group, currentUser, isAdmin })
 
   const loadMemberEmails = async () => {
     try {
-      const members = await base44.entities.GroupMember.filter({ group_id: group.id });
+      const members = await dataService.entities.GroupMember.filter({ group_id: group.id });
       const userIds = members.map(m => m.user_id).filter(Boolean);
       setMemberEmails(userIds);
     } catch (e) {
@@ -308,10 +308,10 @@ function MetricCard({ icon: Icon, label, value, change, color }) {
 async function calculateGroupAnalytics(groupId) {
   try {
     const [discussions, events, resources, members] = await Promise.all([
-      base44.entities.GroupDiscussion.filter({ group_id: groupId }),
-      base44.entities.CommunityEvent.filter({ community_id: groupId }),
-      base44.entities.GroupResource.filter({ group_id: groupId }),
-      base44.entities.GroupMember.filter({ group_id: groupId }),
+      dataService.entities.GroupDiscussion.filter({ group_id: groupId }),
+      dataService.entities.CommunityEvent.filter({ community_id: groupId }),
+      dataService.entities.GroupResource.filter({ group_id: groupId }),
+      dataService.entities.GroupMember.filter({ group_id: groupId }),
     ]);
 
     // Daily active members (last 7 days)

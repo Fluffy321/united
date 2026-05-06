@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, MessageSquare, Users, AtSign, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 export default function NotificationSettings({ userId }) {
@@ -14,12 +14,12 @@ export default function NotificationSettings({ userId }) {
 
   const loadPreferences = async () => {
     try {
-      const result = await base44.entities.NotificationPreference.filter({ user_id: userId });
+      const result = await dataService.entities.NotificationPreference.filter({ user_id: userId });
       if (result[0]) {
         setPrefs(result[0]);
       } else {
         // Create default preferences
-        const newPrefs = await base44.entities.NotificationPreference.create({
+        const newPrefs = await dataService.entities.NotificationPreference.create({
           user_id: userId,
           replies_enabled: true,
           group_activity_enabled: false,
@@ -39,7 +39,7 @@ export default function NotificationSettings({ userId }) {
     
     setSaving(true);
     try {
-      const updated = await base44.entities.NotificationPreference.update(prefs.id, {
+      const updated = await dataService.entities.NotificationPreference.update(prefs.id, {
         [field]: !prefs[field],
       });
       setPrefs(updated);

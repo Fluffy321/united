@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { Loader2, Users, MapPin, CheckCircle2, ArrowRight } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
@@ -18,9 +18,9 @@ export default function InviteJoin() {
 
     Promise.all([
       type === 'community'
-        ? base44.entities.Community.filter({ id }).then(r => r[0])
-        : base44.entities.CommunityGroup.filter({ id }).then(r => r[0]),
-      base44.auth.me().catch(() => null),
+        ? dataService.entities.Community.filter({ id }).then(r => r[0])
+        : dataService.entities.CommunityGroup.filter({ id }).then(r => r[0]),
+      dataService.auth.me().catch(() => null),
     ]).then(async ([res, user]) => {
       if (!res) { setStatus('error'); return; }
       setResource(res);
@@ -29,10 +29,10 @@ export default function InviteJoin() {
       if (user) {
         // Check if already member
         if (type === 'community') {
-          const existing = await base44.entities.UserCommunity.filter({ user_id: user.id, community_id: id });
+          const existing = await dataService.entities.UserCommunity.filter({ user_id: user.id, community_id: id });
           if (existing.length > 0) { setAlreadyMember(true); }
         } else {
-          const existing = await base44.entities.GroupMember.filter({ user_id: user.id, group_id: id });
+          const existing = await dataService.entities.GroupMember.filter({ user_id: user.id, group_id: id });
           if (existing.length > 0) { setAlreadyMember(true); }
         }
       }
@@ -42,7 +42,7 @@ export default function InviteJoin() {
 
   const handleJoin = async () => {
     if (!currentUser) {
-      base44.auth.redirectToLogin(window.location.href);
+      dataService.auth.redirectToLogin(window.location.href);
       return;
     }
     if (alreadyMember) {
@@ -51,22 +51,22 @@ export default function InviteJoin() {
     }
     setStatus('joining');
     if (type === 'community') {
-      const existing = await base44.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: id });
+      const existing = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: id });
       if (existing.length === 0) {
-        await base44.entities.UserCommunity.create({ user_id: currentUser.id, community_id: id, role: 'Member' });
-        await base44.entities.Community.update(id, { follower_count: (resource.follower_count || 0) + 1 });
+        await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: id, role: 'Member' });
+        await dataService.entities.Community.update(id, { follower_count: (resource.follower_count || 0) + 1 });
       }
     } else {
       if (resource.is_private) {
-        await base44.entities.GroupJoinRequest.create({
+        await dataService.entities.GroupJoinRequest.create({
           group_id: id, group_name: resource.name,
           user_id: currentUser.id, user_name: currentUser.full_name, status: 'pending',
         });
       } else {
-        const existing = await base44.entities.GroupMember.filter({ user_id: currentUser.id, group_id: id });
+        const existing = await dataService.entities.GroupMember.filter({ user_id: currentUser.id, group_id: id });
         if (existing.length === 0) {
-          await base44.entities.GroupMember.create({ group_id: id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
-          await base44.entities.CommunityGroup.update(id, { member_count: (resource.member_count || 0) + 1 });
+          await dataService.entities.GroupMember.create({ group_id: id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
+          await dataService.entities.CommunityGroup.update(id, { member_count: (resource.member_count || 0) + 1 });
         }
       }
     }

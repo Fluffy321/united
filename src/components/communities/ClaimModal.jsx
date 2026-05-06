@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import CommunityLogo from './CommunityLogo';
 
@@ -26,7 +26,7 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
     if (!file) return;
     setLogoUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await dataService.integrations.Core.UploadFile({ file });
       setLogoUrl(file_url);
       toast.success('Logo ready!');
     } catch {
@@ -41,7 +41,7 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
       return;
     }
     setSubmitting(true);
-    await base44.entities.ClaimRequest.create({
+    await dataService.entities.ClaimRequest.create({
       community_id: community.id,
       community_name: community.name,
       requester_id: currentUser?.id,
@@ -54,7 +54,7 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
     });
     // If they uploaded a logo, save it immediately
     if (logoUrl && logoUrl !== community?.logo_url) {
-      await base44.entities.Community.update(community.id, {
+      await dataService.entities.Community.update(community.id, {
         logo_url: logoUrl,
         logo_source: 'UPLOADED',
       });

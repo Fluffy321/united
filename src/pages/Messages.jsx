@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle, Inbox, Loader2, MessageCircle, Plus, Sparkles, Users } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import ChatView from '@/components/messages/ChatView';
 import ConversationList from '@/components/messages/ConversationList';
@@ -31,7 +31,7 @@ export default function Messages() {
 
   useEffect(() => {
     if (!currentUser) return;
-    const unsubscribe = base44.entities.Message.subscribe((event) => {
+    const unsubscribe = dataService.entities.Message.subscribe((event) => {
       if (event.type === 'create') {
         const newMsg = event.data;
         if (newMsg.sender_id !== currentUser.id) {
@@ -48,7 +48,7 @@ export default function Messages() {
 
   const loadUser = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await dataService.auth.me();
       setCurrentUser(user);
     } catch (e) {
       setCurrentUser({
@@ -69,7 +69,7 @@ export default function Messages() {
 
   const loadConversation = async (id) => {
     try {
-      const conv = await base44.entities.Conversation.filter({ id });
+      const conv = await dataService.entities.Conversation.filter({ id });
       if (conv[0]) {
         setSelectedConversation(conv[0]);
       }
@@ -83,10 +83,10 @@ export default function Messages() {
   const { data: communityConversations = [] } = useQuery({
     queryKey: ['community-convs', currentUser?.id],
     queryFn: async () => {
-      const memberships = await base44.entities.UserCommunity.filter({ user_id: currentUser.id });
+      const memberships = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id });
       if (!memberships.length) return [];
       const communityIds = memberships.map(m => m.community_id);
-      const allComms = await base44.entities.Community.list('-follower_count', 100);
+      const allComms = await dataService.entities.Community.list('-follower_count', 100);
       const joined = allComms.filter(c => communityIds.includes(c.id));
       return joined.map(c => ({
         id: `community-${c.id}`,
@@ -110,13 +110,13 @@ export default function Messages() {
   const { data: conversations = [], isLoading, isError: isConversationsError } = useQuery({
     queryKey: ['conversations', currentUser?.id],
     queryFn: async () => {
-      const allConvs = await base44.entities.Conversation.list('-updated_date', 50);
+      const allConvs = await dataService.entities.Conversation.list('-updated_date', 50);
       const userConvs = allConvs.filter((c) => c.participant_ids?.includes(currentUser.id));
 
       const requestIds = [...new Set(userConvs.map((c) => c.request_id).filter(Boolean))];
       const requestTitleMap = {};
       await Promise.all(requestIds.map(async (rid) => {
-        const [req] = await base44.entities.MitzvahRequest.filter({ id: rid });
+        const [req] = await dataService.entities.MitzvahRequest.filter({ id: rid });
         if (req) requestTitleMap[rid] = req.title;
       }));
 
@@ -160,7 +160,7 @@ export default function Messages() {
 
   const handleArchive = async (conv) => {
     try {
-      await base44.entities.Conversation.update(conv.id, { is_archived: true });
+      await dataService.entities.Conversation.update(conv.id, { is_archived: true });
       queryClient.invalidateQueries({ queryKey: ['conversations', currentUser.id] });
       toast.success('Conversation archived');
     } catch (e) {
@@ -171,7 +171,7 @@ export default function Messages() {
   const handleMarkUnread = async (conv) => {
     try {
       const newUnread = { ...(conv.unread_count || {}), [currentUser.id]: 1 };
-      await base44.entities.Conversation.update(conv.id, { unread_count: newUnread });
+      await dataService.entities.Conversation.update(conv.id, { unread_count: newUnread });
       queryClient.invalidateQueries({ queryKey: ['conversations', currentUser.id] });
       toast.success('Marked as unread');
     } catch (e) {
@@ -180,7 +180,7 @@ export default function Messages() {
   };
 
   const handleBlock = async (userId) => {
-    await base44.entities.Block.create({
+    await dataService.entities.Block.create({
       blocker_id: currentUser.id,
       blocked_id: userId
     });

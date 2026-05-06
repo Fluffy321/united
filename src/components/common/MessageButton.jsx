@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MessageCircle, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
@@ -26,7 +26,7 @@ export default function MessageButton({
     setLoading(true);
     try {
       // Check for existing conversation first
-      const allConvs = await base44.entities.Conversation.list('-updated_date', 100);
+      const allConvs = await dataService.entities.Conversation.list('-updated_date', 100);
       const existing = allConvs.find(c =>
         c.participant_ids?.includes(currentUser.id) &&
         c.participant_ids?.includes(recipientId) &&
@@ -49,7 +49,7 @@ export default function MessageButton({
       const { canMessage: allowed } = await canMessage(currentUser, recipientId);
 
       if (allowed) {
-        const conv = await base44.entities.Conversation.create({
+        const conv = await dataService.entities.Conversation.create({
           participant_ids: [currentUser.id, recipientId],
           participant_names: [currentUser.full_name || currentUser.display_name, recipientName],
           participant_ages: [currentUser.age_range || '18+', null],
@@ -63,7 +63,7 @@ export default function MessageButton({
         toast.success('Conversation started!');
       } else {
         // Send a message request instead
-        const existing = await base44.entities.MessageRequest.filter({
+        const existing = await dataService.entities.MessageRequest.filter({
           sender_id: currentUser.id,
           recipient_id: recipientId,
           status: 'pending'
@@ -72,7 +72,7 @@ export default function MessageButton({
           toast.info('You already sent a message request to this person.');
           return;
         }
-        await base44.entities.MessageRequest.create({
+        await dataService.entities.MessageRequest.create({
           sender_id: currentUser.id,
           sender_name: currentUser.full_name || currentUser.display_name,
           sender_avatar: currentUser.avatar_url || null,

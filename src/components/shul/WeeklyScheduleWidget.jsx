@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 
 export default function WeeklyScheduleWidget({ shulId }) {
   const { data: schedules = [] } = useQuery({
     queryKey: ['shul-schedule', shulId],
     queryFn: async () => {
-      return await base44.entities.ShulSchedule.filter({ shul_id: shulId, is_active: true });
+      return await dataService.entities.ShulSchedule.filter({ shul_id: shulId, is_active: true });
     }
   });
 

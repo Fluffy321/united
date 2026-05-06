@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService, storageService } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
@@ -14,7 +14,6 @@ import ReportModal from '@/components/common/ReportModal';
 import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
-import SearchModal from '@/components/feed/SearchModal';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
 import { Search, Plus, RefreshCw, ChevronDown } from 'lucide-react';
@@ -175,7 +174,6 @@ export default function Feed() {
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [showAlertModal, setShowAlertModal] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
   const [showEventsSheet, setShowEventsSheet] = useState(false);
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [interestSignals, setInterestSignals] = useState({ types: {}, subtypes: {}, keywords: [] }); // track user interactions
@@ -191,14 +189,14 @@ export default function Feed() {
   const [allPosts, setAllPosts] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 30;
-  const [showNetworkBanner, setShowNetworkBanner] = useState(() => !localStorage.getItem('junited_network_banner_v2_dismissed'));
+  const [showNetworkBanner, setShowNetworkBanner] = useState(() => !storageService.getItem('junited_network_banner_v2_dismissed'));
 
   useEffect(() => {
     if (!appParams.hasBackendConfig) {
       setCurrentUser({ id: 'local-demo', full_name: 'Local demo', cityPreset: 'Five Towns', interests: ['chesed', 'events'] });
       return;
     }
-    base44.auth.me().then(u => {
+    dataService.auth.me().then(u => {
       setCurrentUser(u);
       // Load saved primary network from user profile
       if (u?.cityPreset) {
@@ -224,7 +222,7 @@ export default function Feed() {
       return;
     }
     try {
-      const prompts = await base44.entities.DailyPrompt.list('-created_date', 5);
+      const prompts = await dataService.entities.DailyPrompt.list('-created_date', 5);
       if (prompts?.length > 0) setFeedPrompts(prompts);
     } catch {}
   }, []);
@@ -233,7 +231,7 @@ export default function Feed() {
     queryKey: ['unified-posts', page],
     queryFn: async () => {
       if (!appParams.hasBackendConfig) return page === 0 ? DEMO_POSTS : [];
-      const p = await base44.entities.UnifiedPost.list('-updated_date', PAGE_SIZE, page * PAGE_SIZE);
+      const p = await dataService.entities.UnifiedPost.list('-updated_date', PAGE_SIZE, page * PAGE_SIZE);
       return p;
     },
     staleTime: 30000,
@@ -261,11 +259,11 @@ export default function Feed() {
     queryKey: ['user-communities', currentUser?.id],
     queryFn: async () => {
       if (!currentUser?.id) return [];
-      const memberships = await base44.entities.UserCommunity.filter({ user_id: currentUser.id });
+      const memberships = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id });
       const ids = memberships.map(m => m.community_id).filter(Boolean);
       if (ids.length === 0) return [];
       // Fetch each community individually so a single bad/deleted ID doesn't poison the whole list
-      const results = await Promise.allSettled(ids.map(id => base44.entities.Community.get(id)));
+      const results = await Promise.allSettled(ids.map(id => dataService.entities.Community.get(id)));
       return results
         .filter(r => r.status === 'fulfilled' && r.value && typeof r.value.id === 'string')
         .map(r => r.value);
@@ -277,7 +275,7 @@ export default function Feed() {
     queryKey: ['user-blocks', currentUser?.id],
     queryFn: async () => {
       if (!currentUser?.id) return [];
-      return base44.entities.Block.filter({ blocker_id: currentUser.id });
+      return dataService.entities.Block.filter({ blocker_id: currentUser.id });
     },
     enabled: !!currentUser?.id && appParams.hasBackendConfig,
   });
@@ -319,15 +317,15 @@ export default function Feed() {
 
   const likeMutation = useMutation({
     mutationFn: async (postId) => {
-      const existing = await base44.entities.Like.filter({ post_id: postId, user_id: currentUser.id });
+      const existing = await dataService.entities.Like.filter({ post_id: postId, user_id: currentUser.id });
       if (existing.length > 0) {
-        await base44.entities.Like.delete(existing[0].id);
-        const post = await base44.entities.UnifiedPost.get(postId);
-        await base44.entities.UnifiedPost.update(postId, { likes_count: Math.max(0, (post.likes_count || 1) - 1) });
+        await dataService.entities.Like.delete(existing[0].id);
+        const post = await dataService.entities.UnifiedPost.get(postId);
+        await dataService.entities.UnifiedPost.update(postId, { likes_count: Math.max(0, (post.likes_count || 1) - 1) });
       } else {
-        await base44.entities.Like.create({ post_id: postId, user_id: currentUser.id });
-        const post = await base44.entities.UnifiedPost.get(postId);
-        await base44.entities.UnifiedPost.update(postId, { likes_count: (post.likes_count || 0) + 1 });
+        await dataService.entities.Like.create({ post_id: postId, user_id: currentUser.id });
+        const post = await dataService.entities.UnifiedPost.get(postId);
+        await dataService.entities.UnifiedPost.update(postId, { likes_count: (post.likes_count || 0) + 1 });
       }
     },
     onSuccess: (_, postId) => {
@@ -338,8 +336,8 @@ export default function Feed() {
 
   const deleteMutation = useMutation({
     mutationFn: async (postId) => {
-      await base44.entities.UnifiedPost.delete(postId);
-      await base44.entities.Comment.delete(await base44.entities.Comment.filter({ post_id: postId }).then(c => c.map(x => x.id)));
+      await dataService.entities.UnifiedPost.delete(postId);
+      await dataService.entities.Comment.delete(await dataService.entities.Comment.filter({ post_id: postId }).then(c => c.map(x => x.id)));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
@@ -355,7 +353,7 @@ export default function Feed() {
   };
 
   const handleLike = (postId) => {
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     const post = posts.find(p => p.id === postId);
     if (post) recordInterest(post);
     if (!appParams.hasBackendConfig) {
@@ -373,7 +371,7 @@ export default function Feed() {
       return;
     }
     try {
-      await base44.entities.Block.create({ blocker_id: currentUser.id, blocked_id: userId });
+      await dataService.entities.Block.create({ blocker_id: currentUser.id, blocked_id: userId });
       setBlockedIds(prev => [...prev, userId]);
       toast.success('User blocked');
     } catch { toast.error('Could not block user'); }
@@ -503,7 +501,7 @@ export default function Feed() {
   })();
 
   return (
-    <div className="min-h-screen relative" style={{ background: '#F6F8FB' }}>
+    <div className="app-page relative">
       {pullDistance > 0 && (
         <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[40] pointer-events-none">
           <div className={`transition-all ${isRefreshing ? 'animate-spin' : ''}`} style={{ transform: `rotate(${pullDistance * 3}deg)` }}>
@@ -516,16 +514,15 @@ export default function Feed() {
         <div className="mobile-page px-3 pt-2 pb-2 flex items-center justify-between">
           <button
             onClick={() => setShowLocationPicker(v => !v)}
-            className="mobile-touch flex items-center gap-1.5 rounded-2xl bg-white px-3.5 py-2.5 text-blue-700 font-bold text-[13px] active:scale-95 touch-manipulation shadow-sm border border-blue-100"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
+            className="app-chip app-chip-active min-h-[44px] touch-manipulation active:scale-95"
           >
             <span>{primaryNetwork.emoji}</span>
             <span>{primaryNetwork.shortLabel}</span>
             <ChevronDown className="w-3 h-3 text-blue-400 transition-transform" style={{ transform: showLocationPicker ? 'rotate(180deg)' : 'rotate(0deg)' }} />
           </button>
           <div className="flex items-center gap-0.5">
-            <button onClick={() => navigate('/search')} className="mobile-touch flex items-center justify-center rounded-2xl bg-white shadow-sm border border-slate-100 active:bg-slate-100 transition-colors touch-manipulation" style={{ WebkitTapHighlightColor: 'transparent' }}>
-              <Search className="w-4.5 h-4.5 text-slate-500" style={{ width: 18, height: 18 }} />
+            <button onClick={() => navigate('/search')} className="app-icon-button touch-manipulation" aria-label="Search">
+              <Search className="h-[18px] w-[18px] text-slate-500" />
             </button>
             <NotificationBell userId={currentUser?.id} />
           </div>
@@ -541,7 +538,7 @@ export default function Feed() {
               setSelectedNeighborhood('All');
               // Persist to user profile
               if (appParams.hasBackendConfig) {
-                try { await base44.auth.updateMe({ cityPreset: net.cityPreset }); } catch {}
+                try { await dataService.auth.updateMe({ cityPreset: net.cityPreset }); } catch {}
               }
             }}
             onClose={() => setShowLocationPicker(false)}
@@ -579,13 +576,13 @@ export default function Feed() {
           <div className="mb-3 flex items-center gap-2 rounded-2xl bg-blue-600 px-3.5 py-3 text-white text-[12px] font-medium shadow-sm">
             <span className="text-lg">{primaryNetwork.emoji}</span>
             <span className="flex-1">You're viewing <strong>{primaryNetwork.shortLabel}</strong> — tap the chip above to switch networks.</span>
-            <button onClick={() => { setShowNetworkBanner(false); localStorage.setItem('junited_network_banner_v2_dismissed', '1'); }} className="text-white/70 hover:text-white text-lg leading-none font-bold flex-shrink-0">×</button>
+            <button onClick={() => { setShowNetworkBanner(false); storageService.setItem('junited_network_banner_v2_dismissed', '1'); }} className="text-white/70 hover:text-white text-lg leading-none font-bold flex-shrink-0">×</button>
           </div>
         )}
 
         <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
         {activeTab === 'events' && !isLoading && (
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #F0F9FF 0%, #FAF5FF 100%)', border: '1px solid #C7D7FD', boxShadow: '0 2px 12px rgba(37,99,235,0.06)', marginBottom: 12, padding: 0 }}>
+          <div className="app-gradient-panel mb-3 overflow-hidden">
           <EventsForYou currentUser={currentUser} events={visiblePosts.filter(p => p.type === 'event')} />
           <EventsFeedSection
             posts={visiblePosts}
@@ -610,7 +607,7 @@ export default function Feed() {
           </div>
         )}
         {activeTab !== 'events' && (!isLoading || loadTimedOut) && feedPosts.length > 0 && (
-          <div className="divide-y divide-slate-100 border border-slate-200 rounded-[22px] overflow-hidden bg-white tab-fade-in shadow-sm">
+          <div className="app-card divide-y divide-slate-100 overflow-hidden tab-fade-in">
             {/* Question of the Day — embedded as first "post" in the feed card */}
             <DailyHooks
               onPostClick={(type, subtype, prefill) => {
@@ -751,8 +748,7 @@ export default function Feed() {
 
       <button
         onClick={() => { setPostModalType('feed'); setPostModalSubtype(null); setPostModalInitialBody(''); setShowPostModal(true); }}
-        className={`fixed bottom-[96px] right-5 z-40 h-14 w-14 rounded-2xl text-white flex items-center justify-center active:scale-95 transition-all duration-200 ${isScrollingDown ? 'opacity-0 pointer-events-none translate-y-2' : 'opacity-100 translate-y-0'}`}
-        style={{ background: '#1E40AF', boxShadow: '0 16px 30px rgba(30,64,175,0.32)' }}
+        className={`app-fab fixed bottom-[96px] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-2xl text-white transition-all duration-200 active:scale-95 ${isScrollingDown ? 'opacity-0 pointer-events-none translate-y-2' : 'opacity-100 translate-y-0'}`}
         aria-label="Create post"
       >
         <Plus className="w-6 h-6" />
@@ -765,13 +761,6 @@ export default function Feed() {
         joinedCommunityIds={communityGroups.map(c => c.id)}
       />
 
-      <SearchModal
-        open={showSearch}
-        onOpenChange={setShowSearch}
-        posts={visiblePosts}
-        helpRequests={[]}
-        communities={[]}
-      />
     </div>
   );
 }

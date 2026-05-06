@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const QUICK_CATEGORIES = [
@@ -44,7 +44,7 @@ export default function QuickPostModal({ open, onOpenChange, currentUser }) {
         city: currentUser.city || 'Five Towns'
       };
 
-      await base44.entities.UnifiedPost.create(postData);
+      await dataService.entities.UnifiedPost.create(postData);
       
       setContent('');
       setSelectedCategory(null);

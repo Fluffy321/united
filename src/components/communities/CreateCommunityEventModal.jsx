@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { X, Calendar, Clock, MapPin, AlignLeft, Sparkles, Loader2, Tag, ChevronDown, Ticket, DollarSign, Users } from 'lucide-react';
 
@@ -55,7 +55,7 @@ export default function CreateCommunityEventModal({ communityId, currentUser, on
     }
     setGeneratingDesc(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await dataService.integrations.Core.InvokeLLM({
         prompt: `You are helping a Jewish community in the Five Towns, NY area create an event description.
 
 Event title: "${form.title}"
@@ -81,7 +81,7 @@ Do not make up specific times or dates. Do not use placeholder text.`,
     if (!text.trim()) return;
     setCategorizingAI(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await dataService.integrations.Core.InvokeLLM({
         prompt: `Categorize the following community event into exactly one of these categories:
 shabbos, learning, social, volunteer, youth, fundraiser, memorial, general
 
@@ -106,7 +106,7 @@ Reply with ONLY the category value (one word, lowercase, from the list above).`,
     setLoadingAISuggestions(true);
     setShowTimeSuggestions(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await dataService.integrations.Core.InvokeLLM({
         prompt: `You are helping schedule a Jewish community event in the Five Towns, NY area.
 
 Event: "${form.title}"
@@ -162,7 +162,7 @@ Return a JSON object with a "suggestions" array of exactly 3 items, each with:
     }
     setSaving(true);
     try {
-      const created = await base44.entities.CommunityEvent.create({
+      const created = await dataService.entities.CommunityEvent.create({
         community_id: communityId,
         title: form.title.trim(),
         description: form.description.trim(),

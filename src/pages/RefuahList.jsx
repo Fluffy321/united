@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Plus, RefreshCw, Loader2, HeartHandshake } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -32,7 +32,7 @@ function AddRefuahForm({ onSave, onCancel, communityId }) {
   const [saving, setSaving] = useState(false);
   const [user, setUser] = useState(null);
 
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
+  useEffect(() => { dataService.auth.me().then(setUser).catch(() => {}); }, []);
 
   const handleSave = async () => {
     if (!form.patient_name.trim()) { toast.error('Name is required'); return; }
@@ -54,7 +54,7 @@ function AddRefuahForm({ onSave, onCancel, communityId }) {
       return;
     }
     try {
-      await base44.entities.RefuahRequest.create({
+      await dataService.entities.RefuahRequest.create({
         ...form,
         author_id: user.id,
         author_name: user.full_name,
@@ -146,7 +146,7 @@ export default function RefuahList({ communityId }) {
       setUser({ id: 'local-demo', full_name: 'Local demo' });
       return;
     }
-    base44.auth.me().then(setUser).catch(() => {});
+    dataService.auth.me().then(setUser).catch(() => {});
   }, []);
 
   const { data: requests = [], isLoading } = useQuery({
@@ -155,29 +155,29 @@ export default function RefuahList({ communityId }) {
       if (!appParams.hasBackendConfig) return localRequests;
       const filter = { is_active: true };
       if (communityId) filter.community_id = communityId;
-      return base44.entities.RefuahRequest.filter(filter, '-created_date', 100);
+      return dataService.entities.RefuahRequest.filter(filter, '-created_date', 100);
     },
     enabled: appParams.hasBackendConfig,
   });
 
   const { data: myDavenings = [] } = useQuery({
     queryKey: ['my-davenings', user?.id],
-    queryFn: () => base44.entities.RefuahDavening.filter({ user_id: user.id }),
+    queryFn: () => dataService.entities.RefuahDavening.filter({ user_id: user.id }),
     enabled: !!user && appParams.hasBackendConfig,
   });
 
   const daveningSet = new Set(myDavenings.map(d => d.request_id));
 
   const handleDaven = async (request) => {
-    if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
+    if (!user) { dataService.auth.redirectToLogin(window.location.href); return; }
     if (daveningSet.has(request.id)) return;
     if (!appParams.hasBackendConfig) {
       setLocalRequests(items => items.map(item => item.id === request.id ? { ...item, davening_count: (item.davening_count || 0) + 1 } : item));
       toast.success('Marked locally for this demo session');
       return;
     }
-    await base44.entities.RefuahDavening.create({ request_id: request.id, user_id: user.id });
-    await base44.entities.RefuahRequest.update(request.id, { davening_count: (request.davening_count || 0) + 1 });
+    await dataService.entities.RefuahDavening.create({ request_id: request.id, user_id: user.id });
+    await dataService.entities.RefuahRequest.update(request.id, { davening_count: (request.davening_count || 0) + 1 });
     queryClient.invalidateQueries({ queryKey: ['my-davenings'] });
     queryClient.invalidateQueries({ queryKey: ['refuah-requests'] });
     toast.success('May they have a refuah shleima 🙏');
@@ -191,7 +191,7 @@ export default function RefuahList({ communityId }) {
       toast.success('Renewed locally for this demo session');
       return;
     }
-    await base44.entities.RefuahRequest.update(request.id, { expires_at: expires.toISOString(), renewed_at: new Date().toISOString() });
+    await dataService.entities.RefuahRequest.update(request.id, { expires_at: expires.toISOString(), renewed_at: new Date().toISOString() });
     queryClient.invalidateQueries({ queryKey: ['refuah-requests'] });
     toast.success('Renewed for 30 more days');
   };
@@ -233,7 +233,7 @@ export default function RefuahList({ communityId }) {
             ))}
 
             {!showForm && (
-              <button onClick={() => { if (!user) { base44.auth.redirectToLogin(window.location.href); return; } setShowForm(true); }}
+              <button onClick={() => { if (!user) { dataService.auth.redirectToLogin(window.location.href); return; } setShowForm(true); }}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-slate-200 text-slate-500 hover:border-violet-300 hover:text-violet-600 transition-colors font-semibold text-[14px]">
                 <Plus className="w-4 h-4" /> Add a name to the Tehillim list
               </button>

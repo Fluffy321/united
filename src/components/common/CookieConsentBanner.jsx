@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Cookie, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { storageService } from '@/services';
 
 const STORAGE_KEY = 'junited_cookie_consent';
 
@@ -11,16 +12,16 @@ export default function CookieConsentBanner() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = storageService.getItem(STORAGE_KEY);
       if (!stored) setVisible(true);
     } catch {
-      // localStorage blocked (e.g. incognito with strict settings) — skip banner
+      // Browser storage blocked (e.g. incognito with strict settings) — skip banner
     }
   }, []);
 
   const save = (analyticsEnabled) => {
     const consent = { essential: true, analytics: analyticsEnabled, timestamp: new Date().toISOString() };
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(consent)); } catch {}
+    storageService.setJson(STORAGE_KEY, consent);
     // Expose preference globally so analytics lib can check it
     window.__junited_analytics_enabled = analyticsEnabled;
     setVisible(false);

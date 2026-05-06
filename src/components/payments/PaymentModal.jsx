@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Heart, Ticket, Users, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
+import { paymentsService } from '@/services';
 import { toast } from 'sonner';
 import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
 
@@ -81,7 +81,7 @@ export default function PaymentModal({
 
     setIsLoading(true);
     try {
-      const response = await base44.functions.invoke('create-checkout', {
+      const response = await paymentsService.createCheckout( {
         amount: displayAmount,
         type,
         description: desc,

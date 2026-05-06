@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useNavigate } from 'react-router-dom';
 
 export default function CommunitiesSection({ userCommunities }) {
@@ -9,7 +9,7 @@ export default function CommunitiesSection({ userCommunities }) {
 
   const { data: allCommunities = [] } = useQuery({
     queryKey: ['profile-communities'],
-    queryFn: () => base44.entities.Community.list('-follower_count', 100),
+    queryFn: () => dataService.entities.Community.list('-follower_count', 100),
     staleTime: 300000
   });
 

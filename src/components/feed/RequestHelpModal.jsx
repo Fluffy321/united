@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import FileUploadZone from '@/components/common/FileUploadZone';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 export const HELP_REQUEST_CATEGORIES = [
@@ -43,7 +43,7 @@ export default function RequestHelpModal({ open, onOpenChange, currentUser }) {
     if (!category) { toast.error('Please select a category'); return; }
 
     setIsSubmitting(true);
-    await base44.entities.UnifiedPost.create({
+    await dataService.entities.UnifiedPost.create({
       user_id: currentUser.id,
       user_name: isAnonymous ? 'Anonymous' : (currentUser.display_name || currentUser.full_name),
       user_age_range: currentUser.age_range,

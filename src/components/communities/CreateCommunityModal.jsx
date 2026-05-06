@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, Plus, ImagePlus, X, Lock, Globe, Check, Sparkles, ChevronRight } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const CATEGORIES = [
@@ -72,12 +72,12 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
 
     if (coverImage) {
       setUploading(true);
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: coverImage });
+      const { file_url } = await dataService.integrations.Core.UploadFile({ file: coverImage });
       logo_url = file_url;
       setUploading(false);
     }
 
-    const community = await base44.entities.Community.create({
+    const community = await dataService.entities.Community.create({
       name: form.name.trim(),
       description: form.description.trim() || undefined,
       description_short: form.description.trim().slice(0, 120) || undefined,
@@ -96,7 +96,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
     });
 
     // Auto-join as admin
-    await base44.entities.UserCommunity.create({
+    await dataService.entities.UserCommunity.create({
       user_id: currentUser?.id,
       community_id: community.id,
       role: 'Admin',
@@ -115,7 +115,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
     if (!firstPostBody.trim() || !createdCommunity) return;
     setPostingFirst(true);
     const name = currentUser?.display_name || currentUser?.full_name || 'Admin';
-    await base44.entities.CommunityPost.create({
+    await dataService.entities.CommunityPost.create({
       community_id: createdCommunity.id,
       author_name: name,
       author_user_id: currentUser?.id,
@@ -127,7 +127,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
       likes_count: 0,
       comments_count: 0,
     });
-    await base44.entities.Community.update(createdCommunity.id, { post_count: 1 }).catch(() => {});
+    await dataService.entities.Community.update(createdCommunity.id, { post_count: 1 }).catch(() => {});
     toast.success('Community launched! 🎉');
     onCreated?.(createdCommunity);
     setPostingFirst(false);

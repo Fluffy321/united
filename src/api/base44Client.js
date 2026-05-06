@@ -9,6 +9,7 @@ const SUPABASE_ENTITY_TABLES = {
   Post: 'posts',
   Conversation: 'conversations',
   Message: 'messages',
+  Notification: 'notifications',
 };
 
 const PUBLIC_PROFILE_ENTITIES = new Set(['User', 'Profile']);
@@ -395,6 +396,41 @@ const shouldFallbackToLocal = (error) => {
   );
 };
 
+const getMissingSchemaColumn = (error) => {
+  const text = `${error?.message || ''} ${error?.details || ''}`;
+  const match = text.match(/Could not find the '([^']+)' column/i)
+    || text.match(/column "([^"]+)" of relation/i)
+    || text.match(/column ([a-zA-Z0-9_]+) does not exist/i);
+  return match?.[1] || null;
+};
+
+const updateProfileWithSchemaRetry = async (userId, patch) => {
+  const dbPatch = { ...toDbPatch(patch), updated_at: new Date().toISOString() };
+  const removedColumns = new Set();
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(dbPatch)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (!error) return data;
+
+    const missingColumn = getMissingSchemaColumn(error);
+    if (!missingColumn || removedColumns.has(missingColumn) || !(missingColumn in dbPatch)) {
+      throw error;
+    }
+
+    removedColumns.add(missingColumn);
+    delete dbPatch[missingColumn];
+    console.warn(`Skipping profile column "${missingColumn}" because it is not in the current Supabase schema cache yet.`);
+  }
+
+  throw new Error('Could not update profile because Supabase schema cache is missing required columns.');
+};
+
 const runWithLocalFallback = async (action, fallback, label) => {
   try {
     return await action();
@@ -637,13 +673,7 @@ export const base44 = {
     async updateMe(patch) {
       if (shouldUseSupabase) {
         const user = await getSupabaseUser();
-        const { data, error } = await supabase
-          .from('profiles')
-          .update({ ...toDbPatch(patch), updated_at: new Date().toISOString() })
-          .eq('id', user.id)
-          .select()
-          .single();
-        if (error) throw error;
+        const data = await updateProfileWithSchemaRetry(user.id, patch);
         return toAppRow({
           ...data,
           email: user.email,

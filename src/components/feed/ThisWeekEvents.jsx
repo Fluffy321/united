@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, MapPin, Clock, ChevronRight, Sparkles, Ticket } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO, startOfToday, addDays, isBefore, isToday, isTomorrow } from 'date-fns';
@@ -12,7 +12,7 @@ export default function ThisWeekEvents({ currentUser }) {
   const { data: events = [] } = useQuery({
     queryKey: ['this-week-events'],
     queryFn: async () => {
-      const all = await base44.entities.UnifiedPost.filter({ type: 'event' }, 'event_date', 60);
+      const all = await dataService.entities.UnifiedPost.filter({ type: 'event' }, 'event_date', 60);
       const today = startOfToday();
       const weekEnd = addDays(today, 7);
       return all.filter(e => {

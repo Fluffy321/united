@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 
 export default function CommunityPromptCard({ prompt, responses = [], onReply, currentUser }) {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ export default function CommunityPromptCard({ prompt, responses = [], onReply, c
   const handleMessage = async (userId) => {
     if (onReply) { onReply(userId); return; }
     try {
-      const convs = await base44.entities.Conversation.list('-updated_date', 50);
+      const convs = await dataService.entities.Conversation.list('-updated_date', 50);
       const existing = convs.find(c =>
         c.participant_ids?.includes(currentUser?.id) && c.participant_ids?.includes(userId)
       );
@@ -17,8 +17,8 @@ export default function CommunityPromptCard({ prompt, responses = [], onReply, c
         navigate(createPageUrl('Messages') + `?conversation=${existing.id}`);
         return;
       }
-      const [otherUser] = await base44.entities.User.filter({ id: userId });
-      const conv = await base44.entities.Conversation.create({
+      const [otherUser] = await dataService.entities.User.filter({ id: userId });
+      const conv = await dataService.entities.Conversation.create({
         participant_ids: [currentUser.id, userId],
         participant_names: [
           currentUser.display_name || currentUser.full_name,

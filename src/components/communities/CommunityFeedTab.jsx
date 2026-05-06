@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { MessageSquare, Send, X, Image, ArrowUp, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const AVATAR_COLORS = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899','#0891B2'];
@@ -27,7 +27,7 @@ function ReactionBar({ postId, currentUser, initialCounts = {} }) {
   const timerRef = useRef(null);
 
   const react = async (emoji) => {
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setPicker(false);
     if (myReaction === emoji) {
       // un-react
@@ -41,10 +41,10 @@ function ReactionBar({ postId, currentUser, initialCounts = {} }) {
     }
     // Persist via Reaction entity
     try {
-      const existing = await base44.entities.Reaction.filter({ post_id: postId, user_id: currentUser.id });
-      for (const r of existing) await base44.entities.Reaction.delete(r.id);
+      const existing = await dataService.entities.Reaction.filter({ post_id: postId, user_id: currentUser.id });
+      for (const r of existing) await dataService.entities.Reaction.delete(r.id);
       if (myReaction !== emoji) {
-        await base44.entities.Reaction.create({ post_id: postId, user_id: currentUser.id, emoji });
+        await dataService.entities.Reaction.create({ post_id: postId, user_id: currentUser.id, emoji });
       }
     } catch {}
   };
@@ -102,7 +102,7 @@ function CommentThread({ postId, currentUser, members = [] }) {
   const [suggestions, setSuggestions] = useState([]);
 
   useEffect(() => {
-    base44.entities.Comment.filter({ post_id: postId }, 'created_date', 30)
+    dataService.entities.Comment.filter({ post_id: postId }, 'created_date', 30)
       .then(setComments).catch(() => {}).finally(() => setLoading(false));
   }, [postId]);
 
@@ -128,7 +128,7 @@ function CommentThread({ postId, currentUser, members = [] }) {
   const submit = async () => {
     if (!text.trim() || !currentUser) return;
     setSubmitting(true);
-    const c = await base44.entities.Comment.create({
+    const c = await dataService.entities.Comment.create({
       post_id: postId,
       author_id: currentUser.id,
       author_name: currentUser.display_name || currentUser.full_name || 'Member',
@@ -285,7 +285,7 @@ function NewPostComposer({ community, currentUser, onNewPost, members, isAdmin }
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await dataService.integrations.Core.UploadFile({ file });
       setImageUrl(file_url);
     } catch { toast.error('Upload failed'); }
     setUploading(false);
@@ -297,9 +297,9 @@ function NewPostComposer({ community, currentUser, onNewPost, members, isAdmin }
 
   const submit = async () => {
     if (!body.trim() && !imageUrl) return;
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setSubmitting(true);
-    const post = await base44.entities.CommunityPost.create({
+    const post = await dataService.entities.CommunityPost.create({
       community_id: community.id,
       author_name: currentUser.display_name || currentUser.full_name || 'Member',
       author_user_id: currentUser.id,
@@ -320,7 +320,7 @@ function NewPostComposer({ community, currentUser, onNewPost, members, isAdmin }
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-1">
       {!open ? (
-        <button onClick={() => { if (!currentUser) { base44.auth.redirectToLogin(); return; } setOpen(true); }}
+        <button onClick={() => { if (!currentUser) { dataService.auth.redirectToLogin(); return; } setOpen(true); }}
           className="w-full text-left text-[13px] text-slate-400 bg-slate-50 rounded-full px-4 py-3 border border-slate-200 hover:border-blue-300 transition-colors"
         >
           Share something with {community?.name}…

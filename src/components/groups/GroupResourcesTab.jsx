@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Link, Upload, ExternalLink, Download, Loader2, X } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import FileUploadZone from '@/components/common/FileUploadZone';
@@ -21,7 +21,7 @@ export default function GroupResourcesTab({ group, currentUser, isMember, isAdmi
 
   const loadResources = async () => {
     setLoading(true);
-    const items = await base44.entities.GroupResource.filter({ group_id: group.id }, '-created_date', 50);
+    const items = await dataService.entities.GroupResource.filter({ group_id: group.id }, '-created_date', 50);
     setResources(items);
     setLoading(false);
   };
@@ -38,12 +38,12 @@ export default function GroupResourcesTab({ group, currentUser, isMember, isAdmi
       let fileName = null;
 
       if (selectedFile) {
-        const uploadResult = await base44.integrations.Core.UploadFile({ file: selectedFile });
+        const uploadResult = await dataService.integrations.Core.UploadFile({ file: selectedFile });
         fileUrl = uploadResult.file_url;
         fileName = selectedFile.name;
       }
 
-      const resource = await base44.entities.GroupResource.create({
+      const resource = await dataService.entities.GroupResource.create({
         group_id: group.id,
         user_id: currentUser.id,
         user_name: currentUser.full_name,

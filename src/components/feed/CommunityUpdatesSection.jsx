@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +12,7 @@ export default function CommunityUpdatesSection() {
   const { data: updates = [], isLoading } = useQuery({
     queryKey: ['community-updates'],
     queryFn: async () => {
-      return base44.entities.UnifiedPost.filter({ type: 'news' }, '-created_date', 10);
+      return dataService.entities.UnifiedPost.filter({ type: 'news' }, '-created_date', 10);
     },
     staleTime: 300000,
     gcTime: 600000,

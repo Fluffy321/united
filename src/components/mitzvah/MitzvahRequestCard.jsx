@@ -3,7 +3,7 @@ import { Hand, MessageCircle, CheckCircle2, Clock, MapPin, Eye, Users } from 'lu
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from 'date-fns';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import StatusPipeline from './StatusPipeline';
 import ThankYouBanner from './ThankYouBanner';
 
@@ -48,7 +48,7 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
   // Track view
   useEffect(() => {
     if (!isRequester && isOpen) {
-      base44.entities.MitzvahRequest.update(request.id, {
+      dataService.entities.MitzvahRequest.update(request.id, {
         views_count: (request.views_count || 0) + 1
       }).catch(() => {});
     }

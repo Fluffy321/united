@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Calendar, MessageSquare, X, Send, Loader2, Eye, Edit3 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 export default function NewsletterComposer({ group, memberEmails, onClose, onSent }) {
@@ -15,8 +15,8 @@ export default function NewsletterComposer({ group, memberEmails, onClose, onSen
 
   const handleGenerateContent = async () => {
     try {
-      const discussions = await base44.entities.GroupDiscussion.filter({ group_id: group.id }, '-created_date', 5);
-      const events = await base44.entities.CommunityEvent.filter({ community_id: group.id }, '-event_date', 5);
+      const discussions = await dataService.entities.GroupDiscussion.filter({ group_id: group.id }, '-created_date', 5);
+      const events = await dataService.entities.CommunityEvent.filter({ community_id: group.id }, '-event_date', 5);
       
       setTopDiscussions(discussions);
       setUptoDateEvents(events);
@@ -119,7 +119,7 @@ export default function NewsletterComposer({ group, memberEmails, onClose, onSen
     setStep('sending');
     try {
       const html = generateHtmlTemplate();
-      const response = await base44.functions.invoke('sendGroupNewsletter', {
+      const response = await dataService.functions.invoke('sendGroupNewsletter', {
         groupId: group.id,
         groupName: group.name,
         memberUserIds: memberEmails, // Pass user IDs, backend resolves emails

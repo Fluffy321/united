@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { tabActive, tabInactive, btnPrimary, badgeBlue, gradientStyle } from '@/lib/theme';
 import { Calendar, MapPin, Clock, Plus, ChevronLeft, Users, Ticket } from 'lucide-react';
 import PaymentModal from '@/components/payments/PaymentModal';
 import EventSummaryButton from '@/components/events/EventSummaryButton';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO, isBefore, startOfToday } from 'date-fns';
@@ -32,18 +31,18 @@ export default function Events() {
   const [paymentEvent, setPaymentEvent] = useState(null);
 
   React.useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    dataService.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['all-events'],
-    queryFn: () => base44.entities.UnifiedPost.filter({ type: 'event' }, '-created_date', 80),
+    queryFn: () => dataService.entities.UnifiedPost.filter({ type: 'event' }, '-created_date', 80),
     staleTime: 60000,
   });
 
   const { data: rsvps = [] } = useQuery({
     queryKey: ['my-rsvps', currentUser?.id],
-    queryFn: () => base44.entities.RSVP.filter({ user_id: currentUser.id }),
+    queryFn: () => dataService.entities.RSVP.filter({ user_id: currentUser.id }),
     enabled: !!currentUser,
     staleTime: 60000,
   });
@@ -52,11 +51,11 @@ export default function Events() {
     mutationFn: async ({ event, isGoing }) => {
       if (isGoing) {
         const existing = rsvps.find(r => r.post_id === event.id);
-        if (existing) await base44.entities.RSVP.delete(existing.id);
-        await base44.entities.UnifiedPost.update(event.id, { likes_count: Math.max(0, (event.likes_count || 0) - 1) });
+        if (existing) await dataService.entities.RSVP.delete(existing.id);
+        await dataService.entities.UnifiedPost.update(event.id, { likes_count: Math.max(0, (event.likes_count || 0) - 1) });
       } else {
-        await base44.entities.RSVP.create({ post_id: event.id, user_id: currentUser.id, user_name: currentUser.display_name || currentUser.full_name });
-        await base44.entities.UnifiedPost.update(event.id, { likes_count: (event.likes_count || 0) + 1 });
+        await dataService.entities.RSVP.create({ post_id: event.id, user_id: currentUser.id, user_name: currentUser.display_name || currentUser.full_name });
+        await dataService.entities.UnifiedPost.update(event.id, { likes_count: (event.likes_count || 0) + 1 });
         toast.success('You\'re going! 🎉');
       }
     },
@@ -87,9 +86,9 @@ export default function Events() {
   });
 
   return (
-    <div className="min-h-screen" style={{ background: '#F8FAFC' }}>
+    <div className="app-page">
       {/* Header */}
-      <div className="bg-white sticky top-0 z-20 border-b border-slate-100" style={{ boxShadow: '0 1px 8px rgba(15,23,42,0.04)' }}>
+      <div className="sticky top-0 z-20 border-b border-slate-100 bg-white shadow-sm">
         <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button onClick={() => navigate(-1)} className="p-1.5 rounded-full hover:bg-slate-100 transition-colors">
@@ -100,7 +99,7 @@ export default function Events() {
           {currentUser && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-1.5 bg-blue-600 text-white px-3.5 py-1.5 rounded-full text-[12px] font-bold shadow hover:bg-blue-700 transition-colors"
+              className="app-button-primary min-h-9 rounded-full px-3.5 py-0 text-[12px]"
             >
               <Plus className="w-3.5 h-3.5" /> Create
             </button>
@@ -114,8 +113,7 @@ export default function Events() {
               <button
                 key={f.id}
                 onClick={() => setActiveFilter(f.id)}
-                className={activeFilter === f.id ? tabActive : tabInactive}
-              style={activeFilter === f.id ? gradientStyle : {}}
+                className={`app-chip ${activeFilter === f.id ? 'app-chip-active' : ''}`}
               >
                 {f.label}
               </button>
@@ -128,7 +126,7 @@ export default function Events() {
       <div className="max-w-2xl mx-auto px-4 py-4 pb-28 space-y-3">
         {isLoading ? (
           [...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl p-4 space-y-2">
+            <div key={i} className="app-card space-y-2 p-4">
               <div className="skeleton h-4 w-3/4 rounded" />
               <div className="skeleton h-3 w-1/2 rounded" />
               <div className="skeleton h-3 w-1/3 rounded" />
@@ -144,7 +142,7 @@ export default function Events() {
             {currentUser && (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="mt-4 bg-blue-600 text-white rounded-full px-5 py-2 text-[13px] font-bold"
+                className="app-button-primary mt-4 rounded-full px-5 text-[13px]"
               >
                 Create Event
               </button>
@@ -154,7 +152,7 @@ export default function Events() {
           const isGoing = rsvpSet.has(event.id);
           const attendeeCount = event.likes_count || 0;
           return (
-            <div key={event.id} className="bg-white rounded-2xl overflow-hidden border border-slate-100" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <div key={event.id} className="app-card overflow-hidden">
               {event.image_url && (
                 <img src={event.image_url} alt="" className="w-full h-40 object-cover" />
               )}
@@ -203,8 +201,9 @@ export default function Events() {
                       <button
                         onClick={() => rsvpMutation.mutate({ event, isGoing })}
                         disabled={rsvpMutation.isPending}
-                        className={isGoing ? badgeBlue + ' px-4 py-1.5 text-[12px]' : btnPrimary + ' text-[12px] py-1.5'}
-                        style={isGoing ? {} : gradientStyle}
+                        className={isGoing
+                          ? 'app-chip app-chip-active px-4 py-1.5 text-[12px]'
+                          : 'app-button-primary min-h-8 rounded-full px-4 py-0 text-[12px]'}
                       >
                         {isGoing ? '✓ Going' : 'RSVP'}
                       </button>

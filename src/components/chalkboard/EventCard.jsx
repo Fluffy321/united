@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -24,20 +24,20 @@ export default function EventCard({ event, currentUser, onComment, onDelete, onR
   }, [event.id]);
 
   const loadAttendees = async () => {
-    const allAttendees = await base44.entities.EventAttendee.filter({ event_id: event.id });
+    const allAttendees = await dataService.entities.EventAttendee.filter({ event_id: event.id });
     setAttendees(allAttendees.slice(0, 5));
     setIsAttending(allAttendees.some(a => a.user_id === currentUser.id));
   };
 
   const handleRSVP = async () => {
     if (isAttending) {
-      const myAttendee = await base44.entities.EventAttendee.filter({ 
+      const myAttendee = await dataService.entities.EventAttendee.filter({ 
         event_id: event.id, 
         user_id: currentUser.id 
       });
       if (myAttendee[0]) {
-        await base44.entities.EventAttendee.delete(myAttendee[0].id);
-        await base44.entities.ChalkboardPost.update(event.id, { 
+        await dataService.entities.EventAttendee.delete(myAttendee[0].id);
+        await dataService.entities.ChalkboardPost.update(event.id, { 
           attendee_count: Math.max(0, attendeeCount - 1) 
         });
         setAttendeeCount(prev => Math.max(0, prev - 1));
@@ -46,13 +46,13 @@ export default function EventCard({ event, currentUser, onComment, onDelete, onR
         toast.success('RSVP removed');
       }
     } else {
-      await base44.entities.EventAttendee.create({
+      await dataService.entities.EventAttendee.create({
         event_id: event.id,
         user_id: currentUser.id,
         user_name: currentUser.display_name,
         user_avatar: currentUser.avatar_url
       });
-      await base44.entities.ChalkboardPost.update(event.id, { 
+      await dataService.entities.ChalkboardPost.update(event.id, { 
         attendee_count: attendeeCount + 1 
       });
       setAttendeeCount(prev => prev + 1);

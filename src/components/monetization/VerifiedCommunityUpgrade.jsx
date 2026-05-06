@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, Bell, BarChart2, Pin, Users, Sparkles, Check } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService, paymentsService } from '@/services';
 import { toast } from 'sonner';
 import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
 
@@ -58,10 +58,10 @@ export default function VerifiedCommunityUpgrade({ community, currentUser }) {
     toast.info('Verified upgrades are coming soon. No money was processed.');
     return;
 
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setLoading(true);
     try {
-      const res = await base44.functions.invoke('create-checkout', {
+      const res = await paymentsService.createCheckout( {
         checkoutType: 'verified_community',
         billing,
         tier: selectedTier,
