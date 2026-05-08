@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, User, Loader2, HeartHandshake, MessageCircle, Users } from 'lucide-react';
 import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
+import { shouldUseSupabase } from '@/api/supabaseClient';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -37,7 +38,13 @@ export default function Login() {
     try {
       if (mode === 'signup') {
         await dataService.auth.signUp({ email, password, displayName });
-        setMessage('Check your email to confirm your account, then come back and sign in.');
+        if (shouldUseSupabase) {
+          setMessage('Check your email to confirm your account, then come back and sign in.');
+        } else {
+          setMessage('Local preview account created. Taking you into the app...');
+          await checkAppState();
+          navigate(target, { replace: true });
+        }
       } else {
         const signIn = dataService.auth.signInWithPassword || dataService.auth.signin || dataService.auth.signIn || dataService.auth.login;
         if (typeof signIn !== 'function') {
@@ -175,7 +182,9 @@ export default function Login() {
             <p className="mt-2 text-[14px] font-medium leading-6 text-slate-500">
               {mode === 'signin'
                 ? 'Use the email and password for your JUnited account.'
-                : 'Supabase will send a confirmation email after you create your account.'}
+                : shouldUseSupabase
+                  ? 'Supabase will send a confirmation email after you create your account.'
+                  : 'Local preview mode creates a demo account immediately without sending email.'}
             </p>
           </div>
 

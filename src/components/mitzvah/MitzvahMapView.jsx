@@ -33,7 +33,147 @@ const CATEGORY_CONFIG = {
   'Other':        { color: '#64748b', emoji: '💙' },
 };
 
-const ALL_FILTERS = ['All', ...Object.keys(CATEGORY_CONFIG)];
+const RESOURCE_CONFIG = {
+  Shuls: { color: '#1d4ed8', emoji: '🕍' },
+  Minyanim: { color: '#7c3aed', emoji: '🙏' },
+  Mikvahs: { color: '#0e7490', emoji: '💧' },
+  Chabad: { color: '#be123c', emoji: '✡️' },
+};
+
+const RESOURCE_PINS = [
+  {
+    id: 'resource-yilc',
+    resourceType: 'Shuls',
+    title: 'Young Israel of Lawrence-Cedarhurst',
+    description: 'Large Modern Orthodox shul with daily minyanim, youth programming, and active community life.',
+    address: '86 Spruce St, Lawrence, NY 11559',
+    approxLat: 40.6164,
+    approxLng: -73.7319,
+    website: 'yilc.org',
+  },
+  {
+    id: 'resource-shaaray-lawrence',
+    resourceType: 'Shuls',
+    title: 'Congregation Shaaray Tefila',
+    description: 'Established Lawrence shul with weekday minyanim and Torah learning.',
+    address: '44 Frost Lane, Lawrence, NY 11559',
+    approxLat: 40.6137,
+    approxLng: -73.7241,
+  },
+  {
+    id: 'resource-yiw',
+    resourceType: 'Shuls',
+    title: 'Young Israel of Woodmere',
+    description: 'Vibrant Woodmere shul with daily shiurim, minyanim, and family programming.',
+    address: '135 Irving Place, Woodmere, NY 11598',
+    approxLat: 40.6324,
+    approxLng: -73.7168,
+    website: 'yiwoodmere.org',
+  },
+  {
+    id: 'resource-aish',
+    resourceType: 'Shuls',
+    title: 'Aish Kodesh',
+    description: 'Spirited Woodmere shul known for warm tefillah and deep Torah learning.',
+    address: '35 W Broadway, Woodmere, NY 11598',
+    approxLat: 40.6321,
+    approxLng: -73.7067,
+  },
+  {
+    id: 'resource-yic',
+    resourceType: 'Shuls',
+    title: 'Young Israel of Cedarhurst',
+    description: 'Cedarhurst Young Israel with daily minyanim and community programming.',
+    address: '66 Cedarhurst Ave, Cedarhurst, NY 11516',
+    approxLat: 40.6227,
+    approxLng: -73.7259,
+  },
+  {
+    id: 'resource-yih',
+    resourceType: 'Shuls',
+    title: 'Young Israel of Hewlett',
+    description: 'Traditional Young Israel serving Hewlett families with tefillah and programs.',
+    address: '1215 Broadway, Hewlett, NY 11557',
+    approxLat: 40.6412,
+    approxLng: -73.7012,
+  },
+  {
+    id: 'resource-minyan-lawrence',
+    resourceType: 'Minyanim',
+    title: 'Lawrence Early Minyan Hub',
+    description: 'Common area for early Shacharis and weekday Mincha/Maariv options.',
+    address: 'Central Lawrence',
+    approxLat: 40.6156,
+    approxLng: -73.7292,
+  },
+  {
+    id: 'resource-minyan-woodmere',
+    resourceType: 'Minyanim',
+    title: 'Woodmere Minyan Corridor',
+    description: 'Cluster of daily minyanim around Broadway, Irving Place, and Branch Boulevard.',
+    address: 'Woodmere',
+    approxLat: 40.6331,
+    approxLng: -73.7135,
+  },
+  {
+    id: 'resource-minyan-cedarhurst',
+    resourceType: 'Minyanim',
+    title: 'Cedarhurst Minyan Area',
+    description: 'Neighborhood minyan options near Cedarhurst Avenue and Central Avenue.',
+    address: 'Cedarhurst',
+    approxLat: 40.6229,
+    approxLng: -73.7268,
+  },
+  {
+    id: 'resource-mikvah-fivetowns',
+    resourceType: 'Mikvahs',
+    title: 'Five Towns Mikvah',
+    description: 'Community mikvah serving the Five Towns area.',
+    address: '95 Cedarhurst Ave, Cedarhurst, NY 11516',
+    approxLat: 40.6232,
+    approxLng: -73.7261,
+  },
+  {
+    id: 'resource-chabad-fivetowns',
+    resourceType: 'Chabad',
+    title: 'Chabad of the Five Towns',
+    description: 'Chabad center offering classes, Shabbos and holiday programming, and outreach.',
+    address: '74 Spruce St, Lawrence, NY 11559',
+    approxLat: 40.6162,
+    approxLng: -73.7314,
+    website: 'chabadfivetowns.com',
+  },
+  {
+    id: 'resource-chabad-woodmere',
+    resourceType: 'Chabad',
+    title: 'Chabad of Woodmere',
+    description: 'Inclusive Chabad center with learning, holiday events, and community programming.',
+    address: '700 Branch Blvd, Woodmere, NY 11598',
+    approxLat: 40.6285,
+    approxLng: -73.7216,
+    website: 'chabadwoodmere.com',
+  },
+  {
+    id: 'resource-chabad-inwood',
+    resourceType: 'Chabad',
+    title: 'Chabad of Inwood',
+    description: 'Chabad center serving Inwood with classes, events, and Jewish community support.',
+    address: 'Inwood, NY 11096',
+    approxLat: 40.6229,
+    approxLng: -73.7501,
+  },
+  {
+    id: 'resource-chabad-hewlett',
+    resourceType: 'Chabad',
+    title: 'Chabad of Hewlett',
+    description: 'Chabad center serving Hewlett with learning, Shabbos meals, and holiday programs.',
+    address: 'Hewlett, NY 11557',
+    approxLat: 40.6434,
+    approxLng: -73.6946,
+  },
+];
+
+const ALL_FILTERS = ['All', ...Object.keys(CATEGORY_CONFIG), ...Object.keys(RESOURCE_CONFIG)];
 
 const createCustomIcon = (color, emoji, selected = false) => {
   const size = selected ? 44 : 36;
@@ -68,7 +208,7 @@ function BoundsFitter({ pins }) {
   return null;
 }
 
-function MapInner({ center, zoom, requests, userOrigin, onSelectRequest, mapRef, selectedRequestId, activeFilter }) {
+function MapInner({ center, zoom, requests, resources, userOrigin, onSelectRequest, onSelectResource, mapRef, selectedRequestId, selectedResourceId, activeFilter }) {
   const map = useMap();
 
   useEffect(() => {
@@ -85,11 +225,22 @@ function MapInner({ center, zoom, requests, userOrigin, onSelectRequest, mapRef,
 
   const filtered = withCoords.filter(r =>
     r.approxLat && r.approxLng && !r.is_hidden &&
-    (activeFilter === 'All' || r.category === activeFilter)
+    (activeFilter === 'All' || r.category === activeFilter) &&
+    !RESOURCE_CONFIG[activeFilter]
+  );
+
+  const filteredResources = resources.filter(resource =>
+    activeFilter === 'All' || resource.resourceType === activeFilter
   );
 
   // Use seed pins only when no real pins are visible
-  const displayPins = filtered.length > 0 ? filtered : SEED_PINS;
+  const isResourceFilter = !!RESOURCE_CONFIG[activeFilter];
+  const displayPins = isResourceFilter ? [] : (filtered.length > 0 ? filtered : SEED_PINS);
+  const fittingPins = activeFilter === 'All'
+    ? [...displayPins, ...filteredResources]
+    : isResourceFilter
+      ? filteredResources
+      : displayPins;
 
   return (
     <>
@@ -98,7 +249,7 @@ function MapInner({ center, zoom, requests, userOrigin, onSelectRequest, mapRef,
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <BoundsFitter pins={displayPins} />
+      <BoundsFitter pins={fittingPins} />
 
       {userOrigin && (
         <Marker
@@ -125,6 +276,20 @@ function MapInner({ center, zoom, requests, userOrigin, onSelectRequest, mapRef,
           );
         })}
       </MarkerClusterGroup>
+
+      <MarkerClusterGroup chunkedLoading>
+        {filteredResources.map(resource => {
+          const cfg = RESOURCE_CONFIG[resource.resourceType];
+          return (
+            <Marker
+              key={resource.id}
+              position={[resource.approxLat, resource.approxLng]}
+              icon={createCustomIcon(cfg.color, cfg.emoji, resource.id === selectedResourceId)}
+              eventHandlers={{ click: () => onSelectResource(resource) }}
+            />
+          );
+        })}
+      </MarkerClusterGroup>
     </>
   );
 }
@@ -137,19 +302,30 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
   const effectiveZoom = mapZoom ?? 12;
   const [activeFilter, setActiveFilter] = useState('All');
   const [selectedReq, setSelectedReq] = useState(null);
+  const [selectedResource, setSelectedResource] = useState(null);
+  const resources = RESOURCE_PINS;
 
   // Count real pins
   const realPinCount = requests.filter(r =>
     (r.approxLat || r.lat || r.location_lat) && (r.approxLng || r.lng || r.location_lng) && !r.is_hidden
   ).length;
   const usingSeeds = realPinCount === 0;
+  const showingOnlyResources = !!RESOURCE_CONFIG[activeFilter];
+  const showSeedMessaging = usingSeeds && !showingOnlyResources;
 
   const handlePinClick = (req) => {
     setSelectedReq(req);
+    setSelectedResource(null);
     if (onSelectRequest) onSelectRequest(req);
   };
 
+  const handleResourceClick = (resource) => {
+    setSelectedResource(resource);
+    setSelectedReq(null);
+  };
+
   const cfg = selectedReq ? (CATEGORY_CONFIG[selectedReq.category] || CATEGORY_CONFIG['Other']) : null;
+  const resourceCfg = selectedResource ? RESOURCE_CONFIG[selectedResource.resourceType] : null;
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -159,10 +335,16 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
           className="scrollbar-hide"
           style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, WebkitOverflowScrolling: 'touch' }}
         >
-          {ALL_FILTERS.map(f => (
+          {ALL_FILTERS.map(f => {
+            const filterCfg = CATEGORY_CONFIG[f] || RESOURCE_CONFIG[f];
+            return (
             <button
               key={f}
-              onClick={() => setActiveFilter(f)}
+              onClick={() => {
+                setActiveFilter(f);
+                setSelectedReq(null);
+                setSelectedResource(null);
+              }}
               className="flex-shrink-0 text-[11px] font-bold transition-all touch-manipulation"
               style={{
                 padding: '5px 10px',
@@ -174,14 +356,15 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
                 )
               }}
             >
-              {CATEGORY_CONFIG[f]?.emoji} {f}
+              {filterCfg?.emoji} {f}
             </button>
-          ))}
+          );
+          })}
         </div>
       </div>
 
       {/* Seed notice */}
-      {usingSeeds && (
+      {showSeedMessaging && (
         <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[500] px-3 py-1.5 rounded-full text-[11px] font-semibold text-slate-600 pointer-events-none"
           style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid #E2E8F0', boxShadow: '0 1px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' }}
         >
@@ -206,20 +389,23 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
         scrollWheelZoom={true}
         zoomControl={true}
       >
-        <MapInner
+          <MapInner
           center={effectiveCenter}
           zoom={effectiveZoom}
-          requests={requests}
-          userOrigin={userOrigin}
-          onSelectRequest={handlePinClick}
-          mapRef={mapRef}
-          selectedRequestId={selectedReq?.id || selectedRequestId}
-          activeFilter={activeFilter}
-        />
+            requests={requests}
+            resources={resources}
+            userOrigin={userOrigin}
+            onSelectRequest={handlePinClick}
+            onSelectResource={handleResourceClick}
+            mapRef={mapRef}
+            selectedRequestId={selectedReq?.id || selectedRequestId}
+            selectedResourceId={selectedResource?.id}
+            activeFilter={activeFilter}
+          />
       </MapContainer>
 
       {/* No pins fallback */}
-      {!selectedReq && usingSeeds && (
+      {!selectedReq && showSeedMessaging && (
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[500] px-4 py-2 rounded-full text-[12px] font-semibold text-slate-500 pointer-events-none"
           style={{ background: 'rgba(255,255,255,0.95)', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' }}
         >
@@ -260,6 +446,33 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedResource && (
+        <div
+          className="absolute bottom-0 left-0 right-0 z-[500] px-3 pb-3"
+          style={{ animation: 'slideUp 200ms ease' }}
+        >
+          <style>{`@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`}</style>
+          <div className="bg-white rounded-2xl p-3" style={{ boxShadow: '0 -2px 20px rgba(0,0,0,0.18)', borderTop: `3px solid ${resourceCfg.color}` }}>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style={{ background: `${resourceCfg.color}18` }}>
+                {resourceCfg.emoji}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-[14px] text-slate-900 truncate">{selectedResource.title}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: `${resourceCfg.color}18`, color: resourceCfg.color }}>{selectedResource.resourceType}</span>
+                  <span className="text-[11px] text-slate-400 truncate">{selectedResource.address}</span>
+                </div>
+                <p className="mt-1 text-[11px] font-medium leading-4 text-slate-500 line-clamp-2">{selectedResource.description}</p>
+              </div>
+              <button onClick={() => setSelectedResource(null)} className="w-7 h-7 flex flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </div>

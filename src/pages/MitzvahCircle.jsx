@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
   Award,
@@ -22,6 +23,8 @@ import {
 import { dataService, notificationsService, storageService } from '@/services';
 import { toast } from 'sonner';
 import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
+import MitzvahMap from '@/components/mitzvah/MitzvahMap';
+import CarpoolBoard from '@/components/mitzvah/CarpoolBoard';
 
 const STORAGE_KEY = 'junited_advanced_mitzvah_marketplace_v1';
 
@@ -49,6 +52,106 @@ const STATUSES = {
 };
 
 const CURRENT_USER_ID = 'local-demo';
+
+const NEIGHBORHOOD_COORDS = {
+  Cedarhurst: { lat: 40.6223, lng: -73.7246 },
+  Woodmere: { lat: 40.6323, lng: -73.7129 },
+  Lawrence: { lat: 40.6157, lng: -73.7296 },
+  Hewlett: { lat: 40.6434, lng: -73.6946 },
+  Inwood: { lat: 40.6229, lng: -73.7501 },
+  'Five Towns': { lat: 40.6369, lng: -73.7142 },
+};
+
+const getRequestCoords = (request, index = 0) => {
+  if (request.location_lat && request.location_lng) {
+    return { lat: request.location_lat, lng: request.location_lng };
+  }
+  if (request.approxLat && request.approxLng) {
+    return { lat: request.approxLat, lng: request.approxLng };
+  }
+  const base = NEIGHBORHOOD_COORDS[request.neighborhood] || NEIGHBORHOOD_COORDS[request.locationLabel] || NEIGHBORHOOD_COORDS['Five Towns'];
+  return {
+    lat: base.lat + ((index % 3) - 1) * 0.002,
+    lng: base.lng + (Math.floor(index / 3) - 1) * 0.002,
+  };
+};
+
+const JOINED_COMMUNITY_IDS = [
+  'five-towns-shul-network',
+  'chesed-response-circle',
+  'simcha-events-board',
+  'shabbos-table-hosts',
+  'demo-community',
+];
+
+const COMMUNITY_MAP_POINTS = [
+  {
+    id: 'community-post-minyan',
+    community_id: 'five-towns-shul-network',
+    communityName: 'Five Towns Shul Network',
+    title: 'Late Maariv update',
+    description: 'New late Maariv slot and Motzei Shabbos learning post from your shul network.',
+    type: 'community_post',
+    location_text: 'Cedarhurst',
+    location_lat: 40.6227,
+    location_lng: -73.7233,
+  },
+  {
+    id: 'community-post-meals',
+    community_id: 'chesed-response-circle',
+    communityName: 'Chesed Response Circle',
+    title: 'Meals needed nearby',
+    description: 'Two dinner slots are still open for a local family.',
+    type: 'help_needed',
+    location_text: 'Woodmere',
+    location_lat: 40.6336,
+    location_lng: -73.7118,
+  },
+  {
+    id: 'community-post-simcha',
+    community_id: 'simcha-events-board',
+    communityName: 'Simcha & Events Board',
+    title: 'Sheva brachos setup',
+    description: 'Volunteers and rides are being coordinated for tonight.',
+    type: 'event',
+    location_text: 'Lawrence',
+    location_lat: 40.6178,
+    location_lng: -73.7283,
+  },
+  {
+    id: 'community-post-hosting',
+    community_id: 'shabbos-table-hosts',
+    communityName: 'Shabbos Table Hosts',
+    title: 'Guests looking for lunch',
+    description: 'A new couple is looking for a Shabbos lunch invite this week.',
+    type: 'community_post',
+    location_text: 'Woodmere',
+    location_lat: 40.6311,
+    location_lng: -73.7144,
+  },
+  {
+    id: 'community-post-demo',
+    community_id: 'demo-community',
+    communityName: 'Five Towns',
+    title: 'Neighborhood post near you',
+    description: 'A community update from one of your joined local circles.',
+    type: 'community_post',
+    location_text: 'Five Towns',
+    location_lat: 40.6368,
+    location_lng: -73.7168,
+  },
+  {
+    id: 'not-joined-example',
+    community_id: 'not-joined',
+    communityName: 'Not Joined Example',
+    title: 'Hidden from personalized map',
+    description: 'This point should not appear unless the user joins this community.',
+    type: 'community_post',
+    location_text: 'Inwood',
+    location_lat: 40.6229,
+    location_lng: -73.7501,
+  },
+];
 
 const initialState = {
   mitzvah_requests: [
@@ -671,17 +774,36 @@ function EmptyState({ title, text }) {
 }
 
 export default function MitzvahCircle() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [currentUser, setCurrentUser] = useState(null);
   const [state, setState] = useState(readState);
-  const [activeTab, setActiveTab] = useState('open');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'open');
   const [query, setQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [showCreate, setShowCreate] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [selectedMapRequestId, setSelectedMapRequestId] = useState(null);
 
   useEffect(() => {
     saveState(state);
   }, [state]);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [activeTab, searchParams]);
+
+  const changeTab = (tab) => {
+    setActiveTab(tab);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (tab === 'open') next.delete('tab');
+      else next.set('tab', tab);
+      return next;
+    }, { replace: true });
+  };
 
   useEffect(() => {
     const userTimeout = new Promise((resolve) => {
@@ -1019,6 +1141,34 @@ export default function MitzvahCircle() {
   }, [state.mitzvah_requests, query, categoryFilter]);
 
   const openRequests = filteredRequests.filter((request) => ![STATUSES.VERIFIED, STATUSES.CANCELLED].includes(request.status));
+  const completedRequests = filteredRequests.filter((request) => [STATUSES.VERIFIED, STATUSES.CANCELLED].includes(request.status));
+  const rideRequests = useMemo(() => {
+    return openRequests
+      .filter((request) => {
+        const text = `${request.title || ''} ${request.description || ''} ${request.category || ''}`.toLowerCase();
+        return request.category === 'Transportation' || /ride|carpool|pickup|dropoff|drive|driver|seat|seats|appointment/.test(text);
+      })
+      .map((request) => ({
+        ...request,
+        locationLabel: request.neighborhood || request.locationLabel || 'Five Towns',
+        pickup_window: request.pickup_window || 'Coordinate time',
+      }));
+  }, [openRequests]);
+  const mapRequests = useMemo(() => openRequests.map((request, index) => {
+    const coords = getRequestCoords(request, index);
+    return {
+      ...request,
+      location_lat: coords.lat,
+      location_lng: coords.lng,
+      location_text: request.neighborhood || request.locationLabel || 'Five Towns',
+      created_date: request.created_date || request.createdAt,
+    };
+  }), [openRequests]);
+  const personalizedCommunityPoints = useMemo(() => {
+    const joined = new Set(JOINED_COMMUNITY_IDS);
+    return COMMUNITY_MAP_POINTS.filter((point) => joined.has(point.community_id));
+  }, []);
+  const selectedMapRequest = mapRequests.find((request) => request.id === selectedMapRequestId);
   const myOffers = state.mitzvah_offers
     .filter((offer) => getVolunteerId(offer) === currentUser?.id)
     .map((offer) => ({ offer, request: state.mitzvah_requests.find((request) => request.id === offer.requestId) }))
@@ -1089,6 +1239,28 @@ export default function MitzvahCircle() {
     }
   };
 
+  const handleCreateCarpool = async (type) => {
+    const isOffer = type === 'offer';
+    try {
+      await backend.createRequest({
+        title: isOffer ? 'Offering carpool seats' : 'Need a ride',
+        description: isOffer
+          ? 'Route:\nPickup window:\nSeats available:\nCar seats / bags:\nNotes:'
+          : 'Pickup area:\nDestination:\nPickup window:\nRiders / bags:\nNotes:',
+        category: 'Transportation',
+        neighborhood: 'Five Towns',
+        estimatedHours: 1,
+        type: 'volunteer',
+        amount: 0,
+        urgency: 'Medium',
+      });
+      changeTab('carpool');
+      toast.success(isOffer ? 'Carpool offer started.' : 'Ride request started.');
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   const generateHelperText = ({ totalHours, verifiedHours, logs }) => {
     const categories = [...new Set(logs.map((log) => log.category))].slice(0, 4).join(', ') || 'community service';
     return {
@@ -1107,10 +1279,13 @@ export default function MitzvahCircle() {
   }
 
   const tabs = [
-    { id: 'open', label: 'Open Requests' },
+    { id: 'open', label: 'Help Requests' },
+    { id: 'carpool', label: 'Carpool' },
+    { id: 'map', label: 'Map' },
     { id: 'offers', label: 'My Offers' },
     { id: 'posted', label: 'My Posted Requests' },
-    { id: 'hours', label: 'Chesed Hours' },
+    { id: 'log', label: 'My Log' },
+    { id: 'completed', label: 'Completed' },
   ];
 
   return (
@@ -1156,7 +1331,7 @@ export default function MitzvahCircle() {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => changeTab(tab.id)}
                 className={`shrink-0 rounded-xl px-3.5 py-2 text-[13px] font-black transition ${
                   activeTab === tab.id ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-950'
                 }`}
@@ -1167,7 +1342,7 @@ export default function MitzvahCircle() {
           </div>
         </div>
 
-        {(activeTab === 'open' || activeTab === 'posted') && (
+        {(activeTab === 'open' || activeTab === 'posted' || activeTab === 'map') && (
           <div className="app-card mb-3 grid gap-2 p-3 sm:grid-cols-[1fr_220px]">
             <label className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -1201,6 +1376,50 @@ export default function MitzvahCircle() {
                 onVerify={handleVerify}
               />
             )) : <EmptyState title="No open requests match this view" text="Try clearing filters or post a new request." />
+          )}
+
+          {activeTab === 'carpool' && (
+            <CarpoolBoard
+              rideRequests={rideRequests}
+              signupsByRequest={{}}
+              onCreateRide={handleCreateCarpool}
+              onSelectRide={(request) => setSelectedMapRequestId(request.id)}
+              onClaimRide={(event, request) => handleOffer(request)}
+              isClaiming={false}
+            />
+          )}
+
+          {activeTab === 'map' && (
+            <div className="space-y-3">
+              <div className="app-card overflow-hidden p-2">
+                <MitzvahMap
+                  requests={mapRequests}
+                  userLocation={null}
+                  communityPoints={personalizedCommunityPoints}
+                  personalized
+                  onSelectRequest={(request) => setSelectedMapRequestId(request.id)}
+                />
+              </div>
+              {selectedMapRequest ? (
+                <RequestCard
+                  request={selectedMapRequest}
+                  offers={state.mitzvah_offers}
+                  completions={state.mitzvah_completions}
+                  verificationRequests={state.verification_requests}
+                  currentUser={currentUser}
+                  onOffer={handleOffer}
+                  onAcceptPaid={handleAcceptPaid}
+                  onAcceptOffer={handleAcceptOffer}
+                  onStart={handleStart}
+                  onComplete={handleComplete}
+                  onVerify={handleVerify}
+                />
+              ) : (
+                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-3 text-[13px] font-semibold text-blue-900">
+                  Tap a map pin to preview the request and offer help.
+                </div>
+              )}
+            </div>
           )}
 
           {activeTab === 'offers' && (
@@ -1246,8 +1465,27 @@ export default function MitzvahCircle() {
             )) : <EmptyState title="You have not posted requests yet" text="Create a volunteer or paid request when you need help." />
           )}
 
-          {activeTab === 'hours' && (
+          {activeTab === 'log' && (
             <ChesedHoursDashboard logs={myLogs} onGenerateText={generateHelperText} />
+          )}
+
+          {activeTab === 'completed' && (
+            completedRequests.length ? completedRequests.map((request) => (
+              <RequestCard
+                key={request.id}
+                request={request}
+                offers={state.mitzvah_offers}
+                completions={state.mitzvah_completions}
+                verificationRequests={state.verification_requests}
+                currentUser={currentUser}
+                onOffer={handleOffer}
+                onAcceptPaid={handleAcceptPaid}
+                onAcceptOffer={handleAcceptOffer}
+                onStart={handleStart}
+                onComplete={handleComplete}
+                onVerify={handleVerify}
+              />
+            )) : <EmptyState title="No completed mitzvahs yet" text="Verified or cancelled requests will show here." />
           )}
         </div>
       </section>
@@ -1258,7 +1496,7 @@ export default function MitzvahCircle() {
         onCreate={async (payload) => {
           await backend.createRequest(payload);
           setShowCreate(false);
-          setActiveTab('posted');
+          changeTab('posted');
           toast.success('Request posted.');
         }}
       />
