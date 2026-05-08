@@ -97,8 +97,11 @@ export default function Layout({ children, currentPageName }) {
       {/* Main Content */}
       <main className="min-h-screen overflow-visible">
         <div className="mx-auto max-w-2xl px-3 pt-3">
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold leading-5 text-amber-900">
-            Safety note: some tools are still demo-only while Supabase is being finished. Payment, AI, account deletion, and Chesed verification screens are labeled and will not process money or permanently save demo records yet.
+          <div className="rounded-2xl border border-blue-100 bg-white px-3 py-2 shadow-sm">
+            <p className="text-[12px] font-black uppercase tracking-wide text-blue-700">JUnited Five Towns hub</p>
+            <p className="mt-0.5 text-[12px] font-semibold leading-5 text-slate-600">
+              One local Jewish network for shuls, groups, events, chesed, rides, recommendations, and real neighbor-to-neighbor connection.
+            </p>
           </div>
         </div>
         {isSwipeable ? (

@@ -178,8 +178,10 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
     <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
       {personalized && (
         <div className="border-b border-blue-100 bg-blue-50 px-3 py-2">
-          <p className="text-[12px] font-black text-blue-900">Personalized map</p>
-          <p className="text-[11px] font-semibold text-blue-700">Showing posts, events, places, and mitzvah needs connected to communities you joined.</p>
+          <p className="text-[12px] font-black text-blue-900">Five Towns digital hub</p>
+          <p className="text-[11px] font-semibold leading-5 text-blue-700">
+            A personalized local map for Lawrence, Cedarhurst, Woodmere, Hewlett, and Inwood, showing posts, events, places, and mitzvah needs from communities you joined.
+          </p>
         </div>
       )}
       <div className="mobile-scroll-x flex gap-2 border-b border-slate-200 bg-white p-2">

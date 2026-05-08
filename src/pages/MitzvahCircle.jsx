@@ -1169,6 +1169,13 @@ export default function MitzvahCircle() {
     return COMMUNITY_MAP_POINTS.filter((point) => joined.has(point.community_id));
   }, []);
   const selectedMapRequest = mapRequests.find((request) => request.id === selectedMapRequestId);
+  const hubStats = useMemo(() => {
+    return [
+      { label: 'Joined circles', value: JOINED_COMMUNITY_IDS.length },
+      { label: 'Hub pins', value: personalizedCommunityPoints.length + mapRequests.length },
+      { label: 'Open needs', value: openRequests.length },
+    ];
+  }, [mapRequests.length, openRequests.length, personalizedCommunityPoints.length]);
   const myOffers = state.mitzvah_offers
     .filter((offer) => getVolunteerId(offer) === currentUser?.id)
     .map((offer) => ({ offer, request: state.mitzvah_requests.find((request) => request.id === offer.requestId) }))
@@ -1297,14 +1304,14 @@ export default function MitzvahCircle() {
           <div className="relative">
               <p className="mb-2 flex items-center gap-2 text-[12px] font-black uppercase text-blue-600">
                 <HandHeart className="h-4 w-4" />
-                Community help marketplace
+                Five Towns chesed network
                 <StatusBadge>Demo Only</StatusBadge>
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h1 className="text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">Mitzvah / Chesed Help</h1>
+                  <h1 className="text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">Mitzvah / Chesed Hub</h1>
                   <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-600">
-                    Post requests, offer help, accept helpers, complete tasks, verify completion, and turn verified service into chesed hours reports. This page is currently a structured Supabase-style demo and saves data in this browser.
+                    The Five Towns layer for rides, chesed, errands, events, lost and found, shul help, and verified service, connected back to the communities people join.
                   </p>
                 </div>
                 <button onClick={() => setShowCreate(true)} className="app-button-primary h-11">
@@ -1391,6 +1398,30 @@ export default function MitzvahCircle() {
 
           {activeTab === 'map' && (
             <div className="space-y-3">
+              <div className="app-card overflow-hidden">
+                <div className="border-b border-slate-100 bg-white p-4">
+                  <p className="text-[12px] font-black uppercase tracking-wide text-blue-600">Five Towns hub map</p>
+                  <h2 className="mt-1 text-xl font-black text-slate-950">Everything local, filtered to your communities.</h2>
+                  <p className="mt-1 text-[13px] font-medium leading-6 text-slate-600">
+                    See shuls, kosher food, events, lost and found, rides, chesed needs, and posts from the communities you joined, all in one map.
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-2 p-3">
+                  {hubStats.map((stat) => (
+                    <div key={stat.label} className="rounded-2xl bg-slate-50 p-3">
+                      <p className="text-lg font-black text-slate-950">{stat.value}</p>
+                      <p className="text-[10px] font-black uppercase leading-4 text-slate-500">{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mobile-scroll-x flex gap-2 border-t border-slate-100 p-3">
+                  {['Lawrence', 'Cedarhurst', 'Woodmere', 'Hewlett', 'Inwood'].map((town) => (
+                    <span key={town} className="shrink-0 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[11px] font-black text-blue-700">
+                      {town}
+                    </span>
+                  ))}
+                </div>
+              </div>
               <div className="app-card overflow-hidden p-2">
                 <MitzvahMap
                   requests={mapRequests}

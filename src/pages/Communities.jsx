@@ -42,6 +42,13 @@ const conversationStarters = [
   { title: 'Small groups that stick', body: 'A cooking circle, Daf review pod, new families table, walking group, singles event crew, or marketplace lane.' },
 ];
 
+const hubPlaybook = [
+  'Claimed shul pages for minyanim, shiurim, kiddush, alerts, and member posts',
+  'Joined communities power each person’s feed, map, events, and notifications',
+  'Moderated Jewish social networks by shul, interest, lifestyle, neighborhood, and values',
+  'Local recommendations replace scattered WhatsApp threads and stale directories',
+];
+
 const initialCommunities = [
   {
     id: 'five-towns-shul-network',
@@ -462,11 +469,11 @@ export default function Communities() {
               <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-blue-50" />
               <p className="relative mb-2 flex items-center gap-2 text-[13px] font-black text-blue-700">
                 <Sparkles className="h-4 w-4" />
-                Jewish social networks
+                Five Towns Jewish social networks
               </p>
               <h1 className="relative text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">Communities</h1>
               <p className="relative mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-700">
-                Create and join focused local networks around hobbies, lifestyles, interests, religious values, neighborhoods, and shul-connected circles.
+                Create and join the focused local networks that make the Five Towns feel connected: hobbies, lifestyles, religious values, shul circles, neighborhoods, and everyday Jewish life.
               </p>
 
               <div className="relative mt-4 flex flex-wrap gap-2">
@@ -478,8 +485,8 @@ export default function Communities() {
 
             <div className="border-t border-slate-200 bg-gradient-to-br from-slate-50 via-white to-emerald-50 p-4 sm:border-l sm:border-t-0 sm:p-4">
               <div className="app-card mb-3 p-3">
-                <p className="text-[12px] font-black uppercase tracking-wide text-slate-800">Start a real network</p>
-                <p className="mt-1 text-[13px] font-medium leading-5 text-slate-700">Launch a group people return to for conversation, plans, introductions, resources, and daily belonging.</p>
+                <p className="text-[12px] font-black uppercase tracking-wide text-slate-800">Build the local hub</p>
+                <p className="mt-1 text-[13px] font-medium leading-5 text-slate-700">Launch a circle people return to for conversation, plans, introductions, resources, and daily belonging.</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <MetricCard label="Communities" value={communities.length} tone="blue" />
@@ -502,8 +509,8 @@ export default function Communities() {
 	          <section className="app-card p-3">
 	            <div className="mb-3 flex items-center justify-between gap-3">
 	              <div>
-	                <h2 className="text-[17px] font-black text-slate-950">Community pulse</h2>
-	                <p className="text-[12px] font-medium text-slate-500">A live-feeling feed across the networks people belong to.</p>
+	                <h2 className="text-[17px] font-black text-slate-950">Five Towns pulse</h2>
+	                <p className="text-[12px] font-medium text-slate-500">A live-feeling feed across the Jewish networks people belong to.</p>
 	              </div>
 	              <Radio className="h-5 w-5 text-blue-600" />
 	            </div>
@@ -558,6 +565,21 @@ export default function Communities() {
 	              <div key={starter.title} className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
 	                <p className="text-[14px] font-black text-slate-950">{starter.title}</p>
 	                <p className="mt-1 text-[12px] font-medium leading-5 text-slate-600">{starter.body}</p>
+	              </div>
+	            ))}
+	          </div>
+	        </section>
+
+	        <section className="app-card mb-5 overflow-hidden">
+	          <div className="border-b border-slate-100 p-3">
+	            <p className="text-[12px] font-black uppercase tracking-wide text-blue-700">Hub playbook</p>
+	            <h2 className="mt-1 text-[17px] font-black text-slate-950">How JUnited becomes the Five Towns layer</h2>
+	            <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">Communities are the identity system for the whole app.</p>
+	          </div>
+	          <div className="grid gap-2 p-3 sm:grid-cols-2">
+	            {hubPlaybook.map((item) => (
+	              <div key={item} className="rounded-2xl bg-blue-50 px-3 py-2 text-[12px] font-bold leading-5 text-blue-800">
+	                {item}
 	              </div>
 	            ))}
 	          </div>
