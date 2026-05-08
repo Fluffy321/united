@@ -1,24 +1,25 @@
 import { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 const DefaultFallback = () => (
-  <div className="fixed inset-0 flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+  <div className="fixed inset-0 flex items-center justify-center bg-[#F6F8FB]">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600"></div>
   </div>
 );
 
-export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthenticatedElement }) {
-  const { isAuthenticated, isLoadingAuth, authChecked, authError, checkUserAuth } = useAuth();
+export default function ProtectedRoute({ fallback = <DefaultFallback /> }) {
+  const { isAuthenticated, isLoadingAuth, authError, checkAppState } = useAuth();
+  const location = useLocation();
 
   useEffect(() => {
-    if (!authChecked && !isLoadingAuth) {
-      checkUserAuth();
+    if (!isLoadingAuth && !isAuthenticated && !authError) {
+      checkAppState();
     }
-  }, [authChecked, isLoadingAuth, checkUserAuth]);
+  }, [isLoadingAuth, isAuthenticated, authError, checkAppState]);
 
-  if (isLoadingAuth || !authChecked) {
+  if (isLoadingAuth) {
     return fallback;
   }
 
@@ -26,11 +27,13 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     }
-    return unauthenticatedElement;
+    const fromUrl = `${location.pathname}${location.search || ''}`;
+    return <Navigate to={`/login?from_url=${encodeURIComponent(fromUrl)}`} replace />;
   }
 
   if (!isAuthenticated) {
-    return unauthenticatedElement;
+    const fromUrl = `${location.pathname}${location.search || ''}`;
+    return <Navigate to={`/login?from_url=${encodeURIComponent(fromUrl)}`} replace />;
   }
 
   return <Outlet />;

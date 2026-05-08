@@ -2,14 +2,28 @@ import { getAuthRedirectUrl, shouldUseSupabase, supabase } from '@/api/supabaseC
 
 const STORAGE_PREFIX = 'junited_local_entity_';
 const SUPABASE_ENTITY_TABLES = {
+  // Core — migration 001_core.sql
   User: 'profiles',
   Profile: 'profiles',
   Community: 'communities',
   UnifiedPost: 'posts',
   Post: 'posts',
+  // Messaging — migration 002_messages.sql
   Conversation: 'conversations',
   Message: 'messages',
+  // Feature tables — migration 004_core_feature_tables.sql
+  UserCommunity: 'community_memberships',
+  Comment: 'comments',
+  Reaction: 'reactions',
   Notification: 'notifications',
+  MitzvahRequest: 'mitzvah_requests',
+  MitzvahCompletion: 'mitzvah_completions',
+  VerificationRequest: 'verification_requests',
+  ChesedLog: 'chesed_hours_logs',
+  // HelpOffer / MitzvahSignup intentionally omitted: both map to mitzvah_offers,
+  // but the app sends user_id while the DB column is volunteer_id. Adding the
+  // mapping without a field translation would cause silent localStorage fallbacks
+  // on every write. Fix by adding a user_id compat column to mitzvah_offers first.
 };
 
 const PUBLIC_PROFILE_ENTITIES = new Set(['User', 'Profile']);
