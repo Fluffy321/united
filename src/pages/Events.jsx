@@ -3,6 +3,7 @@ import { Calendar, MapPin, Clock, Plus, ChevronLeft, Users, Ticket } from 'lucid
 import PaymentModal from '@/components/payments/PaymentModal';
 import EventSummaryButton from '@/components/events/EventSummaryButton';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO, isBefore, startOfToday } from 'date-fns';
@@ -27,12 +28,8 @@ export default function Events() {
   const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState('upcoming');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [paymentEvent, setPaymentEvent] = useState(null);
-
-  React.useEffect(() => {
-    dataService.auth.me().then(setCurrentUser).catch(() => {});
-  }, []);
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['all-events'],

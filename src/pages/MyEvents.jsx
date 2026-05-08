@@ -1,22 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2, Calendar, MapPin, Clock } from 'lucide-react';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import { toast } from 'sonner';
 
 export default function MyEvents() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [liked, setLiked] = useState({});
-
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
-    const user = await dataService.auth.me();
-    setCurrentUser(user);
-  };
 
   const { data: rsvps = [], isLoading } = useQuery({
     queryKey: ['my-rsvps', currentUser?.id],

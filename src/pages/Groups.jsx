@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus } from 'lucide-react';
 import GroupCard from '@/components/groups/GroupCard';
@@ -10,7 +11,7 @@ import { toast } from 'sonner';
 const CATEGORIES = ['All', 'Torah Learning', 'Shabbat', 'Chesed', 'Events', 'Youth', 'Families', 'Seniors', 'General'];
 
 export default function Groups() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [membershipSet, setMembershipSet] = useState(new Set());
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
@@ -20,13 +21,11 @@ export default function Groups() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    dataService.auth.me().then(user => {
-      setCurrentUser(user);
-      dataService.entities.GroupMember.filter({ user_id: user.id }).then(memberships => {
-        setMembershipSet(new Set(memberships.map(m => m.group_id)));
-      });
+    if (!currentUser) return;
+    dataService.entities.GroupMember.filter({ user_id: currentUser.id }).then(memberships => {
+      setMembershipSet(new Set(memberships.map(m => m.group_id)));
     });
-  }, []);
+  }, [currentUser?.id]);
 
   const { data: groups = [], refetch } = useQuery({
     queryKey: ['community-groups'],

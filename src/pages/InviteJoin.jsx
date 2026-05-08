@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Users, MapPin, CheckCircle2, ArrowRight } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
@@ -8,37 +9,38 @@ export default function InviteJoin() {
   const type = params.get('type'); // 'community' | 'group'
   const id   = params.get('id');
 
+  const { user: currentUser } = useAuth();
   const [resource, setResource] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
   const [status, setStatus] = useState('loading'); // loading | preview | joining | joined | error
   const [alreadyMember, setAlreadyMember] = useState(false);
 
   useEffect(() => {
     if (!id || !type) { setStatus('error'); return; }
 
-    Promise.all([
-      type === 'community'
-        ? dataService.entities.Community.filter({ id }).then(r => r[0])
-        : dataService.entities.CommunityGroup.filter({ id }).then(r => r[0]),
-      dataService.auth.me().catch(() => null),
-    ]).then(async ([res, user]) => {
-      if (!res) { setStatus('error'); return; }
-      setResource(res);
-      setCurrentUser(user);
+    const loadResource = async () => {
+      try {
+        const res = type === 'community'
+          ? await dataService.entities.Community.filter({ id }).then(r => r[0])
+          : await dataService.entities.CommunityGroup.filter({ id }).then(r => r[0]);
 
-      if (user) {
-        // Check if already member
-        if (type === 'community') {
-          const existing = await dataService.entities.UserCommunity.filter({ user_id: user.id, community_id: id });
-          if (existing.length > 0) { setAlreadyMember(true); }
-        } else {
-          const existing = await dataService.entities.GroupMember.filter({ user_id: user.id, group_id: id });
-          if (existing.length > 0) { setAlreadyMember(true); }
+        if (!res) { setStatus('error'); return; }
+        setResource(res);
+
+        if (currentUser) {
+          // Check if already member
+          if (type === 'community') {
+            const existing = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: id });
+            if (existing.length > 0) { setAlreadyMember(true); }
+          } else {
+            const existing = await dataService.entities.GroupMember.filter({ user_id: currentUser.id, group_id: id });
+            if (existing.length > 0) { setAlreadyMember(true); }
+          }
         }
-      }
-      setStatus('preview');
-    }).catch(() => setStatus('error'));
-  }, []);
+        setStatus('preview');
+      } catch { setStatus('error'); }
+    };
+    loadResource();
+  }, [currentUser?.id]);
 
   const handleJoin = async () => {
     if (!currentUser) {

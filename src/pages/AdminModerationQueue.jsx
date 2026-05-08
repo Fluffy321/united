@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Loader2, Eye, EyeOff, CheckCircle2, AlertTriangle, Building2,
   X, Filter, Shield, Clock, Bot, User, RefreshCw,
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -99,19 +100,12 @@ function ReportCard({ report, onAction, onResolve }) {
 }
 
 export default function AdminModerationQueue() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [selectedReport, setSelectedReport] = useState(null);
   const [showActionModal, setShowActionModal] = useState(false);
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    dataService.auth.me().then(user => {
-      if (user.role !== 'admin') { window.location.href = '/'; return; }
-      setCurrentUser(user);
-    });
-  }, []);
 
   const { data: reports = [], isLoading: reportsLoading, refetch: refetchReports } = useQuery({
     queryKey: ['admin-reports'],

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Star, MapPin, Phone, Globe, Clock, Loader2, Shield, ExternalLink, Sparkles } from 'lucide-react';
 import { dataService, paymentsService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 
@@ -37,15 +38,11 @@ export default function BusinessListingPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const listingId = searchParams.get('id');
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [myRating, setMyRating] = useState(0);
   const [reviewBody, setReviewBody] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
-
-  useEffect(() => {
-    dataService.auth.me().then(setCurrentUser).catch(() => {});
-  }, []);
 
   const { data: listing, refetch: refetchListing } = useQuery({
     queryKey: ['business-listing', listingId],

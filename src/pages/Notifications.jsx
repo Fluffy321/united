@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft, Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2, Megaphone, Calendar, Loader2, AtSign } from 'lucide-react';
-import { dataService, notificationsService } from '@/services';
+import { notificationsService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow, parseISO, isToday, isYesterday, format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -51,13 +52,9 @@ function groupByDate(notifications) {
 
 export default function Notifications() {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [filter, setFilter] = useState('all');
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    dataService.auth.me().then(setCurrentUser).catch(() => {});
-  }, []);
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications-page', currentUser?.id],

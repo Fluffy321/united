@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart, Check } from 'lucide-react';
 import { dataService, paymentsService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
 
@@ -35,14 +36,10 @@ const TIERS = [
 
 export default function SupportJUnited() {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [billing, setBilling] = useState('monthly');
   const [selectedTier, setSelectedTier] = useState('champion');
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    dataService.auth.me().then(setCurrentUser).catch(() => {});
-  }, []);
 
   const handleSupport = async () => {
     toast.info('Support payments are coming soon. No money was processed.');

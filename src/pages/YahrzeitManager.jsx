@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Plus, Loader2, Trash2, Users } from 'lucide-react';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -33,9 +34,7 @@ const DEMO_YAHRZEITS = [
 function AddYahrzeitForm({ onSave, onCancel }) {
   const [form, setForm] = useState({ deceased_name: '', relationship: '', hebrew_month: 7, hebrew_day: 1, share_with_community: false });
   const [saving, setSaving] = useState(false);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => { dataService.auth.me().then(setUser).catch(() => {}); }, []);
+  const { user } = useAuth();
 
   const handleSave = async () => {
     if (!form.deceased_name.trim()) { toast.error('Name is required'); return; }
@@ -155,19 +154,11 @@ function YahrzeitCard({ yahrzeit, onDelete, onLightCandle, candleLit }) {
 }
 
 export default function YahrzeitManager() {
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [localYahrzeits, setLocalYahrzeits] = useState(DEMO_YAHRZEITS);
   const [localLitCandles, setLocalLitCandles] = useState(new Set());
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!appParams.hasBackendConfig) {
-      setUser(DEMO_USER);
-      return;
-    }
-    dataService.auth.me().then(setUser).catch(() => {});
-  }, []);
 
   const { data: yahrzeits = [], isLoading } = useQuery({
     queryKey: ['yahrzeits', user?.id],

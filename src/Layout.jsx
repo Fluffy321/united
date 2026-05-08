@@ -8,6 +8,7 @@ import SwipeableTabs from '@/components/common/SwipeableTabs';
 import PWAInstallPrompt from '@/components/common/PWAInstallPrompt';
 import CookieConsentBanner from '@/components/common/CookieConsentBanner';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 
 // Lazy load main pages
@@ -32,14 +33,10 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const isChatOpen = currentPageName === 'Messages' && new URLSearchParams(location.search).get('chat') === '1';
   const hideNav = ['Settings', 'ShulPage'].includes(currentPageName) || isChatOpen;
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
 
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
-
-  useEffect(() => {
-    dataService.auth.me().then(u => setCurrentUser(u)).catch(() => {});
-  }, []);
 
   useEffect(() => {
     let scrollTimeout;

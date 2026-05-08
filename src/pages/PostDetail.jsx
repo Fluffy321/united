@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Loader2, Heart, MessageCircle, Bookmark } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { dataService, notificationsService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { createPageUrl } from '@/utils';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import CommentsSheet from '@/components/feed/CommentsSheet';
@@ -15,7 +16,7 @@ export default function PostDetail() {
   const navigate = useNavigate();
   const postId = searchParams.get('id');
   
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userLikes, setUserLikes] = useState([]);
@@ -29,9 +30,6 @@ export default function PostDetail() {
 
   const loadPost = async () => {
     try {
-      const user = await dataService.auth.me();
-      setCurrentUser(user);
-
       const posts = await dataService.entities.UnifiedPost.filter({ id: postId });
       if (posts[0]) {
         setPost(posts[0]);
@@ -40,13 +38,15 @@ export default function PostDetail() {
         return;
       }
 
-      // Load user likes
-      const likes = await dataService.entities.Like.filter({ user_id: user.id });
-      setUserLikes(likes.map(l => l.post_id));
+      if (currentUser) {
+        // Load user likes
+        const likes = await dataService.entities.Like.filter({ user_id: currentUser.id });
+        setUserLikes(likes.map(l => l.post_id));
 
-      // Load user bookmarks
-      const bookmarks = await dataService.entities.Bookmark.filter({ user_id: user.id });
-      setUserBookmarks(bookmarks.map(b => b.post_id));
+        // Load user bookmarks
+        const bookmarks = await dataService.entities.Bookmark.filter({ user_id: currentUser.id });
+        setUserBookmarks(bookmarks.map(b => b.post_id));
+      }
     } catch (e) {
       console.error('Failed to load post', e);
       navigate(createPageUrl('Feed'));

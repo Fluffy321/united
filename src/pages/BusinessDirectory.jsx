@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Star, MapPin, ArrowLeft, Loader2, Shield, Utensils, BookOpen, ShoppingBag, GraduationCap, Droplets, Package } from 'lucide-react';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 
 const CATEGORIES = [
@@ -81,11 +82,7 @@ export default function BusinessDirectory() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
-  const [currentUser, setCurrentUser] = useState(null);
-
-  useEffect(() => {
-    dataService.auth.me().then(setCurrentUser).catch(() => {});
-  }, []);
+  const { user: currentUser } = useAuth();
 
   const { data: listings = [], isLoading } = useQuery({
     queryKey: ['business-listings', category],

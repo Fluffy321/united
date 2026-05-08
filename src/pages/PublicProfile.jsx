@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, MessageCircle, Loader2, ArrowLeft, Heart, Users, HandHeart, Calendar, FileText } from 'lucide-react';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import UserAvatar from '@/components/common/UserAvatar';
@@ -123,7 +124,7 @@ function PostCard({ post, navigate }) {
 export default function PublicProfile() {
   const [searchParams] = useSearchParams();
   const userId = searchParams.get('id');
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [profileUser, setProfileUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [mitzvahCount, setMitzvahCount] = useState(0);
@@ -136,11 +137,6 @@ export default function PublicProfile() {
     setLoading(true);
 
     const fetchAll = async () => {
-      try {
-        const [me] = await Promise.allSettled([dataService.auth.me()]);
-        if (me.status === 'fulfilled') setCurrentUser(me.value);
-      } catch {}
-
       const [usersRes, postsRes, mitzvahRes] = await Promise.allSettled([
         dataService.entities.User.filter({ id: userId }),
         dataService.entities.UnifiedPost.filter({ user_id: userId }, '-created_date', 20),

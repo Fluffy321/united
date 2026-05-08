@@ -1,27 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Newspaper, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 
 export default function News() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [selectedSource, setSelectedSource] = useState('all');
-
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
-    try {
-      const user = await dataService.auth.me();
-      setCurrentUser(user);
-    } catch (e) {
-      setCurrentUser({ id: 'guest', full_name: 'Guest', display_name: 'Guest', role: 'user', is_profile_complete: true });
-    }
-  };
 
   const { data: sources = [] } = useQuery({
     queryKey: ['news-sources'],
@@ -52,7 +40,7 @@ export default function News() {
   }
 
   if (!currentUser.is_profile_complete) {
-    return <ProfileSetup user={currentUser} onComplete={loadUser} />;
+    return <ProfileSetup user={currentUser} onComplete={() => {}} />;
   }
 
   return (

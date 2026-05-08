@@ -4,22 +4,25 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function ThankYou() {
+  const { user } = useAuth();
   const [transaction, setTransaction] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadTransaction = async () => {
       try {
-        const user = await dataService.auth.me();
-        const transactions = await dataService.entities.Transaction.filter(
-          { user_id: user.id, status: 'completed' },
-          '-created_date',
-          1
-        );
-        if (transactions.length > 0) {
-          setTransaction(transactions[0]);
+        if (user) {
+          const transactions = await dataService.entities.Transaction.filter(
+            { user_id: user.id, status: 'completed' },
+            '-created_date',
+            1
+          );
+          if (transactions.length > 0) {
+            setTransaction(transactions[0]);
+          }
         }
       } catch (error) {
         console.error('Failed to load transaction:', error);
@@ -28,7 +31,7 @@ export default function ThankYou() {
     };
 
     loadTransaction();
-  }, []);
+  }, [user?.id]);
 
   if (isLoading) {
     return (

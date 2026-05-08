@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search, X, Clock, TrendingUp, Bookmark, BookmarkCheck, Filter, ChevronLeft, Users, Calendar, FileText, User, Loader2, Bell } from 'lucide-react';
 import { dataService, storageService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -150,11 +151,10 @@ export default function SearchPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({ post_type: '', community_id: '', date_from: '', date_to: '' });
   const [recentSearches, setRecentSearches] = useState(() => storageService.getJson('junited_recent_searches', []));
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState(null);
 
-  useEffect(() => { dataService.auth.me().then(setUser).catch(() => {}); }, []);
   useEffect(() => { inputRef.current?.focus(); }, []);
 
   // Debounce query

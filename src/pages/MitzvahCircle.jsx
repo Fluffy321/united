@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
 import {
   AlertCircle,
   Award,
@@ -20,7 +21,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { dataService, notificationsService, storageService } from '@/services';
+import { notificationsService, storageService } from '@/services';
 import { toast } from 'sonner';
 import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
 import MitzvahMap from '@/components/mitzvah/MitzvahMap';
@@ -50,8 +51,6 @@ const STATUSES = {
   VERIFIED: 'Verified',
   CANCELLED: 'Cancelled',
 };
-
-const CURRENT_USER_ID = 'local-demo';
 
 const NEIGHBORHOOD_COORDS = {
   Cedarhurst: { lat: 40.6223, lng: -73.7246 },
@@ -196,7 +195,7 @@ const initialState = {
       amount: 0,
       urgency: 'Low',
       status: STATUSES.OFFERED,
-      postedById: CURRENT_USER_ID,
+      postedById: 'local-demo',
       postedBy: 'Demo',
       createdAt: '2026-05-04T20:00:00.000Z',
     },
@@ -230,7 +229,7 @@ const initialState = {
     {
       id: 'offer-tutoring-demo',
       requestId: 'req-tutoring',
-      volunteerId: CURRENT_USER_ID,
+      volunteerId: 'local-demo',
       volunteerName: 'Demo',
       note: 'I can help with review sheets and practice problems.',
       status: 'accepted',
@@ -242,7 +241,7 @@ const initialState = {
   chesed_hours_logs: [
     {
       id: 'log-food-delivery',
-      volunteerId: CURRENT_USER_ID,
+      volunteerId: 'local-demo',
       volunteerName: 'Demo',
       taskTitle: 'Deliver Shabbos meals',
       category: 'Food / Meals',
@@ -255,7 +254,7 @@ const initialState = {
     },
     {
       id: 'log-shul-setup',
-      volunteerId: CURRENT_USER_ID,
+      volunteerId: 'local-demo',
       volunteerName: 'Demo',
       taskTitle: 'Shul event setup',
       category: 'Shul Help',
@@ -775,13 +774,12 @@ function EmptyState({ title, text }) {
 
 export default function MitzvahCircle() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser, isLoadingAuth: isLoadingUser } = useAuth();
   const [state, setState] = useState(readState);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'open');
   const [query, setQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [showCreate, setShowCreate] = useState(false);
-  const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [selectedMapRequestId, setSelectedMapRequestId] = useState(null);
 
   useEffect(() => {
@@ -805,19 +803,6 @@ export default function MitzvahCircle() {
     }, { replace: true });
   };
 
-  useEffect(() => {
-    const userTimeout = new Promise((resolve) => {
-      window.setTimeout(() => resolve({ display_name: 'Demo', full_name: 'Demo' }), 1500);
-    });
-
-    Promise.race([dataService.auth.me(), userTimeout])
-      .then((user) => setCurrentUser({
-        id: CURRENT_USER_ID,
-        full_name: user.display_name || user.full_name || 'Demo',
-      }))
-      .catch(() => setCurrentUser({ id: CURRENT_USER_ID, full_name: 'Demo' }))
-      .finally(() => setIsLoadingUser(false));
-  }, []);
 
   const backend = {
     createRequest: async (payload) => {
