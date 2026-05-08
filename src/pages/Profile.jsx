@@ -72,7 +72,6 @@ export default function Profile() {
     queryKey: ['user-posts', profileUser?.id],
     queryFn: () => dataService.entities.UnifiedPost.filter({ user_id: profileUser.id }, '-created_date', 10),
     enabled: !!profileUser,
-    gcTime: 0
   });
 
   const { data: userStreak } = useQuery({
@@ -84,7 +83,6 @@ export default function Profile() {
     enabled: !!profileUser,
     staleTime: 0,
     retry: 1,
-    gcTime: 0
   });
 
   const { data: mitzvahLogs = [] } = useQuery({
@@ -96,7 +94,6 @@ export default function Profile() {
     enabled: !!profileUser && isOwnProfile,
     staleTime: 0,
     retry: 1,
-    gcTime: 0
   });
 
   const { data: weeklyMitzvahCount = 0 } = useQuery({
@@ -120,7 +117,6 @@ export default function Profile() {
     enabled: !!profileUser && isOwnProfile,
     staleTime: 0,
     retry: 1,
-    gcTime: 0
   });
 
   const { data: mitzvahPoints = 0 } = useQuery({
@@ -132,7 +128,6 @@ export default function Profile() {
     enabled: !!profileUser,
     staleTime: 0,
     retry: 1,
-    gcTime: 0
   });
 
   const { data: userCommunities = [] } = useQuery({
@@ -148,7 +143,6 @@ export default function Profile() {
     enabled: !!profileUser,
     staleTime: 60000,
     retry: 1,
-    gcTime: 0
   });
 
   const handleMessage = async () => {
