@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Calendar, Clock, MapPin, Users, Search, X } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { format, isPast, parseISO } from 'date-fns';
 
 export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, joinedCommunityIds = [] }) {
@@ -13,7 +13,7 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    base44.entities.UnifiedPost.filter({ type: 'event' }, '-event_date', 60)
+    dataService.entities.UnifiedPost.filter({ type: 'event' }, '-event_date', 60)
       .then(all => {
         const upcoming = all.filter(e => {
           if (!e.event_date) return false;

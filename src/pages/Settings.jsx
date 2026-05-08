@@ -21,7 +21,7 @@ import {
   Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { createPageUrl } from '@/utils';
 
 const interestOptions = [
@@ -95,7 +95,7 @@ export default function Settings() {
   useEffect(() => {
     let mounted = true;
 
-    base44.auth.me().then((user) => {
+    dataService.auth.me().then((user) => {
       if (!mounted) return;
       setCurrentUser(user);
       setForm({
@@ -164,14 +164,14 @@ export default function Settings() {
       toast.error('Please choose an image file');
       return;
     }
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await dataService.integrations.Core.UploadFile({ file });
     updateForm('avatar_url', file_url);
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await base44.auth.updateMe({
+      await dataService.auth.updateMe({
         display_name: form.display_name.trim(),
         bio: form.bio.trim(),
         cityPreset: form.cityPreset,
@@ -190,21 +190,13 @@ export default function Settings() {
   };
 
   const handleLogout = () => {
-    base44.auth.logout();
+    dataService.auth.logout();
     toast.success('Logged out locally');
   };
 
   const handleDeleteAccount = async () => {
     if (deleteText !== 'DELETE') return;
-    setIsSaving(true);
-    try {
-      await base44.functions.invoke('deleteUserAccount', { userId: currentUser.id });
-      setShowDeleteConfirm(false);
-      toast.success('Account deletion requested');
-    } catch {
-      toast.error('Could not delete account');
-    }
-    setIsSaving(false);
+    toast.info('Account deletion is coming soon. Your account was not deleted.');
   };
 
   if (!currentUser) {
@@ -434,8 +426,11 @@ export default function Settings() {
           <div className="w-full rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-md sm:rounded-3xl">
             <h2 className="text-lg font-bold text-slate-950">Delete account?</h2>
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              This is a serious action. Type DELETE to enable the button.
+              Account deletion is not connected yet, so this screen cannot permanently delete your data. Type DELETE only to see the disabled safety state.
             </p>
+            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold text-amber-800">
+              Coming Soon: real account deletion still needs backend support.
+            </div>
             <input
               value={deleteText}
               onChange={(event) => setDeleteText(event.target.value)}
@@ -448,10 +443,10 @@ export default function Settings() {
               </button>
               <button
                 onClick={handleDeleteAccount}
-                disabled={deleteText !== 'DELETE' || isSaving}
-                className="h-11 flex-1 rounded-xl bg-red-600 text-sm font-bold text-white disabled:opacity-40"
+                disabled
+                className="h-11 flex-1 rounded-xl bg-slate-300 text-sm font-bold text-white cursor-not-allowed"
               >
-                Delete
+                Deletion Coming Soon
               </button>
             </div>
           </div>

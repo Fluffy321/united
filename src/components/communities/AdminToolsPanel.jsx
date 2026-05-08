@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import CommunityLogo from './CommunityLogo';
 
@@ -34,7 +34,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
 
   const handleSaveInfo = async () => {
     setSavingInfo(true);
-    await base44.entities.Community.update(community.id, {
+    await dataService.entities.Community.update(community.id, {
       website: infoWebsite.trim() || undefined,
       phone: infoPhone.trim() || undefined,
       address: infoAddress.trim() || undefined,
@@ -55,8 +55,8 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
     if (!file) return;
     setLogoUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      await base44.entities.Community.update(community.id, {
+      const { file_url } = await dataService.integrations.Core.UploadFile({ file });
+      await dataService.entities.Community.update(community.id, {
         logo_url: file_url,
         logo_source: 'UPLOADED',
       });
@@ -72,7 +72,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
   const handleCreatePost = async () => {
     if (!postBody.trim()) { toast.error('Please write something'); return; }
     setSubmitting(true);
-    await base44.entities.CommunityPost.create({
+    await dataService.entities.CommunityPost.create({
       community_id: community.id,
       org_id: org?.id,
       author_user_id: currentUser.id,

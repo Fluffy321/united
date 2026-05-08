@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { addDays } from 'date-fns';
 
 const boards = [
@@ -67,7 +67,7 @@ export default function CreateChalkboardModal({ open, onOpenChange, currentUser,
     
     setIsSubmitting(true);
     
-    await base44.entities.ChalkboardPost.create({
+    await dataService.entities.ChalkboardPost.create({
       board_type: boardType,
       title: title.trim(),
       content: content.trim(),

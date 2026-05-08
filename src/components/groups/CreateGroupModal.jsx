@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const CATEGORIES = ['Torah Learning', 'Shabbat', 'Chesed', 'Events', 'Youth', 'Families', 'Seniors', 'General'];
@@ -13,14 +13,14 @@ export default function CreateGroupModal({ open, onOpenChange, currentUser, onCr
     e.preventDefault();
     if (!form.name.trim() || !form.description.trim()) return;
     setLoading(true);
-    const group = await base44.entities.CommunityGroup.create({
+    const group = await dataService.entities.CommunityGroup.create({
       ...form,
       created_by_user_id: currentUser.id,
       created_by_name: currentUser.full_name,
       member_count: 1
     });
     // Auto-join as admin
-    await base44.entities.GroupMember.create({
+    await dataService.entities.GroupMember.create({
       group_id: group.id,
       user_id: currentUser.id,
       user_name: currentUser.full_name,

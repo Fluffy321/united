@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, FileText } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 export default function ExportReportModal({ open, onOpenChange, currentUser, logs }) {
@@ -43,7 +43,7 @@ export default function ExportReportModal({ open, onOpenChange, currentUser, log
   const handleExportPDF = async () => {
     setExporting(true);
     try {
-      const res = await base44.functions.invoke('exportChesedReport', {
+      const res = await dataService.functions.invoke('exportChesedReport', {
         userName: currentUser.full_name || currentUser.display_name || 'Student',
         dateFrom,
         dateTo,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CheckCircle2, Clock, Edit2, Trash2, MoreVertical, HandHeart } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const CATEGORY_COLORS = {
@@ -25,7 +25,7 @@ export default function ChesedLogItem({ log, onDelete, onEdit }) {
 
   const handleDelete = async () => {
     setShowMenu(false);
-    await base44.entities.ChesedLog.delete(log.id);
+    await dataService.entities.ChesedLog.delete(log.id);
     toast.success('Log deleted');
     if (onDelete) onDelete();
   };

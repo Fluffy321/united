@@ -57,7 +57,6 @@ import Groups from './pages/Groups';
 import InviteJoin from './pages/InviteJoin';
 import Messages from './pages/Messages';
 import MitzvahCircle from './pages/MitzvahCircle';
-import MitzvahMap from './pages/MitzvahMap';
 import MyEvents from './pages/MyEvents';
 import News from './pages/News';
 import Organization from './pages/Organization';
@@ -78,7 +77,6 @@ export const PAGES = {
     "InviteJoin": InviteJoin,
     "Messages": Messages,
     "MitzvahCircle": MitzvahCircle,
-    "MitzvahMap": MitzvahMap,
     "MyEvents": MyEvents,
     "News": News,
     "Organization": Organization,

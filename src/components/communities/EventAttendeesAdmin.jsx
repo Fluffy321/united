@@ -1,12 +1,12 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { Users, CheckCircle, Clock, X, Download } from 'lucide-react';
 
 export default function EventAttendeesAdmin({ event, onClose }) {
   const { data: rsvps = [], isLoading } = useQuery({
     queryKey: ['event-rsvps-admin', event.id],
-    queryFn: () => base44.entities.CommunityEventRSVP.filter({ event_id: event.id }),
+    queryFn: () => dataService.entities.CommunityEventRSVP.filter({ event_id: event.id }),
   });
 
   const going = rsvps.filter(r => r.status === 'going');

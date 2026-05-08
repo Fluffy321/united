@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { Sparkles, Loader2, AlertCircle, Copy, Check } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { Sparkles, AlertCircle, Copy, Check } from 'lucide-react';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 export default function EventSummaryButton({ event }) {
@@ -35,7 +35,7 @@ Location: ${event.location_text || 'TBD'}
 
 Highlight the main purpose, key activity, and why someone should attend.`;
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await dataService.integrations.Core.InvokeLLM({
         prompt,
         add_context_from_internet: false,
       });
@@ -64,20 +64,11 @@ Highlight the main purpose, key activity, and why someone should attend.`;
       {!showSummary ? (
         <button
           onClick={generateSummary}
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 disabled:opacity-50 text-purple-700 font-semibold text-[13px] rounded-lg border border-purple-200 transition-colors"
+          disabled
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-500 font-semibold text-[13px] rounded-lg border border-slate-200 cursor-not-allowed"
         >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Generating summary...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4" />
-              Summarize with AI
-            </>
-          )}
+          <Sparkles className="w-4 h-4" />
+          AI Summary Coming Soon
         </button>
       ) : (
         <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-3.5 border border-purple-100 space-y-2.5">

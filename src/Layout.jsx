@@ -7,7 +7,7 @@ import { Toaster } from 'sonner';
 import SwipeableTabs from '@/components/common/SwipeableTabs';
 import PWAInstallPrompt from '@/components/common/PWAInstallPrompt';
 import CookieConsentBanner from '@/components/common/CookieConsentBanner';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 
 // Lazy load main pages
@@ -38,7 +38,7 @@ export default function Layout({ children, currentPageName }) {
   const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
-    base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
+    dataService.auth.me().then(u => setCurrentUser(u)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function Layout({ children, currentPageName }) {
     queryKey: ['unread-messages', currentUser?.id],
     queryFn: async () => {
       try {
-        const convs = await base44.entities.Conversation.list('-updated_date', 30);
+        const convs = await dataService.entities.Conversation.list('-updated_date', 30);
         const userConvs = convs.filter(c => c.participant_ids?.includes(currentUser.id));
         return userConvs.reduce((sum, c) => sum + (c.unread_count?.[currentUser.id] || 0), 0);
       } catch (e) {
@@ -89,24 +89,18 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: '#F6F8FB' }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', system-ui, sans-serif; background: #F6F8FB; -webkit-font-smoothing: antialiased; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
-        .skeleton { background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%); background-size: 800px 100%; animation: shimmer 1.4s infinite linear; border-radius: 8px; }
-        .tab-fade-in { animation: tabFade 160ms ease both; }
-        @keyframes tabFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
-
+    <div className="app-page">
       <Toaster position="top-center" richColors />
       <PWAInstallPrompt />
       <CookieConsentBanner />
 
       {/* Main Content */}
       <main className="min-h-screen overflow-visible">
+        <div className="mx-auto max-w-2xl px-3 pt-3">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold leading-5 text-amber-900">
+            Safety note: some tools are still demo-only while Supabase is being finished. Payment, AI, account deletion, and Chesed verification screens are labeled and will not process money or permanently save demo records yet.
+          </div>
+        </div>
         {isSwipeable ? (
           <SwipeableTabs
             tabs={['Feed', 'Mitzvah', 'Communities', 'Messages', 'Profile']}
@@ -136,13 +130,9 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Bottom Navigation */}
       {!hideNav && (
-        <nav
-          className="fixed inset-x-0 bottom-0 z-50 px-3 pb-2"
-          style={{ paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))' }}
-        >
+        <nav className="app-bottom-nav fixed inset-x-0 bottom-0 z-50 px-3">
           <div
-            className="mobile-page overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/95 shadow-[0_18px_40px_rgba(15,23,42,0.18)] backdrop-blur-xl"
-            style={{ position: 'relative' }}
+            className="mobile-page relative overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-[0_12px_30px_rgba(15,23,42,0.14)] backdrop-blur-xl"
           >
             {/* Active highlight now rendered per-button */}
             <div className="flex items-center justify-around px-1 py-1.5">
@@ -164,16 +154,14 @@ export default function Layout({ children, currentPageName }) {
                         navigate(createPageUrl(item.page));
                       }
                     }}
-                    className={`relative flex flex-1 flex-col items-center justify-center rounded-[18px] touch-manipulation transition-all duration-150 ${
+                    className={`relative flex min-h-[58px] min-w-[54px] flex-1 flex-col items-center justify-center rounded-xl py-[7px] touch-manipulation transition-all duration-150 ${
                       isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-400 active:bg-slate-100'
                     }`}
-                    style={{ minHeight: '58px', minWidth: '54px', paddingTop: 7, paddingBottom: 7 }}
                   >
                     {/* Active dot above icon */}
                     {isActive && (
                       <span
-                        className="absolute top-1.5 rounded-full bg-[#2563EB]"
-                        style={{ left: '50%', transform: 'translateX(-50%)', width: 4, height: 4 }}
+                        className="absolute left-1/2 top-1.5 h-1 w-1 -translate-x-1/2 rounded-full bg-blue-600"
                       />
                     )}
                     <div className="relative z-10">
@@ -181,12 +169,11 @@ export default function Layout({ children, currentPageName }) {
                         <MitzvahIcon
                           size={20}
                           strokeWidth={isActive ? 2.2 : 1.8}
-                          className={`transition-all duration-150 ${isActive ? 'text-[#2563EB]' : 'text-slate-400'}`}
+                          className={`transition-all duration-150 ${isActive ? 'text-blue-600' : 'text-slate-400'}`}
                         />
                       ) : (
                         <Icon
-                          style={{ width: 21, height: 21 }}
-                          className={`transition-all duration-150 ${isActive ? 'text-[#2563EB]' : 'text-slate-400'}`}
+                          className={`h-[21px] w-[21px] transition-all duration-150 ${isActive ? 'text-blue-600' : 'text-slate-400'}`}
                           strokeWidth={isActive ? 2.4 : 1.8}
                         />
                       )}
@@ -197,12 +184,9 @@ export default function Layout({ children, currentPageName }) {
                       )}
                     </div>
                     <span
-                      className="relative z-10 transition-all duration-150"
-                      style={{
-                        fontSize: 10, marginTop: 4,
-                        fontWeight: isActive ? 700 : 400,
-                        color: isActive ? '#2563EB' : '#94A3B8',
-                      }}
+                      className={`relative z-10 mt-1 text-[10px] transition-all duration-150 ${
+                        isActive ? 'font-bold text-blue-600' : 'font-normal text-slate-400'
+                      }`}
                     >
                       {item.name}
                     </span>

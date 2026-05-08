@@ -4,7 +4,7 @@ import ZmanimWidget from '@/components/jewish/ZmanimWidget';
 import ParshaWidget from '@/components/jewish/ParshaWidget';
 import { isSunday } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 
 // ─── Skeleton loader ────────────────────────────────────────────────────────
@@ -149,7 +149,7 @@ function UpcomingEventsModule({ events, communityId, currentUser, onTabChange })
 
   const { data: myRSVPs = [] } = useQuery({
     queryKey: ['community-rsvps', communityId, currentUser?.id],
-    queryFn: () => base44.entities.CommunityEventRSVP.filter({ community_id: communityId, user_id: currentUser.id }),
+    queryFn: () => dataService.entities.CommunityEventRSVP.filter({ community_id: communityId, user_id: currentUser.id }),
     enabled: !!currentUser,
     staleTime: 60000,
   });
@@ -158,9 +158,9 @@ function UpcomingEventsModule({ events, communityId, currentUser, onTabChange })
 
   const handleRSVP = async (ev, e) => {
     e.stopPropagation();
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     if (rsvpedIds.has(ev.id)) return;
-    await base44.entities.CommunityEventRSVP.create({
+    await dataService.entities.CommunityEventRSVP.create({
       event_id: ev.id,
       community_id: communityId,
       user_id: currentUser.id,

@@ -1,0 +1,43 @@
+import React from 'react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+
+export default class AppErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('JUnited app error:', error, info);
+  }
+
+  render() {
+    if (!this.state.hasError) return this.props.children;
+
+    return (
+      <main className="flex min-h-[100dvh] items-center justify-center bg-[#F6F8FB] px-4">
+        <section className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+            <AlertTriangle className="h-6 w-6" />
+          </div>
+          <h1 className="text-xl font-black text-slate-950">Something did not load right.</h1>
+          <p className="mt-2 text-sm font-medium leading-6 text-slate-500">
+            Refresh the page. If it happens again, the app now shows this screen instead of going blank.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white transition hover:bg-blue-700 active:scale-[0.98]"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh app
+          </button>
+        </section>
+      </main>
+    );
+  }
+}

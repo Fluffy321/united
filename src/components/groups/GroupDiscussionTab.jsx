@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronUp, MessageCircle, Loader2, Send } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 
@@ -19,7 +19,7 @@ export default function GroupDiscussionTab({ group, currentUser, isMember }) {
 
   const loadDiscussions = async () => {
     setLoading(true);
-    const topics = await base44.entities.GroupDiscussion.filter({ group_id: group.id }, '-created_date', 50);
+    const topics = await dataService.entities.GroupDiscussion.filter({ group_id: group.id }, '-created_date', 50);
     setDiscussions(topics);
     setLoading(false);
   };
@@ -27,7 +27,7 @@ export default function GroupDiscussionTab({ group, currentUser, isMember }) {
   const handleCreateTopic = async () => {
     if (!newTopic.title.trim() || !newTopic.body.trim()) return;
     setCreating(true);
-    const topic = await base44.entities.GroupDiscussion.create({
+    const topic = await dataService.entities.GroupDiscussion.create({
       group_id: group.id,
       user_id: currentUser.id,
       user_name: currentUser.full_name,
@@ -43,14 +43,14 @@ export default function GroupDiscussionTab({ group, currentUser, isMember }) {
   };
 
   const handleLike = async (topic) => {
-    const hasLiked = await base44.entities.DiscussionLike.filter({ discussion_id: topic.id, user_id: currentUser.id });
+    const hasLiked = await dataService.entities.DiscussionLike.filter({ discussion_id: topic.id, user_id: currentUser.id });
     if (hasLiked.length > 0) {
-      await base44.entities.DiscussionLike.delete(hasLiked[0].id);
-      await base44.entities.GroupDiscussion.update(topic.id, { likes_count: Math.max(0, (topic.likes_count || 0) - 1) });
+      await dataService.entities.DiscussionLike.delete(hasLiked[0].id);
+      await dataService.entities.GroupDiscussion.update(topic.id, { likes_count: Math.max(0, (topic.likes_count || 0) - 1) });
       setDiscussions(prev => prev.map(t => t.id === topic.id ? { ...t, likes_count: t.likes_count - 1 } : t));
     } else {
-      await base44.entities.DiscussionLike.create({ discussion_id: topic.id, user_id: currentUser.id });
-      await base44.entities.GroupDiscussion.update(topic.id, { likes_count: (topic.likes_count || 0) + 1 });
+      await dataService.entities.DiscussionLike.create({ discussion_id: topic.id, user_id: currentUser.id });
+      await dataService.entities.GroupDiscussion.update(topic.id, { likes_count: (topic.likes_count || 0) + 1 });
       setDiscussions(prev => prev.map(t => t.id === topic.id ? { ...t, likes_count: t.likes_count + 1 } : t));
     }
   };
@@ -61,20 +61,20 @@ export default function GroupDiscussionTab({ group, currentUser, isMember }) {
       return;
     }
     setExpandedDiscussion(topic);
-    const topicComments = await base44.entities.DiscussionComment.filter({ discussion_id: topic.id }, 'created_date', 50);
+    const topicComments = await dataService.entities.DiscussionComment.filter({ discussion_id: topic.id }, 'created_date', 50);
     setComments(prev => ({ ...prev, [topic.id]: topicComments }));
   };
 
   const handleAddComment = async (topic) => {
     if (!newComment.trim()) return;
-    const comment = await base44.entities.DiscussionComment.create({
+    const comment = await dataService.entities.DiscussionComment.create({
       discussion_id: topic.id,
       user_id: currentUser.id,
       user_name: currentUser.full_name,
       body: newComment.trim(),
     });
     setComments(prev => ({ ...prev, [topic.id]: [...(prev[topic.id] || []), comment] }));
-    await base44.entities.GroupDiscussion.update(topic.id, { comments_count: (topic.comments_count || 0) + 1 });
+    await dataService.entities.GroupDiscussion.update(topic.id, { comments_count: (topic.comments_count || 0) + 1 });
     setDiscussions(prev => prev.map(t => t.id === topic.id ? { ...t, comments_count: t.comments_count + 1 } : t));
     setNewComment('');
     toast.success('Comment added!');

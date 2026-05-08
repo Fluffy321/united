@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Heart, Loader2, Check } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { ArrowLeft, Heart, Check } from 'lucide-react';
+import { dataService, paymentsService } from '@/services';
 import { toast } from 'sonner';
+import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
 
 const TIERS = [
   {
@@ -40,14 +41,17 @@ export default function SupportJUnited() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    dataService.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const handleSupport = async () => {
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    toast.info('Support payments are coming soon. No money was processed.');
+    return;
+
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setLoading(true);
     try {
-      const res = await base44.functions.invoke('create-checkout', {
+      const res = await paymentsService.createCheckout( {
         checkoutType: 'support_junited',
         billing,
         tier: selectedTier,
@@ -78,7 +82,10 @@ export default function SupportJUnited() {
         {/* Hero */}
         <div className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl p-6 mb-6 text-white text-center">
           <Heart className="w-10 h-10 mx-auto mb-3 fill-white" />
-          <h1 className="text-[22px] font-bold mb-2">Keep JUnited Free & Independent</h1>
+          <div className="mb-2 flex flex-wrap items-center justify-center gap-2">
+            <h1 className="text-[22px] font-bold">Keep JUnited Free & Independent</h1>
+            <StatusBadge>Coming Soon</StatusBadge>
+          </div>
           <p className="text-[14px] text-rose-100 leading-relaxed">
             JUnited will never run banner ads or sell your data. If this platform adds value to your Jewish community life, consider supporting it.
           </p>
@@ -88,6 +95,10 @@ export default function SupportJUnited() {
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-[13px] text-amber-800 font-medium mb-5">
           💛 <strong>No features are locked.</strong> All community tools are free to use. This is purely a way to say thank you and help us grow.
         </div>
+
+        <FeatureStatusNotice className="mb-5" title="Support payments are not live yet">
+          These tiers are a preview only. No subscription starts and no money is processed.
+        </FeatureStatusNotice>
 
         {/* Billing toggle */}
         <div className="flex items-center justify-center gap-1 bg-slate-100 rounded-full p-1 mb-4">
@@ -153,13 +164,13 @@ export default function SupportJUnited() {
 
         <button
           onClick={handleSupport}
-          disabled={loading}
-          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold text-[15px] flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-60"
+          disabled
+          className="w-full py-3.5 rounded-xl bg-slate-300 text-white font-bold text-[15px] flex items-center justify-center gap-2 cursor-not-allowed transition-all"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Heart className="w-4 h-4" />}
-          {loading ? 'Opening checkout…' : `Support JUnited`}
+          <Heart className="w-4 h-4" />
+          Support Payments Coming Soon
         </button>
-        <p className="text-center text-[11px] text-slate-400 mt-2">Cancel anytime · Secure checkout · No ads, ever.</p>
+        <p className="text-center text-[11px] text-slate-400 mt-2">Demo only · no card is charged · no subscription starts</p>
       </div>
     </div>
   );

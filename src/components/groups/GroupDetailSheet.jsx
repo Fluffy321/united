@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { ArrowLeft, Users, MapPin, Send } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
@@ -14,21 +14,21 @@ export default function GroupDetailSheet({ group, open, onOpenChange, currentUse
 
   useEffect(() => {
     if (open && group) {
-      base44.entities.GroupPost.filter({ group_id: group.id }, '-created_date', 30).then(setPosts);
-      base44.entities.GroupMember.filter({ group_id: group.id }, '-created_date', 50).then(setMembers);
+      dataService.entities.GroupPost.filter({ group_id: group.id }, '-created_date', 30).then(setPosts);
+      dataService.entities.GroupMember.filter({ group_id: group.id }, '-created_date', 50).then(setMembers);
     }
   }, [open, group]);
 
   const handlePost = async () => {
     if (!newPost.trim()) return;
     setPosting(true);
-    const post = await base44.entities.GroupPost.create({
+    const post = await dataService.entities.GroupPost.create({
       group_id: group.id,
       user_id: currentUser.id,
       user_name: currentUser.full_name,
       body: newPost.trim()
     });
-    await base44.entities.CommunityGroup.update(group.id, { post_count: (group.post_count || 0) + 1 });
+    await dataService.entities.CommunityGroup.update(group.id, { post_count: (group.post_count || 0) + 1 });
     setPosts(prev => [post, ...prev]);
     setNewPost('');
     setPosting(false);

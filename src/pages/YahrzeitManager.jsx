@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Plus, Loader2, Trash2, Users } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -35,7 +35,7 @@ function AddYahrzeitForm({ onSave, onCancel }) {
   const [saving, setSaving] = useState(false);
   const [user, setUser] = useState(null);
 
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
+  useEffect(() => { dataService.auth.me().then(setUser).catch(() => {}); }, []);
 
   const handleSave = async () => {
     if (!form.deceased_name.trim()) { toast.error('Name is required'); return; }
@@ -52,7 +52,7 @@ function AddYahrzeitForm({ onSave, onCancel }) {
         toast.success('Yahrzeit saved locally for this demo session');
         return;
       }
-      await base44.entities.Yahrzeit.create({
+      await dataService.entities.Yahrzeit.create({
         ...form,
         user_id: user.id,
         user_name: user.full_name,
@@ -166,25 +166,25 @@ export default function YahrzeitManager() {
       setUser(DEMO_USER);
       return;
     }
-    base44.auth.me().then(setUser).catch(() => {});
+    dataService.auth.me().then(setUser).catch(() => {});
   }, []);
 
   const { data: yahrzeits = [], isLoading } = useQuery({
     queryKey: ['yahrzeits', user?.id],
-    queryFn: () => appParams.hasBackendConfig ? base44.entities.Yahrzeit.filter({ user_id: user.id }, 'hebrew_month') : localYahrzeits,
+    queryFn: () => appParams.hasBackendConfig ? dataService.entities.Yahrzeit.filter({ user_id: user.id }, 'hebrew_month') : localYahrzeits,
     enabled: !!user && appParams.hasBackendConfig,
   });
 
   const { data: litByMe = [] } = useQuery({
     queryKey: ['candles-lit', user?.id],
-    queryFn: () => base44.entities.YahrzeitCandle.filter({ user_id: user.id }),
+    queryFn: () => dataService.entities.YahrzeitCandle.filter({ user_id: user.id }),
     enabled: !!user && appParams.hasBackendConfig,
   });
 
   const litSet = new Set(litByMe.map(c => c.yahrzeit_id));
 
   const handleLightCandle = async (yahrzeit) => {
-    if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
+    if (!user) { dataService.auth.redirectToLogin(window.location.href); return; }
     if (litSet.has(yahrzeit.id)) return; // already lit
     if (!appParams.hasBackendConfig) {
       setLocalLitCandles(prev => new Set(prev).add(yahrzeit.id));
@@ -193,8 +193,8 @@ export default function YahrzeitManager() {
       return;
     }
     try {
-      await base44.entities.YahrzeitCandle.create({ yahrzeit_id: yahrzeit.id, user_id: user.id, user_name: user.full_name });
-      await base44.entities.Yahrzeit.update(yahrzeit.id, { virtual_candle_count: (yahrzeit.virtual_candle_count || 0) + 1 });
+      await dataService.entities.YahrzeitCandle.create({ yahrzeit_id: yahrzeit.id, user_id: user.id, user_name: user.full_name });
+      await dataService.entities.Yahrzeit.update(yahrzeit.id, { virtual_candle_count: (yahrzeit.virtual_candle_count || 0) + 1 });
       queryClient.invalidateQueries({ queryKey: ['candles-lit'] });
       queryClient.invalidateQueries({ queryKey: ['yahrzeits'] });
       toast.success('Candle lit 🕯️');
@@ -207,7 +207,7 @@ export default function YahrzeitManager() {
       toast.success('Removed locally');
       return;
     }
-    await base44.entities.Yahrzeit.delete(id);
+    await dataService.entities.Yahrzeit.delete(id);
     queryClient.invalidateQueries({ queryKey: ['yahrzeits'] });
     toast.success('Removed');
   };
@@ -221,7 +221,7 @@ export default function YahrzeitManager() {
         <div>
           <p className="text-2xl mb-2">🕯️</p>
           <p className="font-bold text-slate-900 mb-1">Sign in to manage Yahrzeits</p>
-          <button onClick={() => base44.auth.redirectToLogin(window.location.href)} className="mt-3 px-5 py-2 rounded-full bg-blue-600 text-white font-semibold text-[14px]">Sign in</button>
+          <button onClick={() => dataService.auth.redirectToLogin(window.location.href)} className="mt-3 px-5 py-2 rounded-full bg-blue-600 text-white font-semibold text-[14px]">Sign in</button>
         </div>
       </div>
     );

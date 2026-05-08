@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, RefreshCw } from 'lucide-react';
 import RssErrorBlock from '@/components/updates/RssErrorBlock';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow, isToday, isTomorrow, format } from 'date-fns';
 import ProfileSetup from '@/components/profile/ProfileSetup';
@@ -19,7 +19,7 @@ export default function CommunityUpdates() {
 
   const loadUser = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await dataService.auth.me();
       setCurrentUser(user);
     } catch (e) {
       setCurrentUser({ id: 'guest', full_name: 'Guest', display_name: 'Guest', role: 'user', is_profile_complete: true });
@@ -29,7 +29,7 @@ export default function CommunityUpdates() {
   const { data: recentPosts = [] } = useQuery({
     queryKey: ['recent-community-posts'],
     queryFn: async () => {
-      const posts = await base44.entities.UnifiedPost.filter({ 
+      const posts = await dataService.entities.UnifiedPost.filter({ 
         type: 'feed' 
       }, '-created_date', 10);
       return posts;
@@ -40,7 +40,7 @@ export default function CommunityUpdates() {
     queryKey: ['upcoming-events'],
     queryFn: async () => {
       const today = format(new Date(), 'yyyy-MM-dd');
-      const events = await base44.entities.UnifiedPost.filter({ 
+      const events = await dataService.entities.UnifiedPost.filter({ 
         type: 'event' 
       }, '-event_date', 20);
       return events.filter(e => e.event_date >= today).slice(0, 5);
@@ -52,7 +52,7 @@ export default function CommunityUpdates() {
   const { data: fiveTownsData, isLoading: fiveTownsLoading, error: fiveTownsError, refetch: refetchFiveTowns } = useQuery({
     queryKey: ['rss-headlines-fivetowns', retryCount.fivetowns],
     queryFn: async () => {
-      const { data } = await base44.functions.invoke('getHeadlines', { sourceType: 'fivetowns' });
+      const { data } = await dataService.functions.invoke('getHeadlines', { sourceType: 'fivetowns' });
       return data;
     },
     staleTime: 300000, // 5 minutes
@@ -62,7 +62,7 @@ export default function CommunityUpdates() {
   const { data: israelData, isLoading: israelLoading, error: israelError, refetch: refetchIsrael } = useQuery({
     queryKey: ['rss-headlines-israel', retryCount.israel],
     queryFn: async () => {
-      const { data } = await base44.functions.invoke('getHeadlines', { sourceType: 'israel' });
+      const { data } = await dataService.functions.invoke('getHeadlines', { sourceType: 'israel' });
       return data;
     },
     staleTime: 300000, // 5 minutes

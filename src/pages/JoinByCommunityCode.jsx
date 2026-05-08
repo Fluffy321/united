@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { Loader2, Users, MapPin, CheckCircle2, ArrowRight, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,17 +23,17 @@ export default function JoinByCommunityCode() {
 
   const loadInvite = async () => {
     try {
-      const [me] = await Promise.allSettled([base44.auth.me()]);
+      const [me] = await Promise.allSettled([dataService.auth.me()]);
       const user = me.status === 'fulfilled' ? me.value : null;
       setCurrentUser(user);
 
-      const invites = await base44.entities.InviteLink.filter({ code });
+      const invites = await dataService.entities.InviteLink.filter({ code });
       const inv = invites[0];
 
       if (!inv) { setStatus('error'); return; }
       if (!inv.is_active) { setStatus('expired'); return; }
       if (inv.expires_at && new Date(inv.expires_at) < new Date()) {
-        await base44.entities.InviteLink.update(inv.id, { is_active: false });
+        await dataService.entities.InviteLink.update(inv.id, { is_active: false });
         setStatus('expired');
         return;
       }
@@ -45,12 +45,12 @@ export default function JoinByCommunityCode() {
       setInvite(inv);
       setInviterName(inv.inviter_name || 'A community member');
 
-      const comm = await base44.entities.Community.filter({ id: inv.community_id });
+      const comm = await dataService.entities.Community.filter({ id: inv.community_id });
       if (!comm[0]) { setStatus('error'); return; }
       setCommunity(comm[0]);
 
       if (user) {
-        const existing = await base44.entities.UserCommunity.filter({
+        const existing = await dataService.entities.UserCommunity.filter({
           user_id: user.id,
           community_id: inv.community_id
         });
@@ -66,7 +66,7 @@ export default function JoinByCommunityCode() {
   const handleJoin = async () => {
     if (!currentUser) {
       // Redirect to login, come back here after
-      base44.auth.redirectToLogin(window.location.href);
+      dataService.auth.redirectToLogin(window.location.href);
       return;
     }
     if (alreadyMember) {
@@ -76,12 +76,12 @@ export default function JoinByCommunityCode() {
 
     setStatus('joining');
     try {
-      const existing = await base44.entities.UserCommunity.filter({
+      const existing = await dataService.entities.UserCommunity.filter({
         user_id: currentUser.id,
         community_id: invite.community_id
       });
       if (existing.length === 0) {
-        await base44.entities.UserCommunity.create({
+        await dataService.entities.UserCommunity.create({
           user_id: currentUser.id,
           community_id: invite.community_id,
           role: 'Member',
@@ -90,10 +90,10 @@ export default function JoinByCommunityCode() {
         });
         // Increment follower count and uses count
         await Promise.all([
-          base44.entities.Community.update(invite.community_id, {
+          dataService.entities.Community.update(invite.community_id, {
             follower_count: (community.follower_count || 0) + 1
           }),
-          base44.entities.InviteLink.update(invite.id, {
+          dataService.entities.InviteLink.update(invite.id, {
             uses_count: (invite.uses_count || 0) + 1
           }),
         ]);

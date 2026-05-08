@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
 
@@ -50,7 +50,7 @@ export default function CommunityAlertModal({ open, onOpenChange, currentUser })
     }
     setLoading(true);
     try {
-      await base44.entities.CommunityAlert.create({
+      await dataService.entities.CommunityAlert.create({
         type: alertType.value,
         title: title.trim(),
         body: body.trim(),

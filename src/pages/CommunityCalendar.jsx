@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar, MapPin, Clock, Loader2 } from 'lucide-react';
 
@@ -27,30 +27,30 @@ export default function CommunityCalendar() {
     const init = async () => {
       setLoading(true);
       let user = null;
-      try { user = await base44.auth.me(); setCurrentUser(user); } catch {}
+      try { user = await dataService.auth.me(); setCurrentUser(user); } catch {}
 
       // Get communities the user is a member of (or all if not logged in)
       let communityIds = [];
       let communityList = [];
       if (user) {
-        const memberships = await base44.entities.UserCommunity.filter({ user_id: user.id });
+        const memberships = await dataService.entities.UserCommunity.filter({ user_id: user.id });
         communityIds = memberships.map(m => m.community_id).filter(Boolean);
         if (communityIds.length > 0) {
           // Fetch community names for display
-          const comms = await base44.entities.Community.list('-follower_count', 80);
+          const comms = await dataService.entities.Community.list('-follower_count', 80);
           communityList = comms.filter(c => communityIds.includes(c.id));
         }
       }
 
       if (communityList.length === 0) {
         // Fall back to all communities
-        communityList = await base44.entities.Community.list('-follower_count', 30);
+        communityList = await dataService.entities.Community.list('-follower_count', 30);
         communityIds = communityList.map(c => c.id);
       }
       setCommunities(communityList);
 
       // Fetch events for all communities
-      const allEvents = await base44.entities.CommunityEvent.list('start_date', 200);
+      const allEvents = await dataService.entities.CommunityEvent.list('start_date', 200);
       const filtered = allEvents.filter(e => communityIds.includes(e.community_id) && e.start_date);
       setEvents(filtered);
       setLoading(false);

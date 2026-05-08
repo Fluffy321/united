@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 
 const FIVE_TOWNS = ['Lawrence', 'Cedarhurst', 'Woodmere', 'Hewlett', 'Inwood'];
 
@@ -30,7 +30,7 @@ export default function CitySelector({ cityPreset, cityCustom, cityState, onChan
       searchTimeoutRef.current = setTimeout(async () => {
         setIsSearching(true);
         try {
-          const response = await base44.functions.invoke('searchCities', { query: searchQuery });
+          const response = await dataService.functions.invoke('searchCities', { query: searchQuery });
           setCities(response.data.cities || []);
           setShowDropdown(true);
         } catch (error) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
+import { storageService } from '@/services';
 
 /**
  * PWA Install Prompt — shows the native "Add to Home Screen" prompt
@@ -12,13 +13,15 @@ export default function PWAInstallPrompt() {
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
+    if (import.meta.env.DEV) return;
+
     // Don't show if already installed (standalone mode)
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
       return;
     }
 
-    const dismissed = localStorage.getItem('junited_pwa_dismissed');
+    const dismissed = storageService.getItem('junited_pwa_dismissed');
     if (dismissed) return;
 
     // iOS detection
@@ -56,13 +59,13 @@ export default function PWAInstallPrompt() {
 
   const handleDismiss = () => {
     setShowBanner(false);
-    localStorage.setItem('junited_pwa_dismissed', '1');
+    storageService.setItem('junited_pwa_dismissed', '1');
   };
 
   if (!showBanner || isInstalled) return null;
 
   return (
-    <div className="fixed bottom-[72px] left-3 right-3 z-50 animate-in slide-in-from-bottom-4 duration-300">
+    <div className="app-floating-banner fixed left-3 right-3 z-50 animate-in slide-in-from-bottom-4 duration-300">
       <div className="bg-slate-900 text-white rounded-2xl px-4 py-3 flex items-center gap-3 shadow-2xl">
         <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0 text-lg font-bold">
           ✡
@@ -88,6 +91,7 @@ export default function PWAInstallPrompt() {
         )}
         <button
           onClick={handleDismiss}
+          aria-label="Dismiss install prompt"
           className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors flex-shrink-0"
         >
           <X className="w-4 h-4 text-slate-400" />

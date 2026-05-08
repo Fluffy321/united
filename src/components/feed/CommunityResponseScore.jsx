@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { format, startOfMonth } from 'date-fns';
 
 function AnimatedCount({ target }) {
@@ -26,9 +26,9 @@ export default function CommunityResponseScore() {
     queryKey: ['community-response-score', monthStart],
     queryFn: async () => {
       const [fulfilled, actions, logs] = await Promise.allSettled([
-        base44.entities.MitzvahRequest.filter({ status: 'completed' }, '-created_date', 100),
-        base44.entities.MitzvahAction.list('-created_date', 200),
-        base44.entities.ChesedLog.list('-created_date', 200),
+        dataService.entities.MitzvahRequest.filter({ status: 'completed' }, '-created_date', 100),
+        dataService.entities.MitzvahAction.list('-created_date', 200),
+        dataService.entities.ChesedLog.list('-created_date', 200),
       ]);
 
       const fulfilledThisMonth = (fulfilled.value || []).filter(r =>

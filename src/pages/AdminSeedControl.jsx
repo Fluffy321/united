@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { Button } from '@/components/ui/button';
 import { Loader2, Play, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,7 +16,7 @@ export default function AdminSeedControl() {
     setLoading(true);
     setResult(null);
     try {
-      const res = await base44.functions.invoke('seedCommunitiesDirectory', {
+      const res = await dataService.functions.invoke('seedCommunitiesDirectory', {
         volumeCommunities,
         volumePostsPerCommunity: volumePosts,
         volumeEventsPerCommunity: volumeEvents,

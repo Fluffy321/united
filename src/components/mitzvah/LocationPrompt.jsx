@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MapPin, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { dataService, storageService } from '@/services';
 import { toast } from 'sonner';
 
 export default function LocationPrompt({ show, onDismiss, onLocationSet }) {
@@ -22,13 +22,13 @@ export default function LocationPrompt({ show, onDismiss, onLocationSet }) {
           const { latitude, longitude } = position.coords;
           
           // Update user location
-          await base44.auth.updateMe({
+          await dataService.auth.updateMe({
             location_lat: latitude,
             location_lng: longitude,
             location_last_updated: new Date().toISOString()
           });
 
-          localStorage.setItem('locationEnabled', 'true');
+          storageService.setItem('locationEnabled', 'true');
           toast.success('Location enabled');
           onLocationSet();
         },
@@ -45,7 +45,7 @@ export default function LocationPrompt({ show, onDismiss, onLocationSet }) {
   };
 
   const handleDismiss = () => {
-    localStorage.setItem('locationPromptDismissed', 'true');
+    storageService.setItem('locationPromptDismissed', 'true');
     onDismiss();
   };
 

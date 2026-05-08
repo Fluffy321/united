@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Newspaper, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import ProfileSetup from '@/components/profile/ProfileSetup';
@@ -16,7 +16,7 @@ export default function News() {
 
   const loadUser = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await dataService.auth.me();
       setCurrentUser(user);
     } catch (e) {
       setCurrentUser({ id: 'guest', full_name: 'Guest', display_name: 'Guest', role: 'user', is_profile_complete: true });
@@ -25,7 +25,7 @@ export default function News() {
 
   const { data: sources = [] } = useQuery({
     queryKey: ['news-sources'],
-    queryFn: () => base44.entities.NewsSource.filter({ enabled: true })
+    queryFn: () => dataService.entities.NewsSource.filter({ enabled: true })
   });
 
   const { data: newsItems = [], isLoading } = useQuery({
@@ -33,9 +33,9 @@ export default function News() {
     queryFn: async () => {
       let items;
       if (selectedSource === 'all') {
-        items = await base44.entities.NewsItem.list('-published_at', 100);
+        items = await dataService.entities.NewsItem.list('-published_at', 100);
       } else {
-        items = await base44.entities.NewsItem.filter({ 
+        items = await dataService.entities.NewsItem.filter({ 
           source_id: selectedSource 
         }, '-published_at', 100);
       }

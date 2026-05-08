@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import UserAvatar from '@/components/common/UserAvatar';
 import { formatDistanceToNow } from 'date-fns';
 import { BarChart2 } from 'lucide-react';
@@ -13,7 +13,7 @@ export default function PollCard({ post, currentUser }) {
   const totalVotes = votes.length;
 
   useEffect(() => {
-    base44.entities.PollVote.filter({ post_id: post.id }).then(v => {
+    dataService.entities.PollVote.filter({ post_id: post.id }).then(v => {
       setVotes(v);
       if (currentUser) {
         const mine = v.find(x => x.user_id === currentUser.id);
@@ -21,7 +21,7 @@ export default function PollCard({ post, currentUser }) {
       }
     }).catch(() => {});
 
-    const unsub = base44.entities.PollVote.subscribe((event) => {
+    const unsub = dataService.entities.PollVote.subscribe((event) => {
       if (event.data?.post_id !== post.id) return;
       setVotes(prev => {
         if (event.type === 'create') return [...prev, event.data];
@@ -36,8 +36,8 @@ export default function PollCard({ post, currentUser }) {
     if (!currentUser || userVote !== null || voting) return;
     setVoting(true);
     try {
-      await base44.entities.PollVote.create({ post_id: post.id, user_id: currentUser.id, option_index: index });
-      await base44.entities.UnifiedPost.update(post.id, { poll_votes_count: totalVotes + 1 });
+      await dataService.entities.PollVote.create({ post_id: post.id, user_id: currentUser.id, option_index: index });
+      await dataService.entities.UnifiedPost.update(post.id, { poll_votes_count: totalVotes + 1 });
       setUserVote(index);
     } finally {
       setVoting(false);

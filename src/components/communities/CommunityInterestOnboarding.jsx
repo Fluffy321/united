@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Loader2, Check, Sparkles } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const INTERESTS = [
@@ -58,13 +58,13 @@ export default function CommunityInterestOnboarding({ currentUser, allCommunitie
 
     await Promise.all(finalJoin.map(async (community) => {
       try {
-        await base44.entities.UserCommunity.create({
+        await dataService.entities.UserCommunity.create({
           user_id: currentUser.id,
           community_id: community.id,
           role: 'Member',
           user_name: currentUser.full_name || currentUser.display_name,
         });
-        await base44.entities.Community.update(community.id, {
+        await dataService.entities.Community.update(community.id, {
           follower_count: (community.follower_count || 0) + 1,
         }).catch(() => {});
       } catch {}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Navigation, X, Loader2, Hand } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService, storageService } from '@/services';
 import { formatDistanceToNow } from 'date-fns';
 
 const MILES_TO_KM = 1.60934;
@@ -24,7 +24,7 @@ export default function NearbyHelpBanner({ currentUser, onClaim }) {
 
   useEffect(() => {
     // Check if already granted from a previous session
-    const cached = localStorage.getItem('userCoords');
+    const cached = storageService.getItem('userCoords');
     if (cached) {
       try {
         const coords = JSON.parse(cached);
@@ -40,7 +40,7 @@ export default function NearbyHelpBanner({ currentUser, onClaim }) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        localStorage.setItem('userCoords', JSON.stringify(coords));
+        storageService.setJson('userCoords', coords);
         setUserCoords(coords);
         setStatus('loading');
         fetchNearby(coords);
@@ -51,7 +51,7 @@ export default function NearbyHelpBanner({ currentUser, onClaim }) {
 
   const fetchNearby = async (coords) => {
     try {
-      const requests = await base44.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 50);
+      const requests = await dataService.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 50);
       const withDistance = requests
         .filter(r => r.approxLat && r.approxLng)
         .map(r => ({

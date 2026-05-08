@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Ticket, Users, ChevronDown, ChevronUp, Loader2, ShoppingCart, CheckCircle } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const RSVP_OPTIONS = [
@@ -31,9 +31,9 @@ export default function EventTicketSection({ event, currentUser, past }) {
 
   const loadRsvpData = async () => {
     const [allRsvps, userRsvps] = await Promise.all([
-      base44.entities.CommunityEventRSVP.filter({ event_id: event.id }),
+      dataService.entities.CommunityEventRSVP.filter({ event_id: event.id }),
       currentUser
-        ? base44.entities.CommunityEventRSVP.filter({ event_id: event.id, user_id: currentUser.id })
+        ? dataService.entities.CommunityEventRSVP.filter({ event_id: event.id, user_id: currentUser.id })
         : Promise.resolve([]),
     ]);
     setRsvpCounts({
@@ -55,14 +55,14 @@ export default function EventTicketSection({ event, currentUser, past }) {
     try {
       if (rsvpRecord) {
         if (rsvp === status) {
-          await base44.entities.CommunityEventRSVP.delete(rsvpRecord.id);
+          await dataService.entities.CommunityEventRSVP.delete(rsvpRecord.id);
           setRsvp(null); setRsvpRecord(null);
         } else {
-          await base44.entities.CommunityEventRSVP.update(rsvpRecord.id, { status });
+          await dataService.entities.CommunityEventRSVP.update(rsvpRecord.id, { status });
           setRsvp(status); setRsvpRecord(r => ({ ...r, status }));
         }
       } else {
-        const created = await base44.entities.CommunityEventRSVP.create({
+        const created = await dataService.entities.CommunityEventRSVP.create({
           event_id: event.id,
           community_id: event.community_id,
           user_id: currentUser.id,
@@ -89,44 +89,7 @@ export default function EventTicketSection({ event, currentUser, past }) {
     if (ticketsSoldOut) { toast.error('Sorry, this event is sold out!'); return; }
     if (hasPurchased) { toast('You already have tickets for this event!'); return; }
 
-    const totalAmount = (event.ticket_price * quantity).toFixed(2);
-    const description = `${event.title} – ${event.ticket_name || 'Ticket'} x${quantity}`;
-
-    setPurchasing(true);
-    try {
-      const res = await base44.functions.invoke('create-checkout', {
-        amount: totalAmount,
-        type: 'event_ticket',
-        description,
-        relatedEntityId: event.id,
-        relatedEntityType: 'CommunityEvent',
-        quantity,
-      });
-
-      const { checkoutUrl } = res.data;
-      if (!checkoutUrl) throw new Error('No checkout URL');
-
-      // Optimistically reserve the RSVP record so we can update it after payment
-      if (!rsvpRecord) {
-        await base44.entities.CommunityEventRSVP.create({
-          event_id: event.id,
-          community_id: event.community_id,
-          user_id: currentUser.id,
-          user_name: currentUser.full_name || currentUser.display_name || 'Member',
-          status: 'going',
-          ticket_purchased: false,
-          ticket_quantity: quantity,
-        });
-      }
-
-      // Redirect to checkout
-      window.location.href = checkoutUrl;
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to start checkout. Please try again.');
-    } finally {
-      setPurchasing(false);
-    }
+    toast.info('Paid ticket checkout is coming soon. No money was processed.');
   };
 
   const handleFreeTicketRsvp = async () => {
@@ -135,7 +98,7 @@ export default function EventTicketSection({ event, currentUser, past }) {
     setLoading(true);
     try {
       if (!rsvpRecord) {
-        const created = await base44.entities.CommunityEventRSVP.create({
+        const created = await dataService.entities.CommunityEventRSVP.create({
           event_id: event.id,
           community_id: event.community_id,
           user_id: currentUser.id,
@@ -145,7 +108,7 @@ export default function EventTicketSection({ event, currentUser, past }) {
           ticket_quantity: quantity,
         });
         setRsvp('going'); setRsvpRecord(created);
-        await base44.entities.CommunityEvent.update(event.id, { tickets_sold: (event.tickets_sold || 0) + quantity });
+        await dataService.entities.CommunityEvent.update(event.id, { tickets_sold: (event.tickets_sold || 0) + quantity });
         toast.success("You're registered! 🎉");
       } else {
         toast('You are already registered for this event.');
@@ -190,28 +153,33 @@ export default function EventTicketSection({ event, currentUser, past }) {
             <p className="text-[13px] font-semibold text-red-600">Sold Out</p>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            {/* Quantity selector */}
-            <div className="flex items-center border border-slate-200 rounded-xl overflow-hidden bg-white">
+          <>
+            <div className="flex items-center gap-2">
+              {/* Quantity selector */}
+              <div className="flex items-center border border-slate-200 rounded-xl overflow-hidden bg-white">
+                <button
+                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                  className="px-3 py-2 text-slate-600 hover:bg-slate-50 font-bold text-lg"
+                >−</button>
+                <span className="px-3 text-[14px] font-bold text-slate-800 min-w-[28px] text-center">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(q => ticketsLeft ? Math.min(q + 1, ticketsLeft, 10) : Math.min(q + 1, 10))}
+                  className="px-3 py-2 text-slate-600 hover:bg-slate-50 font-bold text-lg"
+                >+</button>
+              </div>
               <button
-                onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                className="px-3 py-2 text-slate-600 hover:bg-slate-50 font-bold text-lg"
-              >−</button>
-              <span className="px-3 text-[14px] font-bold text-slate-800 min-w-[28px] text-center">{quantity}</span>
-              <button
-                onClick={() => setQuantity(q => ticketsLeft ? Math.min(q + 1, ticketsLeft, 10) : Math.min(q + 1, 10))}
-                className="px-3 py-2 text-slate-600 hover:bg-slate-50 font-bold text-lg"
-              >+</button>
+                onClick={handleBuyTickets}
+                disabled
+                className="flex-1 flex items-center justify-center gap-2 bg-slate-300 text-white rounded-xl py-2.5 text-[13px] font-bold cursor-not-allowed"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                Paid Tickets Coming Soon
+              </button>
             </div>
-            <button
-              onClick={handleBuyTickets}
-              disabled={purchasing}
-              className="flex-1 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl py-2.5 text-[13px] font-bold transition-all active:scale-95 disabled:opacity-60"
-            >
-              {purchasing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingCart className="w-4 h-4" />}
-              {purchasing ? 'Redirecting…' : `Buy ${quantity > 1 ? `${quantity}x ` : ''}Ticket${quantity > 1 ? 's' : ''} · $${(event.ticket_price * quantity).toFixed(2)}`}
-            </button>
-          </div>
+            <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold text-amber-800">
+              Demo only: paid ticket checkout is not connected, so no money is processed.
+            </p>
+          </>
         )}
 
         {/* Attendee count */}

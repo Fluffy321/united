@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Calendar, MapPin, Clock, ChevronRight, Sparkles, Ticket, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { Calendar, MapPin, Clock, ChevronRight, Sparkles, Ticket } from 'lucide-react';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO, startOfToday, addDays, isBefore, isToday, isTomorrow } from 'date-fns';
@@ -12,7 +12,7 @@ export default function ThisWeekEvents({ currentUser }) {
   const { data: events = [] } = useQuery({
     queryKey: ['this-week-events'],
     queryFn: async () => {
-      const all = await base44.entities.UnifiedPost.filter({ type: 'event' }, 'event_date', 60);
+      const all = await dataService.entities.UnifiedPost.filter({ type: 'event' }, 'event_date', 60);
       const today = startOfToday();
       const weekEnd = addDays(today, 7);
       return all.filter(e => {
@@ -144,26 +144,7 @@ function EventDetailSheet({ event, currentUser, onClose }) {
   const fullDate = event.event_date ? format(parseISO(event.event_date), 'EEEE, MMMM d, yyyy') : null;
 
   const handlePayNow = async () => {
-    setPaying(true);
-    try {
-      const res = await base44.functions.invoke('create-checkout', {
-        amount: event.ticket_price,
-        type: 'event_registration',
-        description: event.title || event.body?.slice(0, 80) || 'Event Ticket',
-        relatedEntityId: event.id,
-        relatedEntityType: 'event',
-      });
-      if (res.data?.checkoutUrl) {
-        window.location.href = res.data.checkoutUrl;
-      } else {
-        toast.error('Could not start checkout');
-      }
-    } catch (e) {
-      console.error('Checkout error:', e);
-      toast.error('Checkout failed. Please try again.');
-    } finally {
-      setPaying(false);
-    }
+    toast.info('Paid event checkout is coming soon. No money was processed.');
   };
 
   return (
@@ -228,16 +209,11 @@ function EventDetailSheet({ event, currentUser, onClose }) {
           {event.ticket_price > 0 && (
             <button
               onClick={handlePayNow}
-              disabled={paying}
-              className="w-full py-3 rounded-2xl text-white text-[15px] font-bold flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-60"
-              style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}
+              disabled
+              className="w-full py-3 rounded-2xl bg-slate-300 text-white text-[15px] font-bold flex items-center justify-center gap-2 cursor-not-allowed"
             >
-              {paying ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Ticket className="w-4 h-4" />
-              )}
-              {paying ? 'Processing...' : `Pay Now · $${event.ticket_price}`}
+              <Ticket className="w-4 h-4" />
+              Paid Checkout Coming Soon
             </button>
           )}
         </div>

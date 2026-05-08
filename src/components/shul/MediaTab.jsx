@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, FileText, Image, Loader2, ExternalLink, Trash2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -26,7 +26,7 @@ export default function MediaTab({ shul, isAdmin, onShulUpdate }) {
 
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await dataService.integrations.Core.UploadFile({ file });
       const newBulletin = {
         url: file_url,
         name: file.name,
@@ -34,7 +34,7 @@ export default function MediaTab({ shul, isAdmin, onShulUpdate }) {
         uploaded_at: new Date().toISOString()
       };
       const updatedBulletins = [newBulletin, ...bulletins].slice(0, 20);
-      await base44.entities.Shul.update(shul.id, { bulletins: updatedBulletins });
+      await dataService.entities.Shul.update(shul.id, { bulletins: updatedBulletins });
       onShulUpdate({ ...shul, bulletins: updatedBulletins });
       toast.success('File uploaded successfully!');
     } catch (error) {
@@ -46,7 +46,7 @@ export default function MediaTab({ shul, isAdmin, onShulUpdate }) {
 
   const handleDelete = async (index) => {
     const updatedBulletins = bulletins.filter((_, i) => i !== index);
-    await base44.entities.Shul.update(shul.id, { bulletins: updatedBulletins });
+    await dataService.entities.Shul.update(shul.id, { bulletins: updatedBulletins });
     onShulUpdate({ ...shul, bulletins: updatedBulletins });
     toast.success('Removed');
   };

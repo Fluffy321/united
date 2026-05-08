@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search, X, Clock, TrendingUp, Bookmark, BookmarkCheck, Filter, ChevronLeft, Users, Calendar, FileText, User, Loader2, Bell } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService, storageService } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -149,14 +149,12 @@ export default function SearchPage() {
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({ post_type: '', community_id: '', date_from: '', date_to: '' });
-  const [recentSearches, setRecentSearches] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('junited_recent_searches') || '[]'); } catch { return []; }
-  });
+  const [recentSearches, setRecentSearches] = useState(() => storageService.getJson('junited_recent_searches', []));
   const [user, setUser] = useState(null);
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState(null);
 
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
+  useEffect(() => { dataService.auth.me().then(setUser).catch(() => {}); }, []);
   useEffect(() => { inputRef.current?.focus(); }, []);
 
   // Debounce query
@@ -174,17 +172,17 @@ export default function SearchPage() {
       setSearching(false);
       const updated = [debouncedQuery, ...recentSearches.filter(s => s !== debouncedQuery)].slice(0, 8);
       setRecentSearches(updated);
-      try { localStorage.setItem('junited_recent_searches', JSON.stringify(updated)); } catch {}
+      storageService.setJson('junited_recent_searches', updated);
       return;
     }
-    base44.functions.invoke('universalSearch', { query: debouncedQuery, filters, user_id: user?.id })
+    dataService.functions.invoke('universalSearch', { query: debouncedQuery, filters, user_id: user?.id })
       .then(res => {
         setResults(res.data?.results || { posts: [], communities: [], events: [], people: [] });
         setSearching(false);
         // Save to recent
         const updated = [debouncedQuery, ...recentSearches.filter(s => s !== debouncedQuery)].slice(0, 8);
         setRecentSearches(updated);
-        try { localStorage.setItem('junited_recent_searches', JSON.stringify(updated)); } catch {}
+        storageService.setJson('junited_recent_searches', updated);
       })
       .catch(() => {
         setResults({ posts: [], communities: [], events: [], people: [] });
@@ -194,20 +192,20 @@ export default function SearchPage() {
 
   const { data: savedSearches = [], refetch: refetchSaved } = useQuery({
     queryKey: ['saved-searches', user?.id],
-    queryFn: () => base44.entities.SavedSearch.filter({ user_id: user.id }, '-created_date', 20),
+    queryFn: () => dataService.entities.SavedSearch.filter({ user_id: user.id }, '-created_date', 20),
     enabled: !!user,
   });
 
   const isQuerySaved = savedSearches.some(s => s.query.toLowerCase() === query.toLowerCase());
 
   const handleSaveSearch = async () => {
-    if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
+    if (!user) { dataService.auth.redirectToLogin(window.location.href); return; }
     if (isQuerySaved) {
       const existing = savedSearches.find(s => s.query.toLowerCase() === query.toLowerCase());
-      await base44.entities.SavedSearch.delete(existing.id);
+      await dataService.entities.SavedSearch.delete(existing.id);
       toast.success('Search removed');
     } else {
-      await base44.entities.SavedSearch.create({ user_id: user.id, query, filters, notify_on_new: true });
+      await dataService.entities.SavedSearch.create({ user_id: user.id, query, filters, notify_on_new: true });
       toast.success('Search saved — you\'ll be notified of new matches');
     }
     refetchSaved();
@@ -219,7 +217,7 @@ export default function SearchPage() {
 
   const clearRecent = () => {
     setRecentSearches([]);
-    try { localStorage.removeItem('junited_recent_searches'); } catch {}
+    storageService.removeItem('junited_recent_searches');
   };
 
   const totalResults = results ? (results.posts?.length + results.communities?.length + results.events?.length + results.people?.length) : 0;

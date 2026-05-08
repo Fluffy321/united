@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { Minus, Plus, Loader2 } from 'lucide-react';
 
@@ -49,7 +49,7 @@ export default function LogHoursModal({ open, onOpenChange, currentUser, onSucce
       verifier_phone: form.requestVerification ? form.verifier_phone.trim() : undefined,
     };
 
-    await base44.entities.ChesedLog.create(payload);
+    await dataService.entities.ChesedLog.create(payload);
     toast.success('Hours logged!');
     setSubmitting(false);
     onOpenChange(false);

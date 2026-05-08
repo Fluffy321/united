@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import CitySelector from '@/components/common/CitySelector';
 
@@ -87,8 +87,8 @@ export default function ProfileSetup({ user, onComplete }) {
     if (avatarFile) {
       setIsSubmitting(true);
       try {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file: avatarFile });
-        await base44.auth.updateMe({ avatar_url: file_url });
+        const { file_url } = await dataService.integrations.Core.UploadFile({ file: avatarFile });
+        await dataService.auth.updateMe({ avatar_url: file_url });
         setAvatarPreview(file_url);
         setIsSubmitting(false);
         setStep(2);
@@ -107,7 +107,7 @@ export default function ProfileSetup({ user, onComplete }) {
     setIsSubmitting(true);
 
     try {
-      await base44.auth.updateMe({
+      await dataService.auth.updateMe({
         display_name: displayName.trim(),
         birth_year: parseInt(birthYear),
         age_range: calculateAgeRange(parseInt(birthYear)),
@@ -122,18 +122,18 @@ export default function ProfileSetup({ user, onComplete }) {
 
       // Auto-join default community groups
       const AUTO_JOIN_GROUPS = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Young Israel Woodmere Members', 'Pickup Basketball', 'Young Adults Hangouts', 'Daf Yomi Chat'];
-      const groups = await base44.entities.CommunityGroup.list();
+      const groups = await dataService.entities.CommunityGroup.list();
       const autoGroups = groups.filter(g => AUTO_JOIN_GROUPS.includes(g.name));
       // Check which ones user isn't already in
-      const existingMemberships = await base44.entities.GroupMember.filter({ user_id: user.id });
+      const existingMemberships = await dataService.entities.GroupMember.filter({ user_id: user.id });
       const existingGroupIds = new Set(existingMemberships.map(m => m.group_id));
       const groupsToJoin = autoGroups.filter(g => !existingGroupIds.has(g.id));
       await Promise.allSettled([
         ...groupsToJoin.map(g =>
-          base44.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: displayName.trim(), role: 'member' })
+          dataService.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: displayName.trim(), role: 'member' })
         ),
         ...groupsToJoin.map(g =>
-          base44.entities.CommunityGroup.update(g.id, { member_count: (g.member_count || 0) + 1 })
+          dataService.entities.CommunityGroup.update(g.id, { member_count: (g.member_count || 0) + 1 })
         ),
       ]);
 

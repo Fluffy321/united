@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Shield, Bell, BarChart2, Pin, Users, Sparkles, Check, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { Shield, Bell, BarChart2, Pin, Users, Sparkles, Check } from 'lucide-react';
+import { dataService, paymentsService } from '@/services';
 import { toast } from 'sonner';
+import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
 
 const TIERS = [
   {
@@ -54,10 +55,13 @@ export default function VerifiedCommunityUpgrade({ community, currentUser }) {
   const isVerified = community?.verified_plan && community.verified_plan !== 'none';
 
   const handleUpgrade = async () => {
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    toast.info('Verified upgrades are coming soon. No money was processed.');
+    return;
+
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setLoading(true);
     try {
-      const res = await base44.functions.invoke('create-checkout', {
+      const res = await paymentsService.createCheckout( {
         checkoutType: 'verified_community',
         billing,
         tier: selectedTier,
@@ -99,11 +103,17 @@ export default function VerifiedCommunityUpgrade({ community, currentUser }) {
         <div className="flex items-center gap-2 mb-1">
           <Shield className="w-5 h-5" />
           <span className="font-bold text-[16px]">Get Verified</span>
+          <StatusBadge>Coming Soon</StatusBadge>
         </div>
         <p className="text-sm text-blue-100">
           Unlock the full toolkit for official shuls, schools, and organizations.
         </p>
       </div>
+
+      {/* Billing toggle */}
+      <FeatureStatusNotice title="Checkout is not live yet">
+        These plans are a preview. No subscription starts and no card is charged.
+      </FeatureStatusNotice>
 
       {/* Billing toggle */}
       <div className="flex items-center justify-center gap-1 bg-slate-100 rounded-full p-1">
@@ -172,14 +182,14 @@ export default function VerifiedCommunityUpgrade({ community, currentUser }) {
       {/* CTA */}
       <button
         onClick={handleUpgrade}
-        disabled={loading}
-        className="w-full py-3 rounded-xl bg-gradient-to-r from-[#0F5ED7] to-[#7B3FE4] text-white font-bold text-[14px] flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-60"
+        disabled
+        className="w-full py-3 rounded-xl bg-slate-300 text-white font-bold text-[14px] flex items-center justify-center gap-2 cursor-not-allowed transition-all"
       >
-        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
-        {loading ? 'Opening checkout…' : `Upgrade to Verified`}
+        <Shield className="w-4 h-4" />
+        Verified Checkout Coming Soon
       </button>
       <p className="text-center text-[11px] text-slate-400">
-        Secure checkout · Cancel anytime · No invasive ads, ever.
+        Demo only · no subscription starts · no card is charged
       </p>
     </div>
   );

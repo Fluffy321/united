@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { Loader2, TrendingUp, Users, MessageSquare, Calendar, Activity, AlertTriangle, Download, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { subDays, format, startOfDay } from 'date-fns';
@@ -75,7 +75,7 @@ export default function AdminAnalyticsDashboard() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(u => {
+    dataService.auth.me().then(u => {
       setUser(u);
       if (u?.role === 'admin') loadData();
       else setLoading(false);
@@ -85,12 +85,12 @@ export default function AdminAnalyticsDashboard() {
   const loadData = async () => {
     try {
       const [communities, posts, users, reports, events, userCommunities] = await Promise.all([
-        base44.entities.Community.list('-follower_count', 200),
-        base44.entities.UnifiedPost.list('-created_date', 500),
-        base44.entities.User.list('-created_date', 500),
-        base44.entities.Report.list('-created_date', 200),
-        base44.entities.CommunityEvent.list('-created_date', 200),
-        base44.entities.UserCommunity.list('-created_date', 500),
+        dataService.entities.Community.list('-follower_count', 200),
+        dataService.entities.UnifiedPost.list('-created_date', 500),
+        dataService.entities.User.list('-created_date', 500),
+        dataService.entities.Report.list('-created_date', 200),
+        dataService.entities.CommunityEvent.list('-created_date', 200),
+        dataService.entities.UserCommunity.list('-created_date', 500),
       ]);
 
       const now = Date.now();

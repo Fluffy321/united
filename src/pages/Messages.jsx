@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Inbox, Loader2, MessageCircle, Plus, Sparkles, Users } from 'lucide-react';
+import { AlertCircle, Inbox, Loader2, MessageCircle, Plus, Sparkles, Users } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import ChatView from '@/components/messages/ChatView';
 import ConversationList from '@/components/messages/ConversationList';
@@ -31,7 +31,7 @@ export default function Messages() {
 
   useEffect(() => {
     if (!currentUser) return;
-    const unsubscribe = base44.entities.Message.subscribe((event) => {
+    const unsubscribe = dataService.entities.Message.subscribe((event) => {
       if (event.type === 'create') {
         const newMsg = event.data;
         if (newMsg.sender_id !== currentUser.id) {
@@ -48,7 +48,7 @@ export default function Messages() {
 
   const loadUser = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await dataService.auth.me();
       setCurrentUser(user);
     } catch (e) {
       setCurrentUser({
@@ -69,7 +69,7 @@ export default function Messages() {
 
   const loadConversation = async (id) => {
     try {
-      const conv = await base44.entities.Conversation.filter({ id });
+      const conv = await dataService.entities.Conversation.filter({ id });
       if (conv[0]) {
         setSelectedConversation(conv[0]);
       }
@@ -83,10 +83,10 @@ export default function Messages() {
   const { data: communityConversations = [] } = useQuery({
     queryKey: ['community-convs', currentUser?.id],
     queryFn: async () => {
-      const memberships = await base44.entities.UserCommunity.filter({ user_id: currentUser.id });
+      const memberships = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id });
       if (!memberships.length) return [];
       const communityIds = memberships.map(m => m.community_id);
-      const allComms = await base44.entities.Community.list('-follower_count', 100);
+      const allComms = await dataService.entities.Community.list('-follower_count', 100);
       const joined = allComms.filter(c => communityIds.includes(c.id));
       return joined.map(c => ({
         id: `community-${c.id}`,
@@ -107,16 +107,16 @@ export default function Messages() {
     staleTime: 120000,
   });
 
-  const { data: conversations = [], isLoading } = useQuery({
+  const { data: conversations = [], isLoading, isError: isConversationsError } = useQuery({
     queryKey: ['conversations', currentUser?.id],
     queryFn: async () => {
-      const allConvs = await base44.entities.Conversation.list('-updated_date', 50);
+      const allConvs = await dataService.entities.Conversation.list('-updated_date', 50);
       const userConvs = allConvs.filter((c) => c.participant_ids?.includes(currentUser.id));
 
       const requestIds = [...new Set(userConvs.map((c) => c.request_id).filter(Boolean))];
       const requestTitleMap = {};
       await Promise.all(requestIds.map(async (rid) => {
-        const [req] = await base44.entities.MitzvahRequest.filter({ id: rid });
+        const [req] = await dataService.entities.MitzvahRequest.filter({ id: rid });
         if (req) requestTitleMap[rid] = req.title;
       }));
 
@@ -128,7 +128,8 @@ export default function Messages() {
     },
     enabled: !!currentUser,
     staleTime: 60000,
-    gcTime: 120000
+    gcTime: 120000,
+    retry: 1
   });
 
   const allConversations = [
@@ -159,7 +160,7 @@ export default function Messages() {
 
   const handleArchive = async (conv) => {
     try {
-      await base44.entities.Conversation.update(conv.id, { is_archived: true });
+      await dataService.entities.Conversation.update(conv.id, { is_archived: true });
       queryClient.invalidateQueries({ queryKey: ['conversations', currentUser.id] });
       toast.success('Conversation archived');
     } catch (e) {
@@ -170,7 +171,7 @@ export default function Messages() {
   const handleMarkUnread = async (conv) => {
     try {
       const newUnread = { ...(conv.unread_count || {}), [currentUser.id]: 1 };
-      await base44.entities.Conversation.update(conv.id, { unread_count: newUnread });
+      await dataService.entities.Conversation.update(conv.id, { unread_count: newUnread });
       queryClient.invalidateQueries({ queryKey: ['conversations', currentUser.id] });
       toast.success('Marked as unread');
     } catch (e) {
@@ -179,7 +180,7 @@ export default function Messages() {
   };
 
   const handleBlock = async (userId) => {
-    await base44.entities.Block.create({
+    await dataService.entities.Block.create({
       blocker_id: currentUser.id,
       blocked_id: userId
     });
@@ -225,11 +226,11 @@ export default function Messages() {
     <div className="relative flex min-h-[100dvh] flex-col bg-[#F6F8FB] mobile-safe-bottom">
       <div className="mobile-page-wide flex flex-1 min-h-[calc(100dvh-112px)] px-3 pt-3 sm:px-4 sm:pt-4">
         {/* Conversation List */}
-        <div className={`flex flex-col w-full overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm ${
+        <div className={`flex flex-col w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ${
         selectedConversation ? 'hidden lg:flex lg:w-80 lg:rounded-r-none lg:border-r' : 'flex'}`
         }>
           <div className="flex-shrink-0 border-b border-slate-100 bg-white p-3">
-            <div className="mb-3 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+            <div className="mb-3 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
               <div className="relative p-4">
                 <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-[42px] bg-blue-50" />
                 <div className="relative flex items-start justify-between gap-3">
@@ -249,17 +250,17 @@ export default function Messages() {
                   </button>
                 </div>
                 <div className="relative mt-3 grid grid-cols-3 gap-2">
-                  <div className="rounded-2xl bg-slate-50 px-3 py-2">
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
                     <MessageCircle className="mb-1 h-4 w-4 text-blue-600" />
                     <p className="text-[15px] font-black text-slate-950">{allConversations.length}</p>
                     <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Chats</p>
                   </div>
-                  <div className="rounded-2xl bg-blue-50 px-3 py-2">
+                  <div className="rounded-xl bg-blue-50 px-3 py-2">
                     <Inbox className="mb-1 h-4 w-4 text-blue-700" />
                     <p className="text-[15px] font-black text-blue-800">{unreadTotal}</p>
                     <p className="text-[10px] font-bold uppercase tracking-wide text-blue-600">Unread</p>
                   </div>
-                  <div className="rounded-2xl bg-emerald-50 px-3 py-2">
+                  <div className="rounded-xl bg-emerald-50 px-3 py-2">
                     <Users className="mb-1 h-4 w-4 text-emerald-700" />
                     <p className="text-[15px] font-black text-emerald-800">{communityTotal}</p>
                     <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600">Groups</p>
@@ -278,7 +279,7 @@ export default function Messages() {
                 <button
                   key={f.key}
                   onClick={() => setActiveFilter(f.key)}
-                  className={`flex-shrink-0 rounded-2xl border px-4 py-2 text-[13px] font-bold transition-all duration-150 active:scale-95 ${
+                  className={`flex-shrink-0 rounded-xl border px-4 py-2 text-[13px] font-bold transition-all duration-150 active:scale-95 ${
                     activeFilter === f.key ? 'border-slate-950 bg-slate-950 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
                   }`}
                 >
@@ -318,6 +319,13 @@ export default function Messages() {
                 <Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7]" />
               </div> :
 
+            isConversationsError ?
+            <div className="mx-3 my-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
+                <AlertCircle className="mx-auto mb-2 h-5 w-5 text-amber-600" />
+                <p className="text-[13px] font-bold text-amber-900">Messages could not refresh.</p>
+                <p className="mt-1 text-[12px] font-medium leading-5 text-amber-700">You can keep using the app. Try refreshing this page in a moment.</p>
+              </div> :
+
             <ConversationList
               conversations={visibleConversations}
               currentUser={currentUser}
@@ -331,7 +339,7 @@ export default function Messages() {
         </div>
 
         {/* Chat View */}
-        <div className={`flex-1 flex-col min-h-0 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm ${
+        <div className={`flex-1 flex-col min-h-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ${
         selectedConversation ? 'flex lg:rounded-l-none lg:border-l-0' : 'hidden'}`
         }>
           {selectedConversation ?

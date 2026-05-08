@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
+import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 
 const AuthContext = createContext();
 
@@ -17,7 +18,7 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
 
     try {
-      const currentUser = await base44.auth.me();
+      const currentUser = await dataService.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
       setAppPublicSettings({ id: 'junited-local', public_settings: { localAppMode: true } });
@@ -35,14 +36,30 @@ export const AuthProvider = ({ children }) => {
     checkAppState();
   }, []);
 
-  const logout = () => {
+  useEffect(() => {
+    if (!shouldUseSupabase || !supabase) return undefined;
+
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session?.user) {
+        setUser(null);
+        setIsAuthenticated(false);
+        return;
+      }
+
+      checkAppState();
+    });
+
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  const logout = async () => {
     setUser(null);
     setIsAuthenticated(false);
-    base44.auth.logout();
+    await dataService.auth.logout();
   };
 
   const navigateToLogin = () => {
-    base44.auth.redirectToLogin();
+    dataService.auth.redirectToLogin();
   };
 
   return (

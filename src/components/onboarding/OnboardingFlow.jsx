@@ -1,908 +1,416 @@
-import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ChevronRight, MapPin, Sparkles, Users, Check, Loader2,
-  Camera, Bell, HandHeart, School, Star
-} from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Bell, Camera, Check, ChevronLeft, ChevronRight, Loader2, MapPin, Users, X } from 'lucide-react';
+import { communitiesService, dataService, storageService } from '@/services';
 import { toast } from 'sonner';
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+const ONBOARDING_KEY_PREFIX = 'junited_onboarding_complete_';
 
-const CITIES = [
-  { id: 'Five Towns', label: 'Five Towns', emoji: '🏠' },
-  { id: 'Brooklyn', label: 'Brooklyn', emoji: '🌉' },
-  { id: 'Lakewood', label: 'Lakewood', emoji: '🌲' },
-  { id: 'Miami', label: 'Miami', emoji: '🌴' },
-  { id: 'Boca Raton', label: 'Boca Raton', emoji: '☀️' },
-  { id: 'Manhattan', label: 'Manhattan', emoji: '🗽' },
-  { id: 'New Jersey', label: 'New Jersey', emoji: '🏙️' },
-  { id: 'Other', label: 'Other', emoji: '📍' },
+const NEIGHBORHOODS = [
+  'Five Towns',
+  'Lawrence',
+  'Cedarhurst',
+  'Woodmere',
+  'Hewlett',
+  'Inwood',
+  'Far Rockaway',
+  'Brooklyn',
+  'Lakewood',
+  'Teaneck',
+  'Other',
 ];
 
-const SUB_NEIGHBORHOODS = {
-  'Five Towns': ['Lawrence', 'Cedarhurst', 'Woodmere', 'Hewlett', 'Inwood', 'Far Rockaway'],
-  'Brooklyn': ['Flatbush', 'Boro Park', 'Crown Heights', 'Williamsburg', 'Marine Park', 'Midwood'],
-  'Lakewood': ['Jackson', 'Howell', 'Toms River', 'Other NJ'],
-  'Miami': ['Aventura', 'Bal Harbour', 'Sunny Isles', 'North Miami Beach', 'Miami Beach'],
-  'Boca Raton': ['West Boca', 'East Boca', 'Delray Beach'],
-  'Manhattan': ['Upper West Side', 'Upper East Side', 'Washington Heights', 'Lower East Side'],
-  'New Jersey': ['Passaic', 'Teaneck', 'Bergenfield', 'Fair Lawn', 'Edison'],
-  'Other': [],
-};
-
-const INTERESTS = [
-  { label: 'Daf Yomi', emoji: '📖' },
-  { label: 'Torah & Learning', emoji: '📚' },
-  { label: 'Chesed & Volunteering', emoji: '🤝' },
-  { label: 'Young Professional', emoji: '💼' },
-  { label: 'Parent', emoji: '👨‍👩‍👧' },
-  { label: 'Baal Teshuva', emoji: '✨' },
-  { label: 'Alumni Network', emoji: '🎓' },
-  { label: 'Events & Social', emoji: '🎉' },
-  { label: 'Sports & Fitness', emoji: '🏀' },
-  { label: 'Food & Kosher', emoji: '🍽️' },
-  { label: 'Shabbos Hosting', emoji: '🕍' },
-  { label: 'Music & Art', emoji: '🎵' },
-  { label: 'Dating & Shidduchim', emoji: '💕' },
-  { label: 'Israel & Zionism', emoji: '🇮🇱' },
+const DEFAULT_COMMUNITIES = [
+  { id: 'demo-community', name: 'Five Towns Community', description: 'Local updates, events, and neighbor-to-neighbor support.' },
+  { id: 'demo-chesed', name: 'Chesed Volunteers', description: 'Mitzvah requests, rides, meals, and volunteer opportunities.' },
+  { id: 'demo-events', name: 'Community Events', description: 'Shiurim, simchas, school events, and local gatherings.' },
 ];
 
-const HELP_INTENTS = [
-  { id: 'help_others', label: 'Mostly here to help', emoji: '🤲', desc: 'I want to give back and support others' },
-  { id: 'get_help', label: 'Mostly here to get help', emoji: '🙏', desc: 'I could use some community support' },
-  { id: 'both', label: 'Both — give and receive', emoji: '💛', desc: 'I\'m here to help and be helped' },
-];
+export const getOnboardingStorageKey = (userId) => `${ONBOARDING_KEY_PREFIX}${userId || 'guest'}`;
 
-const BASE_STEPS = ['welcome', 'age', 'profile', 'location', 'shul', 'schools', 'interests', 'intent', 'communities', 'notifications'];
-const MINOR_STEPS = ['welcome', 'age', 'profile', 'location', 'shul', 'schools', 'interests', 'intent', 'communities', 'supervised', 'notifications'];
+export function hasCompletedOnboarding(user) {
+  if (!user?.id) return true;
+  return Boolean(user.onboarding_complete || storageService.getItem(getOnboardingStorageKey(user.id)) === '1');
+}
 
-const slideVariants = {
-  initial: { opacity: 0, x: 40 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -40 },
-};
-
-// ── Step Components ───────────────────────────────────────────────────────────
-
-function WelcomeStep({ userName }) {
+function StepShell({ eyebrow, title, text, children }) {
   return (
-    <div className="text-center pt-4 pb-8">
-      <div className="text-6xl mb-6">🙌</div>
-      <h1 className="text-[28px] font-bold text-slate-900 leading-tight mb-3">
-        Welcome to Kehilla!<br />
-        <span className="text-blue-600">{userName?.split(' ')[0] || 'Friend'}</span>
-      </h1>
-      <p className="text-[15px] text-slate-500 leading-relaxed max-w-xs mx-auto">
-        Your Jewish community hub for local news, chesed, events, and connection. Let's get you set up in a few quick steps.
-      </p>
-      <div className="mt-8 space-y-3 text-left max-w-xs mx-auto">
-        {[
-          { icon: '📍', text: 'Find your neighborhood' },
-          { icon: '⭐', text: 'Choose your interests' },
-          { icon: '🤝', text: 'Join communities that matter to you' },
-          { icon: '🔔', text: 'Stay in the loop' },
-        ].map(({ icon, text }) => (
-          <div key={text} className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-blue-100">
-            <span className="text-xl">{icon}</span>
-            <span className="text-[14px] font-semibold text-slate-700">{text}</span>
-          </div>
-        ))}
+    <div className="space-y-5">
+      <div>
+        <p className="text-[12px] font-black uppercase text-blue-600">{eyebrow}</p>
+        <h2 className="mt-1 text-2xl font-black leading-tight text-slate-950">{title}</h2>
+        <p className="mt-2 text-sm font-medium leading-6 text-slate-500">{text}</p>
       </div>
+      {children}
     </div>
   );
 }
 
-function AgeGateStep({ dob, setDob, onBlocked }) {
-  const [error, setError] = useState('');
-
-  const handleChange = (val) => {
-    setDob(val);
-    setError('');
-    if (!val) return;
-    const birth = new Date(val);
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-    if (age < 13) {
-      setError('blocked');
-    } else if (age > 120) {
-      setError('invalid');
-    }
-  };
-
-  if (error === 'blocked') {
-    return (
-      <div className="pb-8 text-center pt-8">
-        <div className="text-6xl mb-5">🔒</div>
-        <h2 className="text-[22px] font-bold text-slate-900 mb-3">Sorry, you must be 13 or older</h2>
-        <p className="text-[15px] text-slate-500 leading-relaxed max-w-xs mx-auto">
-          JUnited requires users to be at least 13 years old to join, in compliance with child safety regulations.
-        </p>
-        <p className="text-[13px] text-slate-400 mt-4">
-          If you believe this is an error, please ask a parent or guardian to contact us.
-        </p>
-      </div>
-    );
-  }
-
+function NameStep({ name, setName }) {
   return (
-    <div className="pb-8">
-      <div className="text-4xl mb-4 text-center">🎂</div>
-      <h2 className="text-[22px] font-bold text-slate-900 mb-1 text-center">When were you born?</h2>
-      <p className="text-[14px] text-slate-400 mb-6 text-center">Required to ensure a safe experience for all ages.</p>
-      <label className="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-2 block">Date of Birth *</label>
-      <input
-        type="date"
-        value={dob}
-        onChange={e => handleChange(e.target.value)}
-        max={new Date().toISOString().split('T')[0]}
-        className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-[15px] focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
-      />
-      {error === 'invalid' && (
-        <p className="text-red-500 text-[13px] mt-2">Please enter a valid date of birth.</p>
-      )}
-      <div className="mt-4 bg-blue-50 border border-blue-100 rounded-2xl p-4">
-        <p className="text-[12px] text-blue-700 leading-relaxed">
-          🔒 <strong>Your privacy matters.</strong> Your date of birth is used only to verify eligibility and enable age-appropriate features. It is never shown publicly.
-        </p>
-      </div>
-    </div>
+    <StepShell
+      eyebrow="Step 1"
+      title="What should people call you?"
+      text="This is the public name neighbors will see around the app."
+    >
+      <label className="block">
+        <span className="mb-1.5 block text-[13px] font-bold text-slate-700">Display name</span>
+        <input
+          autoFocus
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder="Example: Sarah Cohen"
+          className="app-input"
+        />
+      </label>
+    </StepShell>
   );
 }
 
-function ProfileStep({ displayName, setDisplayName, avatarUrl, onUploadAvatar, uploading }) {
-  const fileRef = useRef(null);
-  return (
-    <div className="pb-8">
-      <h2 className="text-[22px] font-bold text-slate-900 mb-1">Your profile</h2>
-      <p className="text-[14px] text-slate-400 mb-6">Add your name and a photo so neighbors recognize you.</p>
+function PhotoStep({ name, avatarUrl, uploading, onUpload, onSkipPhoto }) {
+  const inputRef = useRef(null);
+  const initial = (name || '?').trim().charAt(0).toUpperCase();
 
-      {/* Avatar */}
-      <div className="flex flex-col items-center mb-6">
-        <div
-          className="w-24 h-24 rounded-full bg-blue-100 border-4 border-white shadow-lg flex items-center justify-center relative cursor-pointer overflow-hidden"
-          onClick={() => fileRef.current?.click()}
-        >
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-3xl font-bold text-blue-600">{displayName?.[0]?.toUpperCase() || '?'}</span>
-          )}
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-full">
-            <Camera className="w-6 h-6 text-white" />
-          </div>
-          {uploading && (
-            <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-full">
-              <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-            </div>
-          )}
-        </div>
-        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onUploadAvatar} />
+  return (
+    <StepShell
+      eyebrow="Step 2"
+      title="Add a photo"
+      text="Optional, but it helps people recognize you. You can skip this and add one later."
+    >
+      <div className="app-card flex flex-col items-center p-6">
         <button
-          className="mt-2 text-[13px] text-blue-600 font-semibold"
-          onClick={() => fileRef.current?.click()}
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-blue-50 text-4xl font-black text-blue-700 shadow-lg"
+          aria-label="Upload profile photo"
         >
-          {avatarUrl ? 'Change photo' : 'Add photo'}
+          {avatarUrl ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" /> : initial}
+          <span className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-slate-950 text-white shadow">
+            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+          </span>
+        </button>
+        <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onUpload} />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="app-button-primary mt-4 h-11"
+        >
+          {avatarUrl ? 'Change Photo' : 'Choose Photo'}
+        </button>
+        <button type="button" onClick={onSkipPhoto} className="mt-2 text-[13px] font-bold text-slate-400">
+          Skip for now
         </button>
       </div>
-
-      {/* Name */}
-      <label className="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-1 block">Display name *</label>
-      <input
-        value={displayName}
-        onChange={e => setDisplayName(e.target.value)}
-        placeholder="e.g. Moshe Goldberg"
-        className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-[15px] focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
-      />
-    </div>
+    </StepShell>
   );
 }
 
-function LocationStep({ city, setCity, neighborhood, setNeighborhood }) {
-  const subs = SUB_NEIGHBORHOODS[city] || [];
+function NeighborhoodStep({ neighborhood, setNeighborhood }) {
   return (
-    <div className="pb-8">
-      <div className="flex items-center gap-2 mb-1">
-        <MapPin className="w-5 h-5 text-blue-600" />
-        <h2 className="text-[22px] font-bold text-slate-900">Where are you?</h2>
+    <StepShell
+      eyebrow="Step 3"
+      title="Choose your neighborhood"
+      text="This helps the feed show posts, events, and Mitzvah requests near you."
+    >
+      <div className="grid grid-cols-2 gap-2.5">
+        {NEIGHBORHOODS.map((item) => {
+          const active = neighborhood === item;
+          return (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setNeighborhood(item)}
+              className={`flex min-h-12 items-center gap-2 rounded-2xl border px-3 text-left text-[13px] font-black transition active:scale-[0.98] ${
+                active
+                  ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                  : 'app-card-hover border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50'
+              }`}
+            >
+              <MapPin className="h-4 w-4 shrink-0" />
+              {item}
+            </button>
+          );
+        })}
       </div>
-      <p className="text-[14px] text-slate-400 mb-5">Pick your home network so we can show you what's nearby.</p>
-
-      <div className="grid grid-cols-2 gap-2.5 mb-5">
-        {CITIES.map(c => (
-          <button
-            key={c.id}
-            onClick={() => { setCity(c.id); setNeighborhood(''); }}
-            className="py-3 px-3 rounded-2xl text-[13px] font-semibold text-left transition-all active:scale-[0.97] border flex items-center gap-2"
-            style={
-              city === c.id
-                ? { background: '#2563EB', color: 'white', borderColor: '#2563EB' }
-                : { background: 'white', color: '#1E3A5F', borderColor: '#BFDBFE' }
-            }
-          >
-            <span className="text-lg">{c.emoji}</span>
-            {c.label}
-          </button>
-        ))}
-      </div>
-
-      {subs.length > 0 && (
-        <>
-          <p className="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-2">Sub-neighborhood (optional)</p>
-          <div className="flex flex-wrap gap-2">
-            {subs.map(s => (
-              <button
-                key={s}
-                onClick={() => setNeighborhood(neighborhood === s ? '' : s)}
-                className="px-3 py-1.5 rounded-full text-[13px] font-semibold border transition-all"
-                style={
-                  neighborhood === s
-                    ? { background: '#EFF6FF', borderColor: '#2563EB', color: '#1D4ED8' }
-                    : { background: 'white', borderColor: '#BFDBFE', color: '#475569' }
-                }
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+    </StepShell>
   );
 }
 
-function ShulStep({ shul, setShul }) {
-  const [query, setQuery] = useState('');
-  const SHULS = [
-    'Young Israel of Woodmere', 'Young Israel of Lawrence-Cedarhurst',
-    'Congregation Anshei Chesed', 'The Seabreeze Jewish Center',
-    'Congregation Beis Medrash Ohr Chaim', 'White Shul (Far Rockaway)',
-    'Aish Kodesh', 'Beis Medrash of Hewlett', 'Hebrew Institute of Riverdale',
-    'Congregation Shearith Israel', 'Young Israel of Flatbush',
-    'Agudath Israel of Flatbush',
-  ];
-  const filtered = query ? SHULS.filter(s => s.toLowerCase().includes(query.toLowerCase())) : SHULS;
-
-  return (
-    <div className="pb-8">
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">🕍</span>
-        <h2 className="text-[22px] font-bold text-slate-900">Your primary shul</h2>
-      </div>
-      <p className="text-[14px] text-slate-400 mb-5">We'll connect you with your shul community.</p>
-
-      <input
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        placeholder="Search for your shul…"
-        className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-[14px] focus:outline-none focus:border-blue-400 mb-3 bg-white"
-      />
-
-      {shul && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-blue-50 border border-blue-200 rounded-2xl mb-3">
-          <Check className="w-4 h-4 text-blue-600 flex-shrink-0" />
-          <span className="text-[14px] font-semibold text-blue-700">{shul}</span>
-          <button onClick={() => setShul('')} className="ml-auto text-[12px] text-slate-400">Clear</button>
-        </div>
-      )}
-
-      <div className="space-y-2 max-h-64 overflow-y-auto">
-        {filtered.map(s => (
-          <button
-            key={s}
-            onClick={() => setShul(s)}
-            className="w-full text-left px-4 py-3 rounded-xl text-[14px] font-medium border transition-all"
-            style={
-              shul === s
-                ? { background: '#EFF6FF', borderColor: '#2563EB', color: '#1D4ED8', fontWeight: 700 }
-                : { background: 'white', borderColor: '#E2E8F0', color: '#374151' }
-            }
-          >
-            {s}
-          </button>
-        ))}
-        {query && !SHULS.some(s => s.toLowerCase() === query.toLowerCase()) && (
-          <button
-            onClick={() => setShul(query)}
-            className="w-full text-left px-4 py-3 rounded-xl text-[14px] font-semibold text-blue-600 border border-blue-200 bg-blue-50"
-          >
-            + Add "{query}"
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function SchoolsStep({ schools, setSchools }) {
-  const [query, setQuery] = useState('');
-  const SCHOOLS = [
-    'HAFTR', 'DRS (Davis Renov Stahler)', 'HALB', 'SKA', 'North Shore Hebrew Academy',
-    'Rambam Mesivta', 'Torah Academy of the Five Towns', 'Yeshiva Har Torah',
-    'Flatbush Yeshiva', 'Torah Vodaath', 'Chaim Berlin', 'Mir Yeshiva',
-    'Beth Jacob of Boro Park', 'Bais Yaakov of Brooklyn',
-  ];
-  const filtered = query ? SCHOOLS.filter(s => s.toLowerCase().includes(query.toLowerCase())) : SCHOOLS;
-
-  const toggle = (school) => {
-    setSchools(prev => prev.includes(school) ? prev.filter(s => s !== school) : [...prev, school]);
+function CommunitiesStep({ communities, selectedIds, setSelectedIds, loading }) {
+  const toggle = (id) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
   };
 
   return (
-    <div className="pb-8">
-      <div className="flex items-center gap-2 mb-1">
-        <School className="w-5 h-5 text-blue-600" />
-        <h2 className="text-[22px] font-bold text-slate-900">Schools</h2>
-      </div>
-      <p className="text-[14px] text-slate-400 mb-2">Add schools you attended, your children attend, or you're connected to.</p>
-
-      {schools.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {schools.map(s => (
-            <span
-              key={s}
-              onClick={() => toggle(s)}
-              className="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-600 text-white text-[12px] font-semibold cursor-pointer"
-            >
-              {s} <span className="opacity-70">×</span>
-            </span>
-          ))}
-        </div>
-      )}
-
-      <input
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        placeholder="Search schools…"
-        className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-[14px] focus:outline-none focus:border-blue-400 mb-3 bg-white"
-      />
-
-      <div className="space-y-2 max-h-56 overflow-y-auto">
-        {filtered.map(s => {
-          const active = schools.includes(s);
-          return (
-            <button
-              key={s}
-              onClick={() => toggle(s)}
-              className="w-full text-left px-4 py-3 rounded-xl text-[14px] font-medium border transition-all flex items-center justify-between"
-              style={
-                active
-                  ? { background: '#EFF6FF', borderColor: '#2563EB', color: '#1D4ED8', fontWeight: 700 }
-                  : { background: 'white', borderColor: '#E2E8F0', color: '#374151' }
-              }
-            >
-              {s}
-              {active && <Check className="w-4 h-4 text-blue-600 flex-shrink-0" />}
-            </button>
-          );
-        })}
-        {query && !SCHOOLS.some(s => s.toLowerCase() === query.toLowerCase()) && (
-          <button
-            onClick={() => { toggle(query); setQuery(''); }}
-            className="w-full text-left px-4 py-3 rounded-xl text-[14px] font-semibold text-blue-600 border border-blue-200 bg-blue-50"
-          >
-            + Add "{query}"
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function InterestsStep({ selected, onToggle }) {
-  return (
-    <div className="pb-8">
-      <div className="flex items-center gap-2 mb-1">
-        <Star className="w-5 h-5 text-blue-600" />
-        <h2 className="text-[22px] font-bold text-slate-900">Your interests</h2>
-      </div>
-      <p className="text-[14px] text-slate-400 mb-5">Pick all that apply — we'll personalize your feed.</p>
-      <div className="grid grid-cols-2 gap-2.5">
-        {INTERESTS.map(({ label, emoji }) => {
-          const active = selected.includes(label);
-          return (
-            <button
-              key={label}
-              onClick={() => onToggle(label)}
-              className="flex items-center gap-2.5 py-3 px-3.5 rounded-2xl text-left transition-all active:scale-[0.97] border"
-              style={
-                active
-                  ? { background: '#EFF6FF', borderColor: '#2563EB' }
-                  : { background: 'white', borderColor: '#BFDBFE' }
-              }
-            >
-              <span className="text-xl flex-shrink-0">{emoji}</span>
-              <span className="text-[12px] font-semibold text-slate-800 leading-tight flex-1">{label}</span>
-              {active && <Check className="w-4 h-4 text-blue-600 flex-shrink-0" />}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function IntentStep({ intent, setIntent }) {
-  return (
-    <div className="pb-8">
-      <div className="flex items-center gap-2 mb-1">
-        <HandHeart className="w-5 h-5 text-blue-600" />
-        <h2 className="text-[22px] font-bold text-slate-900">Why are you here?</h2>
-      </div>
-      <p className="text-[14px] text-slate-400 mb-5">This helps us match you with the right people and opportunities.</p>
-      <div className="space-y-3">
-        {HELP_INTENTS.map(({ id, label, emoji, desc }) => (
-          <button
-            key={id}
-            onClick={() => setIntent(id)}
-            className="w-full flex items-center gap-4 p-4 rounded-2xl text-left border-2 transition-all active:scale-[0.98]"
-            style={
-              intent === id
-                ? { background: '#EFF6FF', borderColor: '#2563EB' }
-                : { background: 'white', borderColor: '#BFDBFE' }
-            }
-          >
-            <span className="text-3xl flex-shrink-0">{emoji}</span>
-            <div className="flex-1">
-              <p className="text-[15px] font-bold text-slate-900">{label}</p>
-              <p className="text-[12px] text-slate-500 mt-0.5">{desc}</p>
-            </div>
-            {intent === id && <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function CommunitiesStep({ suggestions, selected, onToggle, loading }) {
-  return (
-    <div className="pb-8">
-      <div className="flex items-center gap-2 mb-1">
-        <Users className="w-5 h-5 text-blue-600" />
-        <h2 className="text-[22px] font-bold text-slate-900">Suggested for you</h2>
-      </div>
-      <p className="text-[14px] text-slate-400 mb-5">Based on your answers — join any that interest you.</p>
-
+    <StepShell
+      eyebrow="Step 4"
+      title="Join a few communities"
+      text="Pick the groups you want in your feed. You can always change this later."
+    >
       {loading ? (
-        <div className="flex items-center justify-center py-10">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-7 w-7 animate-spin text-blue-600" />
         </div>
       ) : (
         <div className="space-y-2.5">
-          {suggestions.map(({ id, name, emoji, desc, follower_count }) => {
-            const active = selected.has(id);
+          {communities.map((community) => {
+            const active = selectedIds.has(community.id);
             return (
               <button
-                key={id}
-                onClick={() => onToggle(id)}
-                className="w-full flex items-center gap-3.5 py-3.5 px-4 rounded-2xl text-left transition-all active:scale-[0.99] border"
-                style={
-                  active
-                    ? { background: '#EFF6FF', borderColor: '#2563EB' }
-                    : { background: 'white', borderColor: '#BFDBFE' }
-                }
+                key={community.id}
+                type="button"
+                onClick={() => toggle(community.id)}
+                className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition active:scale-[0.99] ${
+                  active ? 'border-blue-500 bg-blue-50' : 'app-card-hover border-slate-200 bg-white hover:border-blue-200'
+                }`}
               >
-                <span className="text-2xl flex-shrink-0">{emoji || '👥'}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-bold text-slate-900 truncate">{name}</p>
-                  <p className="text-[11px] text-slate-400">{desc || `${follower_count || 0} members`}</p>
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${active ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                  {active ? <Check className="h-5 w-5" /> : <Users className="h-5 w-5" />}
                 </div>
-                <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all"
-                  style={active
-                    ? { background: '#2563EB', borderColor: '#2563EB' }
-                    : { background: 'white', borderColor: '#BFDBFE' }
-                  }
-                >
-                  {active && <Check className="w-3.5 h-3.5 text-white" />}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-black text-slate-950">{community.name}</p>
+                  <p className="line-clamp-2 text-[12px] font-medium leading-5 text-slate-500">{community.description || community.description_short || 'Community updates and local connection.'}</p>
                 </div>
               </button>
             );
           })}
         </div>
       )}
-
-      {suggestions.length > 0 && (
-        <button
-          className="mt-3 text-[13px] text-blue-600 font-semibold w-full text-center"
-          onClick={() => suggestions.forEach(s => !selected.has(s.id) && onToggle(s.id))}
-        >
-          Join all →
-        </button>
-      )}
-    </div>
+    </StepShell>
   );
 }
 
-function MinorSupervisedStep({ parentEmail, setParentEmail }) {
+function NotificationsStep({ preferences, setPreferences }) {
+  const update = (key) => setPreferences((current) => ({ ...current, [key]: !current[key] }));
+
   return (
-    <div className="pb-8">
-      <div className="text-4xl mb-4 text-center">👨‍👩‍👧</div>
-      <h2 className="text-[22px] font-bold text-slate-900 mb-1">Parent supervision (optional)</h2>
-      <p className="text-[14px] text-slate-400 mb-2 leading-relaxed">
-        Since you're 13–17, a parent or guardian can optionally monitor your account activity, friends, and reports.
-      </p>
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
-        <p className="text-[13px] text-amber-800 leading-relaxed">
-          ⚠️ <strong>Transparency notice:</strong> If you add a parent email, they will be able to see your activity summary, connections, and flagged content. This is disclosed to you now and shown in your account settings.
-        </p>
+    <StepShell
+      eyebrow="Step 5"
+      title="Choose notification preferences"
+      text="Keep important things on, and turn down anything you do not want yet."
+    >
+      <div className="space-y-2.5">
+        {[
+          ['messages', 'Messages', 'New direct messages from community members.'],
+          ['mitzvah', 'Mitzvah updates', 'Offers, accepted tasks, and verification requests.'],
+          ['community', 'Community activity', 'Posts and announcements from communities you join.'],
+        ].map(([key, label, description]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => update(key)}
+            className="app-card-hover flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 text-left transition hover:border-blue-200 active:scale-[0.99]"
+          >
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${preferences[key] ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+              {preferences[key] ? <Check className="h-5 w-5" /> : <Bell className="h-5 w-5" />}
+            </div>
+            <div className="flex-1">
+              <p className="text-[14px] font-black text-slate-950">{label}</p>
+              <p className="text-[12px] font-medium leading-5 text-slate-500">{description}</p>
+            </div>
+          </button>
+        ))}
       </div>
-      <label className="text-[12px] font-bold text-slate-500 uppercase tracking-wide mb-2 block">Parent / Guardian Email (optional)</label>
-      <input
-        type="email"
-        value={parentEmail}
-        onChange={e => setParentEmail(e.target.value)}
-        placeholder="parent@example.com"
-        className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-[15px] focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
-      />
-      <p className="text-[12px] text-slate-400 mt-2">You can skip this and add it later in Settings.</p>
-    </div>
+    </StepShell>
   );
 }
-
-function NotificationsStep({ enabled, setEnabled }) {
-  const handleEnable = async () => {
-    if (!('Notification' in window)) { setEnabled(true); return; }
-    try {
-      const permission = await Notification.requestPermission();
-      setEnabled(permission === 'granted');
-    } catch {
-      setEnabled(false);
-    }
-  };
-
-  return (
-    <div className="pb-8 text-center">
-      <div className="text-6xl mb-5">🔔</div>
-      <h2 className="text-[22px] font-bold text-slate-900 mb-2">Stay in the loop</h2>
-      <p className="text-[14px] text-slate-500 leading-relaxed mb-8 max-w-xs mx-auto">
-        Get notified about chesed opportunities, events, and messages from your community.
-      </p>
-      {enabled ? (
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-            <Check className="w-8 h-8 text-green-600" />
-          </div>
-          <p className="text-[16px] font-bold text-green-700">Notifications enabled! 🎉</p>
-        </div>
-      ) : (
-        <button
-          onClick={handleEnable}
-          className="w-full py-4 rounded-2xl text-white font-bold text-[16px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
-          style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 4px 16px rgba(124,58,237,0.35)' }}
-        >
-          <Bell className="w-5 h-5" />
-          Enable Notifications
-        </button>
-      )}
-    </div>
-  );
-}
-
-// ── Main Component ────────────────────────────────────────────────────────────
 
 export default function OnboardingFlow({ user, onComplete }) {
   const [step, setStep] = useState(0);
+  const [name, setName] = useState(user?.display_name || user?.full_name || '');
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [neighborhood, setNeighborhood] = useState(user?.neighborhood || user?.cityPreset || user?.city || '');
+  const [communities, setCommunities] = useState(DEFAULT_COMMUNITIES);
+  const [selectedCommunityIds, setSelectedCommunityIds] = useState(new Set());
+  const [loadingCommunities, setLoadingCommunities] = useState(false);
+  const [notificationPrefs, setNotificationPrefs] = useState({
+    messages: true,
+    mitzvah: true,
+    community: true,
+  });
+  const [saving, setSaving] = useState(false);
 
-  // Age gate
-  const [dob, setDob] = useState('');
-  const [isMinor, setIsMinor] = useState(false);
-  const [parentEmail, setParentEmail] = useState('');
+  const steps = useMemo(() => [
+    'Name',
+    'Photo',
+    'Neighborhood',
+    'Communities',
+    'Notifications',
+  ], []);
 
-  // Profile
-  const [displayName, setDisplayName] = useState(user.display_name || user.full_name || '');
-  const [avatarUrl, setAvatarUrl] = useState(user.avatar_url || '');
-  const [avatarUploading, setAvatarUploading] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    setLoadingCommunities(true);
+    communitiesService.listCommunities('-follower_count', 20)
+      .then((items) => {
+        if (!mounted) return;
+        setCommunities(items.length ? items : DEFAULT_COMMUNITIES);
+      })
+      .catch(() => {
+        if (mounted) setCommunities(DEFAULT_COMMUNITIES);
+      })
+      .finally(() => {
+        if (mounted) setLoadingCommunities(false);
+      });
+    return () => { mounted = false; };
+  }, []);
 
-  // Location
-  const [city, setCity] = useState(user.cityPreset || '');
-  const [neighborhood, setNeighborhood] = useState(user.neighborhood || '');
+  const canContinue = () => {
+    if (step === 0) return name.trim().length >= 2;
+    if (step === 2) return Boolean(neighborhood);
+    return true;
+  };
 
-  // Shul
-  const [shul, setShul] = useState(user.primary_shul || '');
-
-  // Schools
-  const [schools, setSchools] = useState(user.schools || []);
-
-  // Interests
-  const [selectedInterests, setSelectedInterests] = useState(user.interests || []);
-
-  // Intent
-  const [intent, setIntent] = useState(user.help_intent || '');
-
-  // Communities
-  const [suggestedCommunities, setSuggestedCommunities] = useState([]);
-  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
-  const [selectedCommunities, setSelectedCommunities] = useState(new Set());
-
-  // Notifications
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-
-  const [finishing, setFinishing] = useState(false);
-
-  const handleUploadAvatar = async (e) => {
-    const file = e.target.files?.[0];
+  const handleUpload = async (event) => {
+    const file = event.target.files?.[0];
     if (!file) return;
-    setAvatarUploading(true);
+    setUploadingPhoto(true);
     try {
-      const res = await base44.integrations.Core.UploadFile({ file });
-      setAvatarUrl(res.file_url);
+      const result = await dataService.integrations.Core.UploadFile({ file });
+      setAvatarUrl(result.file_url);
     } catch {
-      toast.error('Upload failed');
+      toast.error('Photo upload failed. You can skip it for now.');
     } finally {
-      setAvatarUploading(false);
+      setUploadingPhoto(false);
     }
   };
 
-  const toggleInterest = (label) => {
-    setSelectedInterests(prev =>
-      prev.includes(label) ? prev.filter(i => i !== label) : [...prev, label]
-    );
-  };
-
-  const toggleCommunity = (id) => {
-    setSelectedCommunities(prev => {
-      const s = new Set(prev);
-      s.has(id) ? s.delete(id) : s.add(id);
-      return s;
-    });
-  };
-
-  // Load community suggestions when we reach that step
-  const loadSuggestions = async () => {
-    setSuggestionsLoading(true);
+  const saveProfile = async () => {
+    setSaving(true);
     try {
-      // Fetch communities filtered by city
-      let communities = [];
-      if (city && city !== 'Other') {
-        const byCityNeighborhood = await base44.entities.Community.filter(
-          { neighborhood: city }, '-follower_count', 20
-        );
-        communities = byCityNeighborhood;
-      }
-      if (communities.length < 5) {
-        const featured = await base44.entities.Community.filter(
-          { is_featured: true }, '-follower_count', 15
-        );
-        const ids = new Set(communities.map(c => c.id));
-        communities = [...communities, ...featured.filter(c => !ids.has(c.id))];
-      }
-      // Interest-based boost
-      const interestKeywords = selectedInterests.map(i => i.toLowerCase());
-      const scored = communities.map(c => {
-        let score = 0;
-        const text = `${c.name} ${c.description_short || ''} ${c.category || ''}`.toLowerCase();
-        interestKeywords.forEach(kw => { if (text.includes(kw)) score += 2; });
-        score += (c.follower_count || 0) / 100;
-        return { ...c, _score: score };
-      });
-      scored.sort((a, b) => b._score - a._score);
-      setSuggestedCommunities(scored.slice(0, 8).map(c => ({
-        id: c.id,
-        name: c.name,
-        emoji: c.logo_url ? null : (c.name?.charAt(0) || '👥'),
-        desc: c.description_short || c.description,
-        follower_count: c.follower_count || 0,
-      })));
-    } catch {
-      setSuggestedCommunities([]);
-    } finally {
-      setSuggestionsLoading(false);
-    }
-  };
-
-  const handleFinish = async () => {
-    setFinishing(true);
-    try {
-      const age = getAge(dob);
-      const minor = age !== null && age < 18;
-      await base44.auth.updateMe({
-        display_name: displayName.trim() || user.full_name,
-        avatar_url: avatarUrl,
-        cityPreset: city,
-        city,
+      const profilePatch = {
+        display_name: name.trim(),
+        full_name: name.trim(),
+        avatar_url: avatarUrl || undefined,
         neighborhood,
-        primary_shul: shul,
-        schools,
-        interests: selectedInterests,
-        help_intent: intent,
-        notifications_enabled: notificationsEnabled,
+        cityPreset: neighborhood,
+        city: neighborhood,
+        notifications_enabled: Object.values(notificationPrefs).some(Boolean),
+        notification_preferences: notificationPrefs,
         onboarding_complete: true,
-        date_of_birth: dob || undefined,
-        is_minor: minor,
-        age_range: minor ? '13-17' : '18+',
-        parent_email: minor && parentEmail.trim() ? parentEmail.trim() : undefined,
-        minor_profile_hidden: minor ? true : false,
-        // Minors: default DMs to connections-only
-        message_settings: minor
-          ? { allowMessagesFrom: 'connections', searchable: false }
-          : undefined,
-      });
+        is_profile_complete: true,
+      };
 
-      // Auto-join selected communities
-      if (selectedCommunities.size > 0) {
-        const existing = await base44.entities.UserCommunity.filter({ user_id: user.id });
-        const existingIds = new Set(existing.map(m => m.community_id));
+      await dataService.auth.updateMe(profilePatch);
+
+      if (selectedCommunityIds.size > 0) {
+        const memberships = await communitiesService.listMemberships({ user_id: user.id }, '-created_date', 100);
+        const existingIds = new Set(memberships.map((membership) => membership.community_id));
         await Promise.allSettled(
-          [...selectedCommunities]
-            .filter(cid => !existingIds.has(cid))
-            .map(cid => base44.entities.UserCommunity.create({
+          [...selectedCommunityIds]
+            .filter((communityId) => !existingIds.has(communityId))
+            .map((communityId) => communitiesService.joinCommunity({
               user_id: user.id,
-              community_id: cid,
+              community_id: communityId,
               role: 'Member',
             }))
         );
       }
 
-      localStorage.setItem(`onboarding_done_${user.id}`, '1');
-    } catch {
-      // Non-blocking
-    }
-    setFinishing(false);
-    onComplete();
-  };
-
-  // Compute age from dob
-  const getAge = (dobStr) => {
-    if (!dobStr) return null;
-    const birth = new Date(dobStr);
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-    return age;
-  };
-
-  const isBlocked = dob && getAge(dob) < 13;
-
-  const canAdvance = () => {
-    if (step === 1) {
-      // Age gate step: need valid DOB and not blocked
-      if (!dob) return false;
-      const age = getAge(dob);
-      return age >= 13 && age <= 120;
-    }
-    if (step === 2) return displayName.trim().length >= 2;
-    if (step === 3) return !!city;
-    return true;
-  };
-
-  const next = async () => {
-    // After age gate, compute and store minor status
-    if (step === 1 && dob) {
-      const age = getAge(dob);
-      setIsMinor(age < 18);
-    }
-    if (step === 7) {
-      // Load suggestions before showing communities step
-      await loadSuggestions();
-    }
-    if (step < STEPS.length - 1) {
-      setStep(s => s + 1);
-    } else {
-      handleFinish();
+      storageService.setItem(getOnboardingStorageKey(user.id), '1');
+      onComplete?.({ ...user, ...profilePatch });
+    } catch (error) {
+      toast.error(error?.message || 'Could not save onboarding. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const back = () => setStep(s => Math.max(0, s - 1));
+  const next = () => {
+    if (!canContinue()) return;
+    if (step === steps.length - 1) {
+      saveProfile();
+      return;
+    }
+    setStep((current) => current + 1);
+  };
 
-  const STEPS = isMinor ? MINOR_STEPS : BASE_STEPS;
-  const isLastStep = step === STEPS.length - 1;
-  const isSkippable = [4, 5, 6, 7, 8, 9, 10].includes(step); // shul, schools, interests, intent, communities, supervised, notifications
+  const back = () => setStep((current) => Math.max(0, current - 1));
+  const skip = () => {
+    if (step === 1 || step === 3 || step === 4) next();
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#F0F6FF' }}>
-      {/* Progress bar */}
-      <div className="px-5 pt-10 pb-2">
-        <div className="flex items-center gap-1.5">
-          {STEPS.map((_s, i) => (
-            <div
-              key={i}
-              className="flex-1 h-1.5 rounded-full transition-all duration-300"
-              style={{ background: i <= step ? '#2563EB' : '#BFDBFE' }}
-            />
+    <div className="app-page fixed inset-0 z-[100] overflow-y-auto px-4 py-5">
+      <div className="mx-auto flex min-h-[calc(100dvh-40px)] w-full max-w-xl flex-col">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="text-[12px] font-black uppercase text-slate-400">JUnited setup</p>
+            <p className="text-sm font-bold text-slate-700">{steps[step]}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setStep(steps.length - 1)}
+            className="app-icon-button h-9 w-9 rounded-full text-slate-400"
+            aria-label="Skip to final onboarding step"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mb-5 grid grid-cols-5 gap-1.5">
+          {steps.map((item, index) => (
+            <div key={item} className={`h-1.5 rounded-full ${index <= step ? 'bg-blue-600' : 'bg-blue-100'}`} />
           ))}
         </div>
-        <p className="text-[11px] text-slate-400 mt-1.5 text-right font-medium">
-          Step {step + 1} of {STEPS.length}
-        </p>
-      </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 scrollbar-hide">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            variants={slideVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.2 }}
-          >
-            {step === 0 && <WelcomeStep userName={displayName || user.full_name} />}
-            {step === 1 && (
-              <AgeGateStep dob={dob} setDob={setDob} />
-            )}
-            {step === 2 && (
-              <ProfileStep
-                displayName={displayName}
-                setDisplayName={setDisplayName}
-                avatarUrl={avatarUrl}
-                onUploadAvatar={handleUploadAvatar}
-                uploading={avatarUploading}
-              />
-            )}
-            {step === 3 && (
-              <LocationStep
-                city={city}
-                setCity={setCity}
-                neighborhood={neighborhood}
-                setNeighborhood={setNeighborhood}
-              />
-            )}
-            {step === 4 && <ShulStep shul={shul} setShul={setShul} />}
-            {step === 5 && <SchoolsStep schools={schools} setSchools={setSchools} />}
-            {step === 6 && (
-              <InterestsStep selected={selectedInterests} onToggle={toggleInterest} />
-            )}
-            {step === 7 && <IntentStep intent={intent} setIntent={setIntent} />}
-            {step === 8 && (
-              <CommunitiesStep
-                suggestions={suggestedCommunities}
-                selected={selectedCommunities}
-                onToggle={toggleCommunity}
-                loading={suggestionsLoading}
-              />
-            )}
-            {step === 9 && !isMinor && (
-              <NotificationsStep
-                enabled={notificationsEnabled}
-                setEnabled={setNotificationsEnabled}
-              />
-            )}
-            {step === 9 && isMinor && (
-              <MinorSupervisedStep parentEmail={parentEmail} setParentEmail={setParentEmail} />
-            )}
-            {step === 10 && isMinor && (
-              <NotificationsStep
-                enabled={notificationsEnabled}
-                setEnabled={setNotificationsEnabled}
-              />
-            )}
-
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      {/* Bottom CTA */}
-      <div className="px-5 pb-10 pt-4 bg-[#F0F6FF]">
-        <button
-          onClick={next}
-          disabled={!canAdvance() || finishing}
-          className="w-full py-4 rounded-2xl text-white font-bold text-[16px] flex items-center justify-center gap-2 disabled:opacity-50 transition-all active:scale-[0.98]"
-          style={{ background: 'linear-gradient(135deg, #1d4ed8, #2563eb)', boxShadow: '0 4px 16px rgba(37,99,235,0.35)' }}
-        >
-          {finishing ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : isLastStep ? (
-            <>Let's Go! <Sparkles className="w-4 h-4" /></>
-          ) : (
-            <>Continue <ChevronRight className="w-5 h-5" /></>
+        <div className="app-card-soft flex-1 p-4 sm:p-6">
+          {step === 0 && <NameStep name={name} setName={setName} />}
+          {step === 1 && (
+            <PhotoStep
+              name={name}
+              avatarUrl={avatarUrl}
+              uploading={uploadingPhoto}
+              onUpload={handleUpload}
+              onSkipPhoto={skip}
+            />
           )}
-        </button>
+          {step === 2 && <NeighborhoodStep neighborhood={neighborhood} setNeighborhood={setNeighborhood} />}
+          {step === 3 && (
+            <CommunitiesStep
+              communities={communities}
+              selectedIds={selectedCommunityIds}
+              setSelectedIds={setSelectedCommunityIds}
+              loading={loadingCommunities}
+            />
+          )}
+          {step === 4 && <NotificationsStep preferences={notificationPrefs} setPreferences={setNotificationPrefs} />}
+        </div>
 
-        <div className="flex justify-between mt-2">
-          {step > 0 ? (
-            <button onClick={back} className="py-2 px-1 text-[14px] font-semibold text-slate-400">
-              ← Back
-            </button>
-          ) : <div />}
-          {isSkippable && (
-            <button onClick={next} className="py-2 px-1 text-[13px] text-slate-400 font-medium">
-              Skip →
+        <div className="mt-4 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={back}
+            disabled={step === 0 || saving}
+            className="app-button-secondary h-12 w-12 px-0 disabled:opacity-40"
+            aria-label="Back"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={next}
+            disabled={!canContinue() || saving || uploadingPhoto}
+            className="app-button-primary h-12 flex-1 disabled:opacity-50"
+          >
+            {saving ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : step === steps.length - 1 ? (
+              'Finish Setup'
+            ) : (
+              <>
+                Continue
+                <ChevronRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
+          {(step === 1 || step === 3 || step === 4) && (
+            <button type="button" onClick={skip} className="h-12 rounded-2xl px-3 text-[13px] font-bold text-slate-400">
+              Skip
             </button>
           )}
         </div>

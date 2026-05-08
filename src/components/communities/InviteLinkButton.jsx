@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link2, Check, Copy, Loader2, X, RefreshCw } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 function generateCode() {
@@ -14,11 +14,11 @@ export default function InviteLinkButton({ communityId, communityName, currentUs
   const [copied, setCopied] = useState(false);
 
   const generateLink = async () => {
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setLoading(true);
     try {
       const code = generateCode();
-      await base44.entities.InviteLink.create({
+      await dataService.entities.InviteLink.create({
         code,
         community_id: communityId,
         community_name: communityName,

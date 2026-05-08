@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { X, Calendar, Clock, MapPin, AlignLeft, Sparkles, Loader2, Tag, ChevronDown, Ticket, DollarSign, Users } from 'lucide-react';
 
@@ -55,7 +55,7 @@ export default function CreateCommunityEventModal({ communityId, currentUser, on
     }
     setGeneratingDesc(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await dataService.integrations.Core.InvokeLLM({
         prompt: `You are helping a Jewish community in the Five Towns, NY area create an event description.
 
 Event title: "${form.title}"
@@ -81,7 +81,7 @@ Do not make up specific times or dates. Do not use placeholder text.`,
     if (!text.trim()) return;
     setCategorizingAI(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await dataService.integrations.Core.InvokeLLM({
         prompt: `Categorize the following community event into exactly one of these categories:
 shabbos, learning, social, volunteer, youth, fundraiser, memorial, general
 
@@ -106,7 +106,7 @@ Reply with ONLY the category value (one word, lowercase, from the list above).`,
     setLoadingAISuggestions(true);
     setShowTimeSuggestions(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await dataService.integrations.Core.InvokeLLM({
         prompt: `You are helping schedule a Jewish community event in the Five Towns, NY area.
 
 Event: "${form.title}"
@@ -162,7 +162,7 @@ Return a JSON object with a "suggestions" array of exactly 3 items, each with:
     }
     setSaving(true);
     try {
-      const created = await base44.entities.CommunityEvent.create({
+      const created = await dataService.entities.CommunityEvent.create({
         community_id: communityId,
         title: form.title.trim(),
         description: form.description.trim(),
@@ -226,13 +226,11 @@ Return a JSON object with a "suggestions" array of exactly 3 items, each with:
               <button
                 type="button"
                 onClick={generateDescription}
-                disabled={generatingDesc}
-                className="flex items-center gap-1 text-[11px] font-semibold text-violet-600 hover:text-violet-800 bg-violet-50 hover:bg-violet-100 rounded-full px-2.5 py-1 transition-all disabled:opacity-60"
+                disabled
+                className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 rounded-full px-2.5 py-1 cursor-not-allowed"
               >
-                {generatingDesc
-                  ? <Loader2 className="w-3 h-3 animate-spin" />
-                  : <Sparkles className="w-3 h-3" />}
-                {generatingDesc ? 'Writing…' : 'AI Write'}
+                <Sparkles className="w-3 h-3" />
+                AI Coming Soon
               </button>
             </div>
             <textarea
@@ -295,15 +293,16 @@ Return a JSON object with a "suggestions" array of exactly 3 items, each with:
               <button
                 type="button"
                 onClick={getAITimeSuggestions}
-                disabled={loadingAISuggestions}
-                className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-full px-2.5 py-1 transition-all disabled:opacity-60"
+                disabled
+                className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 rounded-full px-2.5 py-1 cursor-not-allowed"
               >
-                {loadingAISuggestions
-                  ? <Loader2 className="w-3 h-3 animate-spin" />
-                  : <Sparkles className="w-3 h-3" />}
-                {loadingAISuggestions ? 'Thinking…' : 'Suggest Times'}
+                <Sparkles className="w-3 h-3" />
+                AI Times Coming Soon
               </button>
             </div>
+            <p className="mb-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold text-amber-800">
+              AI event-writing tools are not connected yet.
+            </p>
 
             {/* AI Time Suggestions Panel */}
             {showTimeSuggestions && (

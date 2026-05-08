@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const INTERESTS = [
@@ -24,7 +24,7 @@ export default function InterestPickerModal({ open, onOpenChange, currentUser, o
   const handleSave = async () => {
     setIsSubmitting(true);
     try {
-      await base44.auth.updateMe({ interests: selected });
+      await dataService.auth.updateMe({ interests: selected });
       toast.success('Interests updated!');
       onOpenChange(false);
       onInterestAdded();

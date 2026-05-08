@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 export default function FileUploadZone({ onFilesUpload, maxFiles = 3, acceptedTypes = ['image/*', '.pdf', '.doc', '.docx'] }) {
@@ -39,7 +39,7 @@ export default function FileUploadZone({ onFilesUpload, maxFiles = 3, acceptedTy
     setUploading(true);
     try {
       for (const file of filesToAdd) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const { file_url } = await dataService.integrations.Core.UploadFile({ file });
         setFiles(prev => [...prev, { url: file_url, name: file.name, type: file.type, size: file.size }]);
       }
       toast.success(`${filesToAdd.length} file(s) uploaded`);

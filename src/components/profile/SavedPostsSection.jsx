@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { Bookmark, Loader2 } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 
@@ -31,7 +31,7 @@ function SavedPostCard({ post }) {
 export default function SavedPostsSection({ userId }) {
   const { data: bookmarks = [], isLoading } = useQuery({
     queryKey: ['bookmarks', userId],
-    queryFn: () => base44.entities.Bookmark.filter({ user_id: userId }, '-created_date', 50),
+    queryFn: () => dataService.entities.Bookmark.filter({ user_id: userId }, '-created_date', 50),
     enabled: !!userId,
     staleTime: 30000,
   });
@@ -41,7 +41,7 @@ export default function SavedPostsSection({ userId }) {
     queryFn: async () => {
       const postIds = bookmarks.map(b => b.post_id);
       const results = await Promise.all(
-        postIds.map(id => base44.entities.UnifiedPost.filter({ id }).then(r => r[0]).catch(() => null))
+        postIds.map(id => dataService.entities.UnifiedPost.filter({ id }).then(r => r[0]).catch(() => null))
       );
       return results.filter(Boolean);
     },

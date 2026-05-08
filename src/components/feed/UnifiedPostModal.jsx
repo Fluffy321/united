@@ -11,7 +11,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { base44 } from '@/api/base44Client';
+import { dataService, notificationsService } from '@/services';
 import { toast } from 'sonner';
 
 const PLACEHOLDERS = {
@@ -179,11 +179,28 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
         community_name: selectedCommunity?.name || undefined,
       };
 
-      const created = await base44.entities.UnifiedPost.create(postData);
+      const created = await dataService.entities.UnifiedPost.create(postData);
+
+      if (selectedCommunity?.id) {
+        const recipientIds = selectedCommunity.member_ids || selectedCommunity.memberIds || [];
+        recipientIds
+          .filter((memberId) => memberId && memberId !== currentUser.id)
+          .slice(0, 25)
+          .forEach((memberId) => {
+            notificationsService.notifyCommunityActivity({
+              userId: memberId,
+              actorId: currentUser.id,
+              actorName: currentUser.display_name || currentUser.full_name,
+              communityId: selectedCommunity.id,
+              communityName: selectedCommunity.name,
+              postId: created.id,
+            }).catch(() => {});
+          });
+      }
 
       // Fire-and-forget AI moderation scan (non-blocking)
       if (created?.id && body.trim().length > 10) {
-        base44.functions.invoke('moderateContent', {
+        dataService.functions.invoke('moderateContent', {
           text: [title, body].filter(Boolean).join(' '),
           content_id: created.id,
           content_type: 'unified_post',
@@ -192,9 +209,9 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
       }
 
       if (promptId) {
-        const prompt = await base44.entities.DailyPrompt.filter({ id: promptId });
+        const prompt = await dataService.entities.DailyPrompt.filter({ id: promptId });
         if (prompt[0]) {
-          await base44.entities.DailyPrompt.update(promptId, { replies_count: (prompt[0].replies_count || 0) + 1 });
+          await dataService.entities.DailyPrompt.update(promptId, { replies_count: (prompt[0].replies_count || 0) + 1 });
         }
       }
 

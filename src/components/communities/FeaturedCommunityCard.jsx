@@ -1,6 +1,6 @@
 import React from 'react';
 import { TrendingUp, Users, Eye, Star } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 
 const DEFAULT_GRADIENTS = [
   'from-blue-600 via-indigo-600 to-violet-700',
@@ -23,7 +23,7 @@ export default function FeaturedCommunityCard({ community, index = 0, isJoined, 
 
   const handleOpen = () => {
     // Track view
-    base44.entities.Community.update(community.id, {
+    dataService.entities.Community.update(community.id, {
       views_count: (community.views_count || 0) + 1
     }).catch(() => {});
     onOpen(community.id);

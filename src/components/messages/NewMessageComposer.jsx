@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Search, X } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService, messagesService } from '@/services';
 import UserAvatar from '@/components/common/UserAvatar';
 
 export default function NewMessageComposer({ currentUser, onConversationSelect, onCancel }) {
@@ -16,11 +16,11 @@ export default function NewMessageComposer({ currentUser, onConversationSelect, 
   const loadMembers = async () => {
     try {
       // Get all users (simplified - in production would filter by shared communities)
-      const users = await base44.entities.User.list('-created_date', 50);
+      const users = await dataService.entities.User.list('-created_date', 50);
       setMembers(users.filter(u => u.id !== currentUser.id));
 
       // Get existing conversation IDs to mark them
-      const conversations = await base44.entities.Conversation.list('-updated_date', 100);
+      const conversations = await messagesService.listConversations('-updated_date', 100);
       const existingIds = new Set(
         conversations
           .filter(c => c.participant_ids?.includes(currentUser.id))
@@ -37,14 +37,15 @@ export default function NewMessageComposer({ currentUser, onConversationSelect, 
 
   const filteredMembers = members.filter(m =>
     m.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    m.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    m.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleSelectMember = async (member) => {
     try {
       // Check if conversation exists
       let conversation = null;
-      const existing = await base44.entities.Conversation.filter({
+      const existing = await messagesService.filterConversations({
         participant_ids: [currentUser.id, member.id]
       });
 
@@ -52,7 +53,7 @@ export default function NewMessageComposer({ currentUser, onConversationSelect, 
         conversation = existing[0];
       } else {
         // Create new conversation
-        conversation = await base44.entities.Conversation.create({
+        conversation = await messagesService.createConversation({
           participant_ids: [currentUser.id, member.id],
           participant_names: [currentUser.full_name, member.full_name],
           participant_ages: [currentUser.age_range || '18+', member.age_range || '18+'],

@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const ACTIONS = [
@@ -42,7 +42,7 @@ export default function ActionModal({ open, onOpenChange, report, onSuccess }) {
     }
     setLoading(true);
     try {
-      await base44.functions.invoke('moderationAction', {
+      await dataService.functions.invoke('moderationAction', {
         action,
         report_id: report.id,
         content_type: report.content_type,

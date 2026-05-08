@@ -454,9 +454,9 @@ export default function Communities() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F7F9FC] mobile-safe-bottom">
+    <main className="app-page mobile-safe-bottom">
       <section className="mobile-page-wide px-3 pt-3 sm:px-4 sm:pt-4">
-        <div className="mb-4 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+        <div className="app-card mb-4 overflow-hidden">
           <div className="grid gap-0 sm:grid-cols-[1fr_240px]">
             <div className="relative overflow-hidden p-4 sm:p-6">
               <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-blue-50" />
@@ -477,7 +477,7 @@ export default function Communities() {
             </div>
 
             <div className="border-t border-slate-200 bg-gradient-to-br from-slate-50 via-white to-emerald-50 p-4 sm:border-l sm:border-t-0 sm:p-4">
-              <div className="mb-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+              <div className="app-card mb-3 p-3">
                 <p className="text-[12px] font-black uppercase tracking-wide text-slate-800">Start a real network</p>
                 <p className="mt-1 text-[13px] font-medium leading-5 text-slate-700">Launch a group people return to for conversation, plans, introductions, resources, and daily belonging.</p>
               </div>
@@ -489,7 +489,7 @@ export default function Communities() {
               </div>
               <button
                 onClick={() => setShowCreate(true)}
-                className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-700 to-emerald-700 px-4 text-sm font-black text-white shadow-sm transition hover:brightness-95 active:scale-[0.98]"
+                className="app-button-primary mt-3 h-11 w-full"
               >
                 <Plus className="h-4 w-4" />
                 Create Community
@@ -499,7 +499,7 @@ export default function Communities() {
         </div>
 
 	        <div className="mb-5 grid gap-3 lg:grid-cols-[1fr_360px]">
-	          <section className="rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
+	          <section className="app-card p-3">
 	            <div className="mb-3 flex items-center justify-between gap-3">
 	              <div>
 	                <h2 className="text-[17px] font-black text-slate-950">Community pulse</h2>
@@ -526,7 +526,7 @@ export default function Communities() {
 	            </div>
 	          </section>
 
-	          <section className="rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
+	          <section className="app-card p-3">
 	            <div className="mb-3 flex items-center gap-2">
 	              <ShieldCheck className="h-5 w-5 text-emerald-700" />
 	              <div>
@@ -545,7 +545,7 @@ export default function Communities() {
 	          </section>
 	        </div>
 
-	        <section className="mb-5 rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
+	        <section className="app-card mb-5 p-3">
 	          <div className="mb-3 flex items-center justify-between gap-3">
 	            <div>
 	              <h2 className="text-[17px] font-black text-slate-950">Conversation starters</h2>
@@ -563,7 +563,7 @@ export default function Communities() {
 	          </div>
 	        </section>
 
-	        <div className="mb-5 rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="app-card mb-5 p-3">
           <div className="flex flex-col gap-3">
             <label className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -571,7 +571,7 @@ export default function Communities() {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search by name, topic, or neighborhood"
-                className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                className="app-input pl-10 pr-3 text-sm"
               />
             </label>
 

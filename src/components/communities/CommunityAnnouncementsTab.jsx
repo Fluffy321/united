@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { Pin, Eye, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 
 const AVATAR_COLORS = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899','#0891B2'];
 
@@ -33,10 +33,10 @@ function AnnouncementReactionBar({ postId, currentUser, memberCount }) {
       setCounts(prev => ({ ...prev, [emoji]: (prev[emoji] || 0) + 1 }));
     }
     try {
-      const existing = await base44.entities.Reaction.filter({ post_id: postId, user_id: currentUser?.id });
-      for (const r of existing) await base44.entities.Reaction.delete(r.id);
+      const existing = await dataService.entities.Reaction.filter({ post_id: postId, user_id: currentUser?.id });
+      for (const r of existing) await dataService.entities.Reaction.delete(r.id);
       if (myReaction !== emoji) {
-        await base44.entities.Reaction.create({ post_id: postId, user_id: currentUser?.id, emoji });
+        await dataService.entities.Reaction.create({ post_id: postId, user_id: currentUser?.id, emoji });
       }
     } catch {}
   };
@@ -47,7 +47,7 @@ function AnnouncementReactionBar({ postId, currentUser, memberCount }) {
         {REACTIONS.map(em => (
           <button
             key={em}
-            onClick={() => currentUser ? react(em) : base44.auth.redirectToLogin()}
+            onClick={() => currentUser ? react(em) : dataService.auth.redirectToLogin()}
             className={`text-base transition-transform hover:scale-125 active:scale-110 ${myReaction === em ? 'filter-none' : 'opacity-60 hover:opacity-100'}`}
           >
             {em}

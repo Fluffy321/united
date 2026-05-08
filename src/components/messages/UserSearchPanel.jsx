@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Loader2, MessageCircle, Users, Bot } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { canMessage, checkSpamLimits, recordNewChat } from '@/lib/messagingPermissions';
 import { AI_AGENT, buildAIConversation } from '@/lib/aiAgent';
 import { toast } from 'sonner';
@@ -17,7 +17,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
     if (!q.trim()) { setResults([]); return; }
     setSearching(true);
     try {
-      const allUsers = await base44.entities.User.list();
+      const allUsers = await dataService.entities.User.list();
       const filtered = allUsers.filter(u =>
         u.id !== currentUser.id &&
         u.message_settings?.searchable !== false &&
@@ -32,7 +32,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
 
       // Lazily load current user's groups for mutual count
       if (!userGroups) {
-        const memberships = await base44.entities.GroupMember.filter({ user_id: currentUser.id });
+        const memberships = await dataService.entities.GroupMember.filter({ user_id: currentUser.id });
         setUserGroups(new Set(memberships.map(m => m.group_id)));
       }
     } catch {
@@ -55,7 +55,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
       }
 
       // Check for existing conversation
-      const allConvs = await base44.entities.Conversation.list('-updated_date', 100);
+      const allConvs = await dataService.entities.Conversation.list('-updated_date', 100);
       const existing = allConvs.find(c =>
         c.participant_ids?.includes(currentUser.id) &&
         c.participant_ids?.includes(recipient.id) &&
@@ -79,7 +79,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
       const { canMessage: allowed } = await canMessage(currentUser, recipient.id);
 
       if (allowed) {
-        const conv = await base44.entities.Conversation.create({
+        const conv = await dataService.entities.Conversation.create({
           participant_ids: [currentUser.id, recipient.id],
           participant_names: [currentUser.full_name, recipient.full_name],
           participant_ages: [currentUser.age_range || '18+', recipient.age_range || '18+'],
@@ -92,7 +92,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
         setResults([]);
         toast.success('Conversation started!');
       } else {
-        const existing = await base44.entities.MessageRequest.filter({
+        const existing = await dataService.entities.MessageRequest.filter({
           sender_id: currentUser.id,
           recipient_id: recipient.id,
           status: 'pending'
@@ -101,7 +101,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
           toast.info('You already sent a message request to this person.');
           return;
         }
-        await base44.entities.MessageRequest.create({
+        await dataService.entities.MessageRequest.create({
           sender_id: currentUser.id,
           sender_name: currentUser.full_name,
           sender_avatar: currentUser.avatar_url || null,
@@ -161,7 +161,7 @@ function UserResultRow({ user, currentUserGroups, loading, onClick }) {
 
   React.useEffect(() => {
     if (isAI || !currentUserGroups) return;
-    base44.entities.GroupMember.filter({ user_id: user.id }).then(memberships => {
+    dataService.entities.GroupMember.filter({ user_id: user.id }).then(memberships => {
       const theirGroups = new Set(memberships.map(m => m.group_id));
       const count = [...currentUserGroups].filter(id => theirGroups.has(id)).length;
       setMutualCount(count);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus } from 'lucide-react';
 import GroupCard from '@/components/groups/GroupCard';
@@ -20,9 +20,9 @@ export default function Groups() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    base44.auth.me().then(user => {
+    dataService.auth.me().then(user => {
       setCurrentUser(user);
-      base44.entities.GroupMember.filter({ user_id: user.id }).then(memberships => {
+      dataService.entities.GroupMember.filter({ user_id: user.id }).then(memberships => {
         setMembershipSet(new Set(memberships.map(m => m.group_id)));
       });
     });
@@ -30,28 +30,28 @@ export default function Groups() {
 
   const { data: groups = [], refetch } = useQuery({
     queryKey: ['community-groups'],
-    queryFn: () => base44.entities.CommunityGroup.list('-created_date', 100),
+    queryFn: () => dataService.entities.CommunityGroup.list('-created_date', 100),
     staleTime: 60000,
     enabled: !!currentUser
   });
 
   const handleJoin = async (group) => {
-    await base44.entities.GroupMember.create({
+    await dataService.entities.GroupMember.create({
       group_id: group.id,
       user_id: currentUser.id,
       user_name: currentUser.full_name,
       role: 'member'
     });
-    await base44.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
+    await dataService.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
     setMembershipSet(prev => new Set([...prev, group.id]));
     queryClient.invalidateQueries({ queryKey: ['community-groups'] });
     toast.success(`Joined ${group.name}!`);
   };
 
   const handleLeave = async (group) => {
-    const memberships = await base44.entities.GroupMember.filter({ group_id: group.id, user_id: currentUser.id });
-    if (memberships[0]) await base44.entities.GroupMember.delete(memberships[0].id);
-    await base44.entities.CommunityGroup.update(group.id, { member_count: Math.max(0, (group.member_count || 1) - 1) });
+    const memberships = await dataService.entities.GroupMember.filter({ group_id: group.id, user_id: currentUser.id });
+    if (memberships[0]) await dataService.entities.GroupMember.delete(memberships[0].id);
+    await dataService.entities.CommunityGroup.update(group.id, { member_count: Math.max(0, (group.member_count || 1) - 1) });
     setMembershipSet(prev => { const s = new Set(prev); s.delete(group.id); return s; });
     queryClient.invalidateQueries({ queryKey: ['community-groups'] });
     toast.success(`Left ${group.name}`);

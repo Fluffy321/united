@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import LogNewMitzvahModal from '@/components/mitzvah/LogNewMitzvahModal';
@@ -13,7 +13,7 @@ export default function MyMitzvahLogTab({ currentUser }) {
   const { data: mitzvahLogs = [] } = useQuery({
     queryKey: ['mitzvah-logs', currentUser?.id],
     queryFn: async () => {
-      return base44.entities.MitzvahLog.filter({ user_id: currentUser.id }, '-created_date', 50);
+      return dataService.entities.MitzvahLog.filter({ user_id: currentUser.id }, '-created_date', 50);
     },
     enabled: !!currentUser,
     staleTime: 300000,
@@ -24,7 +24,7 @@ export default function MyMitzvahLogTab({ currentUser }) {
   const { data: userStreak = null } = useQuery({
     queryKey: ['user-streak', currentUser?.id],
     queryFn: async () => {
-      const existing = await base44.entities.UserStreak.filter({ user_id: currentUser.id });
+      const existing = await dataService.entities.UserStreak.filter({ user_id: currentUser.id });
       if (existing.length > 0) return existing[0];
       return null;
     },
@@ -38,7 +38,7 @@ export default function MyMitzvahLogTab({ currentUser }) {
 
   const handleLogSubmit = async ({ title, description, hoursCompleted, community, date }) => {
     try {
-      await base44.entities.MitzvahLog.create({
+      await dataService.entities.MitzvahLog.create({
         user_id: currentUser.id,
         user_name: currentUser.display_name || currentUser.full_name,
         description: title || description,

@@ -3,11 +3,11 @@
  *
  * - Strips EXIF data (canvas redraw)
  * - Resizes to max dimensions before upload (saves bandwidth)
- * - Returns a public URL via base44 UploadFile
+ * - Returns a public URL via dataService UploadFile
  * - Optional: returns a "thumb" URL variant by appending query params
  *   (works if the CDN supports width/height transforms; gracefully degrades)
  */
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 
 const MAX_FEED_PX = 1200;      // max width/height for feed images
 const MAX_THUMB_PX = 400;      // max width/height for thumbnails
@@ -82,7 +82,7 @@ export async function uploadImage(file, { maxPx = MAX_FEED_PX } = {}) {
     });
   }
 
-  const { file_url } = await base44.integrations.Core.UploadFile({ file: fileToUpload });
+  const { file_url } = await dataService.integrations.Core.UploadFile({ file: fileToUpload });
 
   return {
     url: file_url,

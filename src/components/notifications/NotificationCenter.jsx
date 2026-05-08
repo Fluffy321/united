@@ -1,16 +1,19 @@
 import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { base44 } from '@/api/base44Client';
+import { notificationsService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2 } from 'lucide-react';
 
 const TYPE_CONFIG = {
-  like: { icon: Heart, color: '#ef4444', bg: '#fef2f2', label: 'liked your post' },
-  comment: { icon: MessageCircle, color: '#2563eb', bg: '#eff6ff', label: 'commented on your post' },
-  help_offer: { icon: HandHeart, color: '#7c3aed', bg: '#f5f3ff', label: 'offered to help' },
-  request_fulfilled: { icon: CheckCircle2, color: '#16a34a', bg: '#f0fdf4', label: 'your request was fulfilled' },
-  default: { icon: Bell, color: '#64748b', bg: '#f8fafc', label: 'notification' }
+  like: { icon: Heart, tone: 'bg-red-50 text-red-500', label: 'liked your post' },
+  comment: { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600', label: 'commented on your post' },
+  help_offer: { icon: HandHeart, tone: 'bg-violet-50 text-violet-600', label: 'offered to help' },
+  mitzvah_offer: { icon: HandHeart, tone: 'bg-violet-50 text-violet-600', label: 'Mitzvah offer' },
+  mitzvah_accepted: { icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-600', label: 'Mitzvah accepted' },
+  verification_request: { icon: CheckCircle2, tone: 'bg-purple-50 text-purple-600', label: 'Verification needed' },
+  request_fulfilled: { icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-600', label: 'your request was fulfilled' },
+  default: { icon: Bell, tone: 'bg-slate-50 text-slate-500', label: 'notification' }
 };
 
 export default function NotificationCenter({ open, onOpenChange, userId }) {
@@ -18,15 +21,14 @@ export default function NotificationCenter({ open, onOpenChange, userId }) {
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', userId],
-    queryFn: () => base44.entities.Notification.filter({ user_id: userId }, '-created_date', 50),
+    queryFn: () => notificationsService.listForUser(userId, 50),
     enabled: !!userId && open,
     staleTime: 30000,
   });
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      const unread = notifications.filter(n => !n.read);
-      await Promise.all(unread.map(n => base44.entities.Notification.update(n.id, { read: true })));
+      await notificationsService.markAllRead(notifications);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
@@ -35,15 +37,15 @@ export default function NotificationCenter({ open, onOpenChange, userId }) {
   });
 
   const markOneRead = async (notif) => {
-    if (!notif.read) {
-      await base44.entities.Notification.update(notif.id, { read: true });
+    if (!notif.is_read) {
+      await notificationsService.markRead(notif.id);
       queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
       queryClient.invalidateQueries({ queryKey: ['notification-count', userId] });
     }
-    if (notif.link) window.location.href = notif.link;
+    if (notif.link_url) window.location.href = notif.link_url;
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -81,22 +83,22 @@ export default function NotificationCenter({ open, onOpenChange, userId }) {
                   <button
                     key={notif.id}
                     onClick={() => markOneRead(notif)}
-                    className="w-full flex items-start gap-3 px-4 py-3.5 text-left active:bg-[#f8fafc] transition-colors"
-                    style={{ background: notif.read ? 'white' : '#f8fbff' }}
+                    className={`w-full flex items-start gap-3 px-4 py-3.5 text-left active:bg-slate-50 transition-colors ${
+                      notif.is_read ? 'bg-white' : 'bg-blue-50/70'
+                    }`}
                   >
                     <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style={{ background: config.bg }}
+                      className={`mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${config.tone}`}
                     >
-                      <Icon className="w-4 h-4" style={{ color: config.color }} />
+                      <Icon className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] text-[#0F1C2E] leading-snug">{notif.message}</p>
+                      <p className="text-[13px] text-[#0F1C2E] leading-snug">{notif.message || notif.body || notif.title}</p>
                       <p className="text-[11px] text-[#94a3b8] mt-1">
                         {formatDistanceToNow(parseISO(notif.created_date), { addSuffix: true })}
                       </p>
                     </div>
-                    {!notif.read && (
+                    {!notif.is_read && (
                       <div className="w-2 h-2 rounded-full bg-[#2563eb] mt-2 flex-shrink-0" />
                     )}
                   </button>

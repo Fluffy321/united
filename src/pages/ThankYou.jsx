@@ -3,7 +3,7 @@ import { CheckCircle2, Home, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 
 export default function ThankYou() {
   const [transaction, setTransaction] = useState(null);
@@ -12,8 +12,8 @@ export default function ThankYou() {
   useEffect(() => {
     const loadTransaction = async () => {
       try {
-        const user = await base44.auth.me();
-        const transactions = await base44.entities.Transaction.filter(
+        const user = await dataService.auth.me();
+        const transactions = await dataService.entities.Transaction.filter(
           { user_id: user.id, status: 'completed' },
           '-created_date',
           1

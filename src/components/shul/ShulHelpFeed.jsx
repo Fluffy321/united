@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { HandHeart, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -27,13 +27,13 @@ export default function ShulHelpFeed({ shulId, shulName, currentUser, isAdmin })
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['shul-help', shulId],
-    queryFn: () => base44.entities.MitzvahRequest.filter({ shul_id: shulId }, '-created_date', 50),
+    queryFn: () => dataService.entities.MitzvahRequest.filter({ shul_id: shulId }, '-created_date', 50),
     enabled: !!shulId,
     staleTime: 30000
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.MitzvahRequest.create(data),
+    mutationFn: (data) => dataService.entities.MitzvahRequest.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shul-help', shulId] });
       setShowForm(false);
@@ -43,7 +43,7 @@ export default function ShulHelpFeed({ shulId, shulName, currentUser, isAdmin })
   });
 
   const claimMutation = useMutation({
-    mutationFn: ({ id }) => base44.entities.MitzvahRequest.update(id, {
+    mutationFn: ({ id }) => dataService.entities.MitzvahRequest.update(id, {
       status: 'in_progress',
       claimed_by_user_id: currentUser.id,
       claimed_by_name: currentUser.display_name || currentUser.full_name
@@ -55,7 +55,7 @@ export default function ShulHelpFeed({ shulId, shulName, currentUser, isAdmin })
   });
 
   const completeMutation = useMutation({
-    mutationFn: ({ id }) => base44.entities.MitzvahRequest.update(id, {
+    mutationFn: ({ id }) => dataService.entities.MitzvahRequest.update(id, {
       status: 'completed',
       completed_at: new Date().toISOString()
     }),

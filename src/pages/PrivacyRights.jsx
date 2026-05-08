@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Download, Trash2, Loader2, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService, storageService } from '@/services';
 import { toast } from 'sonner';
 
 export default function PrivacyRights() {
@@ -13,26 +13,24 @@ export default function PrivacyRights() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [analyticsOptOut, setAnalyticsOptOut] = useState(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('junited_cookie_consent') || '{}');
-      return stored.analytics === false;
-    } catch { return false; }
+    const stored = storageService.getJson('junited_cookie_consent', {});
+    return stored.analytics === false;
   });
 
   React.useEffect(() => {
-    base44.auth.me().then(u => { setUser(u); setLoadingUser(false); }).catch(() => setLoadingUser(false));
+    dataService.auth.me().then(u => { setUser(u); setLoadingUser(false); }).catch(() => setLoadingUser(false));
   }, []);
 
   const handleExport = async () => {
-    if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
+    if (!user) { dataService.auth.redirectToLogin(window.location.href); return; }
     setExporting(true);
     try {
       // Collect all user data
       const [posts, comments, communities, mitzvahLogs] = await Promise.all([
-        base44.entities.UnifiedPost.filter({ user_id: user.id }, '-created_date', 200),
-        base44.entities.Comment.filter({ author_id: user.id }, '-created_date', 200),
-        base44.entities.UserCommunity.filter({ user_id: user.id }),
-        base44.entities.MitzvahLog ? base44.entities.MitzvahLog.filter({ user_id: user.id }, '-created_date', 200) : Promise.resolve([]),
+        dataService.entities.UnifiedPost.filter({ user_id: user.id }, '-created_date', 200),
+        dataService.entities.Comment.filter({ author_id: user.id }, '-created_date', 200),
+        dataService.entities.UserCommunity.filter({ user_id: user.id }),
+        dataService.entities.MitzvahLog ? dataService.entities.MitzvahLog.filter({ user_id: user.id }, '-created_date', 200) : Promise.resolve([]),
       ]);
 
       const exportData = {
@@ -74,27 +72,16 @@ export default function PrivacyRights() {
 
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== 'DELETE') { toast.error('Type DELETE to confirm'); return; }
-    setDeletingAccount(true);
-    try {
-      await base44.functions.invoke('deleteUserAccount', { user_id: user.id });
-      toast.success('Account scheduled for deletion. You will be logged out.');
-      setTimeout(() => base44.auth.logout('/'), 2000);
-    } catch (err) {
-      toast.error('Deletion request failed. Email privacy@junited.app for manual deletion.');
-    } finally {
-      setDeletingAccount(false);
-    }
+    toast.info('Account deletion is coming soon. Your account was not deleted.');
   };
 
   const handleAnalyticsToggle = () => {
     const newOptOut = !analyticsOptOut;
     setAnalyticsOptOut(newOptOut);
-    try {
-      const stored = JSON.parse(localStorage.getItem('junited_cookie_consent') || '{}');
-      stored.analytics = !newOptOut;
-      stored.timestamp = new Date().toISOString();
-      localStorage.setItem('junited_cookie_consent', JSON.stringify(stored));
-    } catch {}
+    const stored = storageService.getJson('junited_cookie_consent', {});
+    stored.analytics = !newOptOut;
+    stored.timestamp = new Date().toISOString();
+    storageService.setJson('junited_cookie_consent', stored);
     window.__junited_analytics_enabled = !newOptOut;
     toast.success(newOptOut ? 'Analytics opted out' : 'Analytics opted in');
   };
@@ -124,7 +111,7 @@ export default function PrivacyRights() {
         {!user && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-[13px] text-amber-800">
             Sign in to access your privacy rights tools.{' '}
-            <button onClick={() => base44.auth.redirectToLogin(window.location.href)} className="font-bold underline">Sign in →</button>
+            <button onClick={() => dataService.auth.redirectToLogin(window.location.href)} className="font-bold underline">Sign in →</button>
           </div>
         )}
 
@@ -203,12 +190,15 @@ export default function PrivacyRights() {
               <div className="flex-1">
                 <h2 className="font-bold text-slate-900 mb-1">Delete My Account</h2>
                 <p className="text-[13px] text-slate-500 mb-3 leading-relaxed">
-                  Your account is soft-deleted for 30 days (you can recover it by logging in), then permanently purged. Posts others engaged with will show "[Deleted User]" as author.
+                  Account deletion is not connected yet. Until the backend is added, this screen cannot permanently delete your account or data.
                 </p>
+                <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold text-amber-800">
+                  Coming Soon: real deletion still needs backend support.
+                </div>
                 {!showDeleteConfirm ? (
                   <button onClick={() => setShowDeleteConfirm(true)} disabled={!user}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-[13px] font-semibold hover:bg-red-700 disabled:opacity-50 active:scale-95 transition-all">
-                    <Trash2 className="w-3.5 h-3.5" /> Delete My Account
+                    <Trash2 className="w-3.5 h-3.5" /> Delete My Account (Coming Soon)
                   </button>
                 ) : (
                   <div className="space-y-3">
@@ -227,10 +217,10 @@ export default function PrivacyRights() {
                         className="flex-1 py-2 rounded-xl border border-slate-200 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
                         Cancel
                       </button>
-                      <button onClick={handleDeleteAccount} disabled={deletingAccount || deleteConfirmText !== 'DELETE'}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-red-600 text-white text-[13px] font-semibold hover:bg-red-700 disabled:opacity-50 active:scale-95 transition-all">
+                      <button onClick={handleDeleteAccount} disabled
+                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-slate-300 text-white text-[13px] font-semibold cursor-not-allowed disabled:opacity-70">
                         {deletingAccount ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                        {deletingAccount ? 'Processing...' : 'Confirm Delete'}
+                        Deletion Coming Soon
                       </button>
                     </div>
                   </div>

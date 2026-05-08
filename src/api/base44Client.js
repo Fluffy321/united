@@ -1,4 +1,19 @@
+import { getAuthRedirectUrl, shouldUseSupabase, supabase } from '@/api/supabaseClient';
+
 const STORAGE_PREFIX = 'junited_local_entity_';
+const SUPABASE_ENTITY_TABLES = {
+  User: 'profiles',
+  Profile: 'profiles',
+  Community: 'communities',
+  UnifiedPost: 'posts',
+  Post: 'posts',
+  Conversation: 'conversations',
+  Message: 'messages',
+  Notification: 'notifications',
+};
+
+const PUBLIC_PROFILE_ENTITIES = new Set(['User', 'Profile']);
+const PUBLIC_PROFILE_SELECT = 'id,display_name,avatar_url,username,public_community,city,bio,is_profile_complete,created_at,updated_at';
 
 const demoUser = {
   id: 'local-demo',
@@ -340,19 +355,399 @@ const entities = new Proxy({}, {
   },
 });
 
+const toAppRow = (row = {}) => ({
+  ...row,
+  created_date: row.created_date || row.created_at,
+  updated_date: row.updated_date || row.updated_at,
+  full_name: row.full_name || row.display_name || 'User',
+  cityPreset: row.cityPreset || row.city,
+});
+
+const toDbPatch = (data = {}) => {
+  const patch = { ...data };
+  if (patch.created_date && !patch.created_at) patch.created_at = patch.created_date;
+  if (patch.updated_date && !patch.updated_at) patch.updated_at = patch.updated_date;
+  if (patch.cityPreset && !patch.city) patch.city = patch.cityPreset;
+  if (patch.community_settings?.primaryNeighborhood && !patch.public_community) {
+    patch.public_community = patch.community_settings.primaryNeighborhood;
+  }
+  delete patch.created_date;
+  delete patch.updated_date;
+  delete patch.full_name;
+  delete patch.email;
+  delete patch.cityPreset;
+  return patch;
+};
+
+const toDbField = (field) => {
+  if (field === 'created_date') return 'created_at';
+  if (field === 'updated_date') return 'updated_at';
+  return field;
+};
+
+const shouldFallbackToLocal = (error) => {
+  const text = `${error?.message || ''} ${error?.details || ''}`.toLowerCase();
+  return (
+    text.includes('not signed in') ||
+    text.includes('permission denied') ||
+    text.includes('row-level security') ||
+    text.includes('relation') ||
+    text.includes('does not exist')
+  );
+};
+
+const getMissingSchemaColumn = (error) => {
+  const text = `${error?.message || ''} ${error?.details || ''}`;
+  const match = text.match(/Could not find the '([^']+)' column/i)
+    || text.match(/column "([^"]+)" of relation/i)
+    || text.match(/column ([a-zA-Z0-9_]+) does not exist/i);
+  return match?.[1] || null;
+};
+
+const updateProfileWithSchemaRetry = async (userId, patch) => {
+  const dbPatch = { ...toDbPatch(patch), updated_at: new Date().toISOString() };
+  const removedColumns = new Set();
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(dbPatch)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (!error) return data;
+
+    const missingColumn = getMissingSchemaColumn(error);
+    if (!missingColumn || removedColumns.has(missingColumn) || !(missingColumn in dbPatch)) {
+      throw error;
+    }
+
+    removedColumns.add(missingColumn);
+    delete dbPatch[missingColumn];
+    console.warn(`Skipping profile column "${missingColumn}" because it is not in the current Supabase schema cache yet.`);
+  }
+
+  throw new Error('Could not update profile because Supabase schema cache is missing required columns.');
+};
+
+const runWithLocalFallback = async (action, fallback, label) => {
+  try {
+    return await action();
+  } catch (error) {
+    if (shouldFallbackToLocal(error)) {
+      console.warn(`Using local ${label} data because Supabase is not ready yet.`, error);
+      return fallback();
+    }
+    throw error;
+  }
+};
+
+const normalizeRealtimeEvent = (event = {}) => {
+  const eventType = String(event.eventType || '').toLowerCase();
+  const typeMap = {
+    insert: 'create',
+    update: 'update',
+    delete: 'delete',
+  };
+
+  return {
+    type: typeMap[eventType] || eventType || event.type,
+    data: event.new || event.old || event.data,
+    raw: event,
+  };
+};
+
+const createSupabaseEntityApi = (entityName) => {
+  const table = SUPABASE_ENTITY_TABLES[entityName];
+  const readTable = PUBLIC_PROFILE_ENTITIES.has(entityName) ? 'public_profiles' : table;
+  const readSelect = PUBLIC_PROFILE_ENTITIES.has(entityName) ? PUBLIC_PROFILE_SELECT : '*';
+  const localApi = createEntityApi(entityName);
+
+  if (!table || !supabase) return localApi;
+
+  return {
+    async list(sort, limit = 100, offset = 0) {
+      return runWithLocalFallback(async () => {
+        let query = supabase.from(readTable).select(readSelect).range(offset, offset + limit - 1);
+        if (sort) {
+          const ascending = !sort.startsWith('-');
+          query = query.order(toDbField(sort.replace(/^-/, '')), { ascending });
+        }
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []).map(toAppRow);
+      }, () => localApi.list(sort, limit, offset), entityName);
+    },
+
+    async filter(filter = {}, sort, limit = 100) {
+      return runWithLocalFallback(async () => {
+        let query = supabase.from(readTable).select(readSelect).limit(limit);
+        Object.entries(filter || {}).forEach(([key, value]) => {
+          const dbKey = toDbField(key);
+          if (Array.isArray(value)) query = query.contains(dbKey, value);
+          else query = query.eq(dbKey, value);
+        });
+        if (sort) {
+          const ascending = !sort.startsWith('-');
+          query = query.order(toDbField(sort.replace(/^-/, '')), { ascending });
+        }
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []).map(toAppRow);
+      }, () => localApi.filter(filter, sort, limit), entityName);
+    },
+
+    async get(id) {
+      return runWithLocalFallback(async () => {
+        const { data, error } = await supabase.from(readTable).select(readSelect).eq('id', id).single();
+        if (error) throw error;
+        return toAppRow(data);
+      }, () => localApi.get(id), entityName);
+    },
+
+    async create(data) {
+      return runWithLocalFallback(async () => {
+        const { data: created, error } = await supabase
+          .from(table)
+          .insert(toDbPatch(data))
+          .select()
+          .single();
+        if (error) throw error;
+        return toAppRow(created);
+      }, () => localApi.create(data), entityName);
+    },
+
+    async bulkCreate(items = []) {
+      return runWithLocalFallback(async () => {
+        const { data, error } = await supabase
+          .from(table)
+          .insert(items.map(toDbPatch))
+          .select();
+        if (error) throw error;
+        return (data || []).map(toAppRow);
+      }, () => localApi.bulkCreate(items), entityName);
+    },
+
+    async update(id, patch) {
+      return runWithLocalFallback(async () => {
+        const { data, error } = await supabase
+          .from(table)
+          .update({ ...toDbPatch(patch), updated_at: new Date().toISOString() })
+          .eq('id', id)
+          .select()
+          .single();
+        if (error) throw error;
+        return toAppRow(data);
+      }, () => localApi.update(id, patch), entityName);
+    },
+
+    async delete(idOrIds) {
+      return runWithLocalFallback(async () => {
+        const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+        const { error } = await supabase.from(table).delete().in('id', ids);
+        if (error) throw error;
+        return true;
+      }, () => localApi.delete(idOrIds), entityName);
+    },
+
+    subscribe(callback) {
+      const channel = supabase
+        .channel(`${table}-changes`)
+        .on('postgres_changes', { event: '*', schema: 'public', table }, (event) => {
+          callback(normalizeRealtimeEvent(event));
+        })
+        .subscribe();
+      return () => supabase.removeChannel(channel);
+    },
+  };
+};
+
+const supabaseEntities = new Proxy({}, {
+  get(target, entityName) {
+    if (!target[entityName]) target[entityName] = createSupabaseEntityApi(entityName);
+    return target[entityName];
+  },
+});
+
+const activeEntities = shouldUseSupabase ? supabaseEntities : entities;
+
+const includesSearchText = (row = {}, fields = [], query = '') => {
+  const needle = String(query || '').trim().toLowerCase();
+  if (!needle) return false;
+  return fields.some((field) => String(row[field] || '').toLowerCase().includes(needle));
+};
+
+const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
+  const [postsResult, communitiesResult, peopleResult] = await Promise.allSettled([
+    activeEntities.UnifiedPost.list('-created_date', 120),
+    activeEntities.Community.list('-follower_count', 80),
+    activeEntities.User.list('-created_date', 80),
+  ]);
+
+  const allPosts = postsResult.status === 'fulfilled' ? postsResult.value : [];
+  const allCommunities = communitiesResult.status === 'fulfilled' ? communitiesResult.value : [];
+  const allPeople = peopleResult.status === 'fulfilled' ? peopleResult.value : [];
+
+  const postMatches = allPosts
+    .filter((post) => {
+      if (filters.post_type && post.type !== filters.post_type) return false;
+      if (filters.community_id && post.community_id !== filters.community_id) return false;
+      if (filters.date_from && post.created_date < filters.date_from) return false;
+      if (filters.date_to && post.created_date > filters.date_to) return false;
+      return includesSearchText(post, ['title', 'body', 'community_name', 'author_name', 'location_text'], query);
+    })
+    .slice(0, 20);
+
+  const events = postMatches
+    .filter((post) => post.type === 'event')
+    .map((post) => ({
+      ...post,
+      start_date: post.start_date || post.event_date || post.created_date,
+      location: post.location || post.location_text || post.city,
+    }))
+    .slice(0, 10);
+
+  return {
+    posts: postMatches.filter((post) => post.type !== 'event').slice(0, 20),
+    communities: allCommunities
+      .filter((community) => includesSearchText(community, ['name', 'description', 'type', 'city', 'neighborhood'], query))
+      .slice(0, 12),
+    events,
+    people: allPeople
+      .filter((person) => includesSearchText(person, ['full_name', 'display_name', 'username', 'bio', 'public_community', 'city'], query))
+      .slice(0, 12),
+  };
+};
+
+const getSupabaseUser = async () => {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw error;
+  if (!data.user) throw new Error('Not signed in');
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', data.user.id)
+    .maybeSingle();
+
+  if (profileError) throw profileError;
+  if (profile) {
+    return toAppRow({
+      ...profile,
+      email: data.user.email,
+    });
+  }
+
+  const createdProfile = {
+    id: data.user.id,
+    display_name: data.user.email?.split('@')[0] || 'User',
+  };
+
+  const { data: created, error: createError } = await supabase
+    .from('profiles')
+    .insert(createdProfile)
+    .select()
+    .single();
+
+  if (createError) throw createError;
+
+  await supabase.from('account_private').upsert({
+    id: data.user.id,
+    email: data.user.email,
+    updated_at: new Date().toISOString(),
+  });
+
+  return toAppRow({
+    ...created,
+    email: data.user.email,
+  });
+};
+
 export const base44 = {
   auth: {
     async me() {
+      if (shouldUseSupabase) return getSupabaseUser();
       return demoUser;
     },
     async updateMe(patch) {
+      if (shouldUseSupabase) {
+        const user = await getSupabaseUser();
+        const data = await updateProfileWithSchemaRetry(user.id, patch);
+        return toAppRow({
+          ...data,
+          email: user.email,
+        });
+      }
       Object.assign(demoUser, patch);
       return demoUser;
     },
-    logout() {
+    async signInWithPassword({ email, password }) {
+      if (!shouldUseSupabase) return { user: demoUser };
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      return data;
+    },
+    async signin({ email, password }) {
+      return this.signInWithPassword({ email, password });
+    },
+    async signIn({ email, password }) {
+      return this.signInWithPassword({ email, password });
+    },
+    async login({ email, password }) {
+      return this.signInWithPassword({ email, password });
+    },
+    async signUp({ email, password, displayName }) {
+      if (!shouldUseSupabase) {
+        Object.assign(demoUser, { email, display_name: displayName || email });
+        return { user: demoUser };
+      }
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            display_name: displayName || email?.split('@')[0],
+          },
+          emailRedirectTo: getAuthRedirectUrl(),
+        },
+      });
+      if (error) throw error;
+
+      if (data.user) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          display_name: displayName || data.user.email?.split('@')[0] || 'User',
+          updated_at: new Date().toISOString(),
+        });
+        await supabase.from('account_private').upsert({
+          id: data.user.id,
+          email: data.user.email,
+          updated_at: new Date().toISOString(),
+        });
+      }
+
+      return data;
+    },
+    async signup({ email, password, displayName, fullName, name }) {
+      return this.signUp({
+        email,
+        password,
+        displayName: displayName || fullName || name,
+      });
+    },
+    async logout() {
+      if (shouldUseSupabase) {
+        await supabase.auth.signOut();
+        return true;
+      }
       return true;
     },
     redirectToLogin(fromUrl = '/') {
+      if (shouldUseSupabase && typeof window !== 'undefined') {
+        window.location.href = `/login?from_url=${encodeURIComponent(fromUrl || window.location.href)}`;
+        return;
+      }
       console.info('Login is not connected yet. Returning to local app mode.');
       if (typeof window !== 'undefined') {
         const target = new URL(fromUrl || '/', window.location.origin);
@@ -361,18 +756,51 @@ export const base44 = {
     },
   },
 
-  entities,
+  entities: activeEntities,
 
   functions: {
     async invoke(name, payload = {}) {
+      if (name === 'universalSearch') {
+        return { data: { results: await runUniversalSearch(payload) } };
+      }
+
+      if (name === 'create-checkout') {
+        return {
+          data: {
+            url: null,
+            checkoutUrl: null,
+            paymentLive: false,
+            error: 'Payments are not connected yet.',
+          },
+        };
+      }
+
+      if (name === 'deleteUserAccount') {
+        throw new Error('Account deletion is not connected yet.');
+      }
+
       console.info(`Local function stub: ${name}`, payload);
-      return { data: { results: { posts: [], communities: [], events: [], people: [] } } };
+      return {
+        data: {
+          demoOnly: true,
+          message: `${name} is not connected yet.`,
+          results: { posts: [], communities: [], events: [], people: [] },
+        },
+      };
     },
   },
 
   integrations: {
     Core: {
-      async UploadFile({ file }) {
+      async UploadFile({ file, bucket = 'post-images' }) {
+        if (shouldUseSupabase && file) {
+          const safeName = file.name?.replace(/[^a-z0-9._-]/gi, '-') || 'upload';
+          const path = `${Date.now()}-${safeName}`;
+          const { error } = await supabase.storage.from(bucket).upload(path, file);
+          if (error) throw error;
+          const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+          return { file_url: data.publicUrl };
+        }
         return { file_url: file ? URL.createObjectURL(file) : '' };
       },
       async InvokeLLM() {

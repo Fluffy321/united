@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, X } from 'lucide-react';
+import { storageService } from '@/services';
 
 const STORAGE_KEY = 'push_notif_prompt_dismissed';
 
@@ -10,16 +11,16 @@ export default function PushNotificationPrompt() {
   useEffect(() => {
     if (typeof Notification === 'undefined') return;
     if (Notification.permission === 'granted') return;
-    if (localStorage.getItem(STORAGE_KEY) === '1') return;
+    if (storageService.getItem(STORAGE_KEY) === '1') return;
     // Show briefly then auto-dismiss — mark as seen immediately so it never blocks feed again
-    localStorage.setItem(STORAGE_KEY, '1');
+    storageService.setItem(STORAGE_KEY, '1');
     const show = setTimeout(() => setVisible(true), 1200);
     const hide = setTimeout(() => setVisible(false), 5000);
     return () => { clearTimeout(show); clearTimeout(hide); };
   }, []);
 
   const dismiss = () => {
-    localStorage.setItem(STORAGE_KEY, '1');
+    storageService.setItem(STORAGE_KEY, '1');
     setVisible(false);
   };
 

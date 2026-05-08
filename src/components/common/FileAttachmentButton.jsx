@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Paperclip, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const ALLOWED_TYPES = {
@@ -32,7 +32,7 @@ export default function FileAttachmentButton({ onAttached, className = '' }) {
 
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await dataService.integrations.Core.UploadFile({ file });
       onAttached({ url: file_url, name: file.name, type: file.type, size: file.size });
     } catch {
       toast.error('Upload failed');

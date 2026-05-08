@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Cookie, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { storageService } from '@/services';
 
 const STORAGE_KEY = 'junited_cookie_consent';
 
@@ -11,16 +12,16 @@ export default function CookieConsentBanner() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = storageService.getItem(STORAGE_KEY);
       if (!stored) setVisible(true);
     } catch {
-      // localStorage blocked (e.g. incognito with strict settings) — skip banner
+      // Browser storage blocked (e.g. incognito with strict settings) — skip banner
     }
   }, []);
 
   const save = (analyticsEnabled) => {
     const consent = { essential: true, analytics: analyticsEnabled, timestamp: new Date().toISOString() };
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(consent)); } catch {}
+    storageService.setJson(STORAGE_KEY, consent);
     // Expose preference globally so analytics lib can check it
     window.__junited_analytics_enabled = analyticsEnabled;
     setVisible(false);
@@ -33,7 +34,7 @@ export default function CookieConsentBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-[72px] left-0 right-0 z-[200] px-3 pb-2">
+    <div className="app-floating-banner fixed left-0 right-0 z-[200] px-3 pb-2">
       <div className="max-w-2xl mx-auto bg-slate-900 text-white rounded-2xl shadow-2xl overflow-hidden">
         <div className="px-4 py-4">
           <div className="flex items-start justify-between gap-3 mb-3">
@@ -41,7 +42,7 @@ export default function CookieConsentBanner() {
               <Cookie className="w-5 h-5 text-amber-400 flex-shrink-0" />
               <p className="font-semibold text-[15px]">We use cookies</p>
             </div>
-            <button onClick={handleRejectOptional} className="p-1 rounded-full hover:bg-white/10 transition-colors flex-shrink-0">
+            <button onClick={handleRejectOptional} aria-label="Close cookie banner" className="p-1 rounded-full hover:bg-white/10 transition-colors flex-shrink-0">
               <X className="w-4 h-4 text-slate-400" />
             </button>
           </div>

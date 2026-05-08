@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2, Calendar, MapPin, Clock } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import { toast } from 'sonner';
@@ -14,17 +14,17 @@ export default function MyEvents() {
   }, []);
 
   const loadUser = async () => {
-    const user = await base44.auth.me();
+    const user = await dataService.auth.me();
     setCurrentUser(user);
   };
 
   const { data: rsvps = [], isLoading } = useQuery({
     queryKey: ['my-rsvps', currentUser?.id],
     queryFn: async () => {
-      const myRsvps = await base44.entities.RSVP.filter({ user_id: currentUser.id });
+      const myRsvps = await dataService.entities.RSVP.filter({ user_id: currentUser.id });
       const postIds = myRsvps.map(r => r.post_id);
       const posts = await Promise.all(
-        postIds.map(id => base44.entities.UnifiedPost.filter({ id }))
+        postIds.map(id => dataService.entities.UnifiedPost.filter({ id }))
       );
       return posts.map(p => p[0]).filter(Boolean);
     },
@@ -34,7 +34,7 @@ export default function MyEvents() {
   const { data: createdEvents = [] } = useQuery({
     queryKey: ['created-events', currentUser?.id],
     queryFn: async () => {
-      return base44.entities.UnifiedPost.filter(
+      return dataService.entities.UnifiedPost.filter(
         { user_id: currentUser.id, type: 'event' },
         '-created_date',
         50
@@ -44,7 +44,7 @@ export default function MyEvents() {
   });
 
   const handleRsvpRemove = async (postId) => {
-    const rsvp = await base44.entities.RSVP.filter({ post_id: postId, user_id: currentUser.id });
+    const rsvp = await dataService.entities.RSVP.filter({ post_id: postId, user_id: currentUser.id });
     if (rsvp[0]) {
       // TODO: implement delete when available
       toast.info('RSVP removal coming soon');
@@ -123,7 +123,7 @@ function EventCreatorCard({ post, currentUser }) {
   }, [post.id]);
 
   const loadGuests = async () => {
-    const rsvps = await base44.entities.RSVP.filter({ post_id: post.id });
+    const rsvps = await dataService.entities.RSVP.filter({ post_id: post.id });
     setGuestCount(rsvps.length);
     setGuests(rsvps);
   };

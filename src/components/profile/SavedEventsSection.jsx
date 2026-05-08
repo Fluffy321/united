@@ -1,13 +1,13 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { Calendar, MapPin, Clock } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
 export default function SavedEventsSection({ userId }) {
   const { data: rsvps = [] } = useQuery({
     queryKey: ['user-rsvps', userId],
-    queryFn: () => base44.entities.RSVP.filter({ user_id: userId }, '-created_date', 20),
+    queryFn: () => dataService.entities.RSVP.filter({ user_id: userId }, '-created_date', 20),
     enabled: !!userId,
     staleTime: 300000,
     retry: 1
@@ -19,7 +19,7 @@ export default function SavedEventsSection({ userId }) {
       if (!rsvps.length) return [];
       const postIds = rsvps.map(r => r.post_id).filter(Boolean);
       const results = await Promise.allSettled(
-        postIds.map(id => base44.entities.UnifiedPost.filter({ id }))
+        postIds.map(id => dataService.entities.UnifiedPost.filter({ id }))
       );
       return results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
     },

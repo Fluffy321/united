@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, MapPin, Phone, Globe, Clock, BookOpen, Heart, Shield } from 'lucide-react';
 import { toast } from 'sonner';
@@ -197,10 +197,10 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
       if (fallbackCommunity) return fallbackCommunity;
       // Try direct get first, fall back to filter
       try {
-        const result = await base44.entities.Community.get(communityId);
+        const result = await dataService.entities.Community.get(communityId);
         if (result) return result;
       } catch {}
-      const results = await base44.entities.Community.filter({ id: communityId });
+      const results = await dataService.entities.Community.filter({ id: communityId });
       return results[0] || null;
     },
     enabled: !!communityId
@@ -208,32 +208,32 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
   const { data: followRecord = [] } = useQuery({
     queryKey: ['community-follow', communityId, currentUser?.id],
-    queryFn: () => base44.entities.CommunityFollow.filter({ community_id: communityId, user_id: currentUser.id }),
+    queryFn: () => dataService.entities.CommunityFollow.filter({ community_id: communityId, user_id: currentUser.id }),
     enabled: !!currentUser
   });
 
   const { data: posts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['community-posts', communityId],
-    queryFn: () => base44.entities.CommunityPost.filter({ community_id: communityId }, '-created_date', 50),
+    queryFn: () => dataService.entities.CommunityPost.filter({ community_id: communityId }, '-created_date', 50),
     enabled: !!communityId
   });
 
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['community-events', communityId],
-    queryFn: () => base44.entities.CommunityEvent.filter({ community_id: communityId }, 'start_date', 50),
+    queryFn: () => dataService.entities.CommunityEvent.filter({ community_id: communityId }, 'start_date', 50),
     enabled: !!communityId
   });
 
   const { data: opportunities = [], isLoading: oppsLoading } = useQuery({
     queryKey: ['community-opportunities', communityId],
-    queryFn: () => base44.entities.MitzvahOpportunity.filter({ community_id: communityId }, '-created_date', 50),
+    queryFn: () => dataService.entities.MitzvahOpportunity.filter({ community_id: communityId }, '-created_date', 50),
     enabled: !!communityId
   });
 
   const { data: communityStats } = useQuery({
     queryKey: ['community-stats', communityId],
     queryFn: async () => {
-      const res = await base44.functions.invoke('getCommunityImpact', { community_id: communityId });
+      const res = await dataService.functions.invoke('getCommunityImpact', { community_id: communityId });
       return res.data;
     },
     enabled: !!communityId
@@ -241,7 +241,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
   const { data: members = [] } = useQuery({
     queryKey: ['community-members', communityId],
-    queryFn: () => base44.entities.UserCommunity.filter({ community_id: communityId }, '-created_date', 100),
+    queryFn: () => dataService.entities.UserCommunity.filter({ community_id: communityId }, '-created_date', 100),
     enabled: !!communityId
   });
 
@@ -252,23 +252,23 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
   const handleFollow = async () => {
     if (isFollowing) {
-      await base44.entities.CommunityFollow.delete(followRecord[0].id);
-      const memberships = await base44.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id });
-      for (const m of memberships) await base44.entities.UserCommunity.delete(m.id);
+      await dataService.entities.CommunityFollow.delete(followRecord[0].id);
+      const memberships = await dataService.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id });
+      for (const m of memberships) await dataService.entities.UserCommunity.delete(m.id);
       if (community) {
-        await base44.entities.Community.update(communityId, {
+        await dataService.entities.Community.update(communityId, {
           follower_count: Math.max(0, (community.follower_count || 0) - 1)
         });
       }
       toast.success('Unfollowed');
     } else {
-      await base44.entities.CommunityFollow.create({ community_id: communityId, user_id: currentUser.id });
-      const existing = await base44.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id });
+      await dataService.entities.CommunityFollow.create({ community_id: communityId, user_id: currentUser.id });
+      const existing = await dataService.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id });
       if (existing.length === 0) {
-        await base44.entities.UserCommunity.create({ user_id: currentUser.id, community_id: communityId, role: 'Member' });
+        await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: communityId, role: 'Member' });
       }
       if (community) {
-        await base44.entities.Community.update(communityId, {
+        await dataService.entities.Community.update(communityId, {
           follower_count: (community.follower_count || 0) + 1
         });
       }

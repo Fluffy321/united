@@ -3,7 +3,7 @@ import { Loader2, MapPin, CheckCircle, Calendar, MessageSquare, ArrowLeft } from
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import EventCard from '@/components/chalkboard/EventCard';
@@ -28,14 +28,14 @@ export default function Organization() {
   }, []);
 
   const loadUser = async () => {
-    const user = await base44.auth.me();
+    const user = await dataService.auth.me();
     setCurrentUser(user);
   };
 
   const { data: org } = useQuery({
     queryKey: ['organization', orgId],
     queryFn: async () => {
-      const orgs = await base44.entities.Organization.filter({ id: orgId });
+      const orgs = await dataService.entities.Organization.filter({ id: orgId });
       return orgs[0];
     },
     enabled: !!orgId
@@ -43,7 +43,7 @@ export default function Organization() {
 
   const { data: events = [] } = useQuery({
     queryKey: ['org-events', orgId],
-    queryFn: () => base44.entities.ChalkboardPost.filter({ 
+    queryFn: () => dataService.entities.ChalkboardPost.filter({ 
       organization_id: orgId,
       board_type: 'events'
     }, '-created_date', 20),
@@ -52,7 +52,7 @@ export default function Organization() {
 
   const { data: posts = [] } = useQuery({
     queryKey: ['org-posts', orgId],
-    queryFn: () => base44.entities.Post.filter({ 
+    queryFn: () => dataService.entities.Post.filter({ 
       organization_id: orgId
     }, '-created_date', 20),
     enabled: !!orgId

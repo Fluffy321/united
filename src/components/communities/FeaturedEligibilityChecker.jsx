@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle2, Zap } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const MIN_FOLLOWERS = 50;
@@ -15,7 +15,7 @@ export default function FeaturedEligibilityChecker({ community, onEligibilityChe
     setLoading(true);
 
     try {
-      const response = await base44.functions.invoke('checkCommunityEligibility', { community_id: community.id });
+      const response = await dataService.functions.invoke('checkCommunityEligibility', { community_id: community.id });
       setResult(response.data);
       onEligibilityChecked?.(response.data);
 

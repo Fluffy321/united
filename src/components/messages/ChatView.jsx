@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { base44 } from '@/api/base44Client';
+import { dataService, messagesService } from '@/services';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import FileAttachmentButton from '@/components/common/FileAttachmentButton';
@@ -56,7 +56,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       return;
     }
     if (isAI) {
-      // Load from localStorage for AI chats
+      // Load saved AI chat messages through the storage service.
       const saved = loadAIMessages(currentUser.id);
       setMessages(saved);
       setIsLoading(false);
@@ -68,7 +68,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     loadMitzvahContext();
 
     // Subscribe to new messages in this conversation
-    const unsubscribe = base44.entities.Message.subscribe((event) => {
+    const unsubscribe = messagesService.subscribeToMessages((event) => {
       if (event.type === 'create' && event.data.conversation_id === conversation.id) {
         setMessages(prev => {
           // Avoid duplicates
@@ -87,7 +87,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
 
   const loadMessages = async (silent = false) => {
     if (!silent) setIsLoading(true);
-    const data = await base44.entities.Message.filter({ conversation_id: conversation.id }, 'created_date');
+    const data = await messagesService.listMessages(conversation.id, 'created_date');
     setMessages(data);
     if (!silent) setIsLoading(false);
   };
@@ -96,7 +96,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     try {
       if (!conversation?.id) return;
       const unreadCount = { ...conversation.unread_count, [currentUser.id]: 0 };
-      await base44.entities.Conversation.update(conversation.id, { unread_count: unreadCount });
+      await messagesService.updateConversation(conversation.id, { unread_count: unreadCount });
     } catch (error) {
       console.error('Failed to mark conversation as read:', error);
     }
@@ -105,11 +105,11 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const loadMitzvahContext = async () => {
     if (conversation.request_id) {
       try {
-        const [request] = await base44.entities.MitzvahRequest.filter({ id: conversation.request_id });
+        const [request] = await dataService.entities.MitzvahRequest.filter({ id: conversation.request_id });
         setMitzvahRequest(request || null);
 
         if (request) {
-          const [offer] = await base44.entities.HelpOffer.filter({ request_id: request.id });
+          const [offer] = await dataService.entities.HelpOffer.filter({ request_id: request.id });
           setHelpOffer(offer || null);
         }
       } catch (error) {
@@ -123,7 +123,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     
     setIsProcessing(true);
     try {
-      await base44.entities.HelpOffer.update(helpOffer.id, {
+      await dataService.entities.HelpOffer.update(helpOffer.id, {
         completed_by_helper: true
       });
       
@@ -141,13 +141,13 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     setIsProcessing(true);
     try {
       // Update request status
-      await base44.entities.MitzvahRequest.update(mitzvahRequest.id, {
+      await dataService.entities.MitzvahRequest.update(mitzvahRequest.id, {
         status: 'Completed',
         completed_at: new Date().toISOString()
       });
 
       // Award points
-      await base44.entities.MitzvahAction.create({
+      await dataService.entities.MitzvahAction.create({
         user_id: mitzvahRequest.claimed_by_user_id,
         user_name: mitzvahRequest.claimed_by_name,
         request_id: mitzvahRequest.id,
@@ -155,13 +155,13 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         points_awarded: 10
       });
 
-      const [points] = await base44.entities.MitzvahPoints.filter({ user_id: mitzvahRequest.claimed_by_user_id });
+      const [points] = await dataService.entities.MitzvahPoints.filter({ user_id: mitzvahRequest.claimed_by_user_id });
       if (points) {
-        await base44.entities.MitzvahPoints.update(points.id, {
+        await dataService.entities.MitzvahPoints.update(points.id, {
           total_points: points.total_points + 10
         });
       } else {
-        await base44.entities.MitzvahPoints.create({
+        await dataService.entities.MitzvahPoints.create({
           user_id: mitzvahRequest.claimed_by_user_id,
           user_name: mitzvahRequest.claimed_by_name,
           total_points: 10
@@ -169,7 +169,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       }
 
       // Update offer
-      await base44.entities.HelpOffer.update(helpOffer.id, { status: 'completed' });
+      await dataService.entities.HelpOffer.update(helpOffer.id, { status: 'completed' });
 
       toast.success('Mitzvah completed! Helper earned 10 points ✨');
       loadMitzvahContext();
@@ -228,31 +228,37 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
 
     setIsSending(true);
 
-    const msg = await base44.entities.Message.create({
-      conversation_id: conversation.id,
-      sender_id: currentUser.id,
-      sender_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],
-      sender_age_range: currentUser.age_range || '18+',
-      recipient_id: other.id,
-      content: text || (attachment ? `📎 ${attachment.name}` : ''),
-      attachment: attachment || null,
-    });
+    try {
+      const msg = await messagesService.createMessage({
+        conversation_id: conversation.id,
+        sender_id: currentUser.id,
+        sender_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],
+        sender_age_range: currentUser.age_range || '18+',
+        recipient_id: other.id,
+        content: text || (attachment ? `📎 ${attachment.name}` : ''),
+        attachment: attachment || null,
+      });
 
-    // Optimistically append
-    setMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg]);
+      // Optimistically append
+      setMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg]);
 
-    const unreadCount = { 
-      ...conversation.unread_count, 
-      [other.id]: (conversation.unread_count?.[other.id] || 0) + 1 
-    };
+      const unreadCount = {
+        ...conversation.unread_count,
+        [other.id]: (conversation.unread_count?.[other.id] || 0) + 1
+      };
 
-    await base44.entities.Conversation.update(conversation.id, {
-      last_message: text,
-      last_message_at: new Date().toISOString(),
-      unread_count: unreadCount
-    });
-
-    setIsSending(false);
+      await messagesService.updateConversation(conversation.id, {
+        last_message: text || (attachment ? `📎 ${attachment.name}` : ''),
+        last_message_at: new Date().toISOString(),
+        unread_count: unreadCount
+      });
+    } catch (error) {
+      setNewMessage(text);
+      setPendingAttachment(attachment);
+      toast.error(error?.message || 'Message failed to send. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -282,7 +288,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         
         <div className="flex-1">
           <span className="font-semibold text-slate-900 text-[16px]">{other.name}</span>
-          {isAI && <p className="text-[11px] text-indigo-500 font-medium">AI Assistant • Always available</p>}
+          {isAI && <p className="text-[11px] text-amber-600 font-bold">AI Assistant • Coming Soon</p>}
           {isCommunityChat && <p className="text-[11px] text-blue-500 font-medium">{other.memberCount?.toLocaleString()} members • Community Chat</p>}
         </div>
 
@@ -346,7 +352,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
                     <Bot className="w-8 h-8 text-white" />
                   </div>
                   <p className="font-semibold text-slate-800">United AI Assistant</p>
-                  <p className="text-sm text-slate-500 max-w-xs mx-auto">Ask me about local events, shuls, schools, chesed opportunities, or anything about the Five Towns community!</p>
+                  <p className="text-sm text-slate-500 max-w-xs mx-auto">AI chat is not connected yet. This space is a preview only.</p>
                   <div className="flex flex-wrap gap-2 justify-center mt-4 mb-4">
                     {[
                       "What's happening this Shabbat?",
@@ -456,6 +462,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           <textarea
             rows={1}
             placeholder="Type a message…"
+            disabled={isAI}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => {
@@ -469,9 +476,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           />
           <button
             onClick={handleSend}
-            disabled={(!newMessage.trim() && !pendingAttachment) || isSending}
+            disabled={isAI || (!newMessage.trim() && !pendingAttachment) || isSending}
             className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 disabled:opacity-40 active:scale-95 transition-all"
-            style={{ background: '#2563EB' }}
+            style={{ background: isAI ? '#CBD5E1' : '#2563EB' }}
           >
             {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>

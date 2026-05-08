@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { Plus, Download, Clock } from 'lucide-react';
 import ChesedSummaryCard from './ChesedSummaryCard';
 import ChesedLogItem from './ChesedLogItem';
@@ -20,7 +20,7 @@ export default function ChesedHoursTab({ currentUser }) {
 
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ['chesed-logs', currentUser?.id],
-    queryFn: () => base44.entities.ChesedLog.filter({ user_id: currentUser.id }, '-date', 200),
+    queryFn: () => dataService.entities.ChesedLog.filter({ user_id: currentUser.id }, '-date', 200),
     enabled: !!currentUser,
   });
 

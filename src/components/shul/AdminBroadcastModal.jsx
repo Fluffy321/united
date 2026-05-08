@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Bell, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 export default function AdminBroadcastModal({ open, onOpenChange, shul, currentUser, memberCount }) {
@@ -19,7 +19,7 @@ export default function AdminBroadcastModal({ open, onOpenChange, shul, currentU
     }
     setIsSubmitting(true);
     try {
-      await base44.entities.ShulPost.create({
+      await dataService.entities.ShulPost.create({
         shul_id: shul.id,
         shul_name: shul.name,
         user_id: currentUser.id,

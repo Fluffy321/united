@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import {
   Loader2, Brain, TrendingUp, TrendingDown, Minus, AlertTriangle,
   CheckCircle, Lightbulb, Hash, Shield, RefreshCw, FileText, Calendar, Heart
@@ -87,7 +87,7 @@ export default function CommunityHealthDashboard({ communityId, community }) {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['community-health', communityId, refreshKey],
     queryFn: async () => {
-      const res = await base44.functions.invoke('getCommunityHealthInsights', { community_id: communityId });
+      const res = await dataService.functions.invoke('getCommunityHealthInsights', { community_id: communityId });
       return res.data;
     },
     enabled: !!communityId,

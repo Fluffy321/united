@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 import { X, CheckCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -18,14 +18,14 @@ export default function CommunityAlertBanner({ currentUser }) {
 
   const { data: alerts = [] } = useQuery({
     queryKey: ['community-alerts'],
-    queryFn: () => base44.entities.CommunityAlert.filter({ is_resolved: false }, '-created_date', 5),
+    queryFn: () => dataService.entities.CommunityAlert.filter({ is_resolved: false }, '-created_date', 5),
     staleTime: 60000,
     refetchInterval: 60000,
   });
 
   const handleResolve = async (alert) => {
     if (alert.posted_by !== currentUser?.id && currentUser?.role !== 'admin') return;
-    await base44.entities.CommunityAlert.update(alert.id, {
+    await dataService.entities.CommunityAlert.update(alert.id, {
       is_resolved: true,
       resolved_at: new Date().toISOString(),
     });

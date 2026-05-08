@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 
@@ -34,7 +34,7 @@ export default function EventRSVPSection({ postId, currentUser, eventDate }) {
       return;
     }
     try {
-      const allRSVPs = await base44.entities.RSVP.filter({ post_id: postId });
+      const allRSVPs = await dataService.entities.RSVP.filter({ post_id: postId });
       
       const counts = { going: 0, interested: 0, not_going: 0 };
       let userFound = null;
@@ -77,18 +77,18 @@ export default function EventRSVPSection({ postId, currentUser, eventDate }) {
     try {
       // Remove existing RSVP if any
       if (userStatus) {
-        const existing = await base44.entities.RSVP.filter({ 
+        const existing = await dataService.entities.RSVP.filter({ 
           post_id: postId, 
           user_id: currentUser.id 
         });
         if (existing[0]) {
-          await base44.entities.RSVP.delete(existing[0].id);
+          await dataService.entities.RSVP.delete(existing[0].id);
         }
       }
 
       // Create new RSVP or just update status
       if (status !== userStatus) {
-        await base44.entities.RSVP.create({
+        await dataService.entities.RSVP.create({
           post_id: postId,
           user_id: currentUser.id,
           user_name: currentUser.display_name || currentUser.full_name,

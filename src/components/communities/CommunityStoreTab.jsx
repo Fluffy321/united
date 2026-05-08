@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import {
   Plus, ShoppingBag, Repeat, Wrench, X, DollarSign,
   Loader2, ImageIcon, CheckCircle, Trash2, Package
@@ -36,7 +36,7 @@ function ListingModal({ communityId, currentUser, listing, onClose, onSaved }) {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await dataService.integrations.Core.UploadFile({ file });
       setForm(f => ({ ...f, image_url: file_url }));
     } catch { toast.error('Upload failed'); }
     setUploading(false);
@@ -60,8 +60,8 @@ function ListingModal({ communityId, currentUser, listing, onClose, onSaved }) {
     };
     try {
       const saved = isEdit
-        ? await base44.entities.CommunityListing.update(listing.id, payload)
-        : await base44.entities.CommunityListing.create(payload);
+        ? await dataService.entities.CommunityListing.update(listing.id, payload)
+        : await dataService.entities.CommunityListing.create(payload);
       toast.success(isEdit ? 'Listing updated!' : 'Listing created!');
       onSaved(saved);
     } catch { toast.error('Failed to save listing'); }
@@ -207,29 +207,12 @@ function ListingCard({ listing, isAdmin, currentUser, onDelete }) {
   const suffix = PERIOD_LABELS[listing.billing_period] || '';
 
   const handleBuy = async () => {
-    if (!listing.price) return;
-    setBuying(true);
-    try {
-      const description = `${listing.title} — ${listing.type === 'subscription' ? 'Subscription' : listing.type === 'service' ? 'Service' : 'Purchase'}`;
-      const res = await base44.functions.invoke('create-checkout', {
-        amount: listing.price.toFixed(2),
-        type: listing.type === 'subscription' ? 'subscription' : 'product',
-        description,
-        relatedEntityId: listing.id,
-        relatedEntityType: 'CommunityListing',
-      });
-      const url = res.data?.checkoutUrl;
-      if (!url) throw new Error('No checkout URL');
-      window.location.href = url;
-    } catch {
-      toast.error('Could not start checkout. Please try again.');
-    }
-    setBuying(false);
+    toast.info('Store checkout is coming soon. No money was processed.');
   };
 
   const handleDelete = async () => {
     if (!confirm('Delete this listing?')) return;
-    await base44.entities.CommunityListing.delete(listing.id);
+    await dataService.entities.CommunityListing.delete(listing.id);
     onDelete(listing.id);
     toast.success('Listing deleted');
   };
@@ -284,11 +267,11 @@ function ListingCard({ listing, isAdmin, currentUser, onDelete }) {
           {listing.price > 0 && (
             <button
               onClick={handleBuy}
-              disabled={buying}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-bold text-white transition-all active:scale-95 disabled:opacity-60 bg-gradient-to-r ${cfg.color}`}
+              disabled
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-bold text-white transition-all bg-slate-300 cursor-not-allowed"
             >
-              {buying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShoppingBag className="w-3.5 h-3.5" />}
-              {buying ? '…' : listing.type === 'subscription' ? 'Subscribe' : 'Buy'}
+              <ShoppingBag className="w-3.5 h-3.5" />
+              Coming Soon
             </button>
           )}
         </div>
@@ -307,23 +290,7 @@ function DonationSection({ community }) {
   const selected = custom ? parseFloat(custom) : parseFloat(amount);
 
   const handleDonate = async () => {
-    if (!selected || selected <= 0) { toast.error('Please enter an amount'); return; }
-    setLoading(true);
-    try {
-      const res = await base44.functions.invoke('create-checkout', {
-        amount: selected.toFixed(2),
-        type: 'donation',
-        description: `Donation to ${community.name}`,
-        relatedEntityId: community.id,
-        relatedEntityType: 'Community',
-      });
-      const url = res.data?.checkoutUrl;
-      if (!url) throw new Error('No checkout URL');
-      window.location.href = url;
-    } catch {
-      toast.error('Could not start checkout. Please try again.');
-    }
-    setLoading(false);
+    toast.info('Community donations are coming soon. No money was processed.');
   };
 
   return (
@@ -332,7 +299,10 @@ function DonationSection({ community }) {
         <span className="text-xl">❤️</span>
         <p className="text-[15px] font-bold text-slate-900">Support {community.name}</p>
       </div>
-      <p className="text-[12px] text-slate-500 mb-4">Your donation directly supports this community.</p>
+      <p className="text-[12px] text-slate-500 mb-2">Your donation directly supports this community.</p>
+      <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold text-amber-800">
+        Demo only: donation checkout is not live yet.
+      </p>
       <div className="flex flex-wrap gap-2 mb-3">
         {PRESETS.map(a => (
           <button
@@ -358,11 +328,11 @@ function DonationSection({ community }) {
         </div>
         <button
           onClick={handleDonate}
-          disabled={loading || !selected || selected <= 0}
-          className="px-5 py-2.5 rounded-xl font-bold text-white text-[13px] bg-gradient-to-r from-rose-500 to-pink-600 hover:opacity-90 disabled:opacity-50 active:scale-95 transition-all flex items-center gap-1.5"
+          disabled
+          className="px-5 py-2.5 rounded-xl font-bold text-white text-[13px] bg-slate-300 cursor-not-allowed transition-all flex items-center gap-1.5"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : '❤️'}
-          {loading ? '…' : 'Donate'}
+          ❤️
+          Soon
         </button>
       </div>
     </div>
@@ -377,7 +347,7 @@ export default function CommunityStoreTab({ communityId, community, currentUser,
 
   const { data: listings = [], isLoading } = useQuery({
     queryKey: ['community-listings', communityId],
-    queryFn: () => base44.entities.CommunityListing.filter({ community_id: communityId, is_active: true }, 'created_date', 100),
+    queryFn: () => dataService.entities.CommunityListing.filter({ community_id: communityId, is_active: true }, 'created_date', 100),
     enabled: !!communityId,
   });
 

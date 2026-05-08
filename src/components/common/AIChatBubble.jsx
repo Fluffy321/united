@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, X, Send, Loader2, Bot } from 'lucide-react';
+import { Sparkles, X, Send, Bot } from 'lucide-react';
 import { toast } from 'sonner';
 import { AI_AGENT, loadAIMessages, saveAIMessages, getAIReply } from '@/lib/aiAgent';
 
@@ -68,7 +68,10 @@ export default function AIChatBubble({ currentUser, isScrollingDown }) {
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
-              <span className="font-semibold text-slate-900 text-sm">United AI</span>
+              <div>
+                <span className="font-semibold text-slate-900 text-sm">United AI</span>
+                <p className="text-[10px] font-bold uppercase text-amber-600">Coming Soon</p>
+              </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
               <X className="w-4 h-4 text-slate-400" />
@@ -82,7 +85,8 @@ export default function AIChatBubble({ currentUser, isScrollingDown }) {
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center mx-auto mb-2">
                   <Bot className="w-6 h-6 text-white" />
                 </div>
-                <p className="text-[12px] text-slate-600 font-medium">Ask me anything!</p>
+                <p className="text-[12px] text-slate-600 font-medium">AI chat is coming soon.</p>
+                <p className="mt-1 text-[11px] text-amber-700">This assistant is not connected yet.</p>
               </div>
             ) : (
               messages.map(msg => {
@@ -122,10 +126,10 @@ export default function AIChatBubble({ currentUser, isScrollingDown }) {
             />
             <button
               onClick={handleSend}
-              disabled={!input.trim() || aiThinking}
-              className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center flex-shrink-0 disabled:opacity-50 active:scale-90 transition-all"
+              disabled
+              className="w-7 h-7 rounded-lg bg-slate-300 text-white flex items-center justify-center flex-shrink-0 cursor-not-allowed transition-all"
             >
-              {aiThinking ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+              <Send className="w-3 h-3" />
             </button>
           </div>
         </div>
@@ -137,7 +141,7 @@ export default function AIChatBubble({ currentUser, isScrollingDown }) {
           onClick={handleOpen}
           className={`fixed bottom-48 right-6 w-12 h-12 rounded-full bg-slate-700 text-white shadow-lg hover:shadow-xl active:scale-95 transition-transform duration-300 flex items-center justify-center z-40 text-xs font-semibold ${isScrollingDown ? 'translate-y-96' : 'translate-y-0'}`}
         >
-          AI
+          AI Soon
         </button>
       )}
     </>

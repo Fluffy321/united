@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, MapPin, Plus, Users, ChevronDown, ChevronUp, Loader2, X, CheckCircle2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { format, parseISO, isPast } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -21,12 +21,12 @@ export default function GroupEventsTab({ group, currentUser, isMember }) {
 
   const load = async () => {
     setLoading(true);
-    const evts = await base44.entities.CommunityEvent.filter({ community_id: group.id }, 'start_date', 50);
+    const evts = await dataService.entities.CommunityEvent.filter({ community_id: group.id }, 'start_date', 50);
     setEvents(evts);
     // Load RSVP counts & user status
     const rsvpMap = {};
     await Promise.all(evts.map(async (e) => {
-      const all = await base44.entities.RSVP.filter({ post_id: e.id });
+      const all = await dataService.entities.RSVP.filter({ post_id: e.id });
       const mine = all.find(r => r.user_id === currentUser?.id);
       rsvpMap[e.id] = { count: all.length, userRsvpId: mine?.id || null, attendees: all };
     }));
@@ -38,7 +38,7 @@ export default function GroupEventsTab({ group, currentUser, isMember }) {
     e.preventDefault();
     if (!form.title.trim() || !form.start_date) return toast.error('Title and date are required');
     setCreating(true);
-    const evt = await base44.entities.CommunityEvent.create({
+    const evt = await dataService.entities.CommunityEvent.create({
       community_id: group.id,
       title: form.title.trim(),
       description: form.description.trim(),
@@ -60,14 +60,14 @@ export default function GroupEventsTab({ group, currentUser, isMember }) {
     setSavingRsvp(eventId);
     const current = rsvps[eventId] || { count: 0, userRsvpId: null, attendees: [] };
     if (current.userRsvpId) {
-      await base44.entities.RSVP.delete(current.userRsvpId);
+      await dataService.entities.RSVP.delete(current.userRsvpId);
       setRsvps(prev => ({
         ...prev,
         [eventId]: { ...current, count: Math.max(0, current.count - 1), userRsvpId: null, attendees: current.attendees.filter(a => a.id !== current.userRsvpId) }
       }));
       toast.success('RSVP removed');
     } else {
-      const rsvp = await base44.entities.RSVP.create({ post_id: eventId, user_id: currentUser.id, user_name: currentUser.full_name, status: 'going' });
+      const rsvp = await dataService.entities.RSVP.create({ post_id: eventId, user_id: currentUser.id, user_name: currentUser.full_name, status: 'going' });
       setRsvps(prev => ({
         ...prev,
         [eventId]: { ...current, count: current.count + 1, userRsvpId: rsvp.id, attendees: [...current.attendees, rsvp] }
@@ -79,7 +79,7 @@ export default function GroupEventsTab({ group, currentUser, isMember }) {
 
   const markAttended = async (eventId, rsvpId) => {
     setMarkingAttendance(rsvpId);
-    await base44.entities.RSVP.update(rsvpId, { attended: true });
+    await dataService.entities.RSVP.update(rsvpId, { attended: true });
     setRsvps(prev => ({
       ...prev,
       [eventId]: {

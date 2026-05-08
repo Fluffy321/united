@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Star, MapPin, Phone, Globe, Clock, Loader2, Shield, ExternalLink, Sparkles } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService, paymentsService } from '@/services';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 
@@ -44,18 +44,18 @@ export default function BusinessListingPage() {
   const [upgradeLoading, setUpgradeLoading] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    dataService.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const { data: listing, refetch: refetchListing } = useQuery({
     queryKey: ['business-listing', listingId],
-    queryFn: () => base44.entities.BusinessListing.get(listingId),
+    queryFn: () => dataService.entities.BusinessListing.get(listingId),
     enabled: !!listingId,
   });
 
   const { data: reviews = [], refetch: refetchReviews } = useQuery({
     queryKey: ['business-reviews', listingId],
-    queryFn: () => base44.entities.BusinessReview.filter({ business_id: listingId }, '-created_date', 20),
+    queryFn: () => dataService.entities.BusinessReview.filter({ business_id: listingId }, '-created_date', 20),
     enabled: !!listingId,
   });
 
@@ -63,11 +63,11 @@ export default function BusinessListingPage() {
   const isPremium = listing?.plan === 'premium';
 
   const handleSubmitReview = async () => {
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     if (myRating === 0) { toast.error('Please select a star rating'); return; }
     setSubmittingReview(true);
     try {
-      await base44.entities.BusinessReview.create({
+      await dataService.entities.BusinessReview.create({
         business_id: listingId,
         reviewer_id: currentUser.id,
         reviewer_name: currentUser.display_name || currentUser.full_name?.split(' ')[0] || 'Community Member',
@@ -77,7 +77,7 @@ export default function BusinessListingPage() {
       // Update average
       const newCount = (listing.review_count || 0) + 1;
       const newAvg = ((listing.rating_avg || 0) * (listing.review_count || 0) + myRating) / newCount;
-      await base44.entities.BusinessListing.update(listingId, {
+      await dataService.entities.BusinessListing.update(listingId, {
         rating_avg: Math.round(newAvg * 10) / 10,
         review_count: newCount,
       });
@@ -92,10 +92,13 @@ export default function BusinessListingPage() {
   };
 
   const handleUpgradeToPremium = async () => {
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    toast.info('Business upgrades are coming soon. No money was processed.');
+    return;
+
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setUpgradeLoading(true);
     try {
-      const res = await base44.functions.invoke('create-checkout', {
+      const res = await paymentsService.createCheckout( {
         checkoutType: 'business_premium',
         billing: 'monthly',
         businessId: listingId,
@@ -235,15 +238,18 @@ export default function BusinessListingPage() {
               <p className="font-bold text-slate-900 text-[14px]">Upgrade to Premium</p>
             </div>
             <p className="text-[12px] text-slate-600 mb-3">
-              Priority placement · Photo gallery · Menu link · Verified badge — $29/mo
+              Priority placement · Photo gallery · Menu link · Verified badge — $29/mo · Coming Soon
             </p>
+            <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold text-amber-800">
+              Premium checkout is not live yet. No money will be processed.
+            </div>
             <button
               onClick={handleUpgradeToPremium}
-              disabled={upgradeLoading}
-              className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-[13px] flex items-center justify-center gap-2 disabled:opacity-60"
+              disabled
+              className="w-full py-2.5 rounded-xl bg-slate-300 text-white font-bold text-[13px] flex items-center justify-center gap-2 cursor-not-allowed"
             >
-              {upgradeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              Upgrade to Premium
+              <Sparkles className="w-4 h-4" />
+              Premium Checkout Coming Soon
             </button>
           </div>
         )}

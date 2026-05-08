@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Car, Plus, MapPin, Clock } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
@@ -18,13 +18,13 @@ export default function RideBoard({ shulId, currentUser }) {
   const { data: rides = [] } = useQuery({
     queryKey: ['rides', shulId],
     queryFn: async () => {
-      return await base44.entities.RideRequest.filter({ shul_id: shulId, is_active: true });
+      return await dataService.entities.RideRequest.filter({ shul_id: shulId, is_active: true });
     }
   });
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      return await base44.entities.RideRequest.create({
+      return await dataService.entities.RideRequest.create({
         ...data,
         shul_id: shulId,
         posted_by: currentUser.id,

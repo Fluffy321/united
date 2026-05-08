@@ -1,37 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2, Megaphone, Calendar, Loader2, AtSign } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataService, notificationsService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow, parseISO, isToday, isYesterday, format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
 const TYPE_CONFIG = {
-  like: { icon: Heart, color: '#ef4444', bg: '#fef2f2', label: 'Liked your post' },
-  post_reply: { icon: MessageCircle, color: '#2563eb', bg: '#eff6ff', label: 'Replied to your post' },
-  comment_reply: { icon: MessageCircle, color: '#7c3aed', bg: '#f5f3ff', label: 'Also replied' },
-  comment: { icon: MessageCircle, color: '#2563eb', bg: '#eff6ff', label: 'Commented' },
-  help_offer: { icon: HandHeart, color: '#7c3aed', bg: '#f5f3ff', label: 'Help offered' },
-  request_fulfilled: { icon: CheckCircle2, color: '#16a34a', bg: '#f0fdf4', label: 'Request fulfilled' },
-  announcement: { icon: Megaphone, color: '#d97706', bg: '#fffbeb', label: 'Announcement' },
-  event: { icon: Calendar, color: '#0891b2', bg: '#ecfeff', label: 'Event reminder' },
-  new_message: { icon: MessageCircle, color: '#2563eb', bg: '#eff6ff', label: 'New message' },
-  mention: { icon: AtSign, color: '#7c3aed', bg: '#f5f3ff', label: 'Mentioned you' },
-  default: { icon: Bell, color: '#64748b', bg: '#f8fafc', label: 'Notification' },
+  like: { icon: Heart, tone: 'bg-red-50 text-red-500', label: 'Liked your post' },
+  post_reply: { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600', label: 'Replied to your post' },
+  comment_reply: { icon: MessageCircle, tone: 'bg-violet-50 text-violet-600', label: 'Also replied' },
+  comment: { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600', label: 'Commented' },
+  help_offer: { icon: HandHeart, tone: 'bg-violet-50 text-violet-600', label: 'Help offered' },
+  mitzvah_offer: { icon: HandHeart, tone: 'bg-violet-50 text-violet-600', label: 'Mitzvah offer' },
+  mitzvah_accepted: { icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-600', label: 'Mitzvah accepted' },
+  verification_request: { icon: CheckCircle2, tone: 'bg-purple-50 text-purple-600', label: 'Verification needed' },
+  request_fulfilled: { icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-600', label: 'Request fulfilled' },
+  announcement: { icon: Megaphone, tone: 'bg-amber-50 text-amber-600', label: 'Announcement' },
+  community_activity: { icon: Megaphone, tone: 'bg-amber-50 text-amber-600', label: 'Community activity' },
+  event: { icon: Calendar, tone: 'bg-cyan-50 text-cyan-600', label: 'Event reminder' },
+  new_message: { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600', label: 'New message' },
+  mention: { icon: AtSign, tone: 'bg-violet-50 text-violet-600', label: 'Mentioned you' },
+  default: { icon: Bell, tone: 'bg-slate-50 text-slate-500', label: 'Notification' },
 };
 
 const FILTER_TABS = [
   { id: 'all', label: 'All' },
   { id: 'new_message', label: '💬 Messages' },
+  { id: 'mitzvah_offer', label: '🤝 Mitzvah' },
   { id: 'like', label: '❤️ Likes' },
   { id: 'comment', label: '💭 Comments' },
   { id: 'mention', label: '@ Mentions' },
-  { id: 'announcement', label: '📣 Community' },
+  { id: 'community_activity', label: '📣 Community' },
 ];
+
+const FILTER_TYPES = {
+  mitzvah_offer: ['mitzvah_offer', 'mitzvah_accepted', 'verification_request'],
+  community_activity: ['community_activity', 'announcement', 'event'],
+};
 
 function groupByDate(notifications) {
   const groups = {};
   for (const n of notifications) {
-    const d = parseISO(n.created_date);
+    const d = parseISO(n.created_date || n.created_at);
     const key = isToday(d) ? 'Today' : isYesterday(d) ? 'Yesterday' : format(d, 'MMMM d');
     if (!groups[key]) groups[key] = [];
     groups[key].push(n);
@@ -46,12 +56,12 @@ export default function Notifications() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    dataService.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications-page', currentUser?.id],
-    queryFn: () => base44.entities.Notification.filter({ user_id: currentUser.id }, '-created_date', 80),
+    queryFn: () => notificationsService.listForUser(currentUser.id),
     enabled: !!currentUser,
     staleTime: 30000,
     refetchInterval: 30000,
@@ -59,8 +69,7 @@ export default function Notifications() {
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      const unread = notifications.filter(n => !n.is_read);
-      await Promise.all(unread.map(n => base44.entities.Notification.update(n.id, { is_read: true })));
+      await notificationsService.markAllRead(notifications);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications-page', currentUser?.id] });
@@ -70,7 +79,7 @@ export default function Notifications() {
 
   const markOneRead = async (notif) => {
     if (!notif.is_read) {
-      await base44.entities.Notification.update(notif.id, { is_read: true });
+      await notificationsService.markRead(notif.id);
       queryClient.invalidateQueries({ queryKey: ['notifications-page', currentUser?.id] });
       queryClient.invalidateQueries({ queryKey: ['notification-count', currentUser?.id] });
     }
@@ -78,17 +87,21 @@ export default function Notifications() {
       navigate(`/Messages?conversation=${notif.conversation_id}`);
     } else if (notif.post_id) {
       navigate(`/PostDetail?id=${notif.post_id}`);
+    } else if (notif.link_url) {
+      navigate(notif.link_url);
     }
   };
 
-  const filtered = filter === 'all' ? notifications : notifications.filter(n => n.type === filter);
+  const filtered = filter === 'all'
+    ? notifications
+    : notifications.filter(n => (FILTER_TYPES[filter] || [filter]).includes(n.type));
   const grouped = groupByDate(filtered);
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: '#F0F6FF' }}>
+    <div className="app-page flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-blue-100" style={{ boxShadow: '0 1px 8px rgba(37,99,235,0.07)' }}>
+      <div className="sticky top-0 z-10 border-b border-blue-100 bg-white shadow-sm">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors">
             <ArrowLeft className="w-5 h-5 text-slate-700" />
@@ -113,11 +126,11 @@ export default function Notifications() {
               <button
                 key={tab.id}
                 onClick={() => setFilter(tab.id)}
-                className="flex-shrink-0 px-4 py-2.5 text-[12px] font-semibold border-b-2 transition-all whitespace-nowrap"
-                style={filter === tab.id
-                  ? { color: '#2563EB', borderColor: '#2563EB' }
-                  : { color: '#94a3b8', borderColor: 'transparent' }
-                }
+                className={`flex-shrink-0 whitespace-nowrap border-b-2 px-4 py-2.5 text-[12px] font-semibold transition-all ${
+                  filter === tab.id
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-slate-400'
+                }`}
               >
                 {tab.label}
                 {tab.id === 'all' && unreadCount > 0 && (
@@ -160,7 +173,7 @@ export default function Notifications() {
             {Object.entries(grouped).map(([dateLabel, items]) => (
               <div key={dateLabel}>
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2 px-1">{dateLabel}</p>
-                <div className="bg-white rounded-2xl border border-blue-50 overflow-hidden" style={{ boxShadow: '0 2px 8px rgba(37,99,235,0.06)' }}>
+                <div className="app-card overflow-hidden border-blue-50">
                   {items.map((notif, idx) => {
                     const config = TYPE_CONFIG[notif.type] || TYPE_CONFIG.default;
                     const Icon = config.icon;
@@ -168,32 +181,28 @@ export default function Notifications() {
                       <button
                         key={notif.id}
                         onClick={() => markOneRead(notif)}
-                        className="w-full flex items-start gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-blue-50"
-                        style={{
-                          background: notif.is_read ? 'white' : '#f0f6ff',
-                          borderTop: idx > 0 ? '1px solid #EFF6FF' : 'none',
-                        }}
+                        className={`w-full flex items-start gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-blue-50 ${
+                          notif.is_read ? 'bg-white' : 'bg-blue-50/80'
+                        } ${idx > 0 ? 'border-t border-blue-50' : ''}`}
                       >
                         {/* Icon bubble */}
                         <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                          style={{ background: config.bg }}
+                          className={`mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${config.tone}`}
                         >
-                          <Icon className="w-4.5 h-4.5" style={{ color: config.color, width: 18, height: 18 }} />
+                          <Icon className="h-[18px] w-[18px]" />
                         </div>
 
                         {/* Text */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] text-slate-800 leading-snug font-medium">{notif.message}</p>
+                          <p className="text-[13px] text-slate-800 leading-snug font-medium">{notif.message || notif.body || notif.title}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <span
-                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                              style={{ background: config.bg, color: config.color }}
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${config.tone}`}
                             >
                               {config.label}
                             </span>
                             <span className="text-[11px] text-slate-400">
-                              {formatDistanceToNow(parseISO(notif.created_date), { addSuffix: true })}
+                              {formatDistanceToNow(parseISO(notif.created_date || notif.created_at), { addSuffix: true })}
                             </span>
                           </div>
                         </div>

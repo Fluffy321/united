@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Loader2, Heart, MessageCircle, Bookmark } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { dataService, notificationsService } from '@/services';
 import { createPageUrl } from '@/utils';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import CommentsSheet from '@/components/feed/CommentsSheet';
@@ -29,10 +29,10 @@ export default function PostDetail() {
 
   const loadPost = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await dataService.auth.me();
       setCurrentUser(user);
 
-      const posts = await base44.entities.UnifiedPost.filter({ id: postId });
+      const posts = await dataService.entities.UnifiedPost.filter({ id: postId });
       if (posts[0]) {
         setPost(posts[0]);
       } else {
@@ -41,11 +41,11 @@ export default function PostDetail() {
       }
 
       // Load user likes
-      const likes = await base44.entities.Like.filter({ user_id: user.id });
+      const likes = await dataService.entities.Like.filter({ user_id: user.id });
       setUserLikes(likes.map(l => l.post_id));
 
       // Load user bookmarks
-      const bookmarks = await base44.entities.Bookmark.filter({ user_id: user.id });
+      const bookmarks = await dataService.entities.Bookmark.filter({ user_id: user.id });
       setUserBookmarks(bookmarks.map(b => b.post_id));
     } catch (e) {
       console.error('Failed to load post', e);
@@ -60,20 +60,23 @@ export default function PostDetail() {
     setUserLikes(prev => isLiked ? prev.filter(id => id !== post.id) : [...prev, post.id]);
     
     if (isLiked) {
-      const like = await base44.entities.Like.filter({ post_id: post.id, user_id: currentUser.id });
-      if (like[0]) await base44.entities.Like.delete(like[0].id);
+      const like = await dataService.entities.Like.filter({ post_id: post.id, user_id: currentUser.id });
+      if (like[0]) await dataService.entities.Like.delete(like[0].id);
     } else {
-      await base44.entities.Like.create({ post_id: post.id, user_id: currentUser.id });
+      await dataService.entities.Like.create({ post_id: post.id, user_id: currentUser.id });
       if (post.user_id !== currentUser.id) {
-        base44.entities.Notification.create({
-          user_id: post.user_id,
+        notificationsService.create({
+          userId: post.user_id,
+          actorId: currentUser.id,
           type: 'like',
-          message: `${currentUser.display_name || currentUser.full_name} liked your post`,
-          read: false
-        });
+          title: 'New like',
+          body: `${currentUser.display_name || currentUser.full_name} liked your post`,
+          linkUrl: `/PostDetail?id=${post.id}`,
+          postId: post.id,
+        }).catch(() => {});
       }
     }
-    await base44.entities.UnifiedPost.update(post.id, {
+    await dataService.entities.UnifiedPost.update(post.id, {
       likes_count: Math.max(0, (post.likes_count || 0) + (isLiked ? -1 : 1))
     });
   };
@@ -84,22 +87,22 @@ export default function PostDetail() {
     setUserBookmarks(prev => isBookmarked ? prev.filter(id => id !== post.id) : [...prev, post.id]);
     
     if (isBookmarked) {
-      const bookmark = await base44.entities.Bookmark.filter({ post_id: post.id, user_id: currentUser.id });
-      if (bookmark[0]) await base44.entities.Bookmark.delete(bookmark[0].id);
+      const bookmark = await dataService.entities.Bookmark.filter({ post_id: post.id, user_id: currentUser.id });
+      if (bookmark[0]) await dataService.entities.Bookmark.delete(bookmark[0].id);
     } else {
-      await base44.entities.Bookmark.create({ post_id: post.id, user_id: currentUser.id });
+      await dataService.entities.Bookmark.create({ post_id: post.id, user_id: currentUser.id });
       toast.success('Post saved');
     }
   };
 
   const handleDelete = async () => {
-    await base44.entities.UnifiedPost.delete(post.id);
+    await dataService.entities.UnifiedPost.delete(post.id);
     toast.success('Post deleted');
     navigate(createPageUrl('Feed'));
   };
 
   const handleBlock = async (userId) => {
-    await base44.entities.Block.create({ blocker_id: currentUser.id, blocked_id: userId });
+    await dataService.entities.Block.create({ blocker_id: currentUser.id, blocked_id: userId });
     setUserBookmarks(prev => prev.filter(id => id !== post.id));
     toast.success('User blocked');
     navigate(createPageUrl('Feed'));
