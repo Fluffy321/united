@@ -96,7 +96,7 @@ const AuthenticatedApp = () => {
         <Route path="/communities/:communityId" element={<PageTransition><LayoutWrapper currentPageName="CommunityDetail"><CommunityPage /></LayoutWrapper></PageTransition>} />
         <Route path="/CommunityCalendar" element={<PageTransition><CommunityCalendar /></PageTransition>} />
         <Route path="/DiscoverCommunitiesFeed" element={<Navigate to="/Communities" replace />} />
-        <Route path="/MitzvahMap" element={<Navigate to="/MitzvahCircle" replace />} />
+        <Route path="/MitzvahMap" element={<Navigate to="/MitzvahCircle?tab=map" replace />} />
         <Route path="/join" element={<PageTransition><JoinByCommunityCode /></PageTransition>} />
         <Route path="/MinorSafetyPolicy" element={<PageTransition><MinorSafetyPolicy /></PageTransition>} />
         <Route path="/BusinessDirectory" element={<PageTransition><BusinessDirectory /></PageTransition>} />
