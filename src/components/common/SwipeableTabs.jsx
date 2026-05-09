@@ -6,9 +6,11 @@ import { motion } from 'framer-motion';
 // which caused race conditions and broken render states.
 export default function SwipeableTabs({ activeIndex, children }) {
   const [everSeen, setEverSeen] = useState(() => new Set([activeIndex]));
+  const [previousIndex, setPreviousIndex] = useState(activeIndex);
 
   // Track which tabs have been visited so we only mount them once needed
   React.useEffect(() => {
+    setPreviousIndex(activeIndex);
     setEverSeen(prev => {
       if (prev.has(activeIndex)) return prev;
       const next = new Set(prev);
@@ -18,6 +20,7 @@ export default function SwipeableTabs({ activeIndex, children }) {
   }, [activeIndex]);
 
   const childArray = React.Children.toArray(children);
+  const direction = activeIndex >= previousIndex ? 1 : -1;
 
   return (
     <div className="w-full" style={{ minHeight: '100dvh' }}>
@@ -26,9 +29,9 @@ export default function SwipeableTabs({ activeIndex, children }) {
         return (
           <motion.div
             key={i}
-            initial={false}
-            animate={i === activeIndex ? { opacity: 1, y: 0 } : { opacity: 0, y: 4 }}
-            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            initial={i === activeIndex ? { opacity: 0, x: 14 * direction } : false}
+            animate={i === activeIndex ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 * direction }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             style={{
               display: i === activeIndex ? 'block' : 'none',
               minHeight: '100dvh',

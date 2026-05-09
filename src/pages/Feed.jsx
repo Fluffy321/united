@@ -920,7 +920,7 @@ export default function Feed() {
         )}
 
         {activeTab !== 'events' && isLoading && !loadTimedOut && (
-          <div className="motion-stagger space-y-3 tab-fade-in">
+          <div key={`loading-${activeTab}`} className="motion-stagger space-y-3 tab-fade-in">
             {[...Array(4)].map((_, i) => (
               <SkeletonCard key={i} hasImage={i === 1} />
             ))}
@@ -934,7 +934,7 @@ export default function Feed() {
           </div>
         )}
         {activeTab !== 'events' && (!isLoading || loadTimedOut) && feedPosts.length > 0 && (
-          <div className="motion-stagger tab-fade-in space-y-2">
+          <div key={`feed-${activeTab}`} className="motion-stagger tab-fade-in space-y-2">
             <div className="app-card overflow-hidden">
               {/* Question of the Day — embedded as first "post" in the feed card */}
               <DailyHooks

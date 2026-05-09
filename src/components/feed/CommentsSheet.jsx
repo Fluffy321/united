@@ -1,30 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import { X, Send, Loader2, ArrowRight, Heart, AlertCircle, RefreshCw } from 'lucide-react';
-import { dataService, postsService } from '@/services';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Send, Loader2, MessageCircle, Heart, AlertCircle, RefreshCw } from 'lucide-react';
+import { dataService, incrementCounter, postsService } from '@/services';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-const INITIAL_COMMENT_COUNT = 5;
-
-export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, currentUser, blockedIds = [] }) {
+export default function CommentsSheet({
+  post,
+  postId,
+  postAuthorId,
+  isOpen,
+  open,
+  onClose,
+  onOpenChange,
+  currentUser,
+  blockedIds = [],
+  onCommentAdded,
+}) {
+  const resolvedPostId = postId || post?.id;
+  const resolvedPostAuthorId = postAuthorId || post?.user_id;
+  const sheetOpen = isOpen ?? open ?? false;
   const navigate = useNavigate();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
-  const [showAll, setShowAll] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [posting, setPosting] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
   const [commentLikes, setCommentLikes] = useState({}); // { commentId: { count, liked } }
+  const listRef = useRef(null);
 
   useEffect(() => {
-    if (isOpen && postId) {
-      setShowAll(false);
+    if (sheetOpen && resolvedPostId) {
       setLoadError(false);
       loadComments();
     }
-  }, [isOpen, postId]);
+  }, [sheetOpen, resolvedPostId]);
+
+  useEffect(() => {
+    if (!sheetOpen || !listRef.current) return;
+    listRef.current.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
+  }, [comments.length, sheetOpen]);
+
+  const handleClose = () => {
+    onClose?.();
+    onOpenChange?.(false);
+  };
 
   const loadCommentLikes = async (loadedComments) => {
     if (!currentUser || loadedComments.length === 0) return;
@@ -53,7 +74,7 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
     setLoading(true);
     setLoadError(false);
     try {
-      const allComments = await postsService.listComments(postId, '-created_date');
+      const allComments = await postsService.listComments(resolvedPostId, 'created_date', 100);
       const filtered = allComments.filter(c => !blockedIds.includes(c.author_id));
       setComments(filtered);
       loadCommentLikes(filtered);
@@ -88,35 +109,39 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
 
   const handlePostComment = async () => {
     if (!newComment.trim()) return;
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     
     setPosting(true);
+    const body = newComment.trim();
     try {
       const comment = await postsService.createComment({
-        post_id: postId,
+        post_id: resolvedPostId,
         author_id: currentUser.id,
-        author_name: currentUser.full_name,
+        author_name: currentUser.display_name || currentUser.full_name || 'Community member',
         author_avatar_url: currentUser.avatar_url,
-        body: newComment.trim(),
+        body,
         reply_to_comment_id: replyingTo,
       });
 
-      setComments(prev => [comment, ...prev]);
+      setComments(prev => [...prev, comment]);
       setNewComment('');
       setReplyingTo(null);
+      onCommentAdded?.(comment);
+      incrementCounter('posts', 'comments_count', resolvedPostId, 1).catch(() => {});
 
       // Send notification to post author
-      if (postAuthorId !== currentUser.id) {
+      if (resolvedPostAuthorId !== currentUser.id) {
         await dataService.functions.invoke('sendNotificationOnComment', {
-          post_id: postId,
+          post_id: resolvedPostId,
           commenter_id: currentUser.id,
           commenter_name: currentUser.full_name,
-          comment_body: newComment.trim(),
-          post_author_id: postAuthorId,
+          comment_body: body,
+          post_author_id: resolvedPostAuthorId,
         });
       }
 
       // Detect @mentions in comment body and notify each mentioned user
-      const mentionMatches = newComment.trim().match(/@(\w+)/g);
+      const mentionMatches = body.match(/@(\w+)/g);
       if (mentionMatches) {
         // Look up participants in this thread to resolve @name -> user_id
         const threadAuthors = comments.filter(c => c.author_id && c.author_id !== currentUser.id);
@@ -130,42 +155,58 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
               mentioned_user_id: mentioned.author_id,
               actor_id: currentUser.id,
               actor_name: currentUser.full_name || currentUser.display_name,
-              post_id: postId,
-              context_text: newComment.trim(),
+              post_id: resolvedPostId,
+              context_text: body,
             }).catch(() => {});
           }
         }
       }
 
-      toast.success('Comment posted!');
+      toast.success('Reply sent');
     } catch (error) {
-      toast.error('Failed to post comment');
+      toast.error('Failed to send reply');
     }
     setPosting(false);
   };
 
-  if (!isOpen) return null;
+  if (!sheetOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white md:inset-auto md:right-0 md:top-0 md:h-screen md:w-96 md:shadow-lg">
+    <div className="fixed inset-0 z-[120] flex flex-col bg-white motion-soft-in md:inset-auto md:right-0 md:top-0 md:h-screen md:w-96 md:shadow-lg">
       {/* Header */}
       <div className="flex-shrink-0 border-b border-slate-100 p-4 flex items-center justify-between">
-        <h2 className="font-bold text-[16px] text-slate-900">Comments</h2>
-        <button onClick={onClose} className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 rounded-lg transition-colors">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+            <MessageCircle className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="font-bold text-[16px] text-slate-900">Replies</h2>
+            <p className="text-[11px] font-semibold text-slate-400">Mini chat for this post</p>
+          </div>
+        </div>
+        <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 rounded-lg transition-colors">
           <X className="w-5 h-5 text-slate-400" />
         </button>
       </div>
 
       {/* Comments List */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3">
+      <div ref={listRef} className="flex-1 overflow-y-auto scrollbar-hide bg-slate-50/70 p-4">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+          <div className="motion-stagger space-y-3 py-2">
+            {[0, 1, 2, 3].map((item) => (
+              <div key={item} className={`flex ${item % 2 ? 'justify-end' : 'justify-start'}`}>
+                <div className="max-w-[78%] rounded-2xl bg-white p-3 shadow-sm">
+                  <div className="skeleton h-3 w-24 rounded" />
+                  <div className="skeleton mt-2 h-3 w-44 rounded" />
+                  <div className="skeleton mt-2 h-3 w-28 rounded" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : loadError ? (
           <div className="flex flex-col items-center justify-center py-12 text-center px-4">
             <AlertCircle className="w-8 h-8 text-slate-300 mb-3" />
-            <p className="text-[14px] font-semibold text-slate-600">Couldn't load comments</p>
+            <p className="text-[14px] font-semibold text-slate-600">Couldn't load replies</p>
             <p className="text-[12px] text-slate-400 mt-1 mb-4">Check your connection and try again.</p>
             <button
               onClick={loadComments}
@@ -176,33 +217,35 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
             </button>
           </div>
         ) : comments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="text-3xl mb-2">💬</div>
-            <p className="text-[14px] font-semibold text-slate-600">No comments yet</p>
-            <p className="text-[12px] text-slate-400 mt-1">Be the first to start a discussion!</p>
+          <div className="flex min-h-[55vh] flex-col items-center justify-center py-12 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-3xl bg-blue-50 text-blue-600">
+              <MessageCircle className="h-5 w-5" />
+            </div>
+            <p className="text-[14px] font-semibold text-slate-700">Start the thread</p>
+            <p className="mt-1 max-w-[220px] text-[12px] leading-5 text-slate-400">Ask a follow-up, answer the post, or keep the conversation going.</p>
           </div>
         ) : (
-          <>
-          {!showAll && comments.length > INITIAL_COMMENT_COUNT && (
-            <button
-              onClick={() => setShowAll(true)}
-              className="w-full text-[13px] font-semibold text-blue-600 py-2 hover:text-blue-700 transition-colors"
-            >
-              Show all {comments.length} comments
-            </button>
-          )}
-          {(showAll ? comments : comments.slice(0, INITIAL_COMMENT_COUNT)).map(comment => {
+          <div className="motion-stagger space-y-3">
+          {comments.map(comment => {
             const repliedTo = comment.reply_to_comment_id ? comments.find(c => c.id === comment.reply_to_comment_id) : null;
+            const isMine = currentUser?.id && comment.author_id === currentUser.id;
             return (
-              <div key={comment.id} className="space-y-2">
-                {repliedTo && (
-                  <div className="ml-4 pl-3 border-l-2 border-slate-200 text-[12px] text-slate-500 flex items-center gap-1">
-                    <ArrowRight className="w-3 h-3" />
-                    <span className="font-medium">{repliedTo.author_name}</span>
-                  </div>
-                )}
-                <div className="bg-slate-50 rounded-xl p-3">
-                  <div className="flex items-center gap-2 mb-1.5">
+              <div key={comment.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[84%] ${isMine ? 'items-end' : 'items-start'} flex flex-col`}>
+                  <div className={`rounded-2xl px-3 py-2.5 shadow-sm ${
+                    isMine
+                      ? 'rounded-br-md bg-blue-600 text-white'
+                      : 'rounded-bl-md bg-white text-slate-800'
+                  }`}>
+                    {repliedTo && (
+                      <div className={`mb-2 rounded-xl border-l-2 px-2 py-1 text-[11px] ${
+                        isMine ? 'border-white/40 bg-white/10 text-blue-50' : 'border-blue-200 bg-blue-50 text-blue-700'
+                      }`}>
+                        Replying to {repliedTo.author_name}: {repliedTo.body?.slice(0, 70)}
+                      </div>
+                    )}
+                    <div className="mb-1.5 flex items-center gap-2">
+                      {!isMine && (
                     <button
                       onClick={() => {
                         if (comment.author_id) navigate(`/PublicProfile?id=${comment.author_id}`);
@@ -217,21 +260,23 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
                         </div>
                       )}
                     </button>
+                      )}
                     <div className="flex-1 min-w-0">
                       <button
                         onClick={() => {
                           if (comment.author_id) navigate(`/PublicProfile?id=${comment.author_id}`);
                         }}
-                        className="text-[13px] font-semibold text-slate-900 hover:text-blue-600 transition-colors text-left"
+                        className={`text-left text-[12px] font-bold transition-colors ${isMine ? 'text-blue-50' : 'text-slate-900 hover:text-blue-600'}`}
                       >
-                        {comment.author_name}
+                        {isMine ? 'You' : comment.author_name}
                       </button>
                     </div>
-                    <p className="text-[11px] text-slate-400 flex-shrink-0">
+                    <p className={`flex-shrink-0 text-[10px] ${isMine ? 'text-blue-100' : 'text-slate-400'}`}>
                       {formatDistanceToNow(parseISO(comment.created_date), { addSuffix: true })}
                     </p>
                   </div>
-                  <p className="text-[13px] text-slate-700 leading-relaxed">{comment.body}</p>
+                  <p className={`whitespace-pre-wrap text-[13px] leading-relaxed ${isMine ? 'text-white' : 'text-slate-700'}`}>{comment.body}</p>
+                  </div>
                   <div className="mt-2 flex items-center gap-3">
                     <button
                       onClick={() => setReplyingTo(comment.id)}
@@ -253,15 +298,7 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
               </div>
             );
           })}
-          {showAll && comments.length > INITIAL_COMMENT_COUNT && (
-            <button
-              onClick={() => setShowAll(false)}
-              className="w-full text-[12px] text-slate-400 py-2 hover:text-slate-600 transition-colors"
-            >
-              Show fewer
-            </button>
-          )}
-          </>
+          </div>
         )}
       </div>
 
@@ -281,7 +318,8 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
       )}
 
       {/* Input */}
-      <div className="flex-shrink-0 border-t border-slate-100 p-3 flex gap-2 bg-white">
+      <div className="flex-shrink-0 border-t border-slate-100 bg-white p-3">
+        <div className="flex gap-2">
         <input
           type="text"
           placeholder={replyingTo ? 'Write a reply...' : 'Add a comment...'}
@@ -292,15 +330,16 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
               handlePostComment();
             }
           }}
-          className="flex-1 bg-slate-100 border-0 rounded-lg px-3 py-2 text-[14px] outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
+          className="flex-1 bg-slate-100 border-0 rounded-2xl px-3 py-2 text-[14px] outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
         />
         <button
           onClick={handlePostComment}
           disabled={posting || !newComment.trim()}
-          className="w-9 h-9 bg-blue-600 text-white rounded-lg flex items-center justify-center disabled:opacity-40 hover:bg-blue-700 transition-colors"
+          className="motion-press w-10 h-10 bg-blue-600 text-white rounded-2xl flex items-center justify-center disabled:opacity-40 hover:bg-blue-700 transition-colors"
         >
           {posting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
         </button>
+        </div>
       </div>
     </div>
   );
