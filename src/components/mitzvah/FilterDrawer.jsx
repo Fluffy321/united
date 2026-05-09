@@ -23,6 +23,7 @@ export default function FilterDrawer({ open, onClose, initialFilters, onApply })
     <>
       {/* Backdrop */}
       <div
+        className="motion-soft-in"
         onClick={onClose}
         style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
@@ -32,6 +33,7 @@ export default function FilterDrawer({ open, onClose, initialFilters, onApply })
 
       {/* Sheet */}
       <div
+        className="motion-page-enter"
         style={{
           position: 'fixed', left: 0, right: 0, bottom: 0,
           background: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20,

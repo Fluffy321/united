@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, User, Users, MessageCircle, Loader2 } from 'lucide-react';
+import { Home, User, Users, MessageCircle } from 'lucide-react';
 import { MitzvahIcon } from '@/components/common/JIcons';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
@@ -28,6 +28,35 @@ const navItems = [
 ];
 
 /* colorStyles removed — now uses direct active/inactive logic per item */
+
+function InlinePageSkeleton() {
+  return (
+    <div className="mobile-page px-3 py-4 motion-page-enter">
+      <div className="app-card p-4">
+        <div className="skeleton h-5 w-28 rounded-full" />
+        <div className="skeleton mt-4 h-8 w-2/3 rounded-xl" />
+        <div className="skeleton mt-3 h-4 w-full rounded" />
+      </div>
+      <div className="mt-3 space-y-3">
+        {[0, 1, 2].map((item) => (
+          <div key={item} className="app-card p-4">
+            <div className="flex items-center gap-3">
+              <div className="skeleton h-9 w-9 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <div className="skeleton h-3 w-32 rounded" />
+                <div className="skeleton h-3 w-20 rounded" />
+              </div>
+            </div>
+            <div className="mt-4 space-y-2">
+              <div className="skeleton h-3 w-full rounded" />
+              <div className="skeleton h-3 w-5/6 rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
@@ -101,27 +130,27 @@ export default function Layout({ children, currentPageName }) {
             onIndexChange={handleTabChange}
           >
             <AppErrorBoundary inline fallbackMessage="Feed could not load.">
-              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+              <Suspense fallback={<InlinePageSkeleton />}>
                 <Feed />
               </Suspense>
             </AppErrorBoundary>
             <AppErrorBoundary inline fallbackMessage="Mitzvah Circle could not load.">
-              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+              <Suspense fallback={<InlinePageSkeleton />}>
                 <MitzvahCircle isActive={currentIndex === 1} />
               </Suspense>
             </AppErrorBoundary>
             <AppErrorBoundary inline fallbackMessage="Communities could not load.">
-              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+              <Suspense fallback={<InlinePageSkeleton />}>
                 <Communities />
               </Suspense>
             </AppErrorBoundary>
             <AppErrorBoundary inline fallbackMessage="Messages could not load.">
-              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+              <Suspense fallback={<InlinePageSkeleton />}>
                 <Messages />
               </Suspense>
             </AppErrorBoundary>
             <AppErrorBoundary inline fallbackMessage="Profile could not load.">
-              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+              <Suspense fallback={<InlinePageSkeleton />}>
                 <Profile />
               </Suspense>
             </AppErrorBoundary>
@@ -157,7 +186,7 @@ export default function Layout({ children, currentPageName }) {
                         navigate(createPageUrl(item.page));
                       }
                     }}
-                    className={`relative flex min-h-[58px] min-w-[54px] flex-1 flex-col items-center justify-center rounded-xl py-[7px] touch-manipulation transition-all duration-150 ${
+                    className={`motion-press relative flex min-h-[58px] min-w-[54px] flex-1 flex-col items-center justify-center rounded-xl py-[7px] touch-manipulation transition-all duration-150 ${
                       isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-400 active:bg-slate-100'
                     }`}
                   >

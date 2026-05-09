@@ -526,8 +526,8 @@ function CreateRequestModal({ open, onClose, onCreate }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 px-0 sm:items-center sm:px-4" onClick={onClose}>
-      <form onSubmit={submit} className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl sm:rounded-2xl" onClick={(event) => event.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 px-0 sm:items-center sm:px-4 motion-soft-in" onClick={onClose}>
+      <form onSubmit={submit} className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl motion-page-enter sm:rounded-2xl" onClick={(event) => event.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <div>
             <p className="text-[12px] font-black uppercase text-blue-600">New request</p>
@@ -538,7 +538,7 @@ function CreateRequestModal({ open, onClose, onCreate }) {
           </button>
         </div>
 
-        <div className="space-y-3">
+        <div className="motion-stagger space-y-3">
           <label className="block">
             <span className="mb-1 block text-[13px] font-bold text-slate-700">Title</span>
             <input required value={form.title} onChange={(event) => update('title', event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="Example: Pick up groceries" />
@@ -1324,7 +1324,7 @@ export default function MitzvahCircle() {
               <button
                 key={tab.id}
                 onClick={() => changeTab(tab.id)}
-                className={`shrink-0 rounded-xl px-3.5 py-2 text-[13px] font-black transition ${
+                className={`motion-press shrink-0 rounded-xl px-3.5 py-2 text-[13px] font-black transition ${
                   activeTab === tab.id ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-950'
                 }`}
               >
@@ -1350,7 +1350,7 @@ export default function MitzvahCircle() {
           </div>
         )}
 
-        <div className="space-y-3">
+        <div key={activeTab} className="motion-stagger space-y-3">
           {activeTab === 'open' && (
             openRequests.length ? openRequests.map((request) => (
               <RequestCard

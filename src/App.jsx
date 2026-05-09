@@ -99,8 +99,30 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const PageFallback = () => (
-  <div className="fixed inset-0 flex items-center justify-center bg-[#F6F8FB]">
-    <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
+  <div className="fixed inset-0 bg-[#F6F8FB] px-4 pt-5">
+    <div className="mx-auto w-full max-w-2xl space-y-3 motion-page-enter">
+      <div className="app-card p-4">
+        <div className="skeleton h-5 w-32 rounded-full" />
+        <div className="skeleton mt-4 h-8 w-3/4 rounded-xl" />
+        <div className="skeleton mt-3 h-4 w-full rounded" />
+        <div className="skeleton mt-2 h-4 w-5/6 rounded" />
+      </div>
+      {[0, 1, 2].map((item) => (
+        <div key={item} className="app-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="skeleton h-10 w-10 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <div className="skeleton h-3 w-28 rounded" />
+              <div className="skeleton h-3 w-20 rounded" />
+            </div>
+          </div>
+          <div className="mt-4 space-y-2">
+            <div className="skeleton h-3 w-full rounded" />
+            <div className="skeleton h-3 w-4/5 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
   </div>
 );
 

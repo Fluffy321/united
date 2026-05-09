@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 
 // Each tab is mounted on first view and kept mounted (display:none when inactive).
 // This prevents all main pages from running their effects simultaneously on load,
@@ -23,15 +24,19 @@ export default function SwipeableTabs({ activeIndex, children }) {
       {childArray.map((child, i) => {
         if (!everSeen.has(i)) return null; // not mounted yet — no effects run
         return (
-          <div
+          <motion.div
             key={i}
+            initial={false}
+            animate={i === activeIndex ? { opacity: 1, y: 0 } : { opacity: 0, y: 4 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
             style={{
               display: i === activeIndex ? 'block' : 'none',
               minHeight: '100dvh',
+              willChange: i === activeIndex ? 'opacity, transform' : 'auto',
             }}
           >
             {child}
-          </div>
+          </motion.div>
         );
       })}
     </div>
