@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Search, Loader2, MessageCircle, Users, Bot } from 'lucide-react';
 import { dataService, findDirectConversation, createDirectConversation, checkRateLimit, RateLimitError } from '@/services';
+import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 import { canMessage } from '@/lib/messagingPermissions';
 import { AI_AGENT, buildAIConversation } from '@/lib/aiAgent';
 import { toast } from 'sonner';
+
+const DEBOUNCE_MS = 300;
+
+// Escape characters with special meaning in a Postgres ILIKE pattern.
+const escapeIlike = (s) => s.replace(/[\\%_]/g, '\\$&');
 
 export default function UserSearchPanel({ currentUser, onConversationOpened }) {
   const [query, setQuery] = useState('');
@@ -12,33 +18,77 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
   const [actionLoading, setActionLoading] = useState(null);
   const [userGroups, setUserGroups] = useState(null);
 
-  const handleSearch = async (q) => {
-    setQuery(q);
-    if (!q.trim()) { setResults([]); return; }
-    setSearching(true);
+  // Debounce timer and in-flight query tracker (stale-result guard).
+  const debounceRef = useRef(null);
+  const latestQueryRef = useRef('');
+
+  useEffect(() => () => clearTimeout(debounceRef.current), []);
+
+  const runSearch = async (q) => {
     try {
-      const allUsers = await dataService.entities.User.list();
-      const filtered = allUsers.filter(u =>
-        u.id !== currentUser.id &&
-        u.message_settings?.searchable !== false &&
-        u.full_name?.toLowerCase().includes(q.toLowerCase())
-      );
+      let filtered;
 
-      // Inject AI agent if query matches
+      if (shouldUseSupabase && supabase) {
+        // Server-side ILIKE: only rows matching the name prefix travel over the wire.
+        const { data, error } = await supabase
+          .from('public_profiles')
+          .select('id,display_name,avatar_url,username,city,created_at')
+          .ilike('display_name', `%${escapeIlike(q)}%`)
+          .neq('id', currentUser.id)
+          .limit(20);
+        if (error) throw error;
+        filtered = (data || []).map(row => ({
+          ...row,
+          full_name: row.display_name || 'User',
+          created_date: row.created_at,
+        }));
+      } else {
+        // Local/demo mode: bounded fetch, client-side filter.
+        const allUsers = await dataService.entities.User.list('-created_date', 200);
+        const lq = q.toLowerCase();
+        filtered = allUsers.filter(u =>
+          u.id !== currentUser.id &&
+          u.message_settings?.searchable !== false &&
+          u.full_name?.toLowerCase().includes(lq)
+        ).slice(0, 20);
+      }
+
+      // Discard if a newer keystroke has already superseded this fetch.
+      if (q !== latestQueryRef.current) return;
+
+      // Inject AI agent when query matches known keywords.
       const lq = q.toLowerCase();
-      const showAI = ['ai', 'assistant', 'united', 'bot', 'help'].some(kw => kw.includes(lq) || lq.includes(kw));
-      const results = showAI ? [AI_AGENT, ...filtered.slice(0, 19)] : filtered.slice(0, 20);
-      setResults(results);
+      const showAI = ['ai', 'assistant', 'united', 'bot', 'help'].some(
+        kw => kw.includes(lq) || lq.includes(kw)
+      );
+      setResults(showAI ? [AI_AGENT, ...filtered.slice(0, 19)] : filtered.slice(0, 20));
 
-      // Lazily load current user's groups for mutual count
+      // Lazily load current user's groups for mutual community counts.
       if (!userGroups) {
         const memberships = await dataService.entities.GroupMember.filter({ user_id: currentUser.id });
         setUserGroups(new Set(memberships.map(m => m.group_id)));
       }
     } catch {
-      toast.error('Search failed');
+      if (q === latestQueryRef.current) toast.error('Search failed');
+    } finally {
+      if (q === latestQueryRef.current) setSearching(false);
     }
-    setSearching(false);
+  };
+
+  const handleSearch = (q) => {
+    setQuery(q);
+    clearTimeout(debounceRef.current);
+
+    if (!q.trim()) {
+      latestQueryRef.current = '';
+      setResults([]);
+      setSearching(false);
+      return;
+    }
+
+    latestQueryRef.current = q;
+    setSearching(true);
+    debounceRef.current = setTimeout(() => runSearch(q), DEBOUNCE_MS);
   };
 
   const handleUserClick = async (recipient) => {

@@ -25,10 +25,20 @@ const SUPABASE_ENTITY_TABLES = {
   FeedEngagementEvent: 'feed_engagement_events',
   DailyFeedPrompt: 'daily_feed_prompts',
   FiveTownsBrief: 'five_towns_briefs',
+  // Admin tables — migration 008_admin_rls.sql + 013_admin_entity_columns.sql
+  Report: 'reports',
+  ClaimRequest: 'claim_requests',
+  ModerationAuditLog: 'moderation_audit_logs',
   // HelpOffer / MitzvahSignup intentionally omitted: both map to mitzvah_offers,
   // but the app sends user_id while the DB column is volunteer_id. Adding the
-  // mapping without a field translation would cause silent localStorage fallbacks
-  // on every write. Fix by adding a user_id compat column to mitzvah_offers first.
+  // mapping without a field translation would cause silent data loss on every
+  // write. Fix: add a user_id compat column to mitzvah_offers, then map here.
+  //
+  // All other entities (MessageRequest, GroupMember, Shul, UserStreak, etc.) are
+  // intentionally unmapped — their DB tables do not exist yet. Each unmapped
+  // entity will throw clearly in production rather than silently using localStorage.
+  // See the UNMAPPED ENTITIES section in base44Client.js for the full list and
+  // the required migrations.
 };
 
 const PUBLIC_PROFILE_ENTITIES = new Set(['User', 'Profile']);
@@ -394,6 +404,7 @@ const toDbPatch = (data = {}) => {
   delete patch.updated_date;
   delete patch.full_name;
   delete patch.email;
+  delete patch.role;
   delete patch.cityPreset;
   return patch;
 };
@@ -495,13 +506,128 @@ const normalizeRealtimeEvent = (event = {}) => {
   };
 };
 
+// ─── Unmapped entity guard ────────────────────────────────────────────────────
+//
+// In Supabase mode, any entity not listed in SUPABASE_ENTITY_TABLES has no
+// backing table.  Silently falling back to localStorage in production means
+// users believe their data was saved when it was not.
+//
+// Instead:
+//   • DEV  — warn once per entity name and return the localStorage API so local
+//             development isn't blocked by missing migrations.
+//   • PROD — every CRUD method throws a clear error.  subscribe() is a no-op
+//             because subscription failures are harder to surface in the UI.
+//
+// Required DB tables and the entities that need them:
+//
+//   MessageRequest    → message_requests  (messaging permissions flow)
+//   GroupMember       → group_members     (community groups)
+//   Shul              → shuls             (shul directory)
+//   ShulMember        → shul_members
+//   ShulPost          → shul_posts
+//   ShulSchedule      → shul_schedules
+//   UserStreak        → user_streaks      (gamification)
+//   MitzvahLog        → mitzvah_logs
+//   MitzvahPoints     → mitzvah_points
+//   MitzvahSignup     → mitzvah_offers    (+ user_id column — see note above)
+//   HelpOffer         → mitzvah_offers    (same field-mismatch blocker)
+//   Block             → user_blocks
+//   UserConnection    → user_connections
+//   NotificationPreference → notification_preferences
+//   CommunityEvent    → community_events
+//   CommunityEventRSVP → community_event_rsvps
+//   CommunityFollow   → community_follows
+//   CommunityGroup    → community_groups
+//   CommunityGroupChat → community_group_chats
+//   GroupDiscussion   → group_discussions
+//   GroupJoinRequest  → group_join_requests
+//   GroupPost         → group_posts
+//   GroupResource     → group_resources
+//   Bookmark          → bookmarks
+//   SavedSearch       → saved_searches
+//   PollVote          → poll_votes
+//   BusinessListing   → business_listings
+//   BusinessReview    → business_reviews
+//   Organization      → organizations
+//   RideRequest       → ride_requests
+//   MealSlot          → meal_slots
+//   MealTrainRequest  → meal_train_requests
+//   MinyanAttendance  → minyan_attendances
+//   RefuahDavening    → refuah_davenings
+//   RefuahRequest     → refuah_requests
+//   Yahrzeit          → yahrzeits
+//   YahrzeitCandle    → yahrzeit_candles
+//   NewsItem          → news_items
+//   NewsSource        → news_sources
+//   NewsletterLog     → newsletter_logs
+//   NewsletterSubscriber → newsletter_subscribers
+//   VolunteerOpportunity → volunteer_opportunities
+//   VolunteerSignup   → volunteer_signups
+//   MitzvahAction     → mitzvah_actions
+//   MitzvahOpportunity → mitzvah_opportunities
+//   EventAttendee     → event_attendees
+//   RSVP              → rsvps
+//   InviteLink        → invite_links
+//   Like              → (use togglePostLike RPC — not a generic entity)
+//   UserConnection    → user_connections
+//   WeeklyStats       → weekly_stats
+//   Transaction       → transactions
+//   ChalkboardPost    → chalkboard_posts
+//   CommunityAlert    → community_alerts
+//   CommunityListing  → community_listings
+//   CommunityPost     → community_posts
+//   CommunityResource → community_resources
+//   DailyPrompt       → daily_prompts
+//   DiscussionComment → discussion_comments
+//   DiscussionLike    → discussion_likes
+//   SubGroup          → sub_groups
+//   SubGroupMember    → sub_group_members
+
+const _warnedUnmapped = new Set();
+
+const createUnmappedEntityApi = (entityName) => {
+  if (!_warnedUnmapped.has(entityName)) {
+    _warnedUnmapped.add(entityName);
+    const msg =
+      `[JUnited] Entity "${entityName}" has no SUPABASE_ENTITY_TABLES mapping. ` +
+      (import.meta.env.DEV
+        ? 'Using localStorage in dev — add a migration + mapping before shipping this feature.'
+        : 'All reads/writes will throw in production. See base44Client.js for required migrations.');
+    import.meta.env.DEV ? console.warn(msg) : console.error(msg);
+  }
+
+  if (import.meta.env.DEV) {
+    return createEntityApi(entityName);
+  }
+
+  const throwUnmapped = () => {
+    throw new Error(
+      `Entity "${entityName}" is not mapped to a Supabase table. ` +
+      `A migration and a SUPABASE_ENTITY_TABLES entry are required before this feature can persist data in production.`
+    );
+  };
+
+  return {
+    list: throwUnmapped,
+    filter: throwUnmapped,
+    get: throwUnmapped,
+    create: throwUnmapped,
+    bulkCreate: throwUnmapped,
+    update: throwUnmapped,
+    delete: throwUnmapped,
+    subscribe: () => () => {},
+  };
+};
+
 const createSupabaseEntityApi = (entityName) => {
   const table = SUPABASE_ENTITY_TABLES[entityName];
+
+  if (!supabase) return createEntityApi(entityName);
+  if (!table) return createUnmappedEntityApi(entityName);
+
   const readTable = PUBLIC_PROFILE_ENTITIES.has(entityName) ? 'public_profiles' : table;
   const readSelect = PUBLIC_PROFILE_ENTITIES.has(entityName) ? PUBLIC_PROFILE_SELECT : '*';
   const localApi = createEntityApi(entityName);
-
-  if (!table || !supabase) return localApi;
 
   return {
     async list(sort, limit = 100, offset = 0) {

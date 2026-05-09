@@ -29,8 +29,8 @@ export default function NotificationBell({ userId }) {
     queryKey: ['notification-count', userId],
     queryFn: () => notificationsService.unreadCount(userId),
     enabled: !!userId,
-    refetchInterval: 30000,
-    staleTime: 15000,
+    refetchInterval: 120_000,
+    staleTime: 60_000,
   });
 
   return (

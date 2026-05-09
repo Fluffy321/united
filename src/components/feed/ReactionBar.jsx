@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Heart } from 'lucide-react';
-import { postsService } from '@/services';
+import { postsService, checkRateLimit, RateLimitError } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -38,6 +38,7 @@ export default function ReactionBar({ postId, currentUser }) {
       if (existing) {
         await postsService.deleteReaction(existing.id);
       } else {
+        await checkRateLimit('react');
         await postsService.createReaction({
           post_id: postId,
           user_id: currentUser.id,
@@ -49,7 +50,10 @@ export default function ReactionBar({ postId, currentUser }) {
       queryClient.invalidateQueries({ queryKey: ['post-reactions', postId] });
       queryClient.invalidateQueries({ queryKey: ['user-reactions', postId, currentUser?.id] });
     },
-    onError: () => toast.error('Failed to update'),
+    onError: (err) => {
+      if (err instanceof RateLimitError) toast.error(err.message);
+      else toast.error('Failed to update');
+    },
   });
 
   const totalLikes = appParams.hasBackendConfig ? reactions.filter(r => r.reaction_type === 'like').length : localLikes;

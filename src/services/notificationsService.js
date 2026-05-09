@@ -1,4 +1,5 @@
 import dataService from './dataService';
+import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 
 const nowISO = () => new Date().toISOString();
 
@@ -43,7 +44,20 @@ export const notificationsService = {
 
   async unreadCount(userId) {
     if (!userId) return 0;
-    const notifications = await dataService.entities.Notification.filter({ user_id: userId, is_read: false }, '-created_date', 200);
+    if (shouldUseSupabase && supabase) {
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('is_read', false);
+      if (error) throw error;
+      return count ?? 0;
+    }
+    const notifications = await dataService.entities.Notification.filter(
+      { user_id: userId, is_read: false },
+      '-created_date',
+      200
+    );
     return notifications.length;
   },
 
