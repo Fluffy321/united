@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, Upload } from 'lucide-react';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 
 const CATEGORIES = [
@@ -18,7 +19,7 @@ const CATEGORIES = [
 
 export default function CreateBusinessListing() {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [form, setForm] = useState({
@@ -26,10 +27,6 @@ export default function CreateBusinessListing() {
     address: '', city: '', phone: '', website: '', email: '',
     hours: '', kosher_cert: '', logo_url: '',
   });
-
-  useEffect(() => {
-    dataService.auth.me().then(setCurrentUser).catch(() => dataService.auth.redirectToLogin());
-  }, []);
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
 

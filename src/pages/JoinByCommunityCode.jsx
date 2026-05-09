@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Users, MapPin, CheckCircle2, ArrowRight, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,9 +10,9 @@ export default function JoinByCommunityCode() {
   const code = params.get('code');
   const navigate = useNavigate();
 
+  const { user: currentUser } = useAuth();
   const [invite, setInvite] = useState(null);
   const [community, setCommunity] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
   const [status, setStatus] = useState('loading'); // loading | preview | joining | joined | error | expired
   const [alreadyMember, setAlreadyMember] = useState(false);
   const [inviterName, setInviterName] = useState('');
@@ -19,14 +20,10 @@ export default function JoinByCommunityCode() {
   useEffect(() => {
     if (!code) { setStatus('error'); return; }
     loadInvite();
-  }, []);
+  }, [currentUser?.id]);
 
   const loadInvite = async () => {
     try {
-      const [me] = await Promise.allSettled([dataService.auth.me()]);
-      const user = me.status === 'fulfilled' ? me.value : null;
-      setCurrentUser(user);
-
       const invites = await dataService.entities.InviteLink.filter({ code });
       const inv = invites[0];
 
@@ -49,9 +46,9 @@ export default function JoinByCommunityCode() {
       if (!comm[0]) { setStatus('error'); return; }
       setCommunity(comm[0]);
 
-      if (user) {
+      if (currentUser) {
         const existing = await dataService.entities.UserCommunity.filter({
-          user_id: user.id,
+          user_id: currentUser.id,
           community_id: inv.community_id
         });
         setAlreadyMember(existing.length > 0);

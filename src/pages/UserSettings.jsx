@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Upload, Save, Loader2, Bell, Lock, Eye, MapPin, Check } from 'lucide-react';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 
 export default function UserSettings() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoadingAuth: loading } = useAuth();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -23,27 +23,17 @@ export default function UserSettings() {
     weekly_digest: true,
   });
 
+  const formInitialized = useRef(false);
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const currentUser = await dataService.auth.me();
-        setUser(currentUser);
-        setBio(currentUser.bio || '');
-        setAvatarUrl(currentUser.avatar_url || '');
-        setCityPreset(currentUser.cityPreset || 'Five Towns');
-        if (currentUser.notification_preferences) {
-          setNotifications(currentUser.notification_preferences);
-        }
-      } catch (error) {
-        console.error('Failed to load user:', error);
-        toast.error('Failed to load user profile');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
+    if (!user || formInitialized.current) return;
+    formInitialized.current = true;
+    setBio(user.bio || '');
+    setAvatarUrl(user.avatar_url || '');
+    setCityPreset(user.cityPreset || 'Five Towns');
+    if (user.notification_preferences) {
+      setNotifications(user.notification_preferences);
+    }
+  }, [user?.id]);
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];

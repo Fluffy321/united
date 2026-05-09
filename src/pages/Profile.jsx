@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import ReportModal from '@/components/common/ReportModal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
+import QueryError from '@/components/common/QueryError';
 import { parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import ModernProfileHeader from '@/components/profile/ModernProfileHeader.jsx';
 import ModernStatsRow from '@/components/profile/ModernStatsRow.jsx';
@@ -24,8 +26,9 @@ import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
 
 export default function Profile() {
   const [searchParams] = useSearchParams();
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [profileUser, setProfileUser] = useState(null);
+  const [profileLoadError, setProfileLoadError] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   const [showInterestPicker, setShowInterestPicker] = useState(false);
@@ -33,38 +36,38 @@ export default function Profile() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    setProfileLoadError(false);
     loadProfile();
-  }, [searchParams]);
+  }, [searchParams, currentUser?.id]);
 
 
   const loadProfile = async () => {
     try {
-      const user = await dataService.auth.me();
-      setCurrentUser(user);
-      
       const profileId = searchParams.get('id');
-      
-      if (profileId && profileId !== user.id) {
+
+      if (!currentUser) return;
+
+      if (profileId && profileId !== currentUser.id) {
         try {
           const users = await dataService.entities.User.filter({ id: profileId });
           if (users[0]) {
             setProfileUser(users[0]);
             setIsOwnProfile(false);
           } else {
-            setProfileUser(user);
+            setProfileUser(currentUser);
             setIsOwnProfile(true);
           }
         } catch {
-          setProfileUser(user);
+          setProfileUser(currentUser);
           setIsOwnProfile(true);
         }
       } else {
-        setProfileUser(user);
+        setProfileUser(currentUser);
         setIsOwnProfile(true);
       }
     } catch (e) {
-      console.warn('Profile: not authenticated', e?.message);
-      dataService.auth.redirectToLogin();
+      console.warn('Profile: error loading profile', e?.message);
+      setProfileLoadError(true);
     }
   };
 
@@ -72,7 +75,6 @@ export default function Profile() {
     queryKey: ['user-posts', profileUser?.id],
     queryFn: () => dataService.entities.UnifiedPost.filter({ user_id: profileUser.id }, '-created_date', 10),
     enabled: !!profileUser,
-    gcTime: 0
   });
 
   const { data: userStreak } = useQuery({
@@ -84,7 +86,6 @@ export default function Profile() {
     enabled: !!profileUser,
     staleTime: 0,
     retry: 1,
-    gcTime: 0
   });
 
   const { data: mitzvahLogs = [] } = useQuery({
@@ -96,7 +97,6 @@ export default function Profile() {
     enabled: !!profileUser && isOwnProfile,
     staleTime: 0,
     retry: 1,
-    gcTime: 0
   });
 
   const { data: weeklyMitzvahCount = 0 } = useQuery({
@@ -120,7 +120,6 @@ export default function Profile() {
     enabled: !!profileUser && isOwnProfile,
     staleTime: 0,
     retry: 1,
-    gcTime: 0
   });
 
   const { data: mitzvahPoints = 0 } = useQuery({
@@ -132,7 +131,6 @@ export default function Profile() {
     enabled: !!profileUser,
     staleTime: 0,
     retry: 1,
-    gcTime: 0
   });
 
   const { data: userCommunities = [] } = useQuery({
@@ -148,7 +146,6 @@ export default function Profile() {
     enabled: !!profileUser,
     staleTime: 60000,
     retry: 1,
-    gcTime: 0
   });
 
   const handleMessage = async () => {
@@ -181,6 +178,19 @@ export default function Profile() {
     toast.success('User blocked');
     navigate(createPageUrl('Feed'));
   };
+
+  if (profileLoadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          <QueryError
+            message="Profile could not load."
+            onRetry={() => { setProfileLoadError(false); loadProfile(); }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (!profileUser) {
     return (

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
 
 // Vanity slug → real community ID mapping
@@ -13,11 +13,7 @@ export default function CommunityPage() {
   const { communityId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentUser, setCurrentUser] = useState(null);
-
-  useEffect(() => {
-    dataService.auth.me().then(setCurrentUser).catch(() => {});
-  }, []);
+  const { user: currentUser } = useAuth();
 
   // Resolve vanity slug to real ID, or use the raw ID directly
   const resolvedId = SLUG_MAP[communityId] || communityId;

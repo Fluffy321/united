@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Users, MessageCircle, Search, ChevronDown, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -125,7 +126,7 @@ export default function MembersListTab({ communityId }) {
   const [subgroups, setSubgroups] = useState([]);
   const [sgMemberships, setSgMemberships] = useState([]); // SubGroupMember records
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [messagingId, setMessagingId] = useState(null);
   const [search, setSearch] = useState('');
   const [segment, setSegment] = useState('all');
@@ -133,10 +134,6 @@ export default function MembersListTab({ communityId }) {
   const [selectedSubgroup, setSelectedSubgroup] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    dataService.auth.me().then(setCurrentUser).catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (!communityId) return;

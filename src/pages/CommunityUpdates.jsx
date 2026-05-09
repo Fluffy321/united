@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Calendar, RefreshCw } from 'lucide-react';
 import RssErrorBlock from '@/components/updates/RssErrorBlock';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow, isToday, isTomorrow, format } from 'date-fns';
 import ProfileSetup from '@/components/profile/ProfileSetup';
@@ -9,22 +10,9 @@ import ArticleViewer from '@/components/updates/ArticleViewer';
 import { toast } from 'sonner';
 
 export default function CommunityUpdates() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [selectedNewsSource, setSelectedNewsSource] = useState('yeshivaworld');
   const [selectedArticle, setSelectedArticle] = useState(null);
-
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
-    try {
-      const user = await dataService.auth.me();
-      setCurrentUser(user);
-    } catch (e) {
-      setCurrentUser({ id: 'guest', full_name: 'Guest', display_name: 'Guest', role: 'user', is_profile_complete: true });
-    }
-  };
 
   const { data: recentPosts = [] } = useQuery({
     queryKey: ['recent-community-posts'],

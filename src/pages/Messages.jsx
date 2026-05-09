@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle, Inbox, Loader2, MessageCircle, Plus, Sparkles, Users } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import ChatView from '@/components/messages/ChatView';
 import ConversationList from '@/components/messages/ConversationList';
@@ -15,7 +16,7 @@ import { buildAIConversation } from '@/lib/aiAgent';
 export default function Messages() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
@@ -25,7 +26,6 @@ export default function Messages() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    loadUser();
     checkUrlParams();
   }, []);
 
@@ -45,19 +45,6 @@ export default function Messages() {
     });
     return unsubscribe;
   }, [currentUser?.id]);
-
-  const loadUser = async () => {
-    try {
-      const user = await dataService.auth.me();
-      setCurrentUser(user);
-    } catch (e) {
-      setCurrentUser({
-        id: 'local-demo',
-        full_name: 'Local Demo User',
-        display_name: 'Demo',
-      });
-    }
-  };
 
   const checkUrlParams = () => {
     const params = new URLSearchParams(window.location.search);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
@@ -28,7 +29,7 @@ export default function ShulPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [shul, setShul] = useState(null);
   const [membership, setMembership] = useState(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -64,13 +65,13 @@ export default function ShulPage() {
   }, [shulId, navigate]);
 
   const loadData = async () => {
-    const user = await dataService.auth.me();
-    setCurrentUser(user);
     if (shulId) {
       const shuls = await dataService.entities.Shul.filter({ id: shulId });
       if (shuls.length > 0) setShul(shuls[0]);
-      const memberships = await dataService.entities.ShulMember.filter({ shul_id: shulId, user_id: user.id });
-      if (memberships.length > 0) setMembership(memberships[0]);
+      if (currentUser) {
+        const memberships = await dataService.entities.ShulMember.filter({ shul_id: shulId, user_id: currentUser.id });
+        if (memberships.length > 0) setMembership(memberships[0]);
+      }
     }
   };
 

@@ -21,16 +21,10 @@ export default function GroupAnalyticsDashboard({ group, currentUser, isAdmin })
     loadMemberEmails();
   }, []);
 
-  const checkPremiumStatus = async () => {
-    try {
-      const user = await dataService.auth.me();
-      const subscription = user.subscription_status || 'free';
-      setIsPremium(subscription === 'premium');
-    } catch (e) {
-      setIsPremium(false);
-    } finally {
-      setCheckingPremium(false);
-    }
+  const checkPremiumStatus = () => {
+    const subscription = currentUser?.subscription_status || 'free';
+    setIsPremium(subscription === 'premium');
+    setCheckingPremium(false);
   };
 
   const loadMemberEmails = async () => {

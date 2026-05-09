@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -23,6 +23,7 @@ import {
 import { toast } from 'sonner';
 import { dataService } from '@/services';
 import { createPageUrl } from '@/utils';
+import { useAuth } from '@/lib/AuthContext';
 
 const interestOptions = [
   'Torah & Learning',
@@ -77,7 +78,7 @@ const defaultSettings = {
 };
 
 export default function Settings() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser, logout } = useAuth();
   const [activeSection, setActiveSection] = useState('profile');
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -92,43 +93,36 @@ export default function Settings() {
     ...defaultSettings,
   });
 
+  const formInitialized = useRef(false);
   useEffect(() => {
-    let mounted = true;
-
-    dataService.auth.me().then((user) => {
-      if (!mounted) return;
-      setCurrentUser(user);
-      setForm({
-        display_name: user.display_name || user.full_name || 'Local Demo User',
-        bio: user.bio || 'Building stronger Jewish community connections.',
-        cityPreset: user.cityPreset || 'Five Towns',
-        email: user.email || 'demo@junited.local',
-        avatar_url: user.avatar_url || '',
-        interests: user.interests || ['Chesed', 'Events', 'Community'],
-        notification_settings: {
-          ...defaultSettings.notification_settings,
-          ...(user.notification_settings || {}),
-        },
-        message_settings: {
-          ...defaultSettings.message_settings,
-          ...(user.message_settings || {}),
-        },
-        app_settings: {
-          ...defaultSettings.app_settings,
-          ...(user.app_settings || {}),
-        },
-        community_settings: {
-          ...defaultSettings.community_settings,
-          ...(user.community_settings || {}),
-          primaryNeighborhood: user.cityPreset || defaultSettings.community_settings.primaryNeighborhood,
-        },
-      });
+    if (!currentUser || formInitialized.current) return;
+    formInitialized.current = true;
+    setForm({
+      display_name: currentUser.display_name || currentUser.full_name || 'Local Demo User',
+      bio: currentUser.bio || 'Building stronger Jewish community connections.',
+      cityPreset: currentUser.cityPreset || 'Five Towns',
+      email: currentUser.email || 'demo@junited.local',
+      avatar_url: currentUser.avatar_url || '',
+      interests: currentUser.interests || ['Chesed', 'Events', 'Community'],
+      notification_settings: {
+        ...defaultSettings.notification_settings,
+        ...(currentUser.notification_settings || {}),
+      },
+      message_settings: {
+        ...defaultSettings.message_settings,
+        ...(currentUser.message_settings || {}),
+      },
+      app_settings: {
+        ...defaultSettings.app_settings,
+        ...(currentUser.app_settings || {}),
+      },
+      community_settings: {
+        ...defaultSettings.community_settings,
+        ...(currentUser.community_settings || {}),
+        primaryNeighborhood: currentUser.cityPreset || defaultSettings.community_settings.primaryNeighborhood,
+      },
     });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  }, [currentUser]);
 
   const activeLabel = useMemo(
     () => sections.find((section) => section.id === activeSection)?.label || 'Settings',
@@ -189,9 +183,9 @@ export default function Settings() {
     setIsSaving(false);
   };
 
-  const handleLogout = () => {
-    dataService.auth.logout();
-    toast.success('Logged out locally');
+  const handleLogout = async () => {
+    await logout();
+    toast.success('Logged out');
   };
 
   const handleDeleteAccount = async () => {

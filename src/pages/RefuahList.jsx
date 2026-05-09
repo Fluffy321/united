@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Plus, RefreshCw, Loader2, HeartHandshake } from 'lucide-react';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -30,9 +31,7 @@ const DEMO_REFUAH_REQUESTS = [
 function AddRefuahForm({ onSave, onCancel, communityId }) {
   const [form, setForm] = useState({ patient_name: '', relationship: '' });
   const [saving, setSaving] = useState(false);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => { dataService.auth.me().then(setUser).catch(() => {}); }, []);
+  const { user } = useAuth();
 
   const handleSave = async () => {
     if (!form.patient_name.trim()) { toast.error('Name is required'); return; }
@@ -136,18 +135,10 @@ function RefuahCard({ request, currentUser, onDaven, onRenew, isDavening }) {
 }
 
 export default function RefuahList({ communityId }) {
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [localRequests, setLocalRequests] = useState(DEMO_REFUAH_REQUESTS);
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!appParams.hasBackendConfig) {
-      setUser({ id: 'local-demo', full_name: 'Local demo' });
-      return;
-    }
-    dataService.auth.me().then(setUser).catch(() => {});
-  }, []);
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['refuah-requests', communityId],

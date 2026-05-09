@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar, MapPin, Clock, Loader2 } from 'lucide-react';
 
@@ -16,7 +17,7 @@ function communityColor(communityId, allCommunityIds) {
 
 export default function CommunityCalendar() {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [events, setEvents] = useState([]);
   const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,14 +27,12 @@ export default function CommunityCalendar() {
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      let user = null;
-      try { user = await dataService.auth.me(); setCurrentUser(user); } catch {}
 
       // Get communities the user is a member of (or all if not logged in)
       let communityIds = [];
       let communityList = [];
-      if (user) {
-        const memberships = await dataService.entities.UserCommunity.filter({ user_id: user.id });
+      if (currentUser) {
+        const memberships = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id });
         communityIds = memberships.map(m => m.community_id).filter(Boolean);
         if (communityIds.length > 0) {
           // Fetch community names for display
@@ -56,7 +55,7 @@ export default function CommunityCalendar() {
       setLoading(false);
     };
     init();
-  }, []);
+  }, [currentUser?.id]);
 
   // Build a map: dateString → events[]
   const eventsByDay = useMemo(() => {

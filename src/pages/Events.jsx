@@ -3,11 +3,13 @@ import { Calendar, MapPin, Clock, Plus, ChevronLeft, Users, Ticket } from 'lucid
 import PaymentModal from '@/components/payments/PaymentModal';
 import EventSummaryButton from '@/components/events/EventSummaryButton';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO, isBefore, startOfToday } from 'date-fns';
 import { toast } from 'sonner';
 import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
+import QueryError from '@/components/common/QueryError';
 
 const FILTERS = [
   { id: 'upcoming', label: '📅 Upcoming' },
@@ -27,14 +29,10 @@ export default function Events() {
   const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState('upcoming');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [paymentEvent, setPaymentEvent] = useState(null);
 
-  React.useEffect(() => {
-    dataService.auth.me().then(setCurrentUser).catch(() => {});
-  }, []);
-
-  const { data: events = [], isLoading } = useQuery({
+  const { data: events = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['all-events'],
     queryFn: () => dataService.entities.UnifiedPost.filter({ type: 'event' }, '-created_date', 80),
     staleTime: 60000,
@@ -62,7 +60,8 @@ export default function Events() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-rsvps'] });
       queryClient.invalidateQueries({ queryKey: ['all-events'] });
-    }
+    },
+    onError: () => toast.error('Could not update your RSVP. Please try again.'),
   });
 
   const rsvpSet = new Set(rsvps.map(r => r.post_id));
@@ -132,6 +131,8 @@ export default function Events() {
               <div className="skeleton h-3 w-1/3 rounded" />
             </div>
           ))
+        ) : isError ? (
+          <QueryError message="Events could not load." onRetry={refetch} />
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
             <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />

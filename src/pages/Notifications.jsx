@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft, Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2, Megaphone, Calendar, Loader2, AtSign } from 'lucide-react';
-import { dataService, notificationsService } from '@/services';
+import { notificationsService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow, parseISO, isToday, isYesterday, format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import QueryError from '@/components/common/QueryError';
 
 const TYPE_CONFIG = {
   like: { icon: Heart, tone: 'bg-red-50 text-red-500', label: 'Liked your post' },
@@ -51,15 +54,11 @@ function groupByDate(notifications) {
 
 export default function Notifications() {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [filter, setFilter] = useState('all');
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    dataService.auth.me().then(setCurrentUser).catch(() => {});
-  }, []);
-
-  const { data: notifications = [], isLoading } = useQuery({
+  const { data: notifications = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['notifications-page', currentUser?.id],
     queryFn: () => notificationsService.listForUser(currentUser.id),
     enabled: !!currentUser,
@@ -75,13 +74,18 @@ export default function Notifications() {
       queryClient.invalidateQueries({ queryKey: ['notifications-page', currentUser?.id] });
       queryClient.invalidateQueries({ queryKey: ['notification-count', currentUser?.id] });
     },
+    onError: () => toast.error('Could not mark notifications as read.'),
   });
 
   const markOneRead = async (notif) => {
     if (!notif.is_read) {
-      await notificationsService.markRead(notif.id);
-      queryClient.invalidateQueries({ queryKey: ['notifications-page', currentUser?.id] });
-      queryClient.invalidateQueries({ queryKey: ['notification-count', currentUser?.id] });
+      try {
+        await notificationsService.markRead(notif.id);
+        queryClient.invalidateQueries({ queryKey: ['notifications-page', currentUser?.id] });
+        queryClient.invalidateQueries({ queryKey: ['notification-count', currentUser?.id] });
+      } catch {
+        // non-blocking — continue navigation even if marking fails
+      }
     }
     if (notif.type === 'new_message' && notif.conversation_id) {
       navigate(`/Messages?conversation=${notif.conversation_id}`);
@@ -157,6 +161,10 @@ export default function Notifications() {
                 </div>
               </div>
             ))}
+          </div>
+        ) : isError ? (
+          <div className="mt-4">
+            <QueryError message="Notifications could not load." onRetry={refetch} />
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">

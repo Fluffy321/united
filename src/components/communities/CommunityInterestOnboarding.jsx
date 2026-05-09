@@ -56,23 +56,25 @@ export default function CommunityInterestOnboarding({ currentUser, allCommunitie
       return;
     }
 
-    await Promise.all(finalJoin.map(async (community) => {
-      try {
-        await dataService.entities.UserCommunity.create({
-          user_id: currentUser.id,
-          community_id: community.id,
-          role: 'Member',
-          user_name: currentUser.full_name || currentUser.display_name,
-        });
-        await dataService.entities.Community.update(community.id, {
-          follower_count: (community.follower_count || 0) + 1,
-        }).catch(() => {});
-      } catch {}
+    const results = await Promise.allSettled(finalJoin.map(async (community) => {
+      await dataService.entities.UserCommunity.create({
+        user_id: currentUser.id,
+        community_id: community.id,
+        role: 'Member',
+        user_name: currentUser.full_name || currentUser.display_name,
+      });
+      await dataService.entities.Community.update(community.id, {
+        follower_count: (community.follower_count || 0) + 1,
+      }).catch(() => {});
     }));
+
+    const joined = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.length - joined;
 
     setDone(true);
     setJoining(false);
-    toast.success(`Joined ${finalJoin.length} communities! 🎉`);
+    if (joined > 0) toast.success(`Joined ${joined} ${joined === 1 ? 'community' : 'communities'}! 🎉`);
+    if (failed > 0) toast.error(`${failed} ${failed === 1 ? 'community' : 'communities'} could not be joined. You can try from the Communities tab.`);
     setTimeout(() => onJoined(finalJoin.map(c => c.id)), 600);
   };
 

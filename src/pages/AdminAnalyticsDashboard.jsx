@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { Loader2, TrendingUp, Users, MessageSquare, Calendar, Activity, AlertTriangle, Download, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { subDays, format, startOfDay } from 'date-fns';
@@ -69,18 +70,15 @@ function buildDailyBuckets(items, dateField, days = 30) {
 }
 
 export default function AdminAnalyticsDashboard() {
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('platform');
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    dataService.auth.me().then(u => {
-      setUser(u);
-      if (u?.role === 'admin') loadData();
-      else setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
+    if (user?.role === 'admin') loadData();
+    else setLoading(false);
+  }, [user?.role]);
 
   const loadData = async () => {
     try {

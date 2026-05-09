@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Download, Trash2, Loader2, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react';
 import { dataService, storageService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 
 export default function PrivacyRights() {
-  const [user, setUser] = useState(null);
-  const [loadingUser, setLoadingUser] = useState(true);
+  const { user, isLoadingAuth: loadingUser } = useAuth();
   const [exporting, setExporting] = useState(false);
   const [exportDone, setExportDone] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -17,12 +17,8 @@ export default function PrivacyRights() {
     return stored.analytics === false;
   });
 
-  React.useEffect(() => {
-    dataService.auth.me().then(u => { setUser(u); setLoadingUser(false); }).catch(() => setLoadingUser(false));
-  }, []);
 
   const handleExport = async () => {
-    if (!user) { dataService.auth.redirectToLogin(window.location.href); return; }
     setExporting(true);
     try {
       // Collect all user data

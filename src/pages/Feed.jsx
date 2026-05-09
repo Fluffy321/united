@@ -1,6 +1,11 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+<<<<<<< HEAD
 import { dataService, feedRetentionService, storageService } from '@/services';
+=======
+import { dataService, storageService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
+>>>>>>> 139a5e5d02b788ebf9a88e45c92d8ced640439ec
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
@@ -450,7 +455,7 @@ export default function Feed() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('trending');
   const [primaryNetwork, setPrimaryNetwork] = useState(LOCAL_NETWORKS[0]);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('All');
@@ -487,19 +492,10 @@ export default function Feed() {
   const [dailyPrompt, setDailyPrompt] = useState(null);
 
   useEffect(() => {
-    if (!appParams.hasBackendConfig) {
-      setCurrentUser({ id: 'local-demo', full_name: 'Local demo', cityPreset: 'Five Towns', interests: ['chesed', 'events'] });
-      return;
-    }
-    dataService.auth.me().then(u => {
-      setCurrentUser(u);
-      // Load saved primary network from user profile
-      if (u?.cityPreset) {
-        const net = LOCAL_NETWORKS.find(n => n.cityPreset === u.cityPreset);
-        if (net) setPrimaryNetwork(net);
-      }
-    }).catch(() => {});
-  }, []);
+    if (!currentUser?.cityPreset) return;
+    const net = LOCAL_NETWORKS.find(n => n.cityPreset === currentUser.cityPreset);
+    if (net) setPrimaryNetwork(net);
+  }, [currentUser?.cityPreset]);
 
   // Request geolocation when user switches to nearby tab
   useEffect(() => {

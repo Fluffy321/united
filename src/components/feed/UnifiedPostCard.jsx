@@ -52,14 +52,18 @@ function BookmarkButton({ postId, currentUser }) {
       toast.success(bookmarked ? 'Post unsaved locally' : 'Post saved locally');
       return;
     }
-    if (bookmarked) {
-      const existing = await dataService.entities.Bookmark.filter({ post_id: postId, user_id: currentUser.id });
-      if (existing[0]) await dataService.entities.Bookmark.delete(existing[0].id);
-      setBookmarked(false);
-    } else {
-      await dataService.entities.Bookmark.create({ post_id: postId, user_id: currentUser.id });
-      setBookmarked(true);
-      toast.success('Post saved!');
+    try {
+      if (bookmarked) {
+        const existing = await dataService.entities.Bookmark.filter({ post_id: postId, user_id: currentUser.id });
+        if (existing[0]) await dataService.entities.Bookmark.delete(existing[0].id);
+        setBookmarked(false);
+      } else {
+        await dataService.entities.Bookmark.create({ post_id: postId, user_id: currentUser.id });
+        setBookmarked(true);
+        toast.success('Post saved!');
+      }
+    } catch {
+      toast.error('Could not update bookmark. Please try again.');
     }
     setLoading(false);
   };

@@ -450,15 +450,33 @@ const updateProfileWithSchemaRetry = async (userId, patch) => {
   throw new Error('Could not update profile because Supabase schema cache is missing required columns.');
 };
 
-const runWithLocalFallback = async (action, fallback, label) => {
+const runWithLocalFallback = async (action, fallback, label, isWrite = false) => {
   try {
     return await action();
   } catch (error) {
-    if (shouldFallbackToLocal(error)) {
-      console.warn(`Using local ${label} data because Supabase is not ready yet.`, error);
+    if (!shouldFallbackToLocal(error)) throw error;
+
+    // Writes never fall back in any environment. A write that silently succeeds
+    // against localStorage while Supabase is configured means the user believes
+    // their data was saved when it was not. Always surface the real error.
+    if (isWrite) {
+      console.error(`[${label}] Supabase write failed — not falling back to local:`, error?.message || error);
+      const err = new Error(`Failed to save ${label}: ${error?.message || 'unknown Supabase error'}`);
+      err.cause = error;
+      throw err;
+    }
+
+    // Reads: in development fall back so local work isn't blocked by an
+    // unfinished Supabase setup. In production surface the real error.
+    if (import.meta.env.DEV) {
+      console.warn(`[dev] Using local ${label} data — Supabase not ready:`, error?.message || error);
       return fallback();
     }
-    throw error;
+
+    console.error(`[${label}] Supabase read failed:`, error?.message || error);
+    const err = new Error(`Failed to load ${label}: ${error?.message || 'unknown Supabase error'}`);
+    err.cause = error;
+    throw err;
   }
 };
 
@@ -534,7 +552,7 @@ const createSupabaseEntityApi = (entityName) => {
           .single();
         if (error) throw error;
         return toAppRow(created);
-      }, () => localApi.create(data), entityName);
+      }, () => localApi.create(data), entityName, true);
     },
 
     async bulkCreate(items = []) {
@@ -545,7 +563,7 @@ const createSupabaseEntityApi = (entityName) => {
           .select();
         if (error) throw error;
         return (data || []).map(toAppRow);
-      }, () => localApi.bulkCreate(items), entityName);
+      }, () => localApi.bulkCreate(items), entityName, true);
     },
 
     async update(id, patch) {
@@ -558,7 +576,7 @@ const createSupabaseEntityApi = (entityName) => {
           .single();
         if (error) throw error;
         return toAppRow(data);
-      }, () => localApi.update(id, patch), entityName);
+      }, () => localApi.update(id, patch), entityName, true);
     },
 
     async delete(idOrIds) {
@@ -567,7 +585,7 @@ const createSupabaseEntityApi = (entityName) => {
         const { error } = await supabase.from(table).delete().in('id', ids);
         if (error) throw error;
         return true;
-      }, () => localApi.delete(idOrIds), entityName);
+      }, () => localApi.delete(idOrIds), entityName, true);
     },
 
     subscribe(callback) {
@@ -597,28 +615,105 @@ const includesSearchText = (row = {}, fields = [], query = '') => {
   return fields.some((field) => String(row[field] || '').toLowerCase().includes(needle));
 };
 
+// Escape characters that have special meaning in a LIKE/ILIKE pattern.
+// Commas are replaced with spaces because PostgREST parses the .or() filter
+// string on commas — a literal comma in the query would break the filter.
+const escapeIlikePattern = (str) =>
+  str.replace(/[\\%_]/g, '\\$&').replace(/,/g, ' ');
+
 const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
+  const needle = query.trim();
+  if (!needle) return { posts: [], communities: [], events: [], people: [] };
+
+  // Local / demo mode: filter tiny in-memory datasets on the client.
+  if (!shouldUseSupabase) {
+    const [postsResult, communitiesResult, peopleResult] = await Promise.allSettled([
+      activeEntities.UnifiedPost.list('-created_date', 120),
+      activeEntities.Community.list('-follower_count', 80),
+      activeEntities.User.list('-created_date', 80),
+    ]);
+
+    const allPosts = postsResult.status === 'fulfilled' ? postsResult.value : [];
+    const allCommunities = communitiesResult.status === 'fulfilled' ? communitiesResult.value : [];
+    const allPeople = peopleResult.status === 'fulfilled' ? peopleResult.value : [];
+
+    const postMatches = allPosts
+      .filter((post) => {
+        if (filters.post_type && post.type !== filters.post_type) return false;
+        if (filters.community_id && post.community_id !== filters.community_id) return false;
+        if (filters.date_from && post.created_date < filters.date_from) return false;
+        if (filters.date_to && post.created_date > filters.date_to) return false;
+        return includesSearchText(post, ['title', 'body', 'community_name', 'author_name', 'location_text'], needle);
+      })
+      .slice(0, 20);
+
+    const events = postMatches
+      .filter((post) => post.type === 'event')
+      .map((post) => ({
+        ...post,
+        start_date: post.start_date || post.event_date || post.created_date,
+        location: post.location || post.location_text || post.city,
+      }))
+      .slice(0, 10);
+
+    return {
+      posts: postMatches.filter((post) => post.type !== 'event').slice(0, 20),
+      communities: allCommunities
+        .filter((community) => includesSearchText(community, ['name', 'description', 'type', 'city', 'neighborhood'], needle))
+        .slice(0, 12),
+      events,
+      people: allPeople
+        .filter((person) => includesSearchText(person, ['full_name', 'display_name', 'username', 'bio', 'public_community', 'city'], needle))
+        .slice(0, 12),
+    };
+  }
+
+  // Supabase mode: push all filtering to the database.
+  // Each query matches only relevant rows server-side; no full-table scans in JS.
+  const esc = escapeIlikePattern(needle);
+
+  let postsQuery = supabase
+    .from('posts')
+    .select('*')
+    .or(`title.ilike.%${esc}%,content.ilike.%${esc}%`)
+    .order('created_at', { ascending: false })
+    .limit(30);
+
+  if (filters.post_type) postsQuery = postsQuery.eq('type', filters.post_type);
+  if (filters.community_id) postsQuery = postsQuery.eq('community_id', filters.community_id);
+  if (filters.date_from) postsQuery = postsQuery.gte('created_at', filters.date_from);
+  if (filters.date_to) postsQuery = postsQuery.lte('created_at', `${filters.date_to}T23:59:59.999Z`);
+
+  const communitiesQuery = supabase
+    .from('communities')
+    .select('*')
+    .or(`name.ilike.%${esc}%,description.ilike.%${esc}%`)
+    .order('follower_count', { ascending: false })
+    .limit(12);
+
+  const peopleQuery = supabase
+    .from('public_profiles')
+    .select('id,display_name,avatar_url,username,public_community,city,bio,is_profile_complete,created_at,updated_at')
+    .or(`display_name.ilike.%${esc}%,username.ilike.%${esc}%,bio.ilike.%${esc}%,city.ilike.%${esc}%,public_community.ilike.%${esc}%`)
+    .limit(12);
+
   const [postsResult, communitiesResult, peopleResult] = await Promise.allSettled([
-    activeEntities.UnifiedPost.list('-created_date', 120),
-    activeEntities.Community.list('-follower_count', 80),
-    activeEntities.User.list('-created_date', 80),
+    postsQuery,
+    communitiesQuery,
+    peopleQuery,
   ]);
 
-  const allPosts = postsResult.status === 'fulfilled' ? postsResult.value : [];
-  const allCommunities = communitiesResult.status === 'fulfilled' ? communitiesResult.value : [];
-  const allPeople = peopleResult.status === 'fulfilled' ? peopleResult.value : [];
+  const allPosts = (postsResult.status === 'fulfilled' && !postsResult.value.error)
+    ? (postsResult.value.data || []).map(toAppRow)
+    : [];
+  const allCommunities = (communitiesResult.status === 'fulfilled' && !communitiesResult.value.error)
+    ? (communitiesResult.value.data || []).map(toAppRow)
+    : [];
+  const allPeople = (peopleResult.status === 'fulfilled' && !peopleResult.value.error)
+    ? (peopleResult.value.data || []).map(toAppRow)
+    : [];
 
-  const postMatches = allPosts
-    .filter((post) => {
-      if (filters.post_type && post.type !== filters.post_type) return false;
-      if (filters.community_id && post.community_id !== filters.community_id) return false;
-      if (filters.date_from && post.created_date < filters.date_from) return false;
-      if (filters.date_to && post.created_date > filters.date_to) return false;
-      return includesSearchText(post, ['title', 'body', 'community_name', 'author_name', 'location_text'], query);
-    })
-    .slice(0, 20);
-
-  const events = postMatches
+  const events = allPosts
     .filter((post) => post.type === 'event')
     .map((post) => ({
       ...post,
@@ -628,14 +723,10 @@ const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
     .slice(0, 10);
 
   return {
-    posts: postMatches.filter((post) => post.type !== 'event').slice(0, 20),
-    communities: allCommunities
-      .filter((community) => includesSearchText(community, ['name', 'description', 'type', 'city', 'neighborhood'], query))
-      .slice(0, 12),
+    posts: allPosts.filter((post) => post.type !== 'event').slice(0, 20),
+    communities: allCommunities,
     events,
-    people: allPeople
-      .filter((person) => includesSearchText(person, ['full_name', 'display_name', 'username', 'bio', 'public_community', 'city'], query))
-      .slice(0, 12),
+    people: allPeople,
   };
 };
 

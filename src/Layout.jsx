@@ -8,7 +8,9 @@ import SwipeableTabs from '@/components/common/SwipeableTabs';
 import PWAInstallPrompt from '@/components/common/PWAInstallPrompt';
 import CookieConsentBanner from '@/components/common/CookieConsentBanner';
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
+import AppErrorBoundary from '@/components/common/AppErrorBoundary';
 
 // Lazy load main pages
 const Feed = lazy(() => import('@/pages/Feed'));
@@ -32,14 +34,10 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const isChatOpen = currentPageName === 'Messages' && new URLSearchParams(location.search).get('chat') === '1';
   const hideNav = ['Settings', 'ShulPage'].includes(currentPageName) || isChatOpen;
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
 
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
-
-  useEffect(() => {
-    dataService.auth.me().then(u => setCurrentUser(u)).catch(() => {});
-  }, []);
 
   useEffect(() => {
     let scrollTimeout;
@@ -110,21 +108,31 @@ export default function Layout({ children, currentPageName }) {
             activeIndex={currentIndex}
             onIndexChange={handleTabChange}
           >
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <Feed />
-            </Suspense>
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <MitzvahCircle isActive={currentIndex === 1} />
-            </Suspense>
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <Communities />
-            </Suspense>
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <Messages />
-            </Suspense>
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <Profile />
-            </Suspense>
+            <AppErrorBoundary inline fallbackMessage="Feed could not load.">
+              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+                <Feed />
+              </Suspense>
+            </AppErrorBoundary>
+            <AppErrorBoundary inline fallbackMessage="Mitzvah Circle could not load.">
+              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+                <MitzvahCircle isActive={currentIndex === 1} />
+              </Suspense>
+            </AppErrorBoundary>
+            <AppErrorBoundary inline fallbackMessage="Communities could not load.">
+              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+                <Communities />
+              </Suspense>
+            </AppErrorBoundary>
+            <AppErrorBoundary inline fallbackMessage="Messages could not load.">
+              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+                <Messages />
+              </Suspense>
+            </AppErrorBoundary>
+            <AppErrorBoundary inline fallbackMessage="Profile could not load.">
+              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+                <Profile />
+              </Suspense>
+            </AppErrorBoundary>
           </SwipeableTabs>
         ) : (
           children

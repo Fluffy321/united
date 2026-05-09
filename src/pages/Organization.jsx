@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { dataService } from '@/services';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import EventCard from '@/components/chalkboard/EventCard';
@@ -17,20 +18,14 @@ const orgTypeConfig = {
 };
 
 export default function Organization() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [orgId, setOrgId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadUser();
     const params = new URLSearchParams(window.location.search);
     setOrgId(params.get('id'));
   }, []);
-
-  const loadUser = async () => {
-    const user = await dataService.auth.me();
-    setCurrentUser(user);
-  };
 
   const { data: org } = useQuery({
     queryKey: ['organization', orgId],
