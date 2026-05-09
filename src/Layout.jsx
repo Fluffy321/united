@@ -163,10 +163,8 @@ export default function Layout({ children, currentPageName }) {
       {/* Bottom Navigation */}
       {!hideNav && (
         <nav className="app-bottom-nav fixed inset-x-0 bottom-0 z-50 px-3">
-          <div
-            className="mobile-page relative overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-[0_12px_30px_rgba(15,23,42,0.14)] backdrop-blur-xl"
-          >
-            {/* Active highlight now rendered per-button */}
+          {/* Warm cream background with warm border — community feel */}
+          <div className="mobile-page relative overflow-hidden rounded-2xl border border-[#E8E2D6] bg-[#FFFDF8]/96 shadow-[0_-1px_0_rgba(15,23,42,0.06),0_8px_32px_rgba(15,23,42,0.12)] backdrop-blur-xl">
             <div className="flex items-center justify-around px-1 py-1.5">
               {navItems.map((item) => {
                 const isActive = currentPageName === item.page;
@@ -186,26 +184,28 @@ export default function Layout({ children, currentPageName }) {
                         navigate(createPageUrl(item.page));
                       }
                     }}
-                    className={`motion-press relative flex min-h-[58px] min-w-[54px] flex-1 flex-col items-center justify-center rounded-xl py-[7px] touch-manipulation transition-all duration-150 ${
-                      isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-400 active:bg-slate-100'
+                    className={`motion-press relative flex min-h-[58px] min-w-[54px] flex-1 flex-col items-center justify-center rounded-xl py-[7px] touch-manipulation ${
+                      isActive ? '' : 'text-slate-400 active:bg-slate-100/60'
                     }`}
                   >
-                    {/* Active dot above icon */}
+                    {/* Spring-animated pill — mounts on activation, springs in via CSS */}
                     {isActive && (
                       <span
-                        className="absolute left-1/2 top-1.5 h-1 w-1 -translate-x-1/2 rounded-full bg-blue-600"
+                        className={`nav-active-pill absolute inset-1 rounded-[10px] ${item.isMitzvah ? 'nav-active-pill-mitzvah' : ''}`}
                       />
                     )}
-                    <div className="relative z-10">
+
+                    {/* Icon — pops up when active */}
+                    <div className={`relative z-10 ${isActive ? 'nav-icon-active' : ''}`}>
                       {item.isMitzvah ? (
                         <MitzvahIcon
                           size={20}
                           strokeWidth={isActive ? 2.2 : 1.8}
-                          className={`transition-all duration-150 ${isActive ? 'text-blue-600' : 'text-slate-400'}`}
+                          className={isActive ? 'text-amber-600' : 'text-slate-400'}
                         />
                       ) : (
                         <Icon
-                          className={`h-[21px] w-[21px] transition-all duration-150 ${isActive ? 'text-blue-600' : 'text-slate-400'}`}
+                          className={`h-[21px] w-[21px] ${isActive ? 'text-blue-600' : 'text-slate-400'}`}
                           strokeWidth={isActive ? 2.4 : 1.8}
                         />
                       )}
@@ -215,9 +215,13 @@ export default function Layout({ children, currentPageName }) {
                         </span>
                       )}
                     </div>
+
+                    {/* Label */}
                     <span
-                      className={`relative z-10 mt-1 text-[10px] transition-all duration-150 ${
-                        isActive ? 'font-bold text-blue-600' : 'font-normal text-slate-400'
+                      className={`relative z-10 mt-1 text-[10px] ${
+                        isActive
+                          ? `font-bold ${item.isMitzvah ? 'text-amber-600' : 'text-blue-600'}`
+                          : 'font-normal text-slate-400'
                       }`}
                     >
                       {item.name}

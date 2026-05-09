@@ -8,24 +8,32 @@
 @layer base {
   :root {
     /* ── JUnited Brand Palette ── */
-    --j-navy:       #0F1C2E;
-    --j-navy-80:    rgba(15,28,46,0.80);
-    --j-gold:       #C9A84C;
-    --j-gold-light: #F5E9C8;
-    --j-gold-dark:  #9B7A2A;
-    --j-cream:      #FAFAF7;
-    --j-white:      #FFFFFF;
+    --j-navy:        #0F1C2E;
+    --j-navy-80:     rgba(15,28,46,0.80);
+    /* Shabbat Gold — highlights, moments of distinction */
+    --j-gold:        #D4AF37;
+    --j-gold-light:  #FAF4D9;
+    --j-gold-mid:    #E8D07A;
+    --j-gold-dark:   #A08520;
+    /* Olive Green — Chesed / Mitzvah success states */
+    --j-olive:       #556B2F;
+    --j-olive-light: #EEF3E5;
+    --j-olive-mid:   #7A9A48;
+    --j-olive-dark:  #3D4F22;
+    /* Off-white Cream — warm, easy-on-the-eyes page background */
+    --j-cream:       #FDFCF8;
+    --j-white:       #FFFFFF;
 
     /* ── Semantic color tokens ── */
-    --c-location:  #2563EB;   /* blue  — location chips, nav */
-    --c-hot:       #D97706;   /* amber — trending/hot posts  */
-    --c-help:      #16A34A;   /* green — chesed / help       */
-    --c-urgent:    #DC2626;   /* red   — alerts / urgent     */
-    --c-featured:  #7C3AED;   /* purple — featured / premium */
-    --c-muted:     #64748B;   /* slate — meta / secondary    */
+    --c-location:  #2563EB;   /* blue   — location chips, nav  */
+    --c-hot:       #D97706;   /* amber  — trending/hot posts   */
+    --c-help:      #556B2F;   /* olive  — chesed / help        */
+    --c-urgent:    #DC2626;   /* red    — alerts / urgent      */
+    --c-featured:  #7C3AED;   /* purple — featured / premium   */
+    --c-muted:     #64748B;   /* slate  — meta / secondary     */
 
     /* ── Shadcn design tokens (light mode) ── */
-    --background:         0 0% 98%;        /* #FAFAFA — off-white cream */
+    --background:         47 54% 98%;      /* #FDFCF8 — warm cream */
     --foreground:         220 40% 13%;     /* #0F1C2E navy */
     --card:               0 0% 100%;
     --card-foreground:    220 40% 13%;
@@ -46,10 +54,10 @@
     --ring:               220 85% 45%;
     --chart-1: 220 85% 45%;
     --chart-2: 43 55% 55%;
-    --chart-3: 142 71% 40%;
+    --chart-3: 88 43% 30%;   /* olive green */
     --chart-4: 0 84% 60%;
     --chart-5: 271 76% 50%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;       /* 12px — base radius for shadcn components */
     --sidebar-background: 220 40% 13%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 43 55% 55%;
@@ -130,7 +138,7 @@
   }
 
   body {
-    background: #F6F8FB !important;
+    background: #FDFCF8 !important;
     color: #0F172A;
     min-height: 100dvh;
     overflow-y: auto;
@@ -176,7 +184,7 @@
 @layer utilities {
   .app-page {
     min-height: 100dvh;
-    background: #F6F8FB;
+    background: #FDFCF8;
     color: #0F172A;
   }
 
@@ -195,26 +203,35 @@
   }
 
   .app-card {
-    border-radius: 16px;
-    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 20px;
+    border: 1px solid rgba(226, 232, 240, 0.85);
     background: #FFFFFF;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 16px rgba(15, 23, 42, 0.07);
+    /* Layered soft shadow for depth without harshness */
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 4px 12px rgba(15, 23, 42, 0.05),
+      0 12px 28px rgba(15, 23, 42, 0.04);
   }
 
   .app-card-soft {
-    border-radius: 16px;
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    background: rgba(255, 255, 255, 0.86);
-    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+    border-radius: 20px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow:
+      0 2px 8px rgba(15, 23, 42, 0.04),
+      0 8px 24px rgba(15, 23, 42, 0.06);
   }
 
   .app-card-hover {
-    transition: border-color 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1), transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: border-color 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .app-card-hover:hover {
-    border-color: rgba(147, 197, 253, 0.8);
-    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.10);
+    border-color: rgba(147, 197, 253, 0.6);
+    box-shadow:
+      0 2px 6px rgba(15, 23, 42, 0.05),
+      0 10px 28px rgba(15, 23, 42, 0.09),
+      0 20px 40px rgba(15, 23, 42, 0.05);
   }
 
   .app-card-hover:active {
@@ -384,10 +401,13 @@
   }
 
   .mobile-card {
-    border-radius: 16px;
-    border: 1px solid rgba(203, 213, 225, 0.9);
+    border-radius: 20px;
+    border: 1px solid rgba(203, 213, 225, 0.8);
     background: #FFFFFF;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 16px rgba(15, 23, 42, 0.07);
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 4px 12px rgba(15, 23, 42, 0.05),
+      0 12px 28px rgba(15, 23, 42, 0.04);
   }
 
   .mobile-touch {
@@ -465,13 +485,16 @@
   border: 1px solid transparent;
   white-space: nowrap;
 }
-.j-chip-location { background: #EFF6FF; color: var(--c-location); border-color: #BFDBFE; }
-.j-chip-hot      { background: #FFFBEB; color: var(--c-hot);      border-color: #FDE68A; }
-.j-chip-help     { background: #F0FDF4; color: var(--c-help);     border-color: #BBF7D0; }
-.j-chip-urgent   { background: #FEF2F2; color: var(--c-urgent);   border-color: #FECACA; }
-.j-chip-featured { background: #F5F3FF; color: var(--c-featured); border-color: #DDD6FE; }
-.j-chip-muted    { background: #F8FAFC; color: var(--c-muted);    border-color: #E2E8F0; }
-.j-chip-gold     { background: var(--j-gold-light); color: var(--j-gold-dark); border-color: var(--j-gold); }
+.j-chip-location { background: #EFF6FF; color: var(--c-location);  border-color: #BFDBFE; }
+.j-chip-hot      { background: #FFFBEB; color: var(--c-hot);       border-color: #FDE68A; }
+/* Chesed/Mitzvah — olive green instead of generic green */
+.j-chip-help     { background: var(--j-olive-light); color: var(--j-olive);     border-color: #C6D9A8; }
+.j-chip-chesed   { background: var(--j-olive-light); color: var(--j-olive);     border-color: #C6D9A8; }
+.j-chip-urgent   { background: #FEF2F2; color: var(--c-urgent);    border-color: #FECACA; }
+.j-chip-featured { background: #F5F3FF; color: var(--c-featured);  border-color: #DDD6FE; }
+.j-chip-muted    { background: #F8FAFC; color: var(--c-muted);     border-color: #E2E8F0; }
+/* Shabbat Gold — special moments, featured content */
+.j-chip-gold     { background: var(--j-gold-light); color: var(--j-gold-dark);  border-color: var(--j-gold); }
 
 /* Gold accent buttons */
 .j-btn-gold {
@@ -484,9 +507,12 @@
 
 /* Card */
 .j-card {
-  background: white; border-radius: 16px;
-  border: 1px solid rgba(203, 213, 225, 0.9);
-  box-shadow: 0 1px 2px rgba(15,28,46,0.06), 0 4px 16px rgba(15,28,46,0.07);
+  background: white; border-radius: 20px;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  box-shadow:
+    0 1px 2px rgba(15,28,46,0.04),
+    0 4px 12px rgba(15,28,46,0.05),
+    0 12px 28px rgba(15,28,46,0.04);
 }
 
 /* Post image component — 4:3 with blur-up */
@@ -511,7 +537,7 @@
   100% { background-position: 600px 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, #F1F5F9 25%, #E8EEF6 50%, #F1F5F9 75%);
+  background: linear-gradient(90deg, #F5F3EE 25%, #EAE7DF 50%, #F5F3EE 75%);
   background-size: 1200px 100%;
   animation: shimmer 1.35s infinite linear;
   border-radius: 8px;
@@ -561,19 +587,41 @@
 }
 .reaction-pop { animation: reactionPop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 
-/* Bottom nav active pill */
-.nav-pill-active {
-  position: relative;
+/* ─── Bottom nav — spring pill active state ────────────────────────────────
+   The pill is a child element that mounts only when the tab is active.
+   Mounting triggers the CSS animation, giving a spring feel without JS.
+   navPillIn keyframe is defined in tailwind.config.js and emitted by Tailwind
+   so .animate-nav-pill-in is available as a utility class.               */
+
+/* Pill that floats behind the active nav icon */
+.nav-active-pill {
+  background: #FFFFFF;
+  box-shadow:
+    0 1px 4px rgba(15, 23, 42, 0.08),
+    0 4px 14px rgba(37, 99, 235, 0.10);
+  animation: navPillIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
-.nav-pill-active::before {
-  content: '';
-  position: absolute;
-  top: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 32px; height: 22px;
-  background: rgba(37,99,235,0.12);
-  border-radius: 10px;
+
+/* Mitzvah tab gets a warm gold-tinted glow */
+.nav-active-pill-mitzvah {
+  box-shadow:
+    0 1px 4px rgba(15, 23, 42, 0.07),
+    0 4px 14px rgba(212, 175, 55, 0.18);
+}
+
+/* Icon spring-pops up when its tab becomes active */
+.nav-icon-active {
+  animation: navIconPop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes navPillIn {
+  from { opacity: 0; transform: scale(0.72); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes navIconPop {
+  from { transform: scale(0.78) translateY(3px); }
+  to   { transform: scale(1) translateY(0); }
 }
 
 /* Scrollbar hide */

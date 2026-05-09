@@ -6,22 +6,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Design Tokens — Vibrant & Modern */
+  /* Design Tokens */
   --primary: #2563EB;
   --primary-hover: #1D4ED8;
   --secondary: #EFF6FF;
-  --background: #F8FAFC;
+  --background: #FDFCF8;   /* warm cream */
   --card: #FFFFFF;
   --text-main: #0F172A;
   --text-muted: #64748B;
   --accent: #7C3AED;
   --accent-pink: #EC4899;
-  --success: #22C55E;
+  --success: #556B2F;      /* olive green — chesed/mitzvah */
   --warning: #F59E0B;
   --border: #E2E8F0;
 
   /* Legacy aliases */
-  --color-bg: #F8FAFC;
+  --color-bg: #FDFCF8;     /* warm cream */
   --color-card: #FFFFFF;
   --color-border: #E2E8F0;
   --color-border-subtle: #F1F5F9;
@@ -45,7 +45,7 @@
   --sp-8: 32px;
 
   /* Radius */
-  --radius-card: 14px;
+  --radius-card: 20px;
   --radius-pill: 999px;
 
   /* Shadow */
@@ -146,16 +146,16 @@
 .card {
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 16px;
-  box-shadow: 0 2px 8px rgba(15,23,42,0.05);
+  box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.05), 0 12px 28px rgba(15,23,42,0.04);
   margin-bottom: 16px;
 }
 
 .community-card {
   background: #ffffff;
   border: 1px solid #BFDBFE;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 16px;
   margin-bottom: 12px;
 }
@@ -167,7 +167,7 @@ html, body {
   color: var(--text-main);
   font-size: 15px;
   line-height: 1.5;
-  background-color: #F8FAFC;
+  background-color: #FDFCF8;  /* warm cream */
   overscroll-behavior: none;
 }
 

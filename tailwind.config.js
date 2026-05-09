@@ -36,8 +36,13 @@ module.exports = {
         ring:   'hsl(var(--ring))',
         /* JUnited semantic tokens */
         navy:   { DEFAULT: '#0F1C2E', 80: 'rgba(15,28,46,0.80)' },
-        gold:   { DEFAULT: '#C9A84C', light: '#F5E9C8', dark: '#9B7A2A' },
-        cream:  '#FAFAF7',
+        /* Shabbat Gold — highlights, special moments */
+        gold:   { DEFAULT: '#D4AF37', light: '#FAF4D9', mid: '#E8D07A', dark: '#A08520' },
+        'shabbat-gold': '#D4AF37',
+        /* Olive Green — Chesed / Mitzvah success states */
+        olive:  { DEFAULT: '#556B2F', light: '#EEF3E5', medium: '#7A9A48', dark: '#3D4F22' },
+        /* Off-white/Cream page background */
+        cream:  '#FDFCF8',
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',
@@ -60,6 +65,8 @@ module.exports = {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        xl: 'calc(var(--radius) + 4px)',
+        '2xl': 'calc(var(--radius) + 8px)',
       },
       keyframes: {
         'accordion-down': { from: { height: '0' }, to: { height: 'var(--radix-accordion-content-height)' } },
@@ -78,6 +85,16 @@ module.exports = {
           '70%':  { transform: 'scale(0.88)' },
           '100%': { transform: 'scale(1)' },
         },
+        /* Bottom-nav pill springs in when a tab becomes active */
+        navPillIn: {
+          from: { opacity: '0', transform: 'scale(0.72)' },
+          to:   { opacity: '1', transform: 'scale(1)' },
+        },
+        /* Icon bounces up slightly when its tab becomes active */
+        navIconPop: {
+          from: { transform: 'scale(0.78) translateY(3px)' },
+          to:   { transform: 'scale(1) translateY(0)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -85,6 +102,8 @@ module.exports = {
         shimmer:          'shimmer 1.6s infinite linear',
         'tab-fade':       'tabFade 150ms ease-out both',
         'reaction-pop':   'reactionPop 300ms cubic-bezier(0.34,1.56,0.64,1) both',
+        'nav-pill-in':    'navPillIn 300ms cubic-bezier(0.34,1.56,0.64,1) both',
+        'nav-icon-pop':   'navIconPop 300ms cubic-bezier(0.34,1.56,0.64,1) both',
       },
     },
   },
