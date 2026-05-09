@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { dataService } from '@/services';
+import { toast } from 'sonner';
 
 const INTERESTS = [
   "Torah & Learning", "Sports", "Music", "Art", "Tech", 
@@ -27,7 +28,7 @@ export default function CreatePostModal({ open, onOpenChange, currentUser, promp
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+      setImagePreview(prev => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
     }
   };
 
@@ -41,34 +42,38 @@ export default function CreatePostModal({ open, onOpenChange, currentUser, promp
 
   const handleSubmit = async () => {
     if (!content.trim()) return;
-    
     setIsSubmitting(true);
-    
-    let imageUrl = null;
-    if (imageFile) {
-      const { file_url } = await dataService.integrations.Core.UploadFile({ file: imageFile });
-      imageUrl = file_url;
+    try {
+      let imageUrl = null;
+      if (imageFile) {
+        const { file_url } = await dataService.integrations.Core.UploadFile({ file: imageFile });
+        imageUrl = file_url;
+      }
+
+      await dataService.entities.Post.create({
+        content: content.trim(),
+        image_url: imageUrl,
+        author_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],
+        author_id: currentUser.id,
+        author_age_range: currentUser.age_range || '18+',
+        city: currentUser.city || 'Five Towns',
+        interests: selectedInterests,
+        is_prompt_response: !!prompt,
+        prompt_text: prompt?.prompt_text
+      });
+
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+      setContent('');
+      setSelectedInterests([]);
+      setImageFile(null);
+      setImagePreview(null);
+      onOpenChange(false);
+      onPostCreated?.();
+    } catch {
+      toast.error('Could not create post. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    await dataService.entities.Post.create({
-      content: content.trim(),
-      image_url: imageUrl,
-      author_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],
-      author_id: currentUser.id,
-      author_age_range: currentUser.age_range || '18+',
-      city: currentUser.city || 'Five Towns',
-      interests: selectedInterests,
-      is_prompt_response: !!prompt,
-      prompt_text: prompt?.prompt_text
-    });
-
-    setContent('');
-    setSelectedInterests([]);
-    setImageFile(null);
-    setImagePreview(null);
-    setIsSubmitting(false);
-    onOpenChange(false);
-    onPostCreated?.();
   };
 
   return (
@@ -98,7 +103,7 @@ export default function CreatePostModal({ open, onOpenChange, currentUser, promp
               size="icon" 
               variant="secondary"
               className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full h-8 w-8"
-              onClick={() => { setImageFile(null); setImagePreview(null); }}
+              onClick={() => { if (imagePreview) URL.revokeObjectURL(imagePreview); setImageFile(null); setImagePreview(null); }}
             >
               <X className="w-4 h-4" />
             </Button>

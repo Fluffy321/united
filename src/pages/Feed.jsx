@@ -1,11 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-<<<<<<< HEAD
 import { dataService, feedRetentionService, storageService } from '@/services';
-=======
-import { dataService, storageService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
->>>>>>> 139a5e5d02b788ebf9a88e45c92d8ced640439ec
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';

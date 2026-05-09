@@ -71,8 +71,8 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
         const [requester] = await dataService.entities.User.filter({ id: request.created_by_user_id });
         conversation = await dataService.entities.Conversation.create({
           participant_ids: [currentUser.id, request.created_by_user_id],
-          participant_names: [currentUser.display_name, requester.display_name],
-          participant_ages: [currentUser.age_range, requester.age_range],
+          participant_names: [currentUser.display_name, requester?.display_name || request.created_by_name],
+          participant_ages: [currentUser.age_range, requester?.age_range || '18+'],
           last_message: '',
           last_message_at: new Date().toISOString(),
           request_id: request.id

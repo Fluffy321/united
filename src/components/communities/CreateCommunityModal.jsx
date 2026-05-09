@@ -59,7 +59,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
     const file = e.target.files[0];
     if (!file) return;
     setCoverImage(file);
-    setCoverPreview(URL.createObjectURL(file));
+    setCoverPreview(prev => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
   };
 
   const handleCreate = async (e) => {
@@ -68,71 +68,81 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
     if (!form.category) return toast.error('Please select a category');
 
     setSubmitting(true);
-    let logo_url = null;
+    try {
+      let logo_url = null;
 
-    if (coverImage) {
-      setUploading(true);
-      const { file_url } = await dataService.integrations.Core.UploadFile({ file: coverImage });
-      logo_url = file_url;
+      if (coverImage) {
+        setUploading(true);
+        const { file_url } = await dataService.integrations.Core.UploadFile({ file: coverImage });
+        logo_url = file_url;
+        setUploading(false);
+      }
+
+      const community = await dataService.entities.Community.create({
+        name: form.name.trim(),
+        description: form.description.trim() || undefined,
+        description_short: form.description.trim().slice(0, 120) || undefined,
+        category: form.category,
+        type: form.category,
+        location: form.location.trim() || 'Five Towns',
+        neighborhood: form.location.trim() || 'Five Towns',
+        privacy: form.privacy,
+        logo_url,
+        follower_count: 1,
+        post_count: 0,
+        created_by_user_id: currentUser?.id,
+        created_by_name: currentUser?.full_name || currentUser?.display_name,
+        is_verified: false,
+        is_seeded: false,
+      });
+
+      // Auto-join as admin
+      await dataService.entities.UserCommunity.create({
+        user_id: currentUser?.id,
+        community_id: community.id,
+        role: 'Admin',
+        user_name: currentUser?.full_name || currentUser?.display_name,
+      }).catch(() => {});
+
+      setCreatedCommunity(community);
+      const suggestions = FIRST_POST_SUGGESTIONS[form.category] || FIRST_POST_SUGGESTIONS.Other;
+      setFirstPostBody(suggestions[0]);
+      setStep(2);
+    } catch {
+      toast.error('Could not create community. Please try again.');
+    } finally {
+      setSubmitting(false);
       setUploading(false);
     }
-
-    const community = await dataService.entities.Community.create({
-      name: form.name.trim(),
-      description: form.description.trim() || undefined,
-      description_short: form.description.trim().slice(0, 120) || undefined,
-      category: form.category,
-      type: form.category,
-      location: form.location.trim() || 'Five Towns',
-      neighborhood: form.location.trim() || 'Five Towns',
-      privacy: form.privacy,
-      logo_url,
-      follower_count: 1,
-      post_count: 0,
-      created_by_user_id: currentUser?.id,
-      created_by_name: currentUser?.full_name || currentUser?.display_name,
-      is_verified: false,
-      is_seeded: false,
-    });
-
-    // Auto-join as admin
-    await dataService.entities.UserCommunity.create({
-      user_id: currentUser?.id,
-      community_id: community.id,
-      role: 'Admin',
-      user_name: currentUser?.full_name || currentUser?.display_name,
-    }).catch(() => {});
-
-    setCreatedCommunity(community);
-    // Pre-fill first post suggestion
-    const suggestions = FIRST_POST_SUGGESTIONS[form.category] || FIRST_POST_SUGGESTIONS.Other;
-    setFirstPostBody(suggestions[0]);
-    setSubmitting(false);
-    setStep(2);
   };
 
   const handlePostFirst = async () => {
     if (!firstPostBody.trim() || !createdCommunity) return;
     setPostingFirst(true);
-    const name = currentUser?.display_name || currentUser?.full_name || 'Admin';
-    await dataService.entities.CommunityPost.create({
-      community_id: createdCommunity.id,
-      author_name: name,
-      author_user_id: currentUser?.id,
-      author_avatar_url: currentUser?.avatar_url,
-      body: firstPostBody.trim(),
-      post_type: 'announcement',
-      is_pinned: true,
-      is_official: true,
-      likes_count: 0,
-      comments_count: 0,
-    });
-    await dataService.entities.Community.update(createdCommunity.id, { post_count: 1 }).catch(() => {});
-    toast.success('Community launched! 🎉');
-    onCreated?.(createdCommunity);
-    setPostingFirst(false);
-    reset();
-    onOpenChange(false);
+    try {
+      const name = currentUser?.display_name || currentUser?.full_name || 'Admin';
+      await dataService.entities.CommunityPost.create({
+        community_id: createdCommunity.id,
+        author_name: name,
+        author_user_id: currentUser?.id,
+        author_avatar_url: currentUser?.avatar_url,
+        body: firstPostBody.trim(),
+        post_type: 'announcement',
+        is_pinned: true,
+        is_official: true,
+        likes_count: 0,
+        comments_count: 0,
+      });
+      await dataService.entities.Community.update(createdCommunity.id, { post_count: 1 }).catch(() => {});
+      toast.success('Community launched! 🎉');
+      onCreated?.(createdCommunity);
+      reset();
+      onOpenChange(false);
+    } catch {
+      toast.error('Could not post. Your community was created — try posting from the community page.');
+    } finally {
+      setPostingFirst(false);
+    }
   };
 
   const handleSkipPost = () => {
@@ -165,7 +175,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
                   {coverPreview ? (
                     <>
                       <img src={coverPreview} alt="" className="w-full h-full object-cover" />
-                      <button type="button" onClick={e=>{e.stopPropagation();setCoverImage(null);setCoverPreview(null);}}
+                      <button type="button" onClick={e=>{e.stopPropagation();if(coverPreview)URL.revokeObjectURL(coverPreview);setCoverImage(null);setCoverPreview(null);}}
                         className="absolute top-2 right-2 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center">
                         <X className="w-3.5 h-3.5 text-white" />
                       </button>

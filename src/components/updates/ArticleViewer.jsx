@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import { ArrowLeft, ExternalLink, Loader2 } from 'lucide-react';
 import { dataService } from '@/services';
 import { formatDistanceToNow } from 'date-fns';
@@ -8,6 +9,11 @@ export default function ArticleViewer({ item, onClose }) {
   const [loading, setLoading] = useState(true);
 
   const image = item.image || articleData?.image;
+
+  const safeHtml = useMemo(
+    () => articleData?.articleHtml ? DOMPurify.sanitize(articleData.articleHtml) : null,
+    [articleData?.articleHtml]
+  );
 
   useEffect(() => {
     const fetch = async () => {
@@ -71,10 +77,10 @@ export default function ArticleViewer({ item, onClose }) {
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-6 h-6 animate-spin text-[#2563EB]" />
               </div>
-            ) : articleData?.articleHtml ? (
+            ) : safeHtml ? (
               <div
                 className="prose prose-sm max-w-none text-[#344054] leading-relaxed article-body"
-                dangerouslySetInnerHTML={{ __html: articleData.articleHtml }}
+                dangerouslySetInnerHTML={{ __html: safeHtml }}
               />
             ) : (
               <div className="space-y-3">
