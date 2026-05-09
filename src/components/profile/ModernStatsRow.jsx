@@ -8,7 +8,6 @@ const TIERS = [
   { name: 'Platinum', threshold: 100 },
 ];
 
-// Decorative face-pile colors — one per slot, deterministic
 const PILE_GRADIENTS = [
   'from-blue-400 to-blue-600',
   'from-emerald-400 to-teal-600',
@@ -24,7 +23,7 @@ function getNextTier(points) {
       return { name: TIERS[i].name, remaining: TIERS[i].threshold - points, pct };
     }
   }
-  return null; // Platinum achieved
+  return null;
 }
 
 export default function ModernStatsRow({
@@ -39,81 +38,74 @@ export default function ModernStatsRow({
   const pileCount = Math.min(following, 4);
 
   return (
-    <div className="px-3 py-3">
-      <div className="grid grid-cols-3 gap-2.5">
+    <div className="px-3 py-2">
+      <div className="overflow-hidden rounded-[20px] bg-slate-950 shadow-lg shadow-slate-900/25">
+        <div className="grid grid-cols-3 divide-x divide-white/10">
 
-        {/* ── Connections card ── */}
-        <button
-          onClick={onFollowingClick}
-          className="rounded-[18px] border border-slate-200 bg-white px-3 py-3 text-left shadow-sm transition-all duration-200 active:scale-95 hover:shadow-md"
-        >
-          {/* Face-pile */}
-          <div className="mb-2 flex items-center">
-            {pileCount > 0
-              ? Array.from({ length: pileCount }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${PILE_GRADIENTS[i]} ring-[2px] ring-white ${i > 0 ? '-ml-1.5' : ''}`}
-                  />
-                ))
-              : (
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 ring-[2px] ring-white">
-                  <span className="text-[9px] font-black text-slate-400">+</span>
-                </div>
-              )}
-            {following > 4 && (
-              <span className="ml-1 text-[10px] font-black text-slate-400">+{following - 4}</span>
-            )}
-          </div>
-          <p className="text-xl font-black text-slate-950">{following}</p>
-          <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-500">Connections</p>
-        </button>
-
-        {/* ── Posts card ── */}
-        <button
-          onClick={onPostsClick}
-          className="rounded-[18px] border border-purple-100 bg-purple-50 px-3 py-3 text-center shadow-sm transition-all duration-200 active:scale-95 hover:shadow-md"
-        >
-          <div className="mb-2 mx-auto flex h-9 w-9 items-center justify-center rounded-2xl bg-purple-500">
-            <FileText className="h-4 w-4 text-white" />
-          </div>
-          <p className="text-xl font-black text-slate-950">{posts}</p>
-          <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-500">Posts</p>
-        </button>
-
-        {/* ── Impact card — olive green ── */}
-        <button
-          onClick={onImpactClick}
-          className="rounded-[18px] px-3 py-3 text-left shadow-sm transition-all duration-200 active:scale-95 hover:shadow-md"
-          style={{
-            background: 'linear-gradient(135deg, #3B5323 0%, #556B2F 55%, #6B8C42 100%)',
-            border: '1px solid rgba(85,107,47,0.35)',
-          }}
-        >
-          <div className="mb-1.5 flex h-9 w-9 items-center justify-center rounded-2xl bg-white/20">
-            <HeartHandshake className="h-4 w-4 text-white" />
-          </div>
-          <p className="text-xl font-black text-white">{impact}</p>
-          <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-white/60">Impact</p>
-
-          {/* Milestone progress bar */}
-          {tier ? (
-            <div className="mt-2">
-              <div className="h-[3px] overflow-hidden rounded-full bg-white/25">
-                <div
-                  className="h-full rounded-full bg-white/80 transition-all duration-500"
-                  style={{ width: `${tier.pct}%` }}
-                />
-              </div>
-              <p className="mt-1 text-[9px] font-bold leading-tight text-white/65">
-                {tier.remaining} until {tier.name}
-              </p>
+          {/* ── Connections ── */}
+          <button
+            onClick={onFollowingClick}
+            className="flex flex-col items-center px-2 py-4 transition-colors active:bg-white/5"
+          >
+            <div className="mb-2 flex items-center justify-center">
+              {pileCount > 0
+                ? Array.from({ length: pileCount }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-5 w-5 shrink-0 rounded-full bg-gradient-to-br ${PILE_GRADIENTS[i]} ring-[1.5px] ring-slate-950 ${i > 0 ? '-ml-1' : ''}`}
+                    />
+                  ))
+                : (
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10">
+                    <span className="text-[8px] font-black text-white/40">+</span>
+                  </div>
+                )
+              }
             </div>
-          ) : (
-            <p className="mt-1 text-[9px] font-bold leading-tight text-amber-300">Platinum ★</p>
-          )}
-        </button>
+            <p className="text-[22px] font-black leading-none text-white">{following}</p>
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-white/35">Connections</p>
+          </button>
 
+          {/* ── Posts ── */}
+          <button
+            onClick={onPostsClick}
+            className="flex flex-col items-center px-2 py-4 transition-colors active:bg-white/5"
+          >
+            <div className="mb-2 flex h-5 w-5 items-center justify-center rounded-full bg-purple-500/25">
+              <FileText className="h-3 w-3 text-purple-300" />
+            </div>
+            <p className="text-[22px] font-black leading-none text-white">{posts}</p>
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-white/35">Posts</p>
+          </button>
+
+          {/* ── Impact ── */}
+          <button
+            onClick={onImpactClick}
+            className="flex flex-col items-center px-2 py-4 transition-colors active:bg-white/5"
+          >
+            <div className="mb-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#6B8C42]/30">
+              <HeartHandshake className="h-3 w-3 text-[#A3C068]" />
+            </div>
+            <p className="text-[22px] font-black leading-none text-white">{impact}</p>
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-white/35">Impact</p>
+            {tier ? (
+              <div className="mt-1.5 w-full px-3">
+                <div className="h-[2px] overflow-hidden rounded-full bg-white/15">
+                  <div
+                    className="h-full rounded-full bg-[#A3C068] transition-all duration-500"
+                    style={{ width: `${tier.pct}%` }}
+                  />
+                </div>
+                <p className="mt-0.5 text-center text-[8px] font-bold text-[#A3C068]/70">
+                  {tier.remaining} to {tier.name}
+                </p>
+              </div>
+            ) : (
+              <p className="mt-1 text-[9px] font-bold text-amber-400">Platinum ★</p>
+            )}
+          </button>
+
+        </div>
       </div>
     </div>
   );

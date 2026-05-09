@@ -2,63 +2,85 @@ import React from 'react';
 import { Lock, CheckCircle2 } from 'lucide-react';
 
 const BADGES = [
-  { id: 'trusted', name: 'Trusted Helper', icon: '🤝', threshold: 10, color: 'blue' },
-  { id: 'volunteer', name: 'Community Volunteer', icon: '❤️', threshold: 25, color: 'purple' },
-  { id: 'leader', name: 'Chesed Leader', icon: '👑', threshold: 50, color: 'amber' },
-  { id: 'first-responder', name: 'First Responder', icon: '⚡', threshold: 5, color: 'red' },
-  { id: 'event-organizer', name: 'Event Organizer', icon: '📅', threshold: 3, color: 'green' },
-  { id: 'community-connector', name: 'Community Connector', icon: '🌉', threshold: 10, color: 'indigo' }
+  { id: 'first-responder',    name: 'First Responder',       icon: '⚡', threshold: 5,  desc: 'Help 5 people' },
+  { id: 'trusted',            name: 'Trusted Helper',         icon: '🤝', threshold: 10, desc: 'Help 10 people' },
+  { id: 'event-organizer',    name: 'Event Organizer',        icon: '📅', threshold: 3,  desc: 'Organize 3 events' },
+  { id: 'volunteer',          name: 'Community Volunteer',    icon: '❤️', threshold: 25, desc: 'Help 25 people' },
+  { id: 'community-connector',name: 'Community Connector',    icon: '🌉', threshold: 10, desc: 'Connect 10 people' },
+  { id: 'leader',             name: 'Chesed Leader',          icon: '👑', threshold: 50, desc: 'Help 50 people' },
 ];
 
 export default function BadgesSection({ user }) {
   const actionCount = user.helper_actions_count || 0;
-
-  if (actionCount === 0) {
-    return null;
-  }
+  const earned = BADGES.filter(b => actionCount >= b.threshold).length;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-4">
-      <div className="bg-white rounded-2xl border border-slate-100 p-4">
-        <h2 className="text-sm font-bold text-slate-900 mb-4">Recognition Badges</h2>
-        
-        <p className="text-xs text-slate-600 mb-4">
-          You've completed {actionCount} helping {actionCount === 1 ? 'act' : 'acts'} — {Math.max(0, BADGES[0].threshold - actionCount)} more to next badge!
-        </p>
+    <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm">
 
-        <div className="grid grid-cols-2 gap-3">
-          {BADGES.map(badge => {
-            const isUnlocked = actionCount >= badge.threshold;
-            const progress = Math.min(actionCount, badge.threshold);
-
-            return (
-              <div
-                key={badge.id}
-                className={`p-3 rounded-xl border ${isUnlocked ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200'}`}
-              >
-                <div className="flex items-start gap-2 mb-2">
-                  <span className="text-xl">{badge.icon}</span>
-                  {isUnlocked && <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />}
-                  {!isUnlocked && <Lock className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />}
-                </div>
-                <p className={`text-xs font-bold ${isUnlocked ? 'text-slate-900' : 'text-slate-600'}`}>
-                  {badge.name}
-                </p>
-                
-                {/* Progress Bar */}
-                <div className="mt-2 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-500 ${isUnlocked ? 'bg-green-500' : 'bg-blue-500'}`}
-                    style={{ width: `${(progress / badge.threshold) * 100}%` }}
-                  />
-                </div>
-                <p className="text-[10px] text-slate-500 mt-1">
-                  {progress}/{badge.threshold}
-                </p>
-              </div>
-            );
-          })}
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pb-3 pt-4">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Recognition</p>
+          <h2 className="text-[15px] font-black text-slate-950">Badges</h2>
         </div>
+        {earned > 0 && (
+          <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-black text-emerald-700">
+            {earned}/{BADGES.length} earned
+          </span>
+        )}
+        {earned === 0 && (
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black text-slate-500">
+            Start earning →
+          </span>
+        )}
+      </div>
+
+      {/* Horizontal badge scroll */}
+      <div className="flex gap-3 overflow-x-auto px-4 pb-4 scrollbar-hide">
+        {BADGES.map(badge => {
+          const isUnlocked = actionCount >= badge.threshold;
+          const pct = Math.min(Math.round((actionCount / badge.threshold) * 100), 100);
+
+          return (
+            <div
+              key={badge.id}
+              className={`shrink-0 w-[110px] rounded-2xl border p-3 transition-all ${
+                isUnlocked
+                  ? 'border-slate-700 bg-gradient-to-br from-slate-950 to-slate-800'
+                  : 'border-slate-100 bg-slate-50'
+              }`}
+            >
+              <div className="mb-2 flex items-start justify-between">
+                <span className={`text-[22px] leading-none ${!isUnlocked ? 'grayscale opacity-40' : ''}`}>
+                  {badge.icon}
+                </span>
+                {isUnlocked
+                  ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                  : <Lock className="h-3.5 w-3.5 shrink-0 text-slate-300" />
+                }
+              </div>
+              <p className={`text-[11px] font-black leading-snug ${isUnlocked ? 'text-white' : 'text-slate-600'}`}>
+                {badge.name}
+              </p>
+              <p className={`mt-0.5 text-[9px] font-semibold leading-tight ${isUnlocked ? 'text-white/45' : 'text-slate-400'}`}>
+                {badge.desc}
+              </p>
+
+              {/* Progress bar */}
+              <div className={`mt-2 h-[2px] overflow-hidden rounded-full ${isUnlocked ? 'bg-white/15' : 'bg-slate-200'}`}>
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${isUnlocked ? 'bg-emerald-400' : 'bg-blue-400'}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              {!isUnlocked && (
+                <p className="mt-0.5 text-[9px] font-semibold text-slate-400">
+                  {Math.min(actionCount, badge.threshold)}/{badge.threshold}
+                </p>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

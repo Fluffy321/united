@@ -16,7 +16,6 @@ import StreakCard from '@/components/profile/StreakCard.jsx';
 import InterestsSection from '@/components/profile/InterestsSection.jsx';
 import ImpactSection from '@/components/profile/ImpactSection.jsx';
 import GetStartedCard from '@/components/profile/GetStartedCard.jsx';
-import WeeklySummaryCard from '@/components/profile/WeeklySummaryCard.jsx';
 import BadgesSection from '@/components/profile/BadgesSection.jsx';
 import MitzvahJourneySection from '@/components/profile/MitzvahJourneySection.jsx';
 import CommunitiesSection from '@/components/profile/CommunitiesSection.jsx';
@@ -279,9 +278,6 @@ export default function Profile() {
               )}
             </div>
           )}
-
-          {/* Weekly Summary */}
-          {isOwnProfile && <div className="mx-3"><WeeklySummaryCard mitzvahCount={weeklyMitzvahCount} /></div>}
 
           {/* Communities Section */}
           {userCommunities.length > 0 && <div id="communities-section" className="mx-3"><CommunitiesSection userCommunities={userCommunities} /></div>}

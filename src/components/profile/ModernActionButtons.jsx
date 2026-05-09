@@ -1,67 +1,65 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Edit2, Share2, MessageCircle, Flag, Ban } from 'lucide-react';
 
-export default function ModernActionButtons({ isOwnProfile, onEditProfile, onMessage, onShare, onReport, onBlock }) {
+export default function ModernActionButtons({
+  isOwnProfile,
+  onEditProfile,
+  onMessage,
+  onShare,
+  onReport,
+  onBlock,
+}) {
+  if (isOwnProfile) {
+    return (
+      <div className="flex gap-2 px-3 pb-1">
+        <button
+          onClick={onEditProfile}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white py-2.5 text-[13px] font-black text-slate-700 shadow-sm transition-all active:scale-95 hover:bg-slate-50"
+        >
+          <Edit2 className="h-3.5 w-3.5" />
+          Edit Profile
+        </button>
+        <button
+          onClick={onShare}
+          className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-500 shadow-sm transition-all active:scale-95 hover:bg-slate-50"
+          title="Share profile"
+        >
+          <Share2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="px-3 py-1.5 space-y-2">
-      {isOwnProfile ? (
-        <>
-          <Button
-            onClick={onEditProfile}
-            className="w-full rounded-2xl bg-slate-950 py-3 font-black text-white shadow-sm transition-all duration-200 active:scale-95 gap-2 hover:bg-slate-900"
-          >
-            <Edit2 className="w-4 h-4" />
-            Edit Profile
-          </Button>
-          <Button
-            onClick={onShare}
-            variant="outline"
-            className="w-full rounded-2xl border-slate-200 bg-white py-3 font-black text-slate-700 shadow-sm transition-all duration-200 active:scale-95 gap-2 hover:bg-slate-50"
-          >
-            <Share2 className="w-4 h-4" />
-            Share Profile
-          </Button>
-        </>
-      ) : (
-        <div className="flex gap-3">
-          <Button
-            onClick={onMessage}
-            className="flex-1 rounded-2xl bg-slate-950 py-3 font-black text-white shadow-sm transition-all duration-200 active:scale-95 gap-2 hover:bg-slate-900"
-          >
-            <MessageCircle className="w-4 h-4" />
-            Message
-          </Button>
-          <Button
-            onClick={onShare}
-            variant="outline"
-            className="flex-1 rounded-2xl border-slate-200 bg-white py-3 font-black text-slate-700 shadow-sm transition-all duration-200 active:scale-95 gap-2 hover:bg-slate-50"
-          >
-            <Share2 className="w-4 h-4" />
-            Share
-          </Button>
-          <div className="flex gap-1">
-            <Button
-              onClick={onReport}
-              variant="ghost"
-              size="icon"
-              className="w-11 h-11 rounded-2xl text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
-              title="Report"
-            >
-              <Flag className="w-4 h-4" />
-            </Button>
-            <Button
-              onClick={onBlock}
-              variant="ghost"
-              size="icon"
-              className="w-11 h-11 rounded-2xl text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
-              title="Block"
-            >
-              <Ban className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+    <div className="flex gap-2 px-3 pb-1">
+      <button
+        onClick={onMessage}
+        className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-slate-950 py-2.5 text-[13px] font-black text-white shadow-sm transition-all active:scale-95 hover:bg-slate-800"
+      >
+        <MessageCircle className="h-3.5 w-3.5" />
+        Message
+      </button>
+      <button
+        onClick={onShare}
+        className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-500 shadow-sm transition-all active:scale-95 hover:bg-slate-50"
+        title="Share profile"
+      >
+        <Share2 className="h-3.5 w-3.5" />
+      </button>
+      <button
+        onClick={onReport}
+        className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:bg-red-50 hover:text-red-500 active:scale-95"
+        title="Report"
+      >
+        <Flag className="h-3.5 w-3.5" />
+      </button>
+      <button
+        onClick={onBlock}
+        className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:bg-red-50 hover:text-red-500 active:scale-95"
+        title="Block"
+      >
+        <Ban className="h-3.5 w-3.5" />
+      </button>
     </div>
   );
 }
