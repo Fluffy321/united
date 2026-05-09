@@ -6,3 +6,4 @@ export { messagesService } from './messagesService';
 export { notificationsService } from './notificationsService';
 export { paymentsService } from './paymentsService';
 export { storageService } from './storageService';
+export { feedRetentionService } from './feedRetentionService';

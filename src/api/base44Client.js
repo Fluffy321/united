@@ -20,6 +20,11 @@ const SUPABASE_ENTITY_TABLES = {
   MitzvahCompletion: 'mitzvah_completions',
   VerificationRequest: 'verification_requests',
   ChesedLog: 'chesed_hours_logs',
+  // Feed retention — migration 007_feed_retention.sql
+  FeedUserPreference: 'feed_user_preferences',
+  FeedEngagementEvent: 'feed_engagement_events',
+  DailyFeedPrompt: 'daily_feed_prompts',
+  FiveTownsBrief: 'five_towns_briefs',
   // HelpOffer / MitzvahSignup intentionally omitted: both map to mitzvah_offers,
   // but the app sends user_id while the DB column is volunteer_id. Adding the
   // mapping without a field translation would cause silent localStorage fallbacks
