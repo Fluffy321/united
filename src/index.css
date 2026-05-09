@@ -578,6 +578,19 @@
   }
 }
 
+/* Chesed CTA pulse — olive ring radiates outward on the "Offer to Help" button */
+@keyframes chesedPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(85, 107, 47, 0.45); }
+  60%  { box-shadow: 0 0 0 9px rgba(85, 107, 47, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(85, 107, 47, 0); }
+}
+.chesed-cta-pulse {
+  animation: chesedPulse 2.4s ease-out infinite;
+}
+.chesed-cta-pulse:active {
+  animation: none;
+}
+
 /* Reaction pop animation */
 @keyframes reactionPop {
   0%   { transform: scale(1); }

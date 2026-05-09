@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Clock,
   Download,
+  Eye,
   HandCoins,
   HandHeart,
   ListFilter,
@@ -333,25 +334,27 @@ const normalizeDate = (value) => {
 
 const escapeCsv = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
 
-function StatusPill({ status }) {
-  const tone = {
-    [STATUSES.OPEN]: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    [STATUSES.OFFERED]: 'bg-blue-50 text-blue-700 border-blue-200',
-    [STATUSES.ACCEPTED]: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    [STATUSES.IN_PROGRESS]: 'bg-amber-50 text-amber-700 border-amber-200',
-    [STATUSES.PENDING]: 'bg-purple-50 text-purple-700 border-purple-200',
-    [STATUSES.VERIFIED]: 'bg-slate-950 text-white border-slate-950',
-    [STATUSES.CANCELLED]: 'bg-slate-100 text-slate-500 border-slate-200',
-  }[status] || 'bg-slate-50 text-slate-600 border-slate-200';
+const STATUS_CONFIGS = {
+  [STATUSES.OPEN]:        { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', Icon: HandHeart,   label: 'Open' },
+  [STATUSES.OFFERED]:     { cls: 'bg-blue-50 text-blue-700 border-blue-200',          Icon: Eye,         label: 'Offered' },
+  [STATUSES.ACCEPTED]:    { cls: 'bg-indigo-50 text-indigo-700 border-indigo-200',    Icon: UserCheck,   label: 'Accepted' },
+  [STATUSES.IN_PROGRESS]: { cls: 'bg-amber-50 text-amber-700 border-amber-200',       Icon: Clock,       label: 'In Progress' },
+  [STATUSES.PENDING]:     { cls: 'bg-purple-50 text-purple-700 border-purple-200',    Icon: ShieldCheck, label: 'Pending Verify' },
+  [STATUSES.VERIFIED]:    { cls: 'bg-slate-950 text-white border-slate-950',          Icon: CheckCircle2, label: 'Verified' },
+  [STATUSES.CANCELLED]:   { cls: 'bg-slate-100 text-slate-500 border-slate-200',      Icon: X,           label: 'Cancelled' },
+};
 
+function StatusPill({ status }) {
+  const { cls, Icon, label } = STATUS_CONFIGS[status] || { cls: 'bg-slate-50 text-slate-600 border-slate-200', Icon: null, label: status };
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-black ${tone}`}>
-      {status}
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-black ${cls}`}>
+      {Icon && <Icon className="h-3 w-3" />}
+      {label}
     </span>
   );
 }
 
-function RequestCard({ request, offers, completions, verificationRequests, currentUser, onOffer, onAcceptPaid, onAcceptOffer, onStart, onComplete, onVerify }) {
+function RequestCard({ request, offers, completions, verificationRequests, currentUser, onOffer, onAcceptPaid, onAcceptOffer, onStart, onComplete, onVerify, onQuickView }) {
   const posterId = getPosterId(request);
   const posterName = getPosterName(request);
   const isPoster = posterId === currentUser.id;
@@ -368,6 +371,7 @@ function RequestCard({ request, offers, completions, verificationRequests, curre
   const canVerify = isPoster && acceptedVolunteerId !== currentUser.id && request.status === STATUSES.PENDING;
   const blockedSelfVerify = isPoster && acceptedVolunteerId === currentUser.id && request.status === STATUSES.PENDING;
   const pendingOffers = offers.filter((offer) => offer.requestId === request.id && offer.status === 'offered');
+  const requestOffers = offers.filter((o) => o.requestId === request.id);
 
   return (
     <article className="app-card p-4">
@@ -376,19 +380,54 @@ function RequestCard({ request, offers, completions, verificationRequests, curre
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-700">{request.category}</span>
             <StatusPill status={request.status} />
+            {request.type === 'paid' ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-black text-amber-700">
+                <HandCoins className="h-3 w-3" />
+                {formatMoney(request.amount)}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
+                <HandHeart className="h-3 w-3" />
+                Chesed
+              </span>
+            )}
             <StatusBadge>Demo Only</StatusBadge>
           </div>
           <h2 className="text-[17px] font-black leading-snug text-slate-950">{request.title}</h2>
           <p className="mt-1 text-[13px] font-medium leading-5 text-slate-600">{request.description}</p>
+
+          {/* Community impact badge — Chesed Chain */}
+          {request.status === STATUSES.VERIFIED && (
+            <div className="mt-3 flex items-center gap-2 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white px-3 py-2.5">
+              <span className="text-base">⛓️</span>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wide text-emerald-700">Chesed Chain</p>
+                <p className="text-[12px] font-semibold leading-5 text-emerald-900">
+                  {request.estimatedHours}h contributed to the community
+                  {requestOffers.length > 0 ? ` · ${requestOffers.length + 1} people involved` : ''}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Social proof — people offering to help */}
+          {request.status === STATUSES.OPEN && requestOffers.length > 0 && (
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
+              <Users className="h-3 w-3" />
+              {requestOffers.length} {requestOffers.length === 1 ? 'person offered' : 'people offered'} to help
+            </div>
+          )}
         </div>
-        <div className={`shrink-0 rounded-xl px-3 py-2 text-right ${request.type === 'paid' ? 'bg-amber-50' : 'bg-emerald-50'}`}>
-          <p className={`text-[11px] font-black uppercase ${request.type === 'paid' ? 'text-amber-700' : 'text-emerald-700'}`}>
-            {request.type === 'paid' ? 'Paid' : 'Chesed'}
-          </p>
-          <p className={`text-lg font-black ${request.type === 'paid' ? 'text-amber-900' : 'text-emerald-900'}`}>
-            {request.type === 'paid' ? formatMoney(request.amount) : 'Free'}
-          </p>
-        </div>
+
+        {onQuickView && (
+          <button
+            onClick={() => onQuickView(request)}
+            className="shrink-0 rounded-xl border border-slate-100 bg-slate-50 p-2 text-slate-400 hover:bg-slate-100 active:scale-95 transition-all"
+            title="Quick view"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 text-[12px] font-semibold text-slate-600 sm:grid-cols-4">
@@ -450,7 +489,11 @@ function RequestCard({ request, offers, completions, verificationRequests, curre
 
       <div className="mt-4 flex flex-wrap gap-2">
         {canOffer && (
-          <button onClick={() => onOffer(request)} className="app-button-primary h-10 bg-slate-950 px-4 text-[13px] hover:bg-slate-900">
+          <button
+            onClick={() => onOffer(request)}
+            className="chesed-cta-pulse app-button-primary h-10 px-4 text-[13px]"
+            style={{ background: '#556B2F' }}
+          >
             <HandHeart className="h-4 w-4" />
             Offer to Help
           </button>
@@ -772,6 +815,111 @@ function EmptyState({ title, text }) {
   );
 }
 
+function QuickViewSheet({ request, offers, currentUser, onClose, onOffer, onAcceptPaid }) {
+  if (!request) return null;
+  const posterId = getPosterId(request);
+  const isPoster = posterId === currentUser?.id;
+  const myOffer = offers.find((o) => o.requestId === request.id && getVolunteerId(o) === currentUser?.id);
+  const canOffer = !isPoster && request.status === STATUSES.OPEN && !myOffer;
+  const canAcceptPaid = canOffer && request.type === 'paid';
+  const requestOffers = offers.filter((o) => o.requestId === request.id);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 motion-soft-in" onClick={onClose}>
+      <div
+        className="max-h-[88dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 shadow-2xl motion-page-enter"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200" />
+
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-700">{request.category}</span>
+              <StatusPill status={request.status} />
+              {request.type === 'paid' ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-black text-amber-700">
+                  <HandCoins className="h-3 w-3" />
+                  {formatMoney(request.amount)}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
+                  <HandHeart className="h-3 w-3" />
+                  Chesed
+                </span>
+              )}
+            </div>
+            <h2 className="text-[20px] font-black leading-snug text-slate-950">{request.title}</h2>
+          </div>
+          <button onClick={onClose} className="shrink-0 rounded-xl p-2 text-slate-500 hover:bg-slate-100 active:scale-95">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <p className="mb-4 text-[14px] font-medium leading-6 text-slate-600">{request.description}</p>
+
+        <div className="mb-4 grid grid-cols-2 gap-2 text-[12px] font-semibold text-slate-600">
+          <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2"><MapPin className="h-3.5 w-3.5" />{request.neighborhood}</div>
+          <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2"><Clock className="h-3.5 w-3.5" />{request.estimatedHours} hrs</div>
+          <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2"><AlertCircle className="h-3.5 w-3.5" />{request.urgency}</div>
+          <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2"><Users className="h-3.5 w-3.5" />{getPosterName(request)}</div>
+        </div>
+
+        {request.status === STATUSES.VERIFIED && (
+          <div className="mb-4 flex items-center gap-2 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white px-3 py-2.5">
+            <span className="text-base">⛓️</span>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wide text-emerald-700">Chesed Chain</p>
+              <p className="text-[12px] font-semibold leading-5 text-emerald-900">
+                {request.estimatedHours}h contributed · {requestOffers.length + 1} people involved
+              </p>
+            </div>
+          </div>
+        )}
+
+        {requestOffers.length > 0 && request.status !== STATUSES.VERIFIED && (
+          <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-[12px] font-semibold text-blue-700">
+            <Users className="h-3.5 w-3.5" />
+            {requestOffers.length} {requestOffers.length === 1 ? 'person offered' : 'people offered'} to help
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+          {canOffer && (
+            <button
+              onClick={() => { onOffer(request); onClose(); }}
+              className="chesed-cta-pulse app-button-primary h-12 flex-1 text-[14px]"
+              style={{ background: '#556B2F' }}
+            >
+              <HandHeart className="h-5 w-5" />
+              Offer to Help
+            </button>
+          )}
+          {canAcceptPaid && (
+            <button
+              onClick={() => { onAcceptPaid(request); onClose(); }}
+              className="app-button-primary h-12 flex-1 bg-amber-500 text-[14px] hover:bg-amber-600"
+            >
+              <HandCoins className="h-5 w-5" />
+              Accept Paid Task
+            </button>
+          )}
+          {myOffer && (
+            <span className="inline-flex h-12 flex-1 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-[13px] font-black text-blue-700">
+              Offer sent ✓
+            </span>
+          )}
+          {!canOffer && !canAcceptPaid && !myOffer && (
+            <button onClick={onClose} className="h-12 flex-1 rounded-xl border border-slate-200 bg-slate-50 text-[13px] font-black text-slate-700 active:scale-[0.98]">
+              Close
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MitzvahCircle() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user: currentUser, isLoadingAuth: isLoadingUser } = useAuth();
@@ -781,6 +929,7 @@ export default function MitzvahCircle() {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [showCreate, setShowCreate] = useState(false);
   const [selectedMapRequestId, setSelectedMapRequestId] = useState(null);
+  const [quickViewRequest, setQuickViewRequest] = useState(null);
 
   useEffect(() => {
     saveState(state);
@@ -1366,6 +1515,7 @@ export default function MitzvahCircle() {
                 onStart={handleStart}
                 onComplete={handleComplete}
                 onVerify={handleVerify}
+                onQuickView={setQuickViewRequest}
               />
             )) : <EmptyState title="No open requests match this view" text="Try clearing filters or post a new request." />
           )}
@@ -1429,6 +1579,7 @@ export default function MitzvahCircle() {
                   onStart={handleStart}
                   onComplete={handleComplete}
                   onVerify={handleVerify}
+                  onQuickView={setQuickViewRequest}
                 />
               ) : (
                 <div className="rounded-2xl border border-blue-100 bg-blue-50 p-3 text-[13px] font-semibold text-blue-900">
@@ -1457,6 +1608,7 @@ export default function MitzvahCircle() {
                   onStart={handleStart}
                   onComplete={handleComplete}
                   onVerify={handleVerify}
+                  onQuickView={setQuickViewRequest}
                 />
               </div>
             )) : <EmptyState title="No offers yet" text="Offer to help on an open request and it will show here." />
@@ -1477,6 +1629,7 @@ export default function MitzvahCircle() {
                 onStart={handleStart}
                 onComplete={handleComplete}
                 onVerify={handleVerify}
+                onQuickView={setQuickViewRequest}
               />
             )) : <EmptyState title="You have not posted requests yet" text="Create a volunteer or paid request when you need help." />
           )}
@@ -1500,6 +1653,7 @@ export default function MitzvahCircle() {
                 onStart={handleStart}
                 onComplete={handleComplete}
                 onVerify={handleVerify}
+                onQuickView={setQuickViewRequest}
               />
             )) : <EmptyState title="No completed mitzvahs yet" text="Verified or cancelled requests will show here." />
           )}
@@ -1516,6 +1670,17 @@ export default function MitzvahCircle() {
           toast.success('Request posted.');
         }}
       />
+
+      {quickViewRequest && (
+        <QuickViewSheet
+          request={quickViewRequest}
+          offers={state.mitzvah_offers}
+          currentUser={currentUser}
+          onClose={() => setQuickViewRequest(null)}
+          onOffer={async (request) => { await handleOffer(request); setQuickViewRequest(null); }}
+          onAcceptPaid={async (request) => { await handleAcceptPaid(request); setQuickViewRequest(null); }}
+        />
+      )}
     </main>
   );
 }
