@@ -10,6 +10,7 @@ import CookieConsentBanner from '@/components/common/CookieConsentBanner';
 import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
+import AppErrorBoundary from '@/components/common/AppErrorBoundary';
 
 // Lazy load main pages
 const Feed = lazy(() => import('@/pages/Feed'));
@@ -107,21 +108,31 @@ export default function Layout({ children, currentPageName }) {
             activeIndex={currentIndex}
             onIndexChange={handleTabChange}
           >
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <Feed />
-            </Suspense>
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <MitzvahCircle isActive={currentIndex === 1} />
-            </Suspense>
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <Communities />
-            </Suspense>
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <Messages />
-            </Suspense>
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
-              <Profile />
-            </Suspense>
+            <AppErrorBoundary inline fallbackMessage="Feed could not load.">
+              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+                <Feed />
+              </Suspense>
+            </AppErrorBoundary>
+            <AppErrorBoundary inline fallbackMessage="Mitzvah Circle could not load.">
+              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+                <MitzvahCircle isActive={currentIndex === 1} />
+              </Suspense>
+            </AppErrorBoundary>
+            <AppErrorBoundary inline fallbackMessage="Communities could not load.">
+              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+                <Communities />
+              </Suspense>
+            </AppErrorBoundary>
+            <AppErrorBoundary inline fallbackMessage="Messages could not load.">
+              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+                <Messages />
+              </Suspense>
+            </AppErrorBoundary>
+            <AppErrorBoundary inline fallbackMessage="Profile could not load.">
+              <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" /></div>}>
+                <Profile />
+              </Suspense>
+            </AppErrorBoundary>
           </SwipeableTabs>
         ) : (
           children

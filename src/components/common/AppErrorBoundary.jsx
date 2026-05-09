@@ -18,6 +18,27 @@ export default class AppErrorBoundary extends React.Component {
   render() {
     if (!this.state.hasError) return this.props.children;
 
+    // Inline variant — used to protect individual page sections.
+    // Renders a compact error card instead of blowing up the full page.
+    if (this.props.inline) {
+      return (
+        <div className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-5 text-center">
+          <AlertTriangle className="h-5 w-5 text-slate-400" />
+          <p className="text-[13px] font-semibold text-slate-600">
+            {this.props.fallbackMessage || 'This section could not load.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => this.setState({ hasError: false })}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-bold text-slate-700 transition hover:bg-slate-50"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Try again
+          </button>
+        </div>
+      );
+    }
+
     return (
       <main className="flex min-h-[100dvh] items-center justify-center bg-[#F6F8FB] px-4">
         <section className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm">

@@ -3,6 +3,7 @@ import { dataService } from '@/services';
 import UserAvatar from '@/components/common/UserAvatar';
 import { formatDistanceToNow } from 'date-fns';
 import { BarChart2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function PollCard({ post, currentUser }) {
   const [votes, setVotes] = useState([]);
@@ -39,6 +40,8 @@ export default function PollCard({ post, currentUser }) {
       await dataService.entities.PollVote.create({ post_id: post.id, user_id: currentUser.id, option_index: index });
       await dataService.entities.UnifiedPost.update(post.id, { poll_votes_count: totalVotes + 1 });
       setUserVote(index);
+    } catch {
+      toast.error('Could not submit your vote. Please try again.');
     } finally {
       setVoting(false);
     }

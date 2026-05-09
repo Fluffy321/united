@@ -7,6 +7,7 @@ import ReportModal from '@/components/common/ReportModal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
+import QueryError from '@/components/common/QueryError';
 import { parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import ModernProfileHeader from '@/components/profile/ModernProfileHeader.jsx';
 import ModernStatsRow from '@/components/profile/ModernStatsRow.jsx';
@@ -27,6 +28,7 @@ export default function Profile() {
   const [searchParams] = useSearchParams();
   const { user: currentUser } = useAuth();
   const [profileUser, setProfileUser] = useState(null);
+  const [profileLoadError, setProfileLoadError] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   const [showInterestPicker, setShowInterestPicker] = useState(false);
@@ -34,6 +36,7 @@ export default function Profile() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    setProfileLoadError(false);
     loadProfile();
   }, [searchParams, currentUser?.id]);
 
@@ -64,6 +67,7 @@ export default function Profile() {
       }
     } catch (e) {
       console.warn('Profile: error loading profile', e?.message);
+      setProfileLoadError(true);
     }
   };
 
@@ -174,6 +178,19 @@ export default function Profile() {
     toast.success('User blocked');
     navigate(createPageUrl('Feed'));
   };
+
+  if (profileLoadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          <QueryError
+            message="Profile could not load."
+            onRetry={() => { setProfileLoadError(false); loadProfile(); }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (!profileUser) {
     return (
