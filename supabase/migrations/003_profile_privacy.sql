@@ -6,6 +6,7 @@ alter table public.profiles
   add column if not exists public_community text,
   add column if not exists city text,
   add column if not exists bio text,
+  add column if not exists is_profile_complete boolean not null default false,
   add column if not exists interests jsonb,
   add column if not exists notification_settings jsonb,
   add column if not exists message_settings jsonb,
