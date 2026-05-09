@@ -1,9 +1,9 @@
+/* ─── Google Fonts: Fraunces (serif display) + Inter (sans body) ─── */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* ─── Google Fonts: Fraunces (serif display) + Inter (sans body) ─── */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -146,6 +146,20 @@
     touch-action: manipulation;
   }
 
+  button,
+  [role="button"],
+  a[href] {
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform, filter;
+    transition-duration: 160ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  button:active,
+  [role="button"]:active,
+  a[href]:active {
+    transform: scale(0.98);
+  }
+
   /* Display headings use serif */
   .font-display, .j-display {
     font-family: var(--font-display);
@@ -195,7 +209,7 @@
   }
 
   .app-card-hover {
-    transition: border-color 160ms ease, box-shadow 160ms ease, transform 120ms ease;
+    transition: border-color 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1), transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .app-card-hover:hover {
@@ -403,6 +417,36 @@
   }
 
   /* Bottom-nav pages intentionally share one width so tabs do not jump sizes. */
+
+  .motion-page-enter {
+    animation: appFadeSlide 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    will-change: opacity, transform;
+  }
+
+  .motion-soft-in {
+    animation: appFadeSlide 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    will-change: opacity, transform;
+  }
+
+  .motion-stagger > * {
+    animation: appListItemIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    will-change: opacity, transform;
+  }
+
+  .motion-stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .motion-stagger > *:nth-child(2) { animation-delay: 24ms; }
+  .motion-stagger > *:nth-child(3) { animation-delay: 48ms; }
+  .motion-stagger > *:nth-child(4) { animation-delay: 72ms; }
+  .motion-stagger > *:nth-child(5) { animation-delay: 96ms; }
+  .motion-stagger > *:nth-child(n+6) { animation-delay: 120ms; }
+
+  .motion-press {
+    transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
+  }
+
+  .motion-press:active {
+    transform: scale(0.98);
+  }
 }
 
 /* ─── JUnited Design Utilities ─────────────────────────────────────── */
@@ -469,8 +513,18 @@
 .skeleton {
   background: linear-gradient(90deg, #F1F5F9 25%, #E8EEF6 50%, #F1F5F9 75%);
   background-size: 1200px 100%;
-  animation: shimmer 1.6s infinite linear;
+  animation: shimmer 1.35s infinite linear;
   border-radius: 8px;
+}
+
+@keyframes appFadeSlide {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes appListItemIn {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 /* Tab fade-in animation */
@@ -479,6 +533,24 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 .tab-fade-in { animation: tabFade 150ms ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+
+  button:active,
+  [role="button"]:active,
+  a[href]:active,
+  .motion-press:active {
+    transform: none !important;
+  }
+}
 
 /* Reaction pop animation */
 @keyframes reactionPop {

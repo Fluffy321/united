@@ -626,7 +626,7 @@ export default function Communities() {
 	            </div>
 	            <Star className="h-5 w-5 text-amber-500" />
 	          </div>
-	          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+	          <div className="motion-stagger grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
 	            {launchTemplates.map((template) => (
 	              <button
 	                key={template.title}
@@ -634,7 +634,7 @@ export default function Communities() {
 	                  setCategory(template.category);
 	                  setQuery('');
 	                }}
-	                className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-left transition hover:bg-white active:scale-[0.99]"
+	                className="motion-press rounded-2xl border border-slate-200 bg-slate-50 p-3 text-left transition hover:bg-white active:scale-[0.99]"
 	              >
 	                <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-black ${categoryHighlights[template.category] || 'border-slate-200 bg-white text-slate-600'}`}>
 	                  {template.category}
@@ -655,7 +655,7 @@ export default function Communities() {
             <p className="mt-1 text-sm text-slate-500">Try another search, switch categories, or create a new community.</p>
           </div>
         ) : (
-          <div className="space-y-7">
+          <div className="motion-stagger space-y-7">
             {featuredCommunities.length > 0 && (
               <CommunitySection
                 title="Featured Communities"
@@ -715,7 +715,7 @@ function CommunitySection({ title, subtitle, communities, onOpen, onToggleJoin, 
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="motion-stagger grid gap-3 sm:grid-cols-2">
         {communities.map((community) => (
           <CommunityHubCard
             key={community.id}

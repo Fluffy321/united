@@ -920,7 +920,7 @@ export default function Feed() {
         )}
 
         {activeTab !== 'events' && isLoading && !loadTimedOut && (
-          <div className="space-y-3 tab-fade-in">
+          <div className="motion-stagger space-y-3 tab-fade-in">
             {[...Array(4)].map((_, i) => (
               <SkeletonCard key={i} hasImage={i === 1} />
             ))}
@@ -934,7 +934,7 @@ export default function Feed() {
           </div>
         )}
         {activeTab !== 'events' && (!isLoading || loadTimedOut) && feedPosts.length > 0 && (
-          <div className="app-card divide-y divide-slate-100 overflow-hidden tab-fade-in">
+          <div className="app-card motion-stagger divide-y divide-slate-100 overflow-hidden tab-fade-in">
             {/* Question of the Day — embedded as first "post" in the feed card */}
             <DailyHooks
               onPostClick={(type, subtype, prefill) => {
@@ -1016,7 +1016,7 @@ export default function Feed() {
                 <button
                   onClick={() => setPage(p => p + 1)}
                   disabled={isLoading}
-                  className="px-6 py-2 rounded-full bg-slate-100 text-slate-700 text-[13px] font-semibold hover:bg-slate-200 transition-colors disabled:opacity-50"
+                  className="motion-press px-6 py-2 rounded-full bg-slate-100 text-slate-700 text-[13px] font-semibold hover:bg-slate-200 transition-colors disabled:opacity-50"
                 >
                   {isLoading ? 'Loading…' : 'Load more posts'}
                 </button>
