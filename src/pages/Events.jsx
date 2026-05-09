@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, MapPin, Clock, Plus, ChevronLeft, Users, Ticket } from 'lucide-react';
 import PaymentModal from '@/components/payments/PaymentModal';
 import EventSummaryButton from '@/components/events/EventSummaryButton';
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -50,10 +50,10 @@ export default function Events() {
       if (isGoing) {
         const existing = rsvps.find(r => r.post_id === event.id);
         if (existing) await dataService.entities.RSVP.delete(existing.id);
-        await dataService.entities.UnifiedPost.update(event.id, { likes_count: Math.max(0, (event.likes_count || 0) - 1) });
+        await incrementCounter('posts', 'likes_count', event.id, -1);
       } else {
         await dataService.entities.RSVP.create({ post_id: event.id, user_id: currentUser.id, user_name: currentUser.display_name || currentUser.full_name });
-        await dataService.entities.UnifiedPost.update(event.id, { likes_count: (event.likes_count || 0) + 1 });
+        await incrementCounter('posts', 'likes_count', event.id, 1);
         toast.success('You\'re going! 🎉');
       }
     },

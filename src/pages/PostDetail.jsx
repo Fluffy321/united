@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Loader2, Heart, MessageCircle, Bookmark } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { dataService, notificationsService } from '@/services';
+import { dataService, notificationsService, togglePostLike, loadUserPostLikes } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { createPageUrl } from '@/utils';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
@@ -40,8 +40,8 @@ export default function PostDetail() {
 
       if (currentUser) {
         // Load user likes
-        const likes = await dataService.entities.Like.filter({ user_id: currentUser.id });
-        setUserLikes(likes.map(l => l.post_id));
+        const likedPostIds = await loadUserPostLikes(currentUser.id);
+        setUserLikes(likedPostIds);
 
         // Load user bookmarks
         const bookmarks = await dataService.entities.Bookmark.filter({ user_id: currentUser.id });
@@ -56,15 +56,14 @@ export default function PostDetail() {
 
   const handleLike = async () => {
     if (!post) return;
-    const isLiked = userLikes.includes(post.id);
-    setUserLikes(prev => isLiked ? prev.filter(id => id !== post.id) : [...prev, post.id]);
-    
-    if (isLiked) {
-      const like = await dataService.entities.Like.filter({ post_id: post.id, user_id: currentUser.id });
-      if (like[0]) await dataService.entities.Like.delete(like[0].id);
-    } else {
-      await dataService.entities.Like.create({ post_id: post.id, user_id: currentUser.id });
-      if (post.user_id !== currentUser.id) {
+    const wasLiked = userLikes.includes(post.id);
+    // Optimistic update
+    setUserLikes(prev => wasLiked ? prev.filter(id => id !== post.id) : [...prev, post.id]);
+    try {
+      const { liked } = await togglePostLike(post.id, currentUser.id);
+      // Reconcile with the authoritative result in case of a race
+      setUserLikes(prev => liked ? [...new Set([...prev, post.id])] : prev.filter(id => id !== post.id));
+      if (liked && post.user_id !== currentUser.id) {
         notificationsService.create({
           userId: post.user_id,
           actorId: currentUser.id,
@@ -75,10 +74,11 @@ export default function PostDetail() {
           postId: post.id,
         }).catch(() => {});
       }
+    } catch {
+      // Revert optimistic update on failure
+      setUserLikes(prev => wasLiked ? [...prev, post.id] : prev.filter(id => id !== post.id));
+      toast.error('Could not update like. Please try again.');
     }
-    await dataService.entities.UnifiedPost.update(post.id, {
-      likes_count: Math.max(0, (post.likes_count || 0) + (isLiked ? -1 : 1))
-    });
   };
 
   const handleBookmark = async () => {

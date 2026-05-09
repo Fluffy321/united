@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { MessageSquare, Send, X, Image, ArrowUp, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { dataService } from '@/services';
+import { dataService, checkRateLimit, RateLimitError } from '@/services';
 import { toast } from 'sonner';
 
 const AVATAR_COLORS = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899','#0891B2'];
@@ -41,12 +41,15 @@ function ReactionBar({ postId, currentUser, initialCounts = {} }) {
     }
     // Persist via Reaction entity
     try {
+      await checkRateLimit('react');
       const existing = await dataService.entities.Reaction.filter({ post_id: postId, user_id: currentUser.id });
       for (const r of existing) await dataService.entities.Reaction.delete(r.id);
       if (myReaction !== emoji) {
         await dataService.entities.Reaction.create({ post_id: postId, user_id: currentUser.id, emoji });
       }
-    } catch {}
+    } catch (err) {
+      if (err instanceof RateLimitError) toast.error(err.message);
+    }
   };
 
   const handlePress = () => {

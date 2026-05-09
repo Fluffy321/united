@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { dataService } from '@/services';
+import { dataService, batchFetchByIds } from '@/services';
 import { Bookmark, Loader2 } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 
@@ -38,13 +38,7 @@ export default function SavedPostsSection({ userId }) {
 
   const { data: savedPosts = [], isLoading: loadingPosts } = useQuery({
     queryKey: ['saved-posts', bookmarks.map(b => b.post_id).join(',')],
-    queryFn: async () => {
-      const postIds = bookmarks.map(b => b.post_id);
-      const results = await Promise.all(
-        postIds.map(id => dataService.entities.UnifiedPost.filter({ id }).then(r => r[0]).catch(() => null))
-      );
-      return results.filter(Boolean);
-    },
+    queryFn: () => batchFetchByIds('UnifiedPost', bookmarks.map(b => b.post_id)),
     enabled: bookmarks.length > 0,
     staleTime: 30000,
   });

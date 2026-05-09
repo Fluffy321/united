@@ -42,4 +42,35 @@ export const messagesService = {
   },
 };
 
+// recipient: { id, name, age_range? }
+export function findDirectConversation(currentUserId, recipientId, conversations) {
+  return conversations.find(c =>
+    c.participant_ids?.includes(currentUserId) &&
+    c.participant_ids?.includes(recipientId) &&
+    c.participant_ids?.length === 2
+  ) ?? null;
+}
+
+export async function createDirectConversation(currentUser, recipient, options = {}) {
+  return dataService.entities.Conversation.create({
+    participant_ids: [currentUser.id, recipient.id],
+    participant_names: [
+      currentUser.display_name || currentUser.full_name?.split(' ')[0] || 'User',
+      recipient.name,
+    ],
+    participant_ages: [currentUser.age_range || '18+', recipient.age_range || '18+'],
+    unread_count: { [recipient.id]: 0 },
+    request_id: options.request_id ?? null,
+    request_title: options.request_title ?? null,
+    request_type: options.request_type ?? 'general',
+  });
+}
+
+export async function findOrCreateDirectConversation(currentUser, recipient, options = {}) {
+  const conversations = await dataService.entities.Conversation.list('-updated_date', 100);
+  const existing = findDirectConversation(currentUser.id, recipient.id, conversations);
+  if (existing) return existing;
+  return createDirectConversation(currentUser, recipient, options);
+}
+
 export default messagesService;

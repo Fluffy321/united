@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -100,7 +100,7 @@ export default function ShulPage() {
       });
     },
     onSuccess: async (newMembership) => {
-      await dataService.entities.Shul.update(shul.id, { member_count: (shul.member_count || 0) + 1 });
+      await incrementCounter('shuls', 'member_count', shul.id, 1);
       setMembership(newMembership);
       setShul(prev => ({ ...prev, member_count: (prev.member_count || 0) + 1 }));
       queryClient.invalidateQueries({ queryKey: ['shul-members'] });

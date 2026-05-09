@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, Loader2, ArrowRight, Heart } from 'lucide-react';
+import { X, Send, Loader2, ArrowRight, Heart, AlertCircle, RefreshCw } from 'lucide-react';
 import { dataService, postsService } from '@/services';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,7 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
   const navigate = useNavigate();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [posting, setPosting] = useState(false);
@@ -20,34 +21,47 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
   useEffect(() => {
     if (isOpen && postId) {
       setShowAll(false);
+      setLoadError(false);
       loadComments();
     }
   }, [isOpen, postId]);
 
   const loadCommentLikes = async (loadedComments) => {
     if (!currentUser || loadedComments.length === 0) return;
-    const ids = loadedComments.map(c => c.id);
-    // Fetch likes where post_id matches comment ids (we reuse Like entity with comment id)
-    const allLikes = await Promise.all(
-      ids.map(id => dataService.entities.Like.filter({ post_id: id }))
-    );
-    const map = {};
-    ids.forEach((id, i) => {
-      map[id] = {
-        count: allLikes[i].length,
-        liked: allLikes[i].some(l => l.user_id === currentUser.id),
-      };
-    });
-    setCommentLikes(map);
+    try {
+      const ids = loadedComments.map(c => c.id);
+      // Single read of all Like records, then group by comment ID in memory.
+      // Like is always localStorage, so this is one JSON parse instead of N.
+      const allLikes = await dataService.entities.Like.filter({}, null, 5000);
+      const idSet = new Set(ids);
+      const byComment = {};
+      allLikes.filter(l => idSet.has(l.post_id)).forEach(l => {
+        (byComment[l.post_id] ??= []).push(l);
+      });
+      const map = {};
+      ids.forEach(id => {
+        const likes = byComment[id] || [];
+        map[id] = { count: likes.length, liked: likes.some(l => l.user_id === currentUser.id) };
+      });
+      setCommentLikes(map);
+    } catch {
+      // Non-critical — like counts stay empty rather than breaking the sheet.
+    }
   };
 
   const loadComments = async () => {
     setLoading(true);
-    const allComments = await postsService.listComments(postId, '-created_date');
-    const filtered = allComments.filter(c => !blockedIds.includes(c.author_id));
-    setComments(filtered);
-    setLoading(false);
-    loadCommentLikes(filtered);
+    setLoadError(false);
+    try {
+      const allComments = await postsService.listComments(postId, '-created_date');
+      const filtered = allComments.filter(c => !blockedIds.includes(c.author_id));
+      setComments(filtered);
+      loadCommentLikes(filtered);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLikeComment = async (commentId) => {
@@ -58,11 +72,17 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
       ...prev,
       [commentId]: { count: current.liked ? current.count - 1 : current.count + 1, liked: !current.liked },
     }));
-    if (current.liked) {
-      const existing = await dataService.entities.Like.filter({ post_id: commentId, user_id: currentUser.id });
-      if (existing[0]) await dataService.entities.Like.delete(existing[0].id);
-    } else {
-      await dataService.entities.Like.create({ post_id: commentId, user_id: currentUser.id });
+    try {
+      if (current.liked) {
+        const existing = await dataService.entities.Like.filter({ post_id: commentId, user_id: currentUser.id });
+        if (existing[0]) await dataService.entities.Like.delete(existing[0].id);
+      } else {
+        await dataService.entities.Like.create({ post_id: commentId, user_id: currentUser.id });
+      }
+    } catch {
+      // Revert the optimistic update so the displayed count stays accurate.
+      setCommentLikes(prev => ({ ...prev, [commentId]: current }));
+      toast.error('Could not update like. Please try again.');
     }
   };
 
@@ -141,6 +161,19 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+          </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+            <AlertCircle className="w-8 h-8 text-slate-300 mb-3" />
+            <p className="text-[14px] font-semibold text-slate-600">Couldn't load comments</p>
+            <p className="text-[12px] text-slate-400 mt-1 mb-4">Check your connection and try again.</p>
+            <button
+              onClick={loadComments}
+              className="flex items-center gap-1.5 text-[13px] font-semibold text-blue-600 hover:text-blue-700"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Retry
+            </button>
           </div>
         ) : comments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -254,7 +287,7 @@ export default function CommentsSheet({ postId, postAuthorId, isOpen, onClose, c
           placeholder={replyingTo ? 'Write a reply...' : 'Add a comment...'}
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          onKeyPress={(e) => {
+          onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey && newComment.trim()) {
               handlePostComment();
             }

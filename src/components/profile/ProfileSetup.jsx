@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import { toast } from 'sonner';
 import CitySelector from '@/components/common/CitySelector';
 
@@ -133,7 +133,7 @@ export default function ProfileSetup({ user, onComplete }) {
           dataService.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: displayName.trim(), role: 'member' })
         ),
         ...groupsToJoin.map(g =>
-          dataService.entities.CommunityGroup.update(g.id, { member_count: (g.member_count || 0) + 1 })
+          incrementCounter('community_groups', 'member_count', g.id, 1)
         ),
       ]);
 

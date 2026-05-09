@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import { ArrowLeft, Loader2, Pin, MapPin, Users, MessageCircle, Heart } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
@@ -211,7 +211,7 @@ function PostCard({ post, currentUser, onPin, isAdmin }) {
     setLiked(l => !l);
     setLikes(n => liked ? n - 1 : n + 1);
     try {
-      await dataService.entities.CommunityPost.update(post.id, { likes_count: liked ? likes - 1 : likes + 1 });
+      await incrementCounter('community_posts', 'likes_count', post.id, liked ? -1 : 1);
     } catch {}
   };
 
@@ -439,11 +439,11 @@ export default function CommunityNetworkView({ communityId, currentUser, onBack 
     if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     if (isMember) {
       await dataService.entities.UserCommunity.delete(membership[0].id);
-      if (community) await dataService.entities.Community.update(communityId, { follower_count: Math.max(0, (community.follower_count || 1) - 1) });
+      if (community) await incrementCounter('communities', 'follower_count', communityId, -1);
       toast.success('Left community');
     } else {
       await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: communityId, role: 'Member' });
-      if (community) await dataService.entities.Community.update(communityId, { follower_count: (community.follower_count || 0) + 1 });
+      if (community) await incrementCounter('communities', 'follower_count', communityId, 1);
       toast.success('Joined! 🎉');
     }
     queryClient.invalidateQueries({ queryKey: ['community-membership-main', communityId] });

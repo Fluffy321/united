@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { Pin, Eye, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { dataService } from '@/services';
+import { dataService, checkRateLimit, RateLimitError } from '@/services';
+import { toast } from 'sonner';
 
 const AVATAR_COLORS = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899','#0891B2'];
 
@@ -33,12 +34,15 @@ function AnnouncementReactionBar({ postId, currentUser, memberCount }) {
       setCounts(prev => ({ ...prev, [emoji]: (prev[emoji] || 0) + 1 }));
     }
     try {
+      await checkRateLimit('react');
       const existing = await dataService.entities.Reaction.filter({ post_id: postId, user_id: currentUser?.id });
       for (const r of existing) await dataService.entities.Reaction.delete(r.id);
       if (myReaction !== emoji) {
         await dataService.entities.Reaction.create({ post_id: postId, user_id: currentUser?.id, emoji });
       }
-    } catch {}
+    } catch (err) {
+      if (err instanceof RateLimitError) toast.error(err.message);
+    }
   };
 
   return (

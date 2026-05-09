@@ -12,6 +12,56 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import AdminRoute from '@/components/AdminRoute';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import OnboardingFlow, { hasCompletedOnboarding } from '@/components/onboarding/OnboardingFlow';
+import { getSupabaseConfigStatus } from '@/api/supabaseClient';
+
+// Evaluated once at module load. In dev mode this is always false so the local
+// demo still works. In production, missing Supabase config is always an operator
+// error — surfacing it immediately prevents users from silently "using" the app
+// against localStorage and losing all their data.
+const supabaseStatus = getSupabaseConfigStatus();
+const PROD_CONFIG_MISSING = import.meta.env.PROD && !supabaseStatus.shouldUseSupabase;
+
+function ConfigVar({ name, present }) {
+  return (
+    <div className={`flex items-center gap-2 py-0.5 ${present ? 'text-green-700' : 'text-red-600 font-semibold'}`}>
+      <span className="w-3 text-center select-none">{present ? '✓' : '✗'}</span>
+      <span>{name}</span>
+      {!present && <span className="text-red-400 font-normal">(missing or not set to correct value)</span>}
+    </div>
+  );
+}
+
+function ProductionConfigError() {
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <div className="max-w-lg w-full bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
+        <div className="bg-red-600 px-6 py-4">
+          <h1 className="text-white font-extrabold text-lg">Production Configuration Error</h1>
+          <p className="text-red-100 text-sm mt-0.5">This app cannot start without a Supabase backend.</p>
+        </div>
+        <div className="px-6 py-5 space-y-5">
+          <p className="text-sm text-slate-700 leading-relaxed">
+            Required environment variables are missing or disabled. Without them the app would
+            silently run in demo mode — all user data would be stored only in the browser and lost
+            on refresh. Set the variables below in your deployment environment and redeploy.
+          </p>
+          <div className="bg-slate-50 rounded-xl border border-slate-200 px-4 py-3 font-mono text-xs space-y-1">
+            <ConfigVar name="VITE_SUPABASE_URL" present={supabaseStatus.hasUrl} />
+            <ConfigVar name="VITE_SUPABASE_ANON_KEY" present={supabaseStatus.hasAnonKey} />
+            <ConfigVar
+              name="VITE_SUPABASE_ENABLED=true"
+              present={supabaseStatus.isSupabaseEnabled}
+            />
+          </div>
+          <p className="text-xs text-slate-400">
+            See <span className="font-mono">env.example</span> in the repository root for the full
+            list of required variables and how to configure them.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Route-level code splitting: each page loads only when first navigated to.
 const PublicProfile        = lazy(() => import('@/pages/PublicProfile'));
@@ -136,6 +186,8 @@ const AuthenticatedApp = () => {
 
 
 function App() {
+  if (PROD_CONFIG_MISSING) return <ProductionConfigError />;
+
   return (
     <AppErrorBoundary>
       <ThemeProvider>

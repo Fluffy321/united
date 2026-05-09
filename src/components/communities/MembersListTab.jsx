@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { dataService } from '@/services';
+import { dataService, findOrCreateDirectConversation } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Users, MessageCircle, Search, ChevronDown, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -193,17 +193,9 @@ export default function MembersListTab({ communityId }) {
     if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setMessagingId(member.user_id);
     try {
-      const allConvs = await dataService.entities.Conversation.list('-updated_date', 100);
-      const existing = allConvs.find(c =>
-        c.participant_ids?.includes(currentUser.id) &&
-        c.participant_ids?.includes(member.user_id) &&
-        c.participant_ids?.length === 2
-      );
-      if (existing) { navigate(`/Messages?conversation=${existing.id}`); return; }
-      const conv = await dataService.entities.Conversation.create({
-        participant_ids: [currentUser.id, member.user_id],
-        participant_names: [currentUser.full_name || 'You', member.user_name || 'Member'],
-        last_message: null, unread_count: {}, request_type: 'general',
+      const conv = await findOrCreateDirectConversation(currentUser, {
+        id: member.user_id,
+        name: member.user_name || 'Member',
       });
       navigate(`/Messages?conversation=${conv.id}`);
     } catch { toast.error('Could not start conversation'); }

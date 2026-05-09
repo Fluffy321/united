@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus } from 'lucide-react';
@@ -41,7 +41,7 @@ export default function Groups() {
       user_name: currentUser.full_name,
       role: 'member'
     });
-    await dataService.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
+    await incrementCounter('community_groups', 'member_count', group.id, 1);
     setMembershipSet(prev => new Set([...prev, group.id]));
     queryClient.invalidateQueries({ queryKey: ['community-groups'] });
     toast.success(`Joined ${group.name}!`);
@@ -50,7 +50,7 @@ export default function Groups() {
   const handleLeave = async (group) => {
     const memberships = await dataService.entities.GroupMember.filter({ group_id: group.id, user_id: currentUser.id });
     if (memberships[0]) await dataService.entities.GroupMember.delete(memberships[0].id);
-    await dataService.entities.CommunityGroup.update(group.id, { member_count: Math.max(0, (group.member_count || 1) - 1) });
+    await incrementCounter('community_groups', 'member_count', group.id, -1);
     setMembershipSet(prev => { const s = new Set(prev); s.delete(group.id); return s; });
     queryClient.invalidateQueries({ queryKey: ['community-groups'] });
     toast.success(`Left ${group.name}`);

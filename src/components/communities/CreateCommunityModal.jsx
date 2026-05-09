@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, Plus, ImagePlus, X, Lock, Globe, Check, Sparkles, ChevronRight } from 'lucide-react';
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import { toast } from 'sonner';
 
 const CATEGORIES = [
@@ -133,7 +133,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
         likes_count: 0,
         comments_count: 0,
       });
-      await dataService.entities.Community.update(createdCommunity.id, { post_count: 1 }).catch(() => {});
+      await incrementCounter('communities', 'post_count', createdCommunity.id, 1).catch(() => {});
       toast.success('Community launched! 🎉');
       onCreated?.(createdCommunity);
       reset();

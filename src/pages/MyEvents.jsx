@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Loader2, Calendar, MapPin, Clock } from 'lucide-react';
-import { dataService } from '@/services';
+import { dataService, batchFetchByIds } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
@@ -14,11 +14,7 @@ export default function MyEvents() {
     queryKey: ['my-rsvps', currentUser?.id],
     queryFn: async () => {
       const myRsvps = await dataService.entities.RSVP.filter({ user_id: currentUser.id });
-      const postIds = myRsvps.map(r => r.post_id);
-      const posts = await Promise.all(
-        postIds.map(id => dataService.entities.UnifiedPost.filter({ id }))
-      );
-      return posts.map(p => p[0]).filter(Boolean);
+      return batchFetchByIds('UnifiedPost', myRsvps.map(r => r.post_id));
     },
     enabled: !!currentUser,
   });
@@ -26,11 +22,21 @@ export default function MyEvents() {
   const { data: createdEvents = [] } = useQuery({
     queryKey: ['created-events', currentUser?.id],
     queryFn: async () => {
-      return dataService.entities.UnifiedPost.filter(
+      const events = await dataService.entities.UnifiedPost.filter(
         { user_id: currentUser.id, type: 'event' },
         '-created_date',
         50
       );
+      if (!events.length) return [];
+      // Batch-load all RSVPs for every created event in one pass so that
+      // EventCreatorCard never needs to fetch data on its own.
+      const eventIds = new Set(events.map(e => e.id));
+      const allRsvps = await dataService.entities.RSVP.filter({}, null, 5000);
+      const rsvpsByEvent = {};
+      allRsvps.filter(r => eventIds.has(r.post_id)).forEach(r => {
+        (rsvpsByEvent[r.post_id] ??= []).push(r);
+      });
+      return events.map(e => ({ ...e, _rsvps: rsvpsByEvent[e.id] || [] }));
     },
     enabled: !!currentUser,
   });
@@ -87,6 +93,7 @@ export default function MyEvents() {
                   key={post.id}
                   post={post}
                   currentUser={currentUser}
+                  rsvps={post._rsvps || []}
                 />
               ))}
             </div>
@@ -105,20 +112,8 @@ export default function MyEvents() {
   );
 }
 
-function EventCreatorCard({ post, currentUser }) {
-  const [guestCount, setGuestCount] = useState(0);
-  const [guests, setGuests] = useState([]);
+function EventCreatorCard({ post, currentUser, rsvps = [] }) {
   const [showGuests, setShowGuests] = useState(false);
-
-  useEffect(() => {
-    loadGuests();
-  }, [post.id]);
-
-  const loadGuests = async () => {
-    const rsvps = await dataService.entities.RSVP.filter({ post_id: post.id });
-    setGuestCount(rsvps.length);
-    setGuests(rsvps);
-  };
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
@@ -156,12 +151,12 @@ function EventCreatorCard({ post, currentUser }) {
             onClick={() => setShowGuests(!showGuests)}
             className="text-sm font-semibold text-blue-600 hover:text-blue-700"
           >
-            {guestCount} Going {showGuests ? '▼' : '▶'}
+            {rsvps.length} Going {showGuests ? '▼' : '▶'}
           </button>
-          
-          {showGuests && guests.length > 0 && (
+
+          {showGuests && rsvps.length > 0 && (
             <div className="mt-3 space-y-2">
-              {guests.map(guest => (
+              {rsvps.map(guest => (
                 <div key={guest.id} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
                   {guest.user_avatar_url && (
                     <img src={guest.user_avatar_url} alt="" className="w-6 h-6 rounded-full" />

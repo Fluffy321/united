@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Loader2, Check, Sparkles } from 'lucide-react';
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import { toast } from 'sonner';
 
 const INTERESTS = [
@@ -63,9 +63,7 @@ export default function CommunityInterestOnboarding({ currentUser, allCommunitie
         role: 'Member',
         user_name: currentUser.full_name || currentUser.display_name,
       });
-      await dataService.entities.Community.update(community.id, {
-        follower_count: (community.follower_count || 0) + 1,
-      }).catch(() => {});
+      await incrementCounter('communities', 'follower_count', community.id, 1).catch(() => {});
     }));
 
     const joined = results.filter(r => r.status === 'fulfilled').length;

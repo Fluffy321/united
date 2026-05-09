@@ -774,6 +774,155 @@ const getSupabaseUser = async () => {
   });
 };
 
+// Map from SQL table name → localStorage entity name (for local/demo mode fallback).
+const COUNTER_TABLE_TO_ENTITY = {
+  posts: 'UnifiedPost',
+  communities: 'Community',
+  community_posts: 'CommunityPost',
+  group_discussions: 'GroupDiscussion',
+  community_groups: 'CommunityGroup',
+  shuls: 'Shul',
+};
+
+// Tables that have a server-side increment_counter RPC in Supabase.
+const SUPABASE_COUNTER_TABLES = new Set(['posts', 'communities']);
+
+/**
+ * Atomically increment (positive delta) or decrement (negative delta) a counter
+ * column.  In Supabase mode the update runs entirely in Postgres, so concurrent
+ * actions on the same row cannot race.  In local/demo mode the update is applied
+ * to localStorage (single-threaded JS, so no drift is possible there either).
+ */
+export const incrementCounter = async (table, column, id, delta = 1) => {
+  if (shouldUseSupabase && supabase && SUPABASE_COUNTER_TABLES.has(table)) {
+    const { error } = await supabase.rpc('increment_counter', {
+      p_table: table, p_column: column, p_id: id, p_delta: delta,
+    });
+    if (error) throw error;
+    return;
+  }
+  const entityName = COUNTER_TABLE_TO_ENTITY[table];
+  if (!entityName) return;
+  writeCollection(entityName, readCollection(entityName).map(item =>
+    item.id === id
+      ? { ...item, [column]: Math.max(0, (item[column] || 0) + delta) }
+      : item
+  ));
+};
+
+/**
+ * Fetch multiple records by their primary-key IDs in a single round-trip.
+ * In Supabase mode uses .in('id', ids) so only one query fires regardless of
+ * how many IDs are requested.  In local/demo mode filters the in-memory
+ * collection with a Set lookup.
+ */
+export const batchFetchByIds = async (entityName, ids) => {
+  if (!ids || ids.length === 0) return [];
+  if (shouldUseSupabase && supabase) {
+    const table = SUPABASE_ENTITY_TABLES[entityName];
+    if (table) {
+      const { data, error } = await supabase.from(table).select('*').in('id', ids);
+      if (error) throw error;
+      return (data || []).map(toAppRow);
+    }
+  }
+  const idSet = new Set(ids);
+  return readCollection(entityName).filter(item => idSet.has(item.id));
+};
+
+/**
+ * Atomically toggle a like on a post.
+ * In Supabase mode the Like row and likes_count are written in one PL/pgSQL
+ * transaction via the toggle_post_like() RPC — no partial failure possible.
+ * In local mode both the Like localStorage entry and the post's likes_count
+ * are updated together (single-threaded JS, so no partial state).
+ *
+ * Returns { liked: boolean } — the new like state after the toggle.
+ * localUserId is only used in local/demo mode; Supabase uses auth.uid().
+ */
+export const togglePostLike = async (postId, localUserId = 'local-demo') => {
+  if (shouldUseSupabase && supabase) {
+    const { data, error } = await supabase.rpc('toggle_post_like', { p_post_id: postId });
+    if (error) throw error;
+    return data; // { liked: boolean }
+  }
+  // Local mode: simulate atomically in a single synchronous block.
+  const likes = readCollection('Like');
+  const idx = likes.findIndex(l => l.post_id === postId && l.user_id === localUserId);
+  const liked = idx === -1;
+  const next = liked
+    ? [...likes, { id: `like-${Date.now()}`, post_id: postId, user_id: localUserId }]
+    : likes.filter((_, i) => i !== idx);
+  writeCollection('Like', next);
+  writeCollection('UnifiedPost', readCollection('UnifiedPost').map(p =>
+    p.id === postId ? { ...p, likes_count: Math.max(0, (p.likes_count || 0) + (liked ? 1 : -1)) } : p
+  ));
+  return { liked };
+};
+
+/**
+ * Load the set of post IDs that a user has liked.
+ * In Supabase mode reads from the post_likes table; in local mode reads the
+ * Like localStorage entries.  Used on page mount to restore liked-indicator state.
+ */
+export const loadUserPostLikes = async (userId) => {
+  if (shouldUseSupabase && supabase) {
+    const { data, error } = await supabase
+      .from('post_likes')
+      .select('post_id')
+      .eq('user_id', userId);
+    if (error) throw error;
+    return (data || []).map(row => row.post_id);
+  }
+  return readCollection('Like')
+    .filter(l => l.user_id === userId)
+    .map(l => l.post_id);
+};
+
+// Rate-limit actions and their server-side windows/limits.
+const RATE_LIMITS = {
+  new_conversation: { limit: 10, windowSeconds: 86400 },  // 10/day
+  send_message:     { limit: 60, windowSeconds: 60 },      // 60/minute
+  react:            { limit: 30, windowSeconds: 60 },      // 30/minute
+  create_post:      { limit: 20, windowSeconds: 3600 },    // 20/hour
+};
+
+export class RateLimitError extends Error {
+  constructor(action) {
+    const cfg = RATE_LIMITS[action];
+    const window = cfg
+      ? cfg.windowSeconds >= 86400 ? 'day'
+        : cfg.windowSeconds >= 3600 ? 'hour'
+        : 'minute'
+      : 'window';
+    super(`You're doing that too often. Please wait before trying again (limit: ${cfg?.limit ?? '?'} per ${window}).`);
+    this.name = 'RateLimitError';
+    this.action = action;
+  }
+}
+
+/**
+ * Checks the server-side rate limit for `action`.
+ * Throws RateLimitError if the caller is over the limit.
+ * No-ops in local (non-Supabase) mode so dev is unaffected.
+ */
+export const checkRateLimit = async (action) => {
+  if (!shouldUseSupabase || !supabase) return;
+  const cfg = RATE_LIMITS[action];
+  if (!cfg) throw new Error(`Unknown rate-limit action: ${action}`);
+  const { error } = await supabase.rpc('check_rate_limit', {
+    p_action: action,
+    p_limit: cfg.limit,
+    p_window_seconds: cfg.windowSeconds,
+  });
+  if (error) {
+    if (error.code === '42501' || error.message?.includes('Rate limit exceeded')) {
+      throw new RateLimitError(action);
+    }
+    throw error;
+  }
+};
+
 export const base44 = {
   auth: {
     async me() {

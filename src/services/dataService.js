@@ -1,4 +1,5 @@
-import { base44 } from '@/api/base44Client';
+import { base44, incrementCounter, togglePostLike, loadUserPostLikes, batchFetchByIds, checkRateLimit, RateLimitError } from '@/api/base44Client';
+export { incrementCounter, togglePostLike, loadUserPostLikes, batchFetchByIds, checkRateLimit, RateLimitError };
 
 // Thin compatibility layer.
 // UI code should import this service instead of importing the backend bridge directly.

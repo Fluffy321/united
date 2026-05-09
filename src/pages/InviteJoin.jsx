@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Users, MapPin, CheckCircle2, ArrowRight } from 'lucide-react';
 import { createPageUrl } from '@/utils';
@@ -56,7 +56,7 @@ export default function InviteJoin() {
       const existing = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: id });
       if (existing.length === 0) {
         await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: id, role: 'Member' });
-        await dataService.entities.Community.update(id, { follower_count: (resource.follower_count || 0) + 1 });
+        await incrementCounter('communities', 'follower_count', id, 1);
       }
     } else {
       if (resource.is_private) {
@@ -68,7 +68,7 @@ export default function InviteJoin() {
         const existing = await dataService.entities.GroupMember.filter({ user_id: currentUser.id, group_id: id });
         if (existing.length === 0) {
           await dataService.entities.GroupMember.create({ group_id: id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
-          await dataService.entities.CommunityGroup.update(id, { member_count: (resource.member_count || 0) + 1 });
+          await incrementCounter('community_groups', 'member_count', id, 1);
         }
       }
     }

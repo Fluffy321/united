@@ -1,8 +1,8 @@
-export { dataService } from './dataService';
+export { dataService, incrementCounter, togglePostLike, loadUserPostLikes, batchFetchByIds, checkRateLimit, RateLimitError } from './dataService';
 export { postsService } from './postsService';
 export { communitiesService } from './communitiesService';
 export { mitzvahService } from './mitzvahService';
-export { messagesService } from './messagesService';
+export { messagesService, findDirectConversation, createDirectConversation, findOrCreateDirectConversation } from './messagesService';
 export { notificationsService } from './notificationsService';
 export { paymentsService } from './paymentsService';
 export { storageService } from './storageService';
