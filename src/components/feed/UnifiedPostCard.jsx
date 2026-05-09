@@ -748,9 +748,11 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 4 }}
+      layout="position"
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.15 }}
+      whileTap={{ scale: 0.997 }}
+      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1], layout: { duration: 0.2 } }}
       className={`relative ${
         isQuestion ? 'bg-blue-50/60 border-l-2 border-l-blue-400' :
         post.post_subtype === 'alert' ? 'border-l-2 border-l-red-500 bg-red-50/30' :
