@@ -1,7 +1,11 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+<<<<<<< HEAD
+import { dataService, feedRetentionService, storageService } from '@/services';
+=======
 import { dataService, storageService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
+>>>>>>> 139a5e5d02b788ebf9a88e45c92d8ced640439ec
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
@@ -24,132 +28,405 @@ import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
+const minutesAgo = (minutes) => new Date(Date.now() - minutes * 60 * 1000).toISOString();
+const hoursAgo = (hours) => new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+const hoursFromNow = (hours) => new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
 const DEMO_POSTS = [
   {
-    id: 'demo-feed-1',
-    type: 'feed',
-    title: 'Welcome to your local JUnited demo',
-    body: 'This app is running locally. Add your real backend URL in .env.local when you are ready to connect live data.',
-    author_name: 'Local demo',
+    id: 'demo-feed-minyan-early',
+    type: 'news',
+    post_subtype: 'shul_update',
+    title: 'Early Shacharis tomorrow: which minyan is most reliable?',
+    body: 'Need to be on the LIRR by 7:18 from Cedarhurst. Is the 6:20 at YILC still ending on time, or is there a better Woodmere option?',
+    author_name: 'Ari G.',
     user_id: 'local-demo',
-    community_id: 'demo-community',
-    community_name: 'Five Towns',
-    city: 'Five Towns',
-    location_text: 'Five Towns',
-    created_date: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-    updated_date: new Date().toISOString(),
-    likes_count: 12,
-    comments_count: 3,
-  },
-  {
-    id: 'demo-feed-2',
-    type: 'help',
-    body: 'Looking for volunteers to help deliver Shabbos meals this week.',
-    author_name: 'Chesed team',
-    user_id: 'local-demo-2',
-    community_id: 'demo-community',
-    community_name: 'Chesed Volunteers',
-    city: 'Five Towns',
-    location_text: 'Woodmere',
-    created_date: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-    updated_date: new Date().toISOString(),
-    likes_count: 8,
-    comments_count: 5,
-  },
-  {
-    id: 'demo-feed-3',
-    type: 'event',
-    body: 'Community dinner tonight in the social hall.',
-    author_name: 'Events demo',
-    user_id: 'local-demo-3',
-    community_id: 'demo-community',
-    community_name: 'Five Towns',
-    city: 'Five Towns',
-    location_text: 'Lawrence',
-    created_date: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-    updated_date: new Date().toISOString(),
-    event_date: new Date().toISOString(),
-    likes_count: 19,
-    comments_count: 6,
-  },
-  {
-    id: 'demo-feed-4',
-    type: 'feed',
-    title: 'Lost and found near Central Avenue',
-    body: 'A small siddur was left after mincha. Message the office if it is yours.',
-    author_name: 'Shul office',
-    user_id: 'local-demo-4',
-    community_id: 'demo-community',
-    community_name: 'Five Towns',
+    community_id: 'five-towns-shul-network',
+    community_name: 'Five Towns Shul Network',
     city: 'Five Towns',
     location_text: 'Cedarhurst',
-    created_date: new Date(Date.now() - 11 * 60 * 60 * 1000).toISOString(),
+    created_date: minutesAgo(14),
     updated_date: new Date().toISOString(),
-    likes_count: 6,
-    comments_count: 2,
+    likes_count: 18,
+    comments_count: 16,
   },
   {
-    id: 'demo-feed-5',
-    type: 'news',
-    title: 'Tonight: short halacha chabura',
-    body: 'Quick 20 minute learning after maariv, focused on practical Shabbos questions.',
-    author_name: 'Learning group',
-    user_id: 'local-demo-5',
-    community_id: 'demo-community',
-    community_name: 'Five Towns',
+    id: 'demo-feed-meals',
+    type: 'help',
+    post_subtype: 'chesed',
+    title: 'Two Shabbos meal deliveries still open',
+    body: 'One family in Woodmere and one in Lawrence need prepared meals dropped off before 1:30 Friday. Can split it if two people are available.',
+    author_name: 'Rachel B.',
+    user_id: 'local-demo-2',
+    community_id: 'chesed-response-circle',
+    community_name: 'Chesed Response Circle',
     city: 'Five Towns',
     location_text: 'Woodmere',
-    created_date: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString(),
+    created_date: minutesAgo(31),
+    updated_date: new Date().toISOString(),
+    likes_count: 27,
+    comments_count: 12,
+  },
+  {
+    id: 'demo-feed-restaurant',
+    type: 'feed',
+    post_subtype: 'recommendation',
+    title: 'Best place for a quiet business lunch on Central?',
+    body: 'Need kosher, not too loud, and decent seating for 3 people around 1 PM. Bonus if parking is not impossible.',
+    author_name: 'Mordy K.',
+    user_id: 'local-demo-3',
+    community_id: 'jewish-marketplace-fivetowns',
+    community_name: 'Five Towns Jewish Marketplace',
+    city: 'Five Towns',
+    location_text: 'Cedarhurst',
+    created_date: minutesAgo(47),
+    updated_date: new Date().toISOString(),
+    likes_count: 9,
+    comments_count: 23,
+  },
+  {
+    id: 'demo-feed-event-tonight',
+    type: 'event',
+    post_subtype: 'local_event',
+    title: 'Women’s shiur and dessert tonight',
+    body: '8:15 PM in Woodmere. Topic is keeping connection at the Shabbos table with teens. Anyone know if there is a Zoom option?',
+    author_name: 'Tova G.',
+    user_id: 'local-demo-4',
+    community_id: 'simcha-events-board',
+    community_name: 'Simcha & Events Board',
+    city: 'Five Towns',
+    location_text: 'Woodmere',
+    created_date: hoursAgo(1.2),
+    updated_date: new Date().toISOString(),
+    event_date: hoursFromNow(7),
+    likes_count: 33,
+    comments_count: 18,
+  },
+  {
+    id: 'demo-feed-lost-siddur',
+    type: 'feed',
+    post_subtype: 'lost_found',
+    title: 'Lost and found: black leather siddur',
+    body: 'Found near Central Ave after mincha. Name inside looks like “Y. Rosen” but hard to read. I can leave it by the shul office.',
+    author_name: 'Shul Office',
+    user_id: 'local-demo-5',
+    community_id: 'five-towns-shul-network',
+    community_name: 'Five Towns Shul Network',
+    city: 'Five Towns',
+    location_text: 'Cedarhurst',
+    created_date: hoursAgo(2),
     updated_date: new Date().toISOString(),
     likes_count: 14,
-    comments_count: 4,
-  },
-  {
-    id: 'demo-feed-6',
-    type: 'help',
-    body: 'Can someone recommend a reliable car service for an early JFK pickup?',
-    author_name: 'Neighbor',
-    user_id: 'local-demo-6',
-    community_id: 'demo-community',
-    community_name: 'Five Towns',
-    city: 'Five Towns',
-    location_text: 'Lawrence',
-    created_date: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(),
-    updated_date: new Date().toISOString(),
-    likes_count: 4,
-    comments_count: 9,
-  },
-  {
-    id: 'demo-feed-7',
-    type: 'event',
-    body: 'Parent meetup at the park after school, weather permitting.',
-    author_name: 'Parents board',
-    user_id: 'local-demo-7',
-    community_id: 'demo-community',
-    community_name: 'Five Towns',
-    city: 'Five Towns',
-    location_text: 'Hewlett',
-    created_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    updated_date: new Date().toISOString(),
-    event_date: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(),
-    likes_count: 11,
     comments_count: 7,
   },
   {
-    id: 'demo-feed-8',
-    type: 'feed',
-    title: 'New family moving in',
-    body: 'A new family is moving to the neighborhood this week. Looking for ideas to help them feel welcomed.',
-    author_name: 'Welcome committee',
+    id: 'demo-feed-halacha',
+    type: 'news',
+    post_subtype: 'learning',
+    title: '20-minute halacha chabura after Maariv',
+    body: 'Quick practical review: reheating soup, blech questions, and what to do if the urn was unplugged. Source sheet posted later tonight.',
+    author_name: 'Rabbi Adler',
+    user_id: 'local-demo-6',
+    community_id: 'daily-learning-beis',
+    community_name: 'Daily Learning Beis',
+    city: 'Five Towns',
+    location_text: 'Woodmere',
+    created_date: hoursAgo(2.5),
+    updated_date: new Date().toISOString(),
+    likes_count: 41,
+    comments_count: 11,
+  },
+  {
+    id: 'demo-feed-jfk-ride',
+    type: 'help',
+    post_subtype: 'ride',
+    title: 'JFK ride tomorrow 5:45 AM',
+    body: 'One adult, one carry-on, leaving from Lawrence. Happy to pay gas or split with anyone already going that way.',
+    author_name: 'Dani P.',
+    user_id: 'local-demo-7',
+    community_id: 'shabbos-table-hosts',
+    community_name: 'Shabbos Table Hosts',
+    city: 'Five Towns',
+    location_text: 'Lawrence',
+    created_date: hoursAgo(3),
+    updated_date: new Date().toISOString(),
+    likes_count: 7,
+    comments_count: 14,
+  },
+  {
+    id: 'demo-feed-park',
+    type: 'event',
+    post_subtype: 'parents',
+    title: 'Parent meetup at Andrew J. Parise Park',
+    body: 'A few families are meeting after school if the weather holds. Good for ages 3-7. Anyone bringing scooters?',
+    author_name: 'Naomi A.',
     user_id: 'local-demo-8',
-    community_id: 'demo-community',
-    community_name: 'Five Towns',
+    community_id: 'young-parents-five-towns',
+    community_name: 'Young Parents Five Towns',
+    city: 'Five Towns',
+    location_text: 'Cedarhurst',
+    created_date: hoursAgo(4),
+    updated_date: new Date().toISOString(),
+    event_date: hoursFromNow(27),
+    likes_count: 19,
+    comments_count: 20,
+  },
+  {
+    id: 'demo-feed-new-family',
+    type: 'feed',
+    post_subtype: 'welcome',
+    title: 'New family moving to Inwood this week',
+    body: 'Family with two kids under 6. Looking for someone to drop off a small welcome basket and maybe invite them for Shabbos lunch.',
+    author_name: 'Welcome Committee',
+    user_id: 'local-demo-9',
+    community_id: 'five-towns-shul-network',
+    community_name: 'Five Towns Shul Network',
     city: 'Five Towns',
     location_text: 'Inwood',
-    created_date: new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString(),
+    created_date: hoursAgo(5),
     updated_date: new Date().toISOString(),
     likes_count: 22,
     comments_count: 10,
+  },
+  {
+    id: 'demo-feed-hosting',
+    type: 'help',
+    post_subtype: 'shabbos',
+    title: 'Two guests looking for Shabbos lunch',
+    body: 'Newly married couple staying in Woodmere. Walking distance preferred. They are easygoing, no allergies.',
+    author_name: 'Tova G.',
+    user_id: 'local-demo-10',
+    community_id: 'shabbos-table-hosts',
+    community_name: 'Shabbos Table Hosts',
+    city: 'Five Towns',
+    location_text: 'Woodmere',
+    created_date: hoursAgo(5.5),
+    updated_date: new Date().toISOString(),
+    likes_count: 35,
+    comments_count: 17,
+  },
+  {
+    id: 'demo-feed-pickleball',
+    type: 'event',
+    post_subtype: 'hobbies',
+    title: 'Pickleball ladder needs two more players',
+    body: 'Thursday 8:15 PM, beginner-friendly court and one competitive court. Please comment skill level so we can split evenly.',
+    author_name: 'Josh M.',
+    user_id: 'local-demo-11',
+    community_id: 'five-towns-pickleball',
+    community_name: 'Five Towns Pickleball & Sports',
+    city: 'Five Towns',
+    location_text: 'Lawrence',
+    created_date: hoursAgo(6),
+    updated_date: new Date().toISOString(),
+    event_date: hoursFromNow(30),
+    likes_count: 26,
+    comments_count: 21,
+  },
+  {
+    id: 'demo-feed-babysitter',
+    type: 'feed',
+    post_subtype: 'recommendation',
+    title: 'Reliable Motzei Shabbos babysitter?',
+    body: 'Looking for someone for 7:45-10:30 in Hewlett. Kids are asleep most of the time. Any names you trust?',
+    author_name: 'Esti F.',
+    user_id: 'local-demo-12',
+    community_id: 'young-parents-five-towns',
+    community_name: 'Young Parents Five Towns',
+    city: 'Five Towns',
+    location_text: 'Hewlett',
+    created_date: hoursAgo(6.5),
+    updated_date: new Date().toISOString(),
+    likes_count: 12,
+    comments_count: 28,
+  },
+  {
+    id: 'demo-feed-marketplace-chairs',
+    type: 'feed',
+    post_subtype: 'marketplace',
+    title: 'Looking to borrow 12 folding chairs',
+    body: 'Need them for a small vort next Tuesday in Cedarhurst. Can pick up and return same night.',
+    author_name: 'Yoni G.',
+    user_id: 'local-demo-13',
+    community_id: 'jewish-marketplace-fivetowns',
+    community_name: 'Five Towns Jewish Marketplace',
+    city: 'Five Towns',
+    location_text: 'Cedarhurst',
+    created_date: hoursAgo(7),
+    updated_date: new Date().toISOString(),
+    likes_count: 8,
+    comments_count: 13,
+  },
+  {
+    id: 'demo-feed-eruv',
+    type: 'news',
+    post_subtype: 'shul_update',
+    title: 'Eruv status thread for this week',
+    body: 'Can we keep one thread here for any updates? Please post only confirmed info and source.',
+    author_name: 'Avi R.',
+    user_id: 'local-demo-14',
+    community_id: 'five-towns-shul-network',
+    community_name: 'Five Towns Shul Network',
+    city: 'Five Towns',
+    location_text: 'Five Towns',
+    created_date: hoursAgo(8),
+    updated_date: new Date().toISOString(),
+    likes_count: 44,
+    comments_count: 19,
+  },
+  {
+    id: 'demo-feed-seforim',
+    type: 'feed',
+    post_subtype: 'marketplace',
+    title: 'Free seforim shelf pickup',
+    body: 'A few duplicate Mishnayos sets and old chumashim available. Please take only what you will use.',
+    author_name: 'Miriam C.',
+    user_id: 'local-demo-15',
+    community_id: 'jewish-marketplace-fivetowns',
+    community_name: 'Five Towns Jewish Marketplace',
+    city: 'Five Towns',
+    location_text: 'Woodmere',
+    created_date: hoursAgo(9),
+    updated_date: new Date().toISOString(),
+    likes_count: 31,
+    comments_count: 15,
+  },
+  {
+    id: 'demo-feed-tech',
+    type: 'help',
+    post_subtype: 'tech_help',
+    title: 'Can someone help set up a printer for an older neighbor?',
+    body: 'Near Peninsula Blvd. Probably 20 minutes if you know wireless printers. They are flexible tonight or tomorrow.',
+    author_name: 'Moshe K.',
+    user_id: 'local-demo-16',
+    community_id: 'chesed-response-circle',
+    community_name: 'Chesed Response Circle',
+    city: 'Five Towns',
+    location_text: 'Hewlett',
+    created_date: hoursAgo(10),
+    updated_date: new Date().toISOString(),
+    likes_count: 16,
+    comments_count: 8,
+  },
+  {
+    id: 'demo-feed-singles',
+    type: 'event',
+    post_subtype: 'singles',
+    title: 'Board game night: still room for 6',
+    body: 'Moderated singles event Motzei Shabbos. Ages 24-32. Details sent after approval. Anyone able to bring Codenames?',
+    author_name: 'Tamar K.',
+    user_id: 'local-demo-17',
+    community_id: 'jewish-singles-circle',
+    community_name: 'Jewish Singles Circle',
+    city: 'Five Towns',
+    location_text: 'Nassau and Queens',
+    created_date: hoursAgo(11),
+    updated_date: new Date().toISOString(),
+    event_date: hoursFromNow(50),
+    likes_count: 18,
+    comments_count: 12,
+  },
+  {
+    id: 'demo-feed-screens',
+    type: 'feed',
+    post_subtype: 'values',
+    title: 'Phones at the Shabbos table: what actually works?',
+    body: 'We want a warmer table, not a fight every week. What boundaries have worked in your home with teens?',
+    author_name: 'Maya R.',
+    user_id: 'local-demo-18',
+    community_id: 'modern-orthodox-home-builders',
+    community_name: 'Modern Orthodox Home Builders',
+    city: 'Five Towns',
+    location_text: 'Five Towns',
+    created_date: hoursAgo(12),
+    updated_date: new Date().toISOString(),
+    likes_count: 52,
+    comments_count: 34,
+  },
+  {
+    id: 'demo-feed-cleanup',
+    type: 'event',
+    post_subtype: 'neighborhood',
+    title: 'Sunday neighborhood cleanup',
+    body: 'Meeting 10:30 near Central Ave. Gloves and bags provided. Good chesed hours opportunity for teens.',
+    author_name: 'Cedarhurst Board',
+    user_id: 'local-demo-19',
+    community_id: 'cedarhurst-neighborhood-watch',
+    community_name: 'Cedarhurst Neighborhood Board',
+    city: 'Five Towns',
+    location_text: 'Cedarhurst',
+    created_date: hoursAgo(13),
+    updated_date: new Date().toISOString(),
+    event_date: hoursFromNow(72),
+    likes_count: 23,
+    comments_count: 9,
+  },
+  {
+    id: 'demo-feed-apartment',
+    type: 'feed',
+    post_subtype: 'housing',
+    title: 'Young couple looking for basement apartment',
+    body: 'Woodmere/Lawrence preferred, near shul if possible. Budget flexible for the right place. Please message leads.',
+    author_name: 'Leah W.',
+    user_id: 'local-demo-20',
+    community_id: 'five-towns-shul-network',
+    community_name: 'Five Towns Shul Network',
+    city: 'Five Towns',
+    location_text: 'Woodmere',
+    created_date: hoursAgo(15),
+    updated_date: new Date().toISOString(),
+    likes_count: 10,
+    comments_count: 18,
+  },
+  {
+    id: 'demo-feed-tehillim',
+    type: 'help',
+    post_subtype: 'tehillim',
+    title: 'Tehillim group tonight 9:15',
+    body: 'Short call for a local refuah request. Please comment if you want the name privately.',
+    author_name: 'Sarah C.',
+    user_id: 'local-demo-21',
+    community_id: 'chesed-response-circle',
+    community_name: 'Chesed Response Circle',
+    city: 'Five Towns',
+    location_text: 'Five Towns',
+    created_date: hoursAgo(16),
+    updated_date: new Date().toISOString(),
+    likes_count: 37,
+    comments_count: 22,
+  },
+  {
+    id: 'demo-feed-carpool',
+    type: 'help',
+    post_subtype: 'ride',
+    title: 'Cedarhurst to Woodmere morning carpool',
+    body: 'We have two seats available leaving 7:48. Can add one stop near Central if timing works.',
+    author_name: 'Ben T.',
+    user_id: 'local-demo-22',
+    community_id: 'young-parents-five-towns',
+    community_name: 'Young Parents Five Towns',
+    city: 'Five Towns',
+    location_text: 'Cedarhurst',
+    created_date: hoursAgo(18),
+    updated_date: new Date().toISOString(),
+    likes_count: 11,
+    comments_count: 10,
+  },
+  {
+    id: 'demo-feed-cholent',
+    type: 'feed',
+    post_subtype: 'recommendation',
+    title: 'Best takeout cholent for a small kiddush?',
+    body: 'Need enough for around 35 people. Looking for something reliable and not too salty. Any recent experiences?',
+    author_name: 'Noam C.',
+    user_id: 'local-demo-23',
+    community_id: 'jewish-marketplace-fivetowns',
+    community_name: 'Five Towns Jewish Marketplace',
+    city: 'Five Towns',
+    location_text: 'Lawrence',
+    created_date: hoursAgo(20),
+    updated_date: new Date().toISOString(),
+    likes_count: 15,
+    comments_count: 26,
   },
 ];
 
@@ -158,13 +435,6 @@ const HUB_ACTIONS = [
   { label: 'Find groups', icon: Users, path: '/Communities', tone: 'emerald' },
   { label: 'Offer chesed', icon: HeartHandshake, path: '/MitzvahCircle', tone: 'rose' },
   { label: 'Plan rides', icon: Car, path: '/MitzvahCircle?tab=carpool', tone: 'amber' },
-];
-
-const HUB_PULSE = [
-  { label: 'Shul updates', value: '12', detail: 'minyanim, shiurim, kiddush notes' },
-  { label: 'Open chesed', value: '4', detail: 'rides, meals, errands, setup help' },
-  { label: 'Events today', value: '7', detail: 'learning, simchas, meetups' },
-  { label: 'Local threads', value: '21', detail: 'recommendations and conversations' },
 ];
 
 const SHABBOS_PREP = [
@@ -219,6 +489,7 @@ export default function Feed() {
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 30;
   const [showNetworkBanner, setShowNetworkBanner] = useState(() => !storageService.getItem('junited_network_banner_v2_dismissed'));
+  const [dailyPrompt, setDailyPrompt] = useState(null);
 
   useEffect(() => {
     if (!currentUser?.cityPreset) return;
@@ -319,6 +590,12 @@ export default function Feed() {
     loadPinnedPrompt();
   }, [loadPinnedPrompt]);
 
+  useEffect(() => {
+    feedRetentionService.getDailyPrompt({ network: primaryNetwork.cityPreset || 'Five Towns', userId: currentUser?.id })
+      .then(setDailyPrompt)
+      .catch(() => setDailyPrompt(null));
+  }, [currentUser?.id, primaryNetwork.cityPreset]);
+
   // 5-second timeout: if still loading, show content or empty state
   useEffect(() => {
     const timer = setTimeout(() => setLoadTimedOut(true), 5000);
@@ -370,6 +647,12 @@ export default function Feed() {
       subtypes: post.post_subtype ? { ...prev.subtypes, [post.post_subtype]: (prev.subtypes[post.post_subtype] || 0) + 1 } : prev.subtypes,
       keywords: [...prev.keywords, ...(post.body || '').toLowerCase().split(/\s+/).slice(0, 5)].slice(-50),
     }));
+    feedRetentionService.recordEvent({
+      userId: currentUser?.id,
+      post,
+      eventType: 'engaged',
+      metadata: { source: 'feed' },
+    }).catch(() => {});
   };
 
   const handleLike = (postId) => {
@@ -423,37 +706,12 @@ export default function Feed() {
 
   const joinedCommunityIds = useMemo(() => new Set(communityGroups.map(c => c.id)), [communityGroups]);
 
-  const engagementScore = (p) => {
-    const likes = p.likes_count || 0;
-    const comments = p.comments_count || 0;
-    const ageMs = Date.now() - new Date(p.created_date).getTime();
-    const ageHours = ageMs / (1000 * 60 * 60);
-    const timeDecay = Math.max(0.2, 1 - ageHours / 48);
-    let base = (likes + comments * 3) * timeDecay;
-
-    // Boost active discussions (many comments recently)
-    if (comments >= 5) base *= 1.3;
-    if (comments >= 10) base *= 1.5;
-
-    // Boost posts matching user's interaction signals
-    const typeBoost = interestSignals.types[p.type] || 0;
-    const subtypeBoost = p.post_subtype ? (interestSignals.subtypes[p.post_subtype] || 0) : 0;
-    const bodyWords = (p.body || '').toLowerCase().split(/\s+/);
-    const keywordMatches = bodyWords.filter(w => w.length > 4 && interestSignals.keywords.includes(w)).length;
-    base *= (1 + typeBoost * 0.1 + subtypeBoost * 0.15 + keywordMatches * 0.05);
-
-    // Strong boost for posts from communities the user joined
-    if (p.community_id && joinedCommunityIds.has(p.community_id)) base = base * 3 + 50;
-
-    // Boost local network posts
-    const postCity = (p.city || p.location_text || '').toLowerCase();
-    const networkLabel = primaryNetwork.cityPreset.toLowerCase();
-    if (postCity.includes(networkLabel) || primaryNetwork.neighborhoods.some(nb => postCity.includes(nb.toLowerCase()))) {
-      base = base * 2 + 10;
-    }
-
-    return base;
-  };
+  const engagementScore = (p) => feedRetentionService.scorePost(p, {
+    joinedCommunityIds,
+    primaryNetwork,
+    userInterests: currentUser?.interests || [],
+    interestSignals,
+  });
 
   const feedPosts = (() => {
     const sorted = [...visiblePosts].sort((a, b) => engagementScore(b) - engagementScore(a));
@@ -519,6 +777,14 @@ export default function Feed() {
     // NEVER show empty feed — fall back to full global feed (seeded + real) if filter yields nothing
     return filtered.length > 0 ? filtered : sorted.slice(0, 40);
   })();
+
+  const fiveTownsBrief = useMemo(() => (
+    feedRetentionService.buildBrief({
+      posts: visiblePosts,
+      communityGroups,
+      networkLabel: primaryNetwork.shortLabel || 'Five Towns',
+    })
+  ), [communityGroups, primaryNetwork.shortLabel, visiblePosts]);
 
   return (
     <div className="app-page relative">
@@ -613,7 +879,7 @@ export default function Feed() {
         </div>
 
         <FiveTownsDashboard
-          pulse={HUB_PULSE}
+          brief={fiveTownsBrief}
           actions={HUB_ACTIONS}
           shabbosPrep={SHABBOS_PREP}
           trustLayers={TRUST_LAYERS}
@@ -622,6 +888,16 @@ export default function Feed() {
             setPostModalType(type);
             setPostModalSubtype(subtype || null);
             setPostModalInitialBody(body || '');
+            setShowPostModal(true);
+          }}
+        />
+
+        <DailyRetentionPrompt
+          prompt={dailyPrompt}
+          onPost={(prompt) => {
+            setPostModalType(prompt?.suggested_post_type || 'feed');
+            setPostModalSubtype(prompt?.suggested_post_subtype || null);
+            setPostModalInitialBody(prompt?.initial_body || '');
             setShowPostModal(true);
           }}
         />
@@ -830,13 +1106,42 @@ function HubMetric({ icon: Icon, label, value }) {
   );
 }
 
-function FiveTownsDashboard({ pulse, actions, shabbosPrep, trustLayers, onNavigate, onPost }) {
+function DailyRetentionPrompt({ prompt, onPost }) {
+  if (!prompt) return null;
+
+  return (
+    <section className="app-card mb-3 overflow-hidden">
+      <div className="border-b border-slate-100 bg-gradient-to-r from-blue-50 to-white p-3">
+        <p className="text-[12px] font-black uppercase tracking-wide text-blue-700">Daily prompt</p>
+        <h2 className="mt-1 text-[17px] font-black leading-snug text-slate-950">{prompt.question}</h2>
+        <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-500">
+          A simple reason to post today, tuned for the Five Towns rhythm.
+        </p>
+      </div>
+      <div className="grid gap-2 p-3 sm:grid-cols-[1fr_auto]">
+        <div className="rounded-2xl bg-slate-50 px-3 py-2">
+          <p className="text-[11px] font-black uppercase text-slate-400">Suggested post</p>
+          <p className="mt-1 text-[12px] font-bold text-slate-700">{prompt.initial_body || 'Share what you need, know, or can offer.'}</p>
+        </div>
+        <button
+          onClick={() => onPost(prompt)}
+          className="h-11 rounded-xl bg-blue-600 px-4 text-[13px] font-black text-white active:scale-[0.98]"
+        >
+          {prompt.cta_label || 'Post'}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function FiveTownsDashboard({ brief, actions, shabbosPrep, trustLayers, onNavigate, onPost }) {
+  const pulse = brief?.metrics || [];
   return (
     <section className="mb-3 space-y-3">
       <div className="app-card overflow-hidden">
         <div className="border-b border-slate-100 p-3">
-          <p className="text-[12px] font-black uppercase tracking-wide text-blue-700">Today in the Five Towns</p>
-          <p className="mt-0.5 text-[13px] font-semibold leading-5 text-slate-600">A daily control center for the Jewish local pulse.</p>
+          <p className="text-[12px] font-black uppercase tracking-wide text-blue-700">{brief?.title || 'Today in the Five Towns'}</p>
+          <p className="mt-0.5 text-[13px] font-semibold leading-5 text-slate-600">{brief?.subtitle || 'A daily control center for the Jewish local pulse.'}</p>
         </div>
         <div className="grid grid-cols-2 gap-2 p-3">
           {pulse.map((item) => (
@@ -847,6 +1152,26 @@ function FiveTownsDashboard({ pulse, actions, shabbosPrep, trustLayers, onNaviga
             </div>
           ))}
         </div>
+        {brief?.activeThreads?.length > 0 && (
+          <div className="border-t border-slate-100 p-3">
+            <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-slate-500">Active now</p>
+            <div className="space-y-2">
+              {brief.activeThreads.map((post) => (
+                <button
+                  key={post.id}
+                  onClick={() => onNavigate('/Feed')}
+                  className="flex w-full items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-2 text-left active:scale-[0.99]"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-[12px] font-black text-slate-900">{post.title || post.body || 'Local discussion'}</span>
+                    <span className="block truncate text-[11px] font-semibold text-slate-500">{post.community_name || post.location_text || 'Five Towns'} · {(post.comments_count || 0)} replies</span>
+                  </span>
+                  <span className="rounded-full bg-white px-2 py-1 text-[10px] font-black text-blue-700">Open</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-2 border-t border-slate-100 p-3">
           {actions.map((action) => {
             const Icon = action.icon;
@@ -874,7 +1199,7 @@ function FiveTownsDashboard({ pulse, actions, shabbosPrep, trustLayers, onNaviga
             </div>
           </div>
           <div className="space-y-2">
-            {shabbosPrep.map((item) => (
+            {(brief?.shabbosChecklist || shabbosPrep).map((item) => (
               <div key={item} className="rounded-2xl bg-blue-50 px-3 py-2 text-[12px] font-bold text-blue-800">{item}</div>
             ))}
           </div>
