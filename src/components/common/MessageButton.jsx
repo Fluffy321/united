@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { MessageCircle, Loader2 } from 'lucide-react';
-import { dataService } from '@/services';
+import { dataService, findDirectConversation, createDirectConversation, checkRateLimit, RateLimitError } from '@/services';
 import { toast } from 'sonner';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
-import { canMessage, checkSpamLimits, recordNewChat } from '@/lib/messagingPermissions';
+import { canMessage } from '@/lib/messagingPermissions';
 
 export default function MessageButton({ 
   recipientId, 
@@ -27,38 +27,25 @@ export default function MessageButton({
     try {
       // Check for existing conversation first
       const allConvs = await dataService.entities.Conversation.list('-updated_date', 100);
-      const existing = allConvs.find(c =>
-        c.participant_ids?.includes(currentUser.id) &&
-        c.participant_ids?.includes(recipientId) &&
-        c.participant_ids?.length === 2
-      );
+      const existing = findDirectConversation(currentUser.id, recipientId, allConvs);
 
       if (existing) {
         navigate(createPageUrl(`Messages?conversation=${existing.id}`));
         return;
       }
 
-      // New conversation — check spam limits
-      const spam = checkSpamLimits(currentUser.id);
-      if (!spam.allowed) {
-        toast.error(spam.reason);
-        return;
-      }
+      // New conversation — server-side rate limit check
+      await checkRateLimit('new_conversation');
 
       // Check messaging permission
       const { canMessage: allowed } = await canMessage(currentUser, recipientId);
 
       if (allowed) {
-        const conv = await dataService.entities.Conversation.create({
-          participant_ids: [currentUser.id, recipientId],
-          participant_names: [currentUser.full_name || currentUser.display_name, recipientName],
-          participant_ages: [currentUser.age_range || '18+', null],
+        const conv = await createDirectConversation(currentUser, { id: recipientId, name: recipientName }, {
           request_id: postId || null,
           request_title: postTitle || null,
           request_type: postType,
-          unread_count: { [recipientId]: 0 }
         });
-        recordNewChat(currentUser.id);
         navigate(createPageUrl(`Messages?conversation=${conv.id}`));
         toast.success('Conversation started!');
       } else {
@@ -79,10 +66,10 @@ export default function MessageButton({
           recipient_id: recipientId,
           status: 'pending',
         });
-        recordNewChat(currentUser.id);
         toast.success('Message request sent! They\'ll be notified to accept.');
       }
     } catch (error) {
+      if (error instanceof RateLimitError) { toast.error(error.message); return; }
       toast.error('Failed to start conversation');
     } finally {
       setLoading(false);

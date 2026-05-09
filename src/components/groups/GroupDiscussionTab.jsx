@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronUp, MessageCircle, Loader2, Send } from 'lucide-react';
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import { toast } from 'sonner';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 
@@ -46,11 +46,11 @@ export default function GroupDiscussionTab({ group, currentUser, isMember }) {
     const hasLiked = await dataService.entities.DiscussionLike.filter({ discussion_id: topic.id, user_id: currentUser.id });
     if (hasLiked.length > 0) {
       await dataService.entities.DiscussionLike.delete(hasLiked[0].id);
-      await dataService.entities.GroupDiscussion.update(topic.id, { likes_count: Math.max(0, (topic.likes_count || 0) - 1) });
+      await incrementCounter('group_discussions', 'likes_count', topic.id, -1);
       setDiscussions(prev => prev.map(t => t.id === topic.id ? { ...t, likes_count: t.likes_count - 1 } : t));
     } else {
       await dataService.entities.DiscussionLike.create({ discussion_id: topic.id, user_id: currentUser.id });
-      await dataService.entities.GroupDiscussion.update(topic.id, { likes_count: (topic.likes_count || 0) + 1 });
+      await incrementCounter('group_discussions', 'likes_count', topic.id, 1);
       setDiscussions(prev => prev.map(t => t.id === topic.id ? { ...t, likes_count: t.likes_count + 1 } : t));
     }
   };
@@ -74,7 +74,7 @@ export default function GroupDiscussionTab({ group, currentUser, isMember }) {
       body: newComment.trim(),
     });
     setComments(prev => ({ ...prev, [topic.id]: [...(prev[topic.id] || []), comment] }));
-    await dataService.entities.GroupDiscussion.update(topic.id, { comments_count: (topic.comments_count || 0) + 1 });
+    await incrementCounter('group_discussions', 'comments_count', topic.id, 1);
     setDiscussions(prev => prev.map(t => t.id === topic.id ? { ...t, comments_count: t.comments_count + 1 } : t));
     setNewComment('');
     toast.success('Comment added!');

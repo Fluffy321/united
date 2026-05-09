@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Users, MapPin, CheckCircle2, ArrowRight, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -87,9 +87,7 @@ export default function JoinByCommunityCode() {
         });
         // Increment follower count and uses count
         await Promise.all([
-          dataService.entities.Community.update(invite.community_id, {
-            follower_count: (community.follower_count || 0) + 1
-          }),
+          incrementCounter('communities', 'follower_count', invite.community_id, 1),
           dataService.entities.InviteLink.update(invite.id, {
             uses_count: (invite.uses_count || 0) + 1
           }),

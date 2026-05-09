@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2, MessageCircle } from 'lucide-react';
-import { dataService } from '@/services';
+import { dataService, incrementCounter, findDirectConversation, createDirectConversation } from '@/services';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
@@ -36,7 +36,7 @@ export default function PromptResponsesSheet({ post, currentUser, open, onOpenCh
         author_avatar_url: currentUser.avatar_url,
         body: reply.trim(),
       });
-      await dataService.entities.UnifiedPost.update(post.id, { comments_count: (post.comments_count || 0) + 1 });
+      await incrementCounter('posts', 'comments_count', post.id, 1);
       setReply('');
       await loadResponses();
       onResponseAdded?.();
@@ -50,16 +50,13 @@ export default function PromptResponsesSheet({ post, currentUser, open, onOpenCh
     if (!currentUser || authorId === currentUser.id) return;
     try {
       const convs = await dataService.entities.Conversation.list('-updated_date', 50);
-      const existing = convs.find(c =>
-        c.participant_ids?.includes(currentUser.id) && c.participant_ids?.includes(authorId)
-      );
+      const existing = findDirectConversation(currentUser.id, authorId, convs);
       if (existing) { navigate(createPageUrl('Messages') + `?conversation=${existing.id}`); return; }
       const [other] = await dataService.entities.User.filter({ id: authorId });
-      const conv = await dataService.entities.Conversation.create({
-        participant_ids: [currentUser.id, authorId],
-        participant_names: [currentUser.display_name || currentUser.full_name, other?.display_name || other?.full_name],
-        participant_ages: [currentUser.age_range || '18+', other?.age_range || '18+'],
-        unread_count: {},
+      const conv = await createDirectConversation(currentUser, {
+        id: authorId,
+        name: other?.display_name || other?.full_name || 'User',
+        age_range: other?.age_range,
       });
       navigate(createPageUrl('Messages') + `?conversation=${conv.id}`);
     } catch (e) { toast.error('Could not open message'); }

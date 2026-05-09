@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Users, MapPin, Send, Calendar, UserCheck, Loader2, Check, X, Clock, Megaphone, UserPlus, MessageSquare, BarChart3 } from 'lucide-react';
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import InviteLinkButton from './InviteLinkButton';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
@@ -71,7 +71,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
       post_type: 'post',
       attachment: postAttachment || null,
     });
-    await dataService.entities.CommunityGroup.update(group.id, { post_count: (group.post_count || 0) + 1 });
+    await incrementCounter('community_groups', 'post_count', group.id, 1);
     setPosts(prev => [post, ...prev]);
     setNewPost('');
     setPostAttachment(null);
@@ -99,7 +99,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
     setProcessingRequest(req.id);
     await dataService.entities.GroupMember.create({ group_id: group.id, user_id: req.user_id, user_name: req.user_name, role: 'member' });
     await dataService.entities.GroupJoinRequest.update(req.id, { status: 'approved' });
-    await dataService.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
+    await incrementCounter('community_groups', 'member_count', group.id, 1);
     setJoinRequests(prev => prev.filter(r => r.id !== req.id));
     setMembers(prev => [...prev, { id: req.id, user_id: req.user_id, user_name: req.user_name, role: 'member' }]);
     onMemberApproved?.(group.id);

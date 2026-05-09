@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Search } from 'lucide-react';
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import CommunityListCard from './CommunityListCard';
@@ -18,11 +18,11 @@ export default function DiscoverTab({ communities, isLoading, currentUser, joine
       if (isJoined) {
         const records = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: community.id });
         if (records[0]) await dataService.entities.UserCommunity.delete(records[0].id);
-        await dataService.entities.Community.update(community.id, { follower_count: Math.max(0, (community.follower_count || 0) - 1) });
+        await incrementCounter('communities', 'follower_count', community.id, -1);
         toast.success('Left community');
       } else {
         await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: community.id, role: 'Member' });
-        await dataService.entities.Community.update(community.id, { follower_count: (community.follower_count || 0) + 1 });
+        await incrementCounter('communities', 'follower_count', community.id, 1);
         toast.success('Joined!');
       }
       onJoinChange();

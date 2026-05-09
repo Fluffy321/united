@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { dataService, feedRetentionService, storageService } from '@/services';
+import { dataService, feedRetentionService, storageService, togglePostLike } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
@@ -609,20 +609,9 @@ export default function Feed() {
   }, []);
 
   const likeMutation = useMutation({
-    mutationFn: async (postId) => {
-      const existing = await dataService.entities.Like.filter({ post_id: postId, user_id: currentUser.id });
-      if (existing.length > 0) {
-        await dataService.entities.Like.delete(existing[0].id);
-        const post = await dataService.entities.UnifiedPost.get(postId);
-        await dataService.entities.UnifiedPost.update(postId, { likes_count: Math.max(0, (post.likes_count || 1) - 1) });
-      } else {
-        await dataService.entities.Like.create({ post_id: postId, user_id: currentUser.id });
-        const post = await dataService.entities.UnifiedPost.get(postId);
-        await dataService.entities.UnifiedPost.update(postId, { likes_count: (post.likes_count || 0) + 1 });
-      }
-    },
-    onSuccess: (_, postId) => {
-      setUserLikes(prev => prev.includes(postId) ? prev.filter(id => id !== postId) : [...prev, postId]);
+    mutationFn: (postId) => togglePostLike(postId, currentUser.id),
+    onSuccess: ({ liked }, postId) => {
+      setUserLikes(prev => liked ? [...prev, postId] : prev.filter(id => id !== postId));
       queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
     },
   });
@@ -637,7 +626,7 @@ export default function Feed() {
     },
   });
 
-  const recordInterest = (post) => {
+  const recordInterest = useCallback((post) => {
     setInterestSignals(prev => ({
       types: { ...prev.types, [post.type]: (prev.types[post.type] || 0) + 1 },
       subtypes: post.post_subtype ? { ...prev.subtypes, [post.post_subtype]: (prev.subtypes[post.post_subtype] || 0) + 1 } : prev.subtypes,
@@ -649,20 +638,25 @@ export default function Feed() {
       eventType: 'engaged',
       metadata: { source: 'feed' },
     }).catch(() => {});
-  };
+  }, [currentUser?.id]);
 
-  const handleLike = (postId) => {
+  // postsRef keeps the latest posts array accessible inside the stable handleLike callback
+  // without adding `posts` to its dependency array (which would make it unstable).
+  const postsRef = React.useRef(posts);
+  postsRef.current = posts;
+
+  const handleLike = useCallback((postId) => {
     if (!currentUser) { dataService.auth.redirectToLogin(); return; }
-    const post = posts.find(p => p.id === postId);
+    const post = postsRef.current.find(p => p.id === postId);
     if (post) recordInterest(post);
     if (!appParams.hasBackendConfig) {
       setUserLikes(prev => prev.includes(postId) ? prev.filter(id => id !== postId) : [...prev, postId]);
       return;
     }
     likeMutation.mutate(postId);
-  };
+  }, [currentUser, appParams, recordInterest, likeMutation]);
 
-  const handleBlock = async (userId) => {
+  const handleBlock = useCallback(async (userId) => {
     if (!currentUser) return;
     if (!appParams.hasBackendConfig) {
       setBlockedIds(prev => [...prev, userId]);
@@ -674,19 +668,25 @@ export default function Feed() {
       setBlockedIds(prev => [...prev, userId]);
       toast.success('User blocked');
     } catch { toast.error('Could not block user'); }
-  };
+  }, [currentUser, appParams]);
 
-  const handleReport = (contentId, contentType) => {
+  const handleReport = useCallback((contentId, contentType) => {
     setReportTarget({ id: contentId, type: contentType });
     setShowReport(true);
-  };
+  }, []);
 
-  const handleCommunityClick = (communityId) => {
+  const handleCommunityClick = useCallback((communityId) => {
     if (!communityId) return;
-    // Navigate to Communities tab with the community selected
-    const params = new URLSearchParams(window.location.search);
     navigate('/Communities?communityId=' + communityId);
-  };
+  }, [navigate]);
+
+  const handleComment = useCallback((p) => {
+    recordInterest(p);
+    setSelectedPost(p);
+    setShowComments(true);
+  }, [recordInterest]);
+
+  const handleDelete = useCallback((id) => deleteMutation.mutate(id), [deleteMutation.mutate]);
 
   const visiblePosts = allPosts.filter(p => {
     if (p.type === 'dating') return false;
@@ -991,8 +991,8 @@ export default function Feed() {
                    currentUser={currentUser}
                    liked={userLikes.includes(post.id)}
                    onLike={handleLike}
-                   onComment={(p) => { recordInterest(p); setSelectedPost(p); setShowComments(true); }}
-                   onDelete={(id) => deleteMutation.mutate(id)}
+                   onComment={handleComment}
+                   onDelete={handleDelete}
                    onBlock={handleBlock}
                    blockedIds={blockedIds}
                    onReport={handleReport}

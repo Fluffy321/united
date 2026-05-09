@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { dataService } from '@/services';
+import { dataService, findOrCreateDirectConversation } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import ReportModal from '@/components/common/ReportModal';
@@ -149,25 +149,12 @@ export default function Profile() {
   });
 
   const handleMessage = async () => {
-    const conversations = await dataService.entities.Conversation.list();
-    const existing = conversations.find(c => 
-      c.participant_ids?.includes(currentUser.id) && c.participant_ids?.includes(profileUser.id)
-    );
-
-    if (existing) {
-      navigate(createPageUrl('Messages') + `?conversation=${existing.id}`);
-    } else {
-      const conv = await dataService.entities.Conversation.create({
-        participant_ids: [currentUser.id, profileUser.id],
-        participant_names: [
-          currentUser.display_name || currentUser.full_name?.split(' ')[0],
-          profileUser.display_name || profileUser.full_name?.split(' ')[0]
-        ],
-        participant_ages: [currentUser.age_range || '18+', profileUser.age_range || '18+'],
-        unread_count: {}
-      });
-      navigate(createPageUrl('Messages') + `?conversation=${conv.id}`);
-    }
+    const conv = await findOrCreateDirectConversation(currentUser, {
+      id: profileUser.id,
+      name: profileUser.display_name || profileUser.full_name?.split(' ')[0] || 'User',
+      age_range: profileUser.age_range,
+    });
+    navigate(createPageUrl('Messages') + `?conversation=${conv.id}`);
   };
 
   const handleBlock = async () => {

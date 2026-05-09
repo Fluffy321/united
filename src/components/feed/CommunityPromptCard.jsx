@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { dataService } from '@/services';
+import { dataService, findDirectConversation, createDirectConversation } from '@/services';
 
 export default function CommunityPromptCard({ prompt, responses = [], onReply, currentUser }) {
   const navigate = useNavigate();
@@ -10,22 +10,16 @@ export default function CommunityPromptCard({ prompt, responses = [], onReply, c
     if (onReply) { onReply(userId); return; }
     try {
       const convs = await dataService.entities.Conversation.list('-updated_date', 50);
-      const existing = convs.find(c =>
-        c.participant_ids?.includes(currentUser?.id) && c.participant_ids?.includes(userId)
-      );
+      const existing = findDirectConversation(currentUser?.id, userId, convs);
       if (existing) {
         navigate(createPageUrl('Messages') + `?conversation=${existing.id}`);
         return;
       }
       const [otherUser] = await dataService.entities.User.filter({ id: userId });
-      const conv = await dataService.entities.Conversation.create({
-        participant_ids: [currentUser.id, userId],
-        participant_names: [
-          currentUser.display_name || currentUser.full_name,
-          otherUser?.display_name || otherUser?.full_name,
-        ],
-        participant_ages: [currentUser.age_range || '18+', otherUser?.age_range || '18+'],
-        unread_count: {},
+      const conv = await createDirectConversation(currentUser, {
+        id: userId,
+        name: otherUser?.display_name || otherUser?.full_name || 'User',
+        age_range: otherUser?.age_range,
       });
       navigate(createPageUrl('Messages') + `?conversation=${conv.id}`);
     } catch (e) {

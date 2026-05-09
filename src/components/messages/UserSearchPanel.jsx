@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Loader2, MessageCircle, Users, Bot } from 'lucide-react';
-import { dataService } from '@/services';
-import { canMessage, checkSpamLimits, recordNewChat } from '@/lib/messagingPermissions';
+import { dataService, findDirectConversation, createDirectConversation, checkRateLimit, RateLimitError } from '@/services';
+import { canMessage } from '@/lib/messagingPermissions';
 import { AI_AGENT, buildAIConversation } from '@/lib/aiAgent';
 import { toast } from 'sonner';
 
@@ -56,11 +56,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
 
       // Check for existing conversation
       const allConvs = await dataService.entities.Conversation.list('-updated_date', 100);
-      const existing = allConvs.find(c =>
-        c.participant_ids?.includes(currentUser.id) &&
-        c.participant_ids?.includes(recipient.id) &&
-        c.participant_ids?.length === 2
-      );
+      const existing = findDirectConversation(currentUser.id, recipient.id, allConvs);
       if (existing) {
         onConversationOpened(existing);
         setQuery('');
@@ -68,25 +64,18 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
         return;
       }
 
-      // Spam check
-      const spam = checkSpamLimits(currentUser.id);
-      if (!spam.allowed) {
-        toast.error(spam.reason);
-        return;
-      }
+      // Server-side rate limit check for new conversations
+      await checkRateLimit('new_conversation');
 
       // Permission check
       const { canMessage: allowed } = await canMessage(currentUser, recipient.id);
 
       if (allowed) {
-        const conv = await dataService.entities.Conversation.create({
-          participant_ids: [currentUser.id, recipient.id],
-          participant_names: [currentUser.full_name, recipient.full_name],
-          participant_ages: [currentUser.age_range || '18+', recipient.age_range || '18+'],
-          request_type: 'general',
-          unread_count: { [recipient.id]: 0 }
+        const conv = await createDirectConversation(currentUser, {
+          id: recipient.id,
+          name: recipient.full_name,
+          age_range: recipient.age_range,
         });
-        recordNewChat(currentUser.id);
         onConversationOpened(conv);
         setQuery('');
         setResults([]);
@@ -108,12 +97,12 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
           recipient_id: recipient.id,
           status: 'pending',
         });
-        recordNewChat(currentUser.id);
         toast.success("Message request sent!");
         setQuery('');
         setResults([]);
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof RateLimitError) { toast.error(err.message); return; }
       toast.error('Something went wrong');
     }
     setActionLoading(null);

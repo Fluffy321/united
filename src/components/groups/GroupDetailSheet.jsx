@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import { ArrowLeft, Users, MapPin, Send } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
@@ -28,7 +28,7 @@ export default function GroupDetailSheet({ group, open, onOpenChange, currentUse
       user_name: currentUser.full_name,
       body: newPost.trim()
     });
-    await dataService.entities.CommunityGroup.update(group.id, { post_count: (group.post_count || 0) + 1 });
+    await incrementCounter('community_groups', 'post_count', group.id, 1);
     setPosts(prev => [post, ...prev]);
     setNewPost('');
     setPosting(false);

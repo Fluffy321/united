@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { dataService, messagesService } from '@/services';
+import { dataService, messagesService, checkRateLimit, RateLimitError } from '@/services';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import FileAttachmentButton from '@/components/common/FileAttachmentButton';
@@ -229,6 +229,8 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     setIsSending(true);
 
     try {
+      await checkRateLimit('send_message');
+
       const msg = await messagesService.createMessage({
         conversation_id: conversation.id,
         sender_id: currentUser.id,
@@ -253,9 +255,13 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         unread_count: unreadCount
       });
     } catch (error) {
-      setNewMessage(text);
-      setPendingAttachment(attachment);
-      toast.error(error?.message || 'Message failed to send. Please try again.');
+      if (error instanceof RateLimitError) {
+        toast.error(error.message);
+      } else {
+        setNewMessage(text);
+        setPendingAttachment(attachment);
+        toast.error(error?.message || 'Message failed to send. Please try again.');
+      }
     } finally {
       setIsSending(false);
     }

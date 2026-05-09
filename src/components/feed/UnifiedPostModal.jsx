@@ -11,7 +11,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { dataService, notificationsService } from '@/services';
+import { dataService, notificationsService, checkRateLimit, RateLimitError } from '@/services';
 import { toast } from 'sonner';
 
 const PLACEHOLDERS = {
@@ -147,6 +147,8 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
 
     setIsSubmitting(true);
     try {
+      await checkRateLimit('create_post');
+
       const isFeedPost = !isPromptReply && postType === 'feed';
       if (isPoll) {
         const validOptions = pollOptions.filter(o => o.trim());
@@ -223,6 +225,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
       setPollOptions(['', '']); setSelectedCommunityId('');
       setSelectedCity(currentUser?.cityPreset || 'Five Towns');
     } catch (error) {
+      if (error instanceof RateLimitError) { toast.error(error.message); return; }
       toast.error('Failed to post');
     } finally {
       setIsSubmitting(false);

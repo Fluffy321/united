@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, MessageCircle, Loader2, ArrowLeft, Heart, Users, HandHeart, Calendar, FileText } from 'lucide-react';
-import { dataService } from '@/services';
+import { dataService, batchFetchByIds, findOrCreateDirectConversation } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
@@ -59,8 +59,8 @@ function SubGroupStrip({ userId }) {
       .then(async (memberships) => {
         if (!memberships.length) { setLoading(false); return; }
         const ids = memberships.map(m => m.subgroup_id);
-        const all = await Promise.allSettled(ids.map(id => dataService.entities.SubGroup.get(id)));
-        setSubgroups(all.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value));
+        const groups = await batchFetchByIds('SubGroup', ids);
+        setSubgroups(groups.filter(Boolean));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -162,25 +162,10 @@ export default function PublicProfile() {
     if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setMessagingLoading(true);
     try {
-      const allConvs = await dataService.entities.Conversation.list('-updated_date', 100);
-      const existing = allConvs.find(c =>
-        c.participant_ids?.includes(currentUser.id) &&
-        c.participant_ids?.includes(profileUser.id) &&
-        c.participant_ids?.length === 2
-      );
-      if (existing) {
-        navigate(`/Messages?conversation=${existing.id}`);
-        return;
-      }
-      const conv = await dataService.entities.Conversation.create({
-        participant_ids: [currentUser.id, profileUser.id],
-        participant_names: [
-          currentUser.display_name || currentUser.full_name?.split(' ')[0] || 'You',
-          profileUser.display_name || profileUser.full_name?.split(' ')[0] || 'User',
-        ],
-        participant_ages: [currentUser.age_range || '18+', profileUser.age_range || '18+'],
-        unread_count: {},
-        request_type: 'general',
+      const conv = await findOrCreateDirectConversation(currentUser, {
+        id: profileUser.id,
+        name: profileUser.display_name || profileUser.full_name?.split(' ')[0] || 'User',
+        age_range: profileUser.age_range,
       });
       navigate(`/Messages?conversation=${conv.id}`);
     } catch {

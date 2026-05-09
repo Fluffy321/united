@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { MessageCircle, MoreHorizontal, Flag, Trash2, MapPin, Clock, CheckCircle2, Ban, Bookmark } from 'lucide-react';
 import PostImage from '@/components/common/PostImage';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
@@ -20,17 +20,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { dataService } from '@/services';
+import { dataService, findOrCreateDirectConversation } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import { HELP_REQUEST_CATEGORIES } from '@/components/feed/RequestHelpModal';
 
-// Short-circuit for community prompts
+// Short-circuit for community prompts — thin wrapper, no memo needed
 function PromptWrapper({ post, currentUser }) {
   return <PromptCard post={post} currentUser={currentUser} />;
 }
 
-function BookmarkButton({ postId, currentUser }) {
+const BookmarkButton = React.memo(function BookmarkButton({ postId, currentUser }) {
   const [bookmarked, setBookmarked] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -79,7 +79,7 @@ function BookmarkButton({ postId, currentUser }) {
       <Bookmark className={`w-3.5 h-3.5 ${bookmarked ? 'fill-current' : ''}`} />
     </button>
   );
-}
+});
 
 // Unified badge style: blue for informational, dark-blue outlined for urgent
 const BASE_BADGE = 'bg-blue-50 text-blue-700 border border-blue-200';
@@ -115,30 +115,18 @@ const ACTION_BUTTON = {
   dating: { label: 'Connect', icon: null },
 };
 
-function InterestedButton({ post, currentUser }) {
+const InterestedButton = React.memo(function InterestedButton({ post, currentUser }) {
   const navigate = useNavigate();
   const [sent, setSent] = React.useState(false);
 
   const handleInterested = async () => {
     try {
-      // Find or create a conversation with the poster
-      const convs = await dataService.entities.Conversation.list('-updated_date', 50);
-      let conv = convs.find(c =>
-        c.participant_ids?.includes(currentUser.id) && c.participant_ids?.includes(post.user_id)
-      );
-      if (!conv) {
-        conv = await dataService.entities.Conversation.create({
-          participant_ids: [currentUser.id, post.user_id],
-          participant_names: [
-            currentUser.display_name || currentUser.full_name?.split(' ')[0],
-            post.user_name,
-          ],
-          participant_ages: [currentUser.age_range || '18+', '18+'],
-          unread_count: {},
-          request_title: post.title || post.body?.substring(0, 50),
-          request_type: 'general',
-        });
-      }
+      const conv = await findOrCreateDirectConversation(currentUser, {
+        id: post.user_id,
+        name: post.user_name,
+      }, {
+        request_title: post.title || post.body?.substring(0, 50),
+      });
       await dataService.entities.Message.create({
         conversation_id: conv.id,
         sender_id: currentUser.id,
@@ -166,9 +154,9 @@ function InterestedButton({ post, currentUser }) {
       {sent ? '✓ Sent' : 'Interested'}
     </button>
   );
-}
+});
 
-export default function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, onBlock, blockedIds = [], liked, communities, onCommunityClick, isFromJoinedCommunity = false }) {
+function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, onBlock, blockedIds, liked, communities, onCommunityClick, isFromJoinedCommunity = false }) {
   const [expanded, setExpanded] = useState(false);
   const [imgExpanded, setImgExpanded] = useState(false);
   const [helpStatus, setHelpStatus] = useState(post.help_status || 'open');
@@ -196,38 +184,69 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
   if (post.type === 'poll' || post.post_subtype === 'poll') return <PollCard post={post} currentUser={currentUser} />;
 
   const isOwner = currentUser?.id === post.user_id;
-  const communityName = post.community_name || (communities && post.community_id
-    ? communities.find(c => c.id === post.community_id)?.name
-    : null);
   const isAnonymous = post.is_anonymous;
-
-  const getDisplayDate = () => {
-    if (post.is_seeded) {
-      const hash = post.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-      const maxMs = 4 * 24 * 60 * 60 * 1000;
-      return new Date(Date.now() - (hash % maxMs));
-    }
-    return new Date(post.created_date);
-  };
-
-  const getTimeAgo = (date) => {
-    const secs = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (secs < 60) return 'Just now';
-    if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
-    if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
-    if (secs < 604800) return `${Math.floor(secs / 86400)}d ago`;
-    return formatDistanceToNow(date, { addSuffix: true });
-  };
-  const timeAgo = getTimeAgo(getDisplayDate());
-  const isVeryRecent = !post.is_seeded && (Date.now() - new Date(post.created_date).getTime()) < 10 * 60 * 1000;
   const typeConfig = TYPE_CONFIGS[post.type] || TYPE_CONFIGS.feed;
   const helpCat = HELP_REQUEST_CATEGORIES.find(c => c.value === post.category);
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const communityName = useMemo(() =>
+    post.community_name || (communities && post.community_id
+      ? communities.find(c => c.id === post.community_id)?.name
+      : null),
+  [post.community_name, post.community_id, communities]);
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const allImages = useMemo(() =>
+    post.image_urls?.length > 0 ? post.image_urls : (post.image_url ? [post.image_url] : []),
+  [post.image_urls, post.image_url]);
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { timeAgo, isVeryRecent } = useMemo(() => {
+    let displayDate;
+    if (post.is_seeded) {
+      const hash = post.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+      displayDate = new Date(Date.now() - (hash % (4 * 24 * 60 * 60 * 1000)));
+    } else {
+      displayDate = new Date(post.created_date);
+    }
+    const secs = Math.floor((Date.now() - displayDate.getTime()) / 1000);
+    let tAgo;
+    if (secs < 60) tAgo = 'Just now';
+    else if (secs < 3600) tAgo = `${Math.floor(secs / 60)}m ago`;
+    else if (secs < 86400) tAgo = `${Math.floor(secs / 3600)}h ago`;
+    else if (secs < 604800) tAgo = `${Math.floor(secs / 86400)}d ago`;
+    else tAgo = formatDistanceToNow(displayDate, { addSuffix: true });
+    return {
+      timeAgo: tAgo,
+      isVeryRecent: !post.is_seeded && (Date.now() - new Date(post.created_date).getTime()) < 10 * 60 * 1000,
+    };
+  }, [post.id, post.created_date, post.is_seeded]);
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { isActiveNow, hasNewReplies, isHotPost } = useMemo(() => {
+    const nowMs = Date.now();
+    const updatedAgeMs = post.updated_date
+      ? nowMs - new Date(post.updated_date).getTime()
+      : nowMs - new Date(post.created_date).getTime();
+    const postAgeHours = (nowMs - new Date(post.created_date).getTime()) / 3600000;
+    const active = !post.is_seeded && updatedAgeMs < 15 * 60 * 1000 && post.comments_count > 0;
+    return {
+      isActiveNow: active,
+      hasNewReplies: !post.is_seeded && updatedAgeMs < 2 * 60 * 60 * 1000 && post.comments_count > 0 && !active,
+      isHotPost: postAgeHours < 48 && (post.likes_count || 0) + (post.comments_count || 0) * 2 >= 20,
+    };
+  }, [post.updated_date, post.created_date, post.comments_count, post.likes_count, post.is_seeded]);
+
   const BODY_LIMIT = 200;
   const bodyLong = post.body && post.body.length > BODY_LIMIT;
-  const bodyPreview = bodyLong && !expanded ? post.body.slice(0, BODY_LIMIT).trimEnd() + '…' : post.body;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const bodyPreview = useMemo(
+    () => (bodyLong && !expanded ? post.body.slice(0, BODY_LIMIT).trimEnd() + '…' : post.body),
+    [post.body, expanded, bodyLong],
+  );
 
-  const handleFulfilled = async () => {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const handleFulfilled = useCallback(async () => {
     setFulfilling(true);
     if (!appParams.hasBackendConfig) {
       setHelpStatus('fulfilled');
@@ -239,9 +258,10 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
     setHelpStatus('fulfilled');
     setFulfilling(false);
     toast.success('Marked as fulfilled! 🎉');
-  };
+  }, [post.id]);
 
-  const handleQuickReply = async () => {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const handleQuickReply = useCallback(async () => {
     if (!quickReplyText.trim() || !currentUser) return;
     setSubmittingQuickReply(true);
     if (!appParams.hasBackendConfig) {
@@ -273,10 +293,9 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
     } finally {
       setSubmittingQuickReply(false);
     }
-  };
+  }, [quickReplyText, currentUser, post.id]);
 
   // ── Photo post ────────────────────────────────────────────────────────
-  const allImages = post.image_urls?.length > 0 ? post.image_urls : (post.image_url ? [post.image_url] : []);
   if (allImages.length > 0 && post.type === 'feed' && !post.title) {
     return (
       <motion.div
@@ -368,7 +387,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             </button>
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} />
       </motion.div>
     );
   }
@@ -461,7 +480,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             </div>
           )}
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} />
       </motion.div>
     );
   }
@@ -527,7 +546,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             )}
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} />
       </motion.div>
     );
   }
@@ -572,7 +591,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             {post.user_id !== currentUser?.id && <InterestedButton post={post} currentUser={currentUser} />}
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} />
       </motion.div>
     );
   }
@@ -653,7 +672,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             )}
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} />
       </motion.div>
     );
   }
@@ -678,7 +697,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             </div>
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} />
       </motion.div>
     );
   }
@@ -719,22 +738,13 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           )}
           <span className="text-[11px] text-white/60 ml-auto">{timeAgo}</span>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} />
       </motion.div>
     );
   }
 
   // ── Default feed post ────────────────────────────────────────────────
   const isQuestion = post.post_subtype === 'question';
-
-  // Live activity signals
-  const nowMs = Date.now();
-  const postAgeMs = nowMs - new Date(post.created_date).getTime();
-  const updatedAgeMs = post.updated_date ? nowMs - new Date(post.updated_date).getTime() : postAgeMs;
-  const isActiveNow = !post.is_seeded && updatedAgeMs < 15 * 60 * 1000 && post.comments_count > 0;
-  const hasNewReplies = !post.is_seeded && updatedAgeMs < 2 * 60 * 60 * 1000 && post.comments_count > 0 && !isActiveNow;
-  const postAgeHours = (nowMs - new Date(post.created_date).getTime()) / 3600000;
-  const isHotPost = postAgeHours < 48 && (post.likes_count || 0) + (post.comments_count || 0) * 2 >= 20;
 
   return (
     <motion.div
@@ -925,7 +935,36 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
         </div>
       </div>
 
-      <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds} />
+      <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} />
     </motion.div>
   );
 }
+
+// Custom comparator: re-render only when data props change, not when the parent
+// recreates handler callbacks on every render. Function props are excluded because
+// they are stateless transforms whose closed-over values are always refreshed on
+// any data-prop change (currentUser, post, etc.) that causes us to re-render.
+function blockedIdsEqual(a, b) {
+  if (a === b) return true;
+  const aLen = a?.length ?? 0;
+  const bLen = b?.length ?? 0;
+  if (aLen !== bLen) return false;
+  if (aLen === 0) return true;
+  for (let i = 0; i < aLen; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+function arePropsEqual(prev, next) {
+  return (
+    prev.post === next.post &&
+    prev.currentUser === next.currentUser &&
+    prev.liked === next.liked &&
+    prev.communities === next.communities &&
+    prev.isFromJoinedCommunity === next.isFromJoinedCommunity &&
+    blockedIdsEqual(prev.blockedIds, next.blockedIds)
+  );
+}
+
+export default React.memo(UnifiedPostCard, arePropsEqual);

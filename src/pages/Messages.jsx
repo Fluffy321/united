@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle, Inbox, Loader2, MessageCircle, Plus, Sparkles, Users } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { dataService } from '@/services';
+import { dataService, batchFetchByIds } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import ChatView from '@/components/messages/ChatView';
@@ -25,9 +25,16 @@ export default function Messages() {
   const [showNewMessage, setShowNewMessage] = useState(false);
   const queryClient = useQueryClient();
 
+  // Fires once, after currentUser is resolved, so the ownership check has a
+  // real user ID to compare against. The ref prevents re-running on
+  // subsequent renders where currentUser refreshes (e.g. token rotation).
+  const hasHandledUrlConv = useRef(false);
   useEffect(() => {
-    checkUrlParams();
-  }, []);
+    if (!currentUser || hasHandledUrlConv.current) return;
+    hasHandledUrlConv.current = true;
+    const convId = new URLSearchParams(window.location.search).get('conversation');
+    if (convId) loadConversation(convId);
+  }, [currentUser?.id]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -36,7 +43,9 @@ export default function Messages() {
         const newMsg = event.data;
         if (newMsg.sender_id !== currentUser.id) {
           queryClient.invalidateQueries({ queryKey: ['conversations', currentUser.id] });
-          toast.success(`📨 ${newMsg.sender_name}: ${newMsg.content.substring(0, 50)}${newMsg.content.length > 50 ? '...' : ''}`, {
+          // Show sender name but not message content — content in a toast is
+          // visible to shoulder-surfers and logged by monitoring tools.
+          toast.success(`📨 New message from ${newMsg.sender_name}`, {
             duration: 5000,
             action: { label: 'View', onClick: () => loadConversation(newMsg.conversation_id) }
           });
@@ -46,20 +55,20 @@ export default function Messages() {
     return unsubscribe;
   }, [currentUser?.id]);
 
-  const checkUrlParams = () => {
-    const params = new URLSearchParams(window.location.search);
-    const convId = params.get('conversation');
-    if (convId) {
-      loadConversation(convId);
-    }
-  };
-
   const loadConversation = async (id) => {
     try {
-      const conv = await dataService.entities.Conversation.filter({ id });
-      if (conv[0]) {
-        setSelectedConversation(conv[0]);
+      const [conv] = await dataService.entities.Conversation.filter({ id });
+      if (!conv) return;
+
+      // IDOR guard: reject any conversation the current user is not part of.
+      // This catches direct URL manipulation (?conversation=<other-user-uuid>).
+      if (!currentUser?.id || !conv.participant_ids?.includes(currentUser.id)) {
+        toast.error("You don't have access to that conversation.");
+        navigate('/Messages', { replace: true });
+        return;
       }
+
+      setSelectedConversation(conv);
     } catch (e) {
       console.error('Failed to load conversation:', e);
     }
@@ -101,11 +110,8 @@ export default function Messages() {
       const userConvs = allConvs.filter((c) => c.participant_ids?.includes(currentUser.id));
 
       const requestIds = [...new Set(userConvs.map((c) => c.request_id).filter(Boolean))];
-      const requestTitleMap = {};
-      await Promise.all(requestIds.map(async (rid) => {
-        const [req] = await dataService.entities.MitzvahRequest.filter({ id: rid });
-        if (req) requestTitleMap[rid] = req.title;
-      }));
+      const requests = await batchFetchByIds('MitzvahRequest', requestIds);
+      const requestTitleMap = Object.fromEntries(requests.map(r => [r.id, r.title]));
 
       return userConvs.map((conv) => ({
         ...conv,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { dataService } from '@/services';
+import { dataService, incrementCounter } from '@/services';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, MapPin, Phone, Globe, Clock, BookOpen, Heart, Shield } from 'lucide-react';
 import { toast } from 'sonner';
@@ -255,11 +255,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
       await dataService.entities.CommunityFollow.delete(followRecord[0].id);
       const memberships = await dataService.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id });
       for (const m of memberships) await dataService.entities.UserCommunity.delete(m.id);
-      if (community) {
-        await dataService.entities.Community.update(communityId, {
-          follower_count: Math.max(0, (community.follower_count || 0) - 1)
-        });
-      }
+      if (community) await incrementCounter('communities', 'follower_count', communityId, -1);
       toast.success('Unfollowed');
     } else {
       await dataService.entities.CommunityFollow.create({ community_id: communityId, user_id: currentUser.id });
@@ -267,11 +263,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
       if (existing.length === 0) {
         await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: communityId, role: 'Member' });
       }
-      if (community) {
-        await dataService.entities.Community.update(communityId, {
-          follower_count: (community.follower_count || 0) + 1
-        });
-      }
+      if (community) await incrementCounter('communities', 'follower_count', communityId, 1);
       toast.success('Joined!');
     }
     queryClient.invalidateQueries({ queryKey: ['community-follow', communityId] });
