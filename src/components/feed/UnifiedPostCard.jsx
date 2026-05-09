@@ -762,8 +762,8 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-sm flex-shrink-0 font-semibold">?</div>
               <div>
-                <span className="font-semibold text-[#0F1C2E] text-[13px]">Anonymous</span>
-                <p className="text-[10px] text-[#98A2B3]">{timeAgo}</p>
+                <span className="font-semibold text-slate-900 text-[13px]">Anonymous</span>
+                <p className="text-[10px] text-slate-400">{timeAgo}</p>
               </div>
             </div>
           ) : (
@@ -771,16 +771,16 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
               <UserAvatar user={post} name={post.user_name} size="xs" className="w-7 h-7" />
               <div className="min-w-0">
                 <div className="flex items-center gap-1 flex-wrap">
-                  <span className="font-semibold text-[#0F1C2E] text-[13px] truncate">{post.user_name}</span>
+                  <span className="font-semibold text-slate-900 text-[13px] truncate">{post.user_name}</span>
                   {post.helper_badge && post.helper_badge !== 'none' && <HelperBadge badge={post.helper_badge} size="sm" />}
-                  <span className="text-[#C8D0DC] text-[10px]">·</span>
-                  <span className={`text-[10px] font-medium ${isVeryRecent ? 'text-green-600' : 'text-[#98A2B3]'}`}>{timeAgo}</span>
+                  <span className="text-slate-300 text-[10px]">·</span>
+                  <span className={`text-[10px] font-medium ${isVeryRecent ? 'text-green-600' : 'text-slate-400'}`}>{timeAgo}</span>
                   {communityName ? (
-                    <><span className="text-[#C8D0DC] text-[10px]">·</span><button onClick={() => onCommunityClick?.(post.community_id)} className="text-[10px] text-[#2563EB] font-semibold hover:underline">📌 {communityName}</button></>
+                    <><span className="text-slate-300 text-[10px]">·</span><button onClick={() => onCommunityClick?.(post.community_id)} className="text-[10px] text-blue-600 font-semibold hover:underline">📌 {communityName}</button></>
                   ) : post.city ? (
                     (() => {
                       const net = LOCAL_NETWORKS.find(n => n.cityPreset === post.city);
-                      return <><span className="text-[#C8D0DC] text-[10px]">·</span><span className="text-[10px] text-slate-500 font-medium">{net ? `${net.emoji} ${net.shortLabel}` : post.city}</span></>;
+                      return <><span className="text-slate-300 text-[10px]">·</span><span className="text-[10px] text-slate-500 font-medium">{net ? `${net.emoji} ${net.shortLabel}` : post.city}</span></>;
                     })()
                   ) : null}
                 </div>
@@ -821,7 +821,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
           ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="w-7 h-7 flex items-center justify-center rounded-full text-[#64748B] hover:bg-slate-100 transition-colors">
+              <button className="w-7 h-7 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 transition-colors">
                 <MoreHorizontal className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
@@ -853,11 +853,11 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
             <p className="text-[11px] text-violet-700 font-semibold">💭 {post.prompt_text}</p>
           </div>
         )}
-        {post.title && <h3 className="font-bold text-[14px] text-[#0F1C2E] mb-0.5 leading-snug">{post.title}</h3>}
-        <p className={`text-[13px] text-[#344054] leading-snug ${!expanded ? 'line-clamp-3' : ''}`}>
+        {post.title && <h3 className="font-bold text-[14px] text-slate-900 mb-0.5 leading-snug">{post.title}</h3>}
+        <p className={`text-[13px] text-slate-700 leading-snug ${!expanded ? 'line-clamp-3' : ''}`}>
           {post.body}
           {bodyLong && (
-            <button onClick={() => setExpanded(e => !e)} className="ml-1 text-[#2563EB] font-semibold text-[12px]">{expanded ? 'less' : 'see more'}</button>
+            <button onClick={() => setExpanded(e => !e)} className="ml-1 text-blue-600 font-semibold text-[12px]">{expanded ? 'less' : 'see more'}</button>
           )}
         </p>
         {/* Image — 4:3 with blur-up and lightbox */}
@@ -905,7 +905,7 @@ export default function UnifiedPostCard({ post, currentUser, onLike, onComment, 
       )}
 
       {/* Footer: compact action row — no duplicate comment icon */}
-      <div className="px-3 py-1.5 mt-1 border-t border-[#F2F4F7] flex items-center gap-2">
+      <div className="px-3 py-1.5 mt-1 border-t border-slate-100 flex items-center gap-2">
         <ReactionBar postId={post.id} currentUser={currentUser} />
         <button
           onClick={() => setCommentsOpen(true)}

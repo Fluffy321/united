@@ -72,10 +72,10 @@ export default function ReactionBar({ postId, currentUser }) {
     <button
       onClick={handleClick}
       disabled={toggleLikeMutation.isPending}
-      className={`flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium transition-colors ${
+      className={`flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[13px] font-medium transition-all ${
         isLiked
-          ? 'bg-red-50 text-red-500'
-          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+          ? 'bg-red-50 text-red-500 border border-red-200'
+          : 'text-slate-500 hover:bg-slate-100 border border-transparent'
       }`}
     >
       <Heart
