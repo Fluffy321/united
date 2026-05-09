@@ -934,16 +934,18 @@ export default function Feed() {
           </div>
         )}
         {activeTab !== 'events' && (!isLoading || loadTimedOut) && feedPosts.length > 0 && (
-          <div className="app-card motion-stagger divide-y divide-slate-100 overflow-hidden tab-fade-in">
-            {/* Question of the Day — embedded as first "post" in the feed card */}
-            <DailyHooks
-              onPostClick={(type, subtype, prefill) => {
-                setPostModalType(type);
-                setPostModalSubtype(subtype || null);
-                setPostModalInitialBody(prefill || '');
-                setShowPostModal(true);
-              }}
-            />
+          <div className="motion-stagger tab-fade-in space-y-2">
+            <div className="app-card overflow-hidden">
+              {/* Question of the Day — embedded as first "post" in the feed card */}
+              <DailyHooks
+                onPostClick={(type, subtype, prefill) => {
+                  setPostModalType(type);
+                  setPostModalSubtype(subtype || null);
+                  setPostModalInitialBody(prefill || '');
+                  setShowPostModal(true);
+                }}
+              />
+            </div>
             {isError && (
               <p className="text-[12px] text-slate-400 text-center px-4 py-2">Showing cached posts — pull down to refresh.</p>
             )}
@@ -976,35 +978,39 @@ export default function Feed() {
               return (
                 <React.Fragment key={post.id}>
                   {sectionLabel && (
-                    <div className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-slate-50 to-blue-50/40 border-b border-slate-100">
+                    <div className="flex items-center gap-2 px-1 py-1">
                       <span className="text-base">{sectionLabel.emoji}</span>
-                      <span className="text-[12px] font-bold text-slate-700 uppercase tracking-wide">{sectionLabel.text}</span>
+                      <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wide">{sectionLabel.text}</span>
                     </div>
                   )}
                   {showCommunityDivider && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50/80 border-b border-indigo-100">
-                      <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wide">👥 From your communities</span>
+                    <div className="flex items-center gap-2 px-1 py-1">
+                      <span className="text-[11px] font-bold text-indigo-500 uppercase tracking-wide">👥 From your communities</span>
                     </div>
                   )}
-                  <UnifiedPostCard
-                   post={post}
-                   currentUser={currentUser}
-                   liked={userLikes.includes(post.id)}
-                   onLike={handleLike}
-                   onComment={handleComment}
-                   onDelete={handleDelete}
-                   onBlock={handleBlock}
-                   blockedIds={blockedIds}
-                   onReport={handleReport}
-                   communities={communityGroups}
-                   onCommunityClick={handleCommunityClick}
-                   isFromJoinedCommunity={isFromJoinedCommunity}
-                  />
-                  {(index + 1) % 6 === 0 && feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length] && (
-                    <InlineFeedPrompt
-                      prompt={feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length]}
-                      onReply={(p) => { setPinnedPrompt(p); setShowPromptReply(true); }}
+                  <div className="app-card overflow-hidden">
+                    <UnifiedPostCard
+                     post={post}
+                     currentUser={currentUser}
+                     liked={userLikes.includes(post.id)}
+                     onLike={handleLike}
+                     onComment={handleComment}
+                     onDelete={handleDelete}
+                     onBlock={handleBlock}
+                     blockedIds={blockedIds}
+                     onReport={handleReport}
+                     communities={communityGroups}
+                     onCommunityClick={handleCommunityClick}
+                     isFromJoinedCommunity={isFromJoinedCommunity}
                     />
+                  </div>
+                  {(index + 1) % 6 === 0 && feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length] && (
+                    <div className="app-card overflow-hidden">
+                      <InlineFeedPrompt
+                        prompt={feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length]}
+                        onReply={(p) => { setPinnedPrompt(p); setShowPromptReply(true); }}
+                      />
+                    </div>
                   )}
                 </React.Fragment>
               );
@@ -1102,21 +1108,54 @@ function HubMetric({ icon: Icon, label, value }) {
   );
 }
 
+function useShabbosCountdown() {
+  const [countdown, setCountdown] = useState('');
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      const day = now.getDay();
+      const daysToFri = day === 5 ? (now.getHours() < 19 ? 0 : 7) : (5 - day + 7) % 7 || 7;
+      const friday = new Date(now);
+      friday.setDate(now.getDate() + daysToFri);
+      friday.setHours(19, 0, 0, 0);
+      const ms = friday - now;
+      if (ms <= 0) { setCountdown('Shabbat is here!'); return; }
+      const totalH = Math.floor(ms / 3600000);
+      const d = Math.floor(totalH / 24);
+      const h = totalH % 24;
+      setCountdown(d > 0 ? `${d}d ${h}h away` : `${h}h away`);
+    };
+    update();
+    const t = setInterval(update, 60000);
+    return () => clearInterval(t);
+  }, []);
+  return countdown;
+}
+
 function DailyRetentionPrompt({ prompt, onPost }) {
+  const countdown = useShabbosCountdown();
   if (!prompt) return null;
 
   return (
     <section className="app-card mb-3 overflow-hidden">
-      <div className="border-b border-slate-100 bg-gradient-to-r from-blue-50 to-white p-3">
-        <p className="text-[12px] font-black uppercase tracking-wide text-blue-700">Daily prompt</p>
-        <h2 className="mt-1 text-[17px] font-black leading-snug text-slate-950">{prompt.question}</h2>
-        <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-500">
-          A simple reason to post today, tuned for the Five Towns rhythm.
-        </p>
+      <div
+        className="p-4"
+        style={{ background: 'linear-gradient(135deg, #1E40AF 0%, #2563EB 45%, #92400E 100%)' }}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-black uppercase tracking-wider text-blue-200">Daily Prompt</p>
+            <h2 className="mt-1.5 text-[16px] font-black leading-snug text-white">{prompt.question}</h2>
+          </div>
+          <div className="shrink-0 rounded-2xl bg-white/15 backdrop-blur-sm px-3 py-2 text-center min-w-[72px]">
+            <p className="text-[9px] font-black uppercase tracking-wide text-amber-200">🕯 Shabbat</p>
+            <p className="mt-0.5 text-[12px] font-black text-white leading-tight">{countdown}</p>
+          </div>
+        </div>
       </div>
       <div className="grid gap-2 p-3 sm:grid-cols-[1fr_auto]">
         <div className="rounded-2xl bg-slate-50 px-3 py-2">
-          <p className="text-[11px] font-black uppercase text-slate-400">Suggested post</p>
+          <p className="text-[11px] font-black uppercase text-slate-400">Suggested</p>
           <p className="mt-1 text-[12px] font-bold text-slate-700">{prompt.initial_body || 'Share what you need, know, or can offer.'}</p>
         </div>
         <button
@@ -1130,6 +1169,13 @@ function DailyRetentionPrompt({ prompt, onPost }) {
   );
 }
 
+const METRIC_PALETTES = [
+  { icon: CalendarDays, iconCls: 'text-blue-600', bgCls: 'bg-blue-50', glassBg: 'rgba(37,99,235,0.06)', glassBorder: '1px solid rgba(37,99,235,0.12)' },
+  { icon: HeartHandshake, iconCls: 'text-emerald-700', bgCls: 'bg-emerald-50', glassBg: 'rgba(85,107,47,0.06)', glassBorder: '1px solid rgba(85,107,47,0.14)' },
+  { icon: Search, iconCls: 'text-amber-600', bgCls: 'bg-amber-50', glassBg: 'rgba(212,175,55,0.07)', glassBorder: '1px solid rgba(212,175,55,0.18)' },
+  { icon: Users, iconCls: 'text-indigo-600', bgCls: 'bg-indigo-50', glassBg: 'rgba(99,102,241,0.06)', glassBorder: '1px solid rgba(99,102,241,0.12)' },
+];
+
 function FiveTownsDashboard({ brief, actions, shabbosPrep, trustLayers, onNavigate, onPost }) {
   const pulse = brief?.metrics || [];
   return (
@@ -1139,14 +1185,24 @@ function FiveTownsDashboard({ brief, actions, shabbosPrep, trustLayers, onNaviga
           <p className="text-[12px] font-black uppercase tracking-wide text-blue-700">{brief?.title || 'Today in the Five Towns'}</p>
           <p className="mt-0.5 text-[13px] font-semibold leading-5 text-slate-600">{brief?.subtitle || 'A daily control center for the Jewish local pulse.'}</p>
         </div>
-        <div className="grid grid-cols-2 gap-2 p-3">
-          {pulse.map((item) => (
-            <div key={item.label} className="rounded-2xl bg-slate-50 p-3">
-              <p className="text-2xl font-black text-slate-950">{item.value}</p>
-              <p className="text-[12px] font-black text-slate-800">{item.label}</p>
-              <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">{item.detail}</p>
-            </div>
-          ))}
+        <div className="flex gap-2.5 overflow-x-auto px-3 pb-3 pt-1 scrollbar-hide">
+          {pulse.map((item, i) => {
+            const { icon: MetricIcon, iconCls, bgCls, glassBg, glassBorder } = METRIC_PALETTES[i] || METRIC_PALETTES[0];
+            return (
+              <div
+                key={item.label}
+                className="shrink-0 w-[106px] rounded-2xl p-3"
+                style={{ background: glassBg, border: glassBorder }}
+              >
+                <div className={`mb-2 flex h-8 w-8 items-center justify-center rounded-xl ${bgCls}`}>
+                  <MetricIcon className={`h-4 w-4 ${iconCls}`} />
+                </div>
+                <p className="text-[22px] font-black leading-none text-slate-950">{item.value}</p>
+                <p className="mt-1 text-[11px] font-black uppercase tracking-wide text-slate-800">{item.label}</p>
+                {item.detail && <p className="mt-0.5 text-[10px] font-semibold leading-tight text-slate-400">{item.detail}</p>}
+              </div>
+            );
+          })}
         </div>
         {brief?.activeThreads?.length > 0 && (
           <div className="border-t border-slate-100 p-3">
