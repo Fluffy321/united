@@ -13,15 +13,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Fallback seed pins shown when no real requests have coordinates
-const SEED_PINS = [
-  { id: 'seed-1', title: 'Shabbat Meal Needed', description: 'Looking for Shabbat hospitality this week.', category: 'Shabbat Help', approxLat: 40.6223, approxLng: -73.7246, created_date: new Date().toISOString() },
-  { id: 'seed-2', title: 'Grocery Errand', description: 'Need help picking up groceries from Gourmet Glatt.', category: 'Errand', approxLat: 40.6323, approxLng: -73.7129, created_date: new Date().toISOString() },
-  { id: 'seed-3', title: 'Ride to Airport', description: 'Need a ride to JFK on Sunday morning.', category: 'Ride', approxLat: 40.6157, approxLng: -73.7296, created_date: new Date().toISOString() },
-  { id: 'seed-4', title: 'Math Tutoring', description: 'Looking for a math tutor for 8th grader.', category: 'Tutoring', approxLat: 40.6434, approxLng: -73.6946, created_date: new Date().toISOString() },
-  { id: 'seed-5', title: 'Moving Help', description: 'Need extra hands for a small move this Thursday.', category: 'Quick Favor', approxLat: 40.6229, approxLng: -73.7501, created_date: new Date().toISOString() },
-];
-
 const CATEGORY_CONFIG = {
   'Errand':       { color: '#2563eb', emoji: '🛍️' },
   'Lost & Found': { color: '#9333ea', emoji: '🔍' },
@@ -173,7 +164,18 @@ const RESOURCE_PINS = [
   },
 ];
 
-const ALL_FILTERS = ['All', ...Object.keys(CATEGORY_CONFIG), ...Object.keys(RESOURCE_CONFIG)];
+const QUICK_FILTERS = [
+  ...Object.keys(RESOURCE_CONFIG),
+  'Food',
+  'Ride',
+  'Shabbat Help',
+  'Lost & Found',
+  'Errand',
+  'Quick Favor',
+  'Tutoring',
+  'Other',
+  'All',
+];
 
 const createCustomIcon = (color, emoji, selected = false) => {
   const size = selected ? 44 : 36;
@@ -204,7 +206,7 @@ function BoundsFitter({ pins }) {
     if (bounds.isValid()) {
       map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14, animate: false });
     }
-  }, []); // only on mount
+  }, [map, pins]);
   return null;
 }
 
@@ -224,18 +226,18 @@ function MapInner({ center, zoom, requests, resources, userOrigin, onSelectReque
   }));
 
   const filtered = withCoords.filter(r =>
+    activeFilter &&
     r.approxLat && r.approxLng && !r.is_hidden &&
     (activeFilter === 'All' || r.category === activeFilter) &&
     !RESOURCE_CONFIG[activeFilter]
   );
 
   const filteredResources = resources.filter(resource =>
-    activeFilter === 'All' || resource.resourceType === activeFilter
+    activeFilter && (activeFilter === 'All' || resource.resourceType === activeFilter)
   );
 
-  // Use seed pins only when no real pins are visible
   const isResourceFilter = !!RESOURCE_CONFIG[activeFilter];
-  const displayPins = isResourceFilter ? [] : (filtered.length > 0 ? filtered : SEED_PINS);
+  const displayPins = activeFilter && !isResourceFilter ? filtered : [];
   const fittingPins = activeFilter === 'All'
     ? [...displayPins, ...filteredResources]
     : isResourceFilter
@@ -300,18 +302,17 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
 ) {
   const effectiveCenter = mapCenter ? [mapCenter.lat, mapCenter.lng] : [40.6369, -73.7142];
   const effectiveZoom = mapZoom ?? 12;
-  const [activeFilter, setActiveFilter] = useState('All');
+  const [activeFilter, setActiveFilter] = useState(null);
   const [selectedReq, setSelectedReq] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);
   const resources = RESOURCE_PINS;
 
-  // Count real pins
-  const realPinCount = requests.filter(r =>
-    (r.approxLat || r.lat || r.location_lat) && (r.approxLng || r.lng || r.location_lng) && !r.is_hidden
-  ).length;
-  const usingSeeds = realPinCount === 0;
-  const showingOnlyResources = !!RESOURCE_CONFIG[activeFilter];
-  const showSeedMessaging = usingSeeds && !showingOnlyResources;
+  const visiblePinCount = activeFilter
+    ? requests.filter(r => {
+      const categoryMatch = activeFilter === 'All' || r.category === activeFilter;
+      return categoryMatch && (r.approxLat || r.lat || r.location_lat) && (r.approxLng || r.lng || r.location_lng) && !r.is_hidden;
+    }).length + resources.filter(resource => activeFilter === 'All' || resource.resourceType === activeFilter).length
+    : 0;
 
   const handlePinClick = (req) => {
     setSelectedReq(req);
@@ -335,19 +336,19 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
           className="scrollbar-hide"
           style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, WebkitOverflowScrolling: 'touch' }}
         >
-          {ALL_FILTERS.map(f => {
+          {QUICK_FILTERS.map(f => {
             const filterCfg = CATEGORY_CONFIG[f] || RESOURCE_CONFIG[f];
             return (
             <button
               key={f}
               onClick={() => {
-                setActiveFilter(f);
+                setActiveFilter(activeFilter === f ? null : f);
                 setSelectedReq(null);
                 setSelectedResource(null);
               }}
               className="flex-shrink-0 text-[11px] font-bold transition-all touch-manipulation"
               style={{
-                padding: '5px 10px',
+                padding: '7px 12px',
                 borderRadius: 999,
                 whiteSpace: 'nowrap',
                 ...(activeFilter === f
@@ -363,12 +364,19 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
         </div>
       </div>
 
-      {/* Seed notice */}
-      {showSeedMessaging && (
+      {!activeFilter && (
         <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[500] px-3 py-1.5 rounded-full text-[11px] font-semibold text-slate-600 pointer-events-none"
           style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid #E2E8F0', boxShadow: '0 1px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' }}
         >
-          📍 Showing sample requests — be the first to post!
+          Pick a filter to show pins
+        </div>
+      )}
+
+      {activeFilter && visiblePinCount === 0 && (
+        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[500] px-3 py-1.5 rounded-full text-[11px] font-semibold text-slate-600 pointer-events-none"
+          style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid #E2E8F0', boxShadow: '0 1px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' }}
+        >
+          No pins in this filter yet
         </div>
       )}
 
@@ -403,15 +411,6 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
             activeFilter={activeFilter}
           />
       </MapContainer>
-
-      {/* No pins fallback */}
-      {!selectedReq && showSeedMessaging && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[500] px-4 py-2 rounded-full text-[12px] font-semibold text-slate-500 pointer-events-none"
-          style={{ background: 'rgba(255,255,255,0.95)', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' }}
-        >
-          📍 No nearby requests yet — be the first!
-        </div>
-      )}
 
       {/* Bottom sheet preview */}
       {selectedReq && (
