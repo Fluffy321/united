@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { dataService, feedRetentionService, storageService, togglePostLike } from '@/services';
+import { dataService, feedRetentionService, shabbatReminderService, storageService, togglePostLike } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
@@ -21,6 +21,7 @@ import SkeletonCard from '@/components/common/SkeletonCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
+import { getFiveTownsShabbatTimes } from '@/lib/hebrewDate';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
 const minutesAgo = (minutes) => new Date(Date.now() - minutes * 60 * 1000).toISOString();
@@ -469,6 +470,14 @@ export default function Feed() {
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [showEventsSheet, setShowEventsSheet] = useState(false);
+
+  useEffect(() => {
+    const enabled = Boolean(currentUser)
+      && currentUser?.notification_settings?.shabbatReminders !== false
+      && currentUser?.app_settings?.quietMode !== true;
+    shabbatReminderService.start({ enabled });
+    return () => shabbatReminderService.stop();
+  }, [currentUser?.notification_settings?.shabbatReminders, currentUser?.app_settings?.quietMode]);
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [interestSignals, setInterestSignals] = useState({ types: {}, subtypes: {}, keywords: [] }); // track user interactions
   const [pullDistance, setPullDistance] = useState(0);
@@ -895,6 +904,18 @@ export default function Feed() {
           }}
         />
 
+        <LocalRetentionActions
+          posts={visiblePosts}
+          communities={communityGroups}
+          onNavigate={navigate}
+          onPost={(type, subtype, body) => {
+            setPostModalType(type);
+            setPostModalSubtype(subtype || null);
+            setPostModalInitialBody(body || '');
+            setShowPostModal(true);
+          }}
+        />
+
         {/* One-time network banner for new users */}
         {showNetworkBanner && (
           <div className="mb-3 flex items-center gap-2 rounded-2xl bg-blue-600 px-3.5 py-3 text-white text-[12px] font-medium shadow-sm">
@@ -1106,31 +1127,52 @@ function HubMetric({ icon: Icon, label, value }) {
 }
 
 function useShabbosCountdown() {
-  const [countdown, setCountdown] = useState('');
+  const [state, setState] = useState({ label: 'Shabbat', countdown: 'Loading…', time: '' });
+
   useEffect(() => {
+    let cancelled = false;
+    let times = null;
+
+    const load = async () => {
+      times = await getFiveTownsShabbatTimes();
+      if (!cancelled) update();
+    };
+
     const update = () => {
+      if (!times?.candleLighting || !times?.havdalah) {
+        setState({ label: 'Shabbat', countdown: 'Soon', time: '' });
+        return;
+      }
       const now = new Date();
-      const day = now.getDay();
-      const daysToFri = day === 5 ? (now.getHours() < 19 ? 0 : 7) : (5 - day + 7) % 7 || 7;
-      const friday = new Date(now);
-      friday.setDate(now.getDate() + daysToFri);
-      friday.setHours(19, 0, 0, 0);
-      const ms = friday - now;
-      if (ms <= 0) { setCountdown('Shabbat is here!'); return; }
+      const candleLighting = new Date(times.candleLighting);
+      const havdalah = new Date(times.havdalah);
+      const target = now < candleLighting ? candleLighting : havdalah;
+      const label = now < candleLighting ? 'Candle lighting' : 'Havdalah';
+      const ms = target - now;
+      if (ms <= 0) {
+        setState({ label: 'Shabbat', countdown: 'Shavua tov', time: '' });
+        return;
+      }
       const totalH = Math.floor(ms / 3600000);
       const d = Math.floor(totalH / 24);
       const h = totalH % 24;
-      setCountdown(d > 0 ? `${d}d ${h}h away` : `${h}h away`);
+      const time = target.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      setState({ label, countdown: d > 0 ? `${d}d ${h}h away` : `${h}h away`, time });
     };
-    update();
+
+    load();
     const t = setInterval(update, 60000);
-    return () => clearInterval(t);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
   }, []);
-  return countdown;
+
+  return state;
 }
 
 function DailyRetentionPrompt({ prompt, onPost }) {
-  const countdown = useShabbosCountdown();
+  const shabbat = useShabbosCountdown();
   if (!prompt) return null;
 
   return (
@@ -1145,8 +1187,9 @@ function DailyRetentionPrompt({ prompt, onPost }) {
             <h2 className="mt-1.5 text-[16px] font-black leading-snug text-white">{prompt.question}</h2>
           </div>
           <div className="shrink-0 rounded-2xl bg-white/15 backdrop-blur-sm px-3 py-2 text-center min-w-[72px]">
-            <p className="text-[9px] font-black uppercase tracking-wide text-amber-200">🕯 Shabbat</p>
-            <p className="mt-0.5 text-[12px] font-black text-white leading-tight">{countdown}</p>
+            <p className="text-[9px] font-black uppercase tracking-wide text-amber-200">🕯 {shabbat.label}</p>
+            <p className="mt-0.5 text-[12px] font-black text-white leading-tight">{shabbat.countdown}</p>
+            {shabbat.time && <p className="mt-0.5 text-[10px] font-bold text-blue-100">{shabbat.time}</p>}
           </div>
         </div>
       </div>
@@ -1172,6 +1215,81 @@ const METRIC_PALETTES = [
   { icon: Search, iconCls: 'text-amber-600', bgCls: 'bg-amber-50', glassBg: 'rgba(212,175,55,0.07)', glassBorder: '1px solid rgba(212,175,55,0.18)' },
   { icon: Users, iconCls: 'text-indigo-600', bgCls: 'bg-indigo-50', glassBg: 'rgba(99,102,241,0.06)', glassBorder: '1px solid rgba(99,102,241,0.12)' },
 ];
+
+function LocalRetentionActions({ posts = [], communities = [], onNavigate, onPost }) {
+  const activeThreads = posts.filter((post) => (post.comments_count || 0) >= 8).length;
+  const urgentNeeds = posts.filter((post) => post.type === 'help' || post.post_subtype === 'chesed').length;
+  const events = posts.filter((post) => post.type === 'event' || post.board === 'events').length;
+
+  const actions = [
+    {
+      icon: MessageCircle,
+      label: 'Reply loop',
+      title: `${activeThreads || 3} active threads`,
+      body: 'Jump into a real conversation and get notified when someone replies.',
+      cta: 'Find a thread',
+      onClick: () => onPost('feed', 'discussion', 'What is one thing people in the Five Towns should know today?'),
+      tone: 'blue',
+    },
+    {
+      icon: HeartHandshake,
+      label: 'Mitzvah habit',
+      title: `${urgentNeeds || 2} ways to help`,
+      body: 'Track two mitzvot today, reflect on the impact, and keep your streak alive.',
+      cta: 'Open tracker',
+      onClick: () => onNavigate('/MitzvahCircle?tab=log'),
+      tone: 'emerald',
+    },
+    {
+      icon: CalendarDays,
+      label: 'Local plans',
+      title: `${events || 4} events nearby`,
+      body: 'Save a shiur, simcha, meetup, or community event before it gets buried.',
+      cta: 'See events',
+      onClick: () => onNavigate('/Feed?tab=events'),
+      tone: 'amber',
+    },
+    {
+      icon: Users,
+      label: 'Your circles',
+      title: `${communities.length || 5} joined circles`,
+      body: 'Joined communities shape your feed, map, events, and notifications.',
+      cta: 'Tune circles',
+      onClick: () => onNavigate('/Communities'),
+      tone: 'indigo',
+    },
+  ];
+
+  return (
+    <section className="app-card mb-3 overflow-hidden">
+      <div className="border-b border-slate-100 px-3 py-2.5">
+        <p className="text-[11px] font-black uppercase tracking-wide text-blue-700">Keep JUnited useful today</p>
+      </div>
+      <div className="mobile-scroll-x flex gap-2 p-3">
+        {actions.map((action) => (
+          <button
+            key={action.label}
+            onClick={action.onClick}
+            className="motion-press w-[220px] shrink-0 rounded-2xl border border-slate-100 bg-slate-50 p-3 text-left transition hover:bg-white"
+          >
+            <div className={`mb-2 flex h-9 w-9 items-center justify-center rounded-xl ${
+              action.tone === 'emerald' ? 'bg-emerald-100 text-emerald-700' :
+              action.tone === 'amber' ? 'bg-amber-100 text-amber-700' :
+              action.tone === 'indigo' ? 'bg-indigo-100 text-indigo-700' :
+              'bg-blue-100 text-blue-700'
+            }`}>
+              <action.icon className="h-4 w-4" />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{action.label}</p>
+            <p className="mt-0.5 text-[14px] font-black text-slate-950">{action.title}</p>
+            <p className="mt-1 line-clamp-2 text-[12px] font-medium leading-5 text-slate-500">{action.body}</p>
+            <p className="mt-2 text-[12px] font-black text-blue-700">{action.cta}</p>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 function FiveTownsDashboard({ brief, actions, shabbosPrep, trustLayers, onNavigate, onPost }) {
   const pulse = brief?.metrics || [];

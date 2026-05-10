@@ -42,6 +42,33 @@ const conversationStarters = [
   { title: 'Small groups that stick', body: 'A cooking circle, Daf review pod, new families table, walking group, singles event crew, or marketplace lane.' },
 ];
 
+const communityRetentionCards = [
+  {
+    icon: Radio,
+    title: 'Pinned weekly pulse',
+    body: 'Every community gets one visible “what matters this week” post so members do not land in an empty room.',
+    stat: '1 anchor post',
+  },
+  {
+    icon: Bell,
+    title: 'Followed thread alerts',
+    body: 'Threads with replies become reasons to return, especially questions, rides, Shabbos plans, and recommendations.',
+    stat: 'Reply loops',
+  },
+  {
+    icon: CalendarDays,
+    title: 'Events plus reminders',
+    body: 'Groups can act like mini websites with upcoming events, saved plans, RSVP intent, and gentle reminders.',
+    stat: 'Calendar layer',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Verified leadership',
+    body: 'Admin and moderator labels build trust before schools and shuls eventually replace email chains here.',
+    stat: 'Trust signals',
+  },
+];
+
 const hubPlaybook = [
   'Claimed shul pages for minyanim, shiurim, kiddush, alerts, and member posts',
   'Joined communities power each person’s feed, map, events, and notifications',
@@ -565,6 +592,26 @@ export default function Communities() {
 	              <div key={starter.title} className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
 	                <p className="text-[14px] font-black text-slate-950">{starter.title}</p>
 	                <p className="mt-1 text-[12px] font-medium leading-5 text-slate-600">{starter.body}</p>
+	              </div>
+	            ))}
+	          </div>
+	        </section>
+
+	        <section className="app-card mb-5 overflow-hidden">
+	          <div className="border-b border-slate-100 p-3">
+	            <p className="text-[12px] font-black uppercase tracking-wide text-emerald-700">Retention systems</p>
+	            <h2 className="mt-1 text-[17px] font-black text-slate-950">What keeps communities alive</h2>
+	            <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">Simple operating pieces that make groups feel active without adding clutter.</p>
+	          </div>
+	          <div className="grid gap-2 p-3 sm:grid-cols-2 lg:grid-cols-4">
+	            {communityRetentionCards.map((card) => (
+	              <div key={card.title} className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+	                <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
+	                  <card.icon className="h-4 w-4" />
+	                </div>
+	                <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{card.stat}</p>
+	                <p className="mt-0.5 text-[14px] font-black text-slate-950">{card.title}</p>
+	                <p className="mt-1 text-[12px] font-medium leading-5 text-slate-600">{card.body}</p>
 	              </div>
 	            ))}
 	          </div>

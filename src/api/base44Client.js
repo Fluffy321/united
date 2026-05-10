@@ -439,6 +439,16 @@ const toDbPatch = (data = {}, entityName) => {
     if (patch.notes && !patch.description) patch.description = patch.notes;
   }
 
+  if (entityName === 'Comment') {
+    if (patch.reply_to_comment_id && !patch.parent_comment_id) {
+      patch.parent_comment_id = patch.reply_to_comment_id;
+    }
+    if (patch.parent_comment_id && !patch.reply_to_comment_id) {
+      patch.reply_to_comment_id = patch.parent_comment_id;
+    }
+    if (!patch.thread_type) patch.thread_type = 'feed_reply';
+  }
+
   delete patch.created_date;
   delete patch.updated_date;
   delete patch.full_name;
@@ -1179,6 +1189,33 @@ export const base44 = {
     async invoke(name, payload = {}) {
       if (name === 'universalSearch') {
         return { data: { results: await runUniversalSearch(payload) } };
+      }
+
+      if (name === 'createFeedReply') {
+        if (shouldUseSupabase && supabase) {
+          const { data, error } = await supabase.rpc('create_feed_reply', {
+            p_post_id: payload.post_id,
+            p_body: payload.body,
+            p_parent_comment_id: payload.parent_comment_id || payload.reply_to_comment_id || null,
+            p_reply_to_comment_id: payload.reply_to_comment_id || payload.parent_comment_id || null,
+            p_author_name: payload.author_name || null,
+            p_author_avatar_url: payload.author_avatar_url || null,
+            p_client_context: payload.client_context || {},
+          });
+          if (error) throw error;
+          return { data: toAppRow(data) };
+        }
+
+        const comment = await activeEntities.Comment.create({
+          ...payload,
+          parent_comment_id: payload.parent_comment_id || payload.reply_to_comment_id || null,
+          reply_to_comment_id: payload.reply_to_comment_id || payload.parent_comment_id || null,
+          thread_type: 'feed_reply',
+          created_date: new Date().toISOString(),
+          updated_date: new Date().toISOString(),
+        });
+        await incrementCounter('posts', 'comments_count', payload.post_id, 1);
+        return { data: comment };
       }
 
       if (name === 'create-checkout') {

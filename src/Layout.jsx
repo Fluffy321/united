@@ -7,7 +7,7 @@ import { Toaster } from 'sonner';
 import SwipeableTabs from '@/components/common/SwipeableTabs';
 import PWAInstallPrompt from '@/components/common/PWAInstallPrompt';
 import CookieConsentBanner from '@/components/common/CookieConsentBanner';
-import { dataService } from '@/services';
+import { dataService, mitzvahReminderService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import AppErrorBoundary from '@/components/common/AppErrorBoundary';
@@ -67,6 +67,14 @@ export default function Layout({ children, currentPageName }) {
 
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const enabled = Boolean(currentUser)
+      && currentUser?.notification_settings?.mitzvahDailyReminders !== false
+      && currentUser?.app_settings?.quietMode !== true;
+    mitzvahReminderService.start({ enabled });
+    return () => mitzvahReminderService.stop();
+  }, [currentUser?.notification_settings?.mitzvahDailyReminders, currentUser?.app_settings?.quietMode]);
 
   useEffect(() => {
     let scrollTimeout;

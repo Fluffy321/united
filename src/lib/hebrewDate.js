@@ -86,6 +86,31 @@ export async function getParsha() {
 }
 
 /**
+ * Get the next Shabbat candle lighting and Havdalah times for the Five Towns.
+ */
+export async function getFiveTownsShabbatTimes(date = new Date()) {
+  const dateStr = date.toISOString().split('T')[0];
+  try {
+    const res = await fetch(
+      `${HEBCAL_BASE}/shabbat?cfg=json&geo=pos&latitude=40.6157&longitude=-73.7296&tzid=America/New_York&m=20&b=18&date=${dateStr}`
+    );
+    const data = await res.json();
+    const candle = data.items?.find((item) => item.category === 'candles');
+    const havdalah = data.items?.find((item) => item.category === 'havdalah');
+    return {
+      location: data.location?.title || 'Five Towns',
+      candleLighting: candle?.date || null,
+      candleTitle: candle?.title || 'Candle lighting',
+      havdalah: havdalah?.date || null,
+      havdalahTitle: havdalah?.title || 'Havdalah',
+      parsha: data.items?.find((item) => item.category === 'parashat')?.title || null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Format a time string (ISO or HH:MM:SS) as 12-hour time.
  */
 export function formatZmanTime(timeStr) {
