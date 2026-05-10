@@ -17,9 +17,16 @@ const SUPABASE_ENTITY_TABLES = {
   Reaction: 'reactions',
   Notification: 'notifications',
   MitzvahRequest: 'mitzvah_requests',
+  HelpOffer: 'mitzvah_offers',
+  MitzvahSignup: 'mitzvah_offers',
   MitzvahCompletion: 'mitzvah_completions',
   VerificationRequest: 'verification_requests',
   ChesedLog: 'chesed_hours_logs',
+  UserStreak: 'user_streaks',
+  MitzvahLog: 'mitzvah_logs',
+  MitzvahAction: 'mitzvah_actions',
+  MitzvahPoints: 'mitzvah_points',
+  Block: 'user_blocks',
   // Feed retention — migration 007_feed_retention.sql
   FeedUserPreference: 'feed_user_preferences',
   FeedEngagementEvent: 'feed_engagement_events',
@@ -29,12 +36,7 @@ const SUPABASE_ENTITY_TABLES = {
   Report: 'reports',
   ClaimRequest: 'claim_requests',
   ModerationAuditLog: 'moderation_audit_logs',
-  // HelpOffer / MitzvahSignup intentionally omitted: both map to mitzvah_offers,
-  // but the app sends user_id while the DB column is volunteer_id. Adding the
-  // mapping without a field translation would cause silent data loss on every
-  // write. Fix: add a user_id compat column to mitzvah_offers, then map here.
-  //
-  // All other entities (MessageRequest, GroupMember, Shul, UserStreak, etc.) are
+  // All other entities (MessageRequest, GroupMember, Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.
   // See the UNMAPPED ENTITIES section in base44Client.js for the full list and
@@ -42,7 +44,7 @@ const SUPABASE_ENTITY_TABLES = {
 };
 
 const PUBLIC_PROFILE_ENTITIES = new Set(['User', 'Profile']);
-const PUBLIC_PROFILE_SELECT = 'id,display_name,avatar_url,username,public_community,city,bio,is_profile_complete,created_at,updated_at';
+const PUBLIC_PROFILE_SELECT = 'id,display_name,avatar_url,cover_url,username,public_community,city,bio,age_range,is_verified,verified_type,communities_joined_count,helper_actions_count,is_profile_complete,created_at,updated_at';
 
 const demoUser = {
   id: 'local-demo',
@@ -268,7 +270,7 @@ const seedData = {
       id: 'local-streak-1',
       user_id: 'local-demo',
       current_streak: 3,
-      longest_streak: 5,
+      best_streak: 5,
       last_activity_date: new Date(now).toISOString().slice(0, 10),
       badge_level: 'starter',
       created_date: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
@@ -384,15 +386,21 @@ const entities = new Proxy({}, {
   },
 });
 
+const firstPresent = (...values) => values.find(value => value !== undefined && value !== null);
+
 const toAppRow = (row = {}) => ({
   ...row,
   created_date: row.created_date || row.created_at,
   updated_date: row.updated_date || row.updated_at,
   full_name: row.full_name || row.display_name || 'User',
   cityPreset: row.cityPreset || row.city,
+  locationLabel: row.locationLabel || row.location_label || row.location_label_legacy,
+  approxLat: firstPresent(row.approxLat, row.approx_lat),
+  approxLng: firstPresent(row.approxLng, row.approx_lng),
+  best_streak: row.best_streak,
 });
 
-const toDbPatch = (data = {}) => {
+const toDbPatch = (data = {}, entityName) => {
   const patch = { ...data };
   if (patch.created_date && !patch.created_at) patch.created_at = patch.created_date;
   if (patch.updated_date && !patch.updated_at) patch.updated_at = patch.updated_date;
@@ -400,6 +408,37 @@ const toDbPatch = (data = {}) => {
   if (patch.community_settings?.primaryNeighborhood && !patch.public_community) {
     patch.public_community = patch.community_settings.primaryNeighborhood;
   }
+
+  if (entityName === 'MitzvahRequest') {
+    if (patch.created_by_user_id && !patch.requester_id) patch.requester_id = patch.created_by_user_id;
+    if (patch.created_by_name && !patch.requester_name) patch.requester_name = patch.created_by_name;
+    if (patch.locationLabel && !patch.location_label) patch.location_label = patch.locationLabel;
+    if (patch.locationLabel && !patch.location_label_legacy) patch.location_label_legacy = patch.locationLabel;
+    if (patch.approxLat !== undefined && patch.approx_lat === undefined) patch.approx_lat = patch.approxLat;
+    if (patch.approxLng !== undefined && patch.approx_lng === undefined) patch.approx_lng = patch.approxLng;
+    delete patch.locationLabel;
+    delete patch.approxLat;
+    delete patch.approxLng;
+  }
+
+  if (entityName === 'HelpOffer' || entityName === 'MitzvahSignup') {
+    if ((patch.user_id || patch.helper_user_id) && !patch.volunteer_id) {
+      patch.volunteer_id = patch.user_id || patch.helper_user_id;
+    }
+    if ((patch.user_name || patch.helper_name) && !patch.volunteer_name) {
+      patch.volunteer_name = patch.user_name || patch.helper_name;
+    }
+  }
+
+  if (entityName === 'ChesedLog') {
+    if (patch.user_id && !patch.volunteer_id) patch.volunteer_id = patch.user_id;
+    if (patch.user_name && !patch.volunteer_name) patch.volunteer_name = patch.user_name;
+    if (patch.title && !patch.task_title) patch.task_title = patch.title;
+    if (patch.date && !patch.date_completed) patch.date_completed = patch.date;
+    if (patch.hours !== undefined && patch.hours_completed === undefined) patch.hours_completed = patch.hours;
+    if (patch.notes && !patch.description) patch.description = patch.notes;
+  }
+
   delete patch.created_date;
   delete patch.updated_date;
   delete patch.full_name;
@@ -435,7 +474,7 @@ const getMissingSchemaColumn = (error) => {
 };
 
 const updateProfileWithSchemaRetry = async (userId, patch) => {
-  const dbPatch = { ...toDbPatch(patch), updated_at: new Date().toISOString() };
+  const dbPatch = { ...toDbPatch(patch, 'User'), updated_at: new Date().toISOString() };
   const removedColumns = new Set();
 
   for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -526,12 +565,6 @@ const normalizeRealtimeEvent = (event = {}) => {
 //   ShulMember        → shul_members
 //   ShulPost          → shul_posts
 //   ShulSchedule      → shul_schedules
-//   UserStreak        → user_streaks      (gamification)
-//   MitzvahLog        → mitzvah_logs
-//   MitzvahPoints     → mitzvah_points
-//   MitzvahSignup     → mitzvah_offers    (+ user_id column — see note above)
-//   HelpOffer         → mitzvah_offers    (same field-mismatch blocker)
-//   Block             → user_blocks
 //   UserConnection    → user_connections
 //   NotificationPreference → notification_preferences
 //   CommunityEvent    → community_events
@@ -563,7 +596,6 @@ const normalizeRealtimeEvent = (event = {}) => {
 //   NewsletterSubscriber → newsletter_subscribers
 //   VolunteerOpportunity → volunteer_opportunities
 //   VolunteerSignup   → volunteer_signups
-//   MitzvahAction     → mitzvah_actions
 //   MitzvahOpportunity → mitzvah_opportunities
 //   EventAttendee     → event_attendees
 //   RSVP              → rsvps
@@ -673,7 +705,7 @@ const createSupabaseEntityApi = (entityName) => {
       return runWithLocalFallback(async () => {
         const { data: created, error } = await supabase
           .from(table)
-          .insert(toDbPatch(data))
+          .insert(toDbPatch(data, entityName))
           .select()
           .single();
         if (error) throw error;
@@ -685,7 +717,7 @@ const createSupabaseEntityApi = (entityName) => {
       return runWithLocalFallback(async () => {
         const { data, error } = await supabase
           .from(table)
-          .insert(items.map(toDbPatch))
+          .insert(items.map(item => toDbPatch(item, entityName)))
           .select();
         if (error) throw error;
         return (data || []).map(toAppRow);
@@ -696,7 +728,7 @@ const createSupabaseEntityApi = (entityName) => {
       return runWithLocalFallback(async () => {
         const { data, error } = await supabase
           .from(table)
-          .update({ ...toDbPatch(patch), updated_at: new Date().toISOString() })
+          .update({ ...toDbPatch(patch, entityName), updated_at: new Date().toISOString() })
           .eq('id', id)
           .select()
           .single();
@@ -819,7 +851,7 @@ const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
 
   const peopleQuery = supabase
     .from('public_profiles')
-    .select('id,display_name,avatar_url,username,public_community,city,bio,is_profile_complete,created_at,updated_at')
+    .select(PUBLIC_PROFILE_SELECT)
     .or(`display_name.ilike.%${esc}%,username.ilike.%${esc}%,bio.ilike.%${esc}%,city.ilike.%${esc}%,public_community.ilike.%${esc}%`)
     .limit(12);
 

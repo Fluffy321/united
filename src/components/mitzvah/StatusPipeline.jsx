@@ -2,11 +2,27 @@ import React from 'react';
 
 const STAGES = [
   { key: 'open',        label: 'Open',        color: '#F59E0B', bg: '#FFFBEB', border: '#FDE68A', dot: 'bg-yellow-400' },
-  { key: 'in_progress', label: 'In Progress',  color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE', dot: 'bg-blue-500' },
-  { key: 'completed',   label: 'Fulfilled',    color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0', dot: 'bg-green-500' },
+  { key: 'offered',     label: 'Offered',     color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', dot: 'bg-violet-500' },
+  { key: 'accepted',    label: 'Accepted',    color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE', dot: 'bg-blue-500' },
+  { key: 'in_progress', label: 'Helping',     color: '#0F766E', bg: '#F0FDFA', border: '#99F6E4', dot: 'bg-teal-500' },
+  { key: 'verified',    label: 'Verified',    color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0', dot: 'bg-green-500' },
 ];
 
-const STATUS_INDEX = { open: 0, in_progress: 1, completed: 2, Claimed: 1, Completed: 2 };
+const STATUS_INDEX = {
+  open: 0,
+  Open: 0,
+  offered: 1,
+  volunteer_offered: 1,
+  Offered: 1,
+  accepted: 2,
+  in_progress: 3,
+  InProgress: 3,
+  Claimed: 3,
+  pending_verify: 4,
+  verified: 4,
+  completed: 4,
+  Completed: 4,
+};
 
 export default function StatusPipeline({ status }) {
   const active = STATUS_INDEX[status] ?? 0;

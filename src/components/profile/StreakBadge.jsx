@@ -41,7 +41,7 @@ export default function StreakBadge({ streak, size = 'default' }) {
       <div>
         <div className="font-bold text-sm">{config.label}</div>
         <div className="text-xs opacity-80">
-          Current: {streak.current_streak} days • Best: {streak.longest_streak} days
+          Current: {streak.current_streak} days • Best: {streak.best_streak || 0} days
         </div>
       </div>
     </div>
