@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
@@ -568,7 +569,9 @@ function CreateRequestModal({ open, onClose, onCreate }) {
     });
   };
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-3 motion-soft-in" onClick={onClose}>
       <form
         onSubmit={submit}
@@ -640,7 +643,8 @@ function CreateRequestModal({ open, onClose, onCreate }) {
           Post Request
         </button>
       </form>
-    </div>
+    </div>,
+    document.body
   );
 }
 

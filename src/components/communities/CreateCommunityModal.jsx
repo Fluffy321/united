@@ -156,7 +156,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="w-[calc(100%-24px)] max-w-md mx-auto rounded-3xl p-0 overflow-hidden">
+      <DialogContent className="w-[calc(100%-24px)] max-h-[calc(100dvh-2rem)] max-w-md mx-auto rounded-3xl p-0 overflow-hidden">
 
         {/* ── STEP 1: CREATE FORM ── */}
         {step === 1 && (
@@ -166,7 +166,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
               <p className="text-[12px] text-slate-400 mt-0.5">Build your own mini-network in seconds</p>
             </div>
 
-            <form onSubmit={handleCreate} className="px-5 pb-5 pt-4 space-y-4 max-h-[80dvh] overflow-y-auto">
+            <form onSubmit={handleCreate} className="px-5 pb-5 pt-4 space-y-4 max-h-[calc(100dvh-9rem)] overflow-y-auto overscroll-contain">
               {/* Cover Image */}
               <div>
                 <label className="text-[12px] font-semibold text-slate-600 block mb-1.5">Cover Photo <span className="font-normal text-slate-400">(optional)</span></label>
@@ -289,7 +289,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
 
         {/* ── STEP 2: FIRST POST PROMPT ── */}
         {step === 2 && createdCommunity && (
-          <div className="px-5 py-6 space-y-5">
+          <div className="max-h-[calc(100dvh-2rem)] space-y-5 overflow-y-auto overscroll-contain px-5 py-6">
             {/* Success banner */}
             <div className="text-center">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-3 shadow-lg">

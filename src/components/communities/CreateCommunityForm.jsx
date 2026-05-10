@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Sparkles, X } from 'lucide-react';
 
 export default function CreateCommunityForm({ categories, onCreate, onClose }) {
@@ -28,8 +29,10 @@ export default function CreateCommunityForm({ categories, onCreate, onClose }) {
     });
   };
 
-  return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm">
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm">
       <form onSubmit={submit} className="flex max-h-[calc(100dvh-24px)] w-full max-w-[500px] flex-col overflow-hidden rounded-[22px] bg-white shadow-2xl">
         <div className="shrink-0 bg-gradient-to-br from-blue-700 via-slate-900 to-emerald-700 px-4 py-3 text-white sm:px-5">
           <div className="flex items-start justify-between gap-4">
@@ -49,7 +52,7 @@ export default function CreateCommunityForm({ categories, onCreate, onClose }) {
           </div>
         </div>
 
-        <div className="grid min-h-0 flex-1 gap-2.5 overflow-hidden px-4 py-3 sm:grid-cols-2 sm:px-5">
+        <div className="grid min-h-0 flex-1 gap-2.5 overflow-y-auto overscroll-contain px-4 py-3 sm:grid-cols-2 sm:px-5">
           <label className="block sm:col-span-2">
             <span className="mb-1 block text-[12px] font-black text-slate-900">Community name</span>
             <input
@@ -130,6 +133,7 @@ export default function CreateCommunityForm({ categories, onCreate, onClose }) {
           </button>
         </div>
       </form>
-    </div>
+    </div>,
+    document.body
   );
 }
