@@ -1,4 +1,4 @@
-import React, { useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, MapPinned, User, Users } from 'lucide-react';
 import { MitzvahIcon } from '@/components/common/JIcons';
