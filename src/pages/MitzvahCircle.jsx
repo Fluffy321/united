@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
 import MitzvahMap from '@/components/mitzvah/MitzvahMap';
 import CarpoolBoard from '@/components/mitzvah/CarpoolBoard';
+import DailyMitzvahTracker from '@/components/mitzvah/DailyMitzvahTracker';
 
 const STORAGE_KEY = 'junited_advanced_mitzvah_marketplace_v1';
 
@@ -1449,7 +1450,7 @@ export default function MitzvahCircle() {
     { id: 'map', label: 'Map' },
     { id: 'offers', label: 'My Offers' },
     { id: 'posted', label: 'My Posted Requests' },
-    { id: 'log', label: 'My Log' },
+    { id: 'log', label: 'Tracker' },
     { id: 'completed', label: 'Completed' },
   ];
 
@@ -1664,7 +1665,10 @@ export default function MitzvahCircle() {
           )}
 
           {activeTab === 'log' && (
-            <ChesedHoursDashboard logs={myLogs} onGenerateText={generateHelperText} />
+            <div className="space-y-3">
+              <DailyMitzvahTracker currentUser={currentUser} />
+              <ChesedHoursDashboard logs={myLogs} onGenerateText={generateHelperText} />
+            </div>
           )}
 
           {activeTab === 'completed' && (

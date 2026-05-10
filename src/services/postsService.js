@@ -23,7 +23,11 @@ export const postsService = {
     return dataService.entities.Comment.filter({ post_id: postId }, sort, limit);
   },
   createComment(payload) {
-    return dataService.entities.Comment.create(payload);
+    return dataService.functions.invoke('createFeedReply', {
+      ...payload,
+      parent_comment_id: payload.parent_comment_id || payload.reply_to_comment_id || null,
+      reply_to_comment_id: payload.reply_to_comment_id || payload.parent_comment_id || null,
+    }).then((response) => response.data);
   },
   updateComment(id, patch) {
     return dataService.entities.Comment.update(id, patch);

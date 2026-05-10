@@ -5,6 +5,7 @@ import {
   Bell,
   Camera,
   ChevronRight,
+  Clock,
   Globe2,
   HeartHandshake,
   Loader2,
@@ -56,6 +57,8 @@ const defaultSettings = {
     communityPosts: true,
     eventReminders: true,
     chesedRequests: true,
+    mitzvahDailyReminders: true,
+    shabbatReminders: true,
     weeklyDigest: false,
   },
   message_settings: {
@@ -139,6 +142,36 @@ export default function Settings() {
         [key]: value,
       },
     }));
+  };
+
+  const handleShabbatReminderToggle = async (value) => {
+    updateNested('notification_settings', 'shabbatReminders', value);
+    if (!value || typeof Notification === 'undefined') return;
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        toast.success('Shabbat reminders enabled');
+      } else {
+        toast.message('Browser notifications are not enabled yet');
+      }
+    } catch {
+      toast.message('Open browser notification permissions to receive Shabbat reminders');
+    }
+  };
+
+  const handleMitzvahReminderToggle = async (value) => {
+    updateNested('notification_settings', 'mitzvahDailyReminders', value);
+    if (!value || typeof Notification === 'undefined') return;
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        toast.success('Daily mitzvah reminders enabled');
+      } else {
+        toast.message('Browser notifications are not enabled yet');
+      }
+    } catch {
+      toast.message('Open browser notification permissions to receive mitzvah reminders');
+    }
   };
 
   const toggleInterest = (interest) => {
@@ -349,6 +382,8 @@ export default function Settings() {
                 <ToggleRow icon={Users} title="Community posts" description="Updates from joined groups." checked={form.notification_settings.communityPosts} onChange={(value) => updateNested('notification_settings', 'communityPosts', value)} />
                 <ToggleRow icon={Globe2} title="Event reminders" description="Upcoming local events." checked={form.notification_settings.eventReminders} onChange={(value) => updateNested('notification_settings', 'eventReminders', value)} />
                 <ToggleRow icon={HeartHandshake} title="Chesed requests" description="Nearby help requests." checked={form.notification_settings.chesedRequests} onChange={(value) => updateNested('notification_settings', 'chesedRequests', value)} />
+                <ToggleRow icon={HeartHandshake} title="Daily mitzvah tracker" description="Morning and evening nudges to log 2 mitzvot and keep your streak." checked={form.notification_settings.mitzvahDailyReminders} onChange={handleMitzvahReminderToggle} />
+                <ToggleRow icon={Clock} title="Shabbat reminders" description="Notify 20 minutes before candle lighting and when Shabbat ends." checked={form.notification_settings.shabbatReminders} onChange={handleShabbatReminderToggle} />
                 <ToggleRow icon={Mail} title="Weekly digest" description="A calm weekly summary." checked={form.notification_settings.weeklyDigest} onChange={(value) => updateNested('notification_settings', 'weeklyDigest', value)} />
               </div>
             </SettingsCard>

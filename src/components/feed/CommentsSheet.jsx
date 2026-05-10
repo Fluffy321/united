@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Send, Loader2, MessageCircle, Heart, AlertCircle, RefreshCw } from 'lucide-react';
-import { dataService, incrementCounter, postsService } from '@/services';
+import { dataService, postsService } from '@/services';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -120,14 +120,18 @@ export default function CommentsSheet({
         author_name: currentUser.display_name || currentUser.full_name || 'Community member',
         author_avatar_url: currentUser.avatar_url,
         body,
+        parent_comment_id: replyingTo,
         reply_to_comment_id: replyingTo,
+        client_context: {
+          surface: 'feed_reply_sheet',
+          source_post_id: resolvedPostId,
+        },
       });
 
       setComments(prev => [...prev, comment]);
       setNewComment('');
       setReplyingTo(null);
       onCommentAdded?.(comment);
-      incrementCounter('posts', 'comments_count', resolvedPostId, 1).catch(() => {});
 
       // Send notification to post author
       if (resolvedPostAuthorId !== currentUser.id) {
@@ -167,6 +171,101 @@ export default function CommentsSheet({
       toast.error('Failed to send reply');
     }
     setPosting(false);
+  };
+
+  const commentTree = useMemo(() => {
+    const byId = new Map();
+    const roots = [];
+    comments.forEach((comment) => byId.set(comment.id, { ...comment, replies: [] }));
+    byId.forEach((comment) => {
+      const parentId = comment.parent_comment_id || comment.reply_to_comment_id;
+      const parent = parentId ? byId.get(parentId) : null;
+      if (parent) parent.replies.push(comment);
+      else roots.push(comment);
+    });
+    return roots;
+  }, [comments]);
+
+  const renderComment = (comment, depth = 0) => {
+    const repliedToId = comment.reply_to_comment_id || comment.parent_comment_id;
+    const repliedTo = repliedToId ? comments.find(c => c.id === repliedToId) : null;
+    const isMine = currentUser?.id && comment.author_id === currentUser.id;
+    const maxDepth = Math.min(depth, 2);
+    return (
+      <div key={comment.id} className={depth > 0 ? 'ml-5 border-l border-slate-200 pl-3' : ''}>
+        <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+          <div className={`max-w-[84%] ${isMine ? 'items-end' : 'items-start'} flex flex-col`}>
+            <div className={`rounded-2xl px-3 py-2.5 shadow-sm ${
+              isMine
+                ? 'rounded-br-md bg-blue-600 text-white'
+                : 'rounded-bl-md bg-white text-slate-800'
+            }`}>
+              {repliedTo && depth === 0 && (
+                <div className={`mb-2 rounded-xl border-l-2 px-2 py-1 text-[11px] ${
+                  isMine ? 'border-white/40 bg-white/10 text-blue-50' : 'border-blue-200 bg-blue-50 text-blue-700'
+                }`}>
+                  Replying to {repliedTo.author_name}: {repliedTo.body?.slice(0, 70)}
+                </div>
+              )}
+              <div className="mb-1.5 flex items-center gap-2">
+                {!isMine && (
+                  <button
+                    onClick={() => {
+                      if (comment.author_id) navigate(`/PublicProfile?id=${comment.author_id}`);
+                    }}
+                    className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                  >
+                    {comment.author_avatar_url ? (
+                      <img src={comment.author_avatar_url} alt="" className="w-6 h-6 rounded-full object-cover cursor-pointer" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[11px] font-bold text-blue-600 cursor-pointer">
+                        {comment.author_name?.[0]}
+                      </div>
+                    )}
+                  </button>
+                )}
+                <div className="flex-1 min-w-0">
+                  <button
+                    onClick={() => {
+                      if (comment.author_id) navigate(`/PublicProfile?id=${comment.author_id}`);
+                    }}
+                    className={`text-left text-[12px] font-bold transition-colors ${isMine ? 'text-blue-50' : 'text-slate-900 hover:text-blue-600'}`}
+                  >
+                    {isMine ? 'You' : comment.author_name}
+                  </button>
+                </div>
+                <p className={`flex-shrink-0 text-[10px] ${isMine ? 'text-blue-100' : 'text-slate-400'}`}>
+                  {formatDistanceToNow(parseISO(comment.created_date), { addSuffix: true })}
+                </p>
+              </div>
+              <p className={`whitespace-pre-wrap text-[13px] leading-relaxed ${isMine ? 'text-white' : 'text-slate-700'}`}>{comment.body}</p>
+            </div>
+            <div className="mt-2 flex items-center gap-3">
+              <button
+                onClick={() => setReplyingTo(comment.id)}
+                className="text-[12px] font-semibold text-blue-600 hover:text-blue-700"
+              >
+                Reply
+              </button>
+              <button
+                onClick={() => handleLikeComment(comment.id)}
+                className={`flex items-center gap-1 text-[12px] font-semibold transition-colors ${
+                  commentLikes[comment.id]?.liked ? 'text-red-500' : 'text-slate-400 hover:text-red-400'
+                }`}
+              >
+                <Heart className={`w-3.5 h-3.5 ${commentLikes[comment.id]?.liked ? 'fill-current' : ''}`} />
+                {commentLikes[comment.id]?.count > 0 && <span>{commentLikes[comment.id].count}</span>}
+              </button>
+            </div>
+          </div>
+        </div>
+        {comment.replies?.length > 0 && (
+          <div className={`mt-3 space-y-3 ${maxDepth >= 2 ? 'ml-0' : ''}`}>
+            {comment.replies.map((reply) => renderComment(reply, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (!sheetOpen) return null;
@@ -226,78 +325,7 @@ export default function CommentsSheet({
           </div>
         ) : (
           <div className="motion-stagger space-y-3">
-          {comments.map(comment => {
-            const repliedTo = comment.reply_to_comment_id ? comments.find(c => c.id === comment.reply_to_comment_id) : null;
-            const isMine = currentUser?.id && comment.author_id === currentUser.id;
-            return (
-              <div key={comment.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[84%] ${isMine ? 'items-end' : 'items-start'} flex flex-col`}>
-                  <div className={`rounded-2xl px-3 py-2.5 shadow-sm ${
-                    isMine
-                      ? 'rounded-br-md bg-blue-600 text-white'
-                      : 'rounded-bl-md bg-white text-slate-800'
-                  }`}>
-                    {repliedTo && (
-                      <div className={`mb-2 rounded-xl border-l-2 px-2 py-1 text-[11px] ${
-                        isMine ? 'border-white/40 bg-white/10 text-blue-50' : 'border-blue-200 bg-blue-50 text-blue-700'
-                      }`}>
-                        Replying to {repliedTo.author_name}: {repliedTo.body?.slice(0, 70)}
-                      </div>
-                    )}
-                    <div className="mb-1.5 flex items-center gap-2">
-                      {!isMine && (
-                    <button
-                      onClick={() => {
-                        if (comment.author_id) navigate(`/PublicProfile?id=${comment.author_id}`);
-                      }}
-                      className="flex-shrink-0 hover:opacity-80 transition-opacity"
-                    >
-                      {comment.author_avatar_url ? (
-                        <img src={comment.author_avatar_url} alt="" className="w-6 h-6 rounded-full object-cover cursor-pointer" />
-                      ) : (
-                        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[11px] font-bold text-blue-600 cursor-pointer">
-                          {comment.author_name?.[0]}
-                        </div>
-                      )}
-                    </button>
-                      )}
-                    <div className="flex-1 min-w-0">
-                      <button
-                        onClick={() => {
-                          if (comment.author_id) navigate(`/PublicProfile?id=${comment.author_id}`);
-                        }}
-                        className={`text-left text-[12px] font-bold transition-colors ${isMine ? 'text-blue-50' : 'text-slate-900 hover:text-blue-600'}`}
-                      >
-                        {isMine ? 'You' : comment.author_name}
-                      </button>
-                    </div>
-                    <p className={`flex-shrink-0 text-[10px] ${isMine ? 'text-blue-100' : 'text-slate-400'}`}>
-                      {formatDistanceToNow(parseISO(comment.created_date), { addSuffix: true })}
-                    </p>
-                  </div>
-                  <p className={`whitespace-pre-wrap text-[13px] leading-relaxed ${isMine ? 'text-white' : 'text-slate-700'}`}>{comment.body}</p>
-                  </div>
-                  <div className="mt-2 flex items-center gap-3">
-                    <button
-                      onClick={() => setReplyingTo(comment.id)}
-                      className="text-[12px] font-semibold text-blue-600 hover:text-blue-700"
-                    >
-                      Reply
-                    </button>
-                    <button
-                      onClick={() => handleLikeComment(comment.id)}
-                      className={`flex items-center gap-1 text-[12px] font-semibold transition-colors ${
-                        commentLikes[comment.id]?.liked ? 'text-red-500' : 'text-slate-400 hover:text-red-400'
-                      }`}
-                    >
-                      <Heart className={`w-3.5 h-3.5 ${commentLikes[comment.id]?.liked ? 'fill-current' : ''}`} />
-                      {commentLikes[comment.id]?.count > 0 && <span>{commentLikes[comment.id].count}</span>}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+            {commentTree.map((comment) => renderComment(comment))}
           </div>
         )}
       </div>
