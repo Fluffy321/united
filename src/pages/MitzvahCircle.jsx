@@ -22,6 +22,7 @@ import {
 import { mitzvahService, notificationsService } from '@/services';
 import { toast } from 'sonner';
 import MitzvahMap from '@/components/mitzvah/MitzvahMap';
+import PageHelp from '@/components/common/PageHelp';
 
 const CATEGORIES = [
   'Transportation',
@@ -811,23 +812,16 @@ export default function MitzvahCircle() {
           <div className="relative p-4 sm:p-5">
             <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-blue-50" />
             <div className="relative">
-              <p className="mb-2 flex items-center gap-2 text-[12px] font-black uppercase text-blue-600">
-                <HandHeart className="h-4 w-4" />
-                Five Towns chesed network
-              </p>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-1.5">
                   <h1 className="text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">
-                    Mitzvah / Chesed Hub
+                    Mitzvah Circle
                   </h1>
-                  <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-600">
-                    Post or accept chesed requests in your community — rides, errands, meals, shul
-                    help, and more.
-                  </p>
+                  <PageHelp text="Ask for help, offer help, and follow mitzvah requests from open to completed." />
                 </div>
                 <button
                   onClick={() => setShowCreate(true)}
-                  className="app-button-primary h-11"
+                  className="app-button-primary h-11 self-start sm:self-auto"
                 >
                   <Plus className="h-4 w-4" />
                   Post Request

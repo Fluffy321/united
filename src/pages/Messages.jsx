@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { AlertCircle, Inbox, Loader2, MessageCircle, Plus, Sparkles, Users } from 'lucide-react';
+import { AlertCircle, Inbox, Loader2, MessageCircle, Plus, Users } from 'lucide-react';
+import PageHelp from '@/components/common/PageHelp';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { dataService, batchFetchByIds } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
@@ -227,13 +228,9 @@ export default function Messages() {
               <div className="relative p-4">
                 <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-[42px] bg-blue-50" />
                 <div className="relative flex items-start justify-between gap-3">
-                  <div>
-                    <p className="mb-1 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wide text-blue-600">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Inbox hub
-                    </p>
+                  <div className="flex items-center gap-1.5">
                     <h1 className="text-[22px] font-black tracking-normal text-slate-950">Messages</h1>
-                    <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">Chats, requests, and community updates in one place.</p>
+                    <PageHelp text="Coordinate privately with people or groups connected to your communities." align="end" />
                   </div>
                   <button
                     onClick={() => setShowNewMessage(true)}

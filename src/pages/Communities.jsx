@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Bell, CalendarDays, CheckCircle2, Compass, HeartHandshake, MessageCircle, Plus, Radio, Search, ShieldCheck, Sparkles, Star, Users } from 'lucide-react';
+import { Bell, CalendarDays, CheckCircle2, Compass, HeartHandshake, MessageCircle, Plus, Radio, Search, ShieldCheck, Star, Users } from 'lucide-react';
+import PageHelp from '@/components/common/PageHelp';
 import { useNavigate } from 'react-router-dom';
 import CommunityHubCard from '@/components/communities/CommunityHubCard';
 import CommunityHubDetail from '@/components/communities/CommunityHubDetail';
@@ -503,14 +504,10 @@ export default function Communities() {
               >
                 <MessageCircle className="h-[18px] w-[18px]" strokeWidth={1.8} />
               </button>
-              <p className="relative mb-2 flex items-center gap-2 text-[13px] font-black text-blue-700">
-                <Sparkles className="h-4 w-4" />
-                Five Towns Jewish social networks
-              </p>
-              <h1 className="relative text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">Communities</h1>
-              <p className="relative mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-700">
-                Create and join the focused local networks that make the Five Towns feel connected: hobbies, lifestyles, religious values, shul circles, neighborhoods, and everyday Jewish life.
-              </p>
+              <div className="relative flex items-center gap-1.5">
+                <h1 className="text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">Communities</h1>
+                <PageHelp text="Explore and join Jewish communities. Use the message icon here to coordinate with community members." />
+              </div>
 
               <div className="relative mt-4 flex flex-wrap gap-2">
                 <PulsePill icon={HeartHandshake} label="Purpose-built groups" />

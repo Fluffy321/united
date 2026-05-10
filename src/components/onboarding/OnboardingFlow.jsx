@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bell, Camera, Check, ChevronLeft, ChevronRight, Loader2, MapPin, Users, X } from 'lucide-react';
+import { Bell, Camera, Check, ChevronLeft, ChevronRight, Home, Loader2, Map, MapPin, MessageCircle, Sparkles, Users, X } from 'lucide-react';
 import { communitiesService, dataService, storageService } from '@/services';
 import { toast } from 'sonner';
 
@@ -183,6 +183,39 @@ function CommunitiesStep({ communities, selectedIds, setSelectedIds, loading }) 
   );
 }
 
+const APP_TOUR_ITEMS = [
+  { icon: Home,          label: 'Feed',            desc: 'See community updates, posts, and announcements from people nearby.' },
+  { icon: Sparkles,      label: 'Mitzvah Circle',  desc: 'Ask for help, offer help, and track mitzvahs from open to completed.' },
+  { icon: Users,         label: 'Communities',     desc: 'Join local Jewish communities. Tap the message icon here for private chats.' },
+  { icon: Map,           label: 'Map',             desc: 'Explore nearby communities, places, and events on a live map.' },
+  { icon: Bell,          label: 'Notifications',   desc: 'Keep up with replies, requests, and important updates.' },
+  { icon: MessageCircle, label: 'Messages',        desc: 'Access through Communities — coordinate privately with people or groups.' },
+];
+
+function AppTourStep() {
+  return (
+    <StepShell
+      eyebrow="Almost there"
+      title="Here's what you can do"
+      text="A quick look at the main sections of the app."
+    >
+      <div className="space-y-2">
+        {APP_TOUR_ITEMS.map(({ icon: Icon, label, desc }) => (
+          <div key={label} className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <Icon className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[13px] font-black text-slate-900">{label}</p>
+              <p className="text-[12px] font-medium leading-5 text-slate-500">{desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </StepShell>
+  );
+}
+
 function NotificationsStep({ preferences, setPreferences }) {
   const update = (key) => setPreferences((current) => ({ ...current, [key]: !current[key] }));
 
@@ -239,6 +272,7 @@ export default function OnboardingFlow({ user, onComplete }) {
     'Photo',
     'Neighborhood',
     'Communities',
+    'App Tour',
     'Notifications',
   ], []);
 
@@ -331,7 +365,7 @@ export default function OnboardingFlow({ user, onComplete }) {
 
   const back = () => setStep((current) => Math.max(0, current - 1));
   const skip = () => {
-    if (step === 1 || step === 3 || step === 4) next();
+    if (step === 1 || step === 3 || step === 4 || step === 5) next();
   };
 
   return (
@@ -352,7 +386,7 @@ export default function OnboardingFlow({ user, onComplete }) {
           </button>
         </div>
 
-        <div className="mb-5 grid grid-cols-5 gap-1.5">
+        <div className="mb-5 grid grid-cols-6 gap-1.5">
           {steps.map((item, index) => (
             <div key={item} className={`h-1.5 rounded-full ${index <= step ? 'bg-blue-600' : 'bg-blue-100'}`} />
           ))}
@@ -378,7 +412,8 @@ export default function OnboardingFlow({ user, onComplete }) {
               loading={loadingCommunities}
             />
           )}
-          {step === 4 && <NotificationsStep preferences={notificationPrefs} setPreferences={setNotificationPrefs} />}
+          {step === 4 && <AppTourStep />}
+          {step === 5 && <NotificationsStep preferences={notificationPrefs} setPreferences={setNotificationPrefs} />}
         </div>
 
         <div className="mt-4 flex items-center gap-2">
@@ -408,7 +443,7 @@ export default function OnboardingFlow({ user, onComplete }) {
               </>
             )}
           </button>
-          {(step === 1 || step === 3 || step === 4) && (
+          {(step === 1 || step === 3 || step === 4 || step === 5) && (
             <button type="button" onClick={skip} className="h-12 rounded-2xl px-3 text-[13px] font-bold text-slate-400">
               Skip
             </button>

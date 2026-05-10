@@ -12,6 +12,7 @@ import EventsFeedSection from '@/components/feed/EventsFeedSection';
 import InlineFeedPrompt from '@/components/feed/InlineFeedPrompt';
 import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
 import ReportModal from '@/components/common/ReportModal';
+import PageHelp from '@/components/common/PageHelp';
 import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
@@ -863,14 +864,10 @@ export default function Feed() {
           <div className="relative p-4">
             <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-[44px] bg-blue-50" />
             <div className="relative">
-              <p className="mb-1 flex items-center gap-2 text-[12px] font-black uppercase tracking-wide text-blue-700">
-                <MapPin className="h-4 w-4" />
-                Digital hub of the Five Towns
-              </p>
-              <h1 className="text-[24px] font-black leading-tight text-slate-950">Connect Jewish life around you.</h1>
-              <p className="mt-2 text-[13px] font-medium leading-6 text-slate-600">
-                A local social network for shuls, families, singles, parents, businesses, events, rides, lost and found, chesed, and everyday Jewish community.
-              </p>
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-[24px] font-black leading-tight text-slate-950">Community Feed</h1>
+                <PageHelp text="See what's happening in your community, from updates and announcements to posts from people nearby." />
+              </div>
               <div className="mt-3 grid grid-cols-3 gap-2">
                 <HubMetric icon={Users} label="Social circles" value="Groups" />
                 <HubMetric icon={HeartHandshake} label="Chesed flow" value="Help" />
