@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Bell, CalendarDays, CheckCircle2, Compass, HeartHandshake, MessageCircle, Plus, Radio, Search, ShieldCheck, Sparkles, Star, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import CommunityHubCard from '@/components/communities/CommunityHubCard';
 import CommunityHubDetail from '@/components/communities/CommunityHubDetail';
 import CreateCommunityForm from '@/components/communities/CreateCommunityForm';
@@ -396,6 +397,7 @@ function buildCommunity(data) {
 }
 
 export default function Communities() {
+  const navigate = useNavigate();
   const [communities, setCommunities] = useState(initialCommunities);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
@@ -494,6 +496,13 @@ export default function Communities() {
           <div className="grid gap-0 sm:grid-cols-[1fr_240px]">
             <div className="relative overflow-hidden p-4 sm:p-6">
               <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-blue-50" />
+              <button
+                onClick={() => navigate('/Messages')}
+                className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm border border-slate-100 text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
+                aria-label="Messages"
+              >
+                <MessageCircle className="h-[18px] w-[18px]" strokeWidth={1.8} />
+              </button>
               <p className="relative mb-2 flex items-center gap-2 text-[13px] font-black text-blue-700">
                 <Sparkles className="h-4 w-4" />
                 Five Towns Jewish social networks
