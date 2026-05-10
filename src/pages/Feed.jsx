@@ -17,7 +17,7 @@ import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
-import { Search, Plus, RefreshCw, ChevronDown, MapPin, Users, HeartHandshake, CalendarDays, Bell, ShieldCheck, Store, Utensils, Car, MessageCircle } from 'lucide-react';
+import { Search, Plus, RefreshCw, ChevronDown, MapPin, Users, HeartHandshake, CalendarDays, Bell, ShieldCheck, MessageCircle } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
@@ -427,26 +427,6 @@ const DEMO_POSTS = [
   },
 ];
 
-const HUB_ACTIONS = [
-  { label: 'Open hub map', icon: MapPin, path: '/MitzvahCircle?tab=map', tone: 'blue' },
-  { label: 'Find groups', icon: Users, path: '/Communities', tone: 'emerald' },
-  { label: 'Offer chesed', icon: HeartHandshake, path: '/MitzvahCircle', tone: 'rose' },
-  { label: 'Plan rides', icon: Car, path: '/MitzvahCircle?tab=carpool', tone: 'amber' },
-];
-
-const SHABBOS_PREP = [
-  'Candle lighting and eruv reminders',
-  'Hosting and guest matching',
-  'Ride and pickup coordination',
-  'Urgent chesed before Shabbos',
-];
-
-const TRUST_LAYERS = [
-  { icon: ShieldCheck, label: 'Verified shuls and admins' },
-  { icon: Bell, label: 'Smart alerts from joined circles' },
-  { icon: Store, label: 'Local marketplace and recommendations' },
-  { icon: MessageCircle, label: 'Direct neighbor-to-neighbor connection' },
-];
 
 export default function Feed() {
   const queryClient = useQueryClient();
@@ -783,14 +763,6 @@ export default function Feed() {
     return filtered.length > 0 ? filtered : sorted.slice(0, 40);
   })();
 
-  const fiveTownsBrief = useMemo(() => (
-    feedRetentionService.buildBrief({
-      posts: visiblePosts,
-      communityGroups,
-      networkLabel: primaryNetwork.shortLabel || 'Five Towns',
-    })
-  ), [communityGroups, primaryNetwork.shortLabel, visiblePosts]);
-
   return (
     <div className="app-page relative">
       {pullDistance > 0 && (
@@ -859,37 +831,11 @@ export default function Feed() {
         </div>
       )}
 
-      <div className="mobile-page px-3 pt-1 mobile-safe-bottom">
-        <div className="app-card mb-3 overflow-hidden">
-          <div className="relative p-4">
-            <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-[44px] bg-blue-50" />
-            <div className="relative">
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-[24px] font-black leading-tight text-slate-950">Community Feed</h1>
-                <PageHelp text="See what's happening in your community, from updates and announcements to posts from people nearby." />
-              </div>
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                <HubMetric icon={Users} label="Social circles" value="Groups" />
-                <HubMetric icon={HeartHandshake} label="Chesed flow" value="Help" />
-                <HubMetric icon={MapPin} label="Local pulse" value="Map" />
-              </div>
-            </div>
-          </div>
+      <div className="mobile-page px-3 pt-2 mobile-safe-bottom">
+        <div className="flex items-center gap-1.5 mb-3">
+          <h1 className="text-[20px] font-black text-slate-950">Community Feed</h1>
+          <PageHelp text="See what's happening in your community, from updates and announcements to posts from people nearby." />
         </div>
-
-        <FiveTownsDashboard
-          brief={fiveTownsBrief}
-          actions={HUB_ACTIONS}
-          shabbosPrep={SHABBOS_PREP}
-          trustLayers={TRUST_LAYERS}
-          onNavigate={navigate}
-          onPost={(type, subtype, body) => {
-            setPostModalType(type);
-            setPostModalSubtype(subtype || null);
-            setPostModalInitialBody(body || '');
-            setShowPostModal(true);
-          }}
-        />
 
         <DailyRetentionPrompt
           prompt={dailyPrompt}
@@ -897,18 +843,6 @@ export default function Feed() {
             setPostModalType(prompt?.suggested_post_type || 'feed');
             setPostModalSubtype(prompt?.suggested_post_subtype || null);
             setPostModalInitialBody(prompt?.initial_body || '');
-            setShowPostModal(true);
-          }}
-        />
-
-        <LocalRetentionActions
-          posts={visiblePosts}
-          communities={communityGroups}
-          onNavigate={navigate}
-          onPost={(type, subtype, body) => {
-            setPostModalType(type);
-            setPostModalSubtype(subtype || null);
-            setPostModalInitialBody(body || '');
             setShowPostModal(true);
           }}
         />
@@ -1113,16 +1047,6 @@ export default function Feed() {
   );
 }
 
-function HubMetric({ icon: Icon, label, value }) {
-  return (
-    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-2.5">
-      <Icon className="mb-1 h-4 w-4 text-blue-600" />
-      <p className="text-[13px] font-black text-slate-950">{value}</p>
-      <p className="text-[10px] font-black uppercase leading-4 text-slate-500">{label}</p>
-    </div>
-  );
-}
-
 function useShabbosCountdown() {
   const [state, setState] = useState({ label: 'Shabbat', countdown: 'Loading…', time: '' });
 
@@ -1206,215 +1130,3 @@ function DailyRetentionPrompt({ prompt, onPost }) {
   );
 }
 
-const METRIC_PALETTES = [
-  { icon: CalendarDays, iconCls: 'text-blue-600', bgCls: 'bg-blue-50', glassBg: 'rgba(37,99,235,0.06)', glassBorder: '1px solid rgba(37,99,235,0.12)' },
-  { icon: HeartHandshake, iconCls: 'text-emerald-700', bgCls: 'bg-emerald-50', glassBg: 'rgba(85,107,47,0.06)', glassBorder: '1px solid rgba(85,107,47,0.14)' },
-  { icon: Search, iconCls: 'text-amber-600', bgCls: 'bg-amber-50', glassBg: 'rgba(212,175,55,0.07)', glassBorder: '1px solid rgba(212,175,55,0.18)' },
-  { icon: Users, iconCls: 'text-indigo-600', bgCls: 'bg-indigo-50', glassBg: 'rgba(99,102,241,0.06)', glassBorder: '1px solid rgba(99,102,241,0.12)' },
-];
-
-function LocalRetentionActions({ posts = [], communities = [], onNavigate, onPost }) {
-  const activeThreads = posts.filter((post) => (post.comments_count || 0) >= 8).length;
-  const urgentNeeds = posts.filter((post) => post.type === 'help' || post.post_subtype === 'chesed').length;
-  const events = posts.filter((post) => post.type === 'event' || post.board === 'events').length;
-
-  const actions = [
-    {
-      icon: MessageCircle,
-      label: 'Reply loop',
-      title: `${activeThreads || 3} active threads`,
-      body: 'Jump into a real conversation and get notified when someone replies.',
-      cta: 'Find a thread',
-      onClick: () => onPost('feed', 'discussion', 'What is one thing people in the Five Towns should know today?'),
-      tone: 'blue',
-    },
-    {
-      icon: HeartHandshake,
-      label: 'Mitzvah habit',
-      title: `${urgentNeeds || 2} ways to help`,
-      body: 'Track two mitzvot today, reflect on the impact, and keep your streak alive.',
-      cta: 'Open tracker',
-      onClick: () => onNavigate('/MitzvahCircle?tab=log'),
-      tone: 'emerald',
-    },
-    {
-      icon: CalendarDays,
-      label: 'Local plans',
-      title: `${events || 4} events nearby`,
-      body: 'Save a shiur, simcha, meetup, or community event before it gets buried.',
-      cta: 'See events',
-      onClick: () => onNavigate('/Feed?tab=events'),
-      tone: 'amber',
-    },
-    {
-      icon: Users,
-      label: 'Your circles',
-      title: `${communities.length || 5} joined circles`,
-      body: 'Joined communities shape your feed, map, events, and notifications.',
-      cta: 'Tune circles',
-      onClick: () => onNavigate('/Communities'),
-      tone: 'indigo',
-    },
-  ];
-
-  return (
-    <section className="app-card mb-3 overflow-hidden">
-      <div className="border-b border-slate-100 px-3 py-2.5">
-        <p className="text-[11px] font-black uppercase tracking-wide text-blue-700">Keep JUnited useful today</p>
-      </div>
-      <div className="mobile-scroll-x flex gap-2 p-3">
-        {actions.map((action) => (
-          <button
-            key={action.label}
-            onClick={action.onClick}
-            className="motion-press w-[220px] shrink-0 rounded-2xl border border-slate-100 bg-slate-50 p-3 text-left transition hover:bg-white"
-          >
-            <div className={`mb-2 flex h-9 w-9 items-center justify-center rounded-xl ${
-              action.tone === 'emerald' ? 'bg-emerald-100 text-emerald-700' :
-              action.tone === 'amber' ? 'bg-amber-100 text-amber-700' :
-              action.tone === 'indigo' ? 'bg-indigo-100 text-indigo-700' :
-              'bg-blue-100 text-blue-700'
-            }`}>
-              <action.icon className="h-4 w-4" />
-            </div>
-            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{action.label}</p>
-            <p className="mt-0.5 text-[14px] font-black text-slate-950">{action.title}</p>
-            <p className="mt-1 line-clamp-2 text-[12px] font-medium leading-5 text-slate-500">{action.body}</p>
-            <p className="mt-2 text-[12px] font-black text-blue-700">{action.cta}</p>
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function FiveTownsDashboard({ brief, actions, shabbosPrep, trustLayers, onNavigate, onPost }) {
-  const pulse = brief?.metrics || [];
-  return (
-    <section className="mb-3 space-y-3">
-      <div className="app-card overflow-hidden">
-        <div className="border-b border-slate-100 p-3">
-          <p className="text-[12px] font-black uppercase tracking-wide text-blue-700">{brief?.title || 'Today in the Five Towns'}</p>
-          <p className="mt-0.5 text-[13px] font-semibold leading-5 text-slate-600">{brief?.subtitle || 'A daily control center for the Jewish local pulse.'}</p>
-        </div>
-        <div className="flex gap-2.5 overflow-x-auto px-3 pb-3 pt-1 scrollbar-hide">
-          {pulse.map((item, i) => {
-            const { icon: MetricIcon, iconCls, bgCls, glassBg, glassBorder } = METRIC_PALETTES[i] || METRIC_PALETTES[0];
-            return (
-              <div
-                key={item.label}
-                className="shrink-0 w-[106px] rounded-2xl p-3"
-                style={{ background: glassBg, border: glassBorder }}
-              >
-                <div className={`mb-2 flex h-8 w-8 items-center justify-center rounded-xl ${bgCls}`}>
-                  <MetricIcon className={`h-4 w-4 ${iconCls}`} />
-                </div>
-                <p className="text-[22px] font-black leading-none text-slate-950">{item.value}</p>
-                <p className="mt-1 text-[11px] font-black uppercase tracking-wide text-slate-800">{item.label}</p>
-                {item.detail && <p className="mt-0.5 text-[10px] font-semibold leading-tight text-slate-400">{item.detail}</p>}
-              </div>
-            );
-          })}
-        </div>
-        {brief?.activeThreads?.length > 0 && (
-          <div className="border-t border-slate-100 p-3">
-            <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-slate-500">Active now</p>
-            <div className="space-y-2">
-              {brief.activeThreads.map((post) => (
-                <button
-                  key={post.id}
-                  onClick={() => onNavigate('/Feed')}
-                  className="flex w-full items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-2 text-left active:scale-[0.99]"
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate text-[12px] font-black text-slate-900">{post.title || post.body || 'Local discussion'}</span>
-                    <span className="block truncate text-[11px] font-semibold text-slate-500">{post.community_name || post.location_text || 'Five Towns'} · {(post.comments_count || 0)} replies</span>
-                  </span>
-                  <span className="rounded-full bg-white px-2 py-1 text-[10px] font-black text-blue-700">Open</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        <div className="grid grid-cols-2 gap-2 border-t border-slate-100 p-3">
-          {actions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={action.label}
-                onClick={() => onNavigate(action.path)}
-                className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white px-3 py-3 text-left text-[12px] font-black text-slate-800 shadow-sm active:scale-[0.99]"
-              >
-                <Icon className="h-4 w-4 text-blue-600" />
-                {action.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="app-card p-3">
-          <div className="mb-3 flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-blue-600" />
-            <div>
-              <p className="text-[15px] font-black text-slate-950">Shabbos prep mode</p>
-              <p className="text-[12px] font-semibold text-slate-500">The weekly rhythm people will return for.</p>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {(brief?.shabbosChecklist || shabbosPrep).map((item) => (
-              <div key={item} className="rounded-2xl bg-blue-50 px-3 py-2 text-[12px] font-bold text-blue-800">{item}</div>
-            ))}
-          </div>
-          <button
-            onClick={() => onPost('help', 'shabbos', 'Before Shabbos I am looking for / can help with...')}
-            className="mt-3 h-10 w-full rounded-xl bg-slate-950 text-[12px] font-black text-white active:scale-[0.98]"
-          >
-            Post before Shabbos
-          </button>
-        </div>
-
-        <div className="app-card p-3">
-          <div className="mb-3 flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-emerald-600" />
-            <div>
-              <p className="text-[15px] font-black text-slate-950">Local trust layer</p>
-              <p className="text-[12px] font-semibold text-slate-500">Built for a real Jewish community.</p>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {trustLayers.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.label} className="flex items-center gap-2 rounded-2xl bg-emerald-50 px-3 py-2 text-[12px] font-bold text-emerald-800">
-                  <Icon className="h-4 w-4 shrink-0" />
-                  {item.label}
-                </div>
-              );
-            })}
-          </div>
-          <button
-            onClick={() => onPost('feed', 'recommendation', 'Who do you recommend locally for...')}
-            className="mt-3 h-10 w-full rounded-xl border border-emerald-100 bg-emerald-50 text-[12px] font-black text-emerald-800 active:scale-[0.98]"
-          >
-            Ask for a recommendation
-          </button>
-        </div>
-      </div>
-
-      <div className="app-card grid grid-cols-[44px_1fr_auto] items-center gap-3 p-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
-          <Utensils className="h-5 w-5" />
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-[14px] font-black text-slate-950">Kosher food, businesses, gemachs, and local recommendations</p>
-          <p className="truncate text-[12px] font-semibold text-slate-500">This becomes the Five Towns directory people actually use.</p>
-        </div>
-        <button onClick={() => onNavigate('/search')} className="rounded-xl bg-slate-100 px-3 py-2 text-[12px] font-black text-slate-700 active:scale-[0.98]">
-          Search
-        </button>
-      </div>
-    </section>
-  );
-}

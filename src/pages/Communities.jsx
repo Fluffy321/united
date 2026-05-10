@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Bell, CalendarDays, CheckCircle2, Compass, HeartHandshake, MessageCircle, Plus, Radio, Search, ShieldCheck, Star, Users } from 'lucide-react';
+import { CalendarDays, Compass, HeartHandshake, MessageCircle, Plus, Search, Users } from 'lucide-react';
 import PageHelp from '@/components/common/PageHelp';
 import { useNavigate } from 'react-router-dom';
 import CommunityHubCard from '@/components/communities/CommunityHubCard';
@@ -22,61 +22,7 @@ const categoryHighlights = {
   'Buy/Sell': 'border-stone-200 bg-stone-50 text-stone-800',
 };
 
-const launchTemplates = [
-  { title: 'Hobby circles', category: 'Hobbies', body: 'Basketball, running, cooking, music, photography, chess, book clubs, and creative groups.' },
-  { title: 'Lifestyle groups', category: 'Lifestyle', body: 'Newly married, young parents, empty nesters, singles, commuters, remote workers, and newcomers.' },
-  { title: 'Religious values', category: 'Values', body: 'Halacha-minded homes, Sephardi minhagim, baalei teshuva support, tznius, learning, and Shabbos growth.' },
-  { title: 'Shul circles', category: 'Shuls', body: 'Daily minyan people, shiur groups, Shabbos plans, kiddush volunteers, newcomer welcomes, and local updates.' },
-];
 
-const networkLoops = [
-  'Daily prompts that start real conversations',
-  'Interest matching for people nearby',
-  'Shul-connected groups without making shuls the whole app',
-  'Join buttons that turn lurkers into members',
-  'Pinned posts for what matters this week',
-  'Moderator tools for warm, focused spaces',
-];
-
-const conversationStarters = [
-  { title: 'What are you looking for this week?', body: 'A chavrusa, meal invite, basketball run, babysitter lead, ride, or good local recommendation.' },
-  { title: 'People near you', body: 'Surface members with shared interests, similar life stage, and overlapping shul or neighborhood circles.' },
-  { title: 'Small groups that stick', body: 'A cooking circle, Daf review pod, new families table, walking group, singles event crew, or marketplace lane.' },
-];
-
-const communityRetentionCards = [
-  {
-    icon: Radio,
-    title: 'Pinned weekly pulse',
-    body: 'Every community gets one visible “what matters this week” post so members do not land in an empty room.',
-    stat: '1 anchor post',
-  },
-  {
-    icon: Bell,
-    title: 'Followed thread alerts',
-    body: 'Threads with replies become reasons to return, especially questions, rides, Shabbos plans, and recommendations.',
-    stat: 'Reply loops',
-  },
-  {
-    icon: CalendarDays,
-    title: 'Events plus reminders',
-    body: 'Groups can act like mini websites with upcoming events, saved plans, RSVP intent, and gentle reminders.',
-    stat: 'Calendar layer',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Verified leadership',
-    body: 'Admin and moderator labels build trust before schools and shuls eventually replace email chains here.',
-    stat: 'Trust signals',
-  },
-];
-
-const hubPlaybook = [
-  'Claimed shul pages for minyanim, shiurim, kiddush, alerts, and member posts',
-  'Joined communities power each person’s feed, map, events, and notifications',
-  'Moderated Jewish social networks by shul, interest, lifestyle, neighborhood, and values',
-  'Local recommendations replace scattered WhatsApp threads and stale directories',
-];
 
 const initialCommunities = [
   {
@@ -427,12 +373,6 @@ export default function Communities() {
   const featuredCommunities = filteredCommunities.filter((community) => community.featured);
   const joinedCommunities = filteredCommunities.filter((community) => community.joined);
   const suggestedCommunities = filteredCommunities.filter((community) => !community.joined);
-  const activityFeed = useMemo(() => {
-    return communities
-      .flatMap((community) => community.posts.map((post) => ({ ...post, communityId: community.id, communityName: community.name, communityCategory: community.category })))
-      .sort((a, b) => Number(b.pinned) - Number(a.pinned))
-      .slice(0, 8);
-  }, [communities]);
   const joinedCount = communities.filter((community) => community.joined).length;
   const totalMembers = communities.reduce((sum, community) => sum + community.memberCount, 0);
   const totalPosts = communities.reduce((sum, community) => sum + community.posts.length, 0);
@@ -509,18 +449,15 @@ export default function Communities() {
                 <PageHelp text="Explore and join Jewish communities. Use the message icon here to coordinate with community members." />
               </div>
 
-              <div className="relative mt-4 flex flex-wrap gap-2">
-                <PulsePill icon={HeartHandshake} label="Purpose-built groups" />
-                <PulsePill icon={MessageCircle} label={`${totalPosts} active threads`} />
-                <PulsePill icon={CalendarDays} label={`${totalEvents} upcoming events`} />
-              </div>
+              {(totalPosts > 0 || totalEvents > 0) && (
+                <div className="relative mt-3 flex flex-wrap gap-2">
+                  {totalPosts > 0 && <PulsePill icon={MessageCircle} label={`${totalPosts} active threads`} />}
+                  {totalEvents > 0 && <PulsePill icon={CalendarDays} label={`${totalEvents} upcoming events`} />}
+                </div>
+              )}
             </div>
 
             <div className="border-t border-slate-200 bg-gradient-to-br from-slate-50 via-white to-emerald-50 p-4 sm:border-l sm:border-t-0 sm:p-4">
-              <div className="app-card mb-3 p-3">
-                <p className="text-[12px] font-black uppercase tracking-wide text-slate-800">Build the local hub</p>
-                <p className="mt-1 text-[13px] font-medium leading-5 text-slate-700">Launch a circle people return to for conversation, plans, introductions, resources, and daily belonging.</p>
-              </div>
               <div className="grid grid-cols-2 gap-2">
                 <MetricCard label="Communities" value={communities.length} tone="blue" />
                 <MetricCard label="Joined by you" value={joinedCount} tone="emerald" />
@@ -538,107 +475,7 @@ export default function Communities() {
           </div>
         </div>
 
-	        <div className="mb-5 grid gap-3 lg:grid-cols-[1fr_360px]">
-	          <section className="app-card p-3">
-	            <div className="mb-3 flex items-center justify-between gap-3">
-	              <div>
-	                <h2 className="text-[17px] font-black text-slate-950">Five Towns pulse</h2>
-	                <p className="text-[12px] font-medium text-slate-500">A live-feeling feed across the Jewish networks people belong to.</p>
-	              </div>
-	              <Radio className="h-5 w-5 text-blue-600" />
-	            </div>
-	            <div className="space-y-2">
-	              {activityFeed.map((post) => (
-	                <button
-	                  key={`${post.communityId}-${post.id}`}
-	                  onClick={() => setSelectedCommunityId(post.communityId)}
-	                  className="flex w-full items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2.5 text-left transition hover:bg-white active:scale-[0.99]"
-	                >
-	                  <span className={`mt-0.5 shrink-0 rounded-full border px-2 py-1 text-[10px] font-black ${categoryHighlights[post.communityCategory] || 'border-slate-200 bg-white text-slate-600'}`}>
-	                    {post.communityCategory}
-	                  </span>
-	                  <span className="min-w-0 flex-1">
-	                    <span className="block truncate text-[13px] font-black text-slate-950">{post.title}</span>
-	                    <span className="block truncate text-[12px] font-semibold text-slate-500">{post.communityName} · {post.time} · {post.comments} replies</span>
-	                  </span>
-	                </button>
-	              ))}
-	            </div>
-	          </section>
-
-	          <section className="app-card p-3">
-	            <div className="mb-3 flex items-center gap-2">
-	              <ShieldCheck className="h-5 w-5 text-emerald-700" />
-	              <div>
-	                <h2 className="text-[17px] font-black text-slate-950">Social network engine</h2>
-	                <p className="text-[12px] font-medium text-slate-500">Make people discover, join, post, and come back.</p>
-	              </div>
-	            </div>
-	            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-	              {networkLoops.map((tool) => (
-	                <div key={tool} className="flex items-center gap-2 rounded-2xl bg-emerald-50 px-3 py-2 text-[12px] font-bold text-emerald-800">
-	                  <CheckCircle2 className="h-4 w-4 shrink-0" />
-	                  {tool}
-	                </div>
-	              ))}
-	            </div>
-	          </section>
-	        </div>
-
-	        <section className="app-card mb-5 p-3">
-	          <div className="mb-3 flex items-center justify-between gap-3">
-	            <div>
-	              <h2 className="text-[17px] font-black text-slate-950">Conversation starters</h2>
-	              <p className="text-[12px] font-medium text-slate-500">Built-in reasons for members to post before a group feels empty.</p>
-	            </div>
-	            <Bell className="h-5 w-5 text-blue-600" />
-	          </div>
-	          <div className="grid gap-2 md:grid-cols-3">
-	            {conversationStarters.map((starter) => (
-	              <div key={starter.title} className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-	                <p className="text-[14px] font-black text-slate-950">{starter.title}</p>
-	                <p className="mt-1 text-[12px] font-medium leading-5 text-slate-600">{starter.body}</p>
-	              </div>
-	            ))}
-	          </div>
-	        </section>
-
-	        <section className="app-card mb-5 overflow-hidden">
-	          <div className="border-b border-slate-100 p-3">
-	            <p className="text-[12px] font-black uppercase tracking-wide text-emerald-700">Retention systems</p>
-	            <h2 className="mt-1 text-[17px] font-black text-slate-950">What keeps communities alive</h2>
-	            <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">Simple operating pieces that make groups feel active without adding clutter.</p>
-	          </div>
-	          <div className="grid gap-2 p-3 sm:grid-cols-2 lg:grid-cols-4">
-	            {communityRetentionCards.map((card) => (
-	              <div key={card.title} className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-	                <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
-	                  <card.icon className="h-4 w-4" />
-	                </div>
-	                <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{card.stat}</p>
-	                <p className="mt-0.5 text-[14px] font-black text-slate-950">{card.title}</p>
-	                <p className="mt-1 text-[12px] font-medium leading-5 text-slate-600">{card.body}</p>
-	              </div>
-	            ))}
-	          </div>
-	        </section>
-
-	        <section className="app-card mb-5 overflow-hidden">
-	          <div className="border-b border-slate-100 p-3">
-	            <p className="text-[12px] font-black uppercase tracking-wide text-blue-700">Hub playbook</p>
-	            <h2 className="mt-1 text-[17px] font-black text-slate-950">How JUnited becomes the Five Towns layer</h2>
-	            <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">Communities are the identity system for the whole app.</p>
-	          </div>
-	          <div className="grid gap-2 p-3 sm:grid-cols-2">
-	            {hubPlaybook.map((item) => (
-	              <div key={item} className="rounded-2xl bg-blue-50 px-3 py-2 text-[12px] font-bold leading-5 text-blue-800">
-	                {item}
-	              </div>
-	            ))}
-	          </div>
-	        </section>
-
-        <div className="app-card mb-5 p-3">
+        <div className="app-card mb-4 p-3">
           <div className="flex flex-col gap-3">
             <label className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -649,7 +486,6 @@ export default function Communities() {
                 className="app-input pl-10 pr-3 text-sm"
               />
             </label>
-
             <div className="mobile-scroll-x flex items-center gap-2 pb-1">
               {categories.map((item) => (
                 <button
@@ -669,35 +505,7 @@ export default function Communities() {
                   )}
                 </button>
               ))}
-	        </div>
-
-	        <section className="mb-5 rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
-	          <div className="mb-3 flex items-center justify-between gap-3">
-	            <div>
-	              <h2 className="text-[17px] font-black text-slate-950">Launch templates</h2>
-	              <p className="text-[12px] font-medium text-slate-500">Fast paths for the communities people actually want to join.</p>
-	            </div>
-	            <Star className="h-5 w-5 text-amber-500" />
-	          </div>
-	          <div className="motion-stagger grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-	            {launchTemplates.map((template) => (
-	              <button
-	                key={template.title}
-	                onClick={() => {
-	                  setCategory(template.category);
-	                  setQuery('');
-	                }}
-	                className="motion-press rounded-2xl border border-slate-200 bg-slate-50 p-3 text-left transition hover:bg-white active:scale-[0.99]"
-	              >
-	                <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-black ${categoryHighlights[template.category] || 'border-slate-200 bg-white text-slate-600'}`}>
-	                  {template.category}
-	                </span>
-	                <p className="mt-2 text-[14px] font-black text-slate-950">{template.title}</p>
-	                <p className="mt-1 text-[12px] font-medium leading-5 text-slate-600">{template.body}</p>
-	              </button>
-	            ))}
-	          </div>
-	        </section>
+            </div>
           </div>
         </div>
 
