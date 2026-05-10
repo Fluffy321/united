@@ -27,7 +27,7 @@ export default function LogMitzvahModal({ open, onOpenChange, onSubmit }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[calc(100%-24px)] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl max-w-md">
         <DialogHeader>
           <DialogTitle>Log a Mitzvah ✨</DialogTitle>
         </DialogHeader>

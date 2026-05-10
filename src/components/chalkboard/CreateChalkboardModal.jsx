@@ -99,7 +99,7 @@ export default function CreateChalkboardModal({ open, onOpenChange, currentUser,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[calc(100%-24px)] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Post to Chalkboard</DialogTitle>
         </DialogHeader>

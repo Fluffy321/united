@@ -35,7 +35,7 @@ export default function CreateGroupModal({ open, onOpenChange, currentUser, onCr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm rounded-2xl">
+      <DialogContent className="w-[calc(100%-24px)] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-[18px] font-bold">Create a Group</DialogTitle>
         </DialogHeader>

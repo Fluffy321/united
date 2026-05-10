@@ -70,7 +70,7 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[calc(100%-24px)] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl max-w-md">
         <DialogHeader>
           <DialogTitle>Claim "{community?.name}"</DialogTitle>
           <DialogDescription>

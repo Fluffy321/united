@@ -116,7 +116,7 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser, in
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[calc(100%-24px)] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Post a Mitzvah Request</DialogTitle>
           <DialogDescription>

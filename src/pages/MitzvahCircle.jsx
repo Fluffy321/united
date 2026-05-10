@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
@@ -569,9 +569,13 @@ function CreateRequestModal({ open, onClose, onCreate }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 px-0 sm:items-center sm:px-4 motion-soft-in" onClick={onClose}>
-      <form onSubmit={submit} className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl motion-page-enter sm:rounded-2xl" onClick={(event) => event.stopPropagation()}>
-        <div className="mb-4 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-3 motion-soft-in" onClick={onClose}>
+      <form
+        onSubmit={submit}
+        className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl motion-page-enter"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-4">
           <div>
             <p className="text-[12px] font-black uppercase text-blue-600">New request</p>
             <h2 className="text-xl font-black text-slate-950">Post help needed</h2>
@@ -581,10 +585,10 @@ function CreateRequestModal({ open, onClose, onCreate }) {
           </button>
         </div>
 
-        <div className="motion-stagger space-y-3">
+        <div className="motion-stagger flex-1 space-y-3 overflow-y-auto overscroll-contain p-4">
           <label className="block">
             <span className="mb-1 block text-[13px] font-bold text-slate-700">Title</span>
-            <input required value={form.title} onChange={(event) => update('title', event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="Example: Pick up groceries" />
+            <input autoFocus required value={form.title} onChange={(event) => update('title', event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="Example: Pick up groceries" />
           </label>
           <label className="block">
             <span className="mb-1 block text-[13px] font-bold text-slate-700">Description</span>
@@ -632,7 +636,7 @@ function CreateRequestModal({ open, onClose, onCreate }) {
           )}
         </div>
 
-        <button type="submit" className="mt-5 h-12 w-full rounded-xl bg-blue-600 text-sm font-black text-white active:scale-[0.98]">
+        <button type="submit" className="m-4 h-12 shrink-0 rounded-xl bg-blue-600 text-sm font-black text-white active:scale-[0.98]">
           Post Request
         </button>
       </form>
@@ -930,6 +934,8 @@ export default function MitzvahCircle() {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedMapRequestId, setSelectedMapRequestId] = useState(null);
   const [quickViewRequest, setQuickViewRequest] = useState(null);
+  const [createdRequestId, setCreatedRequestId] = useState(null);
+  const createdRequestRef = useRef(null);
 
   useEffect(() => {
     saveState(state);
@@ -951,6 +957,20 @@ export default function MitzvahCircle() {
       return next;
     }, { replace: true });
   };
+
+  useEffect(() => {
+    if (!createdRequestId || activeTab !== 'posted') return undefined;
+
+    const frame = requestAnimationFrame(() => {
+      createdRequestRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    const timeout = window.setTimeout(() => setCreatedRequestId(null), 2600);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timeout);
+    };
+  }, [activeTab, createdRequestId, state.mitzvah_requests.length]);
 
 
   const backend = {
@@ -1616,21 +1636,26 @@ export default function MitzvahCircle() {
 
           {activeTab === 'posted' && (
             myPosted.length ? myPosted.map((request) => (
-              <RequestCard
+              <div
                 key={request.id}
-                request={request}
-                offers={state.mitzvah_offers}
-                completions={state.mitzvah_completions}
-                verificationRequests={state.verification_requests}
-                currentUser={currentUser}
-                onOffer={handleOffer}
-                onAcceptPaid={handleAcceptPaid}
-                onAcceptOffer={handleAcceptOffer}
-                onStart={handleStart}
-                onComplete={handleComplete}
-                onVerify={handleVerify}
-                onQuickView={setQuickViewRequest}
-              />
+                ref={request.id === createdRequestId ? createdRequestRef : null}
+                className={request.id === createdRequestId ? 'scroll-mt-28 rounded-2xl ring-2 ring-blue-400 ring-offset-2 ring-offset-[#F6F8FB] transition' : undefined}
+              >
+                <RequestCard
+                  request={request}
+                  offers={state.mitzvah_offers}
+                  completions={state.mitzvah_completions}
+                  verificationRequests={state.verification_requests}
+                  currentUser={currentUser}
+                  onOffer={handleOffer}
+                  onAcceptPaid={handleAcceptPaid}
+                  onAcceptOffer={handleAcceptOffer}
+                  onStart={handleStart}
+                  onComplete={handleComplete}
+                  onVerify={handleVerify}
+                  onQuickView={setQuickViewRequest}
+                />
+              </div>
             )) : <EmptyState title="You have not posted requests yet" text="Create a volunteer or paid request when you need help." />
           )}
 
@@ -1664,7 +1689,10 @@ export default function MitzvahCircle() {
         open={showCreate}
         onClose={() => setShowCreate(false)}
         onCreate={async (payload) => {
-          await backend.createRequest(payload);
+          const request = await backend.createRequest(payload);
+          setCreatedRequestId(request.id);
+          setQuery('');
+          setCategoryFilter('All');
           setShowCreate(false);
           changeTab('posted');
           toast.success('Request posted.');
