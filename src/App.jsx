@@ -14,10 +14,6 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import OnboardingFlow, { hasCompletedOnboarding } from '@/components/onboarding/OnboardingFlow';
 import { getSupabaseConfigStatus } from '@/api/supabaseClient';
 
-// Evaluated once at module load. In dev mode this is always false so the local
-// demo still works. In production, missing Supabase config is always an operator
-// error — surfacing it immediately prevents users from silently "using" the app
-// against localStorage and losing all their data.
 const supabaseStatus = getSupabaseConfigStatus();
 const PROD_CONFIG_MISSING = import.meta.env.PROD && !supabaseStatus.shouldUseSupabase;
 
@@ -63,30 +59,22 @@ function ProductionConfigError() {
   );
 }
 
-// Route-level code splitting: each page loads only when first navigated to.
-const PublicProfile        = lazy(() => import('@/pages/PublicProfile'));
-const Events               = lazy(() => import('@/pages/Events'));
+// Route-level code splitting — only MVP pages are eagerly imported here.
+const PublicProfile           = lazy(() => import('@/pages/PublicProfile'));
 const AdminAnalyticsDashboard = lazy(() => import('@/pages/AdminAnalyticsDashboard'));
-const UserSettings         = lazy(() => import('@/pages/UserSettings'));
-const ThankYou             = lazy(() => import('@/pages/ThankYou'));
-const PostDetail           = lazy(() => import('@/pages/PostDetail'));
-const CommunityPage        = lazy(() => import('@/pages/CommunityPage'));
-const CommunityCalendar    = lazy(() => import('@/pages/CommunityCalendar'));
-const JoinByCommunityCode  = lazy(() => import('@/pages/JoinByCommunityCode'));
-const MinorSafetyPolicy    = lazy(() => import('@/pages/MinorSafetyPolicy'));
-const BusinessDirectory    = lazy(() => import('@/pages/BusinessDirectory'));
-const BusinessListingPage  = lazy(() => import('@/pages/BusinessListing'));
-const CreateBusinessListing = lazy(() => import('@/pages/CreateBusinessListing'));
-const SupportJUnited       = lazy(() => import('@/pages/SupportJUnited'));
-const TermsOfService       = lazy(() => import('@/pages/TermsOfService'));
-const PrivacyPolicy        = lazy(() => import('@/pages/PrivacyPolicy'));
-const CommunityGuidelines  = lazy(() => import('@/pages/CommunityGuidelines'));
-const DMCAPolicy           = lazy(() => import('@/pages/DMCAPolicy'));
-const PrivacyRights        = lazy(() => import('@/pages/PrivacyRights'));
-const YahrzeitManager      = lazy(() => import('@/pages/YahrzeitManager'));
-const SearchPage           = lazy(() => import('@/pages/Search'));
-const RefuahList           = lazy(() => import('@/pages/RefuahList'));
-const Login                = lazy(() => import('@/pages/Login'));
+const FutureFeatures          = lazy(() => import('@/pages/FutureFeatures'));
+const UserSettings            = lazy(() => import('@/pages/UserSettings'));
+const PostDetail              = lazy(() => import('@/pages/PostDetail'));
+const CommunityPage           = lazy(() => import('@/pages/CommunityPage'));
+const JoinByCommunityCode     = lazy(() => import('@/pages/JoinByCommunityCode'));
+const MinorSafetyPolicy       = lazy(() => import('@/pages/MinorSafetyPolicy'));
+const TermsOfService          = lazy(() => import('@/pages/TermsOfService'));
+const PrivacyPolicy           = lazy(() => import('@/pages/PrivacyPolicy'));
+const CommunityGuidelines     = lazy(() => import('@/pages/CommunityGuidelines'));
+const DMCAPolicy              = lazy(() => import('@/pages/DMCAPolicy'));
+const PrivacyRights           = lazy(() => import('@/pages/PrivacyRights'));
+const SearchPage              = lazy(() => import('@/pages/Search'));
+const Login                   = lazy(() => import('@/pages/Login'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -141,6 +129,7 @@ const AuthenticatedApp = () => {
         <Routes>
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route element={<ProtectedRoute />}>
+            {/* Admin-only routes */}
             <Route element={<AdminRoute />}>
               {[...ADMIN_PAGE_KEYS].map((key) => {
                 const Page = Pages[key];
@@ -153,7 +142,10 @@ const AuthenticatedApp = () => {
                 );
               })}
               <Route path="/AdminAnalyticsDashboard" element={<PageTransition><AdminAnalyticsDashboard /></PageTransition>} />
+              <Route path="/FutureFeatures" element={<PageTransition><FutureFeatures /></PageTransition>} />
             </Route>
+
+            {/* Main app routes */}
             <Route path="/" element={<PageTransition><LayoutWrapper currentPageName={mainPageKey}><MainPage /></LayoutWrapper></PageTransition>} />
             {Object.entries(Pages)
               .filter(([path]) => !ADMIN_PAGE_KEYS.has(path))
@@ -164,31 +156,45 @@ const AuthenticatedApp = () => {
                   element={<PageTransition><LayoutWrapper currentPageName={path}><Page /></LayoutWrapper></PageTransition>}
                 />
               ))}
+
+            {/* MVP utility routes */}
             <Route path="/PublicProfile" element={<PageTransition><PublicProfile /></PageTransition>} />
             <Route path="/PostDetail" element={<PageTransition><PostDetail /></PageTransition>} />
-            <Route path="/ThankYou" element={<PageTransition><ThankYou /></PageTransition>} />
-            <Route path="/CommunityMap" element={<Navigate to="/Communities" replace />} />
-            <Route path="/Events" element={<PageTransition><Events /></PageTransition>} />
             <Route path="/UserSettings" element={<PageTransition><UserSettings /></PageTransition>} />
             <Route path="/community/:communityId" element={<PageTransition><LayoutWrapper currentPageName="CommunityDetail"><CommunityPage /></LayoutWrapper></PageTransition>} />
             <Route path="/communities/:communityId" element={<PageTransition><LayoutWrapper currentPageName="CommunityDetail"><CommunityPage /></LayoutWrapper></PageTransition>} />
-            <Route path="/CommunityCalendar" element={<PageTransition><CommunityCalendar /></PageTransition>} />
-            <Route path="/DiscoverCommunitiesFeed" element={<Navigate to="/Communities" replace />} />
-            <Route path="/MitzvahMap" element={<Navigate to="/MitzvahCircle?tab=map" replace />} />
             <Route path="/join" element={<PageTransition><JoinByCommunityCode /></PageTransition>} />
+            <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
+
+            {/* Legal & policy pages */}
             <Route path="/MinorSafetyPolicy" element={<PageTransition><MinorSafetyPolicy /></PageTransition>} />
-            <Route path="/BusinessDirectory" element={<PageTransition><BusinessDirectory /></PageTransition>} />
-            <Route path="/BusinessListing" element={<PageTransition><BusinessListingPage /></PageTransition>} />
-            <Route path="/CreateBusinessListing" element={<PageTransition><CreateBusinessListing /></PageTransition>} />
-            <Route path="/SupportJUnited" element={<PageTransition><SupportJUnited /></PageTransition>} />
             <Route path="/terms" element={<PageTransition><TermsOfService /></PageTransition>} />
             <Route path="/privacy" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
             <Route path="/guidelines" element={<PageTransition><CommunityGuidelines /></PageTransition>} />
             <Route path="/dmca" element={<PageTransition><DMCAPolicy /></PageTransition>} />
             <Route path="/privacy-rights" element={<PageTransition><PrivacyRights /></PageTransition>} />
-            <Route path="/yahrzeits" element={<PageTransition><YahrzeitManager /></PageTransition>} />
-            <Route path="/tehillim" element={<PageTransition><RefuahList /></PageTransition>} />
-            <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
+
+            {/* Legacy redirects — keep old links working */}
+            <Route path="/CommunityMap" element={<Navigate to="/Communities" replace />} />
+            <Route path="/DiscoverCommunitiesFeed" element={<Navigate to="/Communities" replace />} />
+            <Route path="/MitzvahMap" element={<Navigate to="/MitzvahCircle?tab=map" replace />} />
+
+            {/* Non-MVP routes — redirect to home rather than 404 to avoid confusing beta users */}
+            <Route path="/Events" element={<Navigate to="/" replace />} />
+            <Route path="/MyEvents" element={<Navigate to="/" replace />} />
+            <Route path="/CommunityCalendar" element={<Navigate to="/Communities" replace />} />
+            <Route path="/Groups" element={<Navigate to="/Communities" replace />} />
+            <Route path="/News" element={<Navigate to="/" replace />} />
+            <Route path="/Organization" element={<Navigate to="/" replace />} />
+            <Route path="/ShulPage" element={<Navigate to="/" replace />} />
+            <Route path="/CommunityUpdates" element={<Navigate to="/Communities" replace />} />
+            <Route path="/BusinessDirectory" element={<Navigate to="/" replace />} />
+            <Route path="/BusinessListing" element={<Navigate to="/" replace />} />
+            <Route path="/CreateBusinessListing" element={<Navigate to="/" replace />} />
+            <Route path="/SupportJUnited" element={<Navigate to="/" replace />} />
+            <Route path="/ThankYou" element={<Navigate to="/" replace />} />
+            <Route path="/yahrzeits" element={<Navigate to="/" replace />} />
+            <Route path="/tehillim" element={<Navigate to="/" replace />} />
           </Route>
           <Route path="*" element={<PageNotFound />} />
         </Routes>

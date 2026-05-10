@@ -1,7 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { Loader2, Plus, Upload, Save, Heart } from 'lucide-react';
-import FeaturedEligibilityChecker from './FeaturedEligibilityChecker';
-import VerifiedCommunityUpgrade from '@/components/monetization/VerifiedCommunityUpgrade';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -95,7 +93,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
   return (
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
       <div className="flex border-b border-slate-100 overflow-x-auto scrollbar-hide">
-        {['posts', 'events', 'info', 'logo', 'verified'].map(t => (
+        {['posts', 'events', 'info', 'logo'].map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -239,17 +237,6 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
           </div>
         )}
 
-        {/* Verified Tab */}
-        {tab === 'verified' && (
-          <div className="space-y-4">
-            <VerifiedCommunityUpgrade community={community} currentUser={currentUser} />
-            {/* Featured placement */}
-            <div className="border-t border-slate-100 pt-4">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">✨ Featured Placement</p>
-              <FeaturedEligibilityChecker community={community} />
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

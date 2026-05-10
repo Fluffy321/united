@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, MapPin, Send, Calendar, UserCheck, Loader2, Check, X, Clock, Megaphone, UserPlus, MessageSquare, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Users, MapPin, Send, Calendar, UserCheck, Loader2, Check, X, Clock, Megaphone, UserPlus, MessageSquare } from 'lucide-react';
 import { dataService, incrementCounter } from '@/services';
 import InviteLinkButton from './InviteLinkButton';
 import { formatDistanceToNow, parseISO } from 'date-fns';
@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import GroupEventsTab from '@/components/groups/GroupEventsTab';
 import GroupDiscussionTab from '@/components/groups/GroupDiscussionTab';
 import GroupResourcesTab from '@/components/groups/GroupResourcesTab';
-import GroupAnalyticsDashboard from '@/components/groups/GroupAnalyticsDashboard';
 import FileAttachmentButton from '@/components/common/FileAttachmentButton';
 import { AttachmentPreview, PendingAttachmentChip } from '@/components/common/FileAttachmentPreview';
 
@@ -22,7 +21,6 @@ const TABS = [
   { id: 'events', label: 'Events', icon: Calendar },
   { id: 'discussion', label: 'Forum', icon: MessageSquare },
   { id: 'resources', label: 'Resources', icon: UserCheck },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3, adminOnly: true },
   { id: 'posts', label: 'Posts', icon: Send },
   { id: 'members', label: 'Members', icon: UserPlus },
   { id: 'announcements', label: 'Announce', icon: Megaphone },
@@ -222,11 +220,6 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
             {/* Resources Tab */}
             {tab === 'resources' && (
               <GroupResourcesTab group={group} currentUser={currentUser} isMember={isMember} isAdmin={isAdmin} />
-            )}
-
-            {/* Analytics Tab */}
-            {tab === 'analytics' && isAdmin && (
-              <GroupAnalyticsDashboard group={group} currentUser={currentUser} isAdmin={isAdmin} />
             )}
 
             {/* Posts Tab */}

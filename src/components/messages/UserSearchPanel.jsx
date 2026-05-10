@@ -56,12 +56,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
       // Discard if a newer keystroke has already superseded this fetch.
       if (q !== latestQueryRef.current) return;
 
-      // Inject AI agent when query matches known keywords.
-      const lq = q.toLowerCase();
-      const showAI = ['ai', 'assistant', 'united', 'bot', 'help'].some(
-        kw => kw.includes(lq) || lq.includes(kw)
-      );
-      setResults(showAI ? [AI_AGENT, ...filtered.slice(0, 19)] : filtered.slice(0, 20));
+      setResults(filtered.slice(0, 20));
 
       // Lazily load current user's groups for mutual community counts.
       if (!userGroups) {
