@@ -194,12 +194,12 @@ export default function ConversationList({ conversations, currentUser, selectedI
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-0.5">
             <div className="flex flex-col min-w-0 flex-1">
-              <span className={`font-black text-[15px] truncate flex items-center gap-1.5 leading-snug ${
+              <span className={`font-black text-[15px] leading-snug flex items-center gap-1.5 min-w-0 ${
                 unread > 0 ? 'text-slate-900' : 'text-slate-700'
               }`}>
-                {other.name}
+                <span className="truncate">{other.name}</span>
                 {isAIChat && (
-                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-slate-950 text-white">
+                  <span className="flex-shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-slate-950 text-white">
                     AI
                   </span>
                 )}

@@ -89,7 +89,7 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
               <h1 className="truncate text-xl font-black leading-tight text-slate-900">
                 {user.display_name || user.full_name?.split(' ')[0] || 'User'}
               </h1>
-              <p className="text-[13px] font-semibold text-slate-400">
+              <p className="text-[13px] font-semibold text-slate-400 truncate">
                 @{user.username || user.display_name?.toLowerCase().replace(/[^a-z0-9]+/g, '') || `member${String(user.id || '').slice(0, 6)}`}
               </p>
             </div>

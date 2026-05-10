@@ -30,7 +30,7 @@ export default function CommunityPostCard({ post }) {
       {post.title && (
         <h3 className="font-bold text-slate-900 text-sm mb-1">{post.title}</h3>
       )}
-      <p className="text-sm text-slate-700 leading-snug">{post.body}</p>
+      <p className="text-sm text-slate-700 leading-snug line-clamp-4">{post.body}</p>
 
       {post.type === 'event' && (post.event_date || post.event_time || post.location_text) && (
         <div className="mt-2 bg-blue-50 rounded-lg px-3 py-2 flex flex-wrap gap-x-3 gap-y-1">

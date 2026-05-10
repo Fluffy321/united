@@ -427,7 +427,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
                 <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">📅 Event</span>
                 <span className="text-[11px] text-slate-400 ml-auto">{timeAgo}</span>
               </div>
-              {post.title && <h3 className="font-bold text-[14px] text-slate-900 leading-snug mb-0.5">{post.title}</h3>}
+              {post.title && <h3 className="font-bold text-[14px] text-slate-900 leading-snug mb-0.5 line-clamp-2">{post.title}</h3>}
               {post.body && <p className="text-[12px] text-slate-600 line-clamp-2">{post.body}</p>}
               <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
                 {post.event_time && (
@@ -506,7 +506,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             <div className="flex items-start gap-3 flex-1 min-w-0">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-base font-bold flex-shrink-0">💼</div>
               <div className="min-w-0">
-                {post.title && <h3 className="font-bold text-[14px] text-slate-900 leading-snug">{post.title}</h3>}
+                {post.title && <h3 className="font-bold text-[14px] text-slate-900 leading-snug line-clamp-2">{post.title}</h3>}
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">💼 Job</span>
                   {post.location_text && <span className="flex items-center gap-1 text-[11px] text-slate-500"><MapPin className="w-3 h-3" />{post.location_text}</span>}
@@ -623,7 +623,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
                 {helpCat && <span className="text-[11px] font-semibold text-slate-500">{helpCat.label}</span>}
                 {helpStatus === 'fulfilled' && <span className="text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Fulfilled</span>}
               </div>
-                {post.title && <h3 className="font-bold text-[14px] text-slate-900 leading-snug">{post.title}</h3>}
+                {post.title && <h3 className="font-bold text-[14px] text-slate-900 leading-snug line-clamp-2">{post.title}</h3>}
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -871,7 +871,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             <p className="text-[11px] text-violet-700 font-semibold">💭 {post.prompt_text}</p>
           </div>
         )}
-        {post.title && <h3 className="font-bold text-[14px] text-slate-900 mb-0.5 leading-snug">{post.title}</h3>}
+        {post.title && <h3 className="font-bold text-[14px] text-slate-900 mb-0.5 leading-snug line-clamp-2">{post.title}</h3>}
         <p className={`text-[13px] text-slate-700 leading-snug ${!expanded ? 'line-clamp-3' : ''}`}>
           {post.body}
           {bodyLong && (
