@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import {
   Loader2, Eye, EyeOff, CheckCircle2, AlertTriangle, Building2,
   X, Filter, Shield, Clock, Bot, User, RefreshCw,
-  FileText
+  FileText, ArrowLeft
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -101,6 +102,7 @@ function ReportCard({ report, onAction, onResolve }) {
 
 export default function AdminModerationQueue() {
   const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [selectedReport, setSelectedReport] = useState(null);
@@ -204,11 +206,16 @@ export default function AdminModerationQueue() {
       <div className="max-w-5xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="mb-6 flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <Shield className="w-6 h-6 text-slate-700" /> Moderation Queue
-            </h1>
-            <p className="text-sm text-slate-500 mt-1">Review flagged content and take action</p>
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors">
+              <ArrowLeft className="w-5 h-5 text-slate-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <Shield className="w-6 h-6 text-slate-700" /> Moderation Queue
+              </h1>
+              <p className="text-sm text-slate-500 mt-1">Review flagged content and take action</p>
+            </div>
           </div>
           <button onClick={() => refetchReports()} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors">
             <RefreshCw className="w-4 h-4" /> Refresh

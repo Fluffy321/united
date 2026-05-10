@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Upload, Save, Loader2, Bell, Lock, Eye, MapPin, Check } from 'lucide-react';
+import { Upload, Save, Loader2, Bell, Lock, Eye, MapPin, Check, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
@@ -7,6 +8,7 @@ import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 
 export default function UserSettings() {
   const { user, isLoadingAuth: loading } = useAuth();
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -103,9 +105,14 @@ export default function UserSettings() {
     <div className="min-h-screen bg-slate-50 pb-24">
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Account Settings</h1>
-          <p className="text-slate-600">Manage your profile and preferences</p>
+        <div className="mb-8 flex items-start gap-3">
+          <button onClick={() => navigate(-1)} className="mt-1 w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors flex-shrink-0">
+            <ArrowLeft className="w-5 h-5 text-slate-600" />
+          </button>
+          <div>
+            <h1 className="text-4xl font-bold text-slate-900 mb-2">Account Settings</h1>
+            <p className="text-slate-600">Manage your profile and preferences</p>
+          </div>
         </div>
 
         {/* Profile Card */}

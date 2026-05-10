@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { dataService, incrementCounter } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
-import { Loader2, Users, MapPin, CheckCircle2, ArrowRight, Shield } from 'lucide-react';
+import { Loader2, Users, MapPin, CheckCircle2, ArrowRight, Shield, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 // /join?code=ABC123
@@ -151,6 +151,9 @@ export default function JoinByCommunityCode() {
         }}
       >
         <div className="absolute inset-0 bg-black/30" />
+        <button onClick={() => navigate(-1)} className="absolute top-4 left-4 w-9 h-9 flex items-center justify-center rounded-full bg-black/30 backdrop-blur-sm">
+          <ArrowLeft className="w-4 h-4 text-white" />
+        </button>
         <div className="absolute bottom-4 left-5">
           <div className="w-16 h-16 rounded-2xl bg-white shadow-lg overflow-hidden flex items-center justify-center">
             {community.logo_url

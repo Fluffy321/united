@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
-import { Loader2, TrendingUp, Users, MessageSquare, Calendar, Activity, AlertTriangle, Download, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Loader2, TrendingUp, Users, MessageSquare, Calendar, Activity, AlertTriangle, Download, ArrowUpRight, ArrowDownRight, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { subDays, format, startOfDay } from 'date-fns';
 
@@ -71,6 +72,7 @@ function buildDailyBuckets(items, dateField, days = 30) {
 
 export default function AdminAnalyticsDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('platform');
   const [data, setData] = useState(null);
@@ -171,9 +173,14 @@ export default function AdminAnalyticsDashboard() {
     <div className="min-h-screen bg-slate-50 pb-24">
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Analytics Dashboard</h1>
-            <p className="text-[13px] text-slate-500 mt-0.5">Last updated: {new Date().toLocaleString()}</p>
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors">
+              <ArrowLeft className="w-5 h-5 text-slate-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Analytics Dashboard</h1>
+              <p className="text-[13px] text-slate-500 mt-0.5">Last updated: {new Date().toLocaleString()}</p>
+            </div>
           </div>
           <button onClick={() => exportCSV(data.signupsPerDay, 'signups.csv')}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white text-[13px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
