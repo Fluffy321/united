@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, Download, Trash2, Loader2, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, Download, Trash2, Loader2, CheckCircle, ShieldCheck } from 'lucide-react';
 import { dataService, storageService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
@@ -9,9 +9,6 @@ export default function PrivacyRights() {
   const { user, isLoadingAuth: loadingUser } = useAuth();
   const [exporting, setExporting] = useState(false);
   const [exportDone, setExportDone] = useState(false);
-  const [deletingAccount, setDeletingAccount] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [analyticsOptOut, setAnalyticsOptOut] = useState(() => {
     const stored = storageService.getJson('junited_cookie_consent', {});
     return stored.analytics === false;
@@ -64,11 +61,6 @@ export default function PrivacyRights() {
     } finally {
       setExporting(false);
     }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== 'DELETE') { toast.error('Type DELETE to confirm'); return; }
-    toast.info('Account deletion is coming soon. Your account was not deleted.');
   };
 
   const handleAnalyticsToggle = () => {
@@ -186,41 +178,16 @@ export default function PrivacyRights() {
               <div className="flex-1">
                 <h2 className="font-bold text-slate-900 mb-1">Delete My Account</h2>
                 <p className="text-[13px] text-slate-500 mb-3 leading-relaxed">
-                  Account deletion is not connected yet. Until the backend is added, this screen cannot permanently delete your account or data.
+                  To permanently delete your account and all associated data, email us at{' '}
+                  <a href="mailto:support@junited.org" className="text-blue-600 font-medium underline">support@junited.org</a>{' '}
+                  from your registered address with the subject line "Delete my account". We process all deletion requests within 30 days.
                 </p>
-                <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold text-amber-800">
-                  Coming Soon: real deletion still needs backend support.
-                </div>
-                {!showDeleteConfirm ? (
-                  <button onClick={() => setShowDeleteConfirm(true)} disabled={!user}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-[13px] font-semibold hover:bg-red-700 disabled:opacity-50 active:scale-95 transition-all">
-                    <Trash2 className="w-3.5 h-3.5" /> Delete My Account (Coming Soon)
-                  </button>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-3 text-[13px] text-red-700">
-                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                      <span>This cannot be undone after 30 days. Type <strong>DELETE</strong> to confirm.</span>
-                    </div>
-                    <input
-                      value={deleteConfirmText}
-                      onChange={e => setDeleteConfirmText(e.target.value)}
-                      placeholder='Type "DELETE" to confirm'
-                      className="w-full px-3 py-2.5 rounded-xl border border-red-300 bg-red-50 text-[14px] focus:outline-none focus:border-red-500 text-red-900 placeholder-red-300"
-                    />
-                    <div className="flex gap-2">
-                      <button onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
-                        className="flex-1 py-2 rounded-xl border border-slate-200 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-                        Cancel
-                      </button>
-                      <button onClick={handleDeleteAccount} disabled
-                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-slate-300 text-white text-[13px] font-semibold cursor-not-allowed disabled:opacity-70">
-                        {deletingAccount ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                        Deletion Coming Soon
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <a
+                  href="mailto:support@junited.org?subject=Delete%20my%20account"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-[13px] font-semibold hover:bg-red-700 active:scale-95 transition-all"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Email Support to Delete Account
+                </a>
               </div>
             </div>
           </div>

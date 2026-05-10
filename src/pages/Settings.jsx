@@ -20,6 +20,9 @@ import {
   Trash2,
   UserRound,
   Users,
+  Wrench,
+  Flag,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { dataService } from '@/services';
@@ -85,7 +88,6 @@ export default function Settings() {
   const [activeSection, setActiveSection] = useState('profile');
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteText, setDeleteText] = useState('');
   const [form, setForm] = useState({
     display_name: '',
     bio: '',
@@ -221,9 +223,8 @@ export default function Settings() {
     toast.success('Logged out');
   };
 
-  const handleDeleteAccount = async () => {
-    if (deleteText !== 'DELETE') return;
-    toast.info('Account deletion is coming soon. Your account was not deleted.');
+  const handleDeleteAccount = () => {
+    setShowDeleteConfirm(false);
   };
 
   if (!currentUser) {
@@ -422,6 +423,28 @@ export default function Settings() {
             </SettingsCard>
           )}
 
+          {activeSection === 'account' && currentUser.role === 'admin' && (
+            <SettingsCard title="Admin Tools" icon={Wrench}>
+              <div className="space-y-2">
+                <Link to="/AdminModerationQueue" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                  <Flag className="h-4 w-4 text-rose-500" />
+                  Moderation Queue
+                  <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
+                </Link>
+                <Link to="/AdminAnalyticsDashboard" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                  <Shield className="h-4 w-4 text-blue-500" />
+                  Analytics Dashboard
+                  <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
+                </Link>
+                <Link to="/FutureFeatures" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                  <Sparkles className="h-4 w-4 text-amber-500" />
+                  Future Features
+                  <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
+                </Link>
+              </div>
+            </SettingsCard>
+          )}
+
           {activeSection === 'account' && (
             <SettingsCard title="Account Actions" icon={Lock}>
               <div className="space-y-3">
@@ -453,29 +476,20 @@ export default function Settings() {
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-[90] flex items-end bg-slate-950/40 p-0 sm:items-center sm:justify-center sm:p-4">
           <div className="w-full rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-md sm:rounded-3xl">
-            <h2 className="text-lg font-bold text-slate-950">Delete account?</h2>
+            <h2 className="text-lg font-bold text-slate-950">Delete account</h2>
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              Account deletion is not connected yet, so this screen cannot permanently delete your data. Type DELETE only to see the disabled safety state.
+              To permanently delete your account and all associated data, email{' '}
+              <a href="mailto:support@junited.org" className="font-semibold text-blue-600 underline">
+                support@junited.org
+              </a>{' '}
+              from the address you used to sign up. We process deletion requests within 30 days.
             </p>
-            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold text-amber-800">
-              Coming Soon: real account deletion still needs backend support.
-            </div>
-            <input
-              value={deleteText}
-              onChange={(event) => setDeleteText(event.target.value)}
-              placeholder="Type DELETE"
-              className="mt-4 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
-            />
             <div className="mt-5 flex gap-3">
-              <button onClick={() => setShowDeleteConfirm(false)} className="h-11 flex-1 rounded-xl bg-slate-100 text-sm font-bold text-slate-700">
-                Cancel
-              </button>
               <button
                 onClick={handleDeleteAccount}
-                disabled
-                className="h-11 flex-1 rounded-xl bg-slate-300 text-sm font-bold text-white cursor-not-allowed"
+                className="h-11 flex-1 rounded-xl bg-slate-100 text-sm font-bold text-slate-700"
               >
-                Deletion Coming Soon
+                Close
               </button>
             </div>
           </div>

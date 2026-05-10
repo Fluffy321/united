@@ -14,7 +14,6 @@ import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
 import ReportModal from '@/components/common/ReportModal';
 import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
-import PushNotificationPrompt from '@/components/feed/PushNotificationPrompt';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
 import { Search, Plus, RefreshCw, ChevronDown, MapPin, Users, HeartHandshake, CalendarDays, Bell, ShieldCheck, Store, Utensils, Car, MessageCircle } from 'lucide-react';
@@ -860,8 +859,6 @@ export default function Feed() {
       )}
 
       <div className="mobile-page px-3 pt-1 mobile-safe-bottom">
-        <PushNotificationPrompt />
-
         <div className="app-card mb-3 overflow-hidden">
           <div className="relative p-4">
             <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-[44px] bg-blue-50" />

@@ -8,48 +8,41 @@
  * THE ONLY EDITABLE VALUE: mainPage
  * This controls which page is the landing page (shown when users visit the app).
  * The value must match a key in the PAGES object exactly.
+ *
+ * NON-MVP PAGES: Groups, News, Organization, ShulPage, MyEvents, CommunityUpdates,
+ * AdminSeedControl (admin-only), Events, BusinessDirectory, BusinessListing,
+ * SupportJUnited, YahrzeitManager, RefuahList are intentionally excluded.
+ * See FutureFeatures page (admin-only) for the full list and task prompts.
  */
 import { lazy } from 'react';
 import __Layout from './Layout.jsx';
 
 const AdminModerationQueue = lazy(() => import('./pages/AdminModerationQueue'));
-const Notifications        = lazy(() => import('./pages/Notifications'));
 const AdminSeedControl     = lazy(() => import('./pages/AdminSeedControl'));
+const Notifications        = lazy(() => import('./pages/Notifications'));
 const Communities          = lazy(() => import('./pages/Communities'));
-const CommunityUpdates     = lazy(() => import('./pages/CommunityUpdates'));
 const Feed                 = lazy(() => import('./pages/Feed'));
-const Groups               = lazy(() => import('./pages/Groups'));
 const InviteJoin           = lazy(() => import('./pages/InviteJoin'));
 const Messages             = lazy(() => import('./pages/Messages'));
 const MitzvahCircle        = lazy(() => import('./pages/MitzvahCircle'));
-const MyEvents             = lazy(() => import('./pages/MyEvents'));
-const News                 = lazy(() => import('./pages/News'));
-const Organization         = lazy(() => import('./pages/Organization'));
 const Profile              = lazy(() => import('./pages/Profile'));
 const Settings             = lazy(() => import('./pages/Settings'));
-const ShulPage             = lazy(() => import('./pages/ShulPage'));
 
 export const PAGES = {
-    "AdminModerationQueue": AdminModerationQueue,
-    "Notifications": Notifications,
-    "AdminSeedControl": AdminSeedControl,
-    "Communities": Communities,
-    "CommunityUpdates": CommunityUpdates,
-    "Feed": Feed,
-    "Groups": Groups,
-    "InviteJoin": InviteJoin,
-    "Messages": Messages,
-    "MitzvahCircle": MitzvahCircle,
-    "MyEvents": MyEvents,
-    "News": News,
-    "Organization": Organization,
-    "Profile": Profile,
-    "Settings": Settings,
-    "ShulPage": ShulPage,
-}
+  AdminModerationQueue,
+  AdminSeedControl,
+  Notifications,
+  Communities,
+  Feed,
+  InviteJoin,
+  Messages,
+  MitzvahCircle,
+  Profile,
+  Settings,
+};
 
 export const pagesConfig = {
-    mainPage: "Feed",
-    Pages: PAGES,
-    Layout: __Layout,
+  mainPage: 'Feed',
+  Pages: PAGES,
+  Layout: __Layout,
 };

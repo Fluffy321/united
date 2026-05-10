@@ -172,7 +172,6 @@ import MembersListTab from './MembersListTab';
 import GroupChatSection from './GroupChatSection';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import CommunityHealthDashboard from './CommunityHealthDashboard';
-import CommunityStoreTab from './CommunityStoreTab';
 
 const TABS = [
   { key: 'home', label: 'Home' },
@@ -298,7 +297,6 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
   // Extra tabs for verified (premium) communities
   let visibleTabs = [...TABS];
-  if (isPremium) visibleTabs = [...visibleTabs, { key: 'store', label: '🏪 Store' }];
   if (isAdmin && isPremium) visibleTabs = [...visibleTabs, { key: 'health', label: '🧠 Health' }];
 
   const tabsWithCounts = visibleTabs.map(t => ({
@@ -423,15 +421,6 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
         {activeTab === 'resources' && (
           <CommunityResourceLibrary communityId={communityId} currentUser={currentUser} isAdmin={isAdmin} />
-        )}
-
-        {activeTab === 'store' && isPremium && (
-          <CommunityStoreTab
-            communityId={communityId}
-            community={community}
-            currentUser={currentUser}
-            isAdmin={isAdmin}
-          />
         )}
 
         {activeTab === 'health' && isAdmin && isPremium && (
