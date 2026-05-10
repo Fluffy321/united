@@ -95,8 +95,8 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
         {isClaimed && <Clock className="w-4 h-4 text-amber-500 ml-auto" />}
       </div>
 
-      <h3 className="font-bold text-[15px] text-slate-900 mb-1 leading-snug">{request.title}</h3>
-      <p className="text-slate-600 text-[13px] mb-2 leading-relaxed">{request.description}</p>
+      <h3 className="font-bold text-[15px] text-slate-900 mb-1 leading-snug line-clamp-2">{request.title}</h3>
+      <p className="text-slate-600 text-[13px] mb-2 leading-relaxed line-clamp-3">{request.description}</p>
 
       {/* Social proof signals */}
       {isOpen && (request.views_count > 0 || request.offers_count > 0) && (

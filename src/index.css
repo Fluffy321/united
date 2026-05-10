@@ -181,6 +181,28 @@
   }
 }
 
+@layer components {
+  .app-input {
+    min-height: 48px;
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid #E2E8F0;
+    background: #FFFFFF;
+    padding: 0 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #0F172A;
+    outline: none;
+    transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+  }
+
+  .app-input:focus {
+    border-color: #2563EB;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  }
+}
+
 @layer utilities {
   .app-page {
     min-height: 100dvh;
@@ -313,26 +335,6 @@
 
   .app-icon-button:active {
     transform: scale(0.96);
-  }
-
-  .app-input {
-    min-height: 48px;
-    width: 100%;
-    border-radius: 14px;
-    border: 1px solid #E2E8F0;
-    background: #FFFFFF;
-    padding: 0 16px;
-    font-size: 15px;
-    font-weight: 600;
-    color: #0F172A;
-    outline: none;
-    transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
-  }
-
-  .app-input:focus {
-    border-color: #2563EB;
-    background: #FFFFFF;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
   }
 
   .app-chip {

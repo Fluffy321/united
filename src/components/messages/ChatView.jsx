@@ -293,7 +293,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         </div>
         
         <div className="flex-1">
-          <span className="font-semibold text-slate-900 text-[16px]">{other.name}</span>
+          <span className="font-semibold text-slate-900 text-[16px] truncate">{other.name}</span>
           {isAI && <p className="text-[11px] text-amber-600 font-bold">AI Assistant • Coming Soon</p>}
           {isCommunityChat && <p className="text-[11px] text-blue-500 font-medium">{other.memberCount?.toLocaleString()} members • Community Chat</p>}
         </div>

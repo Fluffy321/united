@@ -367,8 +367,8 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
         <div className="px-3 py-2">
           <div className="flex items-center gap-1.5 mb-1">
             <UserAvatar user={post} name={post.user_name} size="xs" />
-            <span className="font-semibold text-slate-900 text-[12px]">{post.user_name}</span>
-            <span className="text-[11px] text-slate-400 ml-auto">{timeAgo}</span>
+            <span className="font-semibold text-slate-900 text-[12px] truncate max-w-[120px]">{post.user_name}</span>
+            <span className="text-[11px] text-slate-400 ml-auto flex-shrink-0">{timeAgo}</span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100"><MoreHorizontal className="w-3.5 h-3.5" /></button>
@@ -446,8 +446,8 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
           {/* Author row */}
           <div className="flex items-center gap-2 mt-1.5 pt-1 border-t border-slate-100">
             <UserAvatar user={post} name={post.user_name} size="xs" />
-            <span className="text-[11px] text-slate-500">{post.user_name}</span>
-            <div className="ml-auto flex items-center gap-2">
+            <span className="text-[11px] text-slate-500 truncate">{post.user_name}</span>
+            <div className="ml-auto flex-shrink-0 flex items-center gap-2">
               <ReactionBar postId={post.id} currentUser={currentUser} />
               <button
                 onClick={() => setShowEventDetails(!showEventDetails)}
@@ -545,7 +545,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
           )}
           <div className="flex items-center gap-2">
             <UserAvatar user={post} name={post.user_name} size="xs" />
-            <span className="text-[11px] text-slate-500 flex-1">{post.user_name} · {timeAgo}</span>
+            <span className="text-[11px] text-slate-500 flex-1 truncate min-w-0">{post.user_name} · {timeAgo}</span>
             <ReactionBar postId={post.id} currentUser={currentUser} />
             {post.user_id !== currentUser?.id && (
               <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
@@ -592,7 +592,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
           )}
           <div className="flex items-center gap-2">
             <UserAvatar user={post} name={post.user_name} size="xs" />
-            <span className="text-[11px] text-slate-500 flex-1">{post.user_name} · {timeAgo}</span>
+            <span className="text-[11px] text-slate-500 flex-1 truncate min-w-0">{post.user_name} · {timeAgo}</span>
             <ReactionBar postId={post.id} currentUser={currentUser} />
             {post.user_id !== currentUser?.id && <InterestedButton post={post} currentUser={currentUser} />}
           </div>
@@ -723,7 +723,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
           <div className="mt-3 bg-white/20 rounded-xl px-3 py-2 text-sm leading-relaxed">
             <div className="flex items-center gap-2 mb-1">
               <UserAvatar user={post} name={post.user_name} size="xs" />
-              <span className="font-semibold text-[12px] opacity-90">{post.user_name}</span>
+              <span className="font-semibold text-[12px] opacity-90 truncate">{post.user_name}</span>
             </div>
             {bodyPreview}
             {bodyLong && <button onClick={() => setExpanded(e => !e)} className="ml-1 font-bold opacity-80 text-[12px]">{expanded ? 'less' : 'more'}</button>}
