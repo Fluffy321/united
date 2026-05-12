@@ -31,6 +31,51 @@ const RESOURCE_CONFIG = {
   Chabad: { color: '#be123c', emoji: '✡️' },
 };
 
+const SUBJECT_THEMES = [
+  {
+    key: 'jewish_life',
+    label: 'Jewish Life',
+    emoji: '🕍',
+    color: '#1d4ed8',
+    filters: ['Shuls', 'Minyanim', 'Mikvahs', 'Chabad'],
+  },
+  {
+    key: 'food_shops',
+    label: 'Food & Shops',
+    emoji: '🍽️',
+    color: '#f97316',
+    filters: ['Food'],
+  },
+  {
+    key: 'chesed_needs',
+    label: 'Chesed Needs',
+    emoji: '🤝',
+    color: '#16a34a',
+    filters: ['Shabbat Help', 'Lost & Found', 'Errand', 'Quick Favor', 'Other'],
+  },
+  {
+    key: 'rides',
+    label: 'Rides',
+    emoji: '🚗',
+    color: '#0891b2',
+    filters: ['Ride'],
+  },
+  {
+    key: 'learning',
+    label: 'Learning',
+    emoji: '📚',
+    color: '#eab308',
+    filters: ['Tutoring'],
+  },
+  {
+    key: 'all',
+    label: 'Everything',
+    emoji: '✨',
+    color: '#0f172a',
+    filters: ['All'],
+  },
+];
+
 const RESOURCE_PINS = [
   {
     id: 'resource-yilc',
@@ -210,7 +255,14 @@ function BoundsFitter({ pins }) {
   return null;
 }
 
-function MapInner({ center, zoom, requests, resources, userOrigin, onSelectRequest, onSelectResource, mapRef, selectedRequestId, selectedResourceId, activeFilter }) {
+function filterMatches(value, activeFilter, activeFilters) {
+  if (!activeFilter && (!activeFilters || activeFilters.length === 0)) return false;
+  if (activeFilter === 'All' || activeFilters?.includes('All')) return true;
+  if (activeFilter) return value === activeFilter;
+  return activeFilters.includes(value);
+}
+
+function MapInner({ center, zoom, requests, resources, userOrigin, onSelectRequest, onSelectResource, mapRef, selectedRequestId, selectedResourceId, activeFilter, activeFilters }) {
   const map = useMap();
 
   useEffect(() => {
@@ -226,19 +278,19 @@ function MapInner({ center, zoom, requests, resources, userOrigin, onSelectReque
   }));
 
   const filtered = withCoords.filter(r =>
-    activeFilter &&
+    (activeFilter || activeFilters?.length > 0) &&
     r.approxLat && r.approxLng && !r.is_hidden &&
-    (activeFilter === 'All' || r.category === activeFilter) &&
+    filterMatches(r.category, activeFilter, activeFilters) &&
     !RESOURCE_CONFIG[activeFilter]
   );
 
   const filteredResources = resources.filter(resource =>
-    activeFilter && (activeFilter === 'All' || resource.resourceType === activeFilter)
+    (activeFilter || activeFilters?.length > 0) && filterMatches(resource.resourceType, activeFilter, activeFilters)
   );
 
-  const isResourceFilter = !!RESOURCE_CONFIG[activeFilter];
-  const displayPins = activeFilter && !isResourceFilter ? filtered : [];
-  const fittingPins = activeFilter === 'All'
+  const isResourceFilter = activeFilter ? !!RESOURCE_CONFIG[activeFilter] : activeFilters?.some((item) => RESOURCE_CONFIG[item]);
+  const displayPins = (activeFilter || activeFilters?.length > 0) && !isResourceFilter ? filtered : filtered;
+  const fittingPins = activeFilter === 'All' || activeFilters?.includes('All')
     ? [...displayPins, ...filteredResources]
     : isResourceFilter
       ? filteredResources
@@ -303,15 +355,26 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
   const effectiveCenter = mapCenter ? [mapCenter.lat, mapCenter.lng] : [40.6369, -73.7142];
   const effectiveZoom = mapZoom ?? 12;
   const [activeFilter, setActiveFilter] = useState(null);
+  const [activeThemeKey, setActiveThemeKey] = useState(null);
   const [selectedReq, setSelectedReq] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);
   const resources = RESOURCE_PINS;
 
+  const activeTheme = SUBJECT_THEMES.find((theme) => theme.key === activeThemeKey);
+  const activeFilters = activeTheme && activeTheme.key !== 'all' ? activeTheme.filters : null;
+  const effectiveActiveFilter = activeTheme?.key === 'all' ? 'All' : activeFilter;
+  const activeLabel = activeTheme ? activeTheme.label : activeFilter;
+
   const visiblePinCount = activeFilter
     ? requests.filter(r => {
-      const categoryMatch = activeFilter === 'All' || r.category === activeFilter;
+      const categoryMatch = filterMatches(r.category, effectiveActiveFilter, activeFilters);
       return categoryMatch && (r.approxLat || r.lat || r.location_lat) && (r.approxLng || r.lng || r.location_lng) && !r.is_hidden;
-    }).length + resources.filter(resource => activeFilter === 'All' || resource.resourceType === activeFilter).length
+    }).length + resources.filter(resource => filterMatches(resource.resourceType, effectiveActiveFilter, activeFilters)).length
+    : activeTheme
+      ? requests.filter(r => {
+        const categoryMatch = filterMatches(r.category, effectiveActiveFilter, activeFilters);
+        return categoryMatch && (r.approxLat || r.lat || r.location_lat) && (r.approxLng || r.lng || r.location_lng) && !r.is_hidden;
+      }).length + resources.filter(resource => filterMatches(resource.resourceType, effectiveActiveFilter, activeFilters)).length
     : 0;
 
   const handlePinClick = (req) => {
@@ -334,6 +397,38 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
       <div className="absolute top-2.5 left-0 right-0 z-[500]" style={{ paddingLeft: 12, paddingRight: 12 }}>
         <div
           className="scrollbar-hide"
+          style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 7, WebkitOverflowScrolling: 'touch' }}
+        >
+          {SUBJECT_THEMES.map(theme => {
+            const selected = activeThemeKey === theme.key;
+            return (
+              <button
+                key={theme.key}
+                onClick={() => {
+                  const nextTheme = selected ? null : theme.key;
+                  setActiveThemeKey(nextTheme);
+                  setActiveFilter(null);
+                  setSelectedReq(null);
+                  setSelectedResource(null);
+                }}
+                className="flex-shrink-0 text-[12px] font-black transition-all touch-manipulation"
+                style={{
+                  padding: '9px 13px',
+                  borderRadius: 14,
+                  whiteSpace: 'nowrap',
+                  ...(selected
+                    ? { background: theme.color, color: 'white', boxShadow: `0 8px 18px ${theme.color}33` }
+                    : { background: 'rgba(255,255,255,0.96)', color: '#0f172a', border: '1px solid #E2E8F0', boxShadow: '0 1px 6px rgba(0,0,0,0.12)' }
+                  )
+                }}
+              >
+                {theme.emoji} {theme.label}
+              </button>
+            );
+          })}
+        </div>
+        <div
+          className="scrollbar-hide"
           style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, WebkitOverflowScrolling: 'touch' }}
         >
           {QUICK_FILTERS.map(f => {
@@ -343,6 +438,7 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
               key={f}
               onClick={() => {
                 setActiveFilter(activeFilter === f ? null : f);
+                setActiveThemeKey(null);
                 setSelectedReq(null);
                 setSelectedResource(null);
               }}
@@ -364,19 +460,19 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
         </div>
       </div>
 
-      {!activeFilter && (
-        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[500] px-3 py-1.5 rounded-full text-[11px] font-semibold text-slate-600 pointer-events-none"
+      {!activeFilter && !activeTheme && (
+        <div className="absolute top-[92px] left-1/2 -translate-x-1/2 z-[500] px-3 py-1.5 rounded-full text-[11px] font-semibold text-slate-600 pointer-events-none"
           style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid #E2E8F0', boxShadow: '0 1px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' }}
         >
-          Pick a filter to show pins
+          Pick a subject theme to show pins
         </div>
       )}
 
-      {activeFilter && visiblePinCount === 0 && (
-        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[500] px-3 py-1.5 rounded-full text-[11px] font-semibold text-slate-600 pointer-events-none"
+      {(activeFilter || activeTheme) && visiblePinCount === 0 && (
+        <div className="absolute top-[92px] left-1/2 -translate-x-1/2 z-[500] px-3 py-1.5 rounded-full text-[11px] font-semibold text-slate-600 pointer-events-none"
           style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid #E2E8F0', boxShadow: '0 1px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' }}
         >
-          No pins in this filter yet
+          No pins in {activeLabel} yet
         </div>
       )}
 
@@ -408,7 +504,8 @@ const MitzvahMapView = forwardRef(function MitzvahMapView(
             mapRef={mapRef}
             selectedRequestId={selectedReq?.id || selectedRequestId}
             selectedResourceId={selectedResource?.id}
-            activeFilter={activeFilter}
+            activeFilter={effectiveActiveFilter}
+            activeFilters={activeFilters}
           />
       </MapContainer>
 

@@ -1,12 +1,12 @@
-import React, { useRef } from 'react';
-import { MapPin } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapPin, Navigation } from 'lucide-react';
 import PageHelp from '@/components/common/PageHelp';
 import { useQuery } from '@tanstack/react-query';
 import { dataService } from '@/services';
-import MitzvahMapView from '@/components/mitzvah/MitzvahMapView';
+import MitzvahMap from '@/components/mitzvah/MitzvahMap';
 
 export default function MapPage() {
-  const mapRef = useRef(null);
+  const [userLocation, setUserLocation] = useState(null);
 
   const { data: requests = [] } = useQuery({
     queryKey: ['mitzvah-requests-map'],
@@ -18,9 +18,7 @@ export default function MapPage() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       ({ coords: { latitude: lat, longitude: lng } }) => {
-        if (mapRef.current) {
-          mapRef.current.flyTo([lat, lng], 14, { animate: true, duration: 1.2 });
-        }
+        setUserLocation({ lat, lng });
       },
       () => {}
     );
@@ -34,17 +32,20 @@ export default function MapPage() {
           <MapPin className="h-5 w-5 shrink-0 text-blue-600" />
           <h1 className="text-2xl font-black text-slate-950">Map</h1>
           <PageHelp text="Explore Jewish community life around you — shuls, minyanim, chesed needs, and more." />
+          <button
+            onClick={handleUseMyLocation}
+            className="motion-press ml-auto inline-flex h-9 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 text-xs font-black text-blue-700 shadow-sm transition hover:bg-blue-100"
+          >
+            <Navigation className="h-3.5 w-3.5" />
+            Near me
+          </button>
         </div>
 
-        {/* Map fills the viewport height minus header and nav */}
-        <div
-          className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm"
-          style={{ height: 'calc(100dvh - 200px)' }}
-        >
-          <MitzvahMapView
-            ref={mapRef}
+        <div className="shadow-sm">
+          <MitzvahMap
             requests={requests}
-            onUseMyLocation={handleUseMyLocation}
+            userLocation={userLocation}
+            personalized
           />
         </div>
       </div>
