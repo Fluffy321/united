@@ -18,13 +18,19 @@
 let sentry = null;
 let posthog = null;
 
+function optionalImport(packageName) {
+  // Keep optional analytics packages out of Vite's build-time resolver.
+  const importer = new Function('packageName', 'return import(packageName)');
+  return importer(packageName);
+}
+
 // ── Sentry ────────────────────────────────────────────────────────────────────
 
 async function loadSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   if (!dsn) return;
   try {
-    const mod = await import(/* @vite-ignore */ '@sentry/react');
+    const mod = await optionalImport('@sentry/react');
     mod.init({
       dsn,
       environment: import.meta.env.MODE,
@@ -69,7 +75,7 @@ async function loadPostHog() {
   const host = import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com';
   if (!key) return;
   try {
-    const mod = await import(/* @vite-ignore */ 'posthog-js');
+    const mod = await optionalImport('posthog-js');
     const ph = mod.default || mod;
     ph.init(key, {
       api_host: host,

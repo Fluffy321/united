@@ -180,7 +180,6 @@ function PostsTab({ community, prompts }) {
 
   return (
     <div className="space-y-3">
-      {/* Empty state with post idea prompts */}
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-blue-600">
