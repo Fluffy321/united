@@ -159,6 +159,39 @@ export const feedRetentionService = {
 
     return score;
   },
+
+  explainPost(post, context = {}) {
+    const {
+      joinedCommunityIds = new Set(),
+      primaryNetwork,
+      userInterests = [],
+    } = context;
+
+    const text = lower(postText(post));
+    const reasons = [];
+    if (post.community_id && joinedCommunityIds.has(post.community_id)) {
+      reasons.push(`From ${post.community_name || 'a community you joined'}`);
+    }
+
+    const location = lower(post.city || post.location_text || '');
+    if (
+      primaryNetwork?.cityPreset && location.includes(lower(primaryNetwork.cityPreset))
+    ) {
+      reasons.push(`Near ${primaryNetwork.shortLabel || primaryNetwork.cityPreset}`);
+    } else if (
+      primaryNetwork?.neighborhoods?.some((neighborhood) => location.includes(lower(neighborhood)))
+    ) {
+      reasons.push('Near your local network');
+    }
+
+    const matchedInterest = userInterests.find((interest) => interest && text.includes(lower(interest)));
+    if (matchedInterest) reasons.push(`Matches ${matchedInterest}`);
+
+    if ((post.comments_count || 0) >= 10) reasons.push('Active discussion');
+    if ((post.likes_count || 0) >= 20) reasons.push('Trending now');
+
+    return reasons.slice(0, 2);
+  },
 };
 
 export default feedRetentionService;

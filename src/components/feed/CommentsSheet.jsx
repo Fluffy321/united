@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Send, Loader2, MessageCircle, Heart, AlertCircle, RefreshCw } from 'lucide-react';
-import { dataService, postsService } from '@/services';
+import { dataService, notificationsService, postsService } from '@/services';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -142,6 +142,20 @@ export default function CommentsSheet({
           comment_body: body,
           post_author_id: resolvedPostAuthorId,
         });
+      }
+
+      if (replyingTo) {
+        const parent = comments.find((commentItem) => commentItem.id === replyingTo);
+        if (parent?.author_id && parent.author_id !== currentUser.id && parent.author_id !== resolvedPostAuthorId) {
+          notificationsService.notifyCommentReply({
+            recipientId: parent.author_id,
+            actorId: currentUser.id,
+            actorName: currentUser.display_name || currentUser.full_name,
+            postId: resolvedPostId,
+            commentId: comment.id,
+            preview: body.slice(0, 90),
+          }).catch(() => {});
+        }
       }
 
       // Detect @mentions in comment body and notify each mentioned user

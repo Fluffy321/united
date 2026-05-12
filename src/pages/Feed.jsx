@@ -17,7 +17,7 @@ import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
-import { Search, Plus, RefreshCw, ChevronDown } from 'lucide-react';
+import { Activity, ArrowRight, CalendarDays, ChevronDown, HandHeart, MapPinned, MessageCircle, Plus, RefreshCw, Search, Sparkles } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
@@ -433,7 +433,7 @@ export default function Feed() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user: currentUser } = useAuth();
-  const [activeTab, setActiveTab] = useState('trending');
+  const [activeTab, setActiveTab] = useState('for_you');
   const [primaryNetwork, setPrimaryNetwork] = useState(LOCAL_NETWORKS[0]);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('All');
   const [userLikes, setUserLikes] = useState([]);
@@ -763,6 +763,18 @@ export default function Feed() {
     return filtered.length > 0 ? filtered : sorted.slice(0, 40);
   })();
 
+  const dailyBrief = useMemo(() => feedRetentionService.buildBrief({
+    posts: feedPosts,
+    communityGroups,
+    networkLabel: primaryNetwork.shortLabel || primaryNetwork.cityPreset || 'Five Towns',
+  }), [communityGroups, feedPosts, primaryNetwork.cityPreset, primaryNetwork.shortLabel]);
+
+  const feedMomentum = useMemo(() => ({
+    activeThreads: feedPosts.filter((post) => (post.comments_count || 0) >= 8).length,
+    joinedPosts: feedPosts.filter((post) => post.community_id && joinedCommunityIds.has(post.community_id)).length,
+    localEvents: feedPosts.filter((post) => post.type === 'event').length,
+  }), [feedPosts, joinedCommunityIds]);
+
   return (
     <div className="app-page relative">
       {pullDistance > 0 && (
@@ -847,6 +859,32 @@ export default function Feed() {
           }}
         />
 
+        <FiveTownsBrief
+          brief={dailyBrief}
+          momentum={feedMomentum}
+          posts={feedPosts}
+          joinedCommunityIds={joinedCommunityIds}
+          onOpenMap={() => navigate('/Map')}
+          onOpenCommunities={() => navigate('/Communities')}
+          onCreate={(type, subtype, body) => {
+            setPostModalType(type);
+            setPostModalSubtype(subtype);
+            setPostModalInitialBody(body);
+            setShowPostModal(true);
+          }}
+        />
+
+        <QuickActionDock
+          onCreate={(type, subtype, body) => {
+            setPostModalType(type);
+            setPostModalSubtype(subtype);
+            setPostModalInitialBody(body);
+            setShowPostModal(true);
+          }}
+          onOpenEvents={() => setShowEventsSheet(true)}
+          onOpenMap={() => navigate('/Map')}
+        />
+
         {/* One-time network banner for new users */}
         {showNetworkBanner && (
           <div className="graphic-stripes mb-3 flex items-center gap-2 rounded-[22px] bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-4 py-3 text-white text-[12px] font-medium shadow-[0_14px_30px_rgba(37,99,235,0.18)]">
@@ -924,6 +962,11 @@ export default function Feed() {
               const showCommunityDivider = isFromJoinedCommunity && !shownCommunityDivider && joinedCommunityIds.size > 0;
               if (showCommunityDivider) shownCommunityDivider = true;
               const sectionLabel = SECTION_LABELS[index];
+              const personalizationReasons = feedRetentionService.explainPost(post, {
+                joinedCommunityIds,
+                primaryNetwork,
+                userInterests: currentUser?.interests || [],
+              });
               return (
                 <React.Fragment key={post.id}>
                   {sectionLabel && (
@@ -938,6 +981,15 @@ export default function Feed() {
                     </div>
                   )}
                   <div className="app-card overflow-hidden">
+                    {personalizationReasons.length > 0 && (
+                      <div className="flex flex-wrap gap-2 border-b border-slate-100 bg-blue-50/60 px-3 py-2">
+                        {personalizationReasons.map((reason) => (
+                          <span key={`${post.id}-${reason}`} className="rounded-full border border-blue-100 bg-white px-2.5 py-1 text-[11px] font-black text-blue-700">
+                            {reason}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <UnifiedPostCard
                      post={post}
                      currentUser={currentUser}
@@ -1091,6 +1143,228 @@ function useShabbosCountdown() {
   }, []);
 
   return state;
+}
+
+function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, onOpenMap, onOpenCommunities, onCreate }) {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const briefScrollerRef = useRef(null);
+  if (!brief) return null;
+
+  const newsItems = posts
+    .filter((post) => post.type === 'news' || /update|brief|eruv|traffic|school|notice|local/i.test(`${post.title || ''} ${post.body || ''}`))
+    .slice(0, 3);
+  const trendingPosts = [...posts]
+    .sort((a, b) => ((b.comments_count || 0) * 2 + (b.likes_count || 0)) - ((a.comments_count || 0) * 2 + (a.likes_count || 0)))
+    .slice(0, 3);
+  const mitzvahOffers = posts
+    .filter((post) => post.type === 'help' || /help|chesed|meal|ride|offer|volunteer/i.test(`${post.title || ''} ${post.body || ''}`))
+    .slice(0, 3);
+  const communityEvents = posts
+    .filter((post) => post.type === 'event' && (!joinedCommunityIds?.size || joinedCommunityIds.has(post.community_id)))
+    .slice(0, 3);
+
+  const slides = [
+    {
+      key: 'news',
+      eyebrow: 'Five Towns News',
+      title: brief.title,
+      subtitle: 'The updates worth noticing before the feed gets noisy.',
+      items: newsItems,
+      tone: 'from-slate-950 via-blue-900 to-cyan-800',
+      empty: 'No major local news posts yet today.',
+      actionLabel: 'Open map',
+      onAction: onOpenMap,
+    },
+    {
+      key: 'trending',
+      eyebrow: 'Trending Posts',
+      title: 'What people are talking about',
+      subtitle: `${momentum.activeThreads} active conversations are pulling the community together.`,
+      items: trendingPosts,
+      tone: 'from-indigo-950 via-blue-800 to-violet-700',
+      empty: 'No trending posts yet. The next one could start with you.',
+      actionLabel: 'Browse communities',
+      onAction: onOpenCommunities,
+    },
+    {
+      key: 'mitzvah',
+      eyebrow: 'Mitzvahs Near You',
+      title: 'Help moving through the network',
+      subtitle: 'Requests, offers, and local chesed that deserve a faster response.',
+      items: mitzvahOffers,
+      tone: 'from-emerald-950 via-emerald-800 to-teal-700',
+      empty: 'No open chesed threads surfaced yet.',
+      actionLabel: 'Post help',
+      onAction: () => onCreate('help', 'chesed', 'I can help with / I need help with...'),
+    },
+    {
+      key: 'events',
+      eyebrow: 'Events In Your Communities',
+      title: 'What is coming up',
+      subtitle: 'Community events that belong on your radar.',
+      items: communityEvents,
+      tone: 'from-rose-950 via-fuchsia-800 to-orange-700',
+      empty: 'No community events posted yet.',
+      actionLabel: 'Share event',
+      onAction: () => onCreate('event', 'local_event', 'Event details: '),
+    },
+  ];
+  const slide = slides[activeSlide];
+
+  return (
+    <section className="surface-panel mb-3 overflow-hidden rounded-[28px]">
+      <div className={`graphic-stripes bg-gradient-to-br ${slide.tone} p-4 text-white sm:p-5`}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/80">
+            <Sparkles className="h-3.5 w-3.5" />
+            Five Towns Daily Brief
+          </div>
+          <div className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[11px] font-black text-white/90">
+            {activeSlide + 1}/{slides.length}
+          </div>
+        </div>
+
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {slides.map((item, index) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => {
+                setActiveSlide(index);
+                const scroller = briefScrollerRef.current;
+                if (scroller) {
+                  scroller.scrollTo({
+                    left: scroller.clientWidth * index,
+                    behavior: 'smooth',
+                  });
+                }
+              }}
+              className={`motion-press shrink-0 rounded-full px-3 py-1.5 text-[11px] font-black transition ${
+                index === activeSlide ? 'bg-white text-slate-950' : 'border border-white/15 bg-white/10 text-white/90'
+              }`}
+            >
+              {item.eyebrow}
+            </button>
+          ))}
+        </div>
+
+        <div
+          ref={briefScrollerRef}
+          className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1"
+          onScroll={(event) => {
+            const node = event.currentTarget;
+            const slideWidth = Math.max(node.clientWidth, 1);
+            const rawIndex = node.scrollLeft / slideWidth;
+            const nextIndex = Math.round(rawIndex);
+            const settledNearSlide = Math.abs(rawIndex - nextIndex) <= 0.18;
+            if (!settledNearSlide) return;
+            if (Number.isFinite(nextIndex) && nextIndex !== activeSlide && nextIndex >= 0 && nextIndex < slides.length) {
+              setActiveSlide(nextIndex);
+            }
+          }}
+        >
+          {slides.map((item, index) => (
+            <div key={`slide-${item.key}`} className="min-w-full snap-start">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-wide text-white/75">{item.eyebrow}</p>
+                <h2 className="mt-1 text-[21px] font-black leading-tight">{item.title}</h2>
+                <p className="mt-1 max-w-2xl text-sm font-semibold text-white/85">{item.subtitle}</p>
+
+                <div className="mt-4 grid gap-2 lg:grid-cols-[1fr_auto]">
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {item.items.length > 0 ? item.items.map((post) => (
+                      <div key={`${item.key}-${post.id}`} className="rounded-2xl border border-white/15 bg-white/12 px-3 py-3 backdrop-blur-sm">
+                        <p className="line-clamp-2 text-[13px] font-black leading-5 text-white">{post.title || post.body || 'Community update'}</p>
+                        <p className="mt-2 text-[11px] font-semibold text-white/75">
+                          {(post.community_name || post.location_text || 'Five Towns')}
+                        </p>
+                      </div>
+                    )) : (
+                      <div className="rounded-2xl border border-white/15 bg-white/12 px-3 py-3 text-[13px] font-bold text-white/90 sm:col-span-3">
+                        {item.empty}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={item.onAction}
+                    className="motion-press inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-4 text-[12px] font-black text-slate-950 lg:self-end"
+                  >
+                    {item.actionLabel}
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <MomentumTile inverse icon={MessageCircle} label="Hot threads" value={momentum.activeThreads} />
+          <MomentumTile inverse icon={Activity} label="For you" value={momentum.joinedPosts} />
+          <MomentumTile inverse icon={CalendarDays} label="Events" value={momentum.localEvents} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MomentumTile({ icon: Icon, label, value, inverse = false }) {
+  return (
+    <div className={`rounded-2xl border p-2.5 text-center ${inverse ? 'border-white/15 bg-white/10' : 'border-slate-200 bg-slate-50'}`}>
+      <Icon className={`mx-auto h-4 w-4 ${inverse ? 'text-white' : 'text-blue-600'}`} />
+      <p className={`mt-1 text-[16px] font-black leading-none ${inverse ? 'text-white' : 'text-slate-950'}`}>{value}</p>
+      <p className={`mt-1 text-[10px] font-black uppercase tracking-wide ${inverse ? 'text-white/75' : 'text-slate-400'}`}>{label}</p>
+    </div>
+  );
+}
+
+function QuickActionDock({ onCreate, onOpenEvents, onOpenMap }) {
+  const actions = [
+    {
+      label: 'Ask local question',
+      detail: 'Get recommendations or practical answers',
+      onClick: () => onCreate('feed', 'question', 'Question for the community: '),
+    },
+    {
+      label: 'Offer help',
+      detail: 'Meals, rides, errands, or small acts of chesed',
+      onClick: () => onCreate('help', 'chesed', 'I can help with...'),
+    },
+    {
+      label: 'Share event',
+      detail: 'Shiur, meetup, school, simcha, or local gathering',
+      onClick: () => onCreate('event', 'local_event', 'Event details: '),
+    },
+  ];
+
+  return (
+    <section className="surface-panel-soft mb-3 rounded-[24px] p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-black text-slate-950">Start something useful</p>
+          <p className="mt-1 text-[12px] font-semibold text-slate-500">Fast paths for the posts that keep a community alive.</p>
+        </div>
+        <div className="hidden gap-2 sm:flex">
+          <button onClick={onOpenEvents} className="motion-press rounded-full border border-slate-200 bg-white px-3 py-2 text-[11px] font-black text-slate-600">Events</button>
+          <button onClick={onOpenMap} className="motion-press rounded-full border border-slate-200 bg-white px-3 py-2 text-[11px] font-black text-slate-600">Map</button>
+        </div>
+      </div>
+      <div className="mobile-scroll-x mt-3 flex gap-2 pb-1">
+        {actions.map((action) => (
+          <button
+            key={action.label}
+            type="button"
+            onClick={action.onClick}
+            className="motion-press min-w-[220px] shrink-0 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
+          >
+            <p className="text-[13px] font-black text-slate-950">{action.label}</p>
+            <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">{action.detail}</p>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function DailyRetentionPrompt({ prompt, onPost }) {

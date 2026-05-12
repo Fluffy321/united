@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
   Award,
+  Car,
   CheckCircle2,
   Clock,
   Eye,
@@ -22,6 +23,7 @@ import {
 import { mitzvahService, notificationsService } from '@/services';
 import { toast } from 'sonner';
 import PageHelp from '@/components/common/PageHelp';
+import CarpoolBoard from '@/components/mitzvah/CarpoolBoard';
 
 const CATEGORIES = [
   'Transportation',
@@ -106,6 +108,18 @@ const normalizeOffer = (row) => {
     volunteerName: row.volunteer_name || row.user_name || 'Volunteer',
   };
 };
+
+const extractRideDetail = (description = '', label) => {
+  const match = String(description).match(new RegExp(`${label}:\\s*([^|]+)`, 'i'));
+  return match?.[1]?.trim() || '';
+};
+
+const normalizeCarpoolRide = (request) => ({
+  ...request,
+  locationLabel: request.location_label || request.locationLabel || request.neighborhood || 'Five Towns',
+  pickup_window: request.pickup_window || extractRideDetail(request.description, 'Pickup') || 'Coordinate time',
+  direction: request.ride_direction || extractRideDetail(request.description, 'Type').toLowerCase() || 'needed',
+});
 
 const STATUS_CONFIGS = {
   [STATUSES.OPEN]:      { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', Icon: HandHeart,    label: 'Open' },
@@ -446,6 +460,104 @@ function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
   );
 }
 
+function CreateCarpoolModal({ mode, onClose, onCreate, isLoading }) {
+  const [form, setForm] = React.useState({
+    from: 'Cedarhurst',
+    to: 'Woodmere',
+    pickup: '8:00 AM',
+    seats: mode === 'offer' ? 2 : 1,
+    notes: '',
+  });
+
+  React.useEffect(() => {
+    setForm({
+      from: 'Cedarhurst',
+      to: 'Woodmere',
+      pickup: '8:00 AM',
+      seats: mode === 'offer' ? 2 : 1,
+      notes: '',
+    });
+  }, [mode]);
+
+  if (!mode || typeof document === 'undefined') return null;
+
+  const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+  const isOffer = mode === 'offer';
+  const title = isOffer ? 'Offer carpool seats' : 'Request a ride';
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/45 p-3 motion-soft-in sm:items-center"
+      onClick={onClose}
+    >
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          onCreate(form, mode);
+        }}
+        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl motion-page-enter"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-slate-100 p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-600 text-white">
+              <Car className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[12px] font-black uppercase text-sky-700">Carpool</p>
+              <h2 className="text-xl font-black text-slate-950">{title}</h2>
+            </div>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="grid gap-3 p-4 sm:grid-cols-2">
+          {[
+            ['from', 'Pickup from'],
+            ['to', 'Destination'],
+            ['pickup', 'Pickup time'],
+            ['seats', isOffer ? 'Seats available' : 'Seats needed'],
+          ].map(([key, label]) => (
+            <label key={key} className="block">
+              <span className="mb-1 block text-[13px] font-bold text-slate-700">{label}</span>
+              <input
+                required
+                type={key === 'seats' ? 'number' : 'text'}
+                min={key === 'seats' ? '1' : undefined}
+                value={form[key]}
+                onChange={(event) => update(key, key === 'seats' ? Number(event.target.value || 1) : event.target.value)}
+                className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+              />
+            </label>
+          ))}
+
+          <label className="block sm:col-span-2">
+            <span className="mb-1 block text-[13px] font-bold text-slate-700">Notes</span>
+            <textarea
+              value={form.notes}
+              onChange={(event) => update('notes', event.target.value)}
+              className="min-h-24 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+              placeholder="Car seats, luggage, flexibility, exact timing, or anything the rider should know"
+            />
+          </label>
+        </div>
+
+        <div className="flex gap-2 border-t border-slate-100 p-4">
+          <button type="button" onClick={onClose} className="h-11 flex-1 rounded-xl border border-slate-200 text-[13px] font-black text-slate-700 hover:bg-slate-50">
+            Cancel
+          </button>
+          <button type="submit" disabled={isLoading} className="app-button-primary h-11 flex-1 text-[13px]">
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (isOffer ? 'Post Offer' : 'Post Ride Need')}
+          </button>
+        </div>
+      </form>
+    </div>,
+    document.body
+  );
+}
+
 function EmptyState({ title, text }) {
   return (
     <div className="app-card flex flex-col items-center gap-3 p-8 text-center">
@@ -537,7 +649,7 @@ export default function MitzvahCircle() {
   const { user: currentUser, isLoadingAuth } = useAuth();
   const queryClient = useQueryClient();
 
-  const VALID_TABS = ['open', 'offers', 'posted', 'completed'];
+  const VALID_TABS = ['open', 'carpool', 'offers', 'posted', 'completed'];
   const [activeTab, setActiveTab] = React.useState(() => {
     const tab = searchParams.get('tab');
     return VALID_TABS.includes(tab) ? tab : 'open';
@@ -545,6 +657,7 @@ export default function MitzvahCircle() {
   const [query, setQuery] = React.useState('');
   const [categoryFilter, setCategoryFilter] = React.useState('All');
   const [showCreate, setShowCreate] = React.useState(false);
+  const [carpoolCreateMode, setCarpoolCreateMode] = React.useState(null);
   const [quickViewRequest, setQuickViewRequest] = React.useState(null);
 
   React.useEffect(() => {
@@ -598,7 +711,7 @@ export default function MitzvahCircle() {
     onSuccess: invalidate,
   });
 
-  const { mutateAsync: createOfferMutation } = useMutation({
+  const { mutateAsync: createOfferMutation, isPending: isOffering } = useMutation({
     mutationFn: (payload) => mitzvahService.createOffer(payload),
     onSuccess: invalidate,
   });
@@ -630,6 +743,40 @@ export default function MitzvahCircle() {
       toast.success('Request posted.');
     } catch (err) {
       toast.error(err.message || 'Could not post request.');
+    }
+  };
+
+  const handleCreateCarpoolRide = async (formData, mode) => {
+    const route = `${formData.from} to ${formData.to}`;
+    const typeLabel = mode === 'offer' ? 'offering' : 'needed';
+    const title = mode === 'offer' ? `Seats available: ${route}` : `Ride needed: ${route}`;
+    const note = formData.notes?.trim();
+    const description = [
+      `Type: ${typeLabel}`,
+      `Pickup: ${formData.pickup}`,
+      `Seats: ${formData.seats}`,
+      note ? `Notes: ${note}` : null,
+    ].filter(Boolean).join(' | ');
+
+    try {
+      await createRequestMutation({
+        title,
+        description,
+        category: 'Transportation',
+        neighborhood: route,
+        locationLabel: route,
+        estimated_hours: 1,
+        urgency: 'medium',
+        status: 'open',
+        request_kind: 'carpool',
+        created_by_user_id: currentUser.id,
+        created_by_name: currentUser.display_name || currentUser.full_name,
+      });
+      setCarpoolCreateMode(null);
+      changeTab('carpool');
+      toast.success(mode === 'offer' ? 'Carpool offer posted.' : 'Ride request posted.');
+    } catch (err) {
+      toast.error(err.message || 'Could not post carpool.');
     }
   };
 
@@ -753,6 +900,18 @@ export default function MitzvahCircle() {
     }))
     .filter((item) => item.offer);
   const myPosted = filteredRequests.filter((r) => r.poster_id === currentUser?.id);
+  const carpoolRequests = requests
+    .filter((r) =>
+      r.request_kind === 'carpool'
+      || r.category === 'Transportation'
+      || /ride|carpool|pickup|seat/i.test(`${r.title || ''} ${r.description || ''}`)
+    )
+    .map(normalizeCarpoolRide);
+  const signupsByRequest = offers.reduce((acc, offer) => {
+    if (!acc[offer.requestId]) acc[offer.requestId] = [];
+    acc[offer.requestId].push(offer);
+    return acc;
+  }, {});
 
   const totals = React.useMemo(() => ({
     openCount: requests.filter((r) => r.status === STATUSES.OPEN).length,
@@ -764,6 +923,7 @@ export default function MitzvahCircle() {
 
   const tabs = [
     { id: 'open', label: 'Help Requests' },
+    { id: 'carpool', label: 'Carpool' },
     { id: 'offers', label: 'My Offers' },
     { id: 'posted', label: 'My Posted' },
     { id: 'completed', label: 'Completed' },
@@ -885,6 +1045,17 @@ export default function MitzvahCircle() {
             )
           )}
 
+          {activeTab === 'carpool' && (
+            <CarpoolBoard
+              rideRequests={carpoolRequests}
+              signupsByRequest={signupsByRequest}
+              onCreateRide={(mode) => setCarpoolCreateMode(mode)}
+              onSelectRide={setQuickViewRequest}
+              onClaimRide={(_, ride) => handleOffer(ride)}
+              isClaiming={isOffering}
+            />
+          )}
+
           {activeTab === 'offers' && (
             myOfferRequests.length ? (
               myOfferRequests.map(({ request, offer }) => (
@@ -960,6 +1131,13 @@ export default function MitzvahCircle() {
         open={showCreate}
         onClose={() => setShowCreate(false)}
         onCreate={handleCreateRequest}
+        isLoading={isCreating}
+      />
+
+      <CreateCarpoolModal
+        mode={carpoolCreateMode}
+        onClose={() => setCarpoolCreateMode(null)}
+        onCreate={handleCreateCarpoolRide}
         isLoading={isCreating}
       />
 

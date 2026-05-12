@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, HeartHandshake, UsersRound } from 'lucide-react';
+import { FileText, HeartHandshake, UsersRound, UserRound } from 'lucide-react';
 
 const TIERS = [
   { name: 'Bronze', threshold: 5 },
@@ -20,6 +20,7 @@ function getNextTier(points) {
 }
 
 export default function ModernStatsRow({
+  friends = 0,
   following = 0,
   posts = 0,
   impact = 0,
@@ -32,7 +33,15 @@ export default function ModernStatsRow({
   return (
     <div className="px-3 py-2">
       <div className="overflow-hidden rounded-[20px] bg-slate-950 shadow-lg shadow-slate-900/25">
-        <div className="grid grid-cols-3 divide-x divide-white/10">
+        <div className="grid grid-cols-4 divide-x divide-white/10">
+
+          <div className="flex flex-col items-center px-2 py-4">
+            <div className="mb-2 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/25">
+              <UserRound className="h-3 w-3 text-emerald-300" />
+            </div>
+            <p className="text-[22px] font-black leading-none text-white">{friends}</p>
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-white/35">Friends</p>
+          </div>
 
           {/* ── Communities ── */}
           <button

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, MessageCircle, Loader2, ArrowLeft, Heart, Users, HandHeart, Calendar, FileText } from 'lucide-react';
-import { dataService, batchFetchByIds, findOrCreateDirectConversation } from '@/services';
+import { MapPin, MessageCircle, Loader2, ArrowLeft, Heart, Users, HandHeart, Calendar, FileText, UserRoundPlus, UserRoundCheck } from 'lucide-react';
+import { dataService, batchFetchByIds, findOrCreateDirectConversation, friendsService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
@@ -130,6 +130,8 @@ export default function PublicProfile() {
   const [mitzvahCount, setMitzvahCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [messagingLoading, setMessagingLoading] = useState(false);
+  const [friendLoading, setFriendLoading] = useState(false);
+  const [isFriend, setIsFriend] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -158,6 +160,11 @@ export default function PublicProfile() {
     fetchAll();
   }, [userId]);
 
+  useEffect(() => {
+    if (!currentUser?.id || !userId || currentUser.id === userId) return;
+    friendsService.isFriend(currentUser.id, userId).then(setIsFriend).catch(() => setIsFriend(false));
+  }, [currentUser?.id, userId]);
+
   const handleMessage = async () => {
     if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setMessagingLoading(true);
@@ -172,6 +179,22 @@ export default function PublicProfile() {
       // silently handle
     } finally {
       setMessagingLoading(false);
+    }
+  };
+
+  const handleFriendToggle = async () => {
+    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
+    setFriendLoading(true);
+    try {
+      if (isFriend) {
+        await friendsService.removeFriend(currentUser.id, profileUser.id);
+        setIsFriend(false);
+      } else {
+        await friendsService.addFriend(currentUser, profileUser);
+        setIsFriend(true);
+      }
+    } finally {
+      setFriendLoading(false);
     }
   };
 
@@ -230,16 +253,32 @@ export default function PublicProfile() {
                 />
               </div>
               {!isMe && currentUser && (
-                <button
-                  onClick={handleMessage}
-                  disabled={messagingLoading}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-600 text-white text-[13px] font-bold hover:bg-blue-700 transition-colors disabled:opacity-60 active:scale-95"
-                >
-                  {messagingLoading
-                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    : <MessageCircle className="w-3.5 h-3.5" />}
-                  Message
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleFriendToggle}
+                    disabled={friendLoading}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold transition-colors disabled:opacity-60 active:scale-95 ${
+                      isFriend ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-950 text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    {friendLoading
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      : isFriend
+                        ? <UserRoundCheck className="w-3.5 h-3.5" />
+                        : <UserRoundPlus className="w-3.5 h-3.5" />}
+                    {isFriend ? 'Friends' : 'Add Friend'}
+                  </button>
+                  <button
+                    onClick={handleMessage}
+                    disabled={messagingLoading}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-600 text-white text-[13px] font-bold hover:bg-blue-700 transition-colors disabled:opacity-60 active:scale-95"
+                  >
+                    {messagingLoading
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      : <MessageCircle className="w-3.5 h-3.5" />}
+                    Message
+                  </button>
+                </div>
               )}
               {!isMe && !currentUser && (
                 <button

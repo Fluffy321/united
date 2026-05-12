@@ -4,6 +4,7 @@ export { communitiesService } from './communitiesService';
 export { mitzvahService } from './mitzvahService';
 export { messagesService, findDirectConversation, createDirectConversation, findOrCreateDirectConversation } from './messagesService';
 export { notificationsService } from './notificationsService';
+export { friendsService } from './friendsService';
 export { paymentsService } from './paymentsService';
 export { storageService } from './storageService';
 export { feedRetentionService } from './feedRetentionService';

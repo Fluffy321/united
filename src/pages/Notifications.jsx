@@ -23,6 +23,7 @@ const TYPE_CONFIG = {
   event: { icon: Calendar, tone: 'bg-cyan-50 text-cyan-600', label: 'Event reminder' },
   new_message: { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600', label: 'New message' },
   mention: { icon: AtSign, tone: 'bg-violet-50 text-violet-600', label: 'Mentioned you' },
+  friend_added: { icon: Users, tone: 'bg-emerald-50 text-emerald-600', label: 'New friend' },
   default: { icon: Bell, tone: 'bg-slate-50 text-slate-500', label: 'Notification' },
 };
 
@@ -34,6 +35,7 @@ const FILTER_TABS = [
   { id: 'comment', label: '💭 Comments' },
   { id: 'mention', label: '@ Mentions' },
   { id: 'community_activity', label: '📣 Community' },
+  { id: 'friend_added', label: '🤝 Friends' },
 ];
 
 const FILTER_TYPES = {

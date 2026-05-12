@@ -28,12 +28,15 @@ export default function CommunitiesSection({ userCommunities }) {
 
   return (
     <div className="max-w-2xl mx-auto px-4 pt-4">
-      <div className="bg-white rounded-2xl border border-slate-100 p-4">
+      <div className="surface-panel-soft rounded-[24px] p-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-slate-900">My Communities</h2>
+          <div>
+            <h2 className="text-sm font-black text-slate-900">Active in...</h2>
+            <p className="mt-1 text-[12px] font-semibold text-slate-500">{communities.length} communities shaping this profile.</p>
+          </div>
           <button
             onClick={() => navigate('/Communities')}
-            className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+            className="motion-press rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700 transition-colors"
           >
             See All
           </button>

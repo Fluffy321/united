@@ -30,6 +30,9 @@ const PRIMARY_FILTERS = [
   { key: 'mitzvot', label: 'Mitzvot', types: ['help_needed', 'mitzvah_available', 'lost_found'] },
 ];
 
+const CLUSTER_BUCKET_SCALE = 1000;
+const CLUSTER_BASE_RADIUS = 0.00042;
+
 const STATIC_POINTS = [
   {
     id: 'shul-yilc',
@@ -801,6 +804,7 @@ function MapController({ center }) {
 export default function MitzvahMap({ requests, userLocation, onSelectRequest, communityPoints = [], personalized = true, mapHeight }) {
   const [mapCenter, setMapCenter] = useState(null);
   const [activeTypes, setActiveTypes] = useState(() => new Set());
+  const [selectedPoint, setSelectedPoint] = useState(null);
 
   const requestPoints = useMemo(() => {
     return requests.map((request) => ({
@@ -821,6 +825,48 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
   }, [communityPoints]);
   const allPoints = useMemo(() => [...requestPoints, ...personalizedPoints, ...STATIC_POINTS], [personalizedPoints, requestPoints]);
   const visiblePoints = useMemo(() => allPoints.filter((point) => activeTypes.has(point.type)), [activeTypes, allPoints]);
+  const spreadVisiblePoints = useMemo(() => {
+    const buckets = new Map();
+
+    visiblePoints.forEach((point) => {
+      if (!point.location_lat || !point.location_lng) return;
+      const bucketKey = [
+        Math.round(point.location_lat * CLUSTER_BUCKET_SCALE),
+        Math.round(point.location_lng * CLUSTER_BUCKET_SCALE),
+      ].join(':');
+      const bucket = buckets.get(bucketKey) || [];
+      bucket.push(point);
+      buckets.set(bucketKey, bucket);
+    });
+
+    return visiblePoints.map((point) => {
+      if (!point.location_lat || !point.location_lng) return point;
+
+      const bucketKey = [
+        Math.round(point.location_lat * CLUSTER_BUCKET_SCALE),
+        Math.round(point.location_lng * CLUSTER_BUCKET_SCALE),
+      ].join(':');
+      const bucket = buckets.get(bucketKey) || [];
+      if (bucket.length <= 1) {
+        return {
+          ...point,
+          display_lat: point.location_lat,
+          display_lng: point.location_lng,
+        };
+      }
+
+      const index = bucket.findIndex((candidate) => candidate.id === point.id);
+      const angle = (Math.PI * 2 * index) / bucket.length;
+      const ring = Math.floor(index / 8);
+      const radius = CLUSTER_BASE_RADIUS + ring * 0.00018;
+
+      return {
+        ...point,
+        display_lat: point.location_lat + Math.sin(angle) * radius,
+        display_lng: point.location_lng + Math.cos(angle) * radius,
+      };
+    });
+  }, [visiblePoints]);
   const hasActiveFilters = activeTypes.size > 0;
   const activePrimaryFilter = PRIMARY_FILTERS.find((filter) => (
     filter.types.length === activeTypes.size && filter.types.every((type) => activeTypes.has(type))
@@ -836,6 +882,12 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
     }
   }, [userLocation, allPoints]);
 
+  useEffect(() => {
+    if (!selectedPoint) return;
+    const pointStillVisible = visiblePoints.some((point) => point.id === selectedPoint.id);
+    if (!pointStillVisible) setSelectedPoint(null);
+  }, [selectedPoint, visiblePoints]);
+
   const toggleType = (type) => {
     setActiveTypes((current) => {
       const next = new Set(current);
@@ -848,9 +900,11 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
   const applyPrimaryFilter = (filter) => {
     if (activePrimaryFilter === filter.key) {
       setActiveTypes(new Set());
+      setSelectedPoint(null);
       return;
     }
     setActiveTypes(new Set(filter.types));
+    setSelectedPoint(null);
   };
 
   const createMarkerIcon = (type) => {
@@ -985,17 +1039,20 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
             />
           )}
 
-          {visiblePoints.map(point => {
+          {spreadVisiblePoints.map(point => {
             if (!point.location_lat || !point.location_lng) return null;
             const config = PIN_TYPES[point.type] || PIN_TYPES.other;
             
             return (
               <Marker
                 key={point.id}
-                position={[point.location_lat, point.location_lng]}
+                position={[point.display_lat || point.location_lat, point.display_lng || point.location_lng]}
                 icon={createMarkerIcon(point.type)}
                 eventHandlers={{
-                  click: () => point.isRequest && onSelectRequest?.(point)
+                  click: () => {
+                    setSelectedPoint(point);
+                    if (point.isRequest) onSelectRequest?.(point);
+                  }
                 }}
               >
                 <Popup>
@@ -1006,6 +1063,11 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
                     <div className="mb-1 font-bold text-slate-950">{point.title}</div>
                     <div className="text-xs leading-5 text-slate-600">{point.description}</div>
                     <div className="mt-1 text-[11px] font-bold text-slate-400">{point.location_text}</div>
+                    {point.posterName && (
+                      <div className="mt-1 text-[11px] font-black text-slate-500">
+                        Posted by {point.posterName}
+                      </div>
+                    )}
                     {point.verification && (
                       <div className="mt-2 rounded-lg bg-emerald-50 px-2 py-1 text-[11px] font-black text-emerald-700">
                         {point.verification}
@@ -1032,7 +1094,116 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
             );
           })}
         </MapContainer>
+        {selectedPoint && (
+          <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[550]">
+            <div className="pointer-events-auto rounded-2xl border border-slate-200 bg-white/96 p-3 shadow-[0_18px_40px_rgba(15,23,42,0.18)] backdrop-blur">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div
+                    className="mb-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-black text-white"
+                    style={{ backgroundColor: (PIN_TYPES[selectedPoint.type] || PIN_TYPES.other).color }}
+                  >
+                    {(PIN_TYPES[selectedPoint.type] || PIN_TYPES.other).label}
+                  </div>
+                  <p className="truncate text-[14px] font-black text-slate-950">{selectedPoint.title}</p>
+                  <p className="mt-1 line-clamp-3 text-[12px] font-semibold leading-5 text-slate-600">
+                    {selectedPoint.description || 'Tap the marker to view details for this map item.'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPoint(null)}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-[16px] font-black text-slate-500 transition hover:bg-slate-100"
+                  aria-label="Close map summary"
+                >
+                  x
+                </button>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-black">
+                {selectedPoint.location_text && (
+                  <span className="rounded-full bg-slate-50 px-2 py-1 text-slate-600 ring-1 ring-slate-200">
+                    {selectedPoint.location_text}
+                  </span>
+                )}
+                {selectedPoint.verification && (
+                  <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700 ring-1 ring-emerald-100">
+                    {selectedPoint.verification}
+                  </span>
+                )}
+                {selectedPoint.communityName && (
+                  <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700 ring-1 ring-blue-100">
+                    {selectedPoint.communityName}
+                  </span>
+                )}
+                {selectedPoint.posterName && (
+                  <span className="rounded-full bg-white px-2 py-1 text-slate-600 ring-1 ring-slate-200">
+                    {selectedPoint.posterName}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+      {hasActiveFilters && visiblePoints.length > 0 && (
+        <div className="border-t border-slate-200 bg-white px-3 py-3">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[12px] font-black uppercase tracking-wide text-slate-500">Visible pins</p>
+              <p className="text-[12px] font-semibold text-slate-600">
+                Tap any item here to preview it, even when map pins overlap.
+              </p>
+            </div>
+            <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-black text-slate-600">
+              {visiblePoints.length}
+            </span>
+          </div>
+
+          <div className="mobile-scroll-x flex gap-2 pb-1">
+            {visiblePoints.map((point) => {
+              const config = PIN_TYPES[point.type] || PIN_TYPES.other;
+              const active = selectedPoint?.id === point.id;
+              return (
+                <button
+                  key={`preview-${point.id}`}
+                  type="button"
+                  onClick={() => {
+                    setSelectedPoint(point);
+                    if (point.isRequest) onSelectRequest?.(point);
+                  }}
+                  className={`min-w-[220px] shrink-0 rounded-2xl border p-3 text-left transition ${
+                    active
+                      ? 'border-blue-300 bg-blue-50 shadow-sm'
+                      : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span
+                      className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-black text-white"
+                      style={{ backgroundColor: config.color }}
+                    >
+                      {config.label}
+                    </span>
+                    {point.verification && (
+                      <span className="truncate text-[10px] font-black text-emerald-700">
+                        Verified
+                      </span>
+                    )}
+                  </div>
+                  <p className="truncate text-[13px] font-black text-slate-950">{point.title}</p>
+                  <p className="mt-1 line-clamp-2 text-[11px] font-semibold leading-4 text-slate-600">
+                    {point.description || 'Tap to preview this map item.'}
+                  </p>
+                  {point.location_text && (
+                    <p className="mt-2 truncate text-[11px] font-black text-slate-400">{point.location_text}</p>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
