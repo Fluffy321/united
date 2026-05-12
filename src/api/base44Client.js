@@ -27,6 +27,13 @@ const SUPABASE_ENTITY_TABLES = {
   MitzvahAction: 'mitzvah_actions',
   MitzvahPoints: 'mitzvah_points',
   Block: 'user_blocks',
+  // Community feature backbone — migration 020_community_feature_backbone.sql
+  CommunityEvent: 'community_events',
+  CommunityEventRSVP: 'community_event_rsvps',
+  CommunityResource: 'community_resources',
+  CommunityListing: 'community_listings',
+  CommunityGroupChat: 'community_group_chats',
+  CommunityPost: 'posts',
   // Feed retention — migration 007_feed_retention.sql
   FeedUserPreference: 'feed_user_preferences',
   FeedEngagementEvent: 'feed_engagement_events',
@@ -398,6 +405,15 @@ const toAppRow = (row = {}) => ({
   approxLat: firstPresent(row.approxLat, row.approx_lat),
   approxLng: firstPresent(row.approxLng, row.approx_lng),
   best_streak: row.best_streak,
+  link_url: row.link_url || row.url,
+  url: row.url || row.link_url,
+  uploaded_by_id: row.uploaded_by_id || row.created_by,
+  created_by: row.created_by || row.uploaded_by_id,
+  message: row.message || row.body,
+  body: row.body || row.message || row.content,
+  content: row.content || row.body || row.message,
+  post_type: row.post_type || row.type || row.post_kind,
+  post_kind: row.post_kind || row.post_type || row.type,
 });
 
 const toDbPatch = (data = {}, entityName) => {
@@ -447,6 +463,43 @@ const toDbPatch = (data = {}, entityName) => {
       patch.reply_to_comment_id = patch.parent_comment_id;
     }
     if (!patch.thread_type) patch.thread_type = 'feed_reply';
+  }
+
+  if (entityName === 'UnifiedPost' || entityName === 'Post' || entityName === 'CommunityPost') {
+    if (patch.content && !patch.body) patch.body = patch.content;
+    if (patch.body && !patch.content) patch.content = patch.body;
+    if (patch.type && !patch.post_type) patch.post_type = patch.type;
+    if (patch.post_type && !patch.type) patch.type = patch.post_type;
+    if ((patch.post_kind || patch.post_type || patch.type) && !patch.post_kind) {
+      patch.post_kind = patch.post_type || patch.type;
+    }
+    if (patch.author_user_id && !patch.user_id) patch.user_id = patch.author_user_id;
+    if (patch.user_id && !patch.author_user_id) patch.author_user_id = patch.user_id;
+  }
+
+  if (entityName === 'CommunityEvent') {
+    if (patch.location && !patch.location_text) patch.location_text = patch.location;
+    if (patch.location_text && !patch.location) patch.location = patch.location_text;
+    if (patch.start_date && !patch.event_date) patch.event_date = patch.start_date;
+    if (patch.start_time && !patch.event_time) patch.event_time = patch.start_time;
+    if (patch.created_by_user_id && !patch.created_by) patch.created_by = patch.created_by_user_id;
+  }
+
+  if (entityName === 'CommunityEventRSVP') {
+    if (patch.status === 'not_going') patch.status = 'not_attending';
+  }
+
+  if (entityName === 'CommunityResource') {
+    if (patch.link_url && !patch.url) patch.url = patch.link_url;
+    if (patch.url && !patch.link_url) patch.link_url = patch.url;
+    if (patch.uploaded_by_id && !patch.created_by) patch.created_by = patch.uploaded_by_id;
+    if (patch.created_by && !patch.uploaded_by_id) patch.uploaded_by_id = patch.created_by;
+    if (patch.resource_type === 'document') patch.resource_type = 'file';
+  }
+
+  if (entityName === 'CommunityGroupChat') {
+    if (patch.body && !patch.message) patch.message = patch.body;
+    if (patch.message && !patch.body) patch.body = patch.message;
   }
 
   delete patch.created_date;
@@ -577,11 +630,8 @@ const normalizeRealtimeEvent = (event = {}) => {
 //   ShulSchedule      → shul_schedules
 //   UserConnection    → user_connections
 //   NotificationPreference → notification_preferences
-//   CommunityEvent    → community_events
-//   CommunityEventRSVP → community_event_rsvps
 //   CommunityFollow   → community_follows
 //   CommunityGroup    → community_groups
-//   CommunityGroupChat → community_group_chats
 //   GroupDiscussion   → group_discussions
 //   GroupJoinRequest  → group_join_requests
 //   GroupPost         → group_posts
@@ -616,9 +666,6 @@ const normalizeRealtimeEvent = (event = {}) => {
 //   Transaction       → transactions
 //   ChalkboardPost    → chalkboard_posts
 //   CommunityAlert    → community_alerts
-//   CommunityListing  → community_listings
-//   CommunityPost     → community_posts
-//   CommunityResource → community_resources
 //   DailyPrompt       → daily_prompts
 //   DiscussionComment → discussion_comments
 //   DiscussionLike    → discussion_likes

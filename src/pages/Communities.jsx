@@ -1,16 +1,10 @@
 import React, { useMemo, useRef, useState } from 'react';
 import {
-  BadgeCheck,
-  Compass,
-  EyeOff,
   Loader2,
   MessageCircle,
   Plus,
   Search,
-  ShieldCheck,
   Sparkles,
-  TrendingUp,
-  Users,
 } from 'lucide-react';
 import PageHelp from '@/components/common/PageHelp';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -21,39 +15,10 @@ import CommunityHubCard from '@/components/communities/CommunityHubCard';
 import CommunityHubDetail from '@/components/communities/CommunityHubDetail';
 import CreateCommunityForm from '@/components/communities/CreateCommunityForm';
 import MessagesDrawer from '@/components/communities/MessagesDrawer';
+import { COMMUNITY_TYPE_OPTIONS, getCommunityTypeConfig, getCommunityTypeKey } from '@/lib/communityTypes';
 
-const CATEGORIES = [
-  'All', 'Official', 'Local', 'Support', 'Learning', 'Lifestyle',
-  'Sports', 'Creative', 'Business', 'Gaming', 'Parents', 'Values',
-];
-
-const TYPE_TO_CATEGORY = {
-  shul: 'Local', shuls: 'Local',
-  chesed: 'Support',
-  learning: 'Learning',
-  events: 'Local',
-  singles: 'Lifestyle',
-  parents: 'Parents',
-  neighborhood: 'Local', neighborhoods: 'Local',
-  hobbies: 'Lifestyle',
-  lifestyle: 'Lifestyle',
-  values: 'Values',
-  'buy/sell': 'Business', marketplace: 'Business', 'buy-sell': 'Business',
-};
-
-const CATEGORY_TO_TYPE = {
-  Official: 'official',
-  Local: 'local',
-  Support: 'support',
-  Learning: 'learning',
-  Lifestyle: 'lifestyle',
-  Sports: 'sports',
-  Creative: 'creative',
-  Business: 'business',
-  Gaming: 'gaming',
-  Parents: 'parents',
-  Values: 'values',
-};
+const COMMUNITY_FILTERS = [{ key: 'all', label: 'All' }, ...COMMUNITY_TYPE_OPTIONS.map(({ key, label }) => ({ key, label }))];
+const CREATE_CATEGORIES = COMMUNITY_TYPE_OPTIONS.map(({ label }) => label);
 
 const EXPERIENCE_SEEDS = [
   {
@@ -422,11 +387,13 @@ const EXPERIENCE_SEEDS = [
 ];
 
 function adaptCommunity(c, joinedIds, membershipsByCommunity) {
-  const rawType = (c.type || '').toLowerCase();
-  const category = TYPE_TO_CATEGORY[rawType] || c.category || c.type || 'Lifestyle';
+  const typeKey = getCommunityTypeKey(c);
+  const typeConfig = getCommunityTypeConfig(c);
+  const category = c.category || typeConfig.label;
   const membership = membershipsByCommunity.get(c.id);
   return {
     ...c,
+    typeKey,
     category,
     communityType: c.communityType || (category === 'Support' ? 'support' : 'user'),
     privacy: c.privacy || 'Public',
@@ -434,13 +401,13 @@ function adaptCommunity(c, joinedIds, membershipsByCommunity) {
     joined: joinedIds.has(c.id) || Boolean(c.joined),
     joinedIncognito: Boolean(membership?.incognito || membership?.hide_membership || c.joinedIncognito),
     hideMembership: Boolean(membership?.hide_membership || c.hideMembership),
-    postsToday: c.postsToday || c.posts_this_week || Math.max(2, Math.round((c.follower_count || 24) / 60)),
-    growth: c.growth || '+ active this week',
-    engagement: c.engagement || 'Member conversation active',
-    dailyPrompt: c.dailyPrompt || 'What should this community talk about today?',
-    quickActions: c.quickActions || ['Start discussion', 'Ask a question', 'Share resource'],
+    postsToday: c.postsToday || c.posts_this_week || 0,
+    growth: c.growth || '',
+    engagement: c.engagement || '',
+    dailyPrompt: c.dailyPrompt || '',
+    quickActions: c.quickActions || typeConfig.prompts,
     posts: c.posts || [],
-    identityTags: c.identityTags || [category, c.privacy || 'Public'],
+    identityTags: c.identityTags || [typeConfig.label, c.privacy || 'Public'],
   };
 }
 
@@ -454,7 +421,8 @@ export default function Communities() {
   const [optimisticJoins, setOptimisticJoins] = useState(new Set());
   const [optimisticLeaves, setOptimisticLeaves] = useState(new Set());
   const [query, setQuery] = useState('');
-  const [category, setCategory] = useState('All');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [view, setView] = useState('discover');
 
   const { data: rawCommunities = [], isLoading } = useQuery({
     queryKey: ['communities-list'],
@@ -499,33 +467,26 @@ export default function Communities() {
         community.description,
         community.location,
         community.category,
+        community.typeKey,
         community.communityType,
         ...(community.identityTags || []),
       ].join(' ').toLowerCase();
       const matchesQuery = !cleanQuery || haystack.includes(cleanQuery);
-      const matchesCategory = category === 'All' || community.category === category;
-      return matchesQuery && matchesCategory;
+      const matchesType = typeFilter === 'all' || community.typeKey === typeFilter;
+      return matchesQuery && matchesType;
     });
-  }, [category, communities, query]);
+  }, [typeFilter, communities, query]);
 
-  const official = filteredCommunities.filter((community) => community.communityType === 'official');
-  const support = filteredCommunities.filter((community) => community.communityType === 'support');
-  const lifestyle = filteredCommunities.filter((community) => community.communityType === 'lifestyle');
   const yourCommunities = filteredCommunities.filter((community) => community.joined);
-  const trending = filteredCommunities.filter((community) => community.trending);
-  const popularNearYou = filteredCommunities.filter((community) =>
-    !community.joined && /Five Towns|Lawrence|Cedarhurst|Woodmere|Hewlett|Inwood/i.test(community.location || '')
-  ).slice(0, 6);
-  const forYou = filteredCommunities
-    .filter((community) => community.trending || community.verified || community.joined)
-    .slice(0, 6);
+  const discoverCommunities = filteredCommunities.filter((community) => !community.joined);
+  const discoverGroups = COMMUNITY_TYPE_OPTIONS
+    .map((type) => ({
+      ...type,
+      communities: discoverCommunities.filter((community) => community.typeKey === type.key),
+    }))
+    .filter((group) => group.communities.length > 0);
 
   const joinedCount = communities.filter((community) => community.joined).length;
-  const hiddenCount = communities.filter((community) => community.joined && (community.joinedIncognito || community.hideMembership)).length;
-  const visibleIdentityTags = communities
-    .filter((community) => community.joined && !(community.joinedIncognito || community.hideMembership))
-    .flatMap((community) => community.identityTags || [])
-    .slice(0, 8);
 
   const handleJoin = async (communityId, options = {}) => {
     const community = communities.find((item) => item.id === communityId);
@@ -589,7 +550,7 @@ export default function Communities() {
       const created = await dataService.entities.Community.create({
         name: formData.name,
         description: formData.description,
-        type: CATEGORY_TO_TYPE[formData.category] || formData.category.toLowerCase(),
+        type: getCommunityTypeKey({ category: formData.category }),
         category: formData.category,
         communityType: formData.communityType,
         privacy: formData.privacy,
@@ -631,18 +592,17 @@ export default function Communities() {
       <div className="mobile-page-wide px-3 pb-6 pt-3 sm:px-4 sm:pt-4">
         <Hero
           joinedCount={joinedCount}
-          hiddenCount={hiddenCount}
           onCreate={() => setShowCreate(true)}
           onMessages={() => setShowMessages(true)}
         />
 
-        <IdentityStrip tags={visibleIdentityTags} />
+        <ViewSwitch view={view} onChange={setView} joinedCount={joinedCount} />
 
         <SearchBar
           query={query}
           onQueryChange={setQuery}
-          category={category}
-          onCategoryChange={setCategory}
+          typeFilter={typeFilter}
+          onTypeFilterChange={setTypeFilter}
         />
 
         {isLoading ? (
@@ -656,20 +616,53 @@ export default function Communities() {
           </div>
         ) : (
           <div className="space-y-7">
-            <CommunitySection title="For You" subtitle="Recommended from identity, activity, and local relevance." icon={Sparkles} communities={forYou} onOpen={setSelectedCommunityId} onJoin={handleJoin} joiningId={joiningId} />
-            <CommunitySection title="Official / Daily" subtitle="Curated hubs that should feel alive every day." icon={BadgeCheck} communities={official} onOpen={setSelectedCommunityId} onJoin={handleJoin} joiningId={joiningId} />
-            <CommunitySection title="Popular Near You" subtitle="Five Towns circles people are joining and using locally." icon={Compass} communities={popularNearYou} onOpen={setSelectedCommunityId} onJoin={handleJoin} joiningId={joiningId} />
-            <CommunitySection title="Trending Now" subtitle="Fast-rising discussions and communities with momentum." icon={TrendingUp} communities={trending} onOpen={setSelectedCommunityId} onJoin={handleJoin} joiningId={joiningId} />
-            <CommunitySection title="Private / Support Spaces" subtitle="Safe spaces with anonymity, privacy, and moderation cues." icon={EyeOff} communities={support} onOpen={setSelectedCommunityId} onJoin={handleJoin} joiningId={joiningId} />
-            <CommunitySection title="Lifestyle & Interests" subtitle="Sports, fitness, learning, creativity, gaming, and ambition." icon={Users} communities={lifestyle} onOpen={setSelectedCommunityId} onJoin={handleJoin} joiningId={joiningId} />
-            <CommunitySection title="Your Communities" subtitle="What represents you and what you are active in." icon={ShieldCheck} communities={yourCommunities} onOpen={setSelectedCommunityId} onJoin={handleJoin} joiningId={joiningId} />
+            {view === 'mine' ? (
+              <CommunitySection
+                title="My Communities"
+                subtitle="Your joined spaces, kept in one easy place."
+                icon={Sparkles}
+                communities={yourCommunities}
+                emptyTitle="No joined communities yet"
+                emptyBody="Switch to Discover and join a community that fits how you want to connect."
+                onOpen={setSelectedCommunityId}
+                onJoin={handleJoin}
+                joiningId={joiningId}
+              />
+            ) : (
+              discoverGroups.length > 0 ? (
+                discoverGroups.map((group) => (
+                  <CommunitySection
+                    key={group.key}
+                    title={group.pluralLabel || group.label}
+                    subtitle={group.tagline}
+                    icon={group.icon}
+                    communities={group.communities}
+                    onOpen={setSelectedCommunityId}
+                    onJoin={handleJoin}
+                    joiningId={joiningId}
+                  />
+                ))
+              ) : (
+                <CommunitySection
+                  title="Discover"
+                  subtitle="No new communities match this view right now."
+                  icon={Search}
+                  communities={[]}
+                  emptyTitle="Nothing new to discover here"
+                  emptyBody="Try another type filter, or switch to My Communities to open the spaces you already joined."
+                  onOpen={setSelectedCommunityId}
+                  onJoin={handleJoin}
+                  joiningId={joiningId}
+                />
+              )
+            )}
           </div>
         )}
       </div>
 
       {showCreate && (
         <CreateCommunityForm
-          categories={CATEGORIES.filter((categoryItem) => !['All', 'Official'].includes(categoryItem))}
+          categories={CREATE_CATEGORIES}
           onCreate={createCommunity}
           onClose={() => setShowCreate(false)}
         />
@@ -684,29 +677,25 @@ export default function Communities() {
   );
 }
 
-function Hero({ joinedCount, hiddenCount, onCreate, onMessages }) {
+function Hero({ joinedCount, onCreate, onMessages }) {
   return (
-    <section className="surface-panel mb-4 overflow-hidden rounded-[28px]">
-      <div className="grid gap-0 lg:grid-cols-[1fr_310px]">
-        <div className="relative p-4 sm:p-6">
+    <section className="surface-panel mb-4 overflow-hidden rounded-[24px]">
+      <div className="grid gap-0 sm:grid-cols-[1fr_auto]">
+        <div className="relative p-4">
           <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-blue-700">
             <Sparkles className="h-3.5 w-3.5" />
-            Identity layer
+            Community hub
           </div>
           <div className="flex items-center gap-1.5">
             <h1 className="text-2xl font-black text-slate-950 sm:text-3xl">Communities</h1>
             <PageHelp text="Communities define what you care about, where you belong, and who you connect with." />
           </div>
-          <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
-            This should feel like your world: daily Jewish life, private support, local belonging, and the interest circles that keep people checking in.
+          <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+            Discover focused Jewish spaces for chesed, shuls, learning, parents, neighborhoods, events, and everyday connection.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <HeroPill label={`${joinedCount} active communities`} />
-            <HeroPill label={`${hiddenCount} private memberships`} />
-            <HeroPill label="Official + lifestyle + support" />
-          </div>
+          <HeroPill label={`${joinedCount} joined`} />
         </div>
-        <div className="border-t border-slate-200 bg-slate-50/80 p-4 lg:border-l lg:border-t-0">
+        <div className="border-t border-slate-200 bg-slate-50/80 p-4 sm:border-l sm:border-t-0 sm:w-64">
           <div className="grid gap-2">
             <button onClick={onCreate} className="motion-press inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-black text-white">
               <Plus className="h-4 w-4" />
@@ -724,27 +713,35 @@ function Hero({ joinedCount, hiddenCount, onCreate, onMessages }) {
 }
 
 function HeroPill({ label }) {
-  return <span className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700">{label}</span>;
+  return <span className="mt-3 inline-flex rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700">{label}</span>;
 }
 
-function IdentityStrip({ tags }) {
+function ViewSwitch({ view, onChange, joinedCount }) {
   return (
-    <section className="surface-panel-soft mb-4 rounded-[24px] p-4">
-      <h2 className="text-base font-black text-slate-950">Active in...</h2>
-      <p className="mt-1 text-sm font-semibold text-slate-500">The communities that represent you can become profile tags and social signals.</p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {tags.length > 0 ? tags.map((tag, index) => (
-          <span key={`${tag}-${index}`} className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700">{tag}</span>
-        )) : (
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-500">Join visible communities to build your identity stack</span>
-        )}
-        <span className="rounded-full border border-violet-100 bg-violet-50 px-3 py-1.5 text-xs font-black text-violet-700">Private spaces stay hidden</span>
+    <section className="surface-panel-soft mb-4 rounded-[20px] p-2">
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={() => onChange('discover')}
+          className={`motion-press h-11 rounded-2xl text-sm font-black transition ${
+            view === 'discover' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600'
+          }`}
+        >
+          Discover
+        </button>
+        <button
+          onClick={() => onChange('mine')}
+          className={`motion-press h-11 rounded-2xl text-sm font-black transition ${
+            view === 'mine' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600'
+          }`}
+        >
+          My Communities ({joinedCount})
+        </button>
       </div>
     </section>
   );
 }
 
-function SearchBar({ query, onQueryChange, category, onCategoryChange }) {
+function SearchBar({ query, onQueryChange, typeFilter, onTypeFilterChange }) {
   const [inputValue, setInputValue] = useState(query);
   const debounceRef = useRef(null);
 
@@ -761,20 +758,20 @@ function SearchBar({ query, onQueryChange, category, onCategoryChange }) {
         <input
           value={inputValue}
           onChange={(event) => handleSearch(event.target.value)}
-          placeholder="Search identity, topic, privacy, or neighborhood"
+          placeholder="Search communities, topics, or neighborhoods"
           className="app-input pl-10 pr-3 text-sm"
         />
       </label>
       <div className="mobile-scroll-x mt-3 flex gap-2 pb-1">
-        {CATEGORIES.map((item) => (
+        {COMMUNITY_FILTERS.map((item) => (
           <button
-            key={item}
-            onClick={() => onCategoryChange(item)}
+            key={item.key}
+            onClick={() => onTypeFilterChange(item.key)}
             className={`motion-press h-9 shrink-0 rounded-full px-3.5 text-[12px] font-black transition ${
-              category === item ? 'bg-slate-950 text-white' : 'border border-slate-200 bg-white text-slate-600'
+              typeFilter === item.key ? 'bg-slate-950 text-white' : 'border border-slate-200 bg-white text-slate-600'
             }`}
           >
-            {item}
+            {item.label}
           </button>
         ))}
       </div>
@@ -782,8 +779,8 @@ function SearchBar({ query, onQueryChange, category, onCategoryChange }) {
   );
 }
 
-function CommunitySection({ title, subtitle, icon: Icon, communities, onOpen, onJoin, joiningId }) {
-  if (!communities.length) return null;
+function CommunitySection({ title, subtitle, icon: Icon, communities, emptyTitle, emptyBody, onOpen, onJoin, joiningId }) {
+  if (!communities.length && !emptyTitle) return null;
   return (
     <section>
       <div className="mb-3 flex items-end justify-between gap-3">
@@ -798,8 +795,14 @@ function CommunitySection({ title, subtitle, icon: Icon, communities, onOpen, on
           {communities.length}
         </span>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {communities.map((community) => (
+      {communities.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
+          <p className="text-sm font-black text-slate-800">{emptyTitle}</p>
+          <p className="mt-1 text-[13px] font-semibold text-slate-500">{emptyBody}</p>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {communities.map((community) => (
           <CommunityHubCard
             key={community.id}
             community={community}
@@ -807,8 +810,9 @@ function CommunitySection({ title, subtitle, icon: Icon, communities, onOpen, on
             onOpen={() => onOpen(community.id)}
             onToggleJoin={(options) => onJoin(community.id, options)}
           />
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

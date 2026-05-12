@@ -79,7 +79,7 @@ function AddResourceSheet({ open, onClose, communityId, currentUser, onAdded }) 
       let fileUrl = null;
       let fileName = null;
       if (resourceType === 'document' && file) {
-        const res = await dataService.integrations.Core.UploadFile({ file });
+        const res = await dataService.integrations.Core.UploadFile({ file, bucket: 'community-resources' });
         fileUrl = res.file_url;
         fileName = file.name;
       }
