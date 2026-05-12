@@ -791,7 +791,7 @@ function MapController({ center }) {
   
   useEffect(() => {
     if (center) {
-      map.setView(center, 13);
+      map.setView(center, map.getZoom() || 13);
     }
   }, [center, map]);
   
@@ -955,8 +955,10 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
         <MapContainer
           center={mapCenter}
           zoom={13}
+          minZoom={9}
           style={{ height: 500, width: '100%' }}
           zoomControl={true}
+          scrollWheelZoom={true}
         >
           <MapController center={mapCenter} />
           <TileLayer

@@ -6,7 +6,7 @@ import React from 'react';
  */
 export default function SkeletonCard({ hasImage = false, className = '' }) {
   return (
-    <div className={`bg-white rounded-2xl p-4 ${className}`}>
+    <div className={`surface-panel-soft rounded-[24px] p-4 ${className}`}>
       {/* Author row */}
       <div className="flex items-center gap-2.5 mb-3">
         <div className="skeleton w-8 h-8 rounded-full flex-shrink-0" />

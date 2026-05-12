@@ -142,9 +142,8 @@ export default function Layout({ children, currentPageName }) {
       {/* Bottom Navigation */}
       {!hideNav && (
         <>
-          <nav className="app-bottom-nav fixed inset-x-0 bottom-0 z-50 px-3">
-            {/* Warm cream background with warm border — community feel */}
-            <div className="mobile-page relative overflow-hidden rounded-2xl border border-[#E8E2D6] bg-[#FFFDF8]/96 shadow-[0_-1px_0_rgba(15,23,42,0.06),0_8px_32px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+          <nav className="pointer-events-none fixed bottom-3 left-0 right-0 z-50 px-4">
+            <div className="glass-toolbar mobile-page pointer-events-auto relative overflow-hidden rounded-[28px] px-2 py-1.5">
               <div className="flex items-center justify-around px-1 py-1.5">
                 {navItems.map((item) => {
                 const isActive = activeNavKey === item.key;
@@ -165,13 +164,13 @@ export default function Layout({ children, currentPageName }) {
                         navigate(createPageUrl(item.page));
                       }
                     }}
-                    className={`motion-press relative flex min-h-[58px] min-w-[54px] flex-1 flex-col items-center justify-center rounded-xl py-[7px] touch-manipulation ${
-                      isActive ? '' : 'text-slate-400 active:bg-slate-100/60'
+                    className={`motion-press relative flex min-h-[58px] min-w-[54px] flex-1 flex-col items-center justify-center rounded-[20px] py-[7px] touch-manipulation ${
+                      isActive ? 'bg-white shadow-[0_12px_24px_rgba(37,99,235,0.14)] ring-1 ring-blue-100' : 'text-slate-500 hover:bg-white/70 active:bg-slate-100/60'
                     }`}
                   >
                     {isActive && (
                       <span
-                        className={`nav-active-pill absolute inset-1 rounded-[10px] ${item.isMitzvah ? 'nav-active-pill-mitzvah' : ''}`}
+                        className={`nav-active-pill absolute inset-1 rounded-[16px] ${item.isMitzvah ? 'nav-active-pill-mitzvah' : ''}`}
                       />
                     )}
 
@@ -180,17 +179,17 @@ export default function Layout({ children, currentPageName }) {
                         <MitzvahIcon
                           size={20}
                           strokeWidth={isActive ? 2.2 : 1.8}
-                          className={isActive ? 'text-blue-600' : 'text-slate-400'}
+                          className={isActive ? 'text-blue-600' : 'text-slate-500'}
                         />
                       ) : item.isProfile && currentUser?.avatar_url ? (
                         <img
                           src={currentUser.avatar_url}
                           alt=""
-                          className={`h-[22px] w-[22px] rounded-full object-cover ${isActive ? 'ring-2 ring-blue-600' : 'ring-1 ring-slate-300'}`}
+                          className={`h-[22px] w-[22px] rounded-full object-cover shadow-sm ${isActive ? 'ring-2 ring-blue-600' : 'ring-1 ring-slate-300'}`}
                         />
                       ) : (
                         <Icon
-                          className={`h-[21px] w-[21px] ${isActive ? 'text-blue-600' : 'text-slate-400'}`}
+                          className={`h-[21px] w-[21px] ${isActive ? 'text-blue-600' : 'text-slate-500'}`}
                           strokeWidth={isActive ? 2.4 : 1.8}
                         />
                       )}
@@ -198,7 +197,7 @@ export default function Layout({ children, currentPageName }) {
 
                     <span
                       className={`relative z-10 mt-1 text-[10px] ${
-                        isActive ? 'font-bold text-blue-600' : 'font-normal text-slate-400'
+                        isActive ? 'font-bold text-blue-600' : 'font-normal text-slate-500'
                       }`}
                     >
                       {item.name}
@@ -214,4 +213,3 @@ export default function Layout({ children, currentPageName }) {
     </div>
   );
 }
-
