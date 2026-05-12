@@ -262,7 +262,11 @@ export default function CommunityHubDetail({ community, currentUser, onBack, onT
 }
 
 function PostsTab({ community, prompts, posts, onCompose }) {
-  if (!community.joined) {
+  const isOfficial = community.communityType === 'official';
+  const isPublic = (community.privacy || 'Public') === 'Public';
+  const shouldHideFeed = !community.joined && !isOfficial && !isPublic;
+
+  if (shouldHideFeed) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
         <MessageCircle className="mx-auto mb-3 h-8 w-8 text-slate-300" />
@@ -274,6 +278,14 @@ function PostsTab({ community, prompts, posts, onCompose }) {
 
   return (
     <div className="space-y-3">
+      {!community.joined && (
+        <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 shadow-sm">
+          {isOfficial
+            ? 'Official feed is open to read. Join to personalize replies, saves, and follow-up activity.'
+            : 'This public feed is open to read. Join to participate and keep it in your identity stack.'}
+        </div>
+      )}
+
       <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5 shadow-sm">
         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-blue-700">
           <Sparkles className="h-4 w-4" />

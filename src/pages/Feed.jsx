@@ -773,18 +773,18 @@ export default function Feed() {
         </div>
       )}
 
-      <div className="sticky top-0 z-[60] bg-[#F6F8FB]/95 backdrop-blur-xl">
-        <div className="mobile-page px-3 pt-2 pb-2 flex items-center justify-between">
+      <div className="sticky top-0 z-[60] px-3 pt-3">
+        <div className="glass-toolbar mobile-page flex min-h-[56px] items-center justify-between rounded-[24px] px-3 py-2">
           <button
             onClick={() => setShowLocationPicker(v => !v)}
-            className="app-chip app-chip-active min-h-[44px] touch-manipulation active:scale-95"
+            className="app-chip app-chip-active min-h-[44px] border-blue-200 bg-blue-50 shadow-sm touch-manipulation active:scale-95"
           >
             <span>{primaryNetwork.emoji}</span>
             <span>{primaryNetwork.shortLabel}</span>
             <ChevronDown className="w-3 h-3 text-blue-400 transition-transform" style={{ transform: showLocationPicker ? 'rotate(180deg)' : 'rotate(0deg)' }} />
           </button>
-          <div className="flex items-center gap-0.5">
-            <button onClick={() => navigate('/search')} className="app-icon-button touch-manipulation" aria-label="Search">
+          <div className="flex items-center gap-1">
+            <button onClick={() => navigate('/search')} className="app-icon-button surface-tile-hover touch-manipulation" aria-label="Search">
               <Search className="h-[18px] w-[18px] text-slate-500" />
             </button>
             <NotificationBell userId={currentUser?.id} />
@@ -793,7 +793,7 @@ export default function Feed() {
       </div>
 
       {showLocationPicker && (
-        <div className="sticky top-[60px] z-20">
+        <div className="sticky top-[78px] z-20">
           <LocationNetworkPicker
             currentNetwork={primaryNetwork}
             onSelect={async (net) => {
@@ -849,7 +849,7 @@ export default function Feed() {
 
         {/* One-time network banner for new users */}
         {showNetworkBanner && (
-          <div className="mb-3 flex items-center gap-2 rounded-2xl bg-blue-600 px-3.5 py-3 text-white text-[12px] font-medium shadow-sm">
+          <div className="graphic-stripes mb-3 flex items-center gap-2 rounded-[22px] bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-4 py-3 text-white text-[12px] font-medium shadow-[0_14px_30px_rgba(37,99,235,0.18)]">
             <span className="text-lg">{primaryNetwork.emoji}</span>
             <span className="flex-1">You're viewing <strong>{primaryNetwork.shortLabel}</strong> — tap the chip above to switch networks.</span>
             <button onClick={() => { setShowNetworkBanner(false); storageService.setItem('junited_network_banner_v2_dismissed', '1'); }} className="text-white/70 hover:text-white text-lg leading-none font-bold flex-shrink-0">×</button>
@@ -858,7 +858,7 @@ export default function Feed() {
 
         <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
         {activeTab === 'events' && !isLoading && (
-          <div className="app-gradient-panel mb-3 overflow-hidden">
+          <div className="surface-panel mb-3 overflow-hidden rounded-[28px]">
           <EventsForYou currentUser={currentUser} events={visiblePosts.filter(p => p.type === 'event')} />
           <EventsFeedSection
             posts={visiblePosts}
@@ -927,14 +927,14 @@ export default function Feed() {
               return (
                 <React.Fragment key={post.id}>
                   {sectionLabel && (
-                    <div className="flex items-center gap-2 px-1 py-1">
+                    <div className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-slate-50 to-blue-50/70 px-3 py-2">
                       <span className="text-base">{sectionLabel.emoji}</span>
-                      <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wide">{sectionLabel.text}</span>
+                      <span className="text-[12px] font-bold uppercase text-slate-700">{sectionLabel.text}</span>
                     </div>
                   )}
                   {showCommunityDivider && (
-                    <div className="flex items-center gap-2 px-1 py-1">
-                      <span className="text-[11px] font-bold text-indigo-500 uppercase tracking-wide">👥 From your communities</span>
+                    <div className="flex items-center gap-2 rounded-2xl bg-indigo-50/80 px-3 py-2">
+                      <span className="text-[11px] font-bold uppercase text-indigo-600">👥 From your communities</span>
                     </div>
                   )}
                   <div className="app-card overflow-hidden">
@@ -1030,7 +1030,8 @@ export default function Feed() {
 
       <button
         onClick={() => { setPostModalType('feed'); setPostModalSubtype(null); setPostModalInitialBody(''); setShowPostModal(true); }}
-        className={`app-fab fixed bottom-[96px] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-2xl text-white transition-all duration-200 active:scale-95 ${isScrollingDown ? 'opacity-0 pointer-events-none translate-y-2' : 'opacity-100 translate-y-0'}`}
+        className={`graphic-stripes app-fab fixed bottom-[96px] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-95 ${isScrollingDown ? 'opacity-0 pointer-events-none translate-y-2' : 'opacity-100 translate-y-0'}`}
+        style={{ background: 'linear-gradient(135deg, #2563EB, #4F46E5)' }}
         aria-label="Create post"
       >
         <Plus className="w-6 h-6" />

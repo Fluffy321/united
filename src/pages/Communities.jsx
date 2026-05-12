@@ -82,6 +82,10 @@ const EXPERIENCE_SEEDS = [
       { id: 'torah-2', type: 'Hot discussion', title: 'What helps you stay consistent?', author: 'Avi Rosen', body: 'Trying to build a realistic 10-minute seder. What actually worked for you?', meta: '51m ago · 31 replies' },
       { id: 'torah-3', type: 'Daily prompt', title: 'One line, one action', author: 'JUnited Torah Desk', body: 'Reply with one idea from today and one tiny action you can do because of it.', meta: 'Today · 27 replies' },
       { id: 'torah-4', type: 'Match', title: 'Beginner-friendly chavrusa thread', author: 'Learning Desk', body: 'Drop topic, level, and available times. Consistency matters more than speed.', meta: 'Today · 22 replies' },
+      { id: 'torah-5', type: 'Recurring column', title: 'Before the day gets noisy', author: 'JUnited Torah Desk', body: 'A 90-second morning thought: where can you replace autopilot with intention today?', meta: 'Today · 18 replies' },
+      { id: 'torah-6', type: 'Interactive prompt', title: 'Finish the sentence: Torah changes my day when...', author: 'Daily Torah', body: 'Keep it short. The best replies become tomorrow’s reflection reel.', meta: 'Today · 34 replies' },
+      { id: 'torah-7', type: 'Mini challenge', title: 'Learn, reflect, share', author: 'Learning Desk', body: 'Learn one idea, write one sentence on how it hits your life, then invite one friend into the thread.', meta: 'Today · 21 replies' },
+      { id: 'torah-8', type: 'Question', title: 'Which topic would make you open this community every day?', author: 'JUnited Torah Desk', body: 'Halacha, parsha, middos, relationships, history, or practical Jewish living?', meta: 'Yesterday · 42 replies' },
     ],
   },
   {
@@ -110,6 +114,10 @@ const EXPERIENCE_SEEDS = [
       { id: 'news-2', type: 'Prompt', title: 'Build tomorrow’s brief', author: 'JUnited Updates', body: 'Drop verified notices, deadlines, closures, and public community updates.', meta: '2h ago · 16 replies' },
       { id: 'news-3', type: 'Update', title: 'What changed since yesterday?', author: 'JUnited Updates', body: 'A clean delta of notable school, shul, traffic, and community changes.', meta: 'Today · 8 replies' },
       { id: 'news-4', type: 'Review', title: 'Rumor check thread', author: 'Moderator Desk', body: 'If something is circulating in chats and you are unsure, post the claim here for review.', meta: 'Today · 14 replies' },
+      { id: 'news-5', type: 'Evening brief', title: 'What mattered today in one scroll', author: 'JUnited Updates', body: 'The 5 items worth knowing tonight, with links, context, and what affects local Jewish families.', meta: 'Today · 11 replies' },
+      { id: 'news-6', type: 'Community ask', title: 'What should we track more closely this week?', author: 'Updates Desk', body: 'School notices, traffic, politics that affect the community, shul calendars, or local business changes?', meta: 'Today · 23 replies' },
+      { id: 'news-7', type: 'Explainer', title: 'Why this update matters', author: 'JUnited Updates', body: 'A short explainer thread for news that deserves context, not just reposting.', meta: 'Yesterday · 17 replies' },
+      { id: 'news-8', type: 'Poll', title: 'Morning brief or evening wrap first?', author: 'JUnited Updates', body: 'Vote on what would make this community part of your daily routine.', meta: 'Yesterday · 39 votes' },
     ],
   },
   {
@@ -138,6 +146,10 @@ const EXPERIENCE_SEEDS = [
       { id: 'local-2', type: 'Hot discussion', title: 'Which shops should go on the map next?', author: 'Miriam Cohen', body: 'Drop restaurants, services, Judaica, bakeries, or wellness spots that matter locally.', meta: '1h ago · 24 replies' },
       { id: 'local-3', type: 'Question', title: 'Best quick weekday lunch near Woodmere?', author: 'Community member', body: 'Need something reliable, sit-down optional, good for a short break.', meta: 'Today · 19 replies' },
       { id: 'local-4', type: 'Community pulse', title: 'Weekend plans board', author: 'Five Towns Desk', body: 'Events, shiurim, sports, helping opportunities, and family ideas in one thread.', meta: 'Today · 21 replies' },
+      { id: 'local-5', type: 'Interactive board', title: 'Ask the Five Towns anything practical', author: 'Five Towns Desk', body: 'Parking, stores, shuls, classes, carpool, programs, errands. One thread for useful local answers.', meta: 'Today · 46 replies' },
+      { id: 'local-6', type: 'Hot list', title: 'Most recommended places this week', author: 'Local Pulse', body: 'Restaurants, bakeries, Judaica, services, and quiet gems people keep recommending.', meta: 'Today · 28 replies' },
+      { id: 'local-7', type: 'Plan', title: 'Sunday family idea swap', author: 'Five Towns Desk', body: 'Share one low-friction idea for kids, teens, or visiting relatives.', meta: 'Yesterday · 31 replies' },
+      { id: 'local-8', type: 'Question', title: 'What does this app still need to replace local WhatsApp chaos?', author: 'Community member', body: 'Events? verified updates? school notices? lost and found? Better search?', meta: 'Yesterday · 37 replies' },
     ],
   },
   {
@@ -165,6 +177,10 @@ const EXPERIENCE_SEEDS = [
       { id: 'chesed-2', type: 'Prompt', title: 'Two-mitzvah challenge', author: 'Chesed Desk', body: 'Pick one private mitzvah and one community mitzvah. Share how it affected you.', meta: 'Today · 22 replies' },
       { id: 'chesed-3', type: 'Match', title: 'After-school ride matching', author: 'Ride Team', body: 'Comment town, pickup window, and whether you can offer or need a seat. No exact addresses here.', meta: 'Today · 17 replies' },
       { id: 'chesed-4', type: 'Reflection', title: 'How did helping someone affect you?', author: 'Mitzvah Tracker', body: 'Short reflections from real mitzvah actions help inspire the next person.', meta: 'Today · 13 replies' },
+      { id: 'chesed-5', type: 'Urgent board', title: 'Small favors that matter today', author: 'Chesed Desk', body: 'Pickups, pharmacy runs, meal handoffs, short visits, and quick check-ins. Take one if you can.', meta: 'Today · 26 replies' },
+      { id: 'chesed-6', type: 'Volunteer pulse', title: 'Where can you reliably help once a week?', author: 'Volunteer Desk', body: 'Meals, rides, phone calls, errands, hospital visits, or school support?', meta: 'Today · 19 replies' },
+      { id: 'chesed-7', type: 'Impact story', title: 'A ride offer became a whole support chain', author: 'Chesed Desk', body: 'A short story on why tiny offers belong in the app, followed by an invite to post one small thing you can do.', meta: 'Yesterday · 24 replies' },
+      { id: 'chesed-8', type: 'Prompt', title: 'What kind of help is hardest to ask for?', author: 'Mitzvah Tracker', body: 'Answer gently. The goal is to design better support, not expose anyone.', meta: 'Yesterday · 33 replies' },
     ],
   },
   {
@@ -670,7 +686,7 @@ export default function Communities() {
 
 function Hero({ joinedCount, hiddenCount, onCreate, onMessages }) {
   return (
-    <section className="app-card mb-4 overflow-hidden">
+    <section className="surface-panel mb-4 overflow-hidden rounded-[28px]">
       <div className="grid gap-0 lg:grid-cols-[1fr_310px]">
         <div className="relative p-4 sm:p-6">
           <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-blue-700">
@@ -690,7 +706,7 @@ function Hero({ joinedCount, hiddenCount, onCreate, onMessages }) {
             <HeroPill label="Official + lifestyle + support" />
           </div>
         </div>
-        <div className="border-t border-slate-200 bg-slate-50 p-4 lg:border-l lg:border-t-0">
+        <div className="border-t border-slate-200 bg-slate-50/80 p-4 lg:border-l lg:border-t-0">
           <div className="grid gap-2">
             <button onClick={onCreate} className="motion-press inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-black text-white">
               <Plus className="h-4 w-4" />
@@ -713,7 +729,7 @@ function HeroPill({ label }) {
 
 function IdentityStrip({ tags }) {
   return (
-    <section className="app-card mb-4 p-4">
+    <section className="surface-panel-soft mb-4 rounded-[24px] p-4">
       <h2 className="text-base font-black text-slate-950">Active in...</h2>
       <p className="mt-1 text-sm font-semibold text-slate-500">The communities that represent you can become profile tags and social signals.</p>
       <div className="mt-3 flex flex-wrap gap-2">
@@ -739,7 +755,7 @@ function SearchBar({ query, onQueryChange, category, onCategoryChange }) {
   };
 
   return (
-    <section className="app-card mb-5 p-3">
+    <section className="surface-panel-soft mb-5 rounded-[24px] p-3">
       <label className="relative block">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input

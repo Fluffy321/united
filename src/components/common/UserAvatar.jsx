@@ -55,7 +55,7 @@ export default function UserAvatar({ user, name, size = 'md', className = '', on
   if (avatarUrl && !imgError) {
     return (
       <div
-        className={`${sizeClass} rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0 ${className} ${canClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+        className={`${sizeClass} flex-shrink-0 overflow-hidden rounded-full border-2 border-white shadow-[0_8px_18px_rgba(15,23,42,0.12)] ring-1 ring-slate-100/80 ${className} ${canClick ? 'cursor-pointer transition-all hover:-translate-y-0.5 hover:opacity-90' : ''}`}
         onClick={canClick ? onClick : undefined}
         role={canClick ? 'button' : undefined}
         tabIndex={canClick ? 0 : undefined}
@@ -76,8 +76,8 @@ export default function UserAvatar({ user, name, size = 'md', className = '', on
 
   return (
     <div
-      className={`${sizeClass} rounded-full flex items-center justify-center flex-shrink-0 font-bold select-none ${fontClass} ${className} ${canClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
-      style={{ background: color.bg, color: color.text, border: `2px solid ${color.bg}` }}
+      className={`${sizeClass} flex flex-shrink-0 items-center justify-center rounded-full font-bold shadow-[0_8px_18px_rgba(15,23,42,0.10)] ring-1 ring-white/80 select-none ${fontClass} ${className} ${canClick ? 'cursor-pointer transition-all hover:-translate-y-0.5 hover:opacity-90' : ''}`}
+      style={{ background: color.bg, color: color.text, border: '2px solid rgba(255,255,255,0.92)' }}
       onClick={canClick ? onClick : undefined}
       role={canClick ? 'button' : undefined}
       tabIndex={canClick ? 0 : undefined}

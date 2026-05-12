@@ -781,9 +781,9 @@ export default function MitzvahCircle() {
     <main className="app-page mobile-safe-bottom">
       <section className="mobile-page-wide px-3 pt-3 sm:px-4 sm:pt-4">
         {/* Header */}
-        <div className="app-card overflow-hidden">
-          <div className="relative p-4 sm:p-5">
-            <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-blue-50" />
+        <div className="surface-panel overflow-hidden rounded-[28px]">
+          <div className="graphic-stripes relative p-4 sm:p-5">
+            <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-blue-50/80" />
             <div className="relative">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-1.5">
@@ -811,8 +811,8 @@ export default function MitzvahCircle() {
         </div>
 
         {/* Tabs */}
-        <div className="sticky top-0 z-20 -mx-3 mt-3 bg-[#F6F8FB]/95 px-3 py-2 backdrop-blur sm:-mx-4 sm:px-4">
-          <div className="app-card mobile-scroll-x flex gap-2 p-1">
+        <div className="sticky top-0 z-20 -mx-3 mt-3 bg-[#F6F8FB]/78 px-3 py-2 backdrop-blur sm:-mx-4 sm:px-4">
+          <div className="surface-panel-soft mobile-scroll-x flex gap-2 rounded-[22px] p-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -831,7 +831,7 @@ export default function MitzvahCircle() {
 
         {/* Search/filter bar for list views */}
         {['open', 'posted'].includes(activeTab) && (
-          <div className="app-card mb-3 grid gap-2 p-3 sm:grid-cols-[1fr_220px]">
+          <div className="surface-panel-soft mb-3 grid gap-2 rounded-[24px] p-3 sm:grid-cols-[1fr_220px]">
             <label className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input

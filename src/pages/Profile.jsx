@@ -219,7 +219,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F8FB] mobile-safe-bottom">
+    <div className="min-h-screen bg-transparent mobile-safe-bottom">
       <div className="mobile-page">
 
         {/* Modern Header */}
@@ -256,11 +256,11 @@ export default function Profile() {
         <div className="space-y-3 pb-4">
 
           {/* Streak Card */}
-          {isOwnProfile && <div className="px-3"><StreakCard streak={userStreak} /></div>}
+          {isOwnProfile && <div className="px-3 motion-soft-in"><StreakCard streak={userStreak} /></div>}
 
           {/* Interests Section */}
           {isOwnProfile && (
-            <div className="mx-3">
+            <div className="mx-3 motion-soft-in">
               <InterestsSection 
                 interests={profileUser.interests || []} 
                 onAddInterest={() => setShowInterestPicker(true)}
@@ -270,7 +270,7 @@ export default function Profile() {
 
           {/* Impact or Get Started */}
           {isOwnProfile && (
-            <div id="impact-section" className="mx-3">
+            <div id="impact-section" className="mx-3 motion-soft-in">
               {hasActivity ? (
                 <ImpactSection points={mitzvahPoints} weeklyCount={weeklyMitzvahCount} streak={userStreak} />
               ) : (
@@ -280,16 +280,16 @@ export default function Profile() {
           )}
 
           {/* Communities Section */}
-          {userCommunities.length > 0 && <div id="communities-section" className="mx-3"><CommunitiesSection userCommunities={userCommunities} /></div>}
+          {userCommunities.length > 0 && <div id="communities-section" className="mx-3 motion-soft-in"><CommunitiesSection userCommunities={userCommunities} /></div>}
 
           {/* Badges Section */}
-          {isOwnProfile && <div className="mx-3"><BadgesSection user={profileUser} /></div>}
+          {isOwnProfile && <div className="mx-3 motion-soft-in"><BadgesSection user={profileUser} /></div>}
 
           {/* Mitzvah Journey */}
-          {isOwnProfile && mitzvahLogs.length > 0 && <div className="mx-3"><MitzvahJourneySection logs={mitzvahLogs} /></div>}
+          {isOwnProfile && mitzvahLogs.length > 0 && <div className="mx-3 motion-soft-in"><MitzvahJourneySection logs={mitzvahLogs} /></div>}
 
           {/* Posts / Saved Tabs */}
-          <div id="recent-posts-section" className="mx-3">
+          <div id="recent-posts-section" className="mx-3 motion-soft-in">
             {isOwnProfile && (
               <div className="mb-3 flex rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
                 <button

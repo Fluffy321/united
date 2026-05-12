@@ -39,11 +39,11 @@ export default function ModernProfileHeader({ user, isOwnProfile, onMessage, onR
 
   return (
     <div className="px-3 pt-3">
-      <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
+      <div className="surface-panel overflow-hidden rounded-[28px]">
 
         {/* ── Cover photo / Shabbat Gold gradient header ── */}
         <div
-          className="relative h-[200px]"
+          className="graphic-stripes relative h-[200px]"
           style={
             user.cover_url
               ? { backgroundImage: `url(${user.cover_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
