@@ -141,14 +141,17 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Bottom Navigation */}
       {!hideNav && (
-        <>
-          <nav className="app-bottom-nav fixed inset-x-0 bottom-0 z-50 px-3">
-            {/* Warm cream background with warm border — community feel */}
-            <div className="mobile-page relative overflow-hidden rounded-2xl border border-[#E8E2D6] bg-[#FFFDF8]/96 shadow-[0_-1px_0_rgba(15,23,42,0.06),0_8px_32px_rgba(15,23,42,0.12)] backdrop-blur-xl">
-              <div className="flex items-center justify-around px-1 py-1.5">
-                {navItems.map((item) => {
+        <nav className="app-bottom-nav fixed inset-x-0 bottom-0 z-50 px-3">
+          {/* bg-white/25 + backdrop-blur-2xl = frosted glass; the low opacity lets the
+              mix-blend-mode:difference on inactive icons blend against the actual page
+              content behind the nav, auto-switching between dark and light. */}
+          <div className="mobile-page relative overflow-hidden rounded-2xl border border-black/[0.07] bg-white/25 shadow-[0_-1px_0_rgba(0,0,0,0.07),0_8px_32px_rgba(0,0,0,0.15)] backdrop-blur-2xl">
+            <div className="flex items-center justify-around px-1 py-1.5">
+              {navItems.map((item) => {
                 const isActive = activeNavKey === item.key;
                 const Icon = item.icon;
+                const showAvatar = item.isProfile && currentUser?.avatar_url;
+
                 return (
                   <button
                     key={item.key}
@@ -165,9 +168,7 @@ export default function Layout({ children, currentPageName }) {
                         navigate(createPageUrl(item.page));
                       }
                     }}
-                    className={`motion-press relative flex min-h-[58px] min-w-[54px] flex-1 flex-col items-center justify-center rounded-xl py-[7px] touch-manipulation ${
-                      isActive ? '' : 'text-slate-400 active:bg-slate-100/60'
-                    }`}
+                    className="motion-press relative flex min-h-[58px] min-w-[54px] flex-1 flex-col items-center justify-center rounded-xl py-[7px] touch-manipulation"
                   >
                     {isActive && (
                       <span
@@ -175,41 +176,53 @@ export default function Layout({ children, currentPageName }) {
                       />
                     )}
 
-                    <div className={`relative z-10 ${isActive ? 'nav-icon-active' : ''}`}>
-                      {item.isMitzvah ? (
-                        <MitzvahIcon
-                          size={20}
-                          strokeWidth={isActive ? 2.2 : 1.8}
-                          className={isActive ? 'text-blue-600' : 'text-slate-400'}
-                        />
-                      ) : item.isProfile && currentUser?.avatar_url ? (
+                    {showAvatar ? (
+                      /* Profile avatar: skip mix-blend-mode to avoid photo color inversion */
+                      <div className="relative z-10 flex flex-col items-center gap-0.5">
                         <img
                           src={currentUser.avatar_url}
                           alt=""
-                          className={`h-[22px] w-[22px] rounded-full object-cover ${isActive ? 'ring-2 ring-blue-600' : 'ring-1 ring-slate-300'}`}
+                          className={`h-[22px] w-[22px] rounded-full object-cover transition-all ${
+                            isActive ? 'ring-2 ring-blue-600' : 'ring-1 ring-black/20 shadow-sm'
+                          }`}
                         />
-                      ) : (
-                        <Icon
-                          className={`h-[21px] w-[21px] ${isActive ? 'text-blue-600' : 'text-slate-400'}`}
-                          strokeWidth={isActive ? 2.4 : 1.8}
-                        />
-                      )}
-                    </div>
-
-                    <span
-                      className={`relative z-10 mt-1 text-[10px] ${
-                        isActive ? 'font-bold text-blue-600' : 'font-normal text-slate-400'
-                      }`}
-                    >
-                      {item.name}
-                    </span>
+                        <span className={`text-[10px] ${
+                          isActive ? 'font-bold text-blue-600' : 'font-semibold text-black/55'
+                        }`}>
+                          {item.name}
+                        </span>
+                      </div>
+                    ) : isActive ? (
+                      /* Active: explicit blue, no blend mode */
+                      <div className="relative z-10 flex flex-col items-center gap-0.5 nav-icon-active">
+                        {item.isMitzvah ? (
+                          <MitzvahIcon size={20} strokeWidth={2.2} className="text-blue-600" />
+                        ) : (
+                          <Icon className="h-[21px] w-[21px] text-blue-600" strokeWidth={2.4} />
+                        )}
+                        <span className="text-[10px] font-bold text-blue-600">{item.name}</span>
+                      </div>
+                    ) : (
+                      /* Inactive: white + mix-blend-mode:difference
+                         → near-black on light backgrounds, lighter on dark backgrounds */
+                      <div
+                        className="relative z-10 flex flex-col items-center gap-0.5"
+                        style={{ mixBlendMode: 'difference' }}
+                      >
+                        {item.isMitzvah ? (
+                          <MitzvahIcon size={20} strokeWidth={1.8} className="text-white" />
+                        ) : (
+                          <Icon className="h-[21px] w-[21px] text-white" strokeWidth={1.8} />
+                        )}
+                        <span className="text-[10px] font-normal text-white">{item.name}</span>
+                      </div>
+                    )}
                   </button>
                 );
               })}
-              </div>
             </div>
-          </nav>
-        </>
+          </div>
+        </nav>
       )}
     </div>
   );
