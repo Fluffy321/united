@@ -141,13 +141,14 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Bottom Navigation */}
       {!hideNav && (
-        <>
-          <nav className="pointer-events-none fixed bottom-3 left-0 right-0 z-50 px-4">
-            <div className="glass-toolbar mobile-page pointer-events-auto relative overflow-hidden rounded-[28px] px-2 py-1.5">
-              <div className="flex items-center justify-around px-1 py-1.5">
-                {navItems.map((item) => {
+        <nav className="app-bottom-nav pointer-events-none fixed inset-x-0 bottom-0 z-50 px-4">
+          <div className="glass-toolbar mobile-page pointer-events-auto relative overflow-hidden rounded-[28px] px-2 py-1.5">
+            <div className="flex items-center justify-around px-1 py-1.5">
+              {navItems.map((item) => {
                 const isActive = activeNavKey === item.key;
                 const Icon = item.icon;
+                const showAvatar = item.isProfile && currentUser?.avatar_url;
+
                 return (
                   <button
                     key={item.key}
@@ -185,7 +186,7 @@ export default function Layout({ children, currentPageName }) {
                         <img
                           src={currentUser.avatar_url}
                           alt=""
-                          className={`h-[22px] w-[22px] rounded-full object-cover shadow-sm ${isActive ? 'ring-2 ring-blue-600' : 'ring-1 ring-slate-300'}`}
+                          className={`h-[22px] w-[22px] rounded-full object-cover shadow-sm transition-all ${isActive ? 'ring-2 ring-blue-600' : 'ring-1 ring-slate-300'}`}
                         />
                       ) : (
                         <Icon
@@ -205,10 +206,9 @@ export default function Layout({ children, currentPageName }) {
                   </button>
                 );
               })}
-              </div>
             </div>
-          </nav>
-        </>
+          </div>
+        </nav>
       )}
     </div>
   );

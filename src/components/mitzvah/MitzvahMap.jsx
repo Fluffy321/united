@@ -801,7 +801,7 @@ function MapController({ center }) {
   return null;
 }
 
-export default function MitzvahMap({ requests, userLocation, onSelectRequest, communityPoints = [], personalized = true }) {
+export default function MitzvahMap({ requests, userLocation, onSelectRequest, communityPoints = [], personalized = true, mapHeight }) {
   const [mapCenter, setMapCenter] = useState(null);
   const [activeTypes, setActiveTypes] = useState(() => new Set());
   const [selectedPoint, setSelectedPoint] = useState(null);
@@ -940,7 +940,7 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
 
   if (!mapCenter) {
     return (
-      <div className="h-[500px] bg-slate-100 rounded-2xl flex items-center justify-center">
+      <div className="bg-slate-100 rounded-2xl flex items-center justify-center" style={{ height: mapHeight ?? 500 }}>
         <p className="text-slate-500">Loading map...</p>
       </div>
     );
@@ -1010,7 +1010,7 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
           center={mapCenter}
           zoom={13}
           minZoom={9}
-          style={{ height: 500, width: '100%' }}
+          style={{ height: mapHeight ?? 500, width: '100%' }}
           zoomControl={true}
           scrollWheelZoom={true}
         >
