@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { dataService, findOrCreateDirectConversation } from '@/services';
+import { dataService, findOrCreateDirectConversation, friendsService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import ReportModal from '@/components/common/ReportModal';
@@ -32,6 +32,8 @@ export default function Profile() {
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   const [showInterestPicker, setShowInterestPicker] = useState(false);
   const [activeProfileTab, setActiveProfileTab] = useState('posts');
+  const [isFriend, setIsFriend] = useState(false);
+  const [friendLoading, setFriendLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -147,6 +149,18 @@ export default function Profile() {
     retry: 1,
   });
 
+  const { data: friends = [] } = useQuery({
+    queryKey: ['profile-friends', profileUser?.id],
+    queryFn: () => friendsService.list(profileUser.id),
+    enabled: !!profileUser,
+    staleTime: 60000,
+  });
+
+  useEffect(() => {
+    if (!currentUser?.id || !profileUser?.id || isOwnProfile) return;
+    friendsService.isFriend(currentUser.id, profileUser.id).then(setIsFriend).catch(() => setIsFriend(false));
+  }, [currentUser?.id, profileUser?.id, isOwnProfile]);
+
   const handleMessage = async () => {
     const conv = await findOrCreateDirectConversation(currentUser, {
       id: profileUser.id,
@@ -163,6 +177,22 @@ export default function Profile() {
     });
     toast.success('User blocked');
     navigate(createPageUrl('Feed'));
+  };
+
+  const handleFriendToggle = async () => {
+    if (!currentUser || !profileUser || isOwnProfile) return;
+    setFriendLoading(true);
+    try {
+      if (isFriend) {
+        await friendsService.removeFriend(currentUser.id, profileUser.id);
+        setIsFriend(false);
+      } else {
+        await friendsService.addFriend(currentUser, profileUser);
+        setIsFriend(true);
+      }
+    } finally {
+      setFriendLoading(false);
+    }
   };
 
   if (profileLoadError) {
@@ -234,6 +264,7 @@ export default function Profile() {
 
         {/* Stats Row */}
         <ModernStatsRow
+          friends={friends.length}
           following={userCommunities.length}
           posts={unifiedPosts.length}
           impact={mitzvahPoints}
@@ -250,6 +281,9 @@ export default function Profile() {
           onShare={handleShareProfile}
           onReport={() => setShowReport(true)}
           onBlock={handleBlock}
+          onFriendToggle={handleFriendToggle}
+          isFriend={isFriend}
+          friendLoading={friendLoading}
         />
 
         {/* Content Sections */}

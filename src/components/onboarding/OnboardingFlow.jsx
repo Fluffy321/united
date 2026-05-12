@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bell, Camera, Check, ChevronLeft, ChevronRight, Home, Loader2, Map, MapPin, MessageCircle, Sparkles, Users, X } from 'lucide-react';
-import { communitiesService, dataService, storageService } from '@/services';
+import { Bell, Camera, Check, ChevronLeft, ChevronRight, Home, Loader2, Map, MapPin, MessageCircle, Sparkles, Users, UserRoundPlus, X } from 'lucide-react';
+import { communitiesService, dataService, friendsService, storageService } from '@/services';
 import { toast } from 'sonner';
 
 const ONBOARDING_KEY_PREFIX = 'junited_onboarding_complete_';
@@ -147,8 +147,8 @@ function CommunitiesStep({ communities, selectedIds, setSelectedIds, loading }) 
   return (
     <StepShell
       eyebrow="Step 4"
-      title="Join a few communities"
-      text="Pick the groups you want in your feed. You can always change this later."
+      title="Choose the communities that feel like you"
+      text="These shape your feed, your map, and what the app learns to prioritize first."
     >
       {loading ? (
         <div className="flex justify-center py-12">
@@ -177,6 +177,74 @@ function CommunitiesStep({ communities, selectedIds, setSelectedIds, loading }) 
               </button>
             );
           })}
+        </div>
+      )}
+    </StepShell>
+  );
+}
+
+function normalizeContactValue(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9@.+]/g, '');
+}
+
+function ContactsStep({ matches, selectedIds, setSelectedIds, loading, error, onFindContacts }) {
+  const toggle = (id) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  return (
+    <StepShell
+      eyebrow="Step 4"
+      title="Find friends already here"
+      text="Tap once to check your contacts for people who already use JUnited. We only look after you approve access."
+    >
+      <button
+        type="button"
+        onClick={onFindContacts}
+        disabled={loading}
+        className="app-button-primary h-12 w-full"
+      >
+        {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserRoundPlus className="h-4 w-4" />}
+        {loading ? 'Checking contacts...' : 'Find Friends From Contacts'}
+      </button>
+
+      {error && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3 text-[12px] font-semibold text-amber-700">
+          {error}
+        </div>
+      )}
+
+      {matches.length > 0 ? (
+        <div className="space-y-2.5">
+          {matches.map((friend) => {
+            const active = selectedIds.has(friend.id);
+            return (
+              <button
+                key={`contact-friend-${friend.id}`}
+                type="button"
+                onClick={() => toggle(friend.id)}
+                className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition active:scale-[0.99] ${
+                  active ? 'border-emerald-500 bg-emerald-50' : 'app-card-hover border-slate-200 bg-white hover:border-emerald-200'
+                }`}
+              >
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${active ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                  {active ? <Check className="h-5 w-5" /> : <Users className="h-5 w-5" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-black text-slate-950">{friend.display_name || friend.full_name || 'JUnited member'}</p>
+                  <p className="truncate text-[12px] font-medium text-slate-500">{friend.email || friend.phone || 'Matched from your contacts'}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-semibold text-slate-500">
+          Contact matches will appear here after you grant access. You can also skip this and add friends later from profiles.
         </div>
       )}
     </StepShell>
@@ -228,8 +296,11 @@ function NotificationsStep({ preferences, setPreferences }) {
       <div className="space-y-2.5">
         {[
           ['messages', 'Messages', 'New direct messages from community members.'],
+          ['replies', 'Replies & mentions', 'Follow-up messages in threads you joined.'],
           ['mitzvah', 'Mitzvah updates', 'Offers, accepted tasks, and verification requests.'],
           ['community', 'Community activity', 'Posts and announcements from communities you join.'],
+          ['localBrief', 'Daily brief', 'A useful recap of what matters nearby.'],
+          ['mapActivity', 'Nearby map activity', 'Posts and local updates that appear on your community map.'],
         ].map(([key, label, description]) => (
           <button
             key={key}
@@ -259,11 +330,18 @@ export default function OnboardingFlow({ user, onComplete }) {
   const [neighborhood, setNeighborhood] = useState(user?.neighborhood || user?.cityPreset || user?.city || '');
   const [communities, setCommunities] = useState(DEFAULT_COMMUNITIES);
   const [selectedCommunityIds, setSelectedCommunityIds] = useState(new Set());
+  const [contactMatches, setContactMatches] = useState([]);
+  const [selectedFriendIds, setSelectedFriendIds] = useState(new Set());
+  const [contactsLoading, setContactsLoading] = useState(false);
+  const [contactsError, setContactsError] = useState('');
   const [loadingCommunities, setLoadingCommunities] = useState(false);
   const [notificationPrefs, setNotificationPrefs] = useState({
     messages: true,
+    replies: true,
     mitzvah: true,
     community: true,
+    localBrief: true,
+    mapActivity: true,
   });
   const [saving, setSaving] = useState(false);
 
@@ -271,6 +349,7 @@ export default function OnboardingFlow({ user, onComplete }) {
     'Name',
     'Photo',
     'Neighborhood',
+    'Friends',
     'Communities',
     'App Tour',
     'Notifications',
@@ -313,6 +392,48 @@ export default function OnboardingFlow({ user, onComplete }) {
     }
   };
 
+  const handleFindContacts = async () => {
+    setContactsError('');
+    setContactsLoading(true);
+    try {
+      if (!navigator.contacts?.select) {
+        setContactsError('This browser cannot read contacts here yet. You can skip this and add friends from profiles.');
+        return;
+      }
+
+      const contacts = await navigator.contacts.select(['name', 'email', 'tel'], { multiple: true });
+      const values = new Set(
+        contacts.flatMap((contact) => [
+          ...(contact.email || []),
+          ...(contact.tel || []),
+        ]).map(normalizeContactValue).filter(Boolean)
+      );
+
+      if (values.size === 0) {
+        setContactsError('No usable email or phone details were found in the selected contacts.');
+        return;
+      }
+
+      const users = await dataService.entities.User.list('-created_date', 500);
+      const matches = users.filter((candidate) => {
+        if (candidate.id === user?.id) return false;
+        const candidateValues = [
+          candidate.email,
+          candidate.phone,
+          candidate.phone_number,
+        ].map(normalizeContactValue).filter(Boolean);
+        return candidateValues.some((value) => values.has(value));
+      });
+
+      setContactMatches(matches);
+      if (matches.length === 0) setContactsError('No current JUnited members matched those contacts yet.');
+    } catch {
+      setContactsError('Contacts access was not completed. You can safely skip this step.');
+    } finally {
+      setContactsLoading(false);
+    }
+  };
+
   const saveProfile = async () => {
     setSaving(true);
     try {
@@ -345,6 +466,14 @@ export default function OnboardingFlow({ user, onComplete }) {
         );
       }
 
+      if (selectedFriendIds.size > 0) {
+        await Promise.allSettled(
+          contactMatches
+            .filter((friend) => selectedFriendIds.has(friend.id))
+            .map((friend) => friendsService.addFriend(user, friend))
+        );
+      }
+
       storageService.setItem(getOnboardingStorageKey(user.id), '1');
       onComplete?.({ ...user, ...profilePatch });
     } catch (error) {
@@ -365,7 +494,7 @@ export default function OnboardingFlow({ user, onComplete }) {
 
   const back = () => setStep((current) => Math.max(0, current - 1));
   const skip = () => {
-    if (step === 1 || step === 3 || step === 4 || step === 5) next();
+    if (step === 1 || step === 3 || step === 4 || step === 5 || step === 6) next();
   };
 
   return (
@@ -386,7 +515,7 @@ export default function OnboardingFlow({ user, onComplete }) {
           </button>
         </div>
 
-        <div className="mb-5 grid grid-cols-6 gap-1.5">
+        <div className="mb-5 grid grid-cols-7 gap-1.5">
           {steps.map((item, index) => (
             <div key={item} className={`h-1.5 rounded-full ${index <= step ? 'bg-blue-600' : 'bg-blue-100'}`} />
           ))}
@@ -405,6 +534,16 @@ export default function OnboardingFlow({ user, onComplete }) {
           )}
           {step === 2 && <NeighborhoodStep neighborhood={neighborhood} setNeighborhood={setNeighborhood} />}
           {step === 3 && (
+            <ContactsStep
+              matches={contactMatches}
+              selectedIds={selectedFriendIds}
+              setSelectedIds={setSelectedFriendIds}
+              loading={contactsLoading}
+              error={contactsError}
+              onFindContacts={handleFindContacts}
+            />
+          )}
+          {step === 4 && (
             <CommunitiesStep
               communities={communities}
               selectedIds={selectedCommunityIds}
@@ -412,8 +551,8 @@ export default function OnboardingFlow({ user, onComplete }) {
               loading={loadingCommunities}
             />
           )}
-          {step === 4 && <AppTourStep />}
-          {step === 5 && <NotificationsStep preferences={notificationPrefs} setPreferences={setNotificationPrefs} />}
+          {step === 5 && <AppTourStep />}
+          {step === 6 && <NotificationsStep preferences={notificationPrefs} setPreferences={setNotificationPrefs} />}
         </div>
 
         <div className="mt-4 flex items-center gap-2">
@@ -443,7 +582,7 @@ export default function OnboardingFlow({ user, onComplete }) {
               </>
             )}
           </button>
-          {(step === 1 || step === 3 || step === 4 || step === 5) && (
+          {(step === 1 || step === 3 || step === 4 || step === 5 || step === 6) && (
             <button type="button" onClick={skip} className="h-12 rounded-2xl px-3 text-[13px] font-bold text-slate-400">
               Skip
             </button>

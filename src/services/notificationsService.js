@@ -142,6 +142,43 @@ export const notificationsService = {
       data: { community_id: communityId },
     });
   },
+
+  notifyCommentReply({ recipientId, actorId, actorName, postId, commentId, preview }) {
+    return this.create({
+      userId: recipientId,
+      actorId,
+      type: 'comment_reply',
+      title: 'New reply in your thread',
+      body: `${actorName || 'Someone'} replied${preview ? `: ${preview}` : '.'}`,
+      linkUrl: postId ? `/PostDetail?id=${postId}` : '/Feed',
+      postId,
+      data: { comment_id: commentId, preview },
+    });
+  },
+
+  notifyDailyBriefReady({ userId, networkLabel = 'Five Towns' }) {
+    return this.create({
+      userId,
+      type: 'announcement',
+      title: 'Your daily brief is ready',
+      body: `See what matters today in ${networkLabel}.`,
+      linkUrl: '/Feed',
+      data: { brief: true, network: networkLabel },
+    });
+  },
+
+  notifyNearbyMapActivity({ userId, actorId, actorName, communityName, postId, locationLabel }) {
+    return this.create({
+      userId,
+      actorId,
+      type: 'community_activity',
+      title: 'New map activity nearby',
+      body: `${actorName || 'Someone'} posted${communityName ? ` in ${communityName}` : ''}${locationLabel ? ` near ${locationLabel}` : ''}.`,
+      linkUrl: '/Map',
+      postId,
+      data: { location_label: locationLabel, source: 'map' },
+    });
+  },
 };
 
 export default notificationsService;

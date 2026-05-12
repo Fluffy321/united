@@ -4,6 +4,7 @@ import { LayoutGroup, motion } from 'framer-motion';
 const TABS = [
   { id: 'for_you',  label: 'For You'  },
   { id: 'trending', label: 'Trending' },
+  { id: 'communities', label: 'Communities' },
   { id: 'events',   label: 'Events'   },
   { id: 'nearby',   label: 'Near You' },
   { id: 'chessed',  label: 'Chesed'   },

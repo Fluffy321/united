@@ -636,7 +636,11 @@ export default function Communities() {
           onMessages={() => setShowMessages(true)}
         />
 
-        <IdentityStrip tags={visibleIdentityTags} />
+        <IdentityStrip
+          tags={visibleIdentityTags}
+          communities={yourCommunities}
+          onOpen={setSelectedCommunityId}
+        />
 
         <SearchBar
           query={query}
@@ -727,11 +731,33 @@ function HeroPill({ label }) {
   return <span className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700">{label}</span>;
 }
 
-function IdentityStrip({ tags }) {
+function IdentityStrip({ tags, communities = [], onOpen }) {
   return (
     <section className="surface-panel-soft mb-4 rounded-[24px] p-4">
       <h2 className="text-base font-black text-slate-950">Active in...</h2>
-      <p className="mt-1 text-sm font-semibold text-slate-500">The communities that represent you can become profile tags and social signals.</p>
+      <p className="mt-1 text-sm font-semibold text-slate-500">Jump back into every community you joined, then keep your visible identity tags underneath.</p>
+      <div className="mobile-scroll-x mt-3 flex gap-2 pb-1">
+        {communities.length > 0 ? communities.map((community) => (
+          <button
+            key={`active-community-${community.id}`}
+            type="button"
+            onClick={() => onOpen?.(community.id)}
+            className="motion-press flex min-w-[180px] shrink-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-[12px] font-black text-white">
+              {(community.name || '?').split(' ').slice(0, 2).map((part) => part[0]).join('').toUpperCase()}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-[13px] font-black text-slate-950">{community.name}</span>
+              <span className="block truncate text-[11px] font-bold text-slate-500">{community.category || community.communityType || 'Community'}</span>
+            </span>
+          </button>
+        )) : (
+          <span className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs font-black text-slate-500">
+            Join communities and they will live here for fast access.
+          </span>
+        )}
+      </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {tags.length > 0 ? tags.map((tag, index) => (
           <span key={`${tag}-${index}`} className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700">{tag}</span>
