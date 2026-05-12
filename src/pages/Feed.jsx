@@ -17,7 +17,7 @@ import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
-import { Search, Plus, RefreshCw, ChevronDown, MapPin, Users, HeartHandshake, CalendarDays, Bell, ShieldCheck, MessageCircle } from 'lucide-react';
+import { Search, Plus, RefreshCw, ChevronDown } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';

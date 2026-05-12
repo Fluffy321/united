@@ -88,6 +88,7 @@ export default function Settings() {
   const [activeSection, setActiveSection] = useState('profile');
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteText, setDeleteText] = useState('');
   const [form, setForm] = useState({
     display_name: '',
     bio: '',

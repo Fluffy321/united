@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   BadgeCheck,
   Compass,
@@ -451,6 +451,8 @@ export default function Communities() {
   const [showCreate, setShowCreate] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   const [joiningId, setJoiningId] = useState(null);
+  const [optimisticJoins, setOptimisticJoins] = useState(new Set());
+  const [optimisticLeaves, setOptimisticLeaves] = useState(new Set());
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
 
@@ -474,13 +476,15 @@ export default function Communities() {
   const joinedIds = useMemo(() => new Set(memberships.map((m) => m.community_id)), [memberships]);
 
   const communities = useMemo(() => {
-    const backendCommunities = rawCommunities.map((community) => adaptCommunity(community, joinedIds, membershipsByCommunity));
+    const effectiveJoined = new Set([...joinedIds, ...optimisticJoins]);
+    optimisticLeaves.forEach((id) => effectiveJoined.delete(id));
+    const backendCommunities = rawCommunities.map((community) => adaptCommunity(community, effectiveJoined, membershipsByCommunity));
     const backendIds = new Set(backendCommunities.map((community) => community.id));
     const seeds = EXPERIENCE_SEEDS
       .filter((seed) => !backendIds.has(seed.id))
-      .map((seed) => adaptCommunity(seed, joinedIds, membershipsByCommunity));
+      .map((seed) => adaptCommunity(seed, effectiveJoined, membershipsByCommunity));
     return [...seeds, ...backendCommunities];
-  }, [joinedIds, membershipsByCommunity, rawCommunities]);
+  }, [joinedIds, membershipsByCommunity, rawCommunities, optimisticJoins, optimisticLeaves]);
 
   const selectedCommunity = useMemo(
     () => communities.find((community) => community.id === selectedCommunityId),
@@ -535,6 +539,16 @@ export default function Communities() {
 
     const isJoined = joinedIds.has(communityId);
     setJoiningId(communityId);
+
+    // Optimistic flip — UI responds instantly
+    if (isJoined) {
+      setOptimisticLeaves((prev) => new Set([...prev, communityId]));
+      setOptimisticJoins((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
+    } else {
+      setOptimisticJoins((prev) => new Set([...prev, communityId]));
+      setOptimisticLeaves((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
+    }
+
     try {
       if (isJoined) {
         const records = await dataService.entities.UserCommunity.filter({
@@ -558,6 +572,12 @@ export default function Communities() {
       queryClient.invalidateQueries({ queryKey: ['communities-list'] });
       queryClient.invalidateQueries({ queryKey: ['communities-memberships', currentUser?.id] });
     } catch {
+      // Roll back optimistic update on failure
+      if (isJoined) {
+        setOptimisticLeaves((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
+      } else {
+        setOptimisticJoins((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
+      }
       toast.error('Something went wrong');
     }
     setJoiningId(null);
@@ -725,13 +745,22 @@ function IdentityStrip({ tags }) {
 }
 
 function SearchBar({ query, onQueryChange, category, onCategoryChange }) {
+  const [inputValue, setInputValue] = useState(query);
+  const debounceRef = useRef(null);
+
+  const handleSearch = (value) => {
+    setInputValue(value);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => onQueryChange(value), 250);
+  };
+
   return (
     <section className="surface-panel-soft mb-5 rounded-[24px] p-3">
       <label className="relative block">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input
-          value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
+          value={inputValue}
+          onChange={(event) => handleSearch(event.target.value)}
           placeholder="Search identity, topic, privacy, or neighborhood"
           className="app-input pl-10 pr-3 text-sm"
         />
