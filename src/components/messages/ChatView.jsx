@@ -50,12 +50,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const other = getOtherParticipant();
 
   useEffect(() => {
-    if (isCommunityChat) {
-      setIsLoading(false);
-      return;
-    }
     if (isAI) {
-      // Load saved AI chat messages through the storage service.
       const saved = loadAIMessages(currentUser.id);
       setMessages(saved);
       setIsLoading(false);
@@ -63,14 +58,14 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     }
 
     loadMessages();
-    markAsRead();
-    loadMitzvahContext();
+    if (!isCommunityChat) {
+      markAsRead();
+      loadMitzvahContext();
+    }
 
-    // Subscribe to new messages in this conversation
     const unsubscribe = messagesService.subscribeToMessages((event) => {
       if (event.type === 'create' && event.data.conversation_id === conversation.id) {
         setMessages(prev => {
-          // Avoid duplicates
           if (prev.find(m => m.id === event.data.id)) return prev;
           return [...prev, event.data];
         });
@@ -508,8 +503,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           <FileAttachmentButton onAttached={setPendingAttachment} />
           <textarea
             rows={1}
-            placeholder="Type a message…"
-            disabled={isAI}
+            placeholder={isAI ? 'Ask the AI assistant…' : isCommunityChat ? 'Message the community…' : 'Type a message…'}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => {
@@ -523,9 +517,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           />
           <button
             onClick={handleSend}
-            disabled={isAI || (!newMessage.trim() && !pendingAttachment) || isSending}
+            disabled={(!newMessage.trim() && !pendingAttachment) || isSending || aiThinking}
             className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 disabled:opacity-40 active:scale-95 transition-all"
-            style={{ background: isAI ? '#CBD5E1' : '#2563EB' }}
+            style={{ background: isAI ? 'linear-gradient(135deg, #2563EB, #0F172A)' : '#2563EB' }}
           >
             {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>

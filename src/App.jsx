@@ -5,6 +5,7 @@ import NavigationTracker from '@/lib/NavigationTracker'
 import ThemeProvider from '@/components/theme/ThemeProvider'
 import PageTransition from '@/components/common/PageTransition'
 import AppErrorBoundary from '@/components/common/AppErrorBoundary'
+import AppSplashScreen from '@/components/common/AppSplashScreen'
 import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
@@ -81,6 +82,8 @@ const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 
 const ADMIN_PAGE_KEYS = new Set(['AdminModerationQueue', 'AdminSeedControl']);
+const SPLASH_MIN_VISIBLE_MS = 720;
+const SPLASH_MAX_WAIT_MS = 4500;
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -212,6 +215,39 @@ const AuthenticatedApp = () => {
   );
 };
 
+const InitialAppGate = ({ children }) => {
+  const { isLoadingAuth } = useAuth();
+  const [minimumElapsed, setMinimumElapsed] = useState(false);
+  const [forceReady, setForceReady] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    const minimumTimer = window.setTimeout(() => setMinimumElapsed(true), SPLASH_MIN_VISIBLE_MS);
+    const maxTimer = window.setTimeout(() => setForceReady(true), SPLASH_MAX_WAIT_MS);
+
+    return () => {
+      window.clearTimeout(minimumTimer);
+      window.clearTimeout(maxTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!showSplash || !minimumElapsed || (isLoadingAuth && !forceReady)) return undefined;
+
+    setIsExiting(true);
+    const exitTimer = window.setTimeout(() => setShowSplash(false), 320);
+    return () => window.clearTimeout(exitTimer);
+  }, [forceReady, isLoadingAuth, minimumElapsed, showSplash]);
+
+  return (
+    <>
+      {children}
+      {showSplash && <AppSplashScreen exiting={isExiting} />}
+    </>
+  );
+};
+
 
 function App() {
   if (PROD_CONFIG_MISSING) return <ProductionConfigError />;
@@ -221,10 +257,12 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <QueryClientProvider client={queryClientInstance}>
-            <Router>
-              <NavigationTracker />
-              <AuthenticatedApp />
-            </Router>
+            <InitialAppGate>
+              <Router>
+                <NavigationTracker />
+                <AuthenticatedApp />
+              </Router>
+            </InitialAppGate>
           </QueryClientProvider>
         </AuthProvider>
       </ThemeProvider>

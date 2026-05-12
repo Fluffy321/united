@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { ChevronRight, Loader2, MessageCircle, Plus, Search, Users } from 'lucide-react';
 import PageHelp from '@/components/common/PageHelp';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -58,6 +58,8 @@ export default function Communities() {
   const [showCreate, setShowCreate] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   const [joiningId, setJoiningId] = useState(null);
+  const [optimisticJoins, setOptimisticJoins] = useState(new Set());
+  const [optimisticLeaves, setOptimisticLeaves] = useState(new Set());
 
   const { data: rawCommunities = [], isLoading } = useQuery({
     queryKey: ['communities-list'],
@@ -74,10 +76,14 @@ export default function Communities() {
 
   const joinedIds = useMemo(() => new Set(memberships.map((m) => m.community_id)), [memberships]);
 
-  const communities = useMemo(
-    () => rawCommunities.map((c) => adaptCommunity(c, joinedIds)),
-    [rawCommunities, joinedIds]
-  );
+  const communities = useMemo(() => {
+    const effectiveJoined = new Set([
+      ...joinedIds,
+      ...optimisticJoins,
+    ]);
+    optimisticLeaves.forEach((id) => effectiveJoined.delete(id));
+    return rawCommunities.map((c) => adaptCommunity(c, effectiveJoined));
+  }, [rawCommunities, joinedIds, optimisticJoins, optimisticLeaves]);
 
   const selectedCommunity = useMemo(
     () => communities.find((c) => c.id === selectedCommunityId),
@@ -89,8 +95,18 @@ export default function Communities() {
 
   const handleJoin = async (communityId) => {
     if (!currentUser) return;
-    const isJoined = joinedIds.has(communityId);
+    const isJoined = joinedIds.has(communityId) || optimisticJoins.has(communityId) && !optimisticLeaves.has(communityId);
     setJoiningId(communityId);
+
+    // Optimistic update — flip immediately
+    if (isJoined) {
+      setOptimisticLeaves((prev) => new Set([...prev, communityId]));
+      setOptimisticJoins((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
+    } else {
+      setOptimisticJoins((prev) => new Set([...prev, communityId]));
+      setOptimisticLeaves((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
+    }
+
     try {
       if (isJoined) {
         const records = await dataService.entities.UserCommunity.filter({
@@ -112,6 +128,12 @@ export default function Communities() {
       queryClient.invalidateQueries({ queryKey: ['communities-list'] });
       queryClient.invalidateQueries({ queryKey: ['communities-memberships', currentUser?.id] });
     } catch {
+      // Roll back optimistic update
+      if (isJoined) {
+        setOptimisticLeaves((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
+      } else {
+        setOptimisticJoins((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
+      }
       toast.error('Something went wrong');
     }
     setJoiningId(null);
@@ -327,8 +349,16 @@ function CommunityRowCard({ community, onOpen }) {
 // ─── Discover tab ─────────────────────────────────────────────────────────────
 
 function DiscoverView({ communities, onOpen, onToggleJoin, joiningId }) {
+  const [inputValue, setInputValue] = useState('');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
+  const debounceRef = useRef(null);
+
+  const handleSearch = (value) => {
+    setInputValue(value);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setQuery(value), 250);
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -350,8 +380,8 @@ function DiscoverView({ communities, onOpen, onToggleJoin, joiningId }) {
         <label className="relative block">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={inputValue}
+            onChange={(e) => handleSearch(e.target.value)}
             placeholder="Search communities..."
             className="app-input pl-10 pr-3 text-sm"
           />

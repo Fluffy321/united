@@ -4,8 +4,10 @@ import {
   Lock,
   MapPin,
   MessageCircle,
+  Send,
   Shield,
   Users,
+  X,
 } from 'lucide-react';
 import { categoryAccent } from './CommunityHubCard';
 
@@ -44,9 +46,31 @@ function initials(name = '') {
 
 export default function CommunityHubDetail({ community, currentUser, onBack, onToggleJoin, joiningId }) {
   const [activeTab, setActiveTab] = useState('posts');
+  const [composeText, setComposeText] = useState('');
+  const [showCompose, setShowCompose] = useState(false);
+  const [posts, setPosts] = useState([]);
   const accent = categoryAccent[community.category] || 'from-blue-500 to-slate-700';
   const prompts = TYPE_PROMPTS[community.category] || DEFAULT_PROMPTS;
   const isJoining = joiningId === community.id;
+
+  const openCompose = (prefill = '') => {
+    setComposeText(prefill);
+    setShowCompose(true);
+  };
+
+  const submitPost = () => {
+    const text = composeText.trim();
+    if (!text) return;
+    setPosts(prev => [{
+      id: `post-${Date.now()}`,
+      author: currentUser?.display_name || currentUser?.full_name || 'You',
+      avatar: currentUser?.avatar_url || null,
+      content: text,
+      createdAt: new Date().toISOString(),
+    }, ...prev]);
+    setComposeText('');
+    setShowCompose(false);
+  };
 
   return (
     <main className="min-h-screen bg-[#F7F9FC] mobile-safe-bottom">
@@ -153,7 +177,7 @@ export default function CommunityHubDetail({ community, currentUser, onBack, onT
         {/* Tab content */}
         <div className="mt-3">
           {activeTab === 'posts' && (
-            <PostsTab community={community} prompts={prompts} />
+            <PostsTab community={community} prompts={prompts} posts={posts} onCompose={openCompose} />
           )}
           {activeTab === 'members' && (
             <MembersTab community={community} />
@@ -163,11 +187,51 @@ export default function CommunityHubDetail({ community, currentUser, onBack, onT
           )}
         </div>
       </section>
+
+      {showCompose && (
+        <div className="fixed inset-0 z-[80] flex items-end bg-slate-950/40 sm:items-center sm:justify-center sm:p-4">
+          <div className="w-full rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-lg sm:rounded-3xl">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900">New post in {community.name}</h3>
+              <button
+                onClick={() => setShowCompose(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <textarea
+              autoFocus
+              rows={4}
+              value={composeText}
+              onChange={(e) => setComposeText(e.target.value)}
+              placeholder="Share something with the community…"
+              className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none focus:border-blue-400 focus:bg-white transition-colors placeholder:text-slate-400"
+            />
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                onClick={() => setShowCompose(false)}
+                className="h-9 rounded-xl px-4 text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitPost}
+                disabled={!composeText.trim()}
+                className="flex h-9 items-center gap-1.5 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-40 active:scale-[0.98]"
+              >
+                <Send className="h-3.5 w-3.5" />
+                Post
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
 
-function PostsTab({ community, prompts }) {
+function PostsTab({ community, prompts, posts, onCompose }) {
   if (!community.joined) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
@@ -181,16 +245,20 @@ function PostsTab({ community, prompts }) {
   return (
     <div className="space-y-3">
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+        <button
+          onClick={() => onCompose('')}
+          className="flex w-full items-center gap-3 pb-4 border-b border-slate-100 text-left"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
             <MessageCircle className="h-4 w-4" />
           </div>
-          <p className="text-sm font-semibold text-slate-600">What's on your mind? Start a conversation.</p>
-        </div>
+          <p className="text-sm font-semibold text-slate-400">What's on your mind? Start a conversation…</p>
+        </button>
         <div className="mt-4 space-y-2">
           {prompts.map((prompt) => (
             <button
               key={prompt}
+              onClick={() => onCompose(prompt)}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-[13px] font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 active:scale-[0.99]"
             >
               {prompt}
@@ -199,9 +267,45 @@ function PostsTab({ community, prompts }) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
-        <p className="text-sm font-semibold text-slate-500">No posts yet — be the first to post!</p>
+      {posts.length > 0 ? (
+        <div className="space-y-3">
+          {posts.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
+          <p className="text-sm font-semibold text-slate-500">No posts yet — be the first to post!</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PostCard({ post }) {
+  const initials = (post.author || '?').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  const timeAgo = (() => {
+    const diff = Date.now() - new Date(post.createdAt).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  })();
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[12px] font-bold text-white overflow-hidden">
+          {post.avatar ? <img src={post.avatar} alt="" className="h-full w-full object-cover" /> : initials}
+        </div>
+        <div>
+          <p className="text-[13px] font-bold text-slate-900">{post.author}</p>
+          <p className="text-[11px] text-slate-400">{timeAgo}</p>
+        </div>
       </div>
+      <p className="text-sm leading-relaxed text-slate-700">{post.content}</p>
     </div>
   );
 }
