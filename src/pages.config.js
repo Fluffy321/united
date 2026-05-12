@@ -23,6 +23,7 @@ const Notifications        = lazy(() => import('./pages/Notifications'));
 const Communities          = lazy(() => import('./pages/Communities'));
 const Feed                 = lazy(() => import('./pages/Feed'));
 const InviteJoin           = lazy(() => import('./pages/InviteJoin'));
+const Map                  = lazy(() => import('./pages/Map'));
 const Messages             = lazy(() => import('./pages/Messages'));
 const MitzvahCircle        = lazy(() => import('./pages/MitzvahCircle'));
 const Profile              = lazy(() => import('./pages/Profile'));
@@ -35,6 +36,7 @@ export const PAGES = {
   Communities,
   Feed,
   InviteJoin,
+  Map,
   Messages,
   MitzvahCircle,
   Profile,

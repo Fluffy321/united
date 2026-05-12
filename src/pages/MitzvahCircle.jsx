@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { mitzvahService, notificationsService } from '@/services';
 import { toast } from 'sonner';
-import MitzvahMap from '@/components/mitzvah/MitzvahMap';
 import PageHelp from '@/components/common/PageHelp';
 
 const CATEGORIES = [
@@ -532,32 +531,17 @@ function Metric({ icon: Icon, label, value, tone }) {
   );
 }
 
-const NEIGHBORHOOD_COORDS = {
-  Cedarhurst: { lat: 40.6223, lng: -73.7246 },
-  Woodmere: { lat: 40.6323, lng: -73.7129 },
-  Lawrence: { lat: 40.6157, lng: -73.7296 },
-  Hewlett: { lat: 40.6434, lng: -73.6946 },
-  Inwood: { lat: 40.6229, lng: -73.7501 },
-  'Five Towns': { lat: 40.6369, lng: -73.7142 },
-};
-
-const getRequestCoords = (request, index = 0) => {
-  if (request.approxLat && request.approxLng) {
-    return { lat: request.approxLat, lng: request.approxLng };
-  }
-  const base = NEIGHBORHOOD_COORDS[request.neighborhood] || NEIGHBORHOOD_COORDS['Five Towns'];
-  return {
-    lat: base.lat + ((index % 3) - 1) * 0.002,
-    lng: base.lng + (Math.floor(index / 3) - 1) * 0.002,
-  };
-};
 
 export default function MitzvahCircle() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user: currentUser, isLoadingAuth } = useAuth();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = React.useState(searchParams.get('tab') || 'open');
+  const VALID_TABS = ['open', 'offers', 'posted', 'completed'];
+  const [activeTab, setActiveTab] = React.useState(() => {
+    const tab = searchParams.get('tab');
+    return VALID_TABS.includes(tab) ? tab : 'open';
+  });
   const [query, setQuery] = React.useState('');
   const [categoryFilter, setCategoryFilter] = React.useState('All');
   const [showCreate, setShowCreate] = React.useState(false);
@@ -565,8 +549,8 @@ export default function MitzvahCircle() {
 
   React.useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && tab !== activeTab) setActiveTab(tab);
-  }, [searchParams, activeTab]);
+    if (tab && tab !== activeTab && VALID_TABS.includes(tab)) setActiveTab(tab);
+  }, [searchParams]);
 
   const changeTab = (tab) => {
     setActiveTab(tab);
@@ -769,16 +753,6 @@ export default function MitzvahCircle() {
     }))
     .filter((item) => item.offer);
   const myPosted = filteredRequests.filter((r) => r.poster_id === currentUser?.id);
-  const mapRequests = openRequests.map((r, i) => {
-    const coords = getRequestCoords(r, i);
-    return {
-      ...r,
-      location_lat: coords.lat,
-      location_lng: coords.lng,
-      location_text: r.neighborhood,
-      created_date: r.created_date || r.created_at,
-    };
-  });
 
   const totals = React.useMemo(() => ({
     openCount: requests.filter((r) => r.status === STATUSES.OPEN).length,
@@ -790,7 +764,6 @@ export default function MitzvahCircle() {
 
   const tabs = [
     { id: 'open', label: 'Help Requests' },
-    { id: 'map', label: 'Map' },
     { id: 'offers', label: 'My Offers' },
     { id: 'posted', label: 'My Posted' },
     { id: 'completed', label: 'Completed' },
@@ -857,7 +830,7 @@ export default function MitzvahCircle() {
         </div>
 
         {/* Search/filter bar for list views */}
-        {['open', 'posted', 'map'].includes(activeTab) && (
+        {['open', 'posted'].includes(activeTab) && (
           <div className="app-card mb-3 grid gap-2 p-3 sm:grid-cols-[1fr_220px]">
             <label className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -910,22 +883,6 @@ export default function MitzvahCircle() {
                 text="Be the first to post a chesed request in your community."
               />
             )
-          )}
-
-          {activeTab === 'map' && (
-            <div className="space-y-3">
-              <div className="app-card overflow-hidden" style={{ height: '380px' }}>
-                <MitzvahMap
-                  requests={mapRequests}
-                  selectedRequestId={null}
-                  onSelectRequest={setQuickViewRequest}
-                  communityPoints={[]}
-                />
-              </div>
-              {mapRequests.length === 0 && (
-                <EmptyState title="No open requests on the map" text="Post a request to see it here." />
-              )}
-            </div>
           )}
 
           {activeTab === 'offers' && (

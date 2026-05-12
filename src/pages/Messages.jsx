@@ -223,43 +223,44 @@ export default function Messages() {
         <div className={`flex flex-col w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ${
         selectedConversation ? 'hidden lg:flex lg:w-80 lg:rounded-r-none lg:border-r' : 'flex'}`
         }>
-          <div className="flex-shrink-0 border-b border-slate-100 bg-white p-3">
-            <div className="mb-3 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-              <div className="relative p-4">
-                <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-[42px] bg-blue-50" />
-                <div className="relative flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-1.5">
-                    <h1 className="text-[22px] font-black tracking-normal text-slate-950">Messages</h1>
-                    <PageHelp text="Coordinate privately with people or groups connected to your communities." align="end" />
-                  </div>
-                  <button
-                    onClick={() => setShowNewMessage(true)}
-                    className="mobile-touch shrink-0 rounded-2xl bg-slate-950 px-3 text-[13px] font-black text-white shadow-sm active:scale-95"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="relative mt-3 grid grid-cols-3 gap-2">
-                  <div className="rounded-xl bg-slate-50 px-3 py-2">
-                    <MessageCircle className="mb-1 h-4 w-4 text-blue-600" />
-                    <p className="text-[15px] font-black text-slate-950">{allConversations.length}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Chats</p>
-                  </div>
-                  <div className="rounded-xl bg-blue-50 px-3 py-2">
-                    <Inbox className="mb-1 h-4 w-4 text-blue-700" />
-                    <p className="text-[15px] font-black text-blue-800">{unreadTotal}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-blue-600">Unread</p>
-                  </div>
-                  <div className="rounded-xl bg-emerald-50 px-3 py-2">
-                    <Users className="mb-1 h-4 w-4 text-emerald-700" />
-                    <p className="text-[15px] font-black text-emerald-800">{communityTotal}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600">Groups</p>
-                  </div>
-                </div>
+          <div className="flex-shrink-0 border-b border-slate-100 bg-white px-4 pt-4 pb-3">
+            {/* Title row */}
+            <div className="flex items-center justify-between gap-2 pb-3">
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-[20px] font-black tracking-normal text-slate-950">Messages</h1>
+                <PageHelp text="Coordinate privately with people or groups connected to your communities." align="end" />
               </div>
+              <button
+                onClick={() => setShowNewMessage(true)}
+                className="flex items-center gap-1.5 rounded-xl bg-slate-950 px-3 py-2 text-[13px] font-black text-white transition-all hover:bg-slate-800 active:scale-95"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                New
+              </button>
             </div>
+
+            {/* Inline stats */}
+            <div className="flex items-center gap-3 pb-3 text-[12px]">
+              <span className="flex items-center gap-1 text-slate-500">
+                <MessageCircle className="h-3.5 w-3.5 text-slate-400" />
+                <span className="font-black text-slate-800">{allConversations.length}</span> chats
+              </span>
+              {unreadTotal > 0 && (
+                <span className="flex items-center gap-1 font-semibold text-blue-600">
+                  <Inbox className="h-3.5 w-3.5" />
+                  <span className="font-black">{unreadTotal}</span> unread
+                </span>
+              )}
+              {communityTotal > 0 && (
+                <span className="flex items-center gap-1 text-slate-500">
+                  <Users className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="font-black text-slate-700">{communityTotal}</span> groups
+                </span>
+              )}
+            </div>
+
             {/* Filter pills */}
-            <div className="mobile-scroll-x flex gap-2 pb-2">
+            <div className="mobile-scroll-x flex gap-1.5 pb-3">
               {[
                 { key: 'all', label: 'All' },
                 { key: 'unread', label: 'Unread' },
@@ -269,25 +270,30 @@ export default function Messages() {
                 <button
                   key={f.key}
                   onClick={() => setActiveFilter(f.key)}
-                  className={`flex-shrink-0 rounded-xl border px-4 py-2 text-[13px] font-bold transition-all duration-150 active:scale-95 ${
-                    activeFilter === f.key ? 'border-slate-950 bg-slate-950 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                  className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
+                    activeFilter === f.key
+                      ? 'border-slate-950 bg-slate-950 text-white'
+                      : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
                   }`}
                 >
                   {f.label}
                 </button>
               ))}
             </div>
-            <div className="mt-1 flex rounded-2xl border border-slate-200 bg-slate-50 p-1">
-              {['inbox', 'requests'].map((tab) =>
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 rounded-xl py-2 text-[13px] font-black transition-all capitalize ${
-                activeTab === tab ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`
-                }>
+
+            {/* Inbox / Requests tab switcher */}
+            <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-0.5">
+              {['inbox', 'requests'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 rounded-[10px] py-1.5 text-[13px] font-black capitalize transition-all ${
+                    activeTab === tab ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'
+                  }`}
+                >
                   {tab === 'inbox' ? 'Inbox' : 'Requests'}
                 </button>
-              )}
+              ))}
             </div>
           </div>
 

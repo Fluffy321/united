@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Loader2, ArrowLeft, MoreVertical, Flag, Ban, CheckCircle2, HandHeart, Bot, Sparkles, Users } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -270,15 +269,27 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-slate-100 bg-white flex-shrink-0">
-        <Button variant="ghost" size="icon" onClick={onBack} className="lg:hidden">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-white flex-shrink-0">
+        <button
+          onClick={onBack}
+          className="lg:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-all hover:bg-slate-100 active:scale-95"
+        >
           <ArrowLeft className="w-5 h-5" />
-        </Button>
-        
-        <div className={`w-10 h-10 flex items-center justify-center text-white font-semibold overflow-hidden ${
-          isCommunityChat ? 'rounded-xl bg-gradient-to-br from-sky-500 to-blue-600'
-          : 'rounded-full bg-gradient-to-br from-indigo-500 to-purple-600'
-        }`}>
+        </button>
+
+        {/* Avatar — matches ConversationList styling */}
+        <div
+          className={`relative flex shrink-0 items-center justify-center overflow-hidden font-bold text-white shadow-sm ${
+            isAI ? 'h-10 w-10 rounded-2xl' : isCommunityChat ? 'h-10 w-10 rounded-xl' : 'h-10 w-10 rounded-full'
+          }`}
+          style={{
+            background: isAI
+              ? 'linear-gradient(135deg, #2563EB, #0F172A)'
+              : isCommunityChat
+              ? 'linear-gradient(135deg, #0EA5E9, #2563EB)'
+              : 'linear-gradient(135deg, #2563EB, #0F172A)',
+          }}
+        >
           {isAI ? (
             <Bot className="w-5 h-5 text-white" />
           ) : isCommunityChat ? (
@@ -288,22 +299,31 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           ) : other.avatar ? (
             <img src={other.avatar} alt="" className="w-full h-full object-cover" />
           ) : (
-            other.name?.charAt(0)?.toUpperCase()
+            <span className="text-[15px]">{other.name?.charAt(0)?.toUpperCase()}</span>
+          )}
+          {isAI && (
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-amber-400">
+              <Sparkles className="h-2 w-2 text-white" />
+            </span>
           )}
         </div>
-        
-        <div className="flex-1">
-          <span className="font-semibold text-slate-900 text-[16px] truncate">{other.name}</span>
-          {isAI && <p className="text-[11px] text-amber-600 font-bold">AI Assistant • Coming Soon</p>}
-          {isCommunityChat && <p className="text-[11px] text-blue-500 font-medium">{other.memberCount?.toLocaleString()} members • Community Chat</p>}
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-bold text-slate-900">{other.name}</p>
+          {isAI && <p className="text-[11px] font-semibold text-amber-500">AI Assistant</p>}
+          {isCommunityChat && (
+            <p className="text-[11px] font-medium text-slate-400">
+              {other.memberCount?.toLocaleString()} members
+            </p>
+          )}
         </div>
 
         {!isAI && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="w-5 h-5" />
-              </Button>
+              <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-all hover:bg-slate-100 active:scale-95">
+                <MoreVertical className="w-4 h-4" />
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onReport(other.id, 'user')}>
@@ -337,45 +357,55 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         )}
 
         {/* Messages */}
-        <div className="p-4 space-y-4 bg-slate-50">
+        <div className="min-h-full p-4 space-y-3 bg-[#F6F8FB]">
           {isLoading ? (
             <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
             </div>
           ) : messages.length === 0 ? (
-            <div className="text-center py-8">
+            <div className="flex flex-col items-center justify-center py-12 text-center px-4">
               {isCommunityChat ? (
-                <div className="space-y-3 px-4">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center mx-auto">
+                <>
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center mb-4 shadow-md">
                     <Users className="w-8 h-8 text-white" />
                   </div>
-                  <p className="font-semibold text-slate-800">{other.name}</p>
-                  <p className="text-sm text-slate-500 max-w-xs mx-auto">Community group chat for {other.name} members. Say hello to your community!</p>
-                </div>
+                  <p className="font-bold text-slate-800 text-[15px]">{other.name}</p>
+                  <p className="text-[13px] text-slate-500 mt-1 max-w-xs">Say hello to your community!</p>
+                </>
               ) : isAI ? (
-                <div className="space-y-3">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto">
+                <>
+                  <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-slate-900 flex items-center justify-center mb-4 shadow-md">
                     <Bot className="w-8 h-8 text-white" />
+                    <span className="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-amber-400 shadow">
+                      <Sparkles className="h-3 w-3 text-white" />
+                    </span>
                   </div>
-                  <p className="font-semibold text-slate-800">United AI Assistant</p>
-                  <p className="text-sm text-slate-500 max-w-xs mx-auto">AI chat is not connected yet. This space is a preview only.</p>
-                  <div className="flex flex-wrap gap-2 justify-center mt-4 mb-4">
+                  <p className="font-bold text-slate-800 text-[15px]">United AI Assistant</p>
+                  <p className="text-[13px] text-slate-500 mt-1 max-w-[240px]">Ask me anything about your community, events, or local resources.</p>
+                  <div className="flex flex-wrap gap-2 justify-center mt-5">
                     {[
                       "What's happening this Shabbat?",
                       "Find local chesed opportunities",
-                      "Recommend a shul near me",
-                      "What events are happening this week?",
-                      "Help me find a carpool"
+                      "Help me find a carpool",
                     ].map(s => (
-                      <button key={s} onClick={() => setNewMessage(s)} className="text-[12px] px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 transition-colors">
+                      <button
+                        key={s}
+                        onClick={() => setNewMessage(s)}
+                        className="text-[12px] px-3 py-1.5 rounded-xl bg-white text-slate-700 border border-slate-200 shadow-sm hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-all"
+                      >
                         {s}
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-400 mt-3">Or type your own question below ↓</p>
-                </div>
+                </>
               ) : (
-                <p className="text-slate-500">Start the conversation!</p>
+                <>
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-slate-800 flex items-center justify-center mb-3 shadow-md">
+                    <span className="text-[22px] font-black text-white">{other.name?.charAt(0)?.toUpperCase()}</span>
+                  </div>
+                  <p className="font-bold text-slate-800">{other.name}</p>
+                  <p className="text-[13px] text-slate-400 mt-1">Start the conversation</p>
+                </>
               )}
             </div>
           ) : (
@@ -385,28 +415,27 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
               return (
                 <div key={msg.id} className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
                   {isAIMsg && (
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                      <Bot className="w-4 h-4 text-white" />
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-600 to-slate-900 flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <Bot className="w-3.5 h-3.5 text-white" />
                     </div>
                   )}
-                  <div className={`max-w-[75%] ${isOwn ? 'order-2' : ''}`}>
-                    <div className={`px-4 py-2.5 rounded-2xl ${
+                  <div className={`max-w-[76%] ${isOwn ? 'order-2' : ''}`}>
+                    <div className={`px-4 py-2.5 text-[14px] leading-relaxed ${
                       isOwn
-                        ? 'text-white rounded-br-md'
-                        : 'bg-white text-slate-800 rounded-bl-md shadow-sm border border-slate-100'
-                    }`}
-                    style={isOwn ? { background: '#2563EB' } : {}}>
-                      {msg.content && !msg.attachment && <p className="text-[15px] leading-relaxed">{msg.content}</p>}
+                        ? 'rounded-2xl rounded-br-sm bg-blue-600 text-white'
+                        : 'rounded-2xl rounded-bl-sm bg-white text-slate-800 shadow-sm border border-slate-100'
+                    }`}>
+                      {msg.content && !msg.attachment && <p>{msg.content}</p>}
                       {msg.attachment && (
                         <div className={msg.content && msg.content !== `📎 ${msg.attachment.name}` ? 'mt-2' : ''}>
                           {msg.content && msg.content !== `📎 ${msg.attachment.name}` && (
-                            <p className="text-[15px] leading-relaxed mb-2">{msg.content}</p>
+                            <p className="mb-2">{msg.content}</p>
                           )}
                           <AttachmentPreview attachment={msg.attachment} compact />
                         </div>
                       )}
                     </div>
-                    <p className={`text-xs text-slate-400 mt-1 ${isOwn ? 'text-right' : ''}`}>
+                    <p className={`text-[11px] text-slate-400 mt-1 ${isOwn ? 'text-right' : ''}`}>
                       {formatDistanceToNow(new Date(msg.created_date), { addSuffix: true })}
                     </p>
                   </div>
@@ -417,9 +446,13 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           {/* AI thinking indicator */}
           {aiThinking && (
             <div className="flex justify-start">
-              <div className="bg-white text-slate-800 rounded-2xl rounded-bl-md shadow-sm border border-slate-100 px-4 py-3 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
-                <span className="text-[14px] text-slate-500 italic">United AI is thinking…</span>
+              <div className="bg-white rounded-2xl rounded-bl-sm shadow-sm border border-slate-100 px-4 py-3 flex items-center gap-2">
+                <span className="flex gap-1 items-center">
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </span>
+                <span className="text-[13px] text-slate-400">Thinking…</span>
               </div>
             </div>
           )}
@@ -429,24 +462,32 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
 
       {/* Mitzvah Completion Actions */}
       {mitzvahRequest && mitzvahRequest.status === 'InProgress' && (
-        <div className="flex-shrink-0 px-3 py-2 bg-white border-t border-slate-100 space-y-2 text-center text-xs">
+        <div className="flex-shrink-0 space-y-2 border-t border-slate-100 bg-white px-4 py-3 text-center text-xs">
           {currentUser.id === mitzvahRequest.claimed_by_user_id && !helpOffer?.completed_by_helper && (
-            <Button onClick={handleMarkCompleted} disabled={isProcessing} size="sm" className="w-full bg-green-600 hover:bg-green-700">
-              <CheckCircle2 className="w-3 h-3 mr-1" /> Mark as Completed
-            </Button>
+            <button
+              onClick={handleMarkCompleted}
+              disabled={isProcessing}
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 text-[13px] font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+            >
+              <CheckCircle2 className="w-4 h-4" /> Mark as Completed
+            </button>
           )}
           {currentUser.id === mitzvahRequest.created_by_user_id && helpOffer?.completed_by_helper && (
             <>
-              <p className="text-green-900 bg-green-50 p-2 rounded">
+              <p className="rounded-xl bg-emerald-50 p-2 text-emerald-900">
                 <strong>{mitzvahRequest.claimed_by_name}</strong> marked as completed
               </p>
-              <Button onClick={handleConfirmCompleted} disabled={isProcessing} size="sm" className="w-full bg-green-600 hover:bg-green-700">
+              <button
+                onClick={handleConfirmCompleted}
+                disabled={isProcessing}
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 text-[13px] font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+              >
                 Confirm Completed
-              </Button>
+              </button>
             </>
           )}
           {currentUser.id === mitzvahRequest.created_by_user_id && !helpOffer?.completed_by_helper && (
-            <p className="text-amber-900 bg-amber-50 p-2 rounded">Waiting for helper...</p>
+            <p className="rounded-xl bg-amber-50 p-2 text-amber-900">Waiting for helper to confirm…</p>
           )}
         </div>
       )}

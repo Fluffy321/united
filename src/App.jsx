@@ -177,7 +177,7 @@ const AuthenticatedApp = () => {
             {/* Legacy redirects — keep old links working */}
             <Route path="/CommunityMap" element={<Navigate to="/Communities" replace />} />
             <Route path="/DiscoverCommunitiesFeed" element={<Navigate to="/Communities" replace />} />
-            <Route path="/MitzvahMap" element={<Navigate to="/MitzvahCircle?tab=map" replace />} />
+            <Route path="/MitzvahMap" element={<Navigate to="/Map" replace />} />
 
             {/* Non-MVP routes — redirect to home rather than 404 to avoid confusing beta users */}
             <Route path="/Events" element={<Navigate to="/" replace />} />

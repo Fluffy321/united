@@ -21,7 +21,7 @@ const navItems = [
   { key: 'Feed',        name: 'Feed',        icon: Home,      page: 'Feed' },
   { key: 'Mitzvah',    name: 'Mitzvah',     icon: null,      page: 'MitzvahCircle', to: '/MitzvahCircle', isMitzvah: true },
   { key: 'Communities',name: 'Communities', icon: Users,     page: 'Communities' },
-  { key: 'Map',        name: 'Map',         icon: MapPinned, page: 'MitzvahCircle', to: '/MitzvahCircle?tab=map', isMap: true },
+  { key: 'Map',        name: 'Map',         icon: MapPinned, page: 'Map',          to: '/Map' },
   { key: 'Profile',    name: 'Profile',     icon: User,      page: 'Profile', isProfile: true },
 ];
 
@@ -92,9 +92,7 @@ export default function Layout({ children, currentPageName }) {
     };
   }, [lastScrollY]);
 
-  const search = new URLSearchParams(location.search);
-  const isMapTab = currentPageName === 'MitzvahCircle' && search.get('tab') === 'map';
-  const activeNavKey = isMapTab ? 'Map' : currentPageName === 'MitzvahCircle' ? 'Mitzvah' : currentPageName;
+  const activeNavKey = currentPageName === 'MitzvahCircle' ? 'Mitzvah' : currentPageName;
   const swipeablePages = ['Feed', 'MitzvahCircle', 'Communities'];
   const currentIndex = swipeablePages.indexOf(currentPageName);
   const isSwipeable = currentIndex !== -1;
