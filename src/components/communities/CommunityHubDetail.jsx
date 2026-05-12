@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import {
   ArrowLeft,
+  BadgeCheck,
+  CalendarDays,
+  EyeOff,
   Lock,
   MapPin,
   MessageCircle,
   Send,
   Shield,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
   Users,
   X,
 } from 'lucide-react';
@@ -50,8 +56,10 @@ export default function CommunityHubDetail({ community, currentUser, onBack, onT
   const [showCompose, setShowCompose] = useState(false);
   const [posts, setPosts] = useState([]);
   const accent = categoryAccent[community.category] || 'from-blue-500 to-slate-700';
-  const prompts = TYPE_PROMPTS[community.category] || DEFAULT_PROMPTS;
+  const prompts = community.quickActions || TYPE_PROMPTS[community.category] || DEFAULT_PROMPTS;
   const isJoining = joiningId === community.id;
+  const isSensitive = community.communityType === 'support';
+  const memberVisibility = isSensitive ? 'Hidden unless opted in' : community.privacy || 'Public';
 
   const openCompose = (prefill = '') => {
     setComposeText(prefill);
@@ -123,10 +131,22 @@ export default function CommunityHubDetail({ community, currentUser, onBack, onT
                     {community.location}
                   </span>
                 )}
+                {community.verified && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-0.5 text-[11px] font-bold text-white">
+                    <BadgeCheck className="h-3 w-3" />
+                    Official
+                  </span>
+                )}
+                {community.trending && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
+                    <TrendingUp className="h-3 w-3" />
+                    Trending
+                  </span>
+                )}
               </div>
             </div>
             <button
-              onClick={onToggleJoin}
+              onClick={() => onToggleJoin?.(isSensitive ? { incognito: true } : {})}
               disabled={isJoining}
               className={`h-10 shrink-0 rounded-xl px-4 text-sm font-bold transition active:scale-[0.98] disabled:opacity-60 ${
                 community.joined
@@ -134,7 +154,7 @@ export default function CommunityHubDetail({ community, currentUser, onBack, onT
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
-              {isJoining ? '...' : community.joined ? 'Leave' : 'Join'}
+              {isJoining ? '...' : community.joined ? 'Leave' : isSensitive ? 'Join Incognito' : 'Join'}
             </button>
           </div>
 
@@ -154,11 +174,15 @@ export default function CommunityHubDetail({ community, currentUser, onBack, onT
                 You're a member
               </span>
             )}
+            <span className="inline-flex items-center gap-1.5 font-semibold">
+              <ShieldCheck className="h-3.5 w-3.5 text-slate-500" />
+              {community.privacy || 'Public'}
+            </span>
           </div>
 
           {/* Tabs */}
           <div className="flex border-t border-slate-100">
-            {['posts', 'members', 'about'].map((tab) => (
+            {['posts', 'about', 'members', 'events', 'mitzvah'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -179,11 +203,17 @@ export default function CommunityHubDetail({ community, currentUser, onBack, onT
           {activeTab === 'posts' && (
             <PostsTab community={community} prompts={prompts} posts={posts} onCompose={openCompose} />
           )}
-          {activeTab === 'members' && (
-            <MembersTab community={community} />
-          )}
           {activeTab === 'about' && (
             <AboutTab community={community} accent={accent} />
+          )}
+          {activeTab === 'members' && (
+            <MembersTab community={community} memberVisibility={memberVisibility} />
+          )}
+          {activeTab === 'events' && (
+            <EventsTab community={community} />
+          )}
+          {activeTab === 'mitzvah' && (
+            <MitzvahTab community={community} />
           )}
         </div>
       </section>
@@ -244,6 +274,16 @@ function PostsTab({ community, prompts, posts, onCompose }) {
 
   return (
     <div className="space-y-3">
+      <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5 shadow-sm">
+        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-blue-700">
+          <Sparkles className="h-4 w-4" />
+          Today’s interactive prompt
+        </div>
+        <h3 className="mt-2 text-lg font-black leading-6 text-slate-950">
+          {community.dailyPrompt || 'What should this community talk about today?'}
+        </h3>
+      </div>
+
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <button
           onClick={() => onCompose('')}
@@ -267,13 +307,38 @@ function PostsTab({ community, prompts, posts, onCompose }) {
         </div>
       </div>
 
-      {posts.length > 0 ? (
+      {(community.announcements?.length > 0 || community.updates?.length > 0) && (
+        <div className="grid gap-3 md:grid-cols-2">
+          {community.announcements?.length > 0 && (
+            <InfoPanel title="Pinned updates" items={community.announcements} />
+          )}
+          {community.updates?.length > 0 && (
+            <InfoPanel title="Live pulse" items={community.updates} />
+          )}
+        </div>
+      )}
+
+      {(community.posts || []).map((seedPost) => (
+        <article key={seedPost.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-slate-950 px-2.5 py-1 text-[11px] font-black text-white">{seedPost.type}</span>
+            <span className="text-[11px] font-semibold text-slate-400">{seedPost.meta}</span>
+          </div>
+          <h3 className="text-[15px] font-black text-slate-950">{seedPost.title}</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">{seedPost.body}</p>
+          <p className="mt-3 text-xs font-bold text-slate-500">Posted by {seedPost.author}</p>
+        </article>
+      ))}
+
+      {posts.length > 0 && (
         <div className="space-y-3">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
         </div>
-      ) : (
+      )}
+
+      {(!community.posts?.length && posts.length === 0) && (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
           <p className="text-sm font-semibold text-slate-500">No posts yet — be the first to post!</p>
         </div>
@@ -283,7 +348,7 @@ function PostsTab({ community, prompts, posts, onCompose }) {
 }
 
 function PostCard({ post }) {
-  const initials = (post.author || '?').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  const postInitials = (post.author || '?').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const timeAgo = (() => {
     const diff = Date.now() - new Date(post.createdAt).getTime();
     const mins = Math.floor(diff / 60000);
@@ -298,7 +363,7 @@ function PostCard({ post }) {
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-center gap-3 mb-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[12px] font-bold text-white overflow-hidden">
-          {post.avatar ? <img src={post.avatar} alt="" className="h-full w-full object-cover" /> : initials}
+          {post.avatar ? <img src={post.avatar} alt="" className="h-full w-full object-cover" /> : postInitials}
         </div>
         <div>
           <p className="text-[13px] font-bold text-slate-900">{post.author}</p>
@@ -310,7 +375,7 @@ function PostCard({ post }) {
   );
 }
 
-function MembersTab({ community }) {
+function MembersTab({ community, memberVisibility }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
@@ -325,7 +390,7 @@ function MembersTab({ community }) {
 
       {community.joined ? (
         <p className="mt-4 text-sm text-slate-500">
-          You're a member of this community. Member profiles are visible to other members.
+          You're a member of this community. Visibility: {memberVisibility}.
         </p>
       ) : (
         <p className="mt-4 text-sm text-slate-500">
@@ -343,6 +408,19 @@ function AboutTab({ community, accent }) {
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h3 className="mb-2 text-sm font-black text-slate-900">About this community</h3>
           <p className="text-sm leading-relaxed text-slate-600">{community.description}</p>
+        </div>
+      )}
+
+      {community.resources?.length > 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="mb-3 text-sm font-black text-slate-900">Useful resources</h3>
+          <div className="flex flex-wrap gap-2">
+            {community.resources.map((resource) => (
+              <span key={resource} className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700">
+                {resource}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
@@ -369,11 +447,75 @@ function AboutTab({ community, accent }) {
             </span>
           </div>
           <div className="flex items-center gap-3 text-sm">
+            <span className="w-16 shrink-0 text-[11px] font-bold uppercase tracking-wide text-slate-400">Identity</span>
+            <span className="font-semibold text-slate-700">{community.communityType || 'user-created'}</span>
+          </div>
+          {community.supportsAnonymousPosting && (
+            <div className="flex items-center gap-3 text-sm">
+              <span className="w-16 shrink-0 text-[11px] font-bold uppercase tracking-wide text-slate-400">Anon</span>
+              <span className="inline-flex items-center gap-1 font-semibold text-violet-700">
+                <EyeOff className="h-3.5 w-3.5" />
+                Anonymous posting enabled
+              </span>
+            </div>
+          )}
+          <div className="flex items-center gap-3 text-sm">
             <span className="w-16 shrink-0 text-[11px] font-bold uppercase tracking-wide text-slate-400">Members</span>
             <span className="font-semibold text-slate-700">{(community.memberCount || 0).toLocaleString()}</span>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function InfoPanel({ title, items }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h3 className="mb-3 text-sm font-black text-slate-900">{title}</h3>
+      <div className="space-y-2">
+        {items.map((item) => (
+          <div key={item} className="rounded-xl bg-slate-50 px-3 py-2 text-[13px] font-semibold leading-5 text-slate-700">
+            {item}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EventsTab({ community }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+        <CalendarDays className="h-5 w-5 text-blue-600" />
+        <div>
+          <p className="text-sm font-black text-slate-950">Community events</p>
+          <p className="text-xs font-semibold text-slate-500">Meetups, circles, shiurim, game nights, and local plans can live here.</p>
+        </div>
+      </div>
+      <p className="mt-4 text-sm font-semibold text-slate-500">
+        Event rails are ready for communities that need real-world coordination.
+      </p>
+    </div>
+  );
+}
+
+function MitzvahTab({ community }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+        <Shield className="h-5 w-5 text-emerald-600" />
+        <div>
+          <p className="text-sm font-black text-slate-950">Mitzvah / Chesed layer</p>
+          <p className="text-xs font-semibold text-slate-500">Help requests, rides, meal trains, and community action can attach here.</p>
+        </div>
+      </div>
+      <p className="mt-4 text-sm font-semibold text-slate-500">
+        {community.category === 'Support' || community.name?.includes('Chesed')
+          ? 'This community is a natural home for private support needs and coordinated action.'
+          : 'This tab keeps social circles connected to useful community action.'}
+      </p>
     </div>
   );
 }
