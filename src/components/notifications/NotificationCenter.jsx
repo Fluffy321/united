@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { notificationsService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow, parseISO } from 'date-fns';
-import { Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2 } from 'lucide-react';
+import { Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2, UserRoundPlus, UserRoundCheck } from 'lucide-react';
 
 const TYPE_CONFIG = {
   like: { icon: Heart, tone: 'bg-red-50 text-red-500', label: 'liked your post' },
@@ -13,6 +13,10 @@ const TYPE_CONFIG = {
   mitzvah_accepted: { icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-600', label: 'Mitzvah accepted' },
   verification_request: { icon: CheckCircle2, tone: 'bg-purple-50 text-purple-600', label: 'Verification needed' },
   request_fulfilled: { icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-600', label: 'your request was fulfilled' },
+  friend_request_received: { icon: UserRoundPlus, tone: 'bg-blue-50 text-blue-600', label: 'sent you a friend request' },
+  friend_request_accepted: { icon: UserRoundCheck, tone: 'bg-emerald-50 text-emerald-600', label: 'accepted your friend request' },
+  // Legacy type kept for backwards compatibility
+  friend_added: { icon: UserRoundCheck, tone: 'bg-emerald-50 text-emerald-600', label: 'added you as a friend' },
   default: { icon: Bell, tone: 'bg-slate-50 text-slate-500', label: 'notification' }
 };
 

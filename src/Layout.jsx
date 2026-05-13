@@ -175,34 +175,44 @@ export default function Layout({ children, currentPageName }) {
                       />
                     )}
 
-                    <div className={`relative z-10 ${isActive ? 'nav-icon-active' : ''}`}>
-                      {item.isMitzvah ? (
-                        <MitzvahIcon
-                          size={20}
-                          strokeWidth={isActive ? 2.2 : 1.8}
-                          className={isActive ? 'text-blue-600' : 'text-slate-500'}
-                        />
-                      ) : item.isProfile && currentUser?.avatar_url ? (
+                    {/* Profile avatar: skip mix-blend-mode to avoid inverting the photo */}
+                    {showAvatar ? (
+                      <div className="relative z-10 flex flex-col items-center gap-0.5">
                         <img
                           src={currentUser.avatar_url}
                           alt=""
-                          className={`h-[22px] w-[22px] rounded-full object-cover shadow-sm transition-all ${isActive ? 'ring-2 ring-blue-600' : 'ring-1 ring-slate-300'}`}
+                          className={`h-[22px] w-[22px] rounded-full object-cover shadow-sm transition-all ${
+                            isActive ? 'ring-2 ring-blue-600' : 'ring-1 ring-black/20'
+                          }`}
                         />
-                      ) : (
-                        <Icon
-                          className={`h-[21px] w-[21px] ${isActive ? 'text-blue-600' : 'text-slate-500'}`}
-                          strokeWidth={isActive ? 2.4 : 1.8}
-                        />
-                      )}
-                    </div>
-
-                    <span
-                      className={`relative z-10 mt-1 text-[10px] ${
-                        isActive ? 'font-bold text-blue-600' : 'font-normal text-slate-500'
-                      }`}
-                    >
-                      {item.name}
-                    </span>
+                        <span className={`text-[10px] ${isActive ? 'font-bold text-blue-600' : 'font-semibold text-black/55'}`}>
+                          {item.name}
+                        </span>
+                      </div>
+                    ) : isActive ? (
+                      /* Active: explicit blue, no blend mode */
+                      <div className={`relative z-10 flex flex-col items-center gap-0.5 nav-icon-active`}>
+                        {item.isMitzvah ? (
+                          <MitzvahIcon size={20} strokeWidth={2.2} className="text-blue-600" />
+                        ) : (
+                          <Icon className="h-[21px] w-[21px] text-blue-600" strokeWidth={2.4} />
+                        )}
+                        <span className="text-[10px] font-bold text-blue-600">{item.name}</span>
+                      </div>
+                    ) : (
+                      /* Inactive: white + mix-blend-mode:difference
+                         The glass-toolbar bg (~88% white) composites with the blurred page
+                         behind it, so white icons invert to near-black on light pages and
+                         lighter on dark content — always readable. */
+                      <div className="relative z-10 flex flex-col items-center gap-0.5" style={{ mixBlendMode: 'difference' }}>
+                        {item.isMitzvah ? (
+                          <MitzvahIcon size={20} strokeWidth={1.8} className="text-white" />
+                        ) : (
+                          <Icon className="h-[21px] w-[21px] text-white" strokeWidth={1.8} />
+                        )}
+                        <span className="text-[10px] font-normal text-white">{item.name}</span>
+                      </div>
+                    )}
                   </button>
                 );
               })}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { dataService, findOrCreateDirectConversation, friendsService } from '@/services';
+import { FRIEND_STATUS } from '@/services/friendsService';
 import { useAuth } from '@/lib/AuthContext';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ReportModal from '@/components/common/ReportModal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -22,17 +23,22 @@ import CommunitiesSection from '@/components/profile/CommunitiesSection.jsx';
 import RecentPostsSection from '@/components/profile/RecentPostsSection.jsx';
 import SavedPostsSection from '@/components/profile/SavedPostsSection.jsx';
 import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
+import FriendsHub from '@/components/profile/FriendsHub.jsx';
 
 export default function Profile() {
   const [searchParams] = useSearchParams();
   const { user: currentUser } = useAuth();
+  const queryClient = useQueryClient();
   const [profileUser, setProfileUser] = useState(null);
   const [profileLoadError, setProfileLoadError] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   const [showInterestPicker, setShowInterestPicker] = useState(false);
   const [activeProfileTab, setActiveProfileTab] = useState('posts');
-  const [isFriend, setIsFriend] = useState(false);
+  const [showFriendsHub, setShowFriendsHub] = useState(false);
+
+  // Relationship state: { status: FRIEND_STATUS.*, requestId: string|null }
+  const [relationship, setRelationship] = useState({ status: FRIEND_STATUS.NONE, requestId: null });
   const [friendLoading, setFriendLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -41,11 +47,9 @@ export default function Profile() {
     loadProfile();
   }, [searchParams, currentUser?.id]);
 
-
   const loadProfile = async () => {
     try {
       const profileId = searchParams.get('id');
-
       if (!currentUser) return;
 
       if (profileId && profileId !== currentUser.id) {
@@ -71,6 +75,15 @@ export default function Profile() {
       setProfileLoadError(true);
     }
   };
+
+  // Load relationship when viewing someone else's profile
+  useEffect(() => {
+    if (!currentUser?.id || !profileUser?.id || isOwnProfile) return;
+    friendsService
+      .getRelationship(currentUser.id, profileUser.id)
+      .then(setRelationship)
+      .catch(() => setRelationship({ status: FRIEND_STATUS.NONE, requestId: null }));
+  }, [currentUser?.id, profileUser?.id, isOwnProfile]);
 
   const { data: unifiedPosts = [] } = useQuery({
     queryKey: ['user-posts', profileUser?.id],
@@ -105,17 +118,16 @@ export default function Profile() {
     queryFn: async () => {
       const actions = await dataService.entities.MitzvahAction.filter({ user_id: profileUser.id }, '-created_date', 100);
       const logs = await dataService.entities.MitzvahLog.filter({ user_id: profileUser.id }, '-created_date', 100);
-      
+
       const weekActions = actions.filter(a => {
         const date = parseISO(a.created_date);
         return date >= startOfWeek(new Date()) && date <= endOfWeek(new Date());
       });
-      
       const weekLogs = logs.filter(l => {
         const date = parseISO(l.date);
         return date >= startOfWeek(new Date()) && date <= endOfWeek(new Date());
       });
-      
+
       return weekActions.length + weekLogs.length;
     },
     enabled: !!profileUser && isOwnProfile,
@@ -138,7 +150,6 @@ export default function Profile() {
     queryKey: ['user-communities', profileUser?.id],
     queryFn: async () => {
       const comms = await dataService.entities.UserCommunity.filter({ user_id: profileUser.id }, '-created_date', 50);
-      // Update user's communities_joined_count
       if (comms.length > 0 && (!profileUser.communities_joined_count || profileUser.communities_joined_count !== comms.length)) {
         dataService.auth.updateMe({ communities_joined_count: comms.length }).catch(() => {});
       }
@@ -149,17 +160,68 @@ export default function Profile() {
     retry: 1,
   });
 
-  const { data: friends = [] } = useQuery({
-    queryKey: ['profile-friends', profileUser?.id],
-    queryFn: () => friendsService.list(profileUser.id),
+  const { data: friendCount = 0 } = useQuery({
+    queryKey: ['profile-friend-count', profileUser?.id],
+    queryFn: () => friendsService.count(profileUser.id),
     enabled: !!profileUser,
     staleTime: 60000,
   });
 
-  useEffect(() => {
-    if (!currentUser?.id || !profileUser?.id || isOwnProfile) return;
-    friendsService.isFriend(currentUser.id, profileUser.id).then(setIsFriend).catch(() => setIsFriend(false));
-  }, [currentUser?.id, profileUser?.id, isOwnProfile]);
+  // ── Friend action handlers ───────────────────────────────────────────────
+
+  const withFriendLoading = async (fn) => {
+    setFriendLoading(true);
+    try { await fn(); } finally { setFriendLoading(false); }
+  };
+
+  const refreshRelationship = async () => {
+    const rel = await friendsService.getRelationship(currentUser.id, profileUser.id);
+    setRelationship(rel);
+    queryClient.invalidateQueries({ queryKey: ['profile-friend-count', profileUser.id] });
+    queryClient.invalidateQueries({ queryKey: ['profile-friend-count', currentUser.id] });
+  };
+
+  const handleSendRequest = () => withFriendLoading(async () => {
+    try {
+      await friendsService.sendRequest(currentUser, profileUser);
+      await refreshRelationship();
+      toast.success('Friend request sent!');
+    } catch (e) {
+      toast.error(e.message === 'blocked' ? 'Cannot send request' : 'Could not send request');
+    }
+  });
+
+  const handleCancelRequest = () => withFriendLoading(async () => {
+    try {
+      await friendsService.cancelRequest(relationship.requestId);
+      setRelationship({ status: FRIEND_STATUS.NONE, requestId: null });
+    } catch { toast.error('Could not cancel request'); }
+  });
+
+  const handleAcceptRequest = () => withFriendLoading(async () => {
+    try {
+      await friendsService.acceptRequest(relationship.requestId, currentUser, profileUser);
+      await refreshRelationship();
+      toast.success('You are now friends!');
+    } catch { toast.error('Could not accept request'); }
+  });
+
+  const handleDeclineRequest = () => withFriendLoading(async () => {
+    try {
+      await friendsService.declineRequest(relationship.requestId);
+      setRelationship({ status: FRIEND_STATUS.NONE, requestId: null });
+    } catch { toast.error('Could not decline request'); }
+  });
+
+  const handleRemoveFriend = () => withFriendLoading(async () => {
+    try {
+      await friendsService.removeFriend(currentUser.id, profileUser.id);
+      setRelationship({ status: FRIEND_STATUS.NONE, requestId: null });
+      queryClient.invalidateQueries({ queryKey: ['profile-friend-count'] });
+    } catch { toast.error('Could not remove friend'); }
+  });
+
+  // ── Other handlers ───────────────────────────────────────────────────────
 
   const handleMessage = async () => {
     const conv = await findOrCreateDirectConversation(currentUser, {
@@ -173,25 +235,35 @@ export default function Profile() {
   const handleBlock = async () => {
     await dataService.entities.Block.create({
       blocker_id: currentUser.id,
-      blocked_id: profileUser.id
+      blocked_id: profileUser.id,
     });
     toast.success('User blocked');
     navigate(createPageUrl('Feed'));
   };
 
-  const handleFriendToggle = async () => {
-    if (!currentUser || !profileUser || isOwnProfile) return;
-    setFriendLoading(true);
+  const handleEditProfile = () => navigate(createPageUrl('Settings'));
+
+  const scrollTo = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleShareProfile = async () => {
+    const profileUrl = `${window.location.origin}${createPageUrl('Profile')}?id=${profileUser.id}`;
     try {
-      if (isFriend) {
-        await friendsService.removeFriend(currentUser.id, profileUser.id);
-        setIsFriend(false);
+      if (navigator.share) {
+        await navigator.share({ title: displayName, url: profileUrl });
       } else {
-        await friendsService.addFriend(currentUser, profileUser);
-        setIsFriend(true);
+        await navigator.clipboard.writeText(profileUrl);
+        toast.success('Profile link copied!');
       }
-    } finally {
-      setFriendLoading(false);
+    } catch {
+      try {
+        await navigator.clipboard.writeText(profileUrl);
+        toast.success('Profile link copied!');
+      } catch {
+        toast.error('Could not share profile');
+      }
     }
   };
 
@@ -219,40 +291,10 @@ export default function Profile() {
   const displayName = profileUser.display_name || profileUser.full_name?.split(' ')[0] || 'User';
   const hasActivity = mitzvahPoints > 0 || weeklyMitzvahCount > 0 || (userStreak?.current_streak || 0) > 0 || mitzvahLogs.length >= 3;
 
-  const handleEditProfile = () => {
-    navigate(createPageUrl('Settings'));
-  };
-
-  const scrollTo = (id) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const handleShareProfile = async () => {
-    const profileUrl = `${window.location.origin}${createPageUrl('Profile')}?id=${profileUser.id}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: displayName, url: profileUrl });
-      } else {
-        await navigator.clipboard.writeText(profileUrl);
-        toast.success('Profile link copied!');
-      }
-    } catch (e) {
-      // Fallback to clipboard if share is denied
-      try {
-        await navigator.clipboard.writeText(profileUrl);
-        toast.success('Profile link copied!');
-      } catch {
-        toast.error('Could not share profile');
-      }
-    }
-  };
-
   return (
     <div className="min-h-screen bg-transparent mobile-safe-bottom">
       <div className="mobile-page">
 
-        {/* Modern Header */}
         <ModernProfileHeader
           user={profileUser}
           isOwnProfile={isOwnProfile}
@@ -262,18 +304,17 @@ export default function Profile() {
           onSettings={isOwnProfile ? handleEditProfile : undefined}
         />
 
-        {/* Stats Row */}
         <ModernStatsRow
-          friends={friends.length}
+          friends={friendCount}
           following={userCommunities.length}
           posts={unifiedPosts.length}
           impact={mitzvahPoints}
+          onFriendsClick={isOwnProfile ? () => setShowFriendsHub(true) : undefined}
           onPostsClick={() => scrollTo('recent-posts-section')}
           onImpactClick={() => scrollTo('impact-section')}
           onFollowingClick={() => scrollTo('communities-section')}
         />
 
-        {/* Action Buttons */}
         <ModernActionButtons
           isOwnProfile={isOwnProfile}
           onEditProfile={handleEditProfile}
@@ -281,28 +322,28 @@ export default function Profile() {
           onShare={handleShareProfile}
           onReport={() => setShowReport(true)}
           onBlock={handleBlock}
-          onFriendToggle={handleFriendToggle}
-          isFriend={isFriend}
+          relationship={relationship}
+          onSendRequest={handleSendRequest}
+          onCancelRequest={handleCancelRequest}
+          onAcceptRequest={handleAcceptRequest}
+          onDeclineRequest={handleDeclineRequest}
+          onRemoveFriend={handleRemoveFriend}
           friendLoading={friendLoading}
         />
 
-        {/* Content Sections */}
         <div className="space-y-3 pb-4">
 
-          {/* Streak Card */}
           {isOwnProfile && <div className="px-3 motion-soft-in"><StreakCard streak={userStreak} /></div>}
 
-          {/* Interests Section */}
           {isOwnProfile && (
             <div className="mx-3 motion-soft-in">
-              <InterestsSection 
-                interests={profileUser.interests || []} 
+              <InterestsSection
+                interests={profileUser.interests || []}
                 onAddInterest={() => setShowInterestPicker(true)}
               />
             </div>
           )}
 
-          {/* Impact or Get Started */}
           {isOwnProfile && (
             <div id="impact-section" className="mx-3 motion-soft-in">
               {hasActivity ? (
@@ -313,16 +354,18 @@ export default function Profile() {
             </div>
           )}
 
-          {/* Communities Section */}
-          {userCommunities.length > 0 && <div id="communities-section" className="mx-3 motion-soft-in"><CommunitiesSection userCommunities={userCommunities} /></div>}
+          {userCommunities.length > 0 && (
+            <div id="communities-section" className="mx-3 motion-soft-in">
+              <CommunitiesSection userCommunities={userCommunities} />
+            </div>
+          )}
 
-          {/* Badges Section */}
           {isOwnProfile && <div className="mx-3 motion-soft-in"><BadgesSection user={profileUser} /></div>}
 
-          {/* Mitzvah Journey */}
-          {isOwnProfile && mitzvahLogs.length > 0 && <div className="mx-3 motion-soft-in"><MitzvahJourneySection logs={mitzvahLogs} /></div>}
+          {isOwnProfile && mitzvahLogs.length > 0 && (
+            <div className="mx-3 motion-soft-in"><MitzvahJourneySection logs={mitzvahLogs} /></div>
+          )}
 
-          {/* Posts / Saved Tabs */}
           <div id="recent-posts-section" className="mx-3 motion-soft-in">
             {isOwnProfile && (
               <div className="mb-3 flex rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
@@ -368,6 +411,14 @@ export default function Profile() {
           onOpenChange={setShowInterestPicker}
           currentUser={profileUser}
           onInterestAdded={() => loadProfile()}
+        />
+      )}
+
+      {isOwnProfile && (
+        <FriendsHub
+          open={showFriendsHub}
+          onOpenChange={setShowFriendsHub}
+          currentUser={currentUser}
         />
       )}
     </div>

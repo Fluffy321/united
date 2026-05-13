@@ -1090,7 +1090,7 @@ export default function Feed() {
 
       <button
         onClick={() => { setPostModalType('feed'); setPostModalSubtype(null); setPostModalInitialBody(''); setShowPostModal(true); }}
-        className={`graphic-stripes app-fab fixed bottom-[96px] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-95 ${isScrollingDown ? 'opacity-0 pointer-events-none translate-y-2' : 'opacity-100 translate-y-0'}`}
+        className={`app-fab fixed bottom-[96px] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-95 ${isScrollingDown ? 'opacity-0 pointer-events-none translate-y-2' : 'opacity-100 translate-y-0'}`}
         style={{ background: 'linear-gradient(135deg, #2563EB, #4F46E5)' }}
         aria-label="Create post"
       >

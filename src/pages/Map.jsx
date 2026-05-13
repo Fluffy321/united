@@ -76,16 +76,16 @@ export default function MapPage() {
     staleTime: 120000,
   });
 
-  const joinedCommunityIds = useMemo(() => new Set(memberships.map((membership) => membership.community_id)), [memberships]);
+  const joinedCommunityIds = useMemo(() => new Set(memberships.map((m) => m.community_id)), [memberships]);
   const joinedCommunities = useMemo(
-    () => communities.filter((community) => joinedCommunityIds.has(community.id)),
+    () => communities.filter((c) => joinedCommunityIds.has(c.id)),
     [communities, joinedCommunityIds]
   );
-  const communityById = useMemo(() => new Map(communities.map((community) => [community.id, community])), [communities]);
+  const communityById = useMemo(() => new Map(communities.map((c) => [c.id, c])), [communities]);
 
   const visibleCommunityIds = useMemo(() => {
     if (selectedCommunityIds.size > 0) return selectedCommunityIds;
-    return new Set(joinedCommunities.map((community) => community.id));
+    return new Set(joinedCommunities.map((c) => c.id));
   }, [joinedCommunities, selectedCommunityIds]);
 
   const communityPoints = useMemo(() => (
@@ -167,7 +167,7 @@ export default function MapPage() {
 
   return (
     <main className="flex h-dvh flex-col overflow-hidden mobile-safe-bottom">
-      {/* Fixed-height header */}
+      {/* Header — matches Feed/Communities pattern */}
       <div className="mobile-page-wide flex shrink-0 items-center gap-2 px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
         <MapPin className="h-5 w-5 shrink-0 text-blue-600" />
         <h1 className="text-2xl font-black text-slate-950">Map</h1>
@@ -192,6 +192,7 @@ export default function MapPage() {
           </section>
         )}
 
+        {/* Community filter panel — matches app surface style */}
         <section className="surface-panel-soft mb-3 rounded-[24px] p-3">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -203,7 +204,7 @@ export default function MapPage() {
                 Pick joined communities one by one, or leave all unselected to show posts from every joined community.
               </p>
             </div>
-            <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
+            <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
               {communityPoints.length} posts
             </span>
           </div>

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import CommunityLogo from './CommunityLogo';
 import InviteLinkButton from './InviteLinkButton';
 import { toast } from 'sonner';
+import { getCommunityTypeConfig } from '@/lib/communityTypes';
 
 const TYPE_LABEL_PLURAL = {
   Shul: 'Shuls', School: 'Schools', Yeshiva: 'Yeshivas',
@@ -65,17 +66,21 @@ function MemberAvatarStrip({ members, totalCount, onViewMembers }) {
 export default function CommunityHero({
   community, isFollowing, isAdmin, onBack, onFollow, onClaim,
   eventCount, mitzvahCount, actualMemberCount, postsThisWeek,
-  members = [], currentUser, onTabChange
+  members = [], currentUser, onTabChange, typeConfig: providedTypeConfig
 }) {
   const scrollRef = useRef(null);
   const [scrollY, setScrollY] = useState(0);
   const [stickyVisible, setStickyVisible] = useState(false);
 
   const memberCount = actualMemberCount > 0 ? actualMemberCount : (community.follower_count || 0);
-  const type = community.type || community.verified_type || 'Other';
-  const typeLabel = TYPE_LABEL_PLURAL[type] || 'Communities';
-  const typeEmoji = TYPE_EMOJI[type] || '🏘️';
-  const gradient = communityGradient(community.name, community.featured_accent_color);
+  const typeConfig = providedTypeConfig || getCommunityTypeConfig(community);
+  const TypeIcon = typeConfig.icon;
+  const type = community.type || community.verified_type || typeConfig.label;
+  const typeLabel = typeConfig.pluralLabel || TYPE_LABEL_PLURAL[type] || 'Communities';
+  const typeEmoji = TYPE_EMOJI[type] || typeConfig.emoji || 'JU';
+  const gradient = community.featured_accent_color
+    ? communityGradient(community.name, community.featured_accent_color)
+    : typeConfig.coverPattern;
 
   // Scroll listener for parallax + sticky
   useEffect(() => {
@@ -150,9 +155,9 @@ export default function CommunityHero({
             transition: 'opacity 0.1s',
           }}
         >
-          {community.cover_image_url ? (
+          {(community.cover_url || community.cover_image_url) ? (
             <img
-              src={community.cover_image_url}
+              src={community.cover_url || community.cover_image_url}
               alt=""
               className="w-full h-full object-cover"
             />
@@ -212,6 +217,10 @@ export default function CommunityHero({
             {community.neighborhood && (
               <p className="text-[12px] text-slate-500">{community.neighborhood}</p>
             )}
+            <p className="mt-1 inline-flex items-center gap-1.5 text-[12px] font-bold text-slate-500">
+              <TypeIcon className="h-3.5 w-3.5" />
+              {typeConfig.tagline}
+            </p>
           </div>
         </div>
 
@@ -227,9 +236,9 @@ export default function CommunityHero({
         {/* Stats ribbon */}
         <div className="flex gap-3 mt-3 overflow-x-auto scrollbar-hide">
           {[
-            { label: 'Posts this wk', value: postsThisWeek, tab: 'feed', show: true },
-            { label: 'Events', value: eventCount, tab: 'events', show: true },
-            { label: 'Chesed done', value: mitzvahCount, tab: 'mitzvah', show: mitzvahCount > 0 },
+            { label: 'Posts this wk', value: postsThisWeek, tab: 'posts', show: true },
+            { label: 'Events', value: eventCount, tab: 'events', show: eventCount > 0 },
+            { label: 'Open needs', value: mitzvahCount, tab: 'openNeeds', show: mitzvahCount > 0 },
             { label: 'Members', value: memberCount, tab: 'members', show: true },
           ].filter(s => s.show).map(s => (
             <button
@@ -248,10 +257,10 @@ export default function CommunityHero({
           {isFollowing ? (
             <>
               <button
-                onClick={() => onTabChange?.('feed')}
+                onClick={() => onTabChange?.('posts')}
                 className="flex-1 h-10 text-[14px] font-bold rounded-xl bg-[#2563EB] text-white flex items-center justify-center gap-1.5 active:scale-95 transition-all"
               >
-                <Plus className="w-4 h-4" /> Post
+                <Plus className="w-4 h-4" /> {typeConfig.primaryCta}
               </button>
               <button
                 onClick={onFollow}

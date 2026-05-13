@@ -18,7 +18,7 @@ const PERIOD_LABELS = { one_time: '', monthly: '/mo', yearly: '/yr' };
 // ── Create / Edit listing modal ──────────────────────────────────────────────
 function ListingModal({ communityId, currentUser, listing, onClose, onSaved }) {
   const [form, setForm] = useState({
-    type: listing?.type || 'subscription',
+    type: listing?.type || 'product',
     title: listing?.title || '',
     description: listing?.description || '',
     price: listing?.price != null ? String(listing.price) : '',
@@ -36,21 +36,21 @@ function ListingModal({ communityId, currentUser, listing, onClose, onSaved }) {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await dataService.integrations.Core.UploadFile({ file });
+      const { file_url } = await dataService.integrations.Core.UploadFile({ file, bucket: 'community-images' });
       setForm(f => ({ ...f, image_url: file_url }));
     } catch { toast.error('Upload failed'); }
     setUploading(false);
   };
 
   const handleSave = async () => {
-    if (!form.title.trim() || !form.price) { toast.error('Title and price are required'); return; }
+    if (!form.title.trim()) { toast.error('Title is required'); return; }
     setSaving(true);
     const payload = {
       community_id: communityId,
       type: form.type,
       title: form.title.trim(),
       description: form.description.trim(),
-      price: parseFloat(form.price),
+      price: form.price ? parseFloat(form.price) : null,
       billing_period: form.billing_period,
       perks: form.perks ? form.perks.split('\n').map(p => p.trim()).filter(Boolean) : [],
       image_url: form.image_url,
@@ -124,7 +124,7 @@ function ListingModal({ communityId, currentUser, listing, onClose, onSaved }) {
         {/* Price + billing */}
         <div className="flex gap-3">
           <div className="flex-1">
-            <p className="text-[12px] font-semibold text-slate-500 mb-1">Price (USD) *</p>
+          <p className="text-[12px] font-semibold text-slate-500 mb-1">Price (USD)</p>
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -200,8 +200,7 @@ function ListingModal({ communityId, currentUser, listing, onClose, onSaved }) {
 }
 
 // ── Individual listing card ──────────────────────────────────────────────────
-function ListingCard({ listing, isAdmin, currentUser, onDelete }) {
-  const [buying, setBuying] = useState(false);
+function ListingCard({ listing, isAdmin, onDelete }) {
   const cfg = TYPE_CONFIG[listing.type] || TYPE_CONFIG.product;
   const Icon = cfg.icon;
   const suffix = PERIOD_LABELS[listing.billing_period] || '';
@@ -258,7 +257,7 @@ function ListingCard({ listing, isAdmin, currentUser, onDelete }) {
         <div className="flex items-center justify-between gap-3 mt-2">
           <div>
             <span className="text-[18px] font-black text-slate-900">
-              {listing.price === 0 ? 'Free' : `$${listing.price}${suffix}`}
+            {listing.price == null || listing.price === 0 ? 'Free' : `$${listing.price}${suffix}`}
             </span>
             {listing.orders_count > 0 && (
               <span className="ml-2 text-[10px] text-slate-400">{listing.orders_count} orders</span>
@@ -280,67 +279,8 @@ function ListingCard({ listing, isAdmin, currentUser, onDelete }) {
   );
 }
 
-// ── Donation section ─────────────────────────────────────────────────────────
-function DonationSection({ community }) {
-  const PRESETS = [18, 36, 54, 100, 180];
-  const [amount, setAmount] = useState('');
-  const [custom, setCustom] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const selected = custom ? parseFloat(custom) : parseFloat(amount);
-
-  const handleDonate = async () => {
-    toast.info('Community donations are coming soon. No money was processed.');
-  };
-
-  return (
-    <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-100 rounded-2xl p-5">
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">❤️</span>
-        <p className="text-[15px] font-bold text-slate-900">Support {community.name}</p>
-      </div>
-      <p className="text-[12px] text-slate-500 mb-2">Your donation directly supports this community.</p>
-      <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold text-amber-800">
-        Demo only: donation checkout is not live yet.
-      </p>
-      <div className="flex flex-wrap gap-2 mb-3">
-        {PRESETS.map(a => (
-          <button
-            key={a}
-            onClick={() => { setAmount(String(a)); setCustom(''); }}
-            className={`px-4 py-2 rounded-full text-[13px] font-bold border transition-all active:scale-95 ${
-              amount === String(a) && !custom ? 'bg-rose-500 text-white border-rose-500' : 'bg-white text-slate-700 border-slate-200'
-            }`}
-          >
-            ${a}
-          </button>
-        ))}
-      </div>
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="number" min="1" placeholder="Custom"
-            value={custom}
-            onChange={e => { setCustom(e.target.value); setAmount(''); }}
-            className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-[14px] outline-none focus:border-rose-300 bg-white"
-          />
-        </div>
-        <button
-          onClick={handleDonate}
-          disabled
-          className="px-5 py-2.5 rounded-xl font-bold text-white text-[13px] bg-slate-300 cursor-not-allowed transition-all flex items-center gap-1.5"
-        >
-          ❤️
-          Soon
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // ── Main tab ─────────────────────────────────────────────────────────────────
-export default function CommunityStoreTab({ communityId, community, currentUser, isAdmin }) {
+export default function CommunityStoreTab({ communityId, currentUser, isAdmin }) {
   const [showCreate, setShowCreate] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const queryClient = useQueryClient();
@@ -372,9 +312,9 @@ export default function CommunityStoreTab({ communityId, community, currentUser,
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-[16px] font-bold text-slate-900 flex items-center gap-2">
-            <Package className="w-5 h-5 text-blue-500" /> Community Store
+            <Package className="w-5 h-5 text-blue-500" /> Community Listings
           </h2>
-          <p className="text-[12px] text-slate-500 mt-0.5">Support {community?.name} with a membership, purchase, or donation</p>
+          <p className="text-[12px] text-slate-500 mt-0.5">Local items, services, and practical community offers.</p>
         </div>
         {isAdmin && (
           <button
@@ -385,9 +325,6 @@ export default function CommunityStoreTab({ communityId, community, currentUser,
           </button>
         )}
       </div>
-
-      {/* Donation section always visible */}
-      <DonationSection community={community} />
 
       {/* Filter pills */}
       {listings.length > 0 && (
@@ -422,7 +359,7 @@ export default function CommunityStoreTab({ communityId, community, currentUser,
           </p>
           <p className="text-[12px] text-slate-400 mt-1">
             {isAdmin && listings.length === 0
-              ? 'Add a subscription, product, or service offering for your community.'
+              ? 'Add the first listing for your community.'
               : 'Check back soon!'}
           </p>
         </div>
@@ -433,7 +370,6 @@ export default function CommunityStoreTab({ communityId, community, currentUser,
               key={l.id}
               listing={l}
               isAdmin={isAdmin}
-              currentUser={currentUser}
               onDelete={handleDelete}
             />
           ))}
@@ -442,12 +378,10 @@ export default function CommunityStoreTab({ communityId, community, currentUser,
 
       {isAdmin && listings.length === 0 && (
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-5">
-          <p className="text-[13px] font-bold text-blue-800 mb-1">💡 Monetize your community</p>
-          <ul className="text-[12px] text-blue-700 space-y-1 mb-3">
-            <li>🔁 <strong>Subscriptions</strong> — Offer premium tiers with exclusive perks</li>
-            <li>📦 <strong>Products</strong> — Sell merchandise, digital downloads, or Shabbos boxes</li>
-            <li>🛠️ <strong>Services</strong> — List tutoring, catering, or other community services</li>
-          </ul>
+          <p className="text-[13px] font-bold text-blue-800 mb-1">Start the listings board</p>
+          <p className="text-[12px] text-blue-700 mb-3">
+            Add a real community-backed listing. Checkout and payments are intentionally not part of this MVP.
+          </p>
           <button
             onClick={() => setShowCreate(true)}
             className="bg-blue-600 text-white rounded-full px-4 py-2 text-[12px] font-bold active:scale-95 transition-all"

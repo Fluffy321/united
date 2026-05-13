@@ -377,7 +377,7 @@ const STATIC_POINTS = [
   },
   {
     id: 'food-gottlieb-fish',
-    title: 'Gottlieb’s Fish',
+    title: "Gottlieb's Fish",
     description: 'Kosher fish and takeout shop serving Lawrence/Cedarhurst. Public listings identify kosher offerings.',
     type: 'grocery',
     location_text: 'Lawrence',
@@ -564,7 +564,7 @@ const STATIC_POINTS = [
   },
   {
     id: 'food-carlos-gabbys',
-    title: 'Carlos and Gabby’s Cedarhurst',
+    title: "Carlos and Gabby's Cedarhurst",
     description: 'Kosher Mexican/meat restaurant. Public kosher restaurant listing notes Vaad Hakashrus of Five Towns & Far Rockaway supervision.',
     type: 'restaurant',
     location_text: '143 Washington Ave, Cedarhurst',
@@ -791,13 +791,13 @@ const STATIC_POINTS = [
 
 function MapController({ center }) {
   const map = useMap();
-  
+
   useEffect(() => {
     if (center) {
       map.setView(center, map.getZoom() || 13);
     }
   }, [center, map]);
-  
+
   return null;
 }
 
@@ -940,14 +940,15 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
 
   if (!mapCenter) {
     return (
-      <div className="bg-slate-100 rounded-2xl flex items-center justify-center" style={{ height: mapHeight ?? 500 }}>
-        <p className="text-slate-500">Loading map...</p>
+      <div className="flex items-center justify-center rounded-2xl bg-slate-100" style={{ height: mapHeight ?? 500 }}>
+        <p className="text-slate-500">Loading map…</p>
       </div>
     );
   }
 
   return (
     <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
+      {/* Five Towns hub banner */}
       {personalized && (
         <div className="border-b border-blue-100 bg-blue-50 px-3 py-2">
           <p className="text-[12px] font-black text-blue-900">Five Towns digital hub</p>
@@ -956,15 +957,17 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
           </p>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-2 border-b border-slate-200 bg-white p-2 sm:grid-cols-4">
+
+      {/* Primary filter chips — horizontal scroll, matches Communities chip pattern */}
+      <div className="mobile-scroll-x flex gap-2 border-b border-slate-200 bg-white px-2 py-2">
         {PRIMARY_FILTERS.map((filter) => {
           const active = activePrimaryFilter === filter.key;
           return (
             <button
               key={filter.key}
               onClick={() => applyPrimaryFilter(filter)}
-              className={`rounded-xl border px-3 py-2 text-[12px] font-black transition ${
-                active ? 'border-slate-900 bg-slate-950 text-white' : 'border-slate-200 bg-slate-50 text-slate-700'
+              className={`motion-press shrink-0 rounded-full px-3.5 py-2 text-[12px] font-black transition ${
+                active ? 'bg-slate-950 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300'
               }`}
             >
               {filter.label}
@@ -972,18 +975,23 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
           );
         })}
       </div>
-      <div className="mobile-scroll-x flex gap-2 border-b border-slate-200 bg-white p-2">
+
+      {/* Type filter chips */}
+      <div className="mobile-scroll-x flex gap-2 border-b border-slate-200 bg-white px-2 py-2">
         {Object.entries(PIN_TYPES).filter(([type]) => type !== 'other').map(([type, config]) => {
           const active = activeTypes.has(type);
           return (
             <button
               key={type}
               onClick={() => toggleType(type)}
-              className={`flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-[12px] font-black transition ${
-                active ? 'border-slate-900 bg-slate-950 text-white' : 'border-slate-200 bg-slate-50 text-slate-600'
+              className={`motion-press flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black transition ${
+                active ? 'bg-slate-950 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300'
               }`}
             >
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: config.color }} />
+              <span
+                className="h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: active ? 'rgba(255,255,255,0.7)' : config.color }}
+              />
               {config.label}
             </button>
           );
@@ -991,21 +999,24 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
         {hasActiveFilters && (
           <button
             onClick={() => setActiveTypes(new Set())}
-            className="flex shrink-0 items-center rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-[12px] font-black text-blue-700 transition"
+            className="motion-press flex shrink-0 items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-[11px] font-black text-blue-700 transition hover:bg-blue-100"
           >
             Clear
           </button>
         )}
       </div>
+
+      {/* Map canvas */}
       <div className="relative">
         {!hasActiveFilters && (
-          <div className="absolute left-3 right-3 top-3 z-[500] rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm">
+          <div className="glass-toolbar absolute left-3 right-3 top-3 z-[500] rounded-2xl px-4 py-3">
             <p className="text-[13px] font-black text-slate-900">Pick a filter to show pins</p>
             <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">
               Choose verified kosher food, shops, shuls, schools, community businesses, lost and found, help, mitzvahs, events, or community posts.
             </p>
           </div>
         )}
+
         <MapContainer
           center={mapCenter}
           zoom={13}
@@ -1016,10 +1027,10 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
         >
           <MapController center={mapCenter} />
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           />
-          
+
           {userLocation && hasActiveFilters && (
             <Marker
               position={[userLocation.lat, userLocation.lng]}
@@ -1042,7 +1053,7 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
           {spreadVisiblePoints.map(point => {
             if (!point.location_lat || !point.location_lng) return null;
             const config = PIN_TYPES[point.type] || PIN_TYPES.other;
-            
+
             return (
               <Marker
                 key={point.id}
@@ -1094,6 +1105,8 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
             );
           })}
         </MapContainer>
+
+        {/* Selected point card */}
         {selectedPoint && (
           <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[550]">
             <div className="pointer-events-auto rounded-2xl border border-slate-200 bg-white/96 p-3 shadow-[0_18px_40px_rgba(15,23,42,0.18)] backdrop-blur">
@@ -1116,7 +1129,7 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-[16px] font-black text-slate-500 transition hover:bg-slate-100"
                   aria-label="Close map summary"
                 >
-                  x
+                  ×
                 </button>
               </div>
 
@@ -1146,6 +1159,8 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
           </div>
         )}
       </div>
+
+      {/* Preview cards strip */}
       {hasActiveFilters && visiblePoints.length > 0 && (
         <div className="border-t border-slate-200 bg-white px-3 py-3">
           <div className="mb-2 flex items-center justify-between gap-3">
