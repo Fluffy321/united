@@ -15,9 +15,9 @@ export default defineConfig({
         // independently of app code. Each chunk gets a content-hash filename
         // so a CDN can cache it indefinitely; only changed chunks re-download.
         manualChunks(id) {
-          if (id.includes('node_modules/leaflet') || id.includes('node_modules/react-leaflet')) {
-            return 'vendor-map';
-          }
+          // react-leaflet uses React.forwardRef — it MUST live in the same chunk
+          // as React to avoid undefined React when vendor-map executes before vendor.
+          // Leaflet + react-leaflet fall through to the vendor catch-all below.
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) {
             return 'vendor-charts';
           }
