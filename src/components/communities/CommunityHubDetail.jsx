@@ -19,7 +19,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { dataService } from '@/services';
 import { getCommunityTabLabel, getCommunityTypeConfig, getSupportedCommunityTabs } from '@/lib/communityTypes';
-import CommunityManagePanel from './CommunityManagePanel';
+import CommunityAdminCenter from './CommunityAdminCenter';
 
 function getPostTypeForTab(activeTab, typeKey) {
   if (activeTab === 'announcements' || typeKey === 'shul') return 'announcement';
@@ -60,7 +60,7 @@ export default function CommunityHubDetail({
   const [activeTab, setActiveTab] = useState(tabs.includes(initialTab) ? initialTab : (tabs[0] || 'home'));
   const [composeText, setComposeText] = useState('');
   const [showCompose, setShowCompose] = useState(false);
-  const [showManage, setShowManage] = useState(false);
+  const [showAdminCenter, setShowAdminCenter] = useState(false);
   const queryClient = useQueryClient();
   const accent = typeConfig.accent;
   const prompts = community.quickActions || typeConfig.prompts;
@@ -235,7 +235,7 @@ export default function CommunityHubDetail({
             <button
               onClick={() => {
                 if (isCreator) {
-                  setShowManage(true);
+                  setShowAdminCenter(true);
                   return;
                 }
                 onToggleJoin?.(isSensitive ? { incognito: true } : {});
@@ -249,7 +249,7 @@ export default function CommunityHubDetail({
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
-              {isJoining ? '...' : isCreator ? 'Manage' : isJoined ? 'Leave' : isSensitive ? 'Join Incognito' : 'Join'}
+              {isJoining ? '...' : isCreator ? 'Admin Center' : isJoined ? 'Leave' : isSensitive ? 'Join Incognito' : 'Join'}
             </button>
           </div>
 
@@ -328,7 +328,7 @@ export default function CommunityHubDetail({
               onCompose={openCompose}
               onTabChange={setTab}
               isCommunityManager={isCommunityManager}
-              onManage={() => setShowManage(true)}
+              onManage={() => setShowAdminCenter(true)}
             />
           )}
           {activeTab === 'openNeeds' && (
@@ -358,9 +358,9 @@ export default function CommunityHubDetail({
       {isCommunityManager && (
         <div className="fixed bottom-24 right-4 z-40 sm:hidden">
           <button
-            onClick={() => setShowManage(true)}
+            onClick={() => setShowAdminCenter(true)}
             className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-950 text-white shadow-xl shadow-slate-950/25"
-            aria-label="Manage community"
+            aria-label="Admin center"
           >
             <Settings className="h-5 w-5" />
           </button>
@@ -407,11 +407,12 @@ export default function CommunityHubDetail({
         </div>
       )}
 
-      <CommunityManagePanel
+      <CommunityAdminCenter
         community={community}
-        open={showManage}
-        onClose={() => setShowManage(false)}
-        onSaved={() => {
+        currentUser={currentUser}
+        open={showAdminCenter}
+        onClose={() => setShowAdminCenter(false)}
+        onCommunityUpdated={() => {
           queryClient.invalidateQueries({ queryKey: ['communities-list'] });
           queryClient.invalidateQueries({ queryKey: ['community-hub-membership', community.id, currentUser?.id] });
         }}

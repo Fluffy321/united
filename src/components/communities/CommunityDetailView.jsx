@@ -16,7 +16,6 @@ import CommunityEventsTab from './CommunityEventsTab';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import CommunityStoreTab from './CommunityStoreTab';
 import GroupChatSection from './GroupChatSection';
-import CommunityManagePanel from './CommunityManagePanel';
 import CommunityAdminCenter, { AppealSubmitModal } from './CommunityAdminCenter';
 
 const CLAIM_COPY = {
@@ -51,7 +50,6 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'home');
   const [showClaim, setShowClaim] = useState(false);
-  const [showManage, setShowManage] = useState(false);
   const [showAdminCenter, setShowAdminCenter] = useState(false);
   const [showAppealModal, setShowAppealModal] = useState(false);
   const [composeText, setComposeText] = useState('');
@@ -402,15 +400,6 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         onOpenChange={setShowClaim}
         community={community}
         currentUser={currentUser}
-      />
-      <CommunityManagePanel
-        community={community}
-        open={showManage}
-        onClose={() => setShowManage(false)}
-        onSaved={() => {
-          queryClient.invalidateQueries({ queryKey: ['community', communityId] });
-          queryClient.invalidateQueries({ queryKey: ['communities-list'] });
-        }}
       />
       <CommunityAdminCenter
         community={community}
