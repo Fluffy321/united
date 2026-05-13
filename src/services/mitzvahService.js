@@ -19,6 +19,12 @@ export const mitzvahService = {
   updateOffer(id, patch) {
     return dataService.entities.HelpOffer.update(id, patch);
   },
+  listRequestComments(filter = {}, sort = 'created_date', limit = 500) {
+    return dataService.entities.MitzvahRequestComment.filter(filter, sort, limit);
+  },
+  createRequestComment(payload) {
+    return dataService.entities.MitzvahRequestComment.create(payload);
+  },
   listCompletions(filter = {}, sort = '-created_date', limit = 100) {
     return dataService.entities.MitzvahCompletion.filter(filter, sort, limit);
   },

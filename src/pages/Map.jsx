@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { EyeOff, MapPin, Navigation, UsersRound } from 'lucide-react';
 import PageHelp from '@/components/common/PageHelp';
 import { useQuery } from '@tanstack/react-query';
@@ -40,6 +41,7 @@ function resolvePostLocation(post) {
 
 export default function MapPage() {
   const { user: currentUser } = useAuth();
+  const [searchParams] = useSearchParams();
   const [userLocation, setUserLocation] = useState(null);
   const [selectedCommunityIds, setSelectedCommunityIds] = useState(() => new Set());
   const [{ hiddenCommunityIds, hiddenPosterIds }, setMapFilterState] = useState(readMapFilterState);
@@ -49,6 +51,11 @@ export default function MapPage() {
     queryFn: () => dataService.entities.MitzvahRequest.list('-created_date', 100),
     staleTime: 120000,
   });
+  const highlightedRequestId = searchParams.get('requestId');
+  const highlightedRequest = useMemo(
+    () => requests.find((request) => request.id === highlightedRequestId),
+    [highlightedRequestId, requests]
+  );
 
   const { data: memberships = [] } = useQuery({
     queryKey: ['map-community-memberships', currentUser?.id],
@@ -175,6 +182,16 @@ export default function MapPage() {
       </div>
 
       <div className="mobile-page-wide min-h-0 flex-1 overflow-y-auto px-3 pb-3 sm:px-4 sm:pb-4">
+        {highlightedRequest && (
+          <section className="mb-3 rounded-[22px] border border-blue-200 bg-blue-50 p-3">
+            <p className="text-[11px] font-black uppercase tracking-wide text-blue-700">Opened from Mitzvah Circle</p>
+            <p className="mt-1 text-[15px] font-black text-slate-950">{highlightedRequest.title}</p>
+            <p className="mt-1 text-[12px] font-semibold text-slate-600">
+              {highlightedRequest.location_label || highlightedRequest.locationLabel || highlightedRequest.neighborhood || 'Five Towns'}
+            </p>
+          </section>
+        )}
+
         <section className="surface-panel-soft mb-3 rounded-[24px] p-3">
           <div className="flex items-start justify-between gap-3">
             <div>

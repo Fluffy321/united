@@ -98,16 +98,31 @@ export const feedRetentionService = {
     return PROMPT_LIBRARY[stableIndex(`${promptDate}-${userId || 'guest'}`, PROMPT_LIBRARY.length)];
   },
 
-  buildBrief({ posts = [], communityGroups = [], networkLabel = 'Five Towns' } = {}) {
+  async getPublishedBrief({ network = 'Five Towns' } = {}) {
+    const briefDate = todayKey();
+    try {
+      const briefs = await dataService.entities.FiveTownsBrief.filter({ brief_date: briefDate, network }, '-updated_at', 1);
+      return briefs?.[0] || null;
+    } catch {
+      return null;
+    }
+  },
+
+  buildBrief({ posts = [], communityGroups = [], networkLabel = 'Five Towns', curatedBrief = null } = {}) {
     const classified = posts.map((post) => ({ post, bucket: classifyPost(post) }));
     const count = (bucket) => classified.filter((item) => item.bucket === bucket).length;
     const activeThreads = [...posts]
       .sort((a, b) => ((b.comments_count || 0) + (b.likes_count || 0)) - ((a.comments_count || 0) + (a.likes_count || 0)))
       .slice(0, 3);
 
+    const payload = curatedBrief?.payload || {};
+    const topLocalUpdates = Array.isArray(payload.top_local_updates) ? payload.top_local_updates.slice(0, 3) : [];
+
     return {
-      title: `Today in ${networkLabel}`,
+      title: curatedBrief?.title || `Today in ${networkLabel}`,
       subtitle: 'Your daily Jewish local brief.',
+      topLocalUpdates,
+      verifiedLocalBrief: Boolean(curatedBrief && topLocalUpdates.length),
       metrics: [
         { label: 'Events', value: count('event'), detail: 'today and coming up' },
         { label: 'Chesed', value: count('help'), detail: 'needs and offers' },

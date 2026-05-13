@@ -1,5 +1,6 @@
-import React, { createPortal } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React from 'react';
+import { createPortal } from 'react-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -13,8 +14,10 @@ import {
   ListFilter,
   Loader2,
   MapPin,
+  MessageCircle,
   Plus,
   Search,
+  Send,
   ShieldCheck,
   UserCheck,
   Users,
@@ -81,6 +84,65 @@ const UI_TO_DB_STATUS = {
   [STATUSES.CANCELLED]: 'cancelled',
 };
 
+const normalizeUrgency = (value) => {
+  const raw = String(value || '').toLowerCase();
+  if (raw.includes('urgent') || raw === 'high') return 'Urgent';
+  if (raw.includes('today') || raw === 'medium') return 'Today';
+  return 'Flexible';
+};
+
+const getCreatedTime = (request) => {
+  const time = new Date(request.created_at || request.created_date || request.updated_at || Date.now()).getTime();
+  return Number.isFinite(time) ? time : Date.now();
+};
+
+const getUrgencyInfo = (request) => {
+  const urgency = normalizeUrgency(request.urgency);
+  const created = getCreatedTime(request);
+  const now = Date.now();
+  const tonight = new Date(now);
+  tonight.setHours(22, 0, 0, 0);
+  if (tonight.getTime() < now) tonight.setDate(tonight.getDate() + 1);
+
+  const dueAt = urgency === 'Urgent'
+    ? created + 2 * 60 * 60 * 1000
+    : urgency === 'Today'
+      ? tonight.getTime()
+      : null;
+
+  const remainingMs = dueAt ? Math.max(0, dueAt - now) : null;
+  const remainingHours = remainingMs === null ? null : Math.max(1, Math.ceil(remainingMs / 3600000));
+  const overdue = remainingMs === 0;
+
+  if (urgency === 'Urgent') {
+    return {
+      label: 'Urgent',
+      tone: 'border-red-200 bg-red-50 text-red-700',
+      dot: 'bg-red-500',
+      detail: overdue ? 'Needed now' : `Happening in ${remainingHours} hour${remainingHours === 1 ? '' : 's'}`,
+      remaining: overdue ? 'Act now' : `${remainingHours}h left`,
+    };
+  }
+
+  if (urgency === 'Today') {
+    return {
+      label: 'Today',
+      tone: 'border-orange-200 bg-orange-50 text-orange-700',
+      dot: 'bg-orange-500',
+      detail: 'Needed by tonight',
+      remaining: overdue ? 'Tonight' : `${remainingHours}h left`,
+    };
+  }
+
+  return {
+    label: 'Flexible',
+    tone: 'border-slate-200 bg-slate-50 text-slate-600',
+    dot: 'bg-slate-400',
+    detail: 'Flexible timing',
+    remaining: 'No rush',
+  };
+};
+
 const normalizeRequest = (row) => {
   if (!row) return row;
   return {
@@ -92,9 +154,7 @@ const normalizeRequest = (row) => {
     postedBy: row.requester_name || row.created_by_name || 'Community member',
     neighborhood: row.neighborhood || row.location_label || row.locationLabel || 'Five Towns',
     estimatedHours: parseFloat(row.estimated_hours || row.estimatedHours || 1),
-    urgency: row.urgency
-      ? row.urgency.charAt(0).toUpperCase() + row.urgency.slice(1).replace('_', ' ')
-      : 'Medium',
+    urgency: normalizeUrgency(row.urgency),
     accepted_volunteer_id: row.claimed_by_user_id,
   };
 };
@@ -120,6 +180,75 @@ const normalizeCarpoolRide = (request) => ({
   pickup_window: request.pickup_window || extractRideDetail(request.description, 'Pickup') || 'Coordinate time',
   direction: request.ride_direction || extractRideDetail(request.description, 'Type').toLowerCase() || 'needed',
 });
+
+const getRequestProgress = (request, helperCount) => {
+  const text = `${request.title || ''} ${request.description || ''} ${request.category || ''}`.toLowerCase();
+  const explicitTarget = Number(request.goal_count || request.target_count || request.volunteers_needed || request.seats_needed || request.meals_needed);
+  const firstNumber = Number((text.match(/\b(\d+)\b/) || [])[1]);
+  const inferredTarget = Number.isFinite(explicitTarget) && explicitTarget > 0
+    ? explicitTarget
+    : Number.isFinite(firstNumber) && firstNumber > 1
+      ? firstNumber
+      : /meal|food|dinner|lunch|supper|shabbos/.test(text)
+        ? 5
+        : /ride|carpool|seat|drive|pickup/.test(text)
+          ? 1
+          : 3;
+  const target = Math.max(1, Math.min(inferredTarget, 20));
+  const filled = Math.min(helperCount, target);
+  const remaining = Math.max(0, target - filled);
+  const percent = Math.round((filled / target) * 100);
+
+  if (/meal|food|dinner|lunch|supper|shabbos/.test(text)) {
+    return {
+      filled,
+      target,
+      remaining,
+      percent,
+      title: `${filled}/${target} meals covered`,
+      detail: remaining === 0 ? 'Meals fully covered' : `${remaining} meal${remaining === 1 ? '' : 's'} still needed`,
+      tone: 'emerald',
+    };
+  }
+
+  if (/ride|carpool|seat|drive|pickup/.test(text)) {
+    return {
+      filled,
+      target,
+      remaining,
+      percent,
+      title: remaining === 0 ? 'Ride covered' : `Ride still needs ${remaining} seat${remaining === 1 ? '' : 's'}`,
+      detail: `${filled}/${target} seat${target === 1 ? '' : 's'} covered`,
+      tone: 'blue',
+    };
+  }
+
+  return {
+    filled,
+    target,
+    remaining,
+    percent,
+    title: `${filled}/${target} volunteers found`,
+    detail: remaining === 0 ? 'Volunteer goal complete' : `${remaining} more helper${remaining === 1 ? '' : 's'} needed`,
+    tone: 'violet',
+  };
+};
+
+const getHelpCta = (request) => {
+  const options = ["I'll help", 'Count me in', 'I can take this'];
+  const seed = String(request.id || request.title || '').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return options[seed % options.length];
+};
+
+const getApproxDistance = (request) => {
+  const text = `${request.neighborhood || ''} ${request.location_label || ''} ${request.locationLabel || ''}`.toLowerCase();
+  if (text.includes('cedarhurst')) return '0.5 miles away';
+  if (text.includes('woodmere')) return '1.2 miles away';
+  if (text.includes('lawrence')) return '1.6 miles away';
+  if (text.includes('hewlett')) return '2.1 miles away';
+  if (text.includes('inwood')) return '2.8 miles away';
+  return 'Nearby';
+};
 
 const STATUS_CONFIGS = {
   [STATUSES.OPEN]:      { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', Icon: HandHeart,    label: 'Open' },
@@ -148,14 +277,19 @@ function StatusPill({ status }) {
 function RequestCard({
   request,
   offers,
+  comments = [],
   currentUser,
   onOffer,
   onAcceptOffer,
   onStart,
   onComplete,
   onVerify,
+  onComment,
+  onOpenMap,
   onQuickView,
 }) {
+  const [discussionOpen, setDiscussionOpen] = React.useState(false);
+  const [commentBody, setCommentBody] = React.useState('');
   const isPoster = request.poster_id === currentUser?.id;
   const acceptedOffer = offers.find(
     (o) => o.requestId === request.id && o.status === 'accepted'
@@ -175,14 +309,55 @@ function RequestCard({
   const pendingOffers = offers.filter(
     (o) => o.requestId === request.id && o.status === 'offered'
   );
+  const urgencyInfo = getUrgencyInfo(request);
+  const helperOffers = offers.filter((o) => o.requestId === request.id);
+  const helperNames = [...new Set(helperOffers.map((offer) => offer.volunteerName).filter(Boolean))];
+  const savedOfferCount = Number(request.offers_count || request.helper_count || request.volunteer_count || 0);
+  const visibleHelperCount = Math.max(helperOffers.length, Number.isFinite(savedOfferCount) ? savedOfferCount : 0);
+  const helperPreviewNames = helperNames.length
+    ? helperNames
+    : Array.from({ length: Math.min(visibleHelperCount, 4) }, (_, index) => `Helper ${index + 1}`);
+  const savedCommentCount = Number(request.comments_count || request.comment_count || request.replies_count || 0);
+  const commentCount = Math.max(comments.length, Number.isFinite(savedCommentCount) ? savedCommentCount : 0);
+  const progress = getRequestProgress(request, visibleHelperCount);
+  const progressTone = {
+    emerald: 'from-emerald-500 to-teal-500',
+    blue: 'from-blue-500 to-sky-500',
+    violet: 'from-violet-500 to-blue-500',
+  }[progress.tone] || 'from-blue-500 to-sky-500';
+  const helpCta = getHelpCta(request);
+  const distanceLabel = getApproxDistance(request);
+
+  const submitComment = async (event) => {
+    event.preventDefault();
+    if (!commentBody.trim()) return;
+    await onComment?.(request, commentBody.trim());
+    setCommentBody('');
+    setDiscussionOpen(true);
+  };
+
+  const handleCardClick = (event) => {
+    if (!onOpenMap) return;
+    if (event.target.closest('button, input, textarea, select, a')) return;
+    onOpenMap(request);
+  };
 
   return (
-    <article className="app-card p-4">
+    <article
+      className="app-card cursor-pointer p-4 transition hover:border-blue-100 hover:shadow-md"
+      onClick={handleCardClick}
+      role={onOpenMap ? 'button' : undefined}
+      tabIndex={onOpenMap ? 0 : undefined}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-700">
               {request.category}
+            </span>
+            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-black ${urgencyInfo.tone}`}>
+              <span className={`h-2 w-2 rounded-full ${urgencyInfo.dot}`} />
+              {urgencyInfo.label}
             </span>
             <StatusPill status={request.status} />
             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
@@ -191,7 +366,36 @@ function RequestCard({
             </span>
           </div>
           <h2 className="text-[17px] font-black leading-snug text-slate-950">{request.title}</h2>
-          <p className="mt-1 text-[13px] font-medium leading-5 text-slate-600">
+
+          <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr]">
+            <div className={`rounded-2xl border px-3 py-2 ${urgencyInfo.tone}`}>
+              <p className="flex items-center gap-2 text-[12px] font-black">
+                <Clock className="h-4 w-4" />
+                {urgencyInfo.label}: {urgencyInfo.detail}
+              </p>
+              <p className="mt-0.5 text-[11px] font-black opacity-80">{urgencyInfo.remaining}</p>
+            </div>
+
+            <div className="mt-3 rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-[13px] font-black text-slate-950">{progress.title}</p>
+                  <p className="mt-0.5 text-[12px] font-semibold text-slate-500">{progress.detail}</p>
+                </div>
+                <span className="shrink-0 rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-black text-slate-600">
+                  {progress.percent}%
+                </span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className={`h-full rounded-full bg-gradient-to-r ${progressTone} transition-all duration-300`}
+                  style={{ width: `${progress.percent}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-3 text-[13px] font-medium leading-5 text-slate-600">
             {request.description}
           </p>
 
@@ -209,13 +413,44 @@ function RequestCard({
             </div>
           )}
 
-          {request.status === STATUSES.OPEN && pendingOffers.length > 0 && (
-            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
-              <Users className="h-3 w-3" />
-              {pendingOffers.length}{' '}
-              {pendingOffers.length === 1 ? 'person offered' : 'people offered'} to help
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-2.5 py-1.5">
+              <div className="flex -space-x-2">
+                {helperPreviewNames.length > 0 ? helperPreviewNames.slice(0, 4).map((name) => (
+                  <span
+                    key={name}
+                    className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-[10px] font-black text-white"
+                    title={name}
+                  >
+                    {name.charAt(0).toUpperCase()}
+                  </span>
+                )) : (
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-slate-200 text-[10px] font-black text-slate-500">
+                    +
+                  </span>
+                )}
+              </div>
+              <span className="text-[12px] font-black text-slate-700">
+                {visibleHelperCount} {visibleHelperCount === 1 ? 'person offered help' : 'people offered help'}
+              </span>
             </div>
-          )}
+            <button
+              type="button"
+              onClick={() => setDiscussionOpen((value) => !value)}
+              className="motion-press inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] font-black text-slate-600"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenMap?.(request)}
+              className="motion-press inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-[12px] font-black text-blue-700"
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              {distanceLabel}
+            </button>
+          </div>
         </div>
 
         {onQuickView && (
@@ -232,7 +467,7 @@ function RequestCard({
       <div className="mt-4 grid grid-cols-2 gap-2 text-[12px] font-semibold text-slate-600 sm:grid-cols-4">
         <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2">
           <MapPin className="h-3.5 w-3.5" />
-          {request.neighborhood}
+          {distanceLabel}
         </div>
         <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2">
           <Clock className="h-3.5 w-3.5" />
@@ -240,7 +475,7 @@ function RequestCard({
         </div>
         <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2">
           <AlertCircle className="h-3.5 w-3.5" />
-          {request.urgency}
+          {urgencyInfo.detail}
         </div>
         <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2">
           <Users className="h-3.5 w-3.5" />
@@ -278,7 +513,17 @@ function RequestCard({
             style={{ background: '#556B2F' }}
           >
             <HandHeart className="h-4 w-4" />
-            Offer to Help
+            {helpCta}
+          </button>
+        )}
+        {onOpenMap && (
+          <button
+            type="button"
+            onClick={() => onOpenMap(request)}
+            className="motion-press inline-flex h-10 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 text-[13px] font-black text-blue-700"
+          >
+            <MapPin className="h-4 w-4" />
+            Open on map
           </button>
         )}
         {myOffer && myOffer.status === 'offered' && (
@@ -319,6 +564,65 @@ function RequestCard({
           </span>
         )}
       </div>
+
+      <div className="mt-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-3">
+        <button
+          type="button"
+          onClick={() => setDiscussionOpen((value) => !value)}
+          className="flex w-full items-center justify-between gap-2 text-left"
+        >
+          <span className="inline-flex items-center gap-2 text-[13px] font-black text-slate-800">
+            <MessageCircle className="h-4 w-4 text-blue-600" />
+            Discussion
+          </span>
+          <span className="text-[12px] font-black text-slate-500">
+            {commentCount > 0 ? `${commentCount} replies` : 'Start one'}
+          </span>
+        </button>
+
+        {discussionOpen && (
+          <div className="mt-3 space-y-2">
+            {comments.length > 0 ? (
+              comments.slice(-4).map((comment) => (
+                <div key={comment.id} className="flex gap-2 rounded-2xl bg-white p-2">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[12px] font-black text-blue-700">
+                    {comment.author_avatar_url ? (
+                      <img src={comment.author_avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
+                    ) : (
+                      (comment.author_name || 'C').charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12px] font-black text-slate-800">{comment.author_name || 'Community member'}</p>
+                    <p className="text-[12px] font-semibold leading-5 text-slate-600">{comment.body}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="rounded-2xl bg-white px-3 py-2 text-[12px] font-semibold text-slate-500">
+                Ask a detail, coordinate timing, or encourage the helper chain.
+              </p>
+            )}
+
+            <form onSubmit={submitComment} className="flex gap-2">
+              <input
+                value={commentBody}
+                onChange={(event) => setCommentBody(event.target.value)}
+                placeholder="Add a comment..."
+                className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-[13px] font-semibold outline-none focus:border-blue-400"
+              />
+              <button
+                type="submit"
+                disabled={!commentBody.trim()}
+                className="motion-press flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white disabled:opacity-40"
+                aria-label="Post comment"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
     </article>
   );
 }
@@ -330,7 +634,7 @@ function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
     category: 'Other',
     neighborhood: 'Five Towns',
     estimatedHours: 1,
-    urgency: 'Medium',
+    urgency: 'Today',
   });
 
   if (!open) return null;
@@ -429,12 +733,20 @@ function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
                 onChange={(e) => update('urgency', e.target.value)}
                 className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none"
               >
-                <option>Low</option>
-                <option>Medium</option>
-                <option>High</option>
                 <option>Urgent</option>
+                <option>Today</option>
+                <option>Flexible</option>
               </select>
             </label>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
+            <p className="text-[12px] font-black text-slate-800">
+              {form.urgency === 'Urgent'
+                ? 'Happening soon. Shows red with a 2-hour action window.'
+                : form.urgency === 'Today'
+                  ? 'Needed by tonight. Shows orange so people know to act today.'
+                  : 'Flexible timing. Shows gray with no rush.'}
+            </p>
           </div>
         </div>
 
@@ -570,12 +882,21 @@ function EmptyState({ title, text }) {
   );
 }
 
-function QuickViewSheet({ request, offers, currentUser, onClose, onOffer }) {
+function QuickViewSheet({ request, offers, comments = [], currentUser, onClose, onOffer, onOpenMap }) {
   if (!request || typeof document === 'undefined') return null;
   const myOffer = offers.find(
     (o) => o.requestId === request.id && o.volunteerId === currentUser?.id
   );
   const canOffer = request.poster_id !== currentUser?.id && request.status === STATUSES.OPEN && !myOffer;
+  const helperOffers = offers.filter((o) => o.requestId === request.id);
+  const savedOfferCount = Number(request.offers_count || request.helper_count || request.volunteer_count || 0);
+  const visibleHelperCount = Math.max(helperOffers.length, Number.isFinite(savedOfferCount) ? savedOfferCount : 0);
+  const savedCommentCount = Number(request.comments_count || request.comment_count || request.replies_count || 0);
+  const commentCount = Math.max(comments.length, Number.isFinite(savedCommentCount) ? savedCommentCount : 0);
+  const urgencyInfo = getUrgencyInfo(request);
+  const progress = getRequestProgress(request, visibleHelperCount);
+  const helpCta = getHelpCta(request);
+  const distanceLabel = getApproxDistance(request);
 
   return createPortal(
     <div
@@ -590,6 +911,10 @@ function QuickViewSheet({ request, offers, currentUser, onClose, onOffer }) {
           <div className="min-w-0">
             <div className="mb-2 flex flex-wrap gap-2">
               <StatusPill status={request.status} />
+              <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-black ${urgencyInfo.tone}`}>
+                <span className={`h-2 w-2 rounded-full ${urgencyInfo.dot}`} />
+                {urgencyInfo.label}
+              </span>
               <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-700">
                 {request.category}
               </span>
@@ -604,6 +929,42 @@ function QuickViewSheet({ request, offers, currentUser, onClose, onOffer }) {
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        <div className="mt-4 grid gap-2">
+          <div className={`rounded-2xl border px-3 py-2 ${urgencyInfo.tone}`}>
+            <p className="flex items-center gap-2 text-[12px] font-black">
+              <Clock className="h-4 w-4" />
+              {urgencyInfo.detail}
+            </p>
+            <p className="mt-0.5 text-[11px] font-black opacity-80">{urgencyInfo.remaining}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[13px] font-black text-slate-950">{progress.title}</p>
+                <p className="text-[12px] font-semibold text-slate-500">{progress.detail}</p>
+              </div>
+              <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600">
+                {progress.percent}%
+              </span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
+              <div className="h-full rounded-full bg-blue-600" style={{ width: `${progress.percent}%` }} />
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 text-[12px] font-black">
+            <span className="rounded-full bg-blue-50 px-2.5 py-1.5 text-blue-700">
+              {visibleHelperCount} {visibleHelperCount === 1 ? 'person offered help' : 'people offered help'}
+            </span>
+            <span className="rounded-full bg-slate-50 px-2.5 py-1.5 text-slate-700">
+              {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
+            </span>
+            <span className="rounded-full bg-emerald-50 px-2.5 py-1.5 text-emerald-700">
+              {distanceLabel}
+            </span>
+          </div>
+        </div>
+
         <div className="mt-4 flex gap-2">
           {canOffer && (
             <button
@@ -612,7 +973,15 @@ function QuickViewSheet({ request, offers, currentUser, onClose, onOffer }) {
               style={{ background: '#556B2F' }}
             >
               <HandHeart className="h-4 w-4" />
-              Offer to Help
+              {helpCta}
+            </button>
+          )}
+          {onOpenMap && (
+            <button
+              onClick={() => { onOpenMap(request); onClose(); }}
+              className="h-10 flex-1 rounded-xl border border-blue-200 bg-blue-50 text-[13px] font-black text-blue-700 hover:bg-blue-100"
+            >
+              Open map
             </button>
           )}
           <button
@@ -646,6 +1015,7 @@ function Metric({ icon: Icon, label, value, tone }) {
 
 export default function MitzvahCircle() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { user: currentUser, isLoadingAuth } = useAuth();
   const queryClient = useQueryClient();
 
@@ -675,6 +1045,10 @@ export default function MitzvahCircle() {
     }, { replace: true });
   };
 
+  const openRequestOnMap = (request) => {
+    navigate(`/Map?requestId=${encodeURIComponent(request.id)}`);
+  };
+
   // ── Data loading ───────────────────────────────────────────────────────────
 
   const { data: rawRequests = [], isLoading: loadingRequests } = useQuery({
@@ -691,12 +1065,29 @@ export default function MitzvahCircle() {
     enabled: !!currentUser,
   });
 
+  const { data: rawComments = [] } = useQuery({
+    queryKey: ['mitzvah-request-comments'],
+    queryFn: () => mitzvahService.listRequestComments({}, 'created_date', 500),
+    staleTime: 30000,
+    enabled: !!currentUser,
+  });
+
   const requests = React.useMemo(() => rawRequests.map(normalizeRequest), [rawRequests]);
   const offers = React.useMemo(() => rawOffers.map(normalizeOffer), [rawOffers]);
+  const commentsByRequest = React.useMemo(() => {
+    const groups = {};
+    (Array.isArray(rawComments) ? rawComments : []).forEach((comment) => {
+      if (!comment.request_id) return;
+      if (!groups[comment.request_id]) groups[comment.request_id] = [];
+      groups[comment.request_id].push(comment);
+    });
+    return groups;
+  }, [rawComments]);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] });
     queryClient.invalidateQueries({ queryKey: ['mitzvah-offers'] });
+    queryClient.invalidateQueries({ queryKey: ['mitzvah-request-comments'] });
   };
 
   // ── Mutations ──────────────────────────────────────────────────────────────
@@ -718,6 +1109,11 @@ export default function MitzvahCircle() {
 
   const { mutateAsync: updateOfferMutation } = useMutation({
     mutationFn: ({ id, patch }) => mitzvahService.updateOffer(id, patch),
+    onSuccess: invalidate,
+  });
+
+  const { mutateAsync: createCommentMutation } = useMutation({
+    mutationFn: (payload) => mitzvahService.createRequestComment(payload),
     onSuccess: invalidate,
   });
 
@@ -869,6 +1265,22 @@ export default function MitzvahCircle() {
       toast.success('Completion verified! Chesed hours logged.');
     } catch (err) {
       toast.error(err.message || 'Could not verify completion.');
+    }
+  };
+
+  const handleCommentOnRequest = async (request, body) => {
+    if (!currentUser) return;
+    try {
+      await createCommentMutation({
+        request_id: request.id,
+        author_id: currentUser.id,
+        author_name: currentUser.display_name || currentUser.full_name || 'Community member',
+        author_avatar_url: currentUser.avatar_url || null,
+        body,
+      });
+      toast.success('Comment added.');
+    } catch (err) {
+      toast.error(err.message || 'Could not add comment.');
     }
   };
 
@@ -1028,12 +1440,15 @@ export default function MitzvahCircle() {
                   key={r.id}
                   request={r}
                   offers={offers}
+                  comments={commentsByRequest[r.id] || []}
                   currentUser={currentUser}
                   onOffer={handleOffer}
                   onAcceptOffer={handleAcceptOffer}
                   onStart={handleStart}
                   onComplete={handleComplete}
                   onVerify={handleVerify}
+                  onComment={handleCommentOnRequest}
+                  onOpenMap={openRequestOnMap}
                   onQuickView={setQuickViewRequest}
                 />
               ))
@@ -1063,12 +1478,15 @@ export default function MitzvahCircle() {
                   key={request.id}
                   request={request}
                   offers={offers}
+                  comments={commentsByRequest[request.id] || []}
                   currentUser={currentUser}
                   onOffer={handleOffer}
                   onAcceptOffer={handleAcceptOffer}
                   onStart={handleStart}
                   onComplete={handleComplete}
                   onVerify={handleVerify}
+                  onComment={handleCommentOnRequest}
+                  onOpenMap={openRequestOnMap}
                 />
               ))
             ) : (
@@ -1086,12 +1504,15 @@ export default function MitzvahCircle() {
                   key={r.id}
                   request={r}
                   offers={offers}
+                  comments={commentsByRequest[r.id] || []}
                   currentUser={currentUser}
                   onOffer={handleOffer}
                   onAcceptOffer={handleAcceptOffer}
                   onStart={handleStart}
                   onComplete={handleComplete}
                   onVerify={handleVerify}
+                  onComment={handleCommentOnRequest}
+                  onOpenMap={openRequestOnMap}
                 />
               ))
             ) : (
@@ -1109,12 +1530,15 @@ export default function MitzvahCircle() {
                   key={r.id}
                   request={r}
                   offers={offers}
+                  comments={commentsByRequest[r.id] || []}
                   currentUser={currentUser}
                   onOffer={() => {}}
                   onAcceptOffer={() => {}}
                   onStart={() => {}}
                   onComplete={() => {}}
                   onVerify={() => {}}
+                  onComment={handleCommentOnRequest}
+                  onOpenMap={openRequestOnMap}
                 />
               ))
             ) : (
@@ -1145,9 +1569,11 @@ export default function MitzvahCircle() {
         <QuickViewSheet
           request={quickViewRequest}
           offers={offers}
+          comments={commentsByRequest[quickViewRequest.id] || []}
           currentUser={currentUser}
           onClose={() => setQuickViewRequest(null)}
           onOffer={(r) => { handleOffer(r); setQuickViewRequest(null); }}
+          onOpenMap={openRequestOnMap}
         />
       )}
     </main>

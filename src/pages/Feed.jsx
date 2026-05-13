@@ -475,6 +475,7 @@ export default function Feed() {
   const PAGE_SIZE = 30;
   const [showNetworkBanner, setShowNetworkBanner] = useState(() => !storageService.getItem('junited_network_banner_v2_dismissed'));
   const [dailyPrompt, setDailyPrompt] = useState(null);
+  const [publishedBrief, setPublishedBrief] = useState(null);
 
   useEffect(() => {
     if (!currentUser?.cityPreset) return;
@@ -580,6 +581,12 @@ export default function Feed() {
       .then(setDailyPrompt)
       .catch(() => setDailyPrompt(null));
   }, [currentUser?.id, primaryNetwork.cityPreset]);
+
+  useEffect(() => {
+    feedRetentionService.getPublishedBrief({ network: primaryNetwork.cityPreset || 'Five Towns' })
+      .then(setPublishedBrief)
+      .catch(() => setPublishedBrief(null));
+  }, [primaryNetwork.cityPreset]);
 
   // 5-second timeout: if still loading, show content or empty state
   useEffect(() => {
@@ -767,7 +774,8 @@ export default function Feed() {
     posts: feedPosts,
     communityGroups,
     networkLabel: primaryNetwork.shortLabel || primaryNetwork.cityPreset || 'Five Towns',
-  }), [communityGroups, feedPosts, primaryNetwork.cityPreset, primaryNetwork.shortLabel]);
+    curatedBrief: publishedBrief,
+  }), [communityGroups, feedPosts, primaryNetwork.cityPreset, primaryNetwork.shortLabel, publishedBrief]);
 
   const feedMomentum = useMemo(() => ({
     activeThreads: feedPosts.filter((post) => (post.comments_count || 0) >= 8).length,
@@ -1150,9 +1158,17 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, onOpe
   const briefScrollerRef = useRef(null);
   if (!brief) return null;
 
-  const newsItems = posts
+  const curatedNewsItems = (brief.topLocalUpdates || []).map((item, index) => ({
+    id: item.id || `curated-local-${index}`,
+    title: item.title || 'Verified local update',
+    body: item.summary || item.detail || '',
+    community_name: item.source_label || item.source || 'Verified local source',
+    location_text: item.location || 'Five Towns',
+  }));
+  const fallbackNewsItems = posts
     .filter((post) => post.type === 'news' || /update|brief|eruv|traffic|school|notice|local/i.test(`${post.title || ''} ${post.body || ''}`))
     .slice(0, 3);
+  const newsItems = curatedNewsItems.length ? curatedNewsItems : fallbackNewsItems;
   const trendingPosts = [...posts]
     .sort((a, b) => ((b.comments_count || 0) * 2 + (b.likes_count || 0)) - ((a.comments_count || 0) * 2 + (a.likes_count || 0)))
     .slice(0, 3);
@@ -1168,7 +1184,9 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, onOpe
       key: 'news',
       eyebrow: 'Five Towns News',
       title: brief.title,
-      subtitle: 'The updates worth noticing before the feed gets noisy.',
+      subtitle: brief.verifiedLocalBrief
+        ? 'Three verified local updates worth knowing today.'
+        : 'The updates worth noticing before the feed gets noisy.',
       items: newsItems,
       tone: 'from-slate-950 via-blue-900 to-cyan-800',
       empty: 'No major local news posts yet today.',
