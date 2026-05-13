@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { EyeOff, MapPin, Navigation, UsersRound } from 'lucide-react';
 import PageHelp from '@/components/common/PageHelp';
@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/AuthContext';
 import MitzvahMap from '@/components/mitzvah/MitzvahMap';
 
 const MAP_FILTER_STORAGE = 'junited-map-community-filters';
+const MAP_LOCATION_PROMPT_KEY = 'junited-map-location-prompted';
 const COMMUNITY_LOCATION_FALLBACKS = {
   cedarhurst: { lat: 40.6224, lng: -73.7268, label: 'Cedarhurst' },
   lawrence: { lat: 40.6134, lng: -73.7302, label: 'Lawrence' },
@@ -45,6 +46,7 @@ export default function MapPage() {
   const [userLocation, setUserLocation] = useState(null);
   const [selectedCommunityIds, setSelectedCommunityIds] = useState(() => new Set());
   const [{ hiddenCommunityIds, hiddenPosterIds }, setMapFilterState] = useState(readMapFilterState);
+  const [locationStatus, setLocationStatus] = useState('idle');
 
   const { data: requests = [] } = useQuery({
     queryKey: ['mitzvah-requests-map'],
@@ -157,13 +159,32 @@ export default function MapPage() {
     persistFilterState({ hiddenCommunityIds, hiddenPosterIds: next });
   };
 
-  const handleUseMyLocation = () => {
-    if (!navigator.geolocation) return;
+  const requestUserLocation = (rememberPrompt = false) => {
+    if (!navigator.geolocation) {
+      setLocationStatus('unavailable');
+      return;
+    }
+    setLocationStatus('requesting');
+    if (rememberPrompt) {
+      window.sessionStorage.setItem(MAP_LOCATION_PROMPT_KEY, '1');
+    }
     navigator.geolocation.getCurrentPosition(
-      ({ coords: { latitude: lat, longitude: lng } }) => setUserLocation({ lat, lng }),
-      () => {}
+      ({ coords: { latitude: lat, longitude: lng } }) => {
+        setUserLocation({ lat, lng });
+        setLocationStatus('allowed');
+      },
+      () => setLocationStatus('denied'),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.sessionStorage.getItem(MAP_LOCATION_PROMPT_KEY)) return;
+    requestUserLocation(true);
+  }, []);
+
+  const handleUseMyLocation = () => requestUserLocation(true);
 
   return (
     <main className="flex h-dvh flex-col overflow-hidden mobile-safe-bottom">
@@ -177,11 +198,20 @@ export default function MapPage() {
           className="motion-press ml-auto inline-flex h-9 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 text-xs font-black text-blue-700 shadow-sm transition hover:bg-blue-100"
         >
           <Navigation className="h-3.5 w-3.5" />
-          Near me
+          {locationStatus === 'requesting' ? 'Locating...' : userLocation ? 'Using location' : 'Near me'}
         </button>
       </div>
 
       <div className="mobile-page-wide min-h-0 flex-1 overflow-y-auto px-3 pb-3 sm:px-4 sm:pb-4">
+        {locationStatus === 'denied' && (
+          <section className="mb-3 rounded-[22px] border border-amber-200 bg-amber-50 p-3">
+            <p className="text-[13px] font-black text-amber-900">Location is off</p>
+            <p className="mt-1 text-[12px] font-semibold leading-5 text-amber-800">
+              Turn on location access and tap Near me to see distances and open exact directions.
+            </p>
+          </section>
+        )}
+
         {highlightedRequest && (
           <section className="mb-3 rounded-[22px] border border-blue-200 bg-blue-50 p-3">
             <p className="text-[11px] font-black uppercase tracking-wide text-blue-700">Opened from Mitzvah Circle</p>
@@ -286,13 +316,13 @@ export default function MapPage() {
           )}
         </section>
 
-        <div className="h-full overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
           <MitzvahMap
             requests={requests}
             userLocation={userLocation}
             communityPoints={communityPoints}
             personalized
-            mapHeight="100%"
+            mapHeight="clamp(520px, 68dvh, 760px)"
           />
         </div>
       </div>

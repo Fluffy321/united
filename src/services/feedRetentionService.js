@@ -39,12 +39,90 @@ const PROMPT_LIBRARY = [
   },
 ];
 
+const LOCAL_DAILY_UPDATE_LIBRARY = [
+  {
+    id: 'traffic-central-ave',
+    title: 'Central Ave timing check',
+    summary: 'Plan a little extra margin around the busiest Cedarhurst and Lawrence errand window.',
+    source_label: 'Five Towns Daily Brief',
+    location: 'Cedarhurst / Lawrence',
+  },
+  {
+    id: 'school-dismissal',
+    title: 'School pickup watch',
+    summary: 'Expect heavier traffic near school corridors during afternoon dismissal and after-school activities.',
+    source_label: 'Five Towns Daily Brief',
+    location: 'Woodmere / Hewlett',
+  },
+  {
+    id: 'local-events',
+    title: 'Tonight’s local rhythm',
+    summary: 'Check community events, shiurim, and family plans before the evening fills up.',
+    source_label: 'Five Towns Daily Brief',
+    location: 'Five Towns',
+  },
+  {
+    id: 'chesed-rides',
+    title: 'Rides and quick-help pulse',
+    summary: 'This is a good day to scan open rides, meal coverage, and short errands someone nearby can finish fast.',
+    source_label: 'Five Towns Daily Brief',
+    location: 'Five Towns',
+  },
+  {
+    id: 'map-businesses',
+    title: 'Support local Jewish businesses',
+    summary: 'Use the map before errands to find nearby kosher food, shops, and community-serving businesses.',
+    source_label: 'Five Towns Daily Brief',
+    location: 'Lawrence / Cedarhurst / Inwood',
+  },
+  {
+    id: 'shul-calendar',
+    title: 'Check the shul calendar',
+    summary: 'Review learning, minyan, and event notices before the day gets noisy in group chats.',
+    source_label: 'Five Towns Daily Brief',
+    location: 'Five Towns shuls',
+  },
+  {
+    id: 'inwood-spotlight',
+    title: 'Inwood belongs in the loop',
+    summary: 'Keep Inwood in local discovery, recommendations, and community updates instead of centering only Central Ave.',
+    source_label: 'Five Towns Daily Brief',
+    location: 'Inwood',
+  },
+  {
+    id: 'lost-found',
+    title: 'Lost and found sweep',
+    summary: 'A quick scan of local posts can reunite siddurim, keys, coats, and school items with the right family.',
+    source_label: 'Five Towns Daily Brief',
+    location: 'Five Towns',
+  },
+  {
+    id: 'community-weekend',
+    title: 'Weekend planning starts early',
+    summary: 'Events, hosting, carpools, and youth plans get easier when communities post them before the last minute.',
+    source_label: 'Five Towns Daily Brief',
+    location: 'Five Towns',
+  },
+];
+
 const lower = (value) => String(value || '').toLowerCase();
 const todayKey = () => new Date().toISOString().slice(0, 10);
 
 const stableIndex = (seed, size) => {
   const total = String(seed).split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
   return total % size;
+};
+
+const pickDailyUpdates = (networkLabel = 'Five Towns') => {
+  const dateSeed = `${todayKey()}-${networkLabel}`;
+  const start = stableIndex(dateSeed, LOCAL_DAILY_UPDATE_LIBRARY.length);
+  return Array.from({ length: 3 }, (_, offset) => {
+    const item = LOCAL_DAILY_UPDATE_LIBRARY[(start + offset * 2) % LOCAL_DAILY_UPDATE_LIBRARY.length];
+    return {
+      ...item,
+      id: `${item.id}-${todayKey()}`,
+    };
+  });
 };
 
 const postText = (post) => `${post.title || ''} ${post.body || ''} ${post.content || ''} ${post.type || ''} ${post.post_subtype || ''}`;
@@ -116,13 +194,16 @@ export const feedRetentionService = {
       .slice(0, 3);
 
     const payload = curatedBrief?.payload || {};
-    const topLocalUpdates = Array.isArray(payload.top_local_updates) ? payload.top_local_updates.slice(0, 3) : [];
+    const curatedUpdates = Array.isArray(payload.top_local_updates) ? payload.top_local_updates.slice(0, 3) : [];
+    const fallbackDailyUpdates = pickDailyUpdates(networkLabel);
+    const topLocalUpdates = curatedUpdates.length ? curatedUpdates : fallbackDailyUpdates;
 
     return {
       title: curatedBrief?.title || `Today in ${networkLabel}`,
       subtitle: 'Your daily Jewish local brief.',
       topLocalUpdates,
-      verifiedLocalBrief: Boolean(curatedBrief && topLocalUpdates.length),
+      verifiedLocalBrief: Boolean(curatedBrief && curatedUpdates.length),
+      rotatingDailyBrief: !curatedUpdates.length,
       metrics: [
         { label: 'Events', value: count('event'), detail: 'today and coming up' },
         { label: 'Chesed', value: count('help'), detail: 'needs and offers' },

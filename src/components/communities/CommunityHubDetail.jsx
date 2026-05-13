@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   BadgeCheck,
+  EyeOff,
+  Lock,
   MapPin,
   MessageCircle,
   Send,
@@ -47,6 +49,9 @@ export default function CommunityHubDetail({ community, currentUser, initialComp
   const [activeTab, setActiveTab] = useState(tabs[0] || 'home');
   const [composeText, setComposeText] = useState('');
   const [showCompose, setShowCompose] = useState(false);
+  const [postAnonymously, setPostAnonymously] = useState(
+    Boolean(community.supportsAnonymousPosting && (community.joinedIncognito || community.hideMembership))
+  );
   const queryClient = useQueryClient();
   const accent = typeConfig.accent;
   const prompts = community.quickActions || typeConfig.prompts;
@@ -60,6 +65,10 @@ export default function CommunityHubDetail({ community, currentUser, initialComp
     setComposeText(initialComposePrompt);
     setShowCompose(true);
   }, [initialComposePrompt, community.id]);
+
+  useEffect(() => {
+    setPostAnonymously(Boolean(community.supportsAnonymousPosting && (community.joinedIncognito || community.hideMembership)));
+  }, [community.id, community.hideMembership, community.joinedIncognito, community.supportsAnonymousPosting]);
 
   const { data: realPosts = [] } = useQuery({
     queryKey: ['community-hub-posts', community.id],
@@ -105,6 +114,7 @@ export default function CommunityHubDetail({ community, currentUser, initialComp
         type: getPostTypeForTab(activeTab, typeConfig.key),
         title: text.length > 72 ? text.slice(0, 72) : undefined,
         content: text,
+        is_anonymous: Boolean(community.supportsAnonymousPosting && postAnonymously),
       });
       await queryClient.invalidateQueries({ queryKey: ['community-hub-posts', community.id] });
       setComposeText('');
@@ -313,6 +323,25 @@ export default function CommunityHubDetail({ community, currentUser, initialComp
               placeholder={typeConfig.prompts[0] || 'Share something with the community...'}
               className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none focus:border-blue-400 focus:bg-white transition-colors placeholder:text-slate-400"
             />
+            {community.supportsAnonymousPosting && (
+              <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-2xl border border-violet-100 bg-violet-50 px-3 py-3 text-left">
+                <input
+                  type="checkbox"
+                  checked={postAnonymously}
+                  onChange={(event) => setPostAnonymously(event.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-violet-300 text-violet-600 focus:ring-violet-500"
+                />
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1.5 text-[13px] font-black text-violet-800">
+                    <EyeOff className="h-4 w-4" />
+                    Post anonymously
+                  </span>
+                  <span className="mt-0.5 block text-[12px] font-semibold leading-5 text-violet-700">
+                    Your name stays off this post inside the community.
+                  </span>
+                </span>
+              </label>
+            )}
             <div className="mt-3 flex items-center justify-end gap-2">
               <button
                 onClick={() => setShowCompose(false)}

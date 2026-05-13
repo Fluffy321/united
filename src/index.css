@@ -711,6 +711,23 @@
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* Leaflet map buttons */
+.junited-leaflet-map,
+.junited-leaflet-map .leaflet-container,
+.junited-leaflet-map .leaflet-map-pane,
+.junited-leaflet-map .leaflet-tile,
+.junited-leaflet-map .leaflet-marker-icon {
+  touch-action: none !important;
+}
+
+.junited-leaflet-map {
+  cursor: grab;
+  user-select: none;
+}
+
+.junited-leaflet-map:active {
+  cursor: grabbing;
+}
+
 .leaflet-control-zoom {
   border: none !important; box-shadow: none !important;
   background: transparent !important;

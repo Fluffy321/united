@@ -1,10 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
+  CalendarDays,
+  HeartHandshake,
   Loader2,
+  MapPinned,
   MessageCircle,
   Plus,
   Search,
+  ShieldCheck,
   Sparkles,
   TrendingUp,
   Users,
@@ -612,24 +616,60 @@ export default function Communities() {
   }, [discoverCommunities]);
 
   const joinedCount = communities.filter((community) => community.joined).length;
-  const featuredGroups = useMemo(() => {
-    const byActivity = [...filteredCommunities]
-      .sort((a, b) => (b.postsToday + b.activeNow) - (a.postsToday + a.activeNow))
-      .slice(0, 3);
-    const blowingUp = filteredCommunities
-      .filter((community) => community.trending || String(community.growth || '').startsWith('+'))
-      .sort((a, b) => (b.activeNow || 0) - (a.activeNow || 0))
-      .slice(0, 3);
-    const needsAttention = filteredCommunities
-      .filter((community) => community.communityType === 'support' || community.privacy === 'Private / Anonymous' || community.category === 'Support')
-      .sort((a, b) => (b.postsToday || 0) - (a.postsToday || 0))
-      .slice(0, 3);
+  const communityPulse = useMemo(() => {
+    const findById = (id) => communities.find((community) => community.id === id);
+    const local = findById('seed-five-towns-local');
+    const updates = findById('seed-jewish-news');
+    const chesed = findById('seed-chesed-updates');
+    const support = findById('seed-mental-health');
+
     return [
-      { key: 'active', title: 'Most Active', subtitle: 'Where the conversation is moving right now.', icon: TrendingUp, tone: 'blue', communities: byActivity },
-      { key: 'hot', title: 'Blowing Up', subtitle: 'Fast-growing spaces people are joining this week.', icon: Zap, tone: 'emerald', communities: blowingUp },
-      { key: 'attention', title: 'Needs Attention', subtitle: 'Private and support spaces that should feel cared for.', icon: AlertTriangle, tone: 'rose', communities: needsAttention },
-    ].filter((group) => group.communities.length > 0);
-  }, [filteredCommunities]);
+      local && {
+        key: 'local',
+        icon: MapPinned,
+        title: 'Five Towns right now',
+        eyebrow: 'Local pulse',
+        copy: 'Open the town square for tonight plans, useful asks, and what locals are talking about.',
+        stat: `${local.postsToday || 0} posts today`,
+        tone: 'blue',
+        community: local,
+        prompt: local.dailyPrompt,
+      },
+      updates && {
+        key: 'updates',
+        icon: CalendarDays,
+        title: 'What changed today',
+        eyebrow: 'Daily brief',
+        copy: 'Check the official update stream before it gets buried in chats and forwarded screenshots.',
+        stat: updates.engagement || `${updates.postsToday || 0} fresh updates`,
+        tone: 'amber',
+        community: updates,
+        prompt: updates.dailyPrompt,
+      },
+      chesed && {
+        key: 'chesed',
+        icon: HeartHandshake,
+        title: 'Do one useful thing',
+        eyebrow: 'Chesed board',
+        copy: 'Jump into needs, rides, meals, and mitzvah offers that are concrete enough to act on.',
+        stat: chesed.engagement || `${chesed.postsToday || 0} active threads`,
+        tone: 'emerald',
+        community: chesed,
+        prompt: chesed.dailyPrompt,
+      },
+      support && {
+        key: 'support',
+        icon: ShieldCheck,
+        title: 'Private spaces matter',
+        eyebrow: 'Trust layer',
+        copy: 'Sensitive communities stay quiet, useful, and anonymous when someone needs a safer place.',
+        stat: support.engagement || 'Anonymous posting available',
+        tone: 'violet',
+        community: support,
+        prompt: support.dailyPrompt,
+      },
+    ].filter(Boolean);
+  }, [communities]);
 
   const visibleIdentityTags = useMemo(() => {
     const tagSet = new Set();
@@ -761,6 +801,12 @@ export default function Communities() {
           onMessages={() => setShowMessages(true)}
         />
 
+        <CommunityPulseDock
+          items={communityPulse}
+          onOpen={openCommunity}
+          onTryPrompt={openCommunityWithPrompt}
+        />
+
         <IdentityStrip
           tags={visibleIdentityTags}
           communities={yourCommunities}
@@ -803,13 +849,6 @@ export default function Communities() {
             ) : (
               curatedDiscoverSections.length > 0 ? (
                 <>
-                  <FeaturedCommunities
-                    groups={featuredGroups}
-                    onOpen={openCommunity}
-                    onTryPrompt={openCommunityWithPrompt}
-                    onJoin={handleJoin}
-                    joiningId={joiningId}
-                  />
                   {curatedDiscoverSections.map((group) => (
                     <CommunitySection
                       key={group.key}
@@ -897,6 +936,61 @@ function Hero({ joinedCount, onCreate, onMessages }) {
 
 function HeroPill({ label }) {
   return <span className="mt-3 inline-flex rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700">{label}</span>;
+}
+
+function CommunityPulseDock({ items, onOpen, onTryPrompt }) {
+  if (!items.length) return null;
+  const toneMap = {
+    blue: 'border-blue-100 bg-blue-50 text-blue-700',
+    amber: 'border-amber-100 bg-amber-50 text-amber-800',
+    emerald: 'border-emerald-100 bg-emerald-50 text-emerald-800',
+    violet: 'border-violet-100 bg-violet-50 text-violet-800',
+  };
+
+  return (
+    <section className="surface-panel-soft mb-4 rounded-[24px] p-4">
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-base font-black text-slate-950">Today in your community world</h2>
+          <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">
+            These are the loops that should make Communities useful enough to reopen, not just join once.
+          </p>
+        </div>
+        <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-slate-500">
+          Five Towns focused
+        </span>
+      </div>
+      <div className="grid gap-3 lg:grid-cols-4">
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <article key={item.key} className="rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
+              <button
+                type="button"
+                onClick={() => onOpen?.(item.community.id)}
+                className="motion-press w-full text-left"
+              >
+                <div className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-black ${toneMap[item.tone] || toneMap.blue}`}>
+                  <Icon className="h-3.5 w-3.5" />
+                  {item.eyebrow}
+                </div>
+                <h3 className="mt-3 text-[15px] font-black leading-5 text-slate-950">{item.title}</h3>
+                <p className="mt-1.5 line-clamp-3 text-[12px] font-semibold leading-5 text-slate-500">{item.copy}</p>
+                <p className="mt-3 text-[11px] font-black uppercase tracking-wide text-slate-400">{item.stat}</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => onTryPrompt?.(item.community, item.prompt)}
+                className="motion-press mt-3 w-full rounded-xl bg-slate-950 px-3 py-2 text-left text-[11px] font-black text-white"
+              >
+                Open with prompt
+              </button>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
 
 function ViewSwitch({ view, onChange, joinedCount }) {
@@ -996,87 +1090,6 @@ function SearchBar({ query, onQueryChange, typeFilter, onTypeFilterChange }) {
             {item.label}
           </button>
         ))}
-      </div>
-    </section>
-  );
-}
-
-function FeaturedCommunities({ groups, onOpen, onTryPrompt, onJoin, joiningId }) {
-  if (!groups.length) return null;
-  const toneMap = {
-    blue: 'border-blue-100 bg-blue-50 text-blue-700',
-    emerald: 'border-emerald-100 bg-emerald-50 text-emerald-700',
-    rose: 'border-rose-100 bg-rose-50 text-rose-700',
-  };
-
-  return (
-    <section className="space-y-3">
-      <div>
-        <h2 className="flex items-center gap-2 text-xl font-black text-slate-950">
-          <Sparkles className="h-5 w-5 text-blue-600" />
-          Featured right now
-        </h2>
-        <p className="text-sm leading-6 text-slate-500">The communities with the strongest reason to click today.</p>
-      </div>
-      <div className="grid gap-3 lg:grid-cols-3">
-        {groups.map((group) => {
-          const Icon = group.icon;
-          return (
-            <div key={group.key} className="surface-panel-soft rounded-[24px] p-3">
-              <div className={`mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-black ${toneMap[group.tone] || toneMap.blue}`}>
-                <Icon className="h-4 w-4" />
-                {group.title}
-              </div>
-              <p className="mb-3 text-[12px] font-semibold leading-5 text-slate-500">{group.subtitle}</p>
-              <div className="space-y-2">
-                {group.communities.map((community) => (
-                  <button
-                    key={`${group.key}-${community.id}`}
-                    type="button"
-                    onClick={() => onOpen(community.id)}
-                    className="motion-press w-full rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-[14px] font-black text-slate-950">{community.name}</p>
-                        <p className="mt-1 line-clamp-2 text-[12px] font-semibold leading-5 text-slate-500">
-                          {community.valueHook || community.description}
-                        </p>
-                      </div>
-                      <span className="shrink-0 rounded-full bg-slate-950 px-2 py-1 text-[10px] font-black text-white">
-                        {community.activeNow} live
-                      </span>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between gap-2 text-[11px] font-black text-slate-500">
-                      <span>{community.postsToday} posts today</span>
-                      <span>{community.socialProof}</span>
-                    </div>
-                    {community.dailyPrompt && (
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onTryPrompt?.(community, community.dailyPrompt);
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            onTryPrompt?.(community, community.dailyPrompt);
-                          }
-                        }}
-                        className="mt-3 inline-flex rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] font-black text-blue-700"
-                      >
-                        Try this prompt
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
-        })}
       </div>
     </section>
   );
