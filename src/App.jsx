@@ -79,7 +79,7 @@ const Login                   = lazy(() => import('@/pages/Login'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
-const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
+const mainPagePath = `/${mainPageKey || 'Feed'}`;
 
 const ADMIN_PAGE_KEYS = new Set(['AdminModerationQueue', 'AdminSeedControl']);
 const SPLASH_MIN_VISIBLE_MS = 720;
@@ -149,7 +149,7 @@ const AuthenticatedApp = () => {
             </Route>
 
             {/* Main app routes */}
-            <Route path="/" element={<PageTransition><LayoutWrapper currentPageName={mainPageKey}><MainPage /></LayoutWrapper></PageTransition>} />
+            <Route path="/" element={<Navigate to={mainPagePath} replace />} />
             {Object.entries(Pages)
               .filter(([path]) => !ADMIN_PAGE_KEYS.has(path))
               .map(([path, Page]) => (
@@ -183,21 +183,21 @@ const AuthenticatedApp = () => {
             <Route path="/MitzvahMap" element={<Navigate to="/Map" replace />} />
 
             {/* Non-MVP routes — redirect to home rather than 404 to avoid confusing beta users */}
-            <Route path="/Events" element={<Navigate to="/" replace />} />
-            <Route path="/MyEvents" element={<Navigate to="/" replace />} />
+            <Route path="/Events" element={<Navigate to={mainPagePath} replace />} />
+            <Route path="/MyEvents" element={<Navigate to={mainPagePath} replace />} />
             <Route path="/CommunityCalendar" element={<Navigate to="/Communities" replace />} />
             <Route path="/Groups" element={<Navigate to="/Communities" replace />} />
-            <Route path="/News" element={<Navigate to="/" replace />} />
-            <Route path="/Organization" element={<Navigate to="/" replace />} />
-            <Route path="/ShulPage" element={<Navigate to="/" replace />} />
+            <Route path="/News" element={<Navigate to={mainPagePath} replace />} />
+            <Route path="/Organization" element={<Navigate to={mainPagePath} replace />} />
+            <Route path="/ShulPage" element={<Navigate to={mainPagePath} replace />} />
             <Route path="/CommunityUpdates" element={<Navigate to="/Communities" replace />} />
-            <Route path="/BusinessDirectory" element={<Navigate to="/" replace />} />
-            <Route path="/BusinessListing" element={<Navigate to="/" replace />} />
-            <Route path="/CreateBusinessListing" element={<Navigate to="/" replace />} />
-            <Route path="/SupportJUnited" element={<Navigate to="/" replace />} />
-            <Route path="/ThankYou" element={<Navigate to="/" replace />} />
-            <Route path="/yahrzeits" element={<Navigate to="/" replace />} />
-            <Route path="/tehillim" element={<Navigate to="/" replace />} />
+            <Route path="/BusinessDirectory" element={<Navigate to={mainPagePath} replace />} />
+            <Route path="/BusinessListing" element={<Navigate to={mainPagePath} replace />} />
+            <Route path="/CreateBusinessListing" element={<Navigate to={mainPagePath} replace />} />
+            <Route path="/SupportJUnited" element={<Navigate to={mainPagePath} replace />} />
+            <Route path="/ThankYou" element={<Navigate to={mainPagePath} replace />} />
+            <Route path="/yahrzeits" element={<Navigate to={mainPagePath} replace />} />
+            <Route path="/tehillim" element={<Navigate to={mainPagePath} replace />} />
           </Route>
           <Route path="*" element={<PageNotFound />} />
         </Routes>
