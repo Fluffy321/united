@@ -2,9 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   BadgeCheck,
+  EyeOff,
+  Lock,
   MapPin,
   MessageCircle,
   Send,
+  Settings,
   Shield,
   ShieldCheck,
   Sparkles,
@@ -16,6 +19,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { dataService } from '@/services';
 import { getCommunityTabLabel, getCommunityTypeConfig, getSupportedCommunityTabs } from '@/lib/communityTypes';
+import CommunityManagePanel from './CommunityManagePanel';
 
 function getPostTypeForTab(activeTab, typeKey) {
   if (activeTab === 'announcements' || typeKey === 'shul') return 'announcement';
@@ -35,7 +39,16 @@ function matchesPostFilter(post, filter) {
   return type === filter;
 }
 
-export default function CommunityHubDetail({ community, currentUser, initialComposePrompt = '', onBack, onToggleJoin, joiningId }) {
+export default function CommunityHubDetail({
+  community,
+  currentUser,
+  initialComposePrompt = '',
+  initialTab = 'home',
+  onBack,
+  onToggleJoin,
+  onTabChange,
+  joiningId,
+}) {
   const typeConfig = getCommunityTypeConfig(community);
   const Icon = typeConfig.icon;
   const tabs = getSupportedCommunityTabs(community, {
@@ -44,9 +57,10 @@ export default function CommunityHubDetail({ community, currentUser, initialComp
     chat: false,
     listings: false,
   });
-  const [activeTab, setActiveTab] = useState(tabs[0] || 'home');
+  const [activeTab, setActiveTab] = useState(tabs.includes(initialTab) ? initialTab : (tabs[0] || 'home'));
   const [composeText, setComposeText] = useState('');
   const [showCompose, setShowCompose] = useState(false);
+  const [showManage, setShowManage] = useState(false);
   const queryClient = useQueryClient();
   const accent = typeConfig.accent;
   const prompts = community.quickActions || typeConfig.prompts;
@@ -55,11 +69,43 @@ export default function CommunityHubDetail({ community, currentUser, initialComp
   const memberVisibility = isSensitive ? 'Hidden unless opted in' : community.privacy || 'Public';
   const isSeedCommunity = String(community.id || '').startsWith('seed-');
 
+  const { data: membershipRecord = [] } = useQuery({
+    queryKey: ['community-hub-membership', community.id, currentUser?.id],
+    queryFn: () => dataService.entities.UserCommunity.filter({ community_id: community.id, user_id: currentUser.id }),
+    enabled: Boolean(currentUser?.id && community.id) && !isSeedCommunity,
+    staleTime: 30000,
+  });
+
+  const membershipRole = String(membershipRecord[0]?.role || '').toLowerCase();
+  const isCreator = Boolean(currentUser?.id && community.created_by_user_id === currentUser.id);
+  const isCommunityManager = Boolean(
+    isCreator
+    || currentUser?.role === 'admin'
+    || ['owner', 'admin', 'moderator'].includes(membershipRole)
+  );
+  const isJoined = Boolean(community.joined || membershipRecord.length > 0 || isCreator);
+
+  const setTab = (tab) => {
+    const nextTab = tabs.includes(tab) ? tab : (tabs[0] || 'home');
+    setActiveTab(nextTab);
+    onTabChange?.(nextTab);
+  };
+
   useEffect(() => {
     if (!initialComposePrompt) return;
     setComposeText(initialComposePrompt);
     setShowCompose(true);
   }, [initialComposePrompt, community.id]);
+
+  useEffect(() => {
+    if (!tabs.includes(activeTab)) setTab(tabs[0] || 'home');
+  }, [activeTab, tabs]);
+
+  useEffect(() => {
+    if (initialTab && tabs.includes(initialTab) && initialTab !== activeTab) {
+      setActiveTab(initialTab);
+    }
+  }, [activeTab, initialTab, tabs]);
 
   const { data: realPosts = [] } = useQuery({
     queryKey: ['community-hub-posts', community.id],
@@ -187,15 +233,23 @@ export default function CommunityHubDetail({ community, currentUser, initialComp
               </div>
             </div>
             <button
-              onClick={() => onToggleJoin?.(isSensitive ? { incognito: true } : {})}
+              onClick={() => {
+                if (isCreator) {
+                  setShowManage(true);
+                  return;
+                }
+                onToggleJoin?.(isSensitive ? { incognito: true } : {});
+              }}
               disabled={isJoining}
               className={`h-10 shrink-0 rounded-xl px-4 text-sm font-bold transition active:scale-[0.98] disabled:opacity-60 ${
-                community.joined
+                isCreator
+                  ? 'bg-slate-950 text-white hover:bg-slate-800'
+                  : isJoined
                   ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
-              {isJoining ? '...' : community.joined ? 'Leave' : isSensitive ? 'Join Incognito' : 'Join'}
+              {isJoining ? '...' : isCreator ? 'Manage' : isJoined ? 'Leave' : isSensitive ? 'Join Incognito' : 'Join'}
             </button>
           </div>
 
@@ -232,6 +286,12 @@ export default function CommunityHubDetail({ community, currentUser, initialComp
                 You're a member
               </span>
             )}
+            {isCommunityManager && (
+              <span className="inline-flex items-center gap-1.5 font-semibold text-slate-700">
+                <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+                {isCreator ? 'Owner' : 'Admin'}
+              </span>
+            )}
             <span className="inline-flex items-center gap-1.5 font-semibold">
               <ShieldCheck className="h-3.5 w-3.5 text-slate-500" />
               {community.privacy || 'Public'}
@@ -243,7 +303,7 @@ export default function CommunityHubDetail({ community, currentUser, initialComp
             {tabs.map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => setTab(tab)}
                 className={`shrink-0 px-4 py-3 text-[13px] font-bold transition ${
                   activeTab === tab
                     ? 'border-b-2 border-blue-600 text-blue-700'
@@ -266,7 +326,9 @@ export default function CommunityHubDetail({ community, currentUser, initialComp
               openNeeds={openNeeds}
               prompts={prompts}
               onCompose={openCompose}
-              onTabChange={setActiveTab}
+              onTabChange={setTab}
+              isCommunityManager={isCommunityManager}
+              onManage={() => setShowManage(true)}
             />
           )}
           {activeTab === 'openNeeds' && (
@@ -292,6 +354,18 @@ export default function CommunityHubDetail({ community, currentUser, initialComp
           )}
         </div>
       </section>
+
+      {isCommunityManager && (
+        <div className="fixed bottom-24 right-4 z-40 sm:hidden">
+          <button
+            onClick={() => setShowManage(true)}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-950 text-white shadow-xl shadow-slate-950/25"
+            aria-label="Manage community"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
+        </div>
+      )}
 
       {showCompose && (
         <div className="fixed inset-0 z-[80] flex items-end bg-slate-950/40 sm:items-center sm:justify-center sm:p-4">
@@ -332,11 +406,21 @@ export default function CommunityHubDetail({ community, currentUser, initialComp
           </div>
         </div>
       )}
+
+      <CommunityManagePanel
+        community={community}
+        open={showManage}
+        onClose={() => setShowManage(false)}
+        onSaved={() => {
+          queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+          queryClient.invalidateQueries({ queryKey: ['community-hub-membership', community.id, currentUser?.id] });
+        }}
+      />
     </main>
   );
 }
 
-function HomeTab({ community, typeConfig, posts, openNeeds, prompts, onCompose, onTabChange }) {
+function HomeTab({ community, typeConfig, posts, openNeeds, prompts, onCompose, onTabChange, isCommunityManager, onManage }) {
   const featuredPosts = posts.slice(0, 3);
   const Icon = typeConfig.icon;
 
@@ -351,6 +435,14 @@ function HomeTab({ community, typeConfig, posts, openNeeds, prompts, onCompose, 
             <p className="text-sm font-black text-slate-950">{typeConfig.primaryCta}</p>
             <p className="mt-1 text-[13px] font-semibold leading-5 text-slate-600">{typeConfig.emptyBody}</p>
             <div className="mt-3 flex flex-wrap gap-2">
+              {isCommunityManager && (
+                <button
+                  onClick={onManage}
+                  className="motion-press rounded-xl bg-slate-950 px-3 py-2 text-xs font-black text-white"
+                >
+                  Manage Community
+                </button>
+              )}
               <button
                 onClick={() => onCompose(prompts[0] || '')}
                 className={`motion-press rounded-xl bg-gradient-to-br ${typeConfig.accent} px-3 py-2 text-xs font-black text-white`}

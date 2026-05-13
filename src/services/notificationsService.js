@@ -167,6 +167,33 @@ export const notificationsService = {
     });
   },
 
+  notifyMemberRemoved({ removedUserId, adminId, communityName, communityId, removalId }) {
+    return this.create({
+      userId: removedUserId,
+      actorId: adminId,
+      type: 'community_removal',
+      title: 'You were removed from a community',
+      body: `You were removed from ${communityName || 'a community'}. You may submit an appeal.`,
+      linkUrl: communityId ? `/Communities?community=${communityId}` : '/Communities',
+      data: { community_id: communityId, removal_id: removalId, can_appeal: true },
+    });
+  },
+
+  notifyAppealResolved({ userId, adminId, communityName, communityId, decision }) {
+    const approved = decision === 'approved';
+    return this.create({
+      userId,
+      actorId: adminId,
+      type: 'appeal_resolved',
+      title: approved ? 'Your appeal was approved' : 'Your appeal was denied',
+      body: approved
+        ? `Your appeal to rejoin ${communityName || 'the community'} was approved. You are now a member again.`
+        : `Your appeal to rejoin ${communityName || 'the community'} was reviewed and denied.`,
+      linkUrl: communityId ? `/Communities?community=${communityId}` : '/Communities',
+      data: { community_id: communityId, decision },
+    });
+  },
+
   notifyNearbyMapActivity({ userId, actorId, actorName, communityName, postId, locationLabel }) {
     return this.create({
       userId,

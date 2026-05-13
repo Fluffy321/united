@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Compass, HeartHandshake, Lock, Mail, MapPin, MessageCircle, ShieldCheck, Sparkles, User, Users, Loader2 } from 'lucide-react';
 import { dataService } from '@/services';
@@ -6,6 +6,18 @@ import { useAuth } from '@/lib/AuthContext';
 import { shouldUseSupabase } from '@/api/supabaseClient';
 
 const DEFAULT_AUTH_DESTINATION = '/Feed';
+const AUTH_SUBMIT_TIMEOUT_MS = 15000;
+
+const withTimeout = (promise, timeoutMs, message) => new Promise((resolve, reject) => {
+  const timeoutId = window.setTimeout(() => {
+    reject(new Error(message));
+  }, timeoutMs);
+
+  promise
+    .then(resolve)
+    .catch(reject)
+    .finally(() => window.clearTimeout(timeoutId));
+});
 
 const VALUE_CHIPS = [
   {
@@ -51,7 +63,7 @@ function BrandMark({ compact = false }) {
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { checkAppState } = useAuth();
+  const { checkAppState, isAuthenticated, isLoadingAuth } = useAuth();
   const [mode, setMode] = useState('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -75,6 +87,12 @@ export default function Login() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!isLoadingAuth && isAuthenticated) {
+      navigate(target, { replace: true });
+    }
+  }, [isAuthenticated, isLoadingAuth, navigate, target]);
+
   const submit = async (event) => {
     event.preventDefault();
     setError('');
@@ -96,7 +114,11 @@ export default function Login() {
         if (typeof signIn !== 'function') {
           throw new Error('Sign in is not connected yet. Please refresh the page and try again.');
         }
-        await signIn.call(dataService.auth, { email, password });
+        await withTimeout(
+          signIn.call(dataService.auth, { email, password }),
+          AUTH_SUBMIT_TIMEOUT_MS,
+          'Sign in is taking longer than expected. Please refresh and try again.'
+        );
         await checkAppState();
         navigate(target, { replace: true });
       }

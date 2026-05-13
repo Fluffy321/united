@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   Loader2,
@@ -468,11 +469,33 @@ function adaptCommunity(c, joinedIds, membershipsByCommunity) {
 export default function Communities() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedCommunityId, setSelectedCommunityId] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlCommunityId = searchParams.get('community');
+  const selectedTab = searchParams.get('tab') || 'home';
+  const [selectedCommunityId, setSelectedCommunityIdState] = useState(urlCommunityId);
+
+  const setSelectedCommunityId = (communityId, tab = 'home') => {
+    setSelectedCommunityIdState(communityId);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (communityId) {
+        next.set('community', communityId);
+        next.set('tab', tab);
+      } else {
+        next.delete('community');
+        next.delete('tab');
+      }
+      return next;
+    }, { replace: false });
+  };
 
   useEffect(() => {
     if (selectedCommunityId) window.scrollTo({ top: 0, behavior: 'instant' });
   }, [selectedCommunityId]);
+
+  useEffect(() => {
+    setSelectedCommunityIdState(urlCommunityId);
+  }, [urlCommunityId]);
 
   const [showCreate, setShowCreate] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
@@ -653,6 +676,11 @@ export default function Communities() {
       return;
     }
 
+    if (community.created_by_user_id === currentUser.id && community.joined) {
+      toast.info('Community owners manage their community instead of leaving it.');
+      return;
+    }
+
     const isJoined = joinedIds.has(communityId);
     setJoiningId(communityId);
 
@@ -678,7 +706,7 @@ export default function Communities() {
         await dataService.entities.UserCommunity.create({
           user_id: currentUser.id,
           community_id: communityId,
-          role: 'Member',
+          role: 'member',
           incognito: Boolean(options.incognito),
           hide_membership: Boolean(options.incognito),
         });
@@ -725,11 +753,17 @@ export default function Communities() {
           aiSetupPrompt: formData.aiSetupPrompt || '',
         },
       });
-      await dataService.entities.UserCommunity.create({
+      const existingMembership = await dataService.entities.UserCommunity.filter({
         user_id: currentUser.id,
         community_id: created.id,
-        role: 'Admin',
       });
+      if (!existingMembership.length) {
+        await dataService.entities.UserCommunity.create({
+          user_id: currentUser.id,
+          community_id: created.id,
+          role: 'admin',
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['communities-list'] });
       queryClient.invalidateQueries({ queryKey: ['communities-memberships', currentUser?.id] });
       setSelectedCommunityId(created.id);
@@ -751,6 +785,8 @@ export default function Communities() {
           setInitialComposePrompt('');
         }}
         onToggleJoin={(options) => handleJoin(selectedCommunity.id, options)}
+        initialTab={selectedTab}
+        onTabChange={(tab) => setSelectedCommunityId(selectedCommunity.id, tab)}
         joiningId={joiningId}
       />
     );
@@ -763,7 +799,7 @@ export default function Communities() {
 
   const openCommunityWithPrompt = (community, prompt) => {
     setInitialComposePrompt(prompt || community.dailyPrompt || '');
-    setSelectedCommunityId(community.id);
+    setSelectedCommunityId(community.id, 'posts');
   };
 
   return (
