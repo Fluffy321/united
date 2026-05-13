@@ -27,6 +27,8 @@ const SUPABASE_ENTITY_TABLES = {
   MitzvahAction: 'mitzvah_actions',
   MitzvahPoints: 'mitzvah_points',
   Block: 'user_blocks',
+  FriendRequest: 'friend_requests',
+  Friendship: 'friendships',
   // Community feature backbone — migration 020_community_feature_backbone.sql
   CommunityEvent: 'community_events',
   CommunityEventRSVP: 'community_event_rsvps',

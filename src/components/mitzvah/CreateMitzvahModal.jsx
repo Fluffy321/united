@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Globe, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,21 @@ import { toast } from 'sonner';
 
 const CATEGORIES = ['Ride', 'Errand', 'Lost & Found', 'Quick Favor', 'Tutoring', 'Shabbat Help', 'Other'];
 
+const VISIBILITY_OPTIONS = [
+  {
+    value: 'community',
+    label: 'Community',
+    description: 'Visible to people in the relevant community or feed.',
+    icon: Globe,
+  },
+  {
+    value: 'friends_only',
+    label: 'Friends Only',
+    description: 'Only friends you have connected with can see this request.',
+    icon: Users,
+  },
+];
+
 export default function CreateMitzvahModal({ open, onOpenChange, currentUser, initialValues = null }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -25,6 +40,7 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser, in
   const [locationLabel, setLocationLabel] = useState('');
   const [communityId, setCommunityId] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [visibility, setVisibility] = useState('community');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userCommunities, setUserCommunities] = useState([]);
 
@@ -34,6 +50,7 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser, in
     setDescription(initialValues?.description || '');
     setCategory(initialValues?.category || '');
     setLocationLabel(initialValues?.locationLabel || '');
+    setVisibility(initialValues?.visibility || 'community');
   }, [open, initialValues]);
 
   useEffect(() => {
@@ -68,10 +85,10 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser, in
         is_anonymous: isAnonymous,
         community_id: communityId || null,
         community_name: selectedCommunity?.name || null,
-        locationLabel: locationLabel || currentUser.cityPreset || currentUser.cityCustom || 'Five Towns'
+        visibility,
+        locationLabel: locationLabel || currentUser.cityPreset || currentUser.cityCustom || 'Five Towns',
       };
 
-      // Add user's location if available
       if (currentUser.location_lat && currentUser.location_lng) {
         requestData.approxLat = currentUser.location_lat;
         requestData.approxLng = currentUser.location_lng;
@@ -79,34 +96,37 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser, in
 
       const newRequest = await dataService.entities.MitzvahRequest.create(requestData);
 
-      // Instant community-wide notification
-      try {
-        await dataService.functions.invoke('notifyNewHelpRequest', { requestId: newRequest.id });
-      } catch (e) { console.warn('notify failed', e); }
-
-      // Also notify nearby users if location available
-      if (requestData.approxLat && requestData.approxLng) {
+      if (visibility === 'community') {
         try {
-          await dataService.functions.invoke('notifyNearbyUsers', {
-            requestId: newRequest.id,
-            requestTitle: title.trim(),
-            locationLabel: requestData.locationLabel,
-            lat: requestData.approxLat,
-            lng: requestData.approxLng
-          });
-        } catch (e) { console.warn('nearby notify failed', e); }
+          await dataService.functions.invoke('notifyNewHelpRequest', { requestId: newRequest.id });
+        } catch (e) { console.warn('notify failed', e); }
+
+        if (requestData.approxLat && requestData.approxLng) {
+          try {
+            await dataService.functions.invoke('notifyNearbyUsers', {
+              requestId: newRequest.id,
+              requestTitle: title.trim(),
+              locationLabel: requestData.locationLabel,
+              lat: requestData.approxLat,
+              lng: requestData.approxLng,
+            });
+          } catch (e) { console.warn('nearby notify failed', e); }
+        }
       }
 
-      toast.success('Mitzvah request posted! Community notified instantly ✅');
+      const successMsg = visibility === 'friends_only'
+        ? 'Mitzvah request posted! Visible to your friends only.'
+        : 'Mitzvah request posted! Community notified instantly ✅';
+      toast.success(successMsg);
       onOpenChange(false);
-      
-      // Reset form
+
       setTitle('');
       setDescription('');
       setCategory('');
       setLocationLabel('');
       setCommunityId('');
       setIsAnonymous(false);
+      setVisibility('community');
     } catch (error) {
       toast.error('Failed to post request');
     } finally {
@@ -158,12 +178,41 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser, in
               </SelectTrigger>
               <SelectContent>
                 {CATEGORIES.map(cat => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Visibility selector */}
+          <div>
+            <Label>Who can see this?</Label>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {VISIBILITY_OPTIONS.map((opt) => {
+                const Icon = opt.icon;
+                const selected = visibility === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setVisibility(opt.value)}
+                    className={`flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-all ${
+                      selected
+                        ? 'border-slate-950 bg-slate-950 text-white'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Icon className="h-3.5 w-3.5 shrink-0" />
+                      <span className="text-[13px] font-black">{opt.label}</span>
+                    </div>
+                    <p className={`text-[11px] leading-tight ${selected ? 'text-white/75' : 'text-slate-400'}`}>
+                      {opt.description}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div>
@@ -180,7 +229,11 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser, in
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-slate-500 mt-1">Request will be visible to members of this community</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {visibility === 'friends_only'
+                ? 'Friends-only requests are visible to friends regardless of community.'
+                : 'Request will be visible to members of this community'}
+            </p>
           </div>
 
           <div>

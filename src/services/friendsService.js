@@ -1,99 +1,182 @@
-import dataService from './dataService';
+import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
 import { notificationsService } from './notificationsService';
 
-const localKey = (userId) => `junited-local-friends-${userId || 'guest'}`;
+// Relationship statuses returned by getRelationship()
+export const FRIEND_STATUS = {
+  NONE:             'none',
+  PENDING_SENT:     'pending_sent',
+  PENDING_RECEIVED: 'pending_received',
+  FRIENDS:          'friends',
+};
 
-function readLocal(userId) {
-  try {
-    return JSON.parse(window.localStorage.getItem(localKey(userId)) || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function writeLocal(userId, records) {
-  window.localStorage.setItem(localKey(userId), JSON.stringify(records));
+async function callRpc(name, params) {
+  const { data, error } = await supabase.rpc(name, params);
+  if (error) throw error;
+  return data;
 }
 
 export const friendsService = {
-  async list(userId) {
-    if (!userId) return [];
-    try {
-      return await dataService.entities.UserConnection.filter({ user_id: userId }, '-created_date', 200);
-    } catch {
-      return readLocal(userId);
+  // ── Read ──────────────────────────────────────────────────────────────────
+
+  /** Full relationship state between two users. */
+  async getRelationship(currentUserId, otherUserId) {
+    if (!currentUserId || !otherUserId || currentUserId === otherUserId) {
+      return { status: FRIEND_STATUS.NONE, requestId: null };
     }
+    if (!shouldUseSupabase) return { status: FRIEND_STATUS.NONE, requestId: null };
+
+    // Check accepted friendship
+    const { data: fs } = await supabase
+      .from('friendships')
+      .select('id')
+      .eq('user_id', currentUserId)
+      .eq('friend_id', otherUserId)
+      .maybeSingle();
+
+    if (fs) return { status: FRIEND_STATUS.FRIENDS, requestId: null };
+
+    // Check pending requests in both directions
+    const { data: reqs } = await supabase
+      .from('friend_requests')
+      .select('id, requester_id, recipient_id, status')
+      .or(`and(requester_id.eq.${currentUserId},recipient_id.eq.${otherUserId}),and(requester_id.eq.${otherUserId},recipient_id.eq.${currentUserId})`)
+      .eq('status', 'pending');
+
+    if (reqs && reqs.length > 0) {
+      const req = reqs[0];
+      if (req.requester_id === currentUserId) {
+        return { status: FRIEND_STATUS.PENDING_SENT, requestId: req.id };
+      }
+      return { status: FRIEND_STATUS.PENDING_RECEIVED, requestId: req.id };
+    }
+
+    return { status: FRIEND_STATUS.NONE, requestId: null };
   },
 
+  /** All accepted friends of userId with profile data. */
+  async listFriends(userId) {
+    if (!userId || !shouldUseSupabase) return [];
+    const { data, error } = await supabase
+      .from('friendships')
+      .select('id, friend_id, created_at, friend:profiles!friend_id(id, display_name, avatar_url, username, city)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) return [];
+    return data || [];
+  },
+
+  /** Count of accepted friends. */
   async count(userId) {
-    const friends = await this.list(userId);
-    return friends.length;
+    if (!userId || !shouldUseSupabase) return 0;
+    const { count, error } = await supabase
+      .from('friendships')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
+    if (error) return 0;
+    return count ?? 0;
   },
 
-  async isFriend(userId, friendId) {
-    if (!userId || !friendId) return false;
-    const existing = await this.list(userId);
-    return existing.some((connection) => connection.connected_user_id === friendId);
+  /** Incoming pending requests (I am the recipient). Includes requester profile. */
+  async getIncomingRequests(userId) {
+    if (!userId || !shouldUseSupabase) return [];
+    const { data, error } = await supabase
+      .from('friend_requests')
+      .select('id, requester_id, created_at, requester:profiles!requester_id(id, display_name, avatar_url, username, city)')
+      .eq('recipient_id', userId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    if (error) return [];
+    return data || [];
   },
 
-  async addFriend(currentUser, friendUser) {
-    if (!currentUser?.id || !friendUser?.id || currentUser.id === friendUser.id) return null;
-    const alreadyFriends = await this.isFriend(currentUser.id, friendUser.id);
-    if (alreadyFriends) return null;
+  /** Outgoing pending requests (I am the requester). Includes recipient profile. */
+  async getOutgoingRequests(userId) {
+    if (!userId || !shouldUseSupabase) return [];
+    const { data, error } = await supabase
+      .from('friend_requests')
+      .select('id, recipient_id, created_at, recipient:profiles!recipient_id(id, display_name, avatar_url, username, city)')
+      .eq('requester_id', userId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    if (error) return [];
+    return data || [];
+  },
 
-    const payload = {
-      user_id: currentUser.id,
-      connected_user_id: friendUser.id,
-      connected_user_name: friendUser.display_name || friendUser.full_name || 'Friend',
-      status: 'accepted',
-    };
-    const reciprocal = {
-      user_id: friendUser.id,
-      connected_user_id: currentUser.id,
-      connected_user_name: currentUser.display_name || currentUser.full_name || 'Friend',
-      status: 'accepted',
-    };
+  // ── Mutations (all via SECURITY DEFINER RPCs) ─────────────────────────────
 
-    try {
-      await Promise.all([
-        dataService.entities.UserConnection.create(payload),
-        dataService.entities.UserConnection.create(reciprocal),
-      ]);
-    } catch {
-      const mine = readLocal(currentUser.id);
-      const theirs = readLocal(friendUser.id);
-      writeLocal(currentUser.id, [...mine, { id: `local-${Date.now()}`, ...payload }]);
-      writeLocal(friendUser.id, [...theirs, { id: `local-${Date.now()}-r`, ...reciprocal }]);
+  async sendRequest(currentUser, recipientUser) {
+    if (!shouldUseSupabase) return { status: FRIEND_STATUS.PENDING_SENT };
+    const result = await callRpc('send_friend_request', { p_recipient_id: recipientUser.id });
+    if (result?.error) throw new Error(result.error);
+
+    // Notify the recipient
+    if (result.status === 'pending') {
+      notificationsService.create({
+        userId:   recipientUser.id,
+        actorId:  currentUser.id,
+        type:     'friend_request_received',
+        title:    'Friend request',
+        body:     `${currentUser.display_name || currentUser.full_name || 'Someone'} sent you a friend request.`,
+        linkUrl:  `/Profile?id=${currentUser.id}`,
+        data:     { requestId: result.request_id },
+      }).catch(() => {});
     }
 
-    notificationsService.create({
-      userId: friendUser.id,
-      actorId: currentUser.id,
-      type: 'friend_added',
-      title: 'New friend',
-      body: `${currentUser.display_name || currentUser.full_name || 'Someone'} added you as a friend.`,
-      linkUrl: `/PublicProfile?id=${currentUser.id}`,
-      data: { friendship: true },
-    }).catch(() => {});
+    return result;
+  },
 
-    return payload;
+  async acceptRequest(requestId, currentUser, requesterUser) {
+    if (!shouldUseSupabase) return;
+    const result = await callRpc('accept_friend_request', { p_request_id: requestId });
+    if (result?.error) throw new Error(result.error);
+
+    // Notify the requester that their request was accepted
+    if (requesterUser?.id) {
+      notificationsService.create({
+        userId:   requesterUser.id,
+        actorId:  currentUser.id,
+        type:     'friend_request_accepted',
+        title:    'Friend request accepted',
+        body:     `${currentUser.display_name || currentUser.full_name || 'Someone'} accepted your friend request.`,
+        linkUrl:  `/Profile?id=${currentUser.id}`,
+        data:     {},
+      }).catch(() => {});
+    }
+
+    return result;
+  },
+
+  async declineRequest(requestId) {
+    if (!shouldUseSupabase) return;
+    const result = await callRpc('decline_friend_request', { p_request_id: requestId });
+    if (result?.error) throw new Error(result.error);
+    return result;
+  },
+
+  async cancelRequest(requestId) {
+    if (!shouldUseSupabase) return;
+    const result = await callRpc('cancel_friend_request', { p_request_id: requestId });
+    if (result?.error) throw new Error(result.error);
+    return result;
   },
 
   async removeFriend(currentUserId, friendUserId) {
-    if (!currentUserId || !friendUserId) return;
-    try {
-      const [mine, theirs] = await Promise.all([
-        dataService.entities.UserConnection.filter({ user_id: currentUserId, connected_user_id: friendUserId }),
-        dataService.entities.UserConnection.filter({ user_id: friendUserId, connected_user_id: currentUserId }),
-      ]);
-      await Promise.all([
-        ...mine.map((record) => dataService.entities.UserConnection.delete(record.id)),
-        ...theirs.map((record) => dataService.entities.UserConnection.delete(record.id)),
-      ]);
-    } catch {
-      writeLocal(currentUserId, readLocal(currentUserId).filter((record) => record.connected_user_id !== friendUserId));
-      writeLocal(friendUserId, readLocal(friendUserId).filter((record) => record.connected_user_id !== currentUserId));
-    }
+    if (!shouldUseSupabase) return;
+    const result = await callRpc('remove_friendship', { p_friend_id: friendUserId });
+    if (result?.error) throw new Error(result.error);
+    return result;
+  },
+
+  // Legacy compatibility shim (used by messagingPermissions.js)
+  async isFriend(userId, friendId) {
+    if (!userId || !friendId || !shouldUseSupabase) return false;
+    const { data } = await supabase
+      .from('friendships')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('friend_id', friendId)
+      .maybeSingle();
+    return !!data;
   },
 };
 

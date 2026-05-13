@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Loader2,
   MessageCircle,
@@ -415,6 +415,11 @@ export default function Communities() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const [selectedCommunityId, setSelectedCommunityId] = useState(null);
+
+  useEffect(() => {
+    if (selectedCommunityId) window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [selectedCommunityId]);
+
   const [showCreate, setShowCreate] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   const [joiningId, setJoiningId] = useState(null);
