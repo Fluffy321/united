@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, BadgeCheck, EyeOff, Lock, MapPin, ShieldCheck, TrendingUp, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, EyeOff, Flame, Lock, MapPin, MessageCircle, ShieldCheck, TrendingUp, Users, Zap } from 'lucide-react';
 import { COMMUNITY_TYPE_CONFIG, getCommunityTypeConfig } from '@/lib/communityTypes';
 
 export const categoryAccent = Object.fromEntries(
@@ -15,13 +15,35 @@ function initials(name = '') {
     .toUpperCase();
 }
 
-export default function CommunityHubCard({ community, onOpen, onToggleJoin, loading = false }) {
+function ProfileBubbles({ count = 0, muted = false }) {
+  const visible = Math.max(0, Math.min(count || 0, 4));
+  if (!visible) return null;
+  return (
+    <div className="flex -space-x-2">
+      {Array.from({ length: visible }, (_, index) => (
+        <span
+          key={index}
+          className={`flex h-6 w-6 items-center justify-center rounded-full border-2 border-white text-[9px] font-black ${
+            muted ? 'bg-slate-200 text-slate-500' : 'bg-blue-600 text-white'
+          }`}
+        >
+          {String.fromCharCode(65 + ((index + count) % 20))}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export default function CommunityHubCard({ community, onOpen, onTryPrompt, onToggleJoin, loading = false }) {
   const typeConfig = getCommunityTypeConfig(community);
   const Icon = typeConfig.icon;
   const accent = typeConfig.accent;
   const description = community.description || typeConfig.cardFallback;
   const privacy = community.privacy || 'Public';
   const isSensitive = community.communityType === 'support' || typeConfig.key === 'chesed';
+  const valueHook = community.valueHook || community.dailyPrompt || description;
+  const activeNow = community.activeNow || 0;
+  const friendsInCommunity = community.friendsInCommunity || 0;
   const typeLabel = community.communityType === 'official'
     ? 'Official'
     : community.communityType === 'support'
@@ -41,7 +63,7 @@ export default function CommunityHubCard({ community, onOpen, onToggleJoin, load
             : { background: typeConfig.coverPattern }
         }
       >
-        {(community.verified || community.trending) && (
+        {(community.verified || community.trending || activeNow > 20) && (
           <div className="absolute left-3 top-2.5 z-10 flex gap-1.5">
             {community.verified && (
               <span className="inline-flex h-5 items-center gap-1 rounded-full bg-white/95 px-2 text-[10px] font-black text-blue-700 shadow-sm">
@@ -53,6 +75,12 @@ export default function CommunityHubCard({ community, onOpen, onToggleJoin, load
               <span className="inline-flex h-5 items-center gap-1 rounded-full bg-white/95 px-2 text-[10px] font-black text-emerald-700 shadow-sm">
                 <TrendingUp className="h-3 w-3" />
                 Trending
+              </span>
+            )}
+            {activeNow > 20 && (
+              <span className="inline-flex h-5 items-center gap-1 rounded-full bg-white/95 px-2 text-[10px] font-black text-rose-700 shadow-sm">
+                <Flame className="h-3 w-3" />
+                Most active
               </span>
             )}
           </div>
@@ -98,7 +126,7 @@ export default function CommunityHubCard({ community, onOpen, onToggleJoin, load
         </div>
 
         {/* Name + meta + description */}
-        <button onClick={onOpen} className="mt-2.5 w-full text-left">
+        <div onClick={onOpen} className="mt-2.5 w-full cursor-pointer text-left">
           <h3 className="text-[15px] font-bold leading-tight text-slate-950">{community.name}</h3>
 
           <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1">
@@ -121,18 +149,57 @@ export default function CommunityHubCard({ community, onOpen, onToggleJoin, load
             )}
           </div>
 
-          <p className={`mt-2 line-clamp-2 text-[12px] leading-relaxed ${
-            community.description ? 'text-slate-600' : 'italic text-slate-400'
-          }`}>
-            {description}
+          <p className="mt-2 line-clamp-2 text-[13px] font-black leading-relaxed text-slate-900">
+            {valueHook}
           </p>
 
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="rounded-xl border border-slate-100 bg-slate-50 px-2.5 py-2">
+              <p className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-slate-400">
+                <MessageCircle className="h-3 w-3" />
+                Activity
+              </p>
+              <p className="mt-0.5 text-[12px] font-black text-slate-800">
+                {community.postsToday || 0} posts today
+              </p>
+            </div>
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-2.5 py-2">
+              <p className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-emerald-600">
+                <Zap className="h-3 w-3" />
+                Live now
+              </p>
+              <p className="mt-0.5 text-[12px] font-black text-emerald-800">
+                {activeNow} active now
+              </p>
+            </div>
+          </div>
+
           {community.dailyPrompt && (
-            <div className={`mt-2 rounded-xl border px-2.5 py-1.5 ${typeConfig.softClass}`}>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onTryPrompt?.(community.dailyPrompt);
+              }}
+              className={`motion-press mt-2 w-full rounded-xl border px-2.5 py-1.5 text-left transition hover:brightness-[0.98] ${typeConfig.softClass}`}
+            >
               <p className="text-[10px] font-black uppercase tracking-wide opacity-80">Try this</p>
               <p className="mt-0.5 line-clamp-1 text-[11px] font-bold leading-4 text-slate-800">{community.dailyPrompt}</p>
-            </div>
+            </button>
           )}
+
+          <div className="mt-2 flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-2">
+            <div className="flex items-center gap-2">
+              <ProfileBubbles count={friendsInCommunity || activeNow} muted={isSensitive} />
+              <span className="text-[11px] font-black text-slate-600">
+                {isSensitive
+                  ? 'Anonymous-safe space'
+                  : friendsInCommunity > 0
+                    ? `${friendsInCommunity} friends in this community`
+                    : community.socialProof || 'Trending in Five Towns'}
+              </span>
+            </div>
+          </div>
 
           <div className="mt-2 flex flex-wrap gap-1">
             {([...(typeConfig.descriptors || []), ...(community.identityTags || [])]).slice(0, 3).map((tag) => (
@@ -152,7 +219,7 @@ export default function CommunityHubCard({ community, onOpen, onToggleJoin, load
               <ArrowRight className="h-3 w-3" />
             </span>
           </div>
-        </button>
+        </div>
       </div>
     </div>
   );
