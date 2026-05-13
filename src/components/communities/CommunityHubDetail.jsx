@@ -416,6 +416,10 @@ export default function CommunityHubDetail({
           queryClient.invalidateQueries({ queryKey: ['communities-list'] });
           queryClient.invalidateQueries({ queryKey: ['community-hub-membership', community.id, currentUser?.id] });
         }}
+        onDeleted={() => {
+          setShowAdminCenter(false);
+          onBack?.();
+        }}
       />
     </main>
   );

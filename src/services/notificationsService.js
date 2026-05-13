@@ -194,6 +194,18 @@ export const notificationsService = {
     });
   },
 
+  notifyDeletionVoteStarted({ recipientId, initiatorId, initiatorName, communityId, communityName, requestId }) {
+    return this.create({
+      userId:   recipientId,
+      actorId:  initiatorId,
+      type:     'deletion_vote',
+      title:    'Community deletion vote started',
+      body:     `${initiatorName || 'An admin'} has initiated a vote to delete "${communityName || 'your community'}". Your approval is required.`,
+      linkUrl:  communityId ? `/Communities?community=${communityId}` : '/Communities',
+      data:     { community_id: communityId, request_id: requestId },
+    });
+  },
+
   notifyNearbyMapActivity({ userId, actorId, actorName, communityName, postId, locationLabel }) {
     return this.create({
       userId,

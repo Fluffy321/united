@@ -411,6 +411,10 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
           queryClient.invalidateQueries({ queryKey: ['community-members', communityId] });
           queryClient.invalidateQueries({ queryKey: ['communities-list'] });
         }}
+        onDeleted={() => {
+          setShowAdminCenter(false);
+          onBack?.();
+        }}
       />
       {showAppealModal && myRemoval && (
         <AppealSubmitModal

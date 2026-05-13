@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -6,7 +6,7 @@ import {
   X, LayoutDashboard, BarChart2, Users, Shield, Settings,
   Search, Loader2, Save, CheckCircle2, XCircle,
   UserMinus, UserCheck, Crown, ShieldCheck, MoreVertical, Clock, TrendingUp,
-  AlertCircle, ShieldAlert, Gavel, Activity,
+  AlertCircle, ShieldAlert, Gavel, Activity, Trash2, AlertTriangle,
 } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
 import { dataService } from '@/services';
@@ -215,6 +215,7 @@ export default function CommunityAdminCenter({
   open,
   onClose,
   onCommunityUpdated,
+  onDeleted,
   initialTab = 'overview',
 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -226,7 +227,7 @@ export default function CommunityAdminCenter({
 
   if (!open || typeof document === 'undefined') return null;
 
-  const tabProps = { communityId, community, currentUser, onNavigateTo: setActiveTab };
+  const tabProps = { communityId, community, currentUser, onNavigateTo: setActiveTab, onDeleted };
 
   return createPortal(
     <div className="fixed inset-0 z-[110] flex flex-col bg-[#F8FAFB]">
@@ -281,7 +282,7 @@ export default function CommunityAdminCenter({
         {activeTab === 'moderation' && <ModerationTab {...tabProps} />}
         {activeTab === 'appeals'    && <AppealsTab    {...tabProps} />}
         {activeTab === 'settings'   && (
-          <SettingsTab {...tabProps} onCommunityUpdated={onCommunityUpdated} onClose={onClose} />
+          <SettingsTab {...tabProps} onCommunityUpdated={onCommunityUpdated} onClose={onClose} onDeleted={onDeleted} />
         )}
       </main>
     </div>,
@@ -418,7 +419,7 @@ function OverviewTab({ communityId, community, onNavigateTo }) {
 
 // ─── Analytics tab ────────────────────────────────────────────────────────────
 
-function AnalyticsTab({ communityId, community }) {
+function AnalyticsTab({ communityId }) {
   const { data: allMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['admin-analytics-members', communityId],
     queryFn: async () => {
@@ -544,7 +545,6 @@ function MembersTab({ communityId, community, currentUser }) {
   const isSelf  = (m) => m.user_id === currentUser?.id;
 
   // Close role menu on outside click
-  const menuRef = useRef(null);
   useEffect(() => {
     const handler = (e) => { if (!e.target.closest('[data-role-menu]')) setRoleMenuOpen(null); };
     document.addEventListener('mousedown', handler);
@@ -667,7 +667,7 @@ function MembersTab({ communityId, community, currentUser }) {
 
 // ─── Moderation tab ───────────────────────────────────────────────────────────
 
-function ModerationTab({ communityId, community }) {
+function ModerationTab({ communityId }) {
   const { data: removals = [], isLoading } = useQuery({
     queryKey: ['admin-removals', communityId],
     queryFn: async () => {
@@ -891,7 +891,7 @@ function AppealsTab({ communityId, community, currentUser }) {
 
 // ─── Settings tab (inline form, same fields as CommunityManagePanel) ──────────
 
-function SettingsTab({ communityId, community, onCommunityUpdated, onClose }) {
+function SettingsTab({ communityId, community, currentUser, onCommunityUpdated, onClose, onDeleted }) {
   const settings = useMemo(
     () => (community?.settings && typeof community.settings === 'object' ? community.settings : {}),
     [community?.settings]
@@ -1031,6 +1031,418 @@ function SettingsTab({ communityId, community, onCommunityUpdated, onClose }) {
           {saving ? 'Saving…' : 'Save changes'}
         </button>
       </div>
+
+      <DangerZone
+        communityId={communityId}
+        community={community}
+        currentUser={currentUser}
+        onDeleted={onDeleted}
+      />
+    </div>
+  );
+}
+
+// ─── Danger Zone (delete community) ──────────────────────────────────────────
+
+function DangerZone({ communityId, community, currentUser, onDeleted }) {
+  const queryClient = useQueryClient();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const { data: pendingRequest = null } = useQuery({
+    queryKey: ['deletion-request', communityId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('community_deletion_requests')
+        .select('id, initiated_by, status, total_admins, created_at, initiator:initiated_by(display_name)')
+        .eq('community_id', communityId)
+        .eq('status', 'pending')
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const { data: admins = [] } = useQuery({
+    queryKey: ['community-admins-for-deletion', communityId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('community_memberships')
+        .select('user_id, role, profile:user_id(display_name, avatar_url)')
+        .eq('community_id', communityId)
+        .eq('status', 'active')
+        .in('role', ['owner', 'admin']);
+      return data ?? [];
+    },
+  });
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['deletion-request', communityId] });
+    queryClient.invalidateQueries({ queryKey: ['community-admins-for-deletion', communityId] });
+  };
+
+  return (
+    <div className="mt-8 pt-6 border-t border-red-100">
+      <p className="text-[12px] font-black text-red-500 uppercase tracking-widest mb-3">Danger Zone</p>
+
+      {pendingRequest ? (
+        <DeletionVoteBanner
+          request={pendingRequest}
+          admins={admins}
+          communityId={communityId}
+          currentUser={currentUser}
+          onDeleted={onDeleted}
+          onCancelled={invalidate}
+        />
+      ) : (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
+          <p className="text-[13px] font-black text-red-800 mb-1">Delete this community</p>
+          <p className="text-[12px] text-red-600 mb-3 leading-relaxed">
+            Permanently removes all content, posts, and memberships.
+            {admins.length > 1
+              ? ` All ${admins.length} admins must vote to approve.`
+              : ' This action cannot be undone.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowDeleteModal(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-[13px] font-black text-white hover:bg-red-700 active:scale-95 transition-all"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete Community
+          </button>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <DeleteCommunityModal
+          community={community}
+          currentUser={currentUser}
+          admins={admins}
+          onClose={() => setShowDeleteModal(false)}
+          onDeleted={onDeleted}
+          onVoteInitiated={() => {
+            setShowDeleteModal(false);
+            invalidate();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Delete community modal ───────────────────────────────────────────────────
+
+function DeleteCommunityModal({ community, currentUser, admins, onClose, onDeleted, onVoteInitiated }) {
+  const isMultiAdmin = admins.length > 1;
+  const [step, setStep]               = useState(1);
+  const [confirmText, setConfirmText] = useState('');
+  const [submitting, setSubmitting]   = useState(false);
+
+  const handleConfirm = async () => {
+    if (!isMultiAdmin && confirmText !== community.name) {
+      toast.error('Community name does not match.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.rpc('initiate_community_deletion', {
+        p_community_id: community.id,
+      });
+      if (error) throw error;
+
+      if (data.status === 'deleted') {
+        toast.success('Community permanently deleted.');
+        onDeleted?.();
+      } else if (data.status === 'pending') {
+        // Notify other admins about the vote
+        const otherAdmins = admins.filter(a => a.user_id !== currentUser.id);
+        const initiatorName = currentUser.display_name || currentUser.full_name || currentUser.user_name || 'An admin';
+        await Promise.allSettled(
+          otherAdmins.map(a =>
+            notificationsService.notifyDeletionVoteStarted({
+              recipientId:   a.user_id,
+              initiatorId:   currentUser.id,
+              initiatorName,
+              communityId:   community.id,
+              communityName: community.name,
+              requestId:     data.request_id,
+            })
+          )
+        );
+        toast.success(`Deletion vote started. All ${data.total_admins} admins must approve.`);
+        onVoteInitiated?.();
+      }
+    } catch (err) {
+      toast.error(err.message || 'Could not initiate deletion');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[130] flex items-end bg-slate-950/60 backdrop-blur-sm sm:items-center sm:justify-center sm:p-4">
+      <div className="flex max-h-[calc(100dvh-8px)] w-full flex-col overflow-hidden rounded-t-[28px] bg-white shadow-2xl sm:max-h-[calc(100dvh-32px)] sm:max-w-md sm:rounded-[28px]">
+        <header className="shrink-0 border-b border-slate-100 px-5 py-4 flex items-start justify-between gap-3">
+          <div>
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-red-700">
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete Community
+            </p>
+            <h2 className="mt-2 text-[18px] font-black text-slate-950">
+              {step === 1 ? `Delete "${community.name}"?` : isMultiAdmin ? 'Start deletion vote' : 'Confirm deletion'}
+            </h2>
+          </div>
+          <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 flex-shrink-0">
+            <X className="h-4 w-4" />
+          </button>
+        </header>
+
+        <section className="min-h-0 flex-1 overflow-y-auto px-5 py-5 space-y-4">
+          {step === 1 ? (
+            <>
+              <div className="rounded-2xl bg-red-50 border border-red-200 p-4 space-y-2">
+                <p className="text-[13px] font-black text-red-700 flex items-center gap-1.5">
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                  This action is permanent and irreversible
+                </p>
+                <ul className="space-y-1.5 text-[12px] font-semibold text-red-700 pl-1">
+                  <li>• All posts and content will be permanently deleted</li>
+                  <li>• All members will immediately lose access</li>
+                  <li>• Invite links and community URLs will stop working</li>
+                  <li>• This cannot be undone by anyone, including support</li>
+                </ul>
+              </div>
+              {isMultiAdmin && (
+                <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3">
+                  <p className="text-[12px] font-semibold text-blue-700">
+                    This community has <strong>{admins.length} admins</strong>. A deletion vote will
+                    be started — the community is only deleted once <strong>every admin approves</strong>.
+                    Any admin can cancel the vote at any time.
+                  </p>
+                </div>
+              )}
+            </>
+          ) : isMultiAdmin ? (
+            <div className="space-y-3">
+              <p className="text-[13px] font-semibold text-slate-600">
+                The following admins will each need to approve before deletion proceeds:
+              </p>
+              <div className="rounded-2xl border border-slate-100 overflow-hidden">
+                {admins.map((a, i) => (
+                  <div
+                    key={a.user_id}
+                    className={`flex items-center gap-3 px-4 py-3 ${i < admins.length - 1 ? 'border-b border-slate-100' : ''}`}
+                  >
+                    <Avatar name={a.profile?.display_name || 'Admin'} size={30} />
+                    <p className="flex-1 text-[13px] font-semibold text-slate-800">
+                      {a.profile?.display_name || 'Admin'}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <RoleBadge role={a.role} />
+                      {a.user_id === currentUser.id && (
+                        <span className="text-[11px] text-slate-400">(you)</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-[13px] font-semibold text-slate-600">
+                Type <strong className="text-slate-900">{community.name}</strong> to confirm:
+              </p>
+              <input
+                value={confirmText}
+                onChange={e => setConfirmText(e.target.value)}
+                placeholder={community.name}
+                autoFocus
+                className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none focus:border-red-400 focus:bg-white"
+              />
+              {confirmText.length > 0 && confirmText !== community.name && (
+                <p className="text-[12px] text-red-500 font-semibold">Name does not match.</p>
+              )}
+            </div>
+          )}
+        </section>
+
+        <footer className="shrink-0 border-t border-slate-100 px-5 py-4 flex gap-2">
+          {step === 1 ? (
+            <>
+              <button type="button" onClick={onClose}
+                className="h-11 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-black text-slate-600">
+                Cancel
+              </button>
+              <button type="button" onClick={() => setStep(2)}
+                className="flex-1 h-11 rounded-2xl bg-red-600 text-sm font-black text-white hover:bg-red-700">
+                I understand, continue
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" onClick={() => setStep(1)}
+                className="h-11 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-black text-slate-600">
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                disabled={submitting || (!isMultiAdmin && confirmText !== community.name)}
+                className="flex-1 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-red-600 text-sm font-black text-white disabled:opacity-50 hover:bg-red-700"
+              >
+                {submitting
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <Trash2 className="h-4 w-4" />}
+                {submitting
+                  ? 'Processing…'
+                  : isMultiAdmin
+                  ? 'Start Deletion Vote'
+                  : 'Permanently Delete'}
+              </button>
+            </>
+          )}
+        </footer>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+// ─── Deletion vote banner (shown inside DangerZone when a vote is pending) ────
+
+function DeletionVoteBanner({ request, admins, currentUser, onDeleted, onCancelled }) {
+  const queryClient = useQueryClient();
+  const [voting, setVoting] = useState(false);
+
+  const { data: votes = [] } = useQuery({
+    queryKey: ['deletion-votes', request.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('community_deletion_votes')
+        .select('admin_user_id, vote, voted_at')
+        .eq('request_id', request.id);
+      return data ?? [];
+    },
+    refetchInterval: 10000,
+  });
+
+  const yesVotes      = votes.filter(v => v.vote === true);
+  const myVote        = votes.find(v => v.admin_user_id === currentUser?.id);
+  const iHaveVotedYes = myVote?.vote === true;
+  const isInitiator   = request.initiated_by === currentUser?.id;
+  const initiatorName = request.initiator?.display_name || 'An admin';
+  const remaining     = request.total_admins - yesVotes.length;
+
+  const handleVote = async (voteYes) => {
+    setVoting(true);
+    try {
+      const { data, error } = await supabase.rpc('vote_on_community_deletion', {
+        p_request_id: request.id,
+        p_vote:       voteYes,
+      });
+      if (error) throw error;
+
+      if (data.status === 'deleted') {
+        toast.success('All admins approved. Community permanently deleted.');
+        onDeleted?.();
+      } else if (data.status === 'cancelled') {
+        toast.success('Deletion vote cancelled.');
+        onCancelled?.();
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['deletion-votes', request.id] });
+        toast.success(voteYes ? `Approved — waiting for ${remaining - 1} more.` : 'Vote recorded.');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Could not register vote');
+    } finally {
+      setVoting(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl border border-red-200 bg-red-50 p-4 space-y-3">
+      <div className="flex items-start gap-2.5">
+        <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Trash2 className="h-4 w-4 text-red-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-black text-red-800">Deletion vote in progress</p>
+          <p className="text-[12px] text-red-600 mt-0.5">
+            {isInitiator ? 'You initiated' : `${initiatorName} initiated`} a vote to permanently delete this community.
+            {' '}<strong>{yesVotes.length} of {request.total_admins}</strong> admins have approved.
+          </p>
+        </div>
+      </div>
+
+      {/* Per-admin vote status */}
+      {admins.length > 0 && (
+        <div className="rounded-xl bg-white border border-red-100 overflow-hidden">
+          {admins.map((a, i) => {
+            const voted = votes.find(v => v.admin_user_id === a.user_id);
+            const approvedByThisAdmin = voted?.vote === true;
+            return (
+              <div
+                key={a.user_id}
+                className={`flex items-center gap-3 px-3 py-2.5 ${i < admins.length - 1 ? 'border-b border-red-50' : ''}`}
+              >
+                <Avatar name={a.profile?.display_name || 'Admin'} size={26} />
+                <p className="flex-1 text-[13px] font-semibold text-slate-700 truncate">
+                  {a.profile?.display_name || 'Admin'}
+                  {a.user_id === currentUser?.id && (
+                    <span className="ml-1.5 text-[11px] text-slate-400">(you)</span>
+                  )}
+                </p>
+                {approvedByThisAdmin ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 rounded-full px-2 py-0.5">
+                    <CheckCircle2 className="h-3 w-3" /> Approved
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-semibold text-slate-400">Pending</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Action buttons */}
+      {!iHaveVotedYes ? (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleVote(false)}
+            disabled={voting}
+            className="flex-1 h-9 rounded-xl border border-red-200 bg-white text-[13px] font-black text-red-600 hover:bg-red-50 disabled:opacity-50"
+          >
+            Cancel Vote
+          </button>
+          <button
+            type="button"
+            onClick={() => handleVote(true)}
+            disabled={voting}
+            className="flex-1 h-9 rounded-xl bg-red-600 text-[13px] font-black text-white hover:bg-red-700 disabled:opacity-50"
+          >
+            {voting
+              ? <Loader2 className="h-3.5 w-3.5 animate-spin mx-auto" />
+              : 'Approve Deletion'}
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleVote(false)}
+            disabled={voting}
+            className="h-9 rounded-xl border border-red-200 bg-white px-4 text-[13px] font-black text-red-600 hover:bg-red-50 disabled:opacity-50"
+          >
+            Cancel Vote
+          </button>
+          <p className="flex-1 text-[12px] font-semibold text-slate-500 text-center">
+            {remaining > 0
+              ? `Waiting for ${remaining} more admin${remaining !== 1 ? 's' : ''}…`
+              : 'All admins approved — deleting…'}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -1042,7 +1454,6 @@ function RemoveMemberModal({ member, community, currentUser, onClose, onRemoved 
   const reasons     = isPublic ? PUBLIC_REMOVAL_REASONS : PRIVATE_REMOVAL_REASONS;
   const [reasonCode, setReasonCode]   = useState('');
   const [reasonNote, setReasonNote]   = useState('');
-  const [confirming, setConfirming]   = useState(false);
   const [submitting, setSubmitting]   = useState(false);
 
   const name = member.profile?.display_name || member.user_name || 'this member';
