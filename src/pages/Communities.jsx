@@ -1,10 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AlertTriangle,
   Loader2,
   MessageCircle,
   Plus,
   Search,
   Sparkles,
+  TrendingUp,
+  Users,
+  Zap,
 } from 'lucide-react';
 import PageHelp from '@/components/common/PageHelp';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -32,6 +36,9 @@ const EXPERIENCE_SEEDS = [
     trending: true,
     follower_count: 1820,
     postsToday: 12,
+    activeNow: 38,
+    friendsInCommunity: 7,
+    valueHook: 'Start your day with one Torah idea people are actually discussing.',
     growth: '+84 this week',
     engagement: '312 learned today',
     identityTags: ['Torah every day', 'Parsha', 'Short shiurim'],
@@ -64,6 +71,9 @@ const EXPERIENCE_SEEDS = [
     trending: true,
     follower_count: 2415,
     postsToday: 18,
+    activeNow: 52,
+    friendsInCommunity: 9,
+    valueHook: 'Know what matters today without digging through noisy chats.',
     growth: '+126 this week',
     engagement: 'Fresh brief every day',
     identityTags: ['Verified updates', 'Local brief', 'Useful news'],
@@ -96,6 +106,9 @@ const EXPERIENCE_SEEDS = [
     trending: true,
     follower_count: 3180,
     postsToday: 27,
+    activeNow: 89,
+    friendsInCommunity: 14,
+    valueHook: 'See what is happening tonight, what changed today, and what locals are asking.',
     growth: '+208 this week',
     engagement: '89 local replies today',
     identityTags: ['Five Towns', 'Neighbors', 'Local life'],
@@ -127,6 +140,9 @@ const EXPERIENCE_SEEDS = [
     verified: true,
     follower_count: 1368,
     postsToday: 15,
+    activeNow: 31,
+    friendsInCommunity: 6,
+    valueHook: 'Find a mitzvah you can actually complete today.',
     growth: '+63 this week',
     engagement: '17 mitzvahs covered',
     identityTags: ['Chesed', 'Mitzvahs', 'Volunteer'],
@@ -160,6 +176,9 @@ const EXPERIENCE_SEEDS = [
     location: 'Private space',
     follower_count: 128,
     postsToday: 6,
+    activeNow: 5,
+    friendsInCommunity: 0,
+    valueHook: 'Get real support anonymously, without showing up on your profile.',
     growth: '+11 this week',
     engagement: 'Moderator active today',
     identityTags: ['Safe space', 'Anonymous option', 'Teen support'],
@@ -188,6 +207,9 @@ const EXPERIENCE_SEEDS = [
     location: 'Private space',
     follower_count: 214,
     postsToday: 9,
+    activeNow: 8,
+    friendsInCommunity: 0,
+    valueHook: 'A quiet place to check in when you do not want the whole world watching.',
     growth: '+19 this week',
     engagement: '36 supportive replies',
     identityTags: ['Support', 'Anonymous posting', 'Moderated'],
@@ -216,6 +238,9 @@ const EXPERIENCE_SEEDS = [
     location: 'Private space',
     follower_count: 169,
     postsToday: 7,
+    activeNow: 7,
+    friendsInCommunity: 0,
+    valueHook: 'Ask for school help without feeling embarrassed.',
     growth: '+15 this week',
     engagement: 'Study support active',
     identityTags: ['School', 'Support', 'Anonymous'],
@@ -242,6 +267,9 @@ const EXPERIENCE_SEEDS = [
     follower_count: 386,
     trending: true,
     postsToday: 11,
+    activeNow: 21,
+    friendsInCommunity: 5,
+    valueHook: 'Find games this week instantly.',
     growth: '+44 this week',
     engagement: '3 pickup games planned',
     identityTags: ['Sports', 'Teen life', 'Pickup games'],
@@ -267,6 +295,9 @@ const EXPERIENCE_SEEDS = [
     location: 'Five Towns',
     follower_count: 312,
     postsToday: 8,
+    activeNow: 14,
+    friendsInCommunity: 4,
+    valueHook: 'Find someone to walk, lift, or stay accountable with today.',
     growth: '+27 this week',
     engagement: '14 check-ins today',
     identityTags: ['Fitness', 'Healthy habits', 'Accountability'],
@@ -292,6 +323,9 @@ const EXPERIENCE_SEEDS = [
     location: 'Online and local batei midrash',
     follower_count: 448,
     postsToday: 10,
+    activeNow: 18,
+    friendsInCommunity: 6,
+    valueHook: 'Find a chavrusa, ask a real question, and stay consistent.',
     growth: '+36 this week',
     engagement: '58 chavrusa posts this month',
     identityTags: ['Gemara', 'Chavrusa', 'Learning goals'],
@@ -317,6 +351,9 @@ const EXPERIENCE_SEEDS = [
     location: 'Five Towns and online',
     follower_count: 235,
     postsToday: 5,
+    activeNow: 12,
+    friendsInCommunity: 3,
+    valueHook: 'Share what you are making and find people who want to build with you.',
     growth: '+22 this week',
     engagement: '12 projects shared',
     identityTags: ['Music', 'Creative', 'Collaborators'],
@@ -343,6 +380,9 @@ const EXPERIENCE_SEEDS = [
     follower_count: 527,
     trending: true,
     postsToday: 13,
+    activeNow: 26,
+    friendsInCommunity: 8,
+    valueHook: 'Get intros, leads, jobs, and smart advice from people nearby.',
     growth: '+58 this week',
     engagement: '27 intros this month',
     identityTags: ['Business', 'Networking', 'Opportunities'],
@@ -368,6 +408,9 @@ const EXPERIENCE_SEEDS = [
     location: 'Online + local',
     follower_count: 274,
     postsToday: 9,
+    activeNow: 19,
+    friendsInCommunity: 4,
+    valueHook: 'Find a squad tonight without spamming a group chat.',
     growth: '+33 this week',
     engagement: 'Two squads formed today',
     identityTags: ['Gaming', 'Friends', 'Low-pressure'],
@@ -393,18 +436,25 @@ function adaptCommunity(c, joinedIds, membershipsByCommunity) {
   const membership = membershipsByCommunity.get(c.id);
   const settings = c.settings && typeof c.settings === 'object' ? c.settings : {};
   const rulesFromSettings = Array.isArray(settings.rules) ? settings.rules.join('\n') : settings.rules;
+  const seed = String(c.id || c.name || '').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const memberCount = c.follower_count || c.memberCount || 0;
+  const postsToday = c.postsToday || c.posts_this_week || c.post_count || 0;
   return {
     ...c,
     typeKey,
     category,
     communityType: c.communityType || settings.communityType || (category === 'Support' ? 'support' : 'user'),
     privacy: c.privacy || 'Public',
-    memberCount: c.follower_count || c.memberCount || 0,
+    memberCount,
     joined: joinedIds.has(c.id) || Boolean(c.joined),
     joinedIncognito: Boolean(membership?.incognito || membership?.hide_membership || c.joinedIncognito),
     hideMembershipDefault: Boolean(c.hideMembershipDefault || settings.hideMembershipDefault),
     hideMembership: Boolean(membership?.hide_membership || c.hideMembership || settings.hideMembershipDefault),
-    postsToday: c.postsToday || c.posts_this_week || 0,
+    postsToday,
+    activeNow: c.activeNow || c.active_now || Math.max(2, Math.min(99, Math.round(memberCount / 75) + (seed % 9))),
+    friendsInCommunity: c.friendsInCommunity || c.friends_in_community || (seed % 6),
+    valueHook: c.valueHook || c.featured_tagline || typeConfig.tagline,
+    socialProof: c.socialProof || (c.trending ? 'Trending in Five Towns' : `${Math.max(postsToday, seed % 12)} posts today`),
     growth: c.growth || '',
     engagement: c.engagement || '',
     dailyPrompt: c.dailyPrompt || '',
@@ -432,6 +482,7 @@ export default function Communities() {
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [view, setView] = useState('discover');
+  const [initialComposePrompt, setInitialComposePrompt] = useState('');
 
   const { data: rawCommunities = [], isLoading } = useQuery({
     queryKey: ['communities-list'],
@@ -488,14 +539,101 @@ export default function Communities() {
 
   const yourCommunities = filteredCommunities.filter((community) => community.joined);
   const discoverCommunities = filteredCommunities.filter((community) => !community.joined);
-  const discoverGroups = COMMUNITY_TYPE_OPTIONS
-    .map((type) => ({
-      ...type,
-      communities: discoverCommunities.filter((community) => community.typeKey === type.key),
-    }))
-    .filter((group) => group.communities.length > 0);
+  const curatedDiscoverSections = useMemo(() => {
+    const includesAny = (community, words) => {
+      const text = [
+        community.name,
+        community.category,
+        community.communityType,
+        community.typeKey,
+        community.description,
+        community.valueHook,
+        ...(community.identityTags || []),
+      ].join(' ').toLowerCase();
+      return words.some((word) => text.includes(word));
+    };
+
+    const sections = [
+      {
+        key: 'official',
+        title: 'Official / Daily',
+        subtitle: 'Always-active, high-signal hubs that make the app worth opening every day.',
+        icon: Sparkles,
+        communities: discoverCommunities.filter((community) => community.communityType === 'official' || community.verified),
+      },
+      {
+        key: 'support',
+        title: 'Private / Support Spaces',
+        subtitle: 'Safe places for real-life challenges, anonymous posting, and quiet belonging.',
+        icon: AlertTriangle,
+        communities: discoverCommunities.filter((community) =>
+          community.communityType === 'support'
+          || community.privacy === 'Private / Anonymous'
+          || includesAny(community, ['mental', 'school', 'divorced', 'anxiety', 'family challenge'])
+        ),
+      },
+      {
+        key: 'lifestyle',
+        title: 'Lifestyle & Interests',
+        subtitle: 'Sports, fitness, creative, business, gaming, and the identity spaces people actually return to.',
+        icon: Zap,
+        communities: discoverCommunities.filter((community) =>
+          community.communityType === 'lifestyle'
+          || includesAny(community, ['sports', 'fitness', 'creative', 'business', 'gaming', 'gym', 'music'])
+        ),
+      },
+      {
+        key: 'jewish-life',
+        title: 'Core Jewish Life',
+        subtitle: 'Torah, Shabbos, Gemara, shuls, chesed, and mitzvah energy in one living layer.',
+        icon: Sparkles,
+        communities: discoverCommunities.filter((community) =>
+          includesAny(community, ['torah', 'shabbos', 'chesed', 'mitzvah', 'gemara', 'learning', 'shul'])
+        ),
+      },
+      {
+        key: 'local-power',
+        title: 'Local Power Communities',
+        subtitle: 'Five Towns updates, alerts, events, tonight plans, and practical neighborhood movement.',
+        icon: Users,
+        communities: discoverCommunities.filter((community) =>
+          includesAny(community, ['five towns', 'local', 'events', 'alerts', 'updates', 'neighborhood'])
+        ),
+      },
+    ];
+
+    const seen = new Set();
+    return sections
+      .map((section) => ({
+        ...section,
+        communities: section.communities.filter((community) => {
+          if (seen.has(community.id)) return false;
+          seen.add(community.id);
+          return true;
+        }),
+      }))
+      .filter((section) => section.communities.length > 0);
+  }, [discoverCommunities]);
 
   const joinedCount = communities.filter((community) => community.joined).length;
+  const featuredGroups = useMemo(() => {
+    const byActivity = [...filteredCommunities]
+      .sort((a, b) => (b.postsToday + b.activeNow) - (a.postsToday + a.activeNow))
+      .slice(0, 3);
+    const blowingUp = filteredCommunities
+      .filter((community) => community.trending || String(community.growth || '').startsWith('+'))
+      .sort((a, b) => (b.activeNow || 0) - (a.activeNow || 0))
+      .slice(0, 3);
+    const needsAttention = filteredCommunities
+      .filter((community) => community.communityType === 'support' || community.privacy === 'Private / Anonymous' || community.category === 'Support')
+      .sort((a, b) => (b.postsToday || 0) - (a.postsToday || 0))
+      .slice(0, 3);
+    return [
+      { key: 'active', title: 'Most Active', subtitle: 'Where the conversation is moving right now.', icon: TrendingUp, tone: 'blue', communities: byActivity },
+      { key: 'hot', title: 'Blowing Up', subtitle: 'Fast-growing spaces people are joining this week.', icon: Zap, tone: 'emerald', communities: blowingUp },
+      { key: 'attention', title: 'Needs Attention', subtitle: 'Private and support spaces that should feel cared for.', icon: AlertTriangle, tone: 'rose', communities: needsAttention },
+    ].filter((group) => group.communities.length > 0);
+  }, [filteredCommunities]);
 
   const visibleIdentityTags = useMemo(() => {
     const tagSet = new Set();
@@ -607,12 +745,26 @@ export default function Communities() {
       <CommunityHubDetail
         community={selectedCommunity}
         currentUser={currentUser}
-        onBack={() => setSelectedCommunityId(null)}
+        initialComposePrompt={initialComposePrompt}
+        onBack={() => {
+          setSelectedCommunityId(null);
+          setInitialComposePrompt('');
+        }}
         onToggleJoin={(options) => handleJoin(selectedCommunity.id, options)}
         joiningId={joiningId}
       />
     );
   }
+
+  const openCommunity = (communityId) => {
+    setInitialComposePrompt('');
+    setSelectedCommunityId(communityId);
+  };
+
+  const openCommunityWithPrompt = (community, prompt) => {
+    setInitialComposePrompt(prompt || community.dailyPrompt || '');
+    setSelectedCommunityId(community.id);
+  };
 
   return (
     <main className="app-page mobile-safe-bottom">
@@ -626,7 +778,7 @@ export default function Communities() {
         <IdentityStrip
           tags={visibleIdentityTags}
           communities={yourCommunities}
-          onOpen={setSelectedCommunityId}
+          onOpen={openCommunity}
         />
 
         <ViewSwitch view={view} onChange={setView} joinedCount={joinedCount} />
@@ -657,24 +809,35 @@ export default function Communities() {
                 communities={yourCommunities}
                 emptyTitle="No joined communities yet"
                 emptyBody="Switch to Discover and join a community that fits how you want to connect."
-                onOpen={setSelectedCommunityId}
+                onOpen={openCommunity}
+                onTryPrompt={openCommunityWithPrompt}
                 onJoin={handleJoin}
                 joiningId={joiningId}
               />
             ) : (
-              discoverGroups.length > 0 ? (
-                discoverGroups.map((group) => (
-                  <CommunitySection
-                    key={group.key}
-                    title={group.pluralLabel || group.label}
-                    subtitle={group.tagline}
-                    icon={group.icon}
-                    communities={group.communities}
-                    onOpen={setSelectedCommunityId}
+              curatedDiscoverSections.length > 0 ? (
+                <>
+                  <FeaturedCommunities
+                    groups={featuredGroups}
+                    onOpen={openCommunity}
+                    onTryPrompt={openCommunityWithPrompt}
                     onJoin={handleJoin}
                     joiningId={joiningId}
                   />
-                ))
+                  {curatedDiscoverSections.map((group) => (
+                    <CommunitySection
+                      key={group.key}
+                      title={group.title}
+                      subtitle={group.subtitle}
+                      icon={group.icon}
+                      communities={group.communities}
+                      onOpen={openCommunity}
+                      onTryPrompt={openCommunityWithPrompt}
+                      onJoin={handleJoin}
+                      joiningId={joiningId}
+                    />
+                  ))}
+                </>
               ) : (
                 <CommunitySection
                   title="Discover"
@@ -683,7 +846,8 @@ export default function Communities() {
                   communities={[]}
                   emptyTitle="Nothing new to discover here"
                   emptyBody="Try another type filter, or switch to My Communities to open the spaces you already joined."
-                  onOpen={setSelectedCommunityId}
+                  onOpen={openCommunity}
+                  onTryPrompt={openCommunityWithPrompt}
                   onJoin={handleJoin}
                   joiningId={joiningId}
                 />
@@ -724,7 +888,7 @@ function Hero({ joinedCount, onCreate, onMessages }) {
             <PageHelp text="Communities define what you care about, where you belong, and who you connect with." />
           </div>
           <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
-            Discover focused Jewish spaces for chesed, shuls, learning, parents, neighborhoods, events, and everyday connection.
+            Find your people: private support, local updates, Torah, Shabbos, sports, creative circles, chesed, and the spaces that make JUnited worth checking every day.
           </p>
           <HeroPill label={`${joinedCount} joined`} />
         </div>
@@ -851,7 +1015,88 @@ function SearchBar({ query, onQueryChange, typeFilter, onTypeFilterChange }) {
   );
 }
 
-function CommunitySection({ title, subtitle, icon: Icon, communities, emptyTitle, emptyBody, onOpen, onJoin, joiningId }) {
+function FeaturedCommunities({ groups, onOpen, onTryPrompt, onJoin, joiningId }) {
+  if (!groups.length) return null;
+  const toneMap = {
+    blue: 'border-blue-100 bg-blue-50 text-blue-700',
+    emerald: 'border-emerald-100 bg-emerald-50 text-emerald-700',
+    rose: 'border-rose-100 bg-rose-50 text-rose-700',
+  };
+
+  return (
+    <section className="space-y-3">
+      <div>
+        <h2 className="flex items-center gap-2 text-xl font-black text-slate-950">
+          <Sparkles className="h-5 w-5 text-blue-600" />
+          Featured right now
+        </h2>
+        <p className="text-sm leading-6 text-slate-500">The communities with the strongest reason to click today.</p>
+      </div>
+      <div className="grid gap-3 lg:grid-cols-3">
+        {groups.map((group) => {
+          const Icon = group.icon;
+          return (
+            <div key={group.key} className="surface-panel-soft rounded-[24px] p-3">
+              <div className={`mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-black ${toneMap[group.tone] || toneMap.blue}`}>
+                <Icon className="h-4 w-4" />
+                {group.title}
+              </div>
+              <p className="mb-3 text-[12px] font-semibold leading-5 text-slate-500">{group.subtitle}</p>
+              <div className="space-y-2">
+                {group.communities.map((community) => (
+                  <button
+                    key={`${group.key}-${community.id}`}
+                    type="button"
+                    onClick={() => onOpen(community.id)}
+                    className="motion-press w-full rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-[14px] font-black text-slate-950">{community.name}</p>
+                        <p className="mt-1 line-clamp-2 text-[12px] font-semibold leading-5 text-slate-500">
+                          {community.valueHook || community.description}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-slate-950 px-2 py-1 text-[10px] font-black text-white">
+                        {community.activeNow} live
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2 text-[11px] font-black text-slate-500">
+                      <span>{community.postsToday} posts today</span>
+                      <span>{community.socialProof}</span>
+                    </div>
+                    {community.dailyPrompt && (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onTryPrompt?.(community, community.dailyPrompt);
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            onTryPrompt?.(community, community.dailyPrompt);
+                          }
+                        }}
+                        className="mt-3 inline-flex rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] font-black text-blue-700"
+                      >
+                        Try this prompt
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function CommunitySection({ title, subtitle, icon: Icon, communities, emptyTitle, emptyBody, onOpen, onTryPrompt, onJoin, joiningId }) {
   if (!communities.length && !emptyTitle) return null;
   return (
     <section>
@@ -880,6 +1125,7 @@ function CommunitySection({ title, subtitle, icon: Icon, communities, emptyTitle
             community={community}
             loading={joiningId === community.id}
             onOpen={() => onOpen(community.id)}
+            onTryPrompt={(prompt) => onTryPrompt?.(community, prompt)}
             onToggleJoin={(options) => onJoin(community.id, options)}
           />
           ))}

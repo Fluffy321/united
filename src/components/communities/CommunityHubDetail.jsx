@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   BadgeCheck,
@@ -35,7 +35,7 @@ function matchesPostFilter(post, filter) {
   return type === filter;
 }
 
-export default function CommunityHubDetail({ community, currentUser, onBack, onToggleJoin, joiningId }) {
+export default function CommunityHubDetail({ community, currentUser, initialComposePrompt = '', onBack, onToggleJoin, joiningId }) {
   const typeConfig = getCommunityTypeConfig(community);
   const Icon = typeConfig.icon;
   const tabs = getSupportedCommunityTabs(community, {
@@ -54,6 +54,12 @@ export default function CommunityHubDetail({ community, currentUser, onBack, onT
   const isSensitive = community.communityType === 'support' || typeConfig.key === 'chesed';
   const memberVisibility = isSensitive ? 'Hidden unless opted in' : community.privacy || 'Public';
   const isSeedCommunity = String(community.id || '').startsWith('seed-');
+
+  useEffect(() => {
+    if (!initialComposePrompt) return;
+    setComposeText(initialComposePrompt);
+    setShowCompose(true);
+  }, [initialComposePrompt, community.id]);
 
   const { data: realPosts = [] } = useQuery({
     queryKey: ['community-hub-posts', community.id],
@@ -195,8 +201,11 @@ export default function CommunityHubDetail({ community, currentUser, onBack, onT
 
           <div className="px-4 pb-4">
             <p className="text-sm font-semibold leading-relaxed text-slate-600">
-              {community.description || typeConfig.cardFallback}
+              {community.valueHook || community.description || typeConfig.cardFallback}
             </p>
+            {community.description && community.valueHook && (
+              <p className="mt-2 text-[13px] font-semibold leading-5 text-slate-500">{community.description}</p>
+            )}
             <div className={`mt-3 rounded-2xl border px-3 py-2 ${typeConfig.softClass}`}>
               <p className="text-[11px] font-black uppercase tracking-wide opacity-80">This space is for</p>
               <p className="mt-0.5 text-[13px] font-bold leading-5 text-slate-800">{typeConfig.tagline}</p>
@@ -208,6 +217,14 @@ export default function CommunityHubDetail({ community, currentUser, onBack, onT
             <span className="inline-flex items-center gap-1.5 font-semibold">
               <Users className="h-3.5 w-3.5 text-blue-500" />
               {(community.memberCount || 0).toLocaleString()} members
+            </span>
+            <span className="inline-flex items-center gap-1.5 font-semibold text-blue-600">
+              <TrendingUp className="h-3.5 w-3.5" />
+              {community.postsToday || 0} posts today
+            </span>
+            <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-600">
+              <Sparkles className="h-3.5 w-3.5" />
+              {community.activeNow || 0} active now
             </span>
             {community.joined && (
               <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-600">
