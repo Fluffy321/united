@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import { divIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 const PIN_TYPES = {
   shul: { label: 'Shuls', color: '#4f46e5', short: 'S' },
-  school: { label: 'Schools', color: '#0ea5e9', short: 'SC' },
+  school: { label: 'Schools / Yeshivas', color: '#0ea5e9', short: 'SC' },
   restaurant: { label: 'Restaurants', color: '#f97316', short: 'R' },
   grocery: { label: 'Grocery', color: '#16a34a', short: 'G' },
   bakery: { label: 'Bakery', color: '#d97706', short: 'B' },
@@ -22,11 +22,11 @@ const PIN_TYPES = {
 };
 
 const PRIMARY_FILTERS = [
+  { key: 'shuls', label: 'Shuls', types: ['shul'] },
   { key: 'restaurants', label: 'Restaurants', types: ['restaurant'] },
   { key: 'kosher_food', label: 'Kosher Food', types: ['restaurant', 'grocery', 'bakery'] },
   { key: 'businesses', label: 'Businesses', types: ['judaica', 'business', 'services', 'wellness'] },
-  { key: 'kosher_shops', label: 'Kosher Shops', types: ['grocery', 'bakery', 'judaica'] },
-  { key: 'community_places', label: 'Community Places', types: ['shul', 'school', 'event', 'community_post'] },
+  { key: 'schools_yeshivas', label: 'Schools / Yeshivas', types: ['school'] },
   { key: 'mitzvot', label: 'Mitzvot', types: ['help_needed', 'mitzvah_available', 'lost_found'] },
 ];
 
@@ -39,9 +39,9 @@ const STATIC_POINTS = [
     title: 'Young Israel of Lawrence-Cedarhurst',
     description: 'Shul, minyanim, learning, and community updates.',
     type: 'shul',
-    location_text: 'Cedarhurst',
-    location_lat: 40.6226,
-    location_lng: -73.7241,
+    location_text: '8 Spruce St, Cedarhurst',
+    location_lat: 40.6221,
+    location_lng: -73.7272,
     verification: 'Community directory',
     source_url: 'https://www.yilc.org/',
   },
@@ -72,9 +72,9 @@ const STATIC_POINTS = [
     title: 'Young Israel of Woodmere',
     description: 'Shul hub for tefillah, shiurim, and local announcements.',
     type: 'shul',
-    location_text: 'Woodmere',
-    location_lat: 40.6325,
-    location_lng: -73.7137,
+    location_text: '859 Peninsula Blvd, Woodmere',
+    location_lat: 40.6317,
+    location_lng: -73.7074,
     verification: 'Community directory',
     source_url: 'https://www.yiwoodmere.org/',
   },
@@ -105,11 +105,319 @@ const STATIC_POINTS = [
     title: 'Young Israel of Hewlett',
     description: 'Young Israel shul serving Hewlett families with tefillah and community programming.',
     type: 'shul',
-    location_text: '1215 Broadway, Hewlett',
-    location_lat: 40.6412,
-    location_lng: -73.7012,
+    location_text: '1 Piermont Ave, Hewlett',
+    location_lat: 40.6416,
+    location_lng: -73.7031,
     verification: 'Community directory',
     source_url: 'https://www.yihe.org/',
+  },
+  {
+    id: 'shul-bais-tefila-inwood',
+    title: 'Bais Tefila of Inwood',
+    description: 'Orthodox community shul for Inwood with weekday and Shabbos minyanim.',
+    type: 'shul',
+    location_text: '259 Doughty Blvd, Inwood',
+    location_lat: 40.6229,
+    location_lng: -73.7458,
+    verification: 'Community directory',
+    source_url: 'https://www.inwoodshul.com/contact-us',
+  },
+  {
+    id: 'shul-marina-inwood',
+    title: 'JCCI / The Marina Shul of Inwood',
+    description: 'Inwood shul and Jewish community center listed publicly on local Jewish directories.',
+    type: 'shul',
+    location_text: '44 Bayswater Blvd, Inwood',
+    location_lat: 40.6179,
+    location_lng: -73.7449,
+    verification: 'Community directory',
+    source_url: 'https://dafyomidirectory.org/shiur-location/jcci-the-marina-shul-of-inwood/',
+  },
+  {
+    id: 'shul-agudah-five-towns',
+    title: 'Agudath Israel of the Five Towns',
+    description: 'Cedarhurst shul listed in the Five Towns shuls and minyanim directory.',
+    type: 'shul',
+    location_text: '508 Peninsula Blvd, Cedarhurst',
+    location_lat: 40.6242,
+    location_lng: -73.7255,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-bais-haknesses-north-woodmere',
+    title: 'Bais Haknesses of North Woodmere',
+    description: 'North Woodmere shul listed with local minyan and community information.',
+    type: 'shul',
+    location_text: '649 Hungry Harbor Rd, North Woodmere',
+    location_lat: 40.6473,
+    location_lng: -73.7294,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-young-israel-north-woodmere',
+    title: 'Young Israel of North Woodmere',
+    description: 'North Woodmere Young Israel shul with minyanim, shiurim, and community programming.',
+    type: 'shul',
+    location_text: '634 Hungry Harbor Rd, North Woodmere',
+    location_lat: 40.6471,
+    location_lng: -73.7298,
+    verification: 'Community directory',
+    source_url: 'https://www.yinw.org/',
+  },
+  {
+    id: 'shul-bais-medrash-cedarhurst',
+    title: 'Bais Medrash of Cedarhurst',
+    description: 'Cedarhurst beis medrash listed in the local shuls directory.',
+    type: 'shul',
+    location_text: '504 West Broadway, Cedarhurst',
+    location_lat: 40.6234,
+    location_lng: -73.7359,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-harborview-lawrence',
+    title: 'Bais Medrash of Harborview',
+    description: 'Lawrence shul serving the Harborview area.',
+    type: 'shul',
+    location_text: '218 Harborview South, Lawrence',
+    location_lat: 40.6096,
+    location_lng: -73.7249,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-bais-ment-lawrence',
+    title: 'Bais Ment - Zichron Dovid & Sora Schwartz',
+    description: 'Lawrence shul listed in the Five Towns directory.',
+    type: 'shul',
+    location_text: '6 Herrik Dr, Lawrence',
+    location_lat: 40.6059,
+    location_lng: -73.7278,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-bais-tefila-north-woodmere',
+    title: 'Bais Tefillah of North Woodmere',
+    description: 'North Woodmere shul listed with local community information.',
+    type: 'shul',
+    location_text: '1000 Rosedale Rd, North Woodmere',
+    location_lat: 40.6536,
+    location_lng: -73.7286,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-heichal-dovid-lawrence',
+    title: 'Beis Medrash Heichal Dovid',
+    description: 'The W Shul in Lawrence, listed in the local shuls directory.',
+    type: 'shul',
+    location_text: '215 Central Ave, Lawrence',
+    location_lat: 40.6149,
+    location_lng: -73.7328,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-beit-midrash-hachaim-vehashalom',
+    title: 'Beit Midrash Hachaim VeHashalom',
+    description: 'Cedarhurst Sephardic beit midrash listed with local shul information.',
+    type: 'shul',
+    location_text: '530 Central Ave, Cedarhurst',
+    location_lat: 40.6215,
+    location_lng: -73.7246,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-bostoner-lawrence',
+    title: 'Bostoner Bais Medrash of Lawrence',
+    description: 'Lawrence shul listed in the Five Towns shuls and minyanim directory.',
+    type: 'shul',
+    location_text: '1109 Doughty Blvd, Lawrence',
+    location_lat: 40.6265,
+    location_lng: -73.7429,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-chabad-hewlett',
+    title: 'Chabad of Hewlett',
+    description: 'Chabad center serving Hewlett with tefillah, Torah classes, and community programming.',
+    type: 'shul',
+    location_text: '31 Franklin Ave, Hewlett',
+    location_lat: 40.6415,
+    location_lng: -73.6963,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-chofetz-chaim-cedarhurst',
+    title: 'Chofetz Chaim Torah Center',
+    description: 'Cedarhurst Torah center and shul listed in the local directory.',
+    type: 'shul',
+    location_text: '7 Derby Ave, Cedarhurst',
+    location_lat: 40.6263,
+    location_lng: -73.7241,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-anshei-chesed-hewlett',
+    title: 'Congregation Anshei Chesed',
+    description: 'Hewlett congregation listed with local shul information.',
+    type: 'shul',
+    location_text: '1170 William St, Hewlett',
+    location_lat: 40.6396,
+    location_lng: -73.7042,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-bais-avrohom-zev-lawrence',
+    title: 'Congregation Bais Avrohom Zev',
+    description: "Rabbi Gruber's Shul in Lawrence, listed in the Five Towns directory.",
+    type: 'shul',
+    location_text: '2 Rockaway Turnpike, Lawrence',
+    location_lat: 40.6079,
+    location_lng: -73.7466,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-island-woodmere',
+    title: 'Congregation Bais Ephraim Yitzchok',
+    description: 'Island Shul in Woodmere, listed publicly with local shul details.',
+    type: 'shul',
+    location_text: '812 Peninsula Blvd, Woodmere',
+    location_lat: 40.6318,
+    location_lng: -73.7089,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-beth-sholom-lawrence',
+    title: 'Congregation Beth Sholom',
+    description: 'Lawrence congregation listed with shul and community information.',
+    type: 'shul',
+    location_text: '390 Broadway, Lawrence',
+    location_lat: 40.6178,
+    location_lng: -73.7297,
+    verification: 'Community directory',
+    source_url: 'https://www.bethsholomlawrence.org/',
+  },
+  {
+    id: 'shul-ohr-torah-north-woodmere',
+    title: 'Congregation Ohr Torah',
+    description: 'North Woodmere congregation listed in the Five Towns shuls directory.',
+    type: 'shul',
+    location_text: '410 Hungry Harbor Rd, North Woodmere',
+    location_lat: 40.6448,
+    location_lng: -73.7227,
+    verification: 'Community directory',
+    source_url: 'https://ohrtorah.org/contact-us',
+  },
+  {
+    id: 'shul-shaaray-tefilah-lawrence',
+    title: 'Congregation Shaaray Tefilah',
+    description: 'Lawrence shul listed with local minyan and congregation information.',
+    type: 'shul',
+    location_text: '25 Central Ave, Lawrence',
+    location_lat: 40.6127,
+    location_lng: -73.7376,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-tifereth-zvi-cedarhurst',
+    title: 'Congregation Tifereth Zvi',
+    description: 'Cedarhurst congregation listed in the local shuls and minyanim directory.',
+    type: 'shul',
+    location_text: '26 Columbia Ave, Cedarhurst',
+    location_lat: 40.6231,
+    location_lng: -73.7292,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-kehilas-bais-yisroel',
+    title: 'Kehilas Bais Yisroel',
+    description: 'Cedarhurst shul listed in the Five Towns shuls directory.',
+    type: 'shul',
+    location_text: '352 West Broadway, Cedarhurst',
+    location_lat: 40.6238,
+    location_lng: -73.7327,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-ahavas-yisrael-cedarhurst',
+    title: 'Kehillas Ahavas Yisrael',
+    description: 'Cedarhurst shul on Peninsula Boulevard listed in the local directory.',
+    type: 'shul',
+    location_text: '568 Peninsula Blvd, Cedarhurst',
+    location_lat: 40.6252,
+    location_lng: -73.7235,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-red-shul-cedarhurst',
+    title: 'Kehillas Bais Yehudah Tzvi',
+    description: 'The Red Shul in Cedarhurst, listed with local community information.',
+    type: 'shul',
+    location_text: '391 Oakland Ave, Cedarhurst',
+    location_lat: 40.6233,
+    location_lng: -73.7249,
+    verification: 'Community directory',
+    source_url: 'https://www.kbyt.org/',
+  },
+  {
+    id: 'shul-bnei-hayeshivos-north-woodmere',
+    title: 'Kehillas Bnei Hayeshivos',
+    description: 'North Woodmere shul listed in the Five Towns shuls directory.',
+    type: 'shul',
+    location_text: '790 Van Dam St, North Woodmere',
+    location_lat: 40.6517,
+    location_lng: -73.7283,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-shaare-emunah-cedarhurst',
+    title: 'Shaare Emunah, Sephardic Congregation of Five Towns',
+    description: 'Sephardic congregation in Cedarhurst listed in the local shuls directory.',
+    type: 'shul',
+    location_text: '539 Oakland Ave, Cedarhurst',
+    location_lat: 40.6254,
+    location_lng: -73.7241,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-woodsburgh-minyan',
+    title: 'Woodsburgh Minyan',
+    description: 'Woodsburgh minyan listed with local shul information.',
+    type: 'shul',
+    location_text: '850 Keene Ln, Woodsburgh',
+    location_lat: 40.6252,
+    location_lng: -73.7117,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
+  },
+  {
+    id: 'shul-back-lawrence-minyan',
+    title: 'Zichron Meir Moshe',
+    description: 'Back Lawrence Minyan listed in the Five Towns shuls directory.',
+    type: 'shul',
+    location_text: '431 Mistletoe Way, Lawrence',
+    location_lat: 40.6034,
+    location_lng: -73.7207,
+    verification: 'Community directory',
+    source_url: 'https://www.5towns.biz/home/directory-category/shuls/',
   },
   {
     id: 'school-haftr',
@@ -380,9 +688,9 @@ const STATIC_POINTS = [
     title: "Gottlieb's Fish",
     description: 'Kosher fish and takeout shop serving Lawrence/Cedarhurst. Public listings identify kosher offerings.',
     type: 'grocery',
-    location_text: 'Lawrence',
-    location_lat: 40.6142,
-    location_lng: -73.7325,
+    location_text: '314 Central Ave, Lawrence',
+    location_lat: 40.6163,
+    location_lng: -73.7313,
     verification: 'Kosher shop listing',
     source_url: 'https://www.gottliebsfish.com/',
   },
@@ -402,31 +710,31 @@ const STATIC_POINTS = [
     title: 'Laffa Bar & Grill',
     description: 'Verified kosher Israeli grill in Hewlett. Public kosher listings identify it as kosher.',
     type: 'restaurant',
-    location_text: 'Hewlett',
-    location_lat: 40.6410,
-    location_lng: -73.7004,
+    location_text: '1326 Peninsula Blvd, Hewlett',
+    location_lat: 40.6433,
+    location_lng: -73.6965,
     verification: 'Verified kosher',
-    source_url: 'https://www.greatkosherrestaurants.com/restaurants-az/laffa-bar-and-grill/',
+    source_url: 'https://www.laffabarandgrill.com/',
   },
   {
     id: 'food-geffen-gourmet',
     title: 'Geffen Gourmet',
     description: 'Kosher prepared foods and catering shop in Hewlett/Five Towns area.',
     type: 'grocery',
-    location_text: 'Hewlett',
-    location_lat: 40.6404,
-    location_lng: -73.7014,
+    location_text: '407 Mill Rd, Hewlett',
+    location_lat: 40.6384,
+    location_lng: -73.7006,
     verification: 'Kosher shop listing',
-    source_url: 'https://www.geffengourmet.com/',
+    source_url: 'https://geffengourmetny.com/contact-us/',
   },
   {
     id: 'food-that-sushi-spot',
     title: 'That Sushi Spot',
     description: 'Kosher sushi restaurant in Woodmere. Public kosher listings identify Vaad of Five Towns supervision.',
     type: 'restaurant',
-    location_text: 'Woodmere',
-    location_lat: 40.6326,
-    location_lng: -73.7162,
+    location_text: '1058 Broadway, Woodmere',
+    location_lat: 40.6397,
+    location_lng: -73.7011,
     verification: 'Verified kosher',
     source_url: 'https://www.greatkosherrestaurants.com/restaurants-az/that-sushi-spot/',
   },
@@ -435,11 +743,11 @@ const STATIC_POINTS = [
     title: 'Gotta Getta Bagel',
     description: 'Kosher bagel and cafe spot serving Woodmere/Five Towns.',
     type: 'bakery',
-    location_text: 'Woodmere',
-    location_lat: 40.6323,
-    location_lng: -73.7158,
+    location_text: '1039 Broadway, Woodmere',
+    location_lat: 40.6392,
+    location_lng: -73.7015,
     verification: 'Kosher shop listing',
-    source_url: 'https://www.gottagettabagel.com/',
+    source_url: 'https://gottagettabagelny.com/',
   },
   {
     id: 'food-bagel-boss-hewlett',
@@ -453,15 +761,15 @@ const STATIC_POINTS = [
     source_url: 'https://www.bagelboss.com/',
   },
   {
-    id: 'food-inwood-bagels',
-    title: 'Inwood Bagels',
-    description: 'Kosher bagel shop serving Inwood and nearby Five Towns neighborhoods.',
+    id: 'food-zomicks-bakery',
+    title: "Zomick's Bakery",
+    description: 'Kosher bakery in Inwood. Public kosher listings identify the Inwood bakery address.',
     type: 'bakery',
-    location_text: 'Inwood',
-    location_lat: 40.6223,
-    location_lng: -73.7462,
+    location_text: '85 Inip Dr, Inwood',
+    location_lat: 40.6282,
+    location_lng: -73.7494,
     verification: 'Kosher shop listing',
-    source_url: 'https://www.inwoodbagels.com/',
+    source_url: 'https://kosherpo.com/id/zomicks',
   },
   {
     id: 'food-glicks-bakehouse',
@@ -490,9 +798,9 @@ const STATIC_POINTS = [
     title: 'Uncle Mochi Cafe',
     description: 'Kosher cafe in the Five Towns offering coffee, desserts, pastries, and dairy dishes.',
     type: 'bakery',
-    location_text: 'Cedarhurst',
-    location_lat: 40.6229,
-    location_lng: -73.7269,
+    location_text: '456 Central Ave, Cedarhurst',
+    location_lat: 40.6227,
+    location_lng: -73.729,
     verification: 'Kosher cafe listing',
     source_url: 'https://myunclemochi.com/uncle-mochi-cafe/',
   },
@@ -699,20 +1007,20 @@ const STATIC_POINTS = [
     title: 'Achiezer Community Resource Center',
     description: 'Community service organization with health insurance, mental health, eldercare, legal network, and urgent support programs.',
     type: 'wellness',
-    location_text: 'Five Towns / Far Rockaway service area',
-    location_lat: 40.6218,
-    location_lng: -73.7357,
+    location_text: '334 Central Ave, Lawrence',
+    location_lat: 40.6164,
+    location_lng: -73.731,
     verification: 'Community wellness/services directory',
-    source_url: 'https://www.achiezer.org/services',
+    source_url: 'https://www.achiezer.org/contact',
   },
   {
     id: 'wellness-five-towns-premier',
     title: 'Five Towns Premier Rehabilitation & Nursing',
     description: 'Rehabilitation and nursing center in Woodmere with resident services and religious/community accommodations.',
     type: 'wellness',
-    location_text: 'Woodmere',
-    location_lat: 40.6334,
-    location_lng: -73.7147,
+    location_text: '1050 Central Ave, Woodmere',
+    location_lat: 40.6329,
+    location_lng: -73.7077,
     verification: 'Wellness services listing',
     source_url: 'https://fivetownspremier.com/',
   },
@@ -798,13 +1106,73 @@ function MapController({ center }) {
     }
   }, [center, map]);
 
+  useEffect(() => {
+    const invalidate = () => map.invalidateSize({ animate: false });
+    const timers = [0, 120, 350, 800].map((delay) => window.setTimeout(invalidate, delay));
+    window.addEventListener('resize', invalidate);
+    return () => {
+      timers.forEach(window.clearTimeout);
+      window.removeEventListener('resize', invalidate);
+    };
+  }, [map]);
+
   return null;
+}
+
+function getDistanceMiles(from, to) {
+  if (!from || !to?.location_lat || !to?.location_lng) return null;
+  const toRadians = (degrees) => (degrees * Math.PI) / 180;
+  const earthRadiusMiles = 3958.8;
+  const dLat = toRadians(to.location_lat - from.lat);
+  const dLng = toRadians(to.location_lng - from.lng);
+  const lat1 = toRadians(from.lat);
+  const lat2 = toRadians(to.location_lat);
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return earthRadiusMiles * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDistance(distance) {
+  if (distance === null || !Number.isFinite(distance)) return null;
+  if (distance < 0.1) return 'Less than 0.1 mi away';
+  if (distance < 10) return `${distance.toFixed(1)} mi away`;
+  return `${Math.round(distance)} mi away`;
+}
+
+function getMapLinks(point, userLocation) {
+  if (!point) return null;
+  const lat = point.location_lat;
+  const lng = point.location_lng;
+  if (!lat || !lng) return null;
+  const label = encodeURIComponent(point.title || point.location_text || 'JUnited map pin');
+  const hasStreetAddress = /^\d/.test(point.location_text || '');
+  const destinationText = hasStreetAddress
+    ? `${point.location_text}, NY`
+    : `${lat},${lng}`;
+  const destination = encodeURIComponent(destinationText);
+  const query = encodeURIComponent(`${point.title || point.location_text || 'JUnited map pin'} ${point.location_text || ''}`.trim());
+  const origin = userLocation?.lat && userLocation?.lng
+    ? `&origin=${userLocation.lat},${userLocation.lng}`
+    : '';
+  const appleStart = userLocation?.lat && userLocation?.lng
+    ? `saddr=${userLocation.lat},${userLocation.lng}&`
+    : '';
+
+  return {
+    google: `https://www.google.com/maps/dir/?api=1${origin}&destination=${destination}&travelmode=driving`,
+    apple: `https://maps.apple.com/?${appleStart}daddr=${destination}&q=${label}&dirflg=d`,
+    waze: hasStreetAddress
+      ? `https://waze.com/ul?q=${destination}&navigate=yes`
+      : `https://waze.com/ul?ll=${lat},${lng}&navigate=yes&q=${query}`,
+  };
 }
 
 export default function MitzvahMap({ requests, userLocation, onSelectRequest, communityPoints = [], personalized = true, mapHeight }) {
   const [mapCenter, setMapCenter] = useState(null);
   const [activeTypes, setActiveTypes] = useState(() => new Set());
   const [selectedPoint, setSelectedPoint] = useState(null);
+  const [tileUrl, setTileUrl] = useState('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
+  const resolvedMapHeight = mapHeight || 'clamp(460px, 64dvh, 720px)';
 
   const requestPoints = useMemo(() => {
     return requests.map((request) => ({
@@ -871,6 +1239,8 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
   const activePrimaryFilter = PRIMARY_FILTERS.find((filter) => (
     filter.types.length === activeTypes.size && filter.types.every((type) => activeTypes.has(type))
   ))?.key;
+  const selectedMapLinks = getMapLinks(selectedPoint, userLocation);
+  const selectedDistance = formatDistance(getDistanceMiles(userLocation, selectedPoint));
 
   useEffect(() => {
     if (userLocation) {
@@ -940,7 +1310,7 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
 
   if (!mapCenter) {
     return (
-      <div className="flex items-center justify-center rounded-2xl bg-slate-100" style={{ height: mapHeight ?? 500 }}>
+      <div className="flex items-center justify-center rounded-2xl bg-slate-100" style={{ height: resolvedMapHeight }}>
         <p className="text-slate-500">Loading map…</p>
       </div>
     );
@@ -1021,14 +1391,28 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
           center={mapCenter}
           zoom={13}
           minZoom={9}
-          style={{ height: mapHeight ?? 500, width: '100%' }}
+          style={{ height: resolvedMapHeight, minHeight: 460, width: '100%' }}
+          className="junited-leaflet-map"
           zoomControl={true}
+          dragging={true}
+          touchZoom={true}
+          doubleClickZoom={true}
+          boxZoom={true}
+          keyboard={true}
           scrollWheelZoom={true}
+          worldCopyJump={true}
         >
           <MapController center={mapCenter} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            url={tileUrl}
+            eventHandlers={{
+              tileerror: () => {
+                if (tileUrl.includes('cartocdn')) {
+                  setTileUrl('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+                }
+              },
+            }}
           />
 
           {userLocation && hasActiveFilters && (
@@ -1052,7 +1436,6 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
 
           {spreadVisiblePoints.map(point => {
             if (!point.location_lat || !point.location_lng) return null;
-            const config = PIN_TYPES[point.type] || PIN_TYPES.other;
 
             return (
               <Marker
@@ -1065,43 +1448,7 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
                     if (point.isRequest) onSelectRequest?.(point);
                   }
                 }}
-              >
-                <Popup>
-                  <div className="min-w-[180px] text-sm">
-                    <div className="mb-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-black text-white" style={{ backgroundColor: config.color }}>
-                      {config.label}
-                    </div>
-                    <div className="mb-1 font-bold text-slate-950">{point.title}</div>
-                    <div className="text-xs leading-5 text-slate-600">{point.description}</div>
-                    <div className="mt-1 text-[11px] font-bold text-slate-400">{point.location_text}</div>
-                    {point.posterName && (
-                      <div className="mt-1 text-[11px] font-black text-slate-500">
-                        Posted by {point.posterName}
-                      </div>
-                    )}
-                    {point.verification && (
-                      <div className="mt-2 rounded-lg bg-emerald-50 px-2 py-1 text-[11px] font-black text-emerald-700">
-                        {point.verification}
-                      </div>
-                    )}
-                    {point.source_url && (
-                      <a
-                        href={point.source_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-2 block text-[11px] font-black text-blue-700 underline"
-                      >
-                        Verification source
-                      </a>
-                    )}
-                    {point.communityName && (
-                      <div className="mt-1 rounded-lg bg-blue-50 px-2 py-1 text-[11px] font-black text-blue-700">
-                        {point.communityName}
-                      </div>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
+              />
             );
           })}
         </MapContainer>
@@ -1139,6 +1486,11 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
                     {selectedPoint.location_text}
                   </span>
                 )}
+                {selectedDistance && (
+                  <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700 ring-1 ring-blue-100">
+                    {selectedDistance}
+                  </span>
+                )}
                 {selectedPoint.verification && (
                   <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700 ring-1 ring-emerald-100">
                     {selectedPoint.verification}
@@ -1155,6 +1507,34 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
                   </span>
                 )}
               </div>
+              {selectedMapLinks && (
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <a
+                    href={selectedMapLinks.google}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="motion-press rounded-xl bg-blue-600 px-2 py-2 text-center text-[11px] font-black text-white shadow-sm"
+                  >
+                    Google Maps
+                  </a>
+                  <a
+                    href={selectedMapLinks.apple}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="motion-press rounded-xl border border-slate-200 bg-white px-2 py-2 text-center text-[11px] font-black text-slate-700"
+                  >
+                    Apple Maps
+                  </a>
+                  <a
+                    href={selectedMapLinks.waze}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="motion-press rounded-xl border border-cyan-200 bg-cyan-50 px-2 py-2 text-center text-[11px] font-black text-cyan-700"
+                  >
+                    Waze
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1179,6 +1559,7 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
             {visiblePoints.map((point) => {
               const config = PIN_TYPES[point.type] || PIN_TYPES.other;
               const active = selectedPoint?.id === point.id;
+              const distanceLabel = formatDistance(getDistanceMiles(userLocation, point));
               return (
                 <button
                   key={`preview-${point.id}`}
@@ -1212,6 +1593,9 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
                   </p>
                   {point.location_text && (
                     <p className="mt-2 truncate text-[11px] font-black text-slate-400">{point.location_text}</p>
+                  )}
+                  {distanceLabel && (
+                    <p className="mt-1 truncate text-[11px] font-black text-blue-600">{distanceLabel}</p>
                   )}
                 </button>
               );
