@@ -286,7 +286,7 @@ export default function CommunityHubDetail({
                 {community.postsToday} posts today
               </span>
             )}
-            {community.joined && (
+            {community.joined && !isCreator && !isCommunityManager && (
               <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-600">
                 <Shield className="h-3.5 w-3.5" />
                 You're a member
