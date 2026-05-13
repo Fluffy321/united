@@ -1219,7 +1219,7 @@ export const base44 = {
       }
       return true;
     },
-    redirectToLogin(fromUrl = '/') {
+    redirectToLogin(fromUrl = '/Feed') {
       if (shouldUseSupabase && typeof window !== 'undefined') {
         window.location.href = `/login?from_url=${encodeURIComponent(fromUrl || window.location.href)}`;
         return;

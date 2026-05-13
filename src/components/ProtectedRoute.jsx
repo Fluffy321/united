@@ -8,6 +8,12 @@ const DefaultFallback = () => (
   </div>
 );
 
+const getLoginReturnPath = (location) => {
+  const fromUrl = `${location.pathname}${location.search || ''}`;
+  if (location.pathname === '/join' || location.pathname === '/InviteJoin') return fromUrl;
+  return '/Feed';
+};
+
 export default function ProtectedRoute({ fallback = <DefaultFallback /> }) {
   const { isAuthenticated, isLoadingAuth, authError } = useAuth();
   const location = useLocation();
@@ -16,12 +22,12 @@ export default function ProtectedRoute({ fallback = <DefaultFallback /> }) {
 
   if (authError) {
     if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
-    const fromUrl = `${location.pathname}${location.search || ''}`;
+    const fromUrl = getLoginReturnPath(location);
     return <Navigate to={`/login?from_url=${encodeURIComponent(fromUrl)}`} replace />;
   }
 
   if (!isAuthenticated) {
-    const fromUrl = `${location.pathname}${location.search || ''}`;
+    const fromUrl = getLoginReturnPath(location);
     return <Navigate to={`/login?from_url=${encodeURIComponent(fromUrl)}`} replace />;
   }
 
