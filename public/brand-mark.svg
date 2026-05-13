@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="JUnited mark">
+  <defs>
+    <linearGradient id="markLine" x1="50" y1="44" x2="146" y2="151" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D4AF37"/>
+      <stop offset="0.5" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#7A9A48"/>
+    </linearGradient>
+  </defs>
+  <path d="M96 42 141 119H51L96 42Z" fill="none" stroke="url(#markLine)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M96 150 51 73H141L96 150Z" fill="none" stroke="url(#markLine)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M96 70v52M73 84l46 26M119 84l-46 26" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.72"/>
+  <circle cx="96" cy="42" r="11" fill="#D4AF37"/>
+  <circle cx="141" cy="73" r="11" fill="#FDFCF8"/>
+  <circle cx="141" cy="119" r="11" fill="#7A9A48"/>
+  <circle cx="96" cy="150" r="11" fill="#D4AF37"/>
+  <circle cx="51" cy="119" r="11" fill="#FDFCF8"/>
+  <circle cx="51" cy="73" r="11" fill="#7A9A48"/>
+  <circle cx="96" cy="96" r="15" fill="#FFFFFF"/>
+  <path d="M88 95c0-6 8-8 12-3 4-5 12-3 12 3 0 8-12 15-12 15s-12-7-12-15Z" fill="#2563EB"/>
+</svg>

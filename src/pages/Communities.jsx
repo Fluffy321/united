@@ -391,23 +391,27 @@ function adaptCommunity(c, joinedIds, membershipsByCommunity) {
   const typeConfig = getCommunityTypeConfig(c);
   const category = c.category || typeConfig.label;
   const membership = membershipsByCommunity.get(c.id);
+  const settings = c.settings && typeof c.settings === 'object' ? c.settings : {};
+  const rulesFromSettings = Array.isArray(settings.rules) ? settings.rules.join('\n') : settings.rules;
   return {
     ...c,
     typeKey,
     category,
-    communityType: c.communityType || (category === 'Support' ? 'support' : 'user'),
+    communityType: c.communityType || settings.communityType || (category === 'Support' ? 'support' : 'user'),
     privacy: c.privacy || 'Public',
     memberCount: c.follower_count || c.memberCount || 0,
     joined: joinedIds.has(c.id) || Boolean(c.joined),
     joinedIncognito: Boolean(membership?.incognito || membership?.hide_membership || c.joinedIncognito),
-    hideMembership: Boolean(membership?.hide_membership || c.hideMembership),
+    hideMembershipDefault: Boolean(c.hideMembershipDefault || settings.hideMembershipDefault),
+    hideMembership: Boolean(membership?.hide_membership || c.hideMembership || settings.hideMembershipDefault),
     postsToday: c.postsToday || c.posts_this_week || 0,
     growth: c.growth || '',
     engagement: c.engagement || '',
     dailyPrompt: c.dailyPrompt || '',
     quickActions: c.quickActions || typeConfig.prompts,
     posts: c.posts || [],
-    identityTags: c.identityTags || [typeConfig.label, c.privacy || 'Public'],
+    identityTags: c.identityTags || settings.identityTags || [typeConfig.label, c.privacy || 'Public'],
+    rules: c.rules || rulesFromSettings || '',
   };
 }
 
@@ -560,18 +564,28 @@ export default function Communities() {
   const createCommunity = async (formData) => {
     if (!currentUser) return;
     try {
+      const typeKey = formData.typeKey || getCommunityTypeKey({ category: formData.category });
       const created = await dataService.entities.Community.create({
         name: formData.name,
         description: formData.description,
-        type: getCommunityTypeKey({ category: formData.category }),
+        type: typeKey,
         category: formData.category,
-        communityType: formData.communityType,
+        template_key: typeKey,
+        tagline: formData.tagline,
         privacy: formData.privacy,
         location: formData.location || 'Local community',
+        created_by_user_id: currentUser.id,
+        created_by_name: currentUser.display_name || currentUser.full_name || 'Community member',
         follower_count: 1,
-        supportsIncognito: formData.supportsIncognito,
-        supportsAnonymousPosting: formData.supportsAnonymousPosting,
-        hideMembershipDefault: formData.hideMembershipDefault,
+        settings: {
+          communityType: formData.communityType,
+          supportsIncognito: formData.supportsIncognito,
+          supportsAnonymousPosting: formData.supportsAnonymousPosting,
+          hideMembershipDefault: formData.hideMembershipDefault,
+          identityTags: formData.identityTags,
+          rules: formData.rules,
+          aiSetupPrompt: formData.aiSetupPrompt || '',
+        },
       });
       await dataService.entities.UserCommunity.create({
         user_id: currentUser.id,
