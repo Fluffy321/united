@@ -280,14 +280,12 @@ export default function CommunityHubDetail({
               <Users className="h-3.5 w-3.5 text-blue-500" />
               {(community.memberCount || 0).toLocaleString()} members
             </span>
-            <span className="inline-flex items-center gap-1.5 font-semibold text-blue-600">
-              <TrendingUp className="h-3.5 w-3.5" />
-              {community.postsToday || 0} posts today
-            </span>
-            <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-600">
-              <Sparkles className="h-3.5 w-3.5" />
-              {community.activeNow || 0} active now
-            </span>
+            {community.postsToday > 0 && (
+              <span className="inline-flex items-center gap-1.5 font-semibold text-blue-600">
+                <TrendingUp className="h-3.5 w-3.5" />
+                {community.postsToday} posts today
+              </span>
+            )}
             {community.joined && (
               <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-600">
                 <Shield className="h-3.5 w-3.5" />

@@ -11,7 +11,6 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  TrendingUp,
   Users,
   Zap,
 } from 'lucide-react';
@@ -441,7 +440,6 @@ function adaptCommunity(c, joinedIds, membershipsByCommunity) {
   const membership = membershipsByCommunity.get(c.id);
   const settings = c.settings && typeof c.settings === 'object' ? c.settings : {};
   const rulesFromSettings = Array.isArray(settings.rules) ? settings.rules.join('\n') : settings.rules;
-  const seed = String(c.id || c.name || '').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
   const memberCount = c.follower_count || c.memberCount || 0;
   const postsToday = c.postsToday || c.posts_this_week || c.post_count || 0;
   return {
@@ -456,10 +454,10 @@ function adaptCommunity(c, joinedIds, membershipsByCommunity) {
     hideMembershipDefault: Boolean(c.hideMembershipDefault || settings.hideMembershipDefault),
     hideMembership: Boolean(membership?.hide_membership || c.hideMembership || settings.hideMembershipDefault),
     postsToday,
-    activeNow: c.activeNow || c.active_now || Math.max(2, Math.min(99, Math.round(memberCount / 75) + (seed % 9))),
-    friendsInCommunity: c.friendsInCommunity || c.friends_in_community || (seed % 6),
+    activeNow: c.activeNow || c.active_now || 0,
+    friendsInCommunity: c.friendsInCommunity || c.friends_in_community || 0,
     valueHook: c.valueHook || c.featured_tagline || typeConfig.tagline,
-    socialProof: c.socialProof || (c.trending ? 'Trending in Five Towns' : `${Math.max(postsToday, seed % 12)} posts today`),
+    socialProof: c.socialProof || null,
     growth: c.growth || '',
     engagement: c.engagement || '',
     dailyPrompt: c.dailyPrompt || '',
