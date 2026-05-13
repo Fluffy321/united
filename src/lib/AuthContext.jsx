@@ -3,6 +3,18 @@ import { dataService } from '@/services';
 import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 
 const AuthContext = createContext(null);
+const AUTH_CHECK_TIMEOUT_MS = 12000;
+
+const withTimeout = (promise, timeoutMs, message) => new Promise((resolve, reject) => {
+  const timeoutId = window.setTimeout(() => {
+    reject(new Error(message));
+  }, timeoutMs);
+
+  promise
+    .then(resolve)
+    .catch(reject)
+    .finally(() => window.clearTimeout(timeoutId));
+});
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -15,7 +27,11 @@ export function AuthProvider({ children }) {
     setIsLoadingAuth(true);
     setAuthError(null);
     try {
-      const currentUser = await dataService.auth.me();
+      const currentUser = await withTimeout(
+        dataService.auth.me(),
+        AUTH_CHECK_TIMEOUT_MS,
+        'Login is taking longer than expected. Please refresh and try again.'
+      );
       setUser(currentUser);
       setIsAuthenticated(true);
     } catch (error) {
@@ -50,7 +66,13 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!shouldUseSupabase || !supabase) return;
 
+    let refreshTimer;
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (refreshTimer) {
+        window.clearTimeout(refreshTimer);
+        refreshTimer = undefined;
+      }
+
       if (event === 'SIGNED_OUT' || !session?.user) {
         setUser(null);
         setIsAuthenticated(false);
@@ -58,10 +80,18 @@ export function AuthProvider({ children }) {
         setIsLoadingAuth(false);
         return;
       }
-      checkAppState();
+
+      setIsLoadingAuth(true);
+      refreshTimer = window.setTimeout(() => {
+        refreshTimer = undefined;
+        void checkAppState();
+      }, 0);
     });
 
-    return () => data.subscription.unsubscribe();
+    return () => {
+      if (refreshTimer) window.clearTimeout(refreshTimer);
+      data.subscription.unsubscribe();
+    };
   }, [checkAppState]);
 
   return (

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Compass, HeartHandshake, Lock, Mail, MapPin, MessageCircle, ShieldCheck, Sparkles, User, Users, Loader2 } from 'lucide-react';
 import { dataService } from '@/services';
@@ -6,6 +6,18 @@ import { useAuth } from '@/lib/AuthContext';
 import { shouldUseSupabase } from '@/api/supabaseClient';
 
 const DEFAULT_AUTH_DESTINATION = '/Feed';
+const AUTH_SUBMIT_TIMEOUT_MS = 15000;
+
+const withTimeout = (promise, timeoutMs, message) => new Promise((resolve, reject) => {
+  const timeoutId = window.setTimeout(() => {
+    reject(new Error(message));
+  }, timeoutMs);
+
+  promise
+    .then(resolve)
+    .catch(reject)
+    .finally(() => window.clearTimeout(timeoutId));
+});
 
 const VALUE_CHIPS = [
   {
@@ -38,7 +50,7 @@ function BrandMark({ compact = false }) {
   return (
     <div className={`flex items-center gap-3 ${compact ? '' : 'mb-8'}`}>
       <div className={`${compact ? 'h-12 w-12 rounded-[18px]' : 'h-14 w-14 rounded-[20px]'} flex shrink-0 items-center justify-center bg-gradient-to-br from-blue-600 via-[#0F5ED7] to-slate-950 shadow-xl shadow-blue-950/20 ring-1 ring-white/70`}>
-        <img src="/icon-192.svg" alt="JUnited" className={compact ? 'h-8 w-8' : 'h-9 w-9'} />
+        <img src="/brand-mark.svg" alt="JUnited" className={compact ? 'h-8 w-8' : 'h-9 w-9'} />
       </div>
       <div>
         <p className={`${compact ? 'text-[18px]' : 'text-[21px]'} font-black leading-none text-slate-950`}>JUnited</p>
@@ -51,7 +63,7 @@ function BrandMark({ compact = false }) {
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { checkAppState } = useAuth();
+  const { checkAppState, isAuthenticated, isLoadingAuth } = useAuth();
   const [mode, setMode] = useState('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -75,6 +87,12 @@ export default function Login() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!isLoadingAuth && isAuthenticated) {
+      navigate(target, { replace: true });
+    }
+  }, [isAuthenticated, isLoadingAuth, navigate, target]);
+
   const submit = async (event) => {
     event.preventDefault();
     setError('');
@@ -96,7 +114,11 @@ export default function Login() {
         if (typeof signIn !== 'function') {
           throw new Error('Sign in is not connected yet. Please refresh the page and try again.');
         }
-        await signIn.call(dataService.auth, { email, password });
+        await withTimeout(
+          signIn.call(dataService.auth, { email, password }),
+          AUTH_SUBMIT_TIMEOUT_MS,
+          'Sign in is taking longer than expected. Please refresh and try again.'
+        );
         await checkAppState();
         navigate(target, { replace: true });
       }

@@ -46,6 +46,10 @@ const SUPABASE_ENTITY_TABLES = {
   Report: 'reports',
   ClaimRequest: 'claim_requests',
   ModerationAuditLog: 'moderation_audit_logs',
+  // Community admin center — migration 024_community_admin_center.sql
+  CommunityMemberRemoval: 'community_member_removals',
+  CommunityMemberAppeal: 'community_member_appeals',
+  CommunityAdminAuditLog: 'community_admin_audit_log',
   // All other entities (MessageRequest, GroupMember, Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.
@@ -561,11 +565,16 @@ const toDbPatch = (data = {}, entityName) => {
     if (patch.message && !patch.body) patch.body = patch.message;
   }
 
+  if (entityName === 'UserCommunity') {
+    if (patch.role) patch.role = String(patch.role).toLowerCase();
+    if (!patch.status) patch.status = 'active';
+  }
+
   delete patch.created_date;
   delete patch.updated_date;
   delete patch.full_name;
   delete patch.email;
-  delete patch.role;
+  if (entityName === 'User' || entityName === 'Profile') delete patch.role;
   delete patch.cityPreset;
   return patch;
 };

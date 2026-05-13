@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BookOpen, Globe, Heart, Loader2, MapPin, MessageCircle, Phone, Send, Shield, Users } from 'lucide-react';
 import { toast } from 'sonner';
@@ -8,12 +9,14 @@ import {
   getCommunityTypeConfig,
   getSupportedCommunityTabs,
 } from '@/lib/communityTypes';
+import { supabase } from '@/api/supabaseClient';
 import CommunityHero from './CommunityHero';
 import ClaimModal from './ClaimModal';
 import CommunityEventsTab from './CommunityEventsTab';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import CommunityStoreTab from './CommunityStoreTab';
 import GroupChatSection from './GroupChatSection';
+import CommunityAdminCenter, { AppealSubmitModal } from './CommunityAdminCenter';
 
 const CLAIM_COPY = {
   School: { question: 'Is this your school?', cta: 'Claim this school' },
@@ -44,8 +47,11 @@ function matchesTab(post, tab) {
 }
 
 export default function CommunityDetailView({ communityId, currentUser, onBack, fallbackCommunity }) {
-  const [activeTab, setActiveTab] = useState('home');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'home');
   const [showClaim, setShowClaim] = useState(false);
+  const [showAdminCenter, setShowAdminCenter] = useState(false);
+  const [showAppealModal, setShowAppealModal] = useState(false);
   const [composeText, setComposeText] = useState('');
   const [posting, setPosting] = useState(false);
   const queryClient = useQueryClient();
@@ -84,15 +90,35 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     enabled: !!communityId,
   });
 
+  // Check if the current (non-member) user was removed and can appeal
+  const { data: myRemoval = null } = useQuery({
+    queryKey: ['my-community-removal', communityId, currentUser?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('community_member_removals')
+        .select('id, reason_code, removed_at, appeal_allowed, appeal:community_member_appeals(id, status)')
+        .eq('community_id', communityId)
+        .eq('removed_user_id', currentUser.id)
+        .order('removed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!currentUser && !!communityId
+      && membershipRecord.length === 0
+      && community?.created_by_user_id !== currentUser?.id,
+  });
+
   const { data: openNeeds = [] } = useQuery({
     queryKey: ['community-open-needs', communityId],
     queryFn: () => dataService.entities.MitzvahRequest.filter({ community_id: communityId }, '-created_date', 50),
     enabled: !!communityId && typeConfig.key === 'chesed',
   });
 
-  const isFollowing = membershipRecord.length > 0;
   const membershipRole = String(membershipRecord[0]?.role || '').toLowerCase();
-  const isAdmin = currentUser?.role === 'admin' || ['admin', 'moderator', 'owner'].includes(membershipRole);
+  const isCreator = Boolean(currentUser?.id && community?.created_by_user_id === currentUser.id);
+  const isFollowing = membershipRecord.length > 0 || isCreator;
+  const isAdmin = currentUser?.role === 'admin' || isCreator || ['admin', 'moderator', 'owner'].includes(membershipRole);
   const actualMemberCount = members.length;
   const activeNeeds = openNeeds.filter((need) => OPEN_NEED_STATUSES.has(String(need.status || 'open')));
   const featureCapabilities = {
@@ -102,6 +128,15 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     listings: Boolean(community?.allow_member_listings || isAdmin || typeConfig.key === 'marketplace'),
   };
   const visibleTabs = getSupportedCommunityTabs(community || fallbackCommunity || {}, featureCapabilities);
+  const setTab = (tab) => {
+    const nextTab = visibleTabs.includes(tab) ? tab : (visibleTabs[0] || 'home');
+    setActiveTab(nextTab);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set('tab', nextTab);
+      return next;
+    }, { replace: true });
+  };
 
   const { data: events = [] } = useQuery({
     queryKey: ['community-events', communityId],
@@ -117,11 +152,15 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
     try {
       if (isFollowing) {
+        if (isCreator) {
+          toast.info('Community owners manage their community instead of leaving it.');
+          return;
+        }
         await dataService.entities.UserCommunity.delete(membershipRecord[0].id);
         if (community) await incrementCounter('communities', 'follower_count', communityId, -1);
         toast.success('Left community');
       } else {
-        await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: communityId, role: 'Member' });
+        await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: communityId, role: 'member' });
         if (community) await incrementCounter('communities', 'follower_count', communityId, 1);
         toast.success('Joined!');
       }
@@ -200,7 +239,9 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         community={community}
         isFollowing={isFollowing}
         isAdmin={isAdmin}
+        isCreator={isCreator}
         onFollow={handleFollow}
+        onManage={() => setShowAdminCenter(true)}
         onClaim={() => setShowClaim(true)}
         onBack={onBack}
         eventCount={events.length}
@@ -209,7 +250,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         postsThisWeek={community.posts_this_week || posts.length}
         members={members}
         currentUser={currentUser}
-        onTabChange={setActiveTab}
+        onTabChange={setTab}
         typeConfig={typeConfig}
       />
 
@@ -219,7 +260,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             {tabsWithCounts.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => setTab(tab.key)}
                 className={`px-4 py-3 text-[13px] font-medium whitespace-nowrap transition-colors relative ${
                   activeTab === tab.key ? 'text-[#0F5ED7]' : 'text-slate-500'
                 }`}
@@ -239,17 +280,60 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         </div>
       </div>
 
+      {/* Appeal banner — shown when user was removed and hasn't yet appealed */}
+      {myRemoval && !isFollowing && (() => {
+        const appealEntry = myRemoval.appeal?.[0];
+        const appealStatus = appealEntry?.status ?? null;
+        if (appealStatus === 'approved') return null;
+        return (
+          <div className={`border-b px-4 py-3 ${
+            appealStatus === 'pending'
+              ? 'bg-amber-50 border-amber-200'
+              : appealStatus === 'denied'
+              ? 'bg-slate-50 border-slate-200'
+              : 'bg-blue-50 border-blue-200'
+          }`}>
+            <div className="max-w-2xl mx-auto flex items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-black text-slate-800">
+                  {appealStatus === 'pending'
+                    ? 'Your appeal is under review.'
+                    : appealStatus === 'denied'
+                    ? 'Your appeal was not approved.'
+                    : 'You were removed from this community.'}
+                </p>
+                <p className="text-[12px] text-slate-500 mt-0.5">
+                  {appealStatus === 'pending'
+                    ? 'The community admin will review your appeal.'
+                    : appealStatus === 'denied'
+                    ? 'Contact the community admin if you have questions.'
+                    : 'You may submit an appeal if you believe this was in error.'}
+                </p>
+              </div>
+              {!appealStatus && myRemoval.appeal_allowed && (
+                <button
+                  type="button"
+                  onClick={() => setShowAppealModal(true)}
+                  className="flex-shrink-0 rounded-xl bg-[#2563EB] px-3 py-1.5 text-[12px] font-black text-white"
+                >
+                  Appeal
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="max-w-2xl mx-auto w-full px-4 pb-28">
         {activeTab === 'home' && (
           <RoutedCommunityHome
-            typeConfig={typeConfig}
             posts={posts}
             activeNeeds={activeNeeds}
             composeText={composeText}
             setComposeText={setComposeText}
             submitPost={submitPost}
             posting={posting}
-            onTabChange={setActiveTab}
+            onTabChange={setTab}
           />
         )}
 
@@ -317,6 +401,28 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         community={community}
         currentUser={currentUser}
       />
+      <CommunityAdminCenter
+        community={community}
+        currentUser={currentUser}
+        open={showAdminCenter}
+        onClose={() => setShowAdminCenter(false)}
+        onCommunityUpdated={() => {
+          queryClient.invalidateQueries({ queryKey: ['community', communityId] });
+          queryClient.invalidateQueries({ queryKey: ['community-members', communityId] });
+          queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+        }}
+      />
+      {showAppealModal && myRemoval && (
+        <AppealSubmitModal
+          removal={myRemoval}
+          communityName={community?.name}
+          onClose={() => setShowAppealModal(false)}
+          onSubmitted={() => {
+            setShowAppealModal(false);
+            queryClient.invalidateQueries({ queryKey: ['my-community-removal', communityId, currentUser?.id] });
+          }}
+        />
+      )}
     </div>
   );
 }

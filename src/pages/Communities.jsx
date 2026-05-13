@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   CalendarDays,
@@ -438,6 +439,8 @@ function adaptCommunity(c, joinedIds, membershipsByCommunity) {
   const typeConfig = getCommunityTypeConfig(c);
   const category = c.category || typeConfig.label;
   const membership = membershipsByCommunity.get(c.id);
+  const settings = c.settings && typeof c.settings === 'object' ? c.settings : {};
+  const rulesFromSettings = Array.isArray(settings.rules) ? settings.rules.join('\n') : settings.rules;
   const seed = String(c.id || c.name || '').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
   const memberCount = c.follower_count || c.memberCount || 0;
   const postsToday = c.postsToday || c.posts_this_week || c.post_count || 0;
@@ -445,12 +448,13 @@ function adaptCommunity(c, joinedIds, membershipsByCommunity) {
     ...c,
     typeKey,
     category,
-    communityType: c.communityType || (category === 'Support' ? 'support' : 'user'),
+    communityType: c.communityType || settings.communityType || (category === 'Support' ? 'support' : 'user'),
     privacy: c.privacy || 'Public',
     memberCount,
     joined: joinedIds.has(c.id) || Boolean(c.joined),
     joinedIncognito: Boolean(membership?.incognito || membership?.hide_membership || c.joinedIncognito),
-    hideMembership: Boolean(membership?.hide_membership || c.hideMembership),
+    hideMembershipDefault: Boolean(c.hideMembershipDefault || settings.hideMembershipDefault),
+    hideMembership: Boolean(membership?.hide_membership || c.hideMembership || settings.hideMembershipDefault),
     postsToday,
     activeNow: c.activeNow || c.active_now || Math.max(2, Math.min(99, Math.round(memberCount / 75) + (seed % 9))),
     friendsInCommunity: c.friendsInCommunity || c.friends_in_community || (seed % 6),
@@ -461,18 +465,41 @@ function adaptCommunity(c, joinedIds, membershipsByCommunity) {
     dailyPrompt: c.dailyPrompt || '',
     quickActions: c.quickActions || typeConfig.prompts,
     posts: c.posts || [],
-    identityTags: c.identityTags || [typeConfig.label, c.privacy || 'Public'],
+    identityTags: c.identityTags || settings.identityTags || [typeConfig.label, c.privacy || 'Public'],
+    rules: c.rules || rulesFromSettings || '',
   };
 }
 
 export default function Communities() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedCommunityId, setSelectedCommunityId] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlCommunityId = searchParams.get('community');
+  const selectedTab = searchParams.get('tab') || 'home';
+  const [selectedCommunityId, setSelectedCommunityIdState] = useState(urlCommunityId);
+
+  const setSelectedCommunityId = (communityId, tab = 'home') => {
+    setSelectedCommunityIdState(communityId);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (communityId) {
+        next.set('community', communityId);
+        next.set('tab', tab);
+      } else {
+        next.delete('community');
+        next.delete('tab');
+      }
+      return next;
+    }, { replace: false });
+  };
 
   useEffect(() => {
     if (selectedCommunityId) window.scrollTo({ top: 0, behavior: 'instant' });
   }, [selectedCommunityId]);
+
+  useEffect(() => {
+    setSelectedCommunityIdState(urlCommunityId);
+  }, [urlCommunityId]);
 
   const [showCreate, setShowCreate] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
@@ -689,6 +716,11 @@ export default function Communities() {
       return;
     }
 
+    if (community.created_by_user_id === currentUser.id && community.joined) {
+      toast.info('Community owners manage their community instead of leaving it.');
+      return;
+    }
+
     const isJoined = joinedIds.has(communityId);
     setJoiningId(communityId);
 
@@ -714,7 +746,7 @@ export default function Communities() {
         await dataService.entities.UserCommunity.create({
           user_id: currentUser.id,
           community_id: communityId,
-          role: 'Member',
+          role: 'member',
           incognito: Boolean(options.incognito),
           hide_membership: Boolean(options.incognito),
         });
@@ -738,24 +770,40 @@ export default function Communities() {
   const createCommunity = async (formData) => {
     if (!currentUser) return;
     try {
+      const typeKey = formData.typeKey || getCommunityTypeKey({ category: formData.category });
       const created = await dataService.entities.Community.create({
         name: formData.name,
         description: formData.description,
-        type: getCommunityTypeKey({ category: formData.category }),
+        type: typeKey,
         category: formData.category,
-        communityType: formData.communityType,
+        template_key: typeKey,
+        tagline: formData.tagline,
         privacy: formData.privacy,
         location: formData.location || 'Local community',
+        created_by_user_id: currentUser.id,
+        created_by_name: currentUser.display_name || currentUser.full_name || 'Community member',
         follower_count: 1,
-        supportsIncognito: formData.supportsIncognito,
-        supportsAnonymousPosting: formData.supportsAnonymousPosting,
-        hideMembershipDefault: formData.hideMembershipDefault,
+        settings: {
+          communityType: formData.communityType,
+          supportsIncognito: formData.supportsIncognito,
+          supportsAnonymousPosting: formData.supportsAnonymousPosting,
+          hideMembershipDefault: formData.hideMembershipDefault,
+          identityTags: formData.identityTags,
+          rules: formData.rules,
+          aiSetupPrompt: formData.aiSetupPrompt || '',
+        },
       });
-      await dataService.entities.UserCommunity.create({
+      const existingMembership = await dataService.entities.UserCommunity.filter({
         user_id: currentUser.id,
         community_id: created.id,
-        role: 'Admin',
       });
+      if (!existingMembership.length) {
+        await dataService.entities.UserCommunity.create({
+          user_id: currentUser.id,
+          community_id: created.id,
+          role: 'admin',
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['communities-list'] });
       queryClient.invalidateQueries({ queryKey: ['communities-memberships', currentUser?.id] });
       setSelectedCommunityId(created.id);
@@ -777,6 +825,8 @@ export default function Communities() {
           setInitialComposePrompt('');
         }}
         onToggleJoin={(options) => handleJoin(selectedCommunity.id, options)}
+        initialTab={selectedTab}
+        onTabChange={(tab) => setSelectedCommunityId(selectedCommunity.id, tab)}
         joiningId={joiningId}
       />
     );
@@ -789,7 +839,7 @@ export default function Communities() {
 
   const openCommunityWithPrompt = (community, prompt) => {
     setInitialComposePrompt(prompt || community.dailyPrompt || '');
-    setSelectedCommunityId(community.id);
+    setSelectedCommunityId(community.id, 'posts');
   };
 
   return (

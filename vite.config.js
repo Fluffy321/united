@@ -15,18 +15,14 @@ export default defineConfig({
         // independently of app code. Each chunk gets a content-hash filename
         // so a CDN can cache it indefinitely; only changed chunks re-download.
         manualChunks(id) {
-          if (id.includes('node_modules/leaflet') || id.includes('node_modules/react-leaflet')) {
-            return 'vendor-map';
-          }
-          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) {
-            return 'vendor-charts';
-          }
-          if (id.includes('node_modules/framer-motion')) {
-            return 'vendor-motion';
-          }
+          // Supabase has no React dependency — safe to split independently.
           if (id.includes('node_modules/@supabase')) {
             return 'vendor-supabase';
           }
+          // All other node_modules (React, recharts, d3, leaflet, react-leaflet,
+          // framer-motion, etc.) go into one vendor chunk. Splitting any of these
+          // into separate chunks creates cross-chunk circular dependencies that
+          // break production initialization order (TDZ / undefined React errors).
           if (id.includes('node_modules/')) {
             return 'vendor';
           }

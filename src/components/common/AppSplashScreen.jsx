@@ -14,7 +14,7 @@ export default function AppSplashScreen({ exiting = false }) {
         <div className="relative mb-5">
           <div className="absolute inset-0 rounded-[30px] bg-blue-500/20 blur-xl" />
           <div className="relative flex h-24 w-24 items-center justify-center rounded-[30px] bg-gradient-to-br from-blue-600 via-[#0F5ED7] to-slate-950 shadow-2xl shadow-blue-950/20 ring-1 ring-white/70">
-            <img src="/icon-192.svg" alt="" className="h-16 w-16 drop-shadow-sm" />
+            <img src="/brand-mark.svg" alt="" className="h-16 w-16 drop-shadow-sm" />
           </div>
         </div>
 

@@ -64,7 +64,7 @@ function MemberAvatarStrip({ members, totalCount, onViewMembers }) {
 }
 
 export default function CommunityHero({
-  community, isFollowing, isAdmin, onBack, onFollow, onClaim,
+  community, isFollowing, isAdmin, isCreator = false, onBack, onFollow, onManage, onClaim,
   eventCount, mitzvahCount, actualMemberCount, postsThisWeek,
   members = [], currentUser, onTabChange, typeConfig: providedTypeConfig
 }) {
@@ -135,12 +135,12 @@ export default function CommunityHero({
           <p className="text-[11px] text-slate-400">{memberCount.toLocaleString()} members</p>
         </div>
         <button
-          onClick={onFollow}
+          onClick={isCreator ? onManage : onFollow}
           className={`h-8 px-4 rounded-full text-[13px] font-bold transition-colors ${
-            isFollowing ? 'bg-slate-100 text-slate-600' : 'bg-[#2563EB] text-white'
+            isCreator ? 'bg-slate-950 text-white' : isFollowing ? 'bg-slate-100 text-slate-600' : 'bg-[#2563EB] text-white'
           }`}
         >
-          {isFollowing ? 'Joined' : '+ Join'}
+          {isCreator ? 'Admin Center' : isFollowing ? 'Joined' : '+ Join'}
         </button>
       </motion.div>
 
@@ -263,13 +263,17 @@ export default function CommunityHero({
                 <Plus className="w-4 h-4" /> {typeConfig.primaryCta}
               </button>
               <button
-                onClick={onFollow}
+                onClick={isCreator ? onManage : onFollow}
                 className="h-10 px-4 text-[13px] font-semibold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
               >
-                ✓ Joined
+                {isCreator ? 'Admin Center' : '✓ Joined'}
               </button>
               {isAdmin && (
-                <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                <button
+                  onClick={onManage}
+                  className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600"
+                  aria-label="Admin center"
+                >
                   <Settings className="w-4 h-4" />
                 </button>
               )}
