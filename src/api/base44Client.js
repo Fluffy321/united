@@ -1036,9 +1036,16 @@ const getSupabaseUser = async () => {
     });
   }
 
+  // Prefer the real name and avatar from OAuth providers (e.g. Google).
+  const metaAvatarUrl = data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture;
   const createdProfile = {
     id: data.user.id,
-    display_name: data.user.email?.split('@')[0] || 'User',
+    display_name:
+      data.user.user_metadata?.full_name ||
+      data.user.user_metadata?.name ||
+      data.user.email?.split('@')[0] ||
+      'User',
+    ...(metaAvatarUrl ? { avatar_url: metaAvatarUrl } : {}),
   };
 
   const { data: created, error: createError } = await supabase
