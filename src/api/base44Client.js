@@ -52,6 +52,9 @@ const SUPABASE_ENTITY_TABLES = {
   CommunityAdminAuditLog: 'community_admin_audit_log',
   // Poll votes — migration 030_poll_votes.sql
   PollVote: 'poll_votes',
+  // Local updates automation — migration 20260515180122_local_updates_automation.sql
+  LocalUpdateSource: 'local_update_sources',
+  LocalUpdateItem: 'local_update_items',
   // All other entities (MessageRequest, GroupMember, Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.

@@ -4,9 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   X, LayoutDashboard, BarChart2, Users, Shield, Settings,
-  Search, Loader2, Save, CheckCircle2, XCircle,
+  Search, Loader2, Save, CheckCircle2, XCircle, ExternalLink,
   UserMinus, UserCheck, Crown, ShieldCheck, MoreVertical, Clock, TrendingUp,
   AlertCircle, ShieldAlert, Gavel, Activity, Trash2, AlertTriangle,
+  Pin, Image, Lock, Globe, Upload,
 } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
 import { dataService } from '@/services';
@@ -18,10 +19,26 @@ import { COMMUNITY_TYPE_OPTIONS, getCommunityTypeKey } from '@/lib/communityType
 const TABS = [
   { key: 'overview',    label: 'Overview',    Icon: LayoutDashboard },
   { key: 'analytics',   label: 'Analytics',   Icon: BarChart2 },
+  { key: 'content',     label: 'Content',     Icon: Pin },
   { key: 'members',     label: 'Members',     Icon: Users },
+  { key: 'localUpdates', label: 'Updates',    Icon: Activity },
   { key: 'moderation',  label: 'Moderation',  Icon: ShieldAlert },
   { key: 'appeals',     label: 'Appeals',     Icon: Gavel },
   { key: 'settings',    label: 'Settings',    Icon: Settings },
+];
+
+const MODULE_CONFIG = [
+  { key: 'allow_member_events',   label: 'Events',      description: 'Members can create and view events' },
+  { key: 'allow_resources',       label: 'Resources',   description: 'Resource library tab for files and links' },
+  { key: 'allow_member_listings', label: 'Marketplace', description: 'Members can post buy/sell listings' },
+  { key: 'allow_group_chat',      label: 'Group Chat',  description: 'Real-time group chat tab' },
+];
+
+const SETTINGS_SECTIONS = [
+  { key: 'profile',     label: 'Profile' },
+  { key: 'appearance',  label: 'Appearance' },
+  { key: 'modules',     label: 'Modules' },
+  { key: 'permissions', label: 'Permissions' },
 ];
 
 const PUBLIC_REMOVAL_REASONS = [
@@ -278,7 +295,9 @@ export default function CommunityAdminCenter({
       <main className="flex-1 overflow-y-auto">
         {activeTab === 'overview'   && <OverviewTab   {...tabProps} />}
         {activeTab === 'analytics'  && <AnalyticsTab  {...tabProps} />}
+        {activeTab === 'content'    && <ContentTab    {...tabProps} />}
         {activeTab === 'members'    && <MembersTab    {...tabProps} />}
+        {activeTab === 'localUpdates' && <LocalUpdatesTab {...tabProps} />}
         {activeTab === 'moderation' && <ModerationTab {...tabProps} />}
         {activeTab === 'appeals'    && <AppealsTab    {...tabProps} />}
         {activeTab === 'settings'   && (
@@ -488,6 +507,176 @@ function AnalyticsTab({ communityId }) {
           Retention rates, engagement trends, and daily active member metrics
           require a <code className="bg-slate-200 px-1 rounded">community_daily_metrics</code> table
           populated by scheduled jobs. Not yet implemented.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Content tab (pinned post) ────────────────────────────────────────────────
+
+function ContentTab({ communityId, currentUser }) {
+  const queryClient = useQueryClient();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pinning, setPinning] = useState(false);
+
+  const { data: pinnedPost = null } = useQuery({
+    queryKey: ['community-pinned-post', communityId],
+    queryFn: async () => {
+      const { data } = await supabase.from('posts')
+        .select('id, title, content, type, created_at')
+        .eq('community_id', communityId)
+        .eq('is_pinned', true)
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const { data: recentPosts = [] } = useQuery({
+    queryKey: ['community-content-posts', communityId],
+    queryFn: async () => {
+      const { data } = await supabase.from('posts')
+        .select('id, title, content, type, created_at')
+        .eq('community_id', communityId)
+        .eq('is_pinned', false)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      return data ?? [];
+    },
+    enabled: pickerOpen,
+  });
+
+  const invalidatePins = () => {
+    queryClient.invalidateQueries({ queryKey: ['community-pinned-post', communityId] });
+    queryClient.invalidateQueries({ queryKey: ['community-content-posts', communityId] });
+    queryClient.invalidateQueries({ queryKey: ['community-posts', communityId] });
+  };
+
+  const handlePin = async (postId) => {
+    setPinning(true);
+    try {
+      if (pinnedPost) {
+        await supabase.from('posts').update({ is_pinned: false }).eq('id', pinnedPost.id);
+      }
+      const { error } = await supabase.from('posts').update({ is_pinned: true }).eq('id', postId);
+      if (error) throw error;
+      invalidatePins();
+      toast.success('Post pinned');
+      setPickerOpen(false);
+    } catch (err) {
+      toast.error(err?.message || 'Could not pin post');
+    } finally {
+      setPinning(false);
+    }
+  };
+
+  const handleUnpin = async () => {
+    if (!pinnedPost) return;
+    setPinning(true);
+    try {
+      const { error } = await supabase.from('posts').update({ is_pinned: false }).eq('id', pinnedPost.id);
+      if (error) throw error;
+      invalidatePins();
+      toast.success('Post unpinned');
+    } catch (err) {
+      toast.error(err?.message || 'Could not unpin post');
+    } finally {
+      setPinning(false);
+    }
+  };
+
+  const postSnippet = (post) => {
+    const text = post.title || post.content || '';
+    return text.length > 80 ? text.slice(0, 80) + '…' : text;
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-5 space-y-5">
+      <div>
+        <SectionHeader title="Pinned post" />
+        <div className="rounded-2xl bg-white border border-slate-100 shadow-sm p-4">
+          {pinnedPost ? (
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="h-8 w-8 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                  <Pin className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-bold text-slate-900 line-clamp-2">{postSnippet(pinnedPost)}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">{fmtRelative(pinnedPost.created_at)}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(true)}
+                  className="flex-1 h-9 rounded-xl border border-slate-200 bg-white text-[13px] font-black text-slate-700 hover:bg-slate-50"
+                >
+                  Change pin
+                </button>
+                <button
+                  type="button"
+                  onClick={handleUnpin}
+                  disabled={pinning}
+                  className="h-9 px-4 rounded-xl bg-slate-100 text-[13px] font-black text-slate-600 hover:bg-slate-200 disabled:opacity-50"
+                >
+                  Unpin
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center py-6 gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center">
+                <Pin className="h-6 w-6 text-slate-400" />
+              </div>
+              <p className="text-[13px] font-bold text-slate-500">No post pinned</p>
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
+                className="h-9 px-5 rounded-xl bg-blue-600 text-white text-[13px] font-black"
+              >
+                Pin a post
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {pickerOpen && (
+        <div className="space-y-3">
+          <SectionHeader
+            title="Select a post to pin"
+            action={
+              <button type="button" onClick={() => setPickerOpen(false)} className="text-[12px] font-bold text-slate-500 hover:text-slate-700">
+                Cancel
+              </button>
+            }
+          />
+          {recentPosts.length === 0 ? (
+            <EmptyState icon={Pin} title="No posts yet" body="Post something in the community first." />
+          ) : (
+            <div className="space-y-2">
+              {recentPosts.map(post => (
+                <button
+                  key={post.id}
+                  type="button"
+                  onClick={() => handlePin(post.id)}
+                  disabled={pinning}
+                  className="w-full text-left rounded-2xl bg-white border border-slate-100 shadow-sm px-4 py-3 hover:border-blue-300 transition-colors disabled:opacity-50"
+                >
+                  <p className="text-[13px] font-semibold text-slate-800 line-clamp-2">{postSnippet(post)}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">{fmtRelative(post.created_at)}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+        <p className="text-[11px] text-slate-500 leading-relaxed">
+          The pinned post appears at the top of the community home for all members. Only one post can be pinned at a time.
         </p>
       </div>
     </div>
@@ -850,6 +1039,326 @@ function ModerationTab({ communityId }) {
   );
 }
 
+// ─── Automated local updates tab ─────────────────────────────────────────────
+
+function LocalUpdatesTab({ communityId }) {
+  const queryClient = useQueryClient();
+  const [drafts, setDrafts] = useState({});
+
+  const { data: sources = [], isLoading: sourcesLoading, error: sourcesError } = useQuery({
+    queryKey: ['local-update-sources', communityId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('local_update_sources')
+        .select('id, name, source_type, source_url, category, enabled, requires_review, auto_publish, last_checked_at')
+        .eq('community_id', communityId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: Boolean(communityId),
+  });
+
+  const { data: items = [], isLoading: itemsLoading, error: itemsError } = useQuery({
+    queryKey: ['local-update-items', communityId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('local_update_items')
+        .select(`
+          id,
+          source_id,
+          community_id,
+          title,
+          short_description,
+          category,
+          source_url,
+          source_name,
+          source_published_at,
+          status,
+          created_at,
+          approved_at,
+          rejected_at,
+          published_post_id,
+          source:source_id(name, source_type)
+        `)
+        .eq('community_id', communityId)
+        .order('created_at', { ascending: false })
+        .limit(60);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: Boolean(communityId),
+  });
+
+  useEffect(() => {
+    setDrafts((current) => {
+      const next = { ...current };
+      items.forEach((item) => {
+        if (!next[item.id]) {
+          next[item.id] = {
+            title: item.title || '',
+            short_description: item.short_description || '',
+            category: item.category || '',
+          };
+        }
+      });
+      return next;
+    });
+  }, [items]);
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['local-update-items', communityId] });
+    queryClient.invalidateQueries({ queryKey: ['community-hub-posts', communityId] });
+  };
+
+  const updateDraft = (itemId, field, value) => {
+    setDrafts((current) => ({
+      ...current,
+      [itemId]: {
+        ...(current[itemId] || {}),
+        [field]: value,
+      },
+    }));
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async ({ item }) => {
+      const draft = drafts[item.id] || {};
+      const { data, error } = await supabase.rpc('update_local_update_item', {
+        p_item_id: item.id,
+        p_title: draft.title || item.title,
+        p_short_description: draft.short_description || '',
+        p_category: draft.category || '',
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Queue item updated');
+      invalidate();
+    },
+    onError: (err) => toast.error(err.message || 'Could not update queue item'),
+  });
+
+  const publishMutation = useMutation({
+    mutationFn: async ({ item }) => {
+      const draft = drafts[item.id] || {};
+      const { data, error } = await supabase.rpc('publish_local_update_item', {
+        p_item_id: item.id,
+        p_title: draft.title || item.title,
+        p_short_description: draft.short_description || item.short_description || '',
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Published as a community post');
+      invalidate();
+    },
+    onError: (err) => toast.error(err.message || 'Could not publish update'),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async ({ item }) => {
+      const { data, error } = await supabase.rpc('reject_local_update_item', {
+        p_item_id: item.id,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Update rejected');
+      invalidate();
+    },
+    onError: (err) => toast.error(err.message || 'Could not reject update'),
+  });
+
+  const isLoading = sourcesLoading || itemsLoading;
+  const error = sourcesError || itemsError;
+  const pendingItems = items.filter((item) => item.status === 'pending');
+  const reviewedItems = items.filter((item) => item.status !== 'pending').slice(0, 8);
+
+  if (isLoading) {
+    return <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-blue-600" /></div>;
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-5">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-black text-amber-900">Automated updates are not ready yet.</p>
+          <p className="mt-1 text-[13px] font-semibold leading-5 text-amber-800">
+            {error.message || 'The local updates tables or permissions are not available.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-5 space-y-5">
+      <div className="rounded-3xl border border-blue-100 bg-blue-50 p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
+            <Activity className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-black text-blue-950">Automated Updates Queue</p>
+            <p className="mt-1 text-[13px] font-semibold leading-5 text-blue-800">
+              Official public sources land here first. Review, edit, then publish only what belongs in the community.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <section>
+        <SectionHeader title={`Sources (${sources.length})`} />
+        {sources.length === 0 ? (
+          <EmptyState icon={AlertCircle} title="No sources configured" body="A platform admin needs to seed official sources for this community." />
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {sources.map((source) => (
+              <div key={source.id} className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-black text-slate-900">{source.name}</p>
+                    <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                      {source.source_type} · {source.category || 'Local Update'}
+                    </p>
+                  </div>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${source.enabled ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                    {source.enabled ? 'On' : 'Off'}
+                  </span>
+                </div>
+                <p className="mt-2 text-[11px] font-semibold text-slate-400">
+                  Last checked: {source.last_checked_at ? fmtRelative(source.last_checked_at) : 'Not yet'}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <SectionHeader title={`Pending review (${pendingItems.length})`} />
+        {pendingItems.length === 0 ? (
+          <EmptyState icon={CheckCircle2} title="No pending updates" body="New official updates will appear here after the next ingestion run." />
+        ) : (
+          <div className="space-y-3">
+            {pendingItems.map((item) => {
+              const draft = drafts[item.id] || {};
+              const busy = saveMutation.isPending || publishMutation.isPending || rejectMutation.isPending;
+              return (
+                <article key={item.id} className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
+                      {item.category || 'Local Update'}
+                    </span>
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-600">
+                      {item.source_name}
+                    </span>
+                    <span className="text-[11px] font-semibold text-slate-400">
+                      {fmtRelative(item.source_published_at || item.created_at)}
+                    </span>
+                  </div>
+
+                  <label className="block">
+                    <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">Post title</span>
+                    <input
+                      value={draft.title ?? item.title}
+                      onChange={(event) => updateDraft(item.id, 'title', event.target.value)}
+                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-black text-slate-900 outline-none focus:border-blue-300 focus:bg-white"
+                    />
+                  </label>
+
+                  <label className="mt-3 block">
+                    <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">Summary / post body</span>
+                    <textarea
+                      rows={4}
+                      value={draft.short_description ?? item.short_description ?? ''}
+                      onChange={(event) => updateDraft(item.id, 'short_description', event.target.value)}
+                      className="mt-1 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold leading-6 text-slate-700 outline-none focus:border-blue-300 focus:bg-white"
+                    />
+                  </label>
+
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <a
+                      href={item.source_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-[12px] font-black text-blue-700 hover:text-blue-800"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Read source
+                    </a>
+
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => saveMutation.mutate({ item })}
+                        className="motion-press inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-black text-slate-700 disabled:opacity-50"
+                      >
+                        <Save className="h-3.5 w-3.5" />
+                        Save Edit
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => rejectMutation.mutate({ item })}
+                        className="motion-press inline-flex h-9 items-center gap-1.5 rounded-xl border border-red-100 bg-red-50 px-3 text-[12px] font-black text-red-700 disabled:opacity-50"
+                      >
+                        <XCircle className="h-3.5 w-3.5" />
+                        Reject
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy || !String(draft.title ?? item.title).trim()}
+                        onClick={() => publishMutation.mutate({ item })}
+                        className="motion-press inline-flex h-9 items-center gap-1.5 rounded-xl bg-slate-950 px-3 text-[12px] font-black text-white disabled:opacity-50"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Approve & Publish
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {reviewedItems.length > 0 && (
+        <section>
+          <SectionHeader title="Recently reviewed" />
+          <div className="space-y-2">
+            {reviewedItems.map((item) => (
+              <div key={item.id} className="rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-black text-slate-900">{item.title}</p>
+                    <p className="mt-0.5 text-[11px] font-semibold text-slate-400">
+                      {item.source_name} · {fmtRelative(item.approved_at || item.rejected_at || item.created_at)}
+                    </p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${
+                    item.status === 'published'
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {item.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
 // ─── Appeals tab ──────────────────────────────────────────────────────────────
 
 function AppealsTab({ communityId, community, currentUser }) {
@@ -988,13 +1497,71 @@ function AppealsTab({ communityId, community, currentUser }) {
   );
 }
 
-// ─── Settings tab (inline form, same fields as CommunityManagePanel) ──────────
+// ─── Settings tab (sub-nav: Profile | Appearance | Modules | Permissions) ─────
 
 function SettingsTab({ communityId, community, currentUser, onCommunityUpdated, onClose, onDeleted }) {
+  const [section, setSection] = useState('profile');
   const settings = useMemo(
     () => (community?.settings && typeof community.settings === 'object' ? community.settings : {}),
     [community?.settings]
   );
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-5">
+      <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide pb-1">
+        {SETTINGS_SECTIONS.map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setSection(key)}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-[13px] font-bold transition-colors ${
+              section === key
+                ? 'bg-slate-900 text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {section === 'profile' && (
+        <ProfileSection
+          communityId={communityId}
+          community={community}
+          settings={settings}
+          onCommunityUpdated={onCommunityUpdated}
+          onClose={onClose}
+          currentUser={currentUser}
+          onDeleted={onDeleted}
+        />
+      )}
+      {section === 'appearance' && (
+        <AppearanceSection
+          communityId={communityId}
+          community={community}
+          onCommunityUpdated={onCommunityUpdated}
+        />
+      )}
+      {section === 'modules' && (
+        <ModulesSection
+          communityId={communityId}
+          community={community}
+          onCommunityUpdated={onCommunityUpdated}
+        />
+      )}
+      {section === 'permissions' && (
+        <PermissionsSection
+          communityId={communityId}
+          community={community}
+          onCommunityUpdated={onCommunityUpdated}
+        />
+      )}
+    </div>
+  );
+}
+
+function ProfileSection({ communityId, community, settings, onCommunityUpdated, onClose, currentUser, onDeleted }) {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(() => ({
     name:        community?.name || '',
@@ -1040,9 +1607,7 @@ function SettingsTab({ communityId, community, currentUser, onCommunityUpdated, 
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
-      <SectionHeader title="Community profile" />
-
+    <div className="space-y-4">
       {[
         { field: 'name', label: 'Community name', type: 'input' },
         { field: 'description', label: 'Description', type: 'textarea', rows: 4 },
@@ -1137,6 +1702,251 @@ function SettingsTab({ communityId, community, currentUser, onCommunityUpdated, 
         currentUser={currentUser}
         onDeleted={onDeleted}
       />
+    </div>
+  );
+}
+
+function AppearanceSection({ communityId, community, onCommunityUpdated }) {
+  const [coverFile, setCoverFile]     = useState(null);
+  const [coverPreview, setCoverPreview] = useState(community?.cover_url || null);
+  const [logoFile, setLogoFile]       = useState(null);
+  const [logoPreview, setLogoPreview] = useState(community?.logo_url || null);
+  const [saving, setSaving]           = useState(false);
+
+  const handleCoverChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCoverFile(file);
+    setCoverPreview(URL.createObjectURL(file));
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
+
+  const handleSave = async () => {
+    if (!coverFile && !logoFile) { toast.info('No changes to save'); return; }
+    setSaving(true);
+    try {
+      const updates = {};
+      if (coverFile) {
+        const result = await dataService.integrations.Core.UploadFile({ file: coverFile, bucket: 'community-images' });
+        updates.cover_url = typeof result === 'string' ? result : (result?.url || result?.publicUrl);
+      }
+      if (logoFile) {
+        const result = await dataService.integrations.Core.UploadFile({ file: logoFile, bucket: 'community-images' });
+        updates.logo_url = typeof result === 'string' ? result : (result?.url || result?.publicUrl);
+      }
+      const updated = await dataService.entities.Community.update(communityId, updates);
+      toast.success('Appearance updated');
+      onCommunityUpdated?.(updated);
+      setCoverFile(null);
+      setLogoFile(null);
+    } catch (err) {
+      toast.error(err?.message || 'Could not update appearance');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <SectionHeader title="Cover photo" />
+        <div className="rounded-2xl overflow-hidden border border-slate-200 bg-gradient-to-br from-blue-600 to-blue-800 relative" style={{ aspectRatio: '3/1' }}>
+          {coverPreview && (
+            <img src={coverPreview} alt="Cover" className="w-full h-full object-cover" />
+          )}
+          <label className="absolute inset-0 flex items-center justify-center cursor-pointer hover:bg-black/20 transition-colors group">
+            <div className="h-10 w-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Image className="h-5 w-5 text-slate-700" />
+            </div>
+            <input type="file" accept="image/*" className="sr-only" onChange={handleCoverChange} />
+          </label>
+        </div>
+        <p className="text-[11px] text-slate-400 mt-1.5">Recommended: 1200×400px. Click to change.</p>
+      </div>
+
+      <div>
+        <SectionHeader title="Community logo" />
+        <div className="flex items-center gap-4">
+          <div className="h-20 w-20 rounded-2xl border border-slate-200 bg-gradient-to-br from-blue-600 to-blue-800 overflow-hidden flex-shrink-0 relative">
+            {logoPreview && (
+              <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+            )}
+            <label className="absolute inset-0 flex items-center justify-center cursor-pointer hover:bg-black/30 transition-colors group">
+              <Upload className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+              <input type="file" accept="image/*" className="sr-only" onChange={handleLogoChange} />
+            </label>
+          </div>
+          <div>
+            <p className="text-[13px] font-bold text-slate-700">Community logo</p>
+            <p className="text-[12px] text-slate-400 mt-0.5">Square image, min 200×200px.<br />Click to upload.</p>
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving || (!coverFile && !logoFile)}
+        className="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-black text-white disabled:opacity-60"
+      >
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+        {saving ? 'Saving…' : 'Save appearance'}
+      </button>
+    </div>
+  );
+}
+
+function ModulesSection({ communityId, community, onCommunityUpdated }) {
+  const [flags, setFlags] = useState({
+    allow_member_events:   Boolean(community?.allow_member_events),
+    allow_resources:       Boolean(community?.allow_resources),
+    allow_member_listings: Boolean(community?.allow_member_listings),
+    allow_group_chat:      Boolean(community?.allow_group_chat),
+  });
+  const [saving, setSaving] = useState(false);
+
+  const toggle = (key) => setFlags(f => ({ ...f, [key]: !f[key] }));
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updated = await dataService.entities.Community.update(communityId, flags);
+      toast.success('Modules updated');
+      onCommunityUpdated?.(updated);
+    } catch (err) {
+      toast.error(err?.message || 'Could not update modules');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+        <div className="px-4 py-3.5 flex items-center justify-between border-b border-slate-100">
+          <div className="flex-1 min-w-0 pr-4">
+            <p className="text-[14px] font-bold text-slate-900">Posts</p>
+            <p className="text-[12px] text-slate-400 mt-0.5">Community discussion feed — always enabled</p>
+          </div>
+          <div className="w-11 h-6 rounded-full bg-blue-600 flex items-center justify-end px-0.5 flex-shrink-0 opacity-50 cursor-not-allowed">
+            <div className="w-5 h-5 rounded-full bg-white shadow-sm" />
+          </div>
+        </div>
+        {MODULE_CONFIG.map(({ key, label, description }, idx) => (
+          <div
+            key={key}
+            className={`px-4 py-3.5 flex items-center justify-between ${idx < MODULE_CONFIG.length - 1 ? 'border-b border-slate-100' : ''}`}
+          >
+            <div className="flex-1 min-w-0 pr-4">
+              <p className="text-[14px] font-bold text-slate-900">{label}</p>
+              <p className="text-[12px] text-slate-400 mt-0.5">{description}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => toggle(key)}
+              className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 flex-shrink-0 ${
+                flags[key] ? 'bg-blue-600 justify-end' : 'bg-slate-200 justify-start'
+              }`}
+              aria-checked={flags[key]}
+              role="switch"
+            >
+              <div className="w-5 h-5 rounded-full bg-white shadow-sm" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving}
+        className="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-black text-white disabled:opacity-60"
+      >
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+        {saving ? 'Saving…' : 'Save modules'}
+      </button>
+    </div>
+  );
+}
+
+function PermissionsSection({ communityId, community, onCommunityUpdated }) {
+  const [postingMode, setPostingMode] = useState(community?.posting_mode || 'open');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updated = await dataService.entities.Community.update(communityId, { posting_mode: postingMode });
+      toast.success('Permissions updated');
+      onCommunityUpdated?.(updated);
+    } catch (err) {
+      toast.error(err?.message || 'Could not update permissions');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <SectionHeader title="Who can post?" />
+      <div className="space-y-2">
+        {[
+          {
+            value: 'open',
+            label: 'All members',
+            description: 'Any member can create posts in this community',
+            Icon: Globe,
+          },
+          {
+            value: 'admin_only',
+            label: 'Admins & mods only',
+            description: 'Only admins and moderators can post — ideal for announcement-only communities',
+            Icon: Lock,
+          },
+        ].map(({ value, label, description, Icon }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setPostingMode(value)}
+            className={`w-full text-left rounded-2xl border px-4 py-3.5 flex items-start gap-3 transition-colors ${
+              postingMode === value
+                ? 'border-blue-400 bg-blue-50'
+                : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
+          >
+            <div className={`h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+              postingMode === value ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
+            }`}>
+              <Icon className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-[14px] font-bold ${postingMode === value ? 'text-blue-900' : 'text-slate-900'}`}>{label}</p>
+              <p className={`text-[12px] mt-0.5 leading-relaxed ${postingMode === value ? 'text-blue-700' : 'text-slate-400'}`}>{description}</p>
+            </div>
+            <div className={`mt-1 h-4 w-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+              postingMode === value ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
+            }`}>
+              {postingMode === value && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving}
+        className="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-black text-white disabled:opacity-60"
+      >
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+        {saving ? 'Saving…' : 'Save permissions'}
+      </button>
     </div>
   );
 }
