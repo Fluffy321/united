@@ -22,12 +22,14 @@ import { toast } from 'sonner';
 import { appParams } from '@/lib/app-params';
 import CommunityHubCard from '@/components/communities/CommunityHubCard';
 import CommunityHubDetail from '@/components/communities/CommunityHubDetail';
+import CommunityAdminCenter from '@/components/communities/CommunityAdminCenter';
 import CreateCommunityForm from '@/components/communities/CreateCommunityForm';
 import MessagesDrawer from '@/components/communities/MessagesDrawer';
 import { COMMUNITY_TYPE_OPTIONS, getCommunityTypeConfig, getCommunityTypeKey } from '@/lib/communityTypes';
 
 const COMMUNITY_FILTERS = [{ key: 'all', label: 'All' }, ...COMMUNITY_TYPE_OPTIONS.map(({ key, label }) => ({ key, label }))];
 const CREATE_CATEGORIES = COMMUNITY_TYPE_OPTIONS.map(({ label }) => label);
+const MANAGEMENT_ROLES = new Set(['owner', 'admin', 'moderator']);
 
 const EXPERIENCE_SEEDS = [
   {
@@ -469,6 +471,19 @@ function adaptCommunity(c, joinedIds, membershipsByCommunity) {
   };
 }
 
+function getManagementRole(community, currentUser, membershipsByCommunity) {
+  if (!currentUser?.id || !community?.id) return null;
+  if (community.created_by_user_id === currentUser.id) return 'Owner';
+
+  const membership = membershipsByCommunity.get(community.id);
+  const role = String(membership?.role || '').toLowerCase();
+  if (!MANAGEMENT_ROLES.has(role)) return null;
+
+  if (role === 'owner') return 'Owner';
+  if (role === 'admin') return 'Admin';
+  return 'Moderator';
+}
+
 export default function Communities() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
@@ -502,6 +517,7 @@ export default function Communities() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
+  const [adminShortcutCommunity, setAdminShortcutCommunity] = useState(null);
   const [joiningId, setJoiningId] = useState(null);
   const [optimisticJoins, setOptimisticJoins] = useState(new Set());
   const [optimisticLeaves, setOptimisticLeaves] = useState(new Set());
@@ -563,8 +579,17 @@ export default function Communities() {
     });
   }, [typeFilter, communities, query]);
 
-  const yourCommunities = filteredCommunities.filter((community) => community.joined);
-  const discoverCommunities = filteredCommunities.filter((community) => !community.joined);
+  const classifiedCommunities = useMemo(
+    () => filteredCommunities.map((community) => ({
+      ...community,
+      managementRole: getManagementRole(community, currentUser, membershipsByCommunity),
+    })),
+    [currentUser, filteredCommunities, membershipsByCommunity]
+  );
+  const managedCommunities = classifiedCommunities.filter((community) => community.managementRole);
+  const joinedCommunities = classifiedCommunities.filter((community) => community.joined && !community.managementRole);
+  const discoverCommunities = classifiedCommunities.filter((community) => !community.joined && !community.managementRole);
+  const yourCommunities = [...managedCommunities, ...joinedCommunities];
   const curatedDiscoverSections = useMemo(() => {
     const includesAny = (community, words) => {
       const text = [
@@ -885,16 +910,42 @@ export default function Communities() {
             {view === 'mine' ? (
               <CommunitySection
                 title="My Communities"
-                subtitle="Your joined spaces, kept in one easy place."
+                subtitle="Separate the spaces you run from the spaces you simply belong to."
                 icon={Sparkles}
-                communities={yourCommunities}
-                emptyTitle="No joined communities yet"
-                emptyBody="Switch to Discover and join a community that fits how you want to connect."
-                onOpen={openCommunity}
-                onTryPrompt={openCommunityWithPrompt}
-                onJoin={handleJoin}
-                joiningId={joiningId}
-              />
+                communities={[]}
+              >
+                <div className="space-y-6">
+                  <CommunitySection
+                    title="Communities You Manage"
+                    subtitle="Owner, admin, and moderator spaces that may need your attention."
+                    icon={ShieldCheck}
+                    communities={managedCommunities}
+                    emptyTitle="You’re not managing any communities yet."
+                    emptyBody="Create one when you’re ready to build a space around a local need, topic, or group."
+                    emptyActionLabel="Create Community"
+                    onEmptyAction={() => setShowCreate(true)}
+                    onOpen={openCommunity}
+                    onTryPrompt={openCommunityWithPrompt}
+                    onJoin={handleJoin}
+                    onManage={(community) => setAdminShortcutCommunity(community)}
+                    joiningId={joiningId}
+                  />
+                  <CommunitySection
+                    title="Communities You Joined"
+                    subtitle="The communities where you’re a regular member."
+                    icon={Users}
+                    communities={joinedCommunities}
+                    emptyTitle="You haven’t joined any member communities yet."
+                    emptyBody="Discover groups that match your interests, neighborhood, or daily Jewish life."
+                    emptyActionLabel="Browse Discover"
+                    onEmptyAction={() => setView('discover')}
+                    onOpen={openCommunity}
+                    onTryPrompt={openCommunityWithPrompt}
+                    onJoin={handleJoin}
+                    joiningId={joiningId}
+                  />
+                </div>
+              </CommunitySection>
             ) : (
               curatedDiscoverSections.length > 0 ? (
                 <>
@@ -944,6 +995,24 @@ export default function Communities() {
         open={showMessages}
         onClose={() => setShowMessages(false)}
       />
+
+      {adminShortcutCommunity && (
+        <CommunityAdminCenter
+          community={adminShortcutCommunity}
+          currentUser={currentUser}
+          open={Boolean(adminShortcutCommunity)}
+          onClose={() => setAdminShortcutCommunity(null)}
+          onCommunityUpdated={() => {
+            queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+            queryClient.invalidateQueries({ queryKey: ['communities-memberships', currentUser?.id] });
+          }}
+          onDeleted={() => {
+            setAdminShortcutCommunity(null);
+            queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+            queryClient.invalidateQueries({ queryKey: ['communities-memberships', currentUser?.id] });
+          }}
+        />
+      )}
     </main>
   );
 }
@@ -1144,7 +1213,39 @@ function SearchBar({ query, onQueryChange, typeFilter, onTypeFilterChange }) {
   );
 }
 
-function CommunitySection({ title, subtitle, icon: Icon, communities, emptyTitle, emptyBody, onOpen, onTryPrompt, onJoin, joiningId }) {
+function CommunitySection({
+  title,
+  subtitle,
+  icon: Icon,
+  communities = [],
+  emptyTitle,
+  emptyBody,
+  emptyActionLabel,
+  onEmptyAction,
+  onOpen,
+  onTryPrompt,
+  onJoin,
+  onManage,
+  joiningId,
+  children,
+}) {
+  if (children) {
+    return (
+      <section>
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <h2 className="flex items-center gap-2 text-xl font-black text-slate-950">
+              <Icon className="h-5 w-5 text-blue-600" />
+              {title}
+            </h2>
+            <p className="text-sm leading-6 text-slate-500">{subtitle}</p>
+          </div>
+        </div>
+        {children}
+      </section>
+    );
+  }
+
   if (!communities.length && !emptyTitle) return null;
   return (
     <section>
@@ -1164,6 +1265,15 @@ function CommunitySection({ title, subtitle, icon: Icon, communities, emptyTitle
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
           <p className="text-sm font-black text-slate-800">{emptyTitle}</p>
           <p className="mt-1 text-[13px] font-semibold text-slate-500">{emptyBody}</p>
+          {emptyActionLabel && onEmptyAction && (
+            <button
+              type="button"
+              onClick={onEmptyAction}
+              className="motion-press mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-black text-white"
+            >
+              {emptyActionLabel}
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
@@ -1175,6 +1285,8 @@ function CommunitySection({ title, subtitle, icon: Icon, communities, emptyTitle
             onOpen={() => onOpen(community.id)}
             onTryPrompt={(prompt) => onTryPrompt?.(community, prompt)}
             onToggleJoin={(options) => onJoin(community.id, options)}
+            managementRole={community.managementRole}
+            onManage={community.managementRole ? () => onManage?.(community) : undefined}
           />
           ))}
         </div>

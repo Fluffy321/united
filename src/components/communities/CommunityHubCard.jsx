@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, BadgeCheck, EyeOff, Lock, MapPin, MessageCircle, ShieldCheck, TrendingUp, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, EyeOff, Lock, MapPin, MessageCircle, Settings, ShieldCheck, TrendingUp, Users } from 'lucide-react';
 import { COMMUNITY_TYPE_CONFIG, getCommunityTypeConfig } from '@/lib/communityTypes';
 
 export const categoryAccent = Object.fromEntries(
@@ -25,7 +25,15 @@ function ProfileBubbles({ count = 0, muted = false }) {
   );
 }
 
-export default function CommunityHubCard({ community, onOpen, onTryPrompt, onToggleJoin, loading = false }) {
+export default function CommunityHubCard({
+  community,
+  onOpen,
+  onTryPrompt,
+  onToggleJoin,
+  onManage,
+  managementRole,
+  loading = false,
+}) {
   const typeConfig = getCommunityTypeConfig(community);
   const Icon = typeConfig.icon;
   const accent = typeConfig.accent;
@@ -102,16 +110,26 @@ export default function CommunityHubCard({ community, onOpen, onTryPrompt, onTog
           <button
             onClick={(e) => {
               e.stopPropagation();
+              if (managementRole && onManage) {
+                onManage();
+                return;
+              }
+              if (community.joined) {
+                onOpen?.();
+                return;
+              }
               onToggleJoin?.(isSensitive ? { incognito: true } : {});
             }}
             disabled={loading}
             className={`shrink-0 rounded-full px-4 py-1.5 text-[12px] font-bold transition-all active:scale-[0.97] disabled:opacity-60 ${
-              community.joined
-                ? 'bg-slate-100 text-slate-700 hover:bg-red-50 hover:text-red-600'
+              managementRole
+                ? 'bg-slate-950 text-white hover:bg-slate-800'
+                : community.joined
+                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 : `bg-gradient-to-br ${accent} text-white shadow-sm hover:opacity-90`
             }`}
           >
-            {loading ? '…' : community.joined ? 'Open' : isSensitive ? 'Join Private' : 'Join'}
+            {loading ? '…' : managementRole ? 'Admin Center' : community.joined ? 'Open' : isSensitive ? 'Join Private' : 'Join'}
           </button>
         </div>
 
@@ -125,6 +143,12 @@ export default function CommunityHubCard({ community, onOpen, onTryPrompt, onTog
               {typeConfig.label}
             </span>
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">{typeLabel}</span>
+            {managementRole && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-800">
+                <ShieldCheck className="h-3 w-3" />
+                {managementRole}
+              </span>
+            )}
             {(community.memberCount || community.follower_count) > 0 && (
               <span className="flex items-center gap-1 text-[11px] text-slate-400">
                 <Users className="h-3 w-3" />
@@ -182,6 +206,20 @@ export default function CommunityHubCard({ community, onOpen, onTryPrompt, onTog
                 </span>
               </div>
             </div>
+          )}
+
+          {managementRole && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onManage?.();
+              }}
+              className="motion-press mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-[12px] font-black text-amber-800 transition hover:bg-amber-100"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              Manage this community
+            </button>
           )}
 
           <div className="mt-2 flex flex-wrap gap-1">
