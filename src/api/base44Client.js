@@ -50,6 +50,8 @@ const SUPABASE_ENTITY_TABLES = {
   CommunityMemberRemoval: 'community_member_removals',
   CommunityMemberAppeal: 'community_member_appeals',
   CommunityAdminAuditLog: 'community_admin_audit_log',
+  // Poll votes — migration 030_poll_votes.sql
+  PollVote: 'poll_votes',
   // All other entities (MessageRequest, GroupMember, Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.
@@ -706,7 +708,6 @@ const normalizeRealtimeEvent = (event = {}) => {
 //   GroupResource     → group_resources
 //   Bookmark          → bookmarks
 //   SavedSearch       → saved_searches
-//   PollVote          → poll_votes
 //   BusinessListing   → business_listings
 //   BusinessReview    → business_reviews
 //   Organization      → organizations

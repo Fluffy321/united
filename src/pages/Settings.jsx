@@ -194,7 +194,7 @@ export default function Settings() {
       toast.error('Please choose an image file');
       return;
     }
-    const { file_url } = await dataService.integrations.Core.UploadFile({ file });
+    const { file_url } = await dataService.integrations.Core.UploadFile({ file, bucket: 'avatars' });
     updateForm('avatar_url', file_url);
   };
 

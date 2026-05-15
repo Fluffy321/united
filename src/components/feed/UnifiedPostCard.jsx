@@ -22,6 +22,7 @@ import { dataService, findOrCreateDirectConversation } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import { HELP_REQUEST_CATEGORIES } from '@/components/feed/RequestHelpModal';
+import PollCard from './PollCard';
 
 // Short-circuit for community prompts — thin wrapper, no memo needed
 function PromptWrapper({ post, currentUser }) {
@@ -134,11 +135,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
 
   if (post.type === 'prompt') return <PromptWrapper post={post} currentUser={currentUser} />;
   if (post.type === 'poll' || post.post_subtype === 'poll') {
-    return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-600">
-        Polls are paused for beta while voting is connected to production data.
-      </div>
-    );
+    return <PollCard post={post} currentUser={currentUser} />;
   }
 
   const isOwner = currentUser?.id === post.user_id;

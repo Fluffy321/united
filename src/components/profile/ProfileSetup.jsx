@@ -87,7 +87,7 @@ export default function ProfileSetup({ user, onComplete }) {
     if (avatarFile) {
       setIsSubmitting(true);
       try {
-        const { file_url } = await dataService.integrations.Core.UploadFile({ file: avatarFile });
+        const { file_url } = await dataService.integrations.Core.UploadFile({ file: avatarFile, bucket: 'avatars' });
         await dataService.auth.updateMe({ avatar_url: file_url });
         setAvatarPreview(file_url);
         setIsSubmitting(false);
