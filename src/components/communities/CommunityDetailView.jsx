@@ -424,7 +424,11 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         currentUser={currentUser}
         open={showAdminCenter}
         onClose={() => setShowAdminCenter(false)}
-        onCommunityUpdated={() => {
+        onCommunityUpdated={(updated) => {
+          if (updated) {
+            // Immediately update the cache so tabs/flags reflect without waiting for a refetch.
+            queryClient.setQueryData(['community', communityId], updated);
+          }
           queryClient.invalidateQueries({ queryKey: ['community', communityId] });
           queryClient.invalidateQueries({ queryKey: ['community-members', communityId] });
           queryClient.invalidateQueries({ queryKey: ['communities-list'] });

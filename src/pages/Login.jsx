@@ -78,14 +78,18 @@ export default function Login() {
 
     try {
       const parsed = new URL(fromUrl, window.location.origin);
-      if (parsed.pathname === '/InviteJoin' || parsed.pathname === '/join') {
-        return `${parsed.pathname}${parsed.search || ''}`;
-      }
-      return DEFAULT_AUTH_DESTINATION;
+      // Reject cross-origin values to prevent open redirect attacks.
+      if (parsed.origin !== window.location.origin) return DEFAULT_AUTH_DESTINATION;
+      return `${parsed.pathname}${parsed.search || ''}`;
     } catch {
       return DEFAULT_AUTH_DESTINATION;
     }
   }, [searchParams]);
+
+  // Supabase appends ?code=...&type=email (PKCE) or ?token_hash=...&type=email
+  // when the user clicks their verification link. Detect this so we can show a
+  // "Verifying..." state instead of the login form while the token is exchanged.
+  const isEmailCallback = searchParams.get('type') === 'email';
 
   useEffect(() => {
     if (!isLoadingAuth && isAuthenticated) {
@@ -128,6 +132,17 @@ export default function Login() {
       setIsSubmitting(false);
     }
   };
+
+  // While Supabase processes the email verification token, show a clean
+  // "Verifying..." screen instead of flashing the login form.
+  if (isEmailCallback && (isLoadingAuth || isAuthenticated)) {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-[#F6F8FB]">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
+        <p className="text-sm font-semibold text-slate-500">Verifying your account…</p>
+      </div>
+    );
+  }
 
   return (
     <main
