@@ -16,25 +16,19 @@ export default function InviteJoin() {
 
   useEffect(() => {
     if (!id || !type) { setStatus('error'); return; }
+    if (type !== 'community') { setStatus('error'); return; }
 
     const loadResource = async () => {
       try {
-        const res = type === 'community'
-          ? await dataService.entities.Community.filter({ id }).then(r => r[0])
-          : await dataService.entities.CommunityGroup.filter({ id }).then(r => r[0]);
+        const res = await dataService.entities.Community.filter({ id }).then(r => r[0]);
 
         if (!res) { setStatus('error'); return; }
         setResource(res);
 
         if (currentUser) {
           // Check if already member
-          if (type === 'community') {
-            const existing = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: id });
-            if (existing.length > 0) { setAlreadyMember(true); }
-          } else {
-            const existing = await dataService.entities.GroupMember.filter({ user_id: currentUser.id, group_id: id });
-            if (existing.length > 0) { setAlreadyMember(true); }
-          }
+          const existing = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: id });
+          if (existing.length > 0) { setAlreadyMember(true); }
         }
         setStatus('preview');
       } catch { setStatus('error'); }
@@ -52,25 +46,10 @@ export default function InviteJoin() {
       return;
     }
     setStatus('joining');
-    if (type === 'community') {
-      const existing = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: id });
-      if (existing.length === 0) {
-        await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: id, role: 'Member' });
-        await incrementCounter('communities', 'follower_count', id, 1);
-      }
-    } else {
-      if (resource.is_private) {
-        await dataService.entities.GroupJoinRequest.create({
-          group_id: id, group_name: resource.name,
-          user_id: currentUser.id, user_name: currentUser.full_name, status: 'pending',
-        });
-      } else {
-        const existing = await dataService.entities.GroupMember.filter({ user_id: currentUser.id, group_id: id });
-        if (existing.length === 0) {
-          await dataService.entities.GroupMember.create({ group_id: id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
-          await incrementCounter('community_groups', 'member_count', id, 1);
-        }
-      }
+    const existing = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: id });
+    if (existing.length === 0) {
+      await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: id, role: 'Member' });
+      await incrementCounter('communities', 'follower_count', id, 1);
     }
     setStatus('joined');
   };

@@ -19,6 +19,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { dataService, incrementCounter } from '@/services';
 import { toast } from 'sonner';
+import { appParams } from '@/lib/app-params';
 import CommunityHubCard from '@/components/communities/CommunityHubCard';
 import CommunityHubDetail from '@/components/communities/CommunityHubDetail';
 import CreateCommunityForm from '@/components/communities/CreateCommunityForm';
@@ -533,9 +534,9 @@ export default function Communities() {
     optimisticLeaves.forEach((id) => effectiveJoined.delete(id));
     const backendCommunities = rawCommunities.map((community) => adaptCommunity(community, effectiveJoined, membershipsByCommunity));
     const backendIds = new Set(backendCommunities.map((community) => community.id));
-    const seeds = EXPERIENCE_SEEDS
+    const seeds = appParams.hasBackendConfig ? [] : EXPERIENCE_SEEDS
       .filter((seed) => !backendIds.has(seed.id))
-      .map((seed) => adaptCommunity(seed, effectiveJoined, membershipsByCommunity));
+      .map((seed) => adaptCommunity({ ...seed, isDemo: true }, effectiveJoined, membershipsByCommunity));
     return [...seeds, ...backendCommunities];
   }, [joinedIds, membershipsByCommunity, rawCommunities, optimisticJoins, optimisticLeaves]);
 

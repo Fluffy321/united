@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, X, Clock, TrendingUp, Bookmark, BookmarkCheck, Filter, ChevronLeft, Users, Calendar, FileText, User, Loader2, Bell } from 'lucide-react';
+import { Search, X, Clock, TrendingUp, Filter, ChevronLeft, Users, Calendar, FileText, User, Loader2 } from 'lucide-react';
 import { dataService, storageService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 
 const TRENDING = ['Five Towns minyan', 'Shabbos carpool', 'TAG school', 'kosher restaurant', 'tehillim', 'Purim event'];
@@ -143,7 +141,6 @@ function PersonResult({ person }) {
 
 export default function SearchPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const inputRef = useRef(null);
 
   const [query, setQuery] = useState('');
@@ -189,27 +186,6 @@ export default function SearchPage() {
         setSearching(false);
       });
   }, [debouncedQuery, filters, user?.id]);
-
-  const { data: savedSearches = [], refetch: refetchSaved } = useQuery({
-    queryKey: ['saved-searches', user?.id],
-    queryFn: () => dataService.entities.SavedSearch.filter({ user_id: user.id }, '-created_date', 20),
-    enabled: !!user,
-  });
-
-  const isQuerySaved = savedSearches.some(s => s.query.toLowerCase() === query.toLowerCase());
-
-  const handleSaveSearch = async () => {
-    if (!user) { dataService.auth.redirectToLogin(window.location.href); return; }
-    if (isQuerySaved) {
-      const existing = savedSearches.find(s => s.query.toLowerCase() === query.toLowerCase());
-      await dataService.entities.SavedSearch.delete(existing.id);
-      toast.success('Search removed');
-    } else {
-      await dataService.entities.SavedSearch.create({ user_id: user.id, query, filters, notify_on_new: true });
-      toast.success('Search saved — you\'ll be notified of new matches');
-    }
-    refetchSaved();
-  };
 
   const handlePostClick = (post) => {
     navigate(`/PostDetail?postId=${post.id}`);
@@ -275,23 +251,6 @@ export default function SearchPage() {
         {/* Empty state: recent + trending + saved */}
         {!query && (
           <>
-            {/* Saved searches */}
-            {savedSearches.length > 0 && (
-              <div className="mb-5">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[13px] font-bold text-slate-700 flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-blue-600" /> Saved Searches</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {savedSearches.map(s => (
-                    <button key={s.id} onClick={() => setQuery(s.query)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-[12px] font-semibold border border-blue-200 hover:bg-blue-100 transition-colors">
-                      <BookmarkCheck className="w-3 h-3" /> {s.query}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Recent */}
             {recentSearches.length > 0 && (
               <div className="mb-5">
@@ -339,13 +298,9 @@ export default function SearchPage() {
                 {totalResults === 0 ? 'No results found' : `${totalResults} result${totalResults !== 1 ? 's' : ''} for "${debouncedQuery}"`}
               </p>
               {query.trim().length >= 2 && user && (
-                <button onClick={handleSaveSearch}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all ${
-                    isQuerySaved ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'
-                  }`}>
-                  {isQuerySaved ? <BookmarkCheck className="w-3 h-3" /> : <Bookmark className="w-3 h-3" />}
-                  {isQuerySaved ? 'Saved' : 'Save search'}
-                </button>
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-500">
+                  Saved searches paused for beta
+                </span>
               )}
             </div>
 

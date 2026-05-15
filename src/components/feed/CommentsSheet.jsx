@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, Send, Loader2, MessageCircle, Heart, AlertCircle, RefreshCw } from 'lucide-react';
+import { X, Send, Loader2, MessageCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { dataService, notificationsService, postsService } from '@/services';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +27,6 @@ export default function CommentsSheet({
   const [newComment, setNewComment] = useState('');
   const [posting, setPosting] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
-  const [commentLikes, setCommentLikes] = useState({}); // { commentId: { count, liked } }
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -47,29 +46,6 @@ export default function CommentsSheet({
     onOpenChange?.(false);
   };
 
-  const loadCommentLikes = async (loadedComments) => {
-    if (!currentUser || loadedComments.length === 0) return;
-    try {
-      const ids = loadedComments.map(c => c.id);
-      // Single read of all Like records, then group by comment ID in memory.
-      // Like is always localStorage, so this is one JSON parse instead of N.
-      const allLikes = await dataService.entities.Like.filter({}, null, 5000);
-      const idSet = new Set(ids);
-      const byComment = {};
-      allLikes.filter(l => idSet.has(l.post_id)).forEach(l => {
-        (byComment[l.post_id] ??= []).push(l);
-      });
-      const map = {};
-      ids.forEach(id => {
-        const likes = byComment[id] || [];
-        map[id] = { count: likes.length, liked: likes.some(l => l.user_id === currentUser.id) };
-      });
-      setCommentLikes(map);
-    } catch {
-      // Non-critical — like counts stay empty rather than breaking the sheet.
-    }
-  };
-
   const loadComments = async () => {
     setLoading(true);
     setLoadError(false);
@@ -77,33 +53,10 @@ export default function CommentsSheet({
       const allComments = await postsService.listComments(resolvedPostId, 'created_date', 100);
       const filtered = allComments.filter(c => !blockedIds.includes(c.author_id));
       setComments(filtered);
-      loadCommentLikes(filtered);
     } catch {
       setLoadError(true);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleLikeComment = async (commentId) => {
-    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
-    const current = commentLikes[commentId] || { count: 0, liked: false };
-    // Optimistic update
-    setCommentLikes(prev => ({
-      ...prev,
-      [commentId]: { count: current.liked ? current.count - 1 : current.count + 1, liked: !current.liked },
-    }));
-    try {
-      if (current.liked) {
-        const existing = await dataService.entities.Like.filter({ post_id: commentId, user_id: currentUser.id });
-        if (existing[0]) await dataService.entities.Like.delete(existing[0].id);
-      } else {
-        await dataService.entities.Like.create({ post_id: commentId, user_id: currentUser.id });
-      }
-    } catch {
-      // Revert the optimistic update so the displayed count stays accurate.
-      setCommentLikes(prev => ({ ...prev, [commentId]: current }));
-      toast.error('Could not update like. Please try again.');
     }
   };
 
@@ -260,15 +213,6 @@ export default function CommentsSheet({
                 className="text-[12px] font-semibold text-blue-600 hover:text-blue-700"
               >
                 Reply
-              </button>
-              <button
-                onClick={() => handleLikeComment(comment.id)}
-                className={`flex items-center gap-1 text-[12px] font-semibold transition-colors ${
-                  commentLikes[comment.id]?.liked ? 'text-red-500' : 'text-slate-400 hover:text-red-400'
-                }`}
-              >
-                <Heart className={`w-3.5 h-3.5 ${commentLikes[comment.id]?.liked ? 'fill-current' : ''}`} />
-                {commentLikes[comment.id]?.count > 0 && <span>{commentLikes[comment.id].count}</span>}
               </button>
             </div>
           </div>

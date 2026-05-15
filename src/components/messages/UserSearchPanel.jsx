@@ -16,7 +16,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
-  const [userGroups, setUserGroups] = useState(null);
+  const [userCommunities, setUserCommunities] = useState(null);
 
   // Debounce timer and in-flight query tracker (stale-result guard).
   const debounceRef = useRef(null);
@@ -58,10 +58,10 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
 
       setResults(filtered.slice(0, 20));
 
-      // Lazily load current user's groups for mutual community counts.
-      if (!userGroups) {
-        const memberships = await dataService.entities.GroupMember.filter({ user_id: currentUser.id });
-        setUserGroups(new Set(memberships.map(m => m.group_id)));
+      // Lazily load current user's communities for mutual community counts.
+      if (!userCommunities) {
+        const memberships = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id });
+        setUserCommunities(new Set(memberships.map(m => m.community_id)));
       }
     } catch {
       if (q === latestQueryRef.current) toast.error('Search failed');
@@ -126,25 +126,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
         setResults([]);
         toast.success('Conversation started!');
       } else {
-        const existing = await dataService.entities.MessageRequest.filter({
-          sender_id: currentUser.id,
-          recipient_id: recipient.id,
-          status: 'pending'
-        });
-        if (existing.length > 0) {
-          toast.info('You already sent a message request to this person.');
-          return;
-        }
-        await dataService.entities.MessageRequest.create({
-          sender_id: currentUser.id,
-          sender_name: currentUser.full_name,
-          sender_avatar: currentUser.avatar_url || null,
-          recipient_id: recipient.id,
-          status: 'pending',
-        });
-        toast.success("Message request sent!");
-        setQuery('');
-        setResults([]);
+        toast.info('You can message people who share a community with you or are friends.');
       }
     } catch (err) {
       if (err instanceof RateLimitError) { toast.error(err.message); return; }
@@ -174,7 +156,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
             <UserResultRow
               key={user.id}
               user={user}
-              currentUserGroups={userGroups}
+              currentUserCommunities={userCommunities}
               loading={actionLoading === user.id}
               onClick={() => handleUserClick(user)}
             />
@@ -189,18 +171,18 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
   );
 }
 
-function UserResultRow({ user, currentUserGroups, loading, onClick }) {
+function UserResultRow({ user, currentUserCommunities, loading, onClick }) {
   const [mutualCount, setMutualCount] = useState(null);
   const isAI = user.id === AI_AGENT.id;
 
   React.useEffect(() => {
-    if (isAI || !currentUserGroups) return;
-    dataService.entities.GroupMember.filter({ user_id: user.id }).then(memberships => {
-      const theirGroups = new Set(memberships.map(m => m.group_id));
-      const count = [...currentUserGroups].filter(id => theirGroups.has(id)).length;
+    if (isAI || !currentUserCommunities) return;
+    dataService.entities.UserCommunity.filter({ user_id: user.id }).then(memberships => {
+      const theirCommunities = new Set(memberships.map(m => m.community_id));
+      const count = [...currentUserCommunities].filter(id => theirCommunities.has(id)).length;
       setMutualCount(count);
     }).catch(() => setMutualCount(0));
-  }, [user.id, currentUserGroups]);
+  }, [user.id, currentUserCommunities]);
 
   return (
     <button

@@ -4,7 +4,6 @@ import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO, startOfToday, addDays, isBefore, isToday, isTomorrow } from 'date-fns';
-import EventRSVPSection from '@/components/events/EventRSVPSection';
 
 export default function ThisWeekEvents({ currentUser }) {
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -198,12 +197,8 @@ function EventDetailSheet({ event, currentUser, onClose }) {
 
           <p className="text-[12px] text-slate-400">Posted by {event.user_name}</p>
 
-          <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
-            <EventRSVPSection
-              postId={event.id}
-              currentUser={currentUser}
-              eventDate={event.event_date}
-            />
+          <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 text-[13px] font-semibold text-slate-500">
+            Feed event RSVPs are paused for beta. Community event RSVPs are available inside Communities.
           </div>
 
           {event.ticket_price > 0 && (

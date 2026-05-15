@@ -449,7 +449,7 @@ export default function Settings() {
           {activeSection === 'account' && (
             <SettingsCard title="Account Actions" icon={Lock}>
               <div className="space-y-3">
-                <InfoRow title="Account type" value={currentUser.role === 'admin' ? 'Admin' : 'Local demo member'} />
+                <InfoRow title="Account type" value={currentUser.role === 'admin' ? 'Admin' : 'Member'} />
                 <InfoRow title="User ID" value={currentUser.id} />
                 <button
                   onClick={handleLogout}
@@ -519,7 +519,7 @@ function sectionDescription(section) {
     notifications: 'Keep important messages on, and turn down the noise where you want calm.',
     privacy: 'Messaging and search settings help you stay reachable without feeling exposed.',
     app: 'Small quality-of-life preferences for how JUnited looks and behaves.',
-    account: 'Basic local account controls while the app is still running in demo mode.',
+    account: 'Basic account controls for your JUnited login.',
   };
   return descriptions[section];
 }

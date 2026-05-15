@@ -5,18 +5,18 @@ import { dataService } from '@/services';
  */
 export async function shareCommunity(senderId, recipientId) {
   const [senderMemberships, recipientMemberships] = await Promise.all([
-    dataService.entities.GroupMember.filter({ user_id: senderId }),
-    dataService.entities.GroupMember.filter({ user_id: recipientId }),
+    dataService.entities.UserCommunity.filter({ user_id: senderId }),
+    dataService.entities.UserCommunity.filter({ user_id: recipientId }),
   ]);
-  const senderGroupIds = new Set(senderMemberships.map(m => m.group_id));
-  return recipientMemberships.some(m => senderGroupIds.has(m.group_id));
+  const senderCommunityIds = new Set(senderMemberships.map(m => m.community_id));
+  return recipientMemberships.some(m => senderCommunityIds.has(m.community_id));
 }
 
 /**
  * Check whether sender and recipient are connections (UserConnection).
  */
 export async function areConnections(senderId, recipientId) {
-  const conns = await dataService.entities.UserConnection.filter({ user_id: senderId, connected_user_id: recipientId });
+  const conns = await dataService.entities.Friendship.filter({ user_id: senderId, friend_id: recipientId });
   return conns.length > 0;
 }
 

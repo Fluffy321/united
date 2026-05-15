@@ -211,9 +211,9 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
       }
 
       if (promptId) {
-        const prompt = await dataService.entities.DailyPrompt.filter({ id: promptId });
+        const prompt = await dataService.entities.DailyFeedPrompt.filter({ id: promptId });
         if (prompt[0]) {
-          await dataService.entities.DailyPrompt.update(promptId, { replies_count: (prompt[0].replies_count || 0) + 1 });
+          await dataService.entities.DailyFeedPrompt.update(promptId, { replies_count: (prompt[0].replies_count || 0) + 1 });
         }
       }
 

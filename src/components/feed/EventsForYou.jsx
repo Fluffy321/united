@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Calendar, MapPin, Sparkles, Clock } from 'lucide-react';
 import { format, parseISO, startOfToday } from 'date-fns';
-import EventRSVPSection from '@/components/events/EventRSVPSection';
 import EventSummaryButton from '@/components/events/EventSummaryButton';
 
 // Keywords that tie interests → event body/title text
@@ -191,8 +190,8 @@ function EventSheet({ event, currentUser, onClose }) {
             <EventSummaryButton event={event} />
           </div>
 
-          <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
-            <EventRSVPSection postId={event.id} currentUser={currentUser} eventDate={event.event_date} />
+          <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 text-[13px] font-semibold text-slate-500">
+            Feed event RSVPs are paused for beta. Community event RSVPs are available inside Communities.
           </div>
         </div>
         <div className="h-8" />

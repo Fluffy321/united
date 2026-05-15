@@ -13,7 +13,6 @@ import InlineFeedPrompt from '@/components/feed/InlineFeedPrompt';
 import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
 import ReportModal from '@/components/common/ReportModal';
 import PageHelp from '@/components/common/PageHelp';
-import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
@@ -449,7 +448,6 @@ export default function Feed() {
   const [selectedPost, setSelectedPost] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
-  const [showAlertModal, setShowAlertModal] = useState(false);
   const [showEventsSheet, setShowEventsSheet] = useState(false);
 
   useEffect(() => {
@@ -499,7 +497,7 @@ export default function Feed() {
       return;
     }
     try {
-      const prompts = await dataService.entities.DailyPrompt.list('-created_date', 5);
+      const prompts = await dataService.entities.DailyFeedPrompt.list('-created_date', 5);
       if (prompts?.length > 0) setFeedPrompts(prompts);
     } catch {}
   }, []);
@@ -1079,12 +1077,6 @@ export default function Feed() {
         onOpenChange={setShowReport}
         contentId={reportTarget.id}
         contentType={reportTarget.type}
-        currentUser={currentUser}
-      />
-
-      <CommunityAlertModal
-        open={showAlertModal}
-        onOpenChange={setShowAlertModal}
         currentUser={currentUser}
       />
 

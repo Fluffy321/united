@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2, Heart, MessageCircle, Bookmark } from 'lucide-react';
+import { ArrowLeft, Loader2, Heart, MessageCircle } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { dataService, notificationsService, togglePostLike, loadUserPostLikes } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
@@ -20,7 +20,6 @@ export default function PostDetail() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userLikes, setUserLikes] = useState([]);
-  const [userBookmarks, setUserBookmarks] = useState([]);
   const [showComments, setShowComments] = useState(false);
   const [showReport, setShowReport] = useState(false);
 
@@ -43,9 +42,6 @@ export default function PostDetail() {
         const likedPostIds = await loadUserPostLikes(currentUser.id);
         setUserLikes(likedPostIds);
 
-        // Load user bookmarks
-        const bookmarks = await dataService.entities.Bookmark.filter({ user_id: currentUser.id });
-        setUserBookmarks(bookmarks.map(b => b.post_id));
       }
     } catch (e) {
       console.error('Failed to load post', e);
@@ -81,20 +77,6 @@ export default function PostDetail() {
     }
   };
 
-  const handleBookmark = async () => {
-    if (!post) return;
-    const isBookmarked = userBookmarks.includes(post.id);
-    setUserBookmarks(prev => isBookmarked ? prev.filter(id => id !== post.id) : [...prev, post.id]);
-    
-    if (isBookmarked) {
-      const bookmark = await dataService.entities.Bookmark.filter({ post_id: post.id, user_id: currentUser.id });
-      if (bookmark[0]) await dataService.entities.Bookmark.delete(bookmark[0].id);
-    } else {
-      await dataService.entities.Bookmark.create({ post_id: post.id, user_id: currentUser.id });
-      toast.success('Post saved');
-    }
-  };
-
   const handleDelete = async () => {
     await dataService.entities.UnifiedPost.delete(post.id);
     toast.success('Post deleted');
@@ -103,7 +85,6 @@ export default function PostDetail() {
 
   const handleBlock = async (userId) => {
     await dataService.entities.Block.create({ blocker_id: currentUser.id, blocked_id: userId });
-    setUserBookmarks(prev => prev.filter(id => id !== post.id));
     toast.success('User blocked');
     navigate(createPageUrl('Feed'));
   };
@@ -175,17 +156,9 @@ export default function PostDetail() {
             <span className="text-sm font-medium">{post.comments_count || 0}</span>
           </button>
 
-          <button
-            onClick={handleBookmark}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-              userBookmarks.includes(post.id)
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Bookmark className={`w-5 h-5 ${userBookmarks.includes(post.id) ? 'fill-current' : ''}`} />
-            <span className="text-sm font-medium">Save</span>
-          </button>
+          <span className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-500">
+            Save paused for beta
+          </span>
         </div>
 
         {/* Comments */}
