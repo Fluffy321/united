@@ -5,7 +5,6 @@ import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
-import CommentsSheet from '@/components/feed/CommentsSheet';
 import HomeFeedTabs from '@/components/feed/HomeFeedTabs';
 import EventsForYou from '@/components/feed/EventsForYou';
 import EventsFeedSection from '@/components/feed/EventsFeedSection';
@@ -444,8 +443,7 @@ export default function Feed() {
   const [postModalInitialBody, setPostModalInitialBody] = useState('');
   const [showPromptReply, setShowPromptReply] = useState(false);
   const [pinnedPrompt, setPinnedPrompt] = useState(null);
-  const [showComments, setShowComments] = useState(false);
-  const [selectedPost, setSelectedPost] = useState(null);
+  // CommentsSheet is now handled inside each UnifiedPostCard via createPortal
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [showEventsSheet, setShowEventsSheet] = useState(false);
@@ -676,8 +674,6 @@ export default function Feed() {
 
   const handleComment = useCallback((p) => {
     recordInterest(p);
-    setSelectedPost(p);
-    setShowComments(true);
   }, [recordInterest]);
 
   const handleDelete = useCallback((id) => deleteMutation.mutate(id), [deleteMutation.mutate]);
@@ -1062,14 +1058,6 @@ export default function Feed() {
         postType="prompt_reply"
         promptId={pinnedPrompt?.id}
         promptText={pinnedPrompt?.question}
-      />
-
-      <CommentsSheet
-        open={showComments}
-        onOpenChange={setShowComments}
-        post={selectedPost}
-        currentUser={currentUser}
-        onCommentAdded={() => queryClient.invalidateQueries({ queryKey: ['unified-posts'] })}
       />
 
       <ReportModal

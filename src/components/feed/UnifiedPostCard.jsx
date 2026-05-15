@@ -342,7 +342,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             </button>
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -427,7 +427,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             </div>
           )}
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -493,7 +493,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             )}
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -538,7 +538,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             {post.user_id !== currentUser?.id && <InterestedButton post={post} currentUser={currentUser} />}
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -619,7 +619,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             )}
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -644,7 +644,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             </div>
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -685,7 +685,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
           )}
           <span className="text-[11px] text-white/60 ml-auto">{timeAgo}</span>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -881,7 +881,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
         )}
       </div>
 
-      <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+      <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
     </motion.div>
   );
 }
