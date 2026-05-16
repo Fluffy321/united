@@ -737,6 +737,16 @@ Goals:
   },
 
   {
+    id: 'ios-app-store-readiness',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'iOS App Store Readiness Admin Tool',
+    description: 'Structured admin tool at /AdminiOSReadiness for tracking iOS App Store submission progress. Static catalog of ~55 required and optional tasks across 10 categories (build setup, auth, account management, privacy, metadata, legal, UI, performance, app review). Persistent per-task status/notes via ios_app_store_readiness_progress table. AI copy prompts for AI-executable tasks, numbered manual steps for human tasks. Overall readiness score with progress bar.',
+    shippedNote: 'Shipped. Config: src/config/iosReadiness.js. Page: src/pages/AdminiOSReadiness.jsx. Migration: 20260516175045_ios_app_store_readiness_progress.sql. Route: /AdminiOSReadiness under AdminRoute.',
+  },
+
+  {
     id: 'admin-seed-hardening',
     category: 'Admin & Platform',
     status: STATUS.PLANNED,

@@ -79,6 +79,7 @@ const Login                   = lazy(() => import('@/pages/Login'));
 const Events                  = lazy(() => import('@/pages/Events'));
 const MyEvents                = lazy(() => import('@/pages/MyEvents'));
 const AdminFeedbackInbox      = lazy(() => import('@/pages/AdminFeedbackInbox'));
+const AdminiOSReadiness       = lazy(() => import('@/pages/AdminiOSReadiness'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -150,6 +151,7 @@ const AuthenticatedApp = () => {
               <Route path="/AdminAnalyticsDashboard" element={<PageTransition><AdminAnalyticsDashboard /></PageTransition>} />
               <Route path="/FutureFeatures" element={<PageTransition><FutureFeatures /></PageTransition>} />
               <Route path="/AdminFeedbackInbox" element={<PageTransition><AdminFeedbackInbox /></PageTransition>} />
+              <Route path="/AdminiOSReadiness" element={<PageTransition><AdminiOSReadiness /></PageTransition>} />
             </Route>
 
             {/* Main app routes */}
