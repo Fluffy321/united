@@ -1180,6 +1180,8 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
       type: getRequestPinType(request),
       description: request.description,
       location_text: request.location_text || request.neighborhood || request.locationLabel || 'Five Towns',
+      location_lat: request.location_lat || request.approxLat || request.approx_lat,
+      location_lng: request.location_lng || request.approxLng || request.approx_lng,
       isRequest: true,
     }));
   }, [requests]);

@@ -176,6 +176,137 @@ const demoMessages = [
   },
 ];
 
+const DAILY_TORAH_COMMUNITY_ID = 'seed-daily-torah';
+const DAILY_TORAH_SOURCES = [
+  {
+    slot: 'morning',
+    hour: 7,
+    ref: 'Pirkei Avot 1:2',
+    title: 'Morning Torah: the three pillars',
+    text: 'Shimon the Righteous taught that the world stands on Torah, avodah, and acts of chesed.',
+    action: 'Choose one small act of Torah, tefillah, or chesed that can shape the tone of your day.',
+    source_url: 'https://www.sefaria.org/Pirkei_Avot.1.2',
+  },
+  {
+    slot: 'afternoon',
+    hour: 13,
+    ref: 'Proverbs 3:6',
+    title: 'Midday Torah: bring Hashem into the route',
+    text: 'Mishlei teaches, "Know Him in all your ways," calling us to bring Hashem into ordinary choices.',
+    action: 'Before the next decision, pause and name what a more honest, Jewish choice would look like.',
+    source_url: 'https://www.sefaria.org/Proverbs.3.6',
+  },
+  {
+    slot: 'evening',
+    hour: 20,
+    ref: 'Psalms 121:1',
+    title: 'Evening Torah: lift your eyes',
+    text: 'Tehillim begins this chapter by lifting eyes toward the mountains and asking where help comes from.',
+    action: 'Write one sentence about where you needed help today, and where you noticed help arrive.',
+    source_url: 'https://www.sefaria.org/Psalms.121.1',
+  },
+];
+
+function getLocalDailyTorahParts(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'short',
+    hour: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const read = (type) => parts.find((part) => part.type === type)?.value || '';
+  return {
+    dateKey: `${read('year')}-${read('month')}-${read('day')}`,
+    weekday: read('weekday'),
+    hour: Number(read('hour') || '0'),
+  };
+}
+
+async function publishLocalDailyTorah(payload = {}) {
+  const { dateKey, weekday, hour } = getLocalDailyTorahParts();
+  const requestedSlot = payload.slot || null;
+  const existing = await activeEntities.UnifiedPost.filter({ community_id: DAILY_TORAH_COMMUNITY_ID }, '-created_date', 80);
+  const seen = new Set((existing || []).map((post) => `${post.migrated_from || ''} ${post.title || ''}`));
+  const candidates = DAILY_TORAH_SOURCES
+    .filter((source) => (requestedSlot ? requestedSlot === source.slot : hour >= source.hour))
+    .map((source) => ({
+      migrated_from: `daily-torah:${dateKey}:${source.slot}`,
+      title: source.title,
+      type: 'announcement',
+      body: [
+        `${source.ref}: ${source.text}`,
+        '',
+        `Reflect: ${source.action}`,
+        '',
+        `Verified source: Sefaria (${source.ref})`,
+        source.source_url,
+      ].join('\n'),
+      source_name: 'Sefaria',
+      source_ref: source.ref,
+      source_url: source.source_url,
+    }));
+
+  if (requestedSlot === 'friday-parsha' || (!requestedSlot && weekday === 'Fri' && hour >= 12)) {
+    candidates.push(
+      {
+        migrated_from: `daily-torah:${dateKey}:friday-parsha-1`,
+        title: 'Friday Parsha: source-backed table thought',
+        type: 'announcement',
+        body: [
+          'Friday parsha posts are published from Hebcal’s weekly parsha calendar in production.',
+          '',
+          'Dvar Torah prompt: What is one idea from this week’s parsha that can become one real action before Shabbos?',
+          '',
+          'Verified source: Hebcal Shabbat API',
+          'https://www.hebcal.com/home/developer-apis',
+        ].join('\n'),
+        source_name: 'Hebcal',
+        source_ref: 'Weekly parsha',
+        source_url: 'https://www.hebcal.com/home/developer-apis',
+      },
+      {
+        migrated_from: `daily-torah:${dateKey}:friday-parsha-2`,
+        title: 'Friday Parsha: one question for the table',
+        type: 'question',
+        body: [
+          'Use this at the table: Where does this week’s parsha ask us to take more responsibility for the people around us?',
+          '',
+          'Verified source: Hebcal Shabbat API',
+          'https://www.hebcal.com/home/developer-apis',
+        ].join('\n'),
+        source_name: 'Hebcal',
+        source_ref: 'Weekly parsha',
+        source_url: 'https://www.hebcal.com/home/developer-apis',
+      },
+    );
+  }
+
+  const created = [];
+  for (const candidate of candidates) {
+    if ([...seen].some((text) => text.includes(candidate.migrated_from))) continue;
+    const post = await activeEntities.UnifiedPost.create({
+      ...candidate,
+      user_id: 'official-daily-torah',
+      user_name: 'JUnited Torah Desk',
+      author_name: 'JUnited Torah Desk',
+      community_id: DAILY_TORAH_COMMUNITY_ID,
+      community_name: 'Daily Torah',
+      board: 'feed',
+      post_type: candidate.type,
+      content: candidate.body,
+      is_official: true,
+      is_pinned: candidate.type === 'announcement',
+    });
+    created.push(post);
+    seen.add(candidate.migrated_from);
+  }
+
+  return { ok: true, localPreview: true, created: created.length, skipped: candidates.length - created.length };
+}
+
 const seedData = {
   User: demoUsers,
   Conversation: demoConversations,
@@ -1347,6 +1478,10 @@ export const base44 = {
         });
         await incrementCounter('posts', 'comments_count', payload.post_id, 1);
         return { data: comment };
+      }
+
+      if (name === 'publishDailyTorah') {
+        return { data: await publishLocalDailyTorah(payload) };
       }
 
       if (name === 'create-checkout') {

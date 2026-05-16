@@ -41,6 +41,15 @@ const CATEGORIES = [
   'Other',
 ];
 
+const MITZVAH_MAP_LOCATION_FALLBACKS = {
+  cedarhurst: { lat: 40.6224, lng: -73.7268, label: 'Cedarhurst' },
+  lawrence: { lat: 40.6134, lng: -73.7302, label: 'Lawrence' },
+  woodmere: { lat: 40.6326, lng: -73.7162, label: 'Woodmere' },
+  hewlett: { lat: 40.6412, lng: -73.7012, label: 'Hewlett' },
+  inwood: { lat: 40.6223, lng: -73.7462, label: 'Inwood' },
+  'five towns': { lat: 40.6249, lng: -73.7178, label: 'Five Towns' },
+};
+
 const STATUSES = {
   OPEN:      'Open',
   OFFERED:   'Offered',
@@ -89,6 +98,13 @@ const normalizeUrgency = (value) => {
   if (raw.includes('urgent') || raw === 'high') return 'Urgent';
   if (raw.includes('today') || raw === 'medium') return 'Today';
   return 'Flexible';
+};
+
+const resolveMapLocation = (neighborhood = '') => {
+  const key = Object.keys(MITZVAH_MAP_LOCATION_FALLBACKS).find((place) =>
+    String(neighborhood || '').toLowerCase().includes(place)
+  );
+  return MITZVAH_MAP_LOCATION_FALLBACKS[key || 'five towns'];
 };
 
 const getCreatedTime = (request) => {
@@ -287,6 +303,7 @@ function RequestCard({
   onComment,
   onOpenMap,
   onQuickView,
+  onUrgencyChange,
 }) {
   const [discussionOpen, setDiscussionOpen] = React.useState(false);
   const [commentBody, setCommentBody] = React.useState('');
@@ -327,6 +344,16 @@ function RequestCard({
   }[progress.tone] || 'from-blue-500 to-sky-500';
   const helpCta = getHelpCta(request);
   const distanceLabel = getApproxDistance(request);
+  const urgencyCardTone = {
+    Urgent: 'border-red-200 bg-gradient-to-br from-red-50/80 via-white to-white',
+    Today: 'border-orange-200 bg-gradient-to-br from-orange-50/80 via-white to-white',
+    Flexible: 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-white',
+  }[urgencyInfo.label] || 'border-slate-200 bg-white';
+  const urgencyRail = {
+    Urgent: 'bg-red-500',
+    Today: 'bg-orange-500',
+    Flexible: 'bg-slate-400',
+  }[urgencyInfo.label] || 'bg-slate-300';
 
   const submitComment = async (event) => {
     event.preventDefault();
@@ -342,13 +369,16 @@ function RequestCard({
     onOpenMap(request);
   };
 
+  const canAdjustUrgency = Boolean(isPoster && onUrgencyChange && ![STATUSES.VERIFIED, STATUSES.CANCELLED].includes(request.status));
+
   return (
     <article
-      className="app-card cursor-pointer p-4 transition hover:border-blue-100 hover:shadow-md"
+      className={`app-card relative cursor-pointer overflow-hidden border p-4 transition hover:shadow-md ${urgencyCardTone}`}
       onClick={handleCardClick}
       role={onOpenMap ? 'button' : undefined}
       tabIndex={onOpenMap ? 0 : undefined}
     >
+      <div className={`absolute inset-y-0 left-0 w-1.5 ${urgencyRail}`} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -365,6 +395,29 @@ function RequestCard({
               Chesed
             </span>
           </div>
+          {canAdjustUrgency && (
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              {['Urgent', 'Today', 'Flexible'].map((level) => {
+                const selected = urgencyInfo.label === level;
+                const levelClass = {
+                  Urgent: selected ? 'border-red-500 bg-red-600 text-white' : 'border-red-200 bg-red-50 text-red-700',
+                  Today: selected ? 'border-orange-500 bg-orange-500 text-white' : 'border-orange-200 bg-orange-50 text-orange-700',
+                  Flexible: selected ? 'border-slate-500 bg-slate-700 text-white' : 'border-slate-200 bg-slate-50 text-slate-600',
+                }[level];
+                return (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => onUrgencyChange(request.id, level)}
+                    className={`motion-press rounded-full border px-3 py-1.5 text-[12px] font-black transition ${levelClass}`}
+                    aria-pressed={selected}
+                  >
+                    {level}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <h2 className="text-[17px] font-black leading-snug text-slate-950">{request.title}</h2>
 
           <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr]">
@@ -635,6 +688,7 @@ function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
     neighborhood: 'Five Towns',
     estimatedHours: 1,
     urgency: 'Today',
+    postToMap: true,
   });
 
   if (!open) return null;
@@ -726,18 +780,28 @@ function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
                 className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none"
               />
             </label>
-            <label className="block">
+            <div className="block">
               <span className="mb-1 block text-[13px] font-bold text-slate-700">Urgency</span>
-              <select
-                value={form.urgency}
-                onChange={(e) => update('urgency', e.target.value)}
-                className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none"
-              >
-                <option>Urgent</option>
-                <option>Today</option>
-                <option>Flexible</option>
-              </select>
-            </label>
+              <div className="grid h-11 grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+                {[
+                  ['Urgent', 'border-red-500 bg-red-600 text-white', 'border-red-200 bg-red-50 text-red-700'],
+                  ['Today', 'border-orange-500 bg-orange-500 text-white', 'border-orange-200 bg-orange-50 text-orange-700'],
+                  ['Flexible', 'border-slate-500 bg-slate-700 text-white', 'border-slate-200 bg-slate-100 text-slate-600'],
+                ].map(([level, activeClass, idleClass]) => (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => update('urgency', level)}
+                    className={`motion-press rounded-lg border text-[12px] font-black transition ${
+                      form.urgency === level ? activeClass : idleClass
+                    }`}
+                    aria-pressed={form.urgency === level}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
             <p className="text-[12px] font-black text-slate-800">
@@ -748,6 +812,20 @@ function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
                   : 'Flexible timing. Shows gray with no rush.'}
             </p>
           </div>
+          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50 px-3 py-3">
+            <input
+              type="checkbox"
+              checked={form.postToMap}
+              onChange={(e) => update('postToMap', e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="min-w-0">
+              <span className="block text-[13px] font-black text-blue-900">Post this request to the map</span>
+              <span className="mt-0.5 block text-[12px] font-semibold leading-5 text-blue-700">
+                People nearby can discover it on the map and tap in to help.
+              </span>
+            </span>
+          </label>
         </div>
 
         <div className="flex shrink-0 gap-2 border-t border-slate-100 p-4">
@@ -1120,6 +1198,7 @@ export default function MitzvahCircle() {
   // ── Action handlers ────────────────────────────────────────────────────────
 
   const handleCreateRequest = async (formData) => {
+    const mapLocation = resolveMapLocation(formData.neighborhood);
     try {
       await createRequestMutation({
         title: formData.title,
@@ -1127,6 +1206,17 @@ export default function MitzvahCircle() {
         category: formData.category,
         neighborhood: formData.neighborhood,
         locationLabel: formData.neighborhood,
+        location_text: formData.neighborhood,
+        ...(formData.postToMap ? {
+          location_lat: currentUser?.location_lat || mapLocation.lat,
+          location_lng: currentUser?.location_lng || mapLocation.lng,
+          approxLat: currentUser?.location_lat || mapLocation.lat,
+          approxLng: currentUser?.location_lng || mapLocation.lng,
+          map_visible: true,
+          is_hidden: false,
+        } : {
+          map_visible: false,
+        }),
         estimated_hours: formData.estimatedHours,
         urgency: formData.urgency.toLowerCase(),
         status: 'open',
@@ -1268,6 +1358,18 @@ export default function MitzvahCircle() {
     }
   };
 
+  const handleUrgencyChange = async (requestId, urgency) => {
+    try {
+      await updateRequestMutation({
+        id: requestId,
+        patch: { urgency: urgency.toLowerCase() },
+      });
+      toast.success(`Urgency set to ${urgency}.`);
+    } catch (err) {
+      toast.error(err.message || 'Could not update urgency.');
+    }
+  };
+
   const handleCommentOnRequest = async (request, body) => {
     if (!currentUser) return;
     try {
@@ -1378,6 +1480,7 @@ export default function MitzvahCircle() {
                 <Metric icon={Clock} label="In Progress" value={totals.offeredCount} tone="amber" />
                 <Metric icon={Award} label="Completed" value={totals.completedCount} tone="emerald" />
               </div>
+
             </div>
           </div>
         </div>
@@ -1450,6 +1553,7 @@ export default function MitzvahCircle() {
                   onComment={handleCommentOnRequest}
                   onOpenMap={openRequestOnMap}
                   onQuickView={setQuickViewRequest}
+                  onUrgencyChange={handleUrgencyChange}
                 />
               ))
             ) : (
@@ -1487,6 +1591,7 @@ export default function MitzvahCircle() {
                   onVerify={handleVerify}
                   onComment={handleCommentOnRequest}
                   onOpenMap={openRequestOnMap}
+                  onUrgencyChange={handleUrgencyChange}
                 />
               ))
             ) : (
@@ -1513,6 +1618,7 @@ export default function MitzvahCircle() {
                   onVerify={handleVerify}
                   onComment={handleCommentOnRequest}
                   onOpenMap={openRequestOnMap}
+                  onUrgencyChange={handleUrgencyChange}
                 />
               ))
             ) : (
@@ -1539,6 +1645,7 @@ export default function MitzvahCircle() {
                   onVerify={() => {}}
                   onComment={handleCommentOnRequest}
                   onOpenMap={openRequestOnMap}
+                  onUrgencyChange={handleUrgencyChange}
                 />
               ))
             ) : (

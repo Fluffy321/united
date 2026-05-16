@@ -159,6 +159,18 @@
     },
     "migrated_from": {
       "type": "string"
+    },
+    "source_name": {
+      "type": "string",
+      "description": "Verified source name for official/source-backed posts"
+    },
+    "source_ref": {
+      "type": "string",
+      "description": "Canonical source reference, such as Sefaria ref or parsha reading"
+    },
+    "source_url": {
+      "type": "string",
+      "description": "Canonical source URL for verification"
     }
   },
   "required": [
