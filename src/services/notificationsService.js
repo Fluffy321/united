@@ -1,6 +1,17 @@
 import dataService from './dataService';
 import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 
+async function sendPush({ userId, title, body, url, notificationType }) {
+  if (!shouldUseSupabase || !supabase) return;
+  try {
+    await supabase.functions.invoke('push-notify', {
+      body: { user_id: userId, title, body, url, notification_type: notificationType },
+    });
+  } catch {
+    // Push is best-effort — never let it break the in-app notification flow
+  }
+}
+
 const nowISO = () => new Date().toISOString();
 
 const normalizeNotification = (notification = {}) => ({
@@ -64,6 +75,13 @@ export const notificationsService = {
   async create(input) {
     if (!input?.userId || input.userId === input.actorId) return null;
     const notification = await dataService.entities.Notification.create(buildNotification(input));
+    sendPush({
+      userId: input.userId,
+      title: input.title || input.body || 'JUnited',
+      body: input.body || input.title || '',
+      url: input.linkUrl ?? '/',
+      notificationType: input.type,
+    });
     return normalizeNotification(notification);
   },
 

@@ -33,6 +33,13 @@ import { createPageUrl } from '@/utils';
 import { useAuth } from '@/lib/AuthContext';
 import { getStoredConsent, saveConsent } from '@/lib/cookieConsent';
 import { enableAnalytics, optOutAnalytics } from '@/lib/analytics';
+import {
+  isPushSupported,
+  isPushSubscribed,
+  requestPushPermission,
+  subscribeToPush,
+  unsubscribeFromPush,
+} from '@/lib/pushSubscription';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -101,6 +108,39 @@ export default function Settings() {
   );
   const [form, setForm] = useState({ display_name: '', bio: '', username: '',
     cityPreset: 'Five Towns', email: '', avatar_url: '', interests: [], ...defaultSettings });
+
+  const [pushSupported, setPushSupported]   = useState(false);
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushLoading, setPushLoading]       = useState(false);
+
+  useEffect(() => {
+    setPushSupported(isPushSupported());
+    isPushSubscribed().then(setPushSubscribed);
+  }, []);
+
+  const handlePushToggle = async (enable) => {
+    setPushLoading(true);
+    try {
+      if (enable) {
+        const perm = await requestPushPermission();
+        if (perm === 'granted') {
+          const ok = await subscribeToPush(currentUser.id);
+          if (ok) { setPushSubscribed(true); toast.success('Push notifications enabled'); }
+          else toast.error('Could not subscribe — try again');
+        } else if (perm === 'denied') {
+          toast.message('Notifications are blocked. Enable them in your browser settings.');
+        }
+      } else {
+        await unsubscribeFromPush(currentUser.id);
+        setPushSubscribed(false);
+        toast.success('Push notifications disabled');
+      }
+    } catch {
+      toast.error('Could not update push notifications');
+    } finally {
+      setPushLoading(false);
+    }
+  };
 
   const formInitialized = useRef(false);
   useEffect(() => {
@@ -367,6 +407,20 @@ export default function Settings() {
           {activeSection === 'notifications' && (
             <SettingsCard title="Notification Settings" icon={Bell}>
               <div className="divide-y divide-slate-100">
+                {pushSupported && (
+                  <SettingsRow
+                    icon={Smartphone}
+                    title="Push notifications"
+                    description={pushSubscribed ? 'Notifications are delivered to this device.' : 'Enable to receive alerts even when the app is closed.'}
+                  >
+                    <Toggle
+                      checked={pushSubscribed}
+                      onChange={handlePushToggle}
+                      label="Push notifications"
+                      disabled={pushLoading}
+                    />
+                  </SettingsRow>
+                )}
                 <SettingsRow icon={Mail} title="Messages" description="Get notified when someone sends you a direct message.">
                   <Toggle checked={n.messages} onChange={v => updateNested('notification_settings', 'messages', v)} label="Messages" />
                 </SettingsRow>
@@ -646,17 +700,18 @@ function SettingsRow({ icon: Icon, title, description, children }) {
 }
 
 /** The toggle switch control — used inside SettingsRow */
-function Toggle({ checked, onChange, label }) {
+function Toggle({ checked, onChange, label, disabled = false }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
-        checked ? 'bg-blue-600' : 'bg-slate-200'
-      }`}
+      disabled={disabled}
+      onClick={() => !disabled && onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+      } ${checked ? 'bg-blue-600' : 'bg-slate-200'}`}
     >
       <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-transform ${
         checked ? 'translate-x-5' : 'translate-x-0'

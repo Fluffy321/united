@@ -94,22 +94,11 @@ Goals:
   {
     id: 'push-notifications',
     category: 'Auth & Identity',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Push Notifications',
     description: 'Browser and mobile push notifications for messages, mitzvah updates, and community activity.',
-    why: 'Deferred pending user base growth. Service worker exists in /public.',
-    prompt: `You are implementing Push Notifications for JUnited.
-
-Context: A service worker already exists at /public/sw.js. Supabase is the backend.
-
-Goals:
-1. Add Notification.requestPermission() call in onboarding (Notifications step) and Settings.
-2. Store push subscription endpoint in a push_subscriptions table (user_id, endpoint, keys).
-3. Create a Supabase Edge Function push-notify that accepts { user_id, title, body } and sends via Web Push.
-4. Trigger notifications for: new messages, mitzvah request updates, community @mentions.
-5. Respect notification_preferences from the profiles table.
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+    shippedNote: 'Shipped. push_subscriptions table, src/lib/pushSubscription.js client helpers, supabase/functions/push-notify Edge Function (web-push@3 + VAPID), toggle in Settings Notifications section, push subscribe on onboarding completion. Respects notification_preferences and notifications_enabled per user.',
   },
 
   // ── Community ─────────────────────────────────────────────────────────────

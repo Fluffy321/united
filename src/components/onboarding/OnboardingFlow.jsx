@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Bell, Camera, Check, ChevronLeft, ChevronRight, Home, Loader2, Map, MapPin, MessageCircle, Sparkles, Users, UserRoundPlus, X } from 'lucide-react';
 import { communitiesService, dataService, friendsService, storageService } from '@/services';
 import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
+import { requestPushPermission, subscribeToPush } from '@/lib/pushSubscription';
 import { toast } from 'sonner';
 
 const ONBOARDING_KEY_PREFIX = 'junited_onboarding_complete_';
@@ -326,7 +327,7 @@ function NotificationsStep({ preferences, setPreferences }) {
     <StepShell
       eyebrow="Step 5"
       title="Choose notification preferences"
-      text="Keep important things on, and turn down anything you do not want yet."
+      text="Keep important things on, and turn down anything you do not want yet. We'll ask permission to send push notifications when you finish setup."
     >
       <div className="space-y-2.5">
         {[
@@ -552,6 +553,14 @@ export default function OnboardingFlow({ user, onComplete }) {
             .filter((friend) => selectedFriendIds.has(friend.id))
             .map((friend) => friendsService.addFriend(user, friend))
         );
+      }
+
+      // Request push permission if user enabled at least one notification type
+      if (Object.values(notificationPrefs).some(Boolean)) {
+        const perm = await requestPushPermission();
+        if (perm === 'granted') {
+          await subscribeToPush(user.id);
+        }
       }
 
       storageService.setItem(getOnboardingStorageKey(user.id), '1');
