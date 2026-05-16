@@ -1,0 +1,49 @@
+# JUnited — Agent Instructions
+
+This file is read by OpenAI Codex and other AI coding agents.
+Claude Code sessions read `CLAUDE.md` instead, but both files share the same rules.
+
+---
+
+## Stack
+
+- **Frontend**: React 18, Vite, Tailwind CSS, shadcn/ui, React Router v6, TanStack Query
+- **Backend**: Supabase (Postgres, Auth, Edge Functions, Storage)
+- **Auth bridge**: `src/api/base44Client.js` is a compatibility shim — prefer `src/api/supabaseClient.js` and `src/services/` for new code
+- **Email**: Resend (via Supabase Edge Functions)
+- **Payments**: Stripe (not yet live — see roadmap)
+
+---
+
+## ⚠️ Roadmap Maintenance Rule
+
+**`src/config/roadmap.js` is the single source of truth for the JUnited product roadmap.**
+
+`src/pages/FutureFeatures.jsx` is a pure renderer — it reads from the config file.
+Do not edit `FutureFeatures.jsx` to change roadmap content. Only edit `src/config/roadmap.js`.
+
+You must update `src/config/roadmap.js` in the same task whenever you:
+
+| Situation | Action |
+|---|---|
+| Implement a feature listed in the roadmap | Set `status` to `'shipped'`, add a `shippedNote` |
+| Intentionally defer a feature | Set `status` to `'deferred'`, fill in `why` |
+| Remove a not-yet-built feature from scope | Set `status` to `'dropped'`, explain in `why` |
+| Introduce a meaningful new future feature idea | Add a new entry with `status: 'planned'` or `'deferred'` |
+| Unblock a blocked feature | Update `status`, update or remove `needs` |
+
+Valid status values: `'planned'`, `'deferred'`, `'exploring'`, `'blocked'`, `'shipped'`, `'dropped'`
+
+**Your final report for any such task must explicitly state:**
+- Whether `src/config/roadmap.js` needed updating
+- If yes, which items changed and how
+
+---
+
+## Key Rules
+
+- **Auth**: Use `useAuth()` from `src/lib/AuthContext.jsx`. Protected routes use `<ProtectedRoute />`. Admin routes use `<AdminRoute />`.
+- **Data**: Use `dataService` from `src/services/` for entity reads/writes. Use `supabase` from `src/api/supabaseClient.js` for direct queries and RPCs.
+- **Migrations**: All schema changes go in `supabase/migrations/` as timestamped SQL files. Run `npx supabase db push --linked --dry-run` before pushing.
+- **Disabled routes**: Future pages use `<Navigate to={mainPagePath} replace />` in `App.jsx` rather than being deleted.
+- **Lint/build**: Run `npm run lint` and `npm run build` before completing any task.
