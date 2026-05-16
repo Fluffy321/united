@@ -727,6 +727,16 @@ Goals:
   // ── Admin & Platform ──────────────────────────────────────────────────────
 
   {
+    id: 'in-app-feedback',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'In-App Feedback System',
+    description: 'Global floating Feedback button visible throughout the authenticated app opens a polished bottom-sheet form. Submissions captured in app_feedback table with rich page context. Admin Feedback Inbox at /AdminFeedbackInbox for reviewing, triaging, and noting submissions.',
+    shippedNote: 'Shipped. FeedbackModal in Layout.jsx (floating pill above bottom nav). Migration 20260516170012_app_feedback.sql. RLS: users insert/read-own, admins read/update-all. AdminFeedbackInbox with status triage, internal notes, and filters.',
+  },
+
+  {
     id: 'admin-seed-hardening',
     category: 'Admin & Platform',
     status: STATUS.PLANNED,
