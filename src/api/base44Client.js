@@ -55,6 +55,10 @@ const SUPABASE_ENTITY_TABLES = {
   // Local updates automation — migration 20260515180122_local_updates_automation.sql
   LocalUpdateSource: 'local_update_sources',
   LocalUpdateItem: 'local_update_items',
+  // Business directory MVP — migration 20260516011532_business_directory_mvp.sql
+  BusinessListing: 'business_listings',
+  BusinessClaimRequest: 'business_claim_requests',
+  BusinessManager: 'business_managers',
   // All other entities (MessageRequest, GroupMember, Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.
@@ -711,7 +715,6 @@ const normalizeRealtimeEvent = (event = {}) => {
 //   GroupResource     → group_resources
 //   Bookmark          → bookmarks
 //   SavedSearch       → saved_searches
-//   BusinessListing   → business_listings
 //   BusinessReview    → business_reviews
 //   Organization      → organizations
 //   RideRequest       → ride_requests

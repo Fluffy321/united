@@ -73,23 +73,21 @@ Current files: src/pages/ShulPage.jsx.`,
   {
     id: 'business-directory',
     category: 'Directory',
-    title: 'Business Directory & Reviews',
-    description: 'Jewish business listings, reviews, and claim-your-listing flow.',
-    prompt: `You are implementing the Business Directory for JUnited.
+    title: 'Business Reviews & Owner Tools',
+    description: 'Reviews, ratings, richer owner editing, and the older standalone business pages remain post-MVP.',
+    prompt: `The MVP business directory now lives inside /Map and uses business_listings,
+business_claim_requests, and business_managers.
 
-Goals:
-1. Create business_listings and business_reviews table migrations.
-2. Wire BusinessListing → business_listings in SUPABASE_ENTITY_TABLES.
-3. Wire BusinessReview → business_reviews in SUPABASE_ENTITY_TABLES.
-4. Connect BusinessDirectory page (/BusinessDirectory) to real data.
-5. Connect BusinessListing detail page (/BusinessListing?id=...) to real data.
-6. Connect CreateBusinessListing page to real Supabase insert.
-7. Add ClaimRequest → claim_requests entity for business claiming.
-8. Re-add all three pages to App.jsx routes and remove from FutureFeatures.
+Deferred goals:
+1. Create business_reviews only if reviews/ratings are approved for the product.
+2. Wire BusinessReview → business_reviews in SUPABASE_ENTITY_TABLES.
+3. Decide whether to retire or rebuild the older standalone pages:
+   src/pages/BusinessDirectory.jsx, src/pages/BusinessListing.jsx,
+   src/pages/CreateBusinessListing.jsx.
+4. Add richer owner editing tools after the claim workflow is used in beta.
 
-Required migrations: business_listings, business_reviews tables.
-Current files: src/pages/BusinessDirectory.jsx, src/pages/BusinessListing.jsx,
-  src/pages/CreateBusinessListing.jsx.`,
+Do not re-enable ratings, reviews, paid upgrades, or the old routes until they
+are production-backed and intentionally in scope.`,
   },
   {
     id: 'yahrzeit-refuah',

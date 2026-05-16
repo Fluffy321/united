@@ -1167,7 +1167,7 @@ function getMapLinks(point, userLocation) {
   };
 }
 
-export default function MitzvahMap({ requests, userLocation, onSelectRequest, communityPoints = [], personalized = true, mapHeight }) {
+export default function MitzvahMap({ requests, userLocation, onSelectRequest, communityPoints = [], personalized = true, mapHeight, includeStaticPoints = false }) {
   const [mapCenter, setMapCenter] = useState(null);
   const [activeTypes, setActiveTypes] = useState(() => new Set());
   const [selectedPoint, setSelectedPoint] = useState(null);
@@ -1191,7 +1191,10 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
       isCommunityPoint: true,
     }));
   }, [communityPoints]);
-  const allPoints = useMemo(() => [...requestPoints, ...personalizedPoints, ...STATIC_POINTS], [personalizedPoints, requestPoints]);
+  const allPoints = useMemo(
+    () => [...requestPoints, ...personalizedPoints, ...(includeStaticPoints ? STATIC_POINTS : [])],
+    [includeStaticPoints, personalizedPoints, requestPoints]
+  );
   const visiblePoints = useMemo(() => allPoints.filter((point) => activeTypes.has(point.type)), [activeTypes, allPoints]);
   const spreadVisiblePoints = useMemo(() => {
     const buckets = new Map();
