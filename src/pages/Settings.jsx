@@ -22,6 +22,8 @@ import {
   Users,
   Wrench,
   Flag,
+  Inbox,
+  Smartphone,
   Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -496,6 +498,16 @@ export default function Settings() {
                 <Link to="/AdminAnalyticsDashboard" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                   <Shield className="h-4 w-4 text-blue-500" />
                   Analytics Dashboard
+                  <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
+                </Link>
+                <Link to="/AdminFeedbackInbox" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                  <Inbox className="h-4 w-4 text-violet-500" />
+                  Feedback Inbox
+                  <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
+                </Link>
+                <Link to="/AdminiOSReadiness" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                  <Smartphone className="h-4 w-4 text-slate-500" />
+                  iOS App Store Readiness
                   <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
                 </Link>
                 <Link to="/FutureFeatures" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
