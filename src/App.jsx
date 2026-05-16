@@ -76,6 +76,8 @@ const DMCAPolicy              = lazy(() => import('@/pages/DMCAPolicy'));
 const PrivacyRights           = lazy(() => import('@/pages/PrivacyRights'));
 const SearchPage              = lazy(() => import('@/pages/Search'));
 const Login                   = lazy(() => import('@/pages/Login'));
+const Events                  = lazy(() => import('@/pages/Events'));
+const MyEvents                = lazy(() => import('@/pages/MyEvents'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -182,10 +184,12 @@ const AuthenticatedApp = () => {
             <Route path="/DiscoverCommunitiesFeed" element={<Navigate to="/Communities" replace />} />
             <Route path="/MitzvahMap" element={<Navigate to="/Map" replace />} />
 
+            {/* Standalone events pages */}
+            <Route path="/Events" element={<PageTransition><LayoutWrapper currentPageName="Events"><Events /></LayoutWrapper></PageTransition>} />
+            <Route path="/MyEvents" element={<PageTransition><LayoutWrapper currentPageName="MyEvents"><MyEvents /></LayoutWrapper></PageTransition>} />
+            <Route path="/CommunityCalendar" element={<Navigate to="/Events" replace />} />
+
             {/* Non-MVP routes — redirect to home rather than 404 to avoid confusing beta users */}
-            <Route path="/Events" element={<Navigate to={mainPagePath} replace />} />
-            <Route path="/MyEvents" element={<Navigate to={mainPagePath} replace />} />
-            <Route path="/CommunityCalendar" element={<Navigate to="/Communities" replace />} />
             <Route path="/Groups" element={<Navigate to="/Communities" replace />} />
             <Route path="/News" element={<Navigate to={mainPagePath} replace />} />
             <Route path="/Organization" element={<Navigate to={mainPagePath} replace />} />

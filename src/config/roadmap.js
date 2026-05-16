@@ -177,11 +177,11 @@ Goals:
   {
     id: 'events-system',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Standalone Events System',
     description: 'Full events pages: event listings, RSVP, calendar view, MyEvents, and ticket support. (Community-level events tab is already shipped.)',
-    why: 'Community events tab is live. The standalone Events page, RSVP flow, MyEvents, and CommunityCalendar pages are built as files but routes redirect to Feed. Deferring until events volume justifies a dedicated section.',
+    shippedNote: 'Shipped. /Events queries community_events for user\'s followed communities. /MyEvents shows going RSVPs + created events. /CommunityCalendar redirects to /Events. EventTicketSection reused for RSVP. Routes live in App.jsx.',
     prompt: `You are implementing the standalone Events System for JUnited.
 
 Context: Community-level events (CommunityEventsTab.jsx) are already live. These are the
