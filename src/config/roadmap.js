@@ -732,8 +732,19 @@ Goals:
     status: STATUS.SHIPPED,
     priority: PRIORITY.HIGH,
     title: 'In-App Feedback System',
-    description: 'Global floating Feedback button visible throughout the authenticated app opens a polished bottom-sheet form. Submissions captured in app_feedback table with rich page context. Admin Feedback Inbox at /AdminFeedbackInbox for reviewing, triaging, and noting submissions.',
-    shippedNote: 'Shipped. FeedbackModal in Layout.jsx (floating pill above bottom nav). Migration 20260516170012_app_feedback.sql. RLS: users insert/read-own, admins read/update-all. AdminFeedbackInbox with status triage, internal notes, and filters.',
+    description: 'Global floating Feedback button visible throughout the authenticated app opens a polished bottom-sheet form. Submissions captured in app_feedback table with rich page context. Admin Feedback Inbox at /AdminFeedbackInbox for reviewing, triaging, and noting submissions. Includes Spam/Junk bucket, rule-based junk signal detection, deterministic triage summary, Copy Fix Prompt, and status/type/urgency filters.',
+    shippedNote: 'Shipped. FeedbackModal in Layout.jsx. Migration 20260516170012_app_feedback.sql (schema) + 20260516195749_feedback_inbox_junk.sql (is_junk column). AdminFeedbackInbox: Inbox/Junk tabs, 6 client-side junk heuristics (advisory only, never auto-move), triage summary from structured fields, Copy Fix Prompt for Claude Code/Codex, status/type/urgency filters.',
+  },
+
+  {
+    id: 'ai-feedback-triage',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'AI-Assisted Feedback Triage (Future)',
+    description: 'Connect the Feedback Inbox to an LLM to auto-summarize free-text feedback, suggest priority, detect duplicate themes, and draft responses. The current free rule-based system is the foundation — a paid AI layer would read the same app_feedback table and write AI-generated summaries to an admin-only field.',
+    why: 'Free rule-based triage is live and sufficient for beta. AI adds value only once feedback volume is high enough to warrant the cost.',
+    needs: ['Paid AI inference budget (OpenAI, Anthropic, or equivalent)', 'Supabase Edge Function to call AI API on new submissions', 'New nullable column: ai_summary text on app_feedback'],
   },
 
   {
