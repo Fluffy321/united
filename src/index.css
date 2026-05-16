@@ -121,10 +121,12 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overscroll-behavior-x: none;
-    overscroll-behavior-y: auto;
+    /* none: prevents the iOS rubber-band bounce that temporarily displaces fixed nav */
+    overscroll-behavior-y: none;
     min-height: 100%;
     width: 100%;
-    overflow-x: hidden;
+    /* clip: unlike hidden, does not create a scroll container — iOS touch cannot pan horizontally */
+    overflow-x: clip;
   }
 
   html {
@@ -134,7 +136,7 @@
   #root {
     width: 100%;
     min-height: 100dvh;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   body {
@@ -143,7 +145,8 @@
     color: #0F172A;
     min-height: 100dvh;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    /* Removed: -webkit-overflow-scrolling: touch — deprecated, causes position:fixed elements
+       to shift during iOS momentum scroll. Modern iOS enables momentum scrolling by default. */
   }
 
   button,

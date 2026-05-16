@@ -9,6 +9,7 @@ const bottomNavPaths = new Set([
   '/Communities',
   '/Messages',
   '/Profile',
+  '/Map',
 ]);
 
 export default function PageTransition({ children }) {
