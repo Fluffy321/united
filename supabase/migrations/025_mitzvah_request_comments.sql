@@ -31,4 +31,3 @@ create policy "Users can create their own mitzvah request comments"
   on public.mitzvah_request_comments
   for insert
   with check (auth.uid() = author_id);
-

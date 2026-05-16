@@ -9,9 +9,7 @@ const DefaultFallback = () => (
 );
 
 const getLoginReturnPath = (location) => {
-  const fromUrl = `${location.pathname}${location.search || ''}`;
-  if (location.pathname === '/join' || location.pathname === '/InviteJoin') return fromUrl;
-  return '/Feed';
+  return `${location.pathname}${location.search || ''}`;
 };
 
 export default function ProtectedRoute({ fallback = <DefaultFallback /> }) {

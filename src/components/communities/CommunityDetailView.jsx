@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { BookOpen, Globe, Heart, Loader2, MapPin, MessageCircle, Phone, Send, Shield, Users } from 'lucide-react';
+import { BookOpen, Globe, Heart, Loader2, Lock, MapPin, MessageCircle, Phone, Pin, Send, Shield, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { dataService, incrementCounter } from '@/services';
 import {
@@ -115,10 +115,25 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     enabled: !!communityId && typeConfig.key === 'chesed',
   });
 
+  const { data: pinnedPost = null } = useQuery({
+    queryKey: ['community-pinned-post', communityId],
+    queryFn: async () => {
+      const { data } = await supabase.from('posts')
+        .select('id, title, content, type, created_at')
+        .eq('community_id', communityId)
+        .eq('is_pinned', true)
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!communityId,
+  });
+
   const membershipRole = String(membershipRecord[0]?.role || '').toLowerCase();
   const isCreator = Boolean(currentUser?.id && community?.created_by_user_id === currentUser.id);
   const isFollowing = membershipRecord.length > 0 || isCreator;
   const isAdmin = currentUser?.role === 'admin' || isCreator || ['admin', 'moderator', 'owner'].includes(membershipRole);
+  const canPost = isAdmin || (community?.posting_mode || 'open') === 'open';
   const actualMemberCount = members.length;
   const activeNeeds = openNeeds.filter((need) => OPEN_NEED_STATUSES.has(String(need.status || 'open')));
   const featureCapabilities = {
@@ -334,6 +349,8 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             submitPost={submitPost}
             posting={posting}
             onTabChange={setTab}
+            pinnedPost={pinnedPost}
+            canPost={canPost}
           />
         )}
 
@@ -355,6 +372,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             setComposeText={setComposeText}
             submitPost={submitPost}
             posting={posting}
+            canPost={canPost}
           />
         )}
 
@@ -406,10 +424,15 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         currentUser={currentUser}
         open={showAdminCenter}
         onClose={() => setShowAdminCenter(false)}
-        onCommunityUpdated={() => {
+        onCommunityUpdated={(updated) => {
+          if (updated) {
+            // Immediately update the cache so tabs/flags reflect without waiting for a refetch.
+            queryClient.setQueryData(['community', communityId], updated);
+          }
           queryClient.invalidateQueries({ queryKey: ['community', communityId] });
           queryClient.invalidateQueries({ queryKey: ['community-members', communityId] });
           queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+          queryClient.invalidateQueries({ queryKey: ['community-pinned-post', communityId] });
         }}
         onDeleted={() => {
           setShowAdminCenter(false);
@@ -464,7 +487,7 @@ function ComposerBox({ typeConfig, composeText, setComposeText, submitPost, post
   );
 }
 
-function RoutedCommunityHome({ typeConfig, posts, activeNeeds, composeText, setComposeText, submitPost, posting, onTabChange }) {
+function RoutedCommunityHome({ typeConfig, posts, activeNeeds, composeText, setComposeText, submitPost, posting, onTabChange, pinnedPost, canPost }) {
   const Icon = typeConfig.icon;
   return (
     <div className="space-y-4 pt-4">
@@ -492,30 +515,56 @@ function RoutedCommunityHome({ typeConfig, posts, activeNeeds, composeText, setC
         </button>
       )}
 
-      <ComposerBox
-        typeConfig={typeConfig}
-        composeText={composeText}
-        setComposeText={setComposeText}
-        submitPost={submitPost}
-        posting={posting}
-      />
+      {pinnedPost && (
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 flex items-start gap-3">
+          <Pin className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-black text-blue-600 uppercase tracking-wide mb-0.5">Pinned</p>
+            <p className="text-[13px] font-semibold text-slate-800 line-clamp-2">
+              {pinnedPost.title || pinnedPost.content || ''}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {canPost ? (
+        <ComposerBox
+          typeConfig={typeConfig}
+          composeText={composeText}
+          setComposeText={setComposeText}
+          submitPost={submitPost}
+          posting={posting}
+        />
+      ) : (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 flex items-center gap-3">
+          <Lock className="h-5 w-5 text-slate-400 flex-shrink-0" />
+          <p className="text-[13px] font-semibold text-slate-500">Posting is restricted to community admins.</p>
+        </div>
+      )}
 
       <RoutedPostsList posts={posts.slice(0, 3)} typeConfig={typeConfig} emptyCompact />
     </div>
   );
 }
 
-function RoutedPostsTab({ posts, isLoading, activeTab, typeConfig, composeText, setComposeText, submitPost, posting }) {
+function RoutedPostsTab({ posts, isLoading, activeTab, typeConfig, composeText, setComposeText, submitPost, posting, canPost }) {
   const filteredPosts = posts.filter((post) => matchesTab(post, activeTab));
   return (
     <div className="space-y-4 pt-4">
-      <ComposerBox
-        typeConfig={typeConfig}
-        composeText={composeText}
-        setComposeText={setComposeText}
-        submitPost={submitPost}
-        posting={posting}
-      />
+      {canPost ? (
+        <ComposerBox
+          typeConfig={typeConfig}
+          composeText={composeText}
+          setComposeText={setComposeText}
+          submitPost={submitPost}
+          posting={posting}
+        />
+      ) : (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 flex items-center gap-3">
+          <Lock className="h-5 w-5 text-slate-400 flex-shrink-0" />
+          <p className="text-[13px] font-semibold text-slate-500">Posting is restricted to community admins.</p>
+        </div>
+      )}
       {isLoading ? (
         <div className="flex justify-center py-10">
           <Loader2 className="h-5 w-5 animate-spin text-blue-600" />

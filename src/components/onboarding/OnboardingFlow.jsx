@@ -1,9 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Bell, Camera, Check, ChevronLeft, ChevronRight, Home, Loader2, Map, MapPin, MessageCircle, Sparkles, Users, UserRoundPlus, X } from 'lucide-react';
 import { communitiesService, dataService, friendsService, storageService } from '@/services';
+import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
 import { toast } from 'sonner';
 
 const ONBOARDING_KEY_PREFIX = 'junited_onboarding_complete_';
+const USERNAME_REGEX = /^[a-z0-9_]{3,30}$/;
+const suggestUsername = (displayName) =>
+  String(displayName || '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 28);
 
 const NEIGHBORHOODS = [
   'Five Towns',
@@ -45,7 +49,22 @@ function StepShell({ eyebrow, title, text, children }) {
   );
 }
 
-function NameStep({ name, setName }) {
+function NameStep({ name, setName, username, setUsername, onUsernameTouched, usernameAvailable, checkingUsername }) {
+  const hint = checkingUsername
+    ? 'Checking…'
+    : usernameAvailable === true
+    ? 'Username available ✓'
+    : usernameAvailable === false
+    ? 'That username is already taken'
+    : 'Letters, numbers, and underscores · 3–30 characters';
+
+  const hintColor =
+    checkingUsername || usernameAvailable === null
+      ? 'text-slate-400'
+      : usernameAvailable
+      ? 'text-emerald-600'
+      : 'text-rose-500';
+
   return (
     <StepShell
       eyebrow="Step 1"
@@ -61,6 +80,22 @@ function NameStep({ name, setName }) {
           placeholder="Example: Sarah Cohen"
           className="app-input"
         />
+      </label>
+      <label className="mt-4 block">
+        <span className="mb-1.5 block text-[13px] font-bold text-slate-700">Username</span>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-bold text-slate-400">@</span>
+          <input
+            value={username}
+            onChange={(event) => {
+              onUsernameTouched();
+              setUsername(event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 30));
+            }}
+            placeholder="sarah_cohen"
+            className="app-input pl-7"
+          />
+        </div>
+        <p className={`mt-1.5 text-[12px] font-semibold ${hintColor}`}>{hint}</p>
       </label>
     </StepShell>
   );
@@ -345,6 +380,11 @@ export default function OnboardingFlow({ user, onComplete }) {
   });
   const [saving, setSaving] = useState(false);
 
+  const [username, setUsername] = useState(() => suggestUsername(user?.display_name || user?.full_name || ''));
+  const [usernameTouched, setUsernameTouched] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+
   const steps = useMemo(() => [
     'Name',
     'Photo',
@@ -372,8 +412,47 @@ export default function OnboardingFlow({ user, onComplete }) {
     return () => { mounted = false; };
   }, []);
 
+  // Auto-suggest username from display name when user hasn't typed one yet.
+  useEffect(() => {
+    if (!usernameTouched) {
+      setUsername(suggestUsername(name));
+      setUsernameAvailable(null);
+    }
+  }, [name, usernameTouched]);
+
+  // Debounced username availability check.
+  useEffect(() => {
+    if (!shouldUseSupabase || !supabase) return;
+    const raw = username.trim();
+    if (!USERNAME_REGEX.test(raw)) {
+      setUsernameAvailable(null);
+      setCheckingUsername(false);
+      return;
+    }
+    setCheckingUsername(true);
+    setUsernameAvailable(null);
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await supabase.rpc('check_username_available', { p_username: raw });
+        setUsernameAvailable(data === true);
+      } catch {
+        setUsernameAvailable(null);
+      } finally {
+        setCheckingUsername(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [username]);
+
   const canContinue = () => {
-    if (step === 0) return name.trim().length >= 2;
+    if (step === 0) {
+      return (
+        name.trim().length >= 2 &&
+        USERNAME_REGEX.test(username.trim()) &&
+        usernameAvailable === true &&
+        !checkingUsername
+      );
+    }
     if (step === 2) return Boolean(neighborhood);
     return true;
   };
@@ -440,6 +519,7 @@ export default function OnboardingFlow({ user, onComplete }) {
       const profilePatch = {
         display_name: name.trim(),
         full_name: name.trim(),
+        username: username.trim() || undefined,
         avatar_url: avatarUrl || undefined,
         neighborhood,
         cityPreset: neighborhood,
@@ -522,7 +602,17 @@ export default function OnboardingFlow({ user, onComplete }) {
         </div>
 
         <div className="app-card-soft flex-1 p-4 sm:p-6">
-          {step === 0 && <NameStep name={name} setName={setName} />}
+          {step === 0 && (
+            <NameStep
+              name={name}
+              setName={setName}
+              username={username}
+              setUsername={setUsername}
+              onUsernameTouched={() => setUsernameTouched(true)}
+              usernameAvailable={usernameAvailable}
+              checkingUsername={checkingUsername}
+            />
+          )}
           {step === 1 && (
             <PhotoStep
               name={name}

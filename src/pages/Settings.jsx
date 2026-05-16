@@ -22,12 +22,17 @@ import {
   Users,
   Wrench,
   Flag,
+  Inbox,
+  Smartphone,
   Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { dataService } from '@/services';
+import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
 import { createPageUrl } from '@/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { getStoredConsent, saveConsent } from '@/lib/cookieConsent';
+import { enableAnalytics, optOutAnalytics } from '@/lib/analytics';
 
 const interestOptions = [
   'Torah & Learning',
@@ -89,9 +94,11 @@ export default function Settings() {
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteText, setDeleteText] = useState('');
+  const [analyticsConsent, setAnalyticsConsent] = useState(() => getStoredConsent()?.analytics ?? false);
   const [form, setForm] = useState({
     display_name: '',
     bio: '',
+    username: '',
     cityPreset: 'Five Towns',
     email: '',
     avatar_url: '',
@@ -106,6 +113,7 @@ export default function Settings() {
     setForm({
       display_name: currentUser.display_name || currentUser.full_name || 'Local Demo User',
       bio: currentUser.bio || 'Building stronger Jewish community connections.',
+      username: currentUser.username || '',
       cityPreset: currentUser.cityPreset || 'Five Towns',
       email: currentUser.email || 'demo@junited.local',
       avatar_url: currentUser.avatar_url || '',
@@ -129,6 +137,35 @@ export default function Settings() {
       },
     });
   }, [currentUser]);
+
+  const [usernameAvailable, setUsernameAvailable] = useState(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+
+  useEffect(() => {
+    if (!shouldUseSupabase || !supabase || !currentUser?.id) return;
+    const raw = (form.username || '').trim();
+    if (!raw || !/^[a-z0-9_]{3,30}$/.test(raw)) {
+      setUsernameAvailable(null);
+      setCheckingUsername(false);
+      return;
+    }
+    setCheckingUsername(true);
+    setUsernameAvailable(null);
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await supabase.rpc('check_username_available', {
+          p_username: raw,
+          p_exclude_user_id: currentUser.id,
+        });
+        setUsernameAvailable(data === true);
+      } catch {
+        setUsernameAvailable(null);
+      } finally {
+        setCheckingUsername(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [form.username, currentUser?.id]);
 
   const activeLabel = useMemo(
     () => sections.find((section) => section.id === activeSection)?.label || 'Settings',
@@ -194,7 +231,7 @@ export default function Settings() {
       toast.error('Please choose an image file');
       return;
     }
-    const { file_url } = await dataService.integrations.Core.UploadFile({ file });
+    const { file_url } = await dataService.integrations.Core.UploadFile({ file, bucket: 'avatars' });
     updateForm('avatar_url', file_url);
   };
 
@@ -204,6 +241,7 @@ export default function Settings() {
       await dataService.auth.updateMe({
         display_name: form.display_name.trim(),
         bio: form.bio.trim(),
+        username: form.username.trim() || null,
         cityPreset: form.cityPreset,
         avatar_url: form.avatar_url,
         interests: form.interests,
@@ -302,6 +340,34 @@ export default function Settings() {
             <SettingsCard title="Profile Information" icon={UserRound}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextField label="Display name" value={form.display_name} onChange={(value) => updateForm('display_name', value)} />
+                <div className="block min-w-0">
+                  <span className="mb-1.5 block text-sm font-bold text-slate-700">Username</span>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">@</span>
+                    <input
+                      value={form.username}
+                      onChange={(event) =>
+                        updateForm('username', event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 30))
+                      }
+                      placeholder="your_handle"
+                      className="h-11 w-full min-w-0 rounded-xl border border-slate-200 pl-8 pr-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </div>
+                  <p className={`mt-1 text-xs font-semibold ${
+                    checkingUsername ? 'text-slate-400' :
+                    usernameAvailable === true ? 'text-emerald-600' :
+                    usernameAvailable === false ? 'text-rose-500' :
+                    'text-slate-400'
+                  }`}>
+                    {checkingUsername
+                      ? 'Checking…'
+                      : usernameAvailable === true
+                      ? 'Username available ✓'
+                      : usernameAvailable === false
+                      ? 'That username is already taken'
+                      : 'Letters, numbers, and underscores · 3–30 characters'}
+                  </p>
+                </div>
                 <TextField label="Email" value={form.email} onChange={(value) => updateForm('email', value)} disabled />
                 <TextField label="Neighborhood" value={form.cityPreset} onChange={(value) => updateForm('cityPreset', value)} icon={MapPin} />
                 <TextField label="Profile photo URL" value={form.avatar_url} onChange={(value) => updateForm('avatar_url', value)} />
@@ -413,6 +479,62 @@ export default function Settings() {
             </SettingsCard>
           )}
 
+          {activeSection === 'privacy' && (
+            <SettingsCard title="Cookie Preferences" icon={Lock}>
+              <div className="space-y-3">
+                {/* Essential — always on */}
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
+                    <Shield className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold leading-tight text-slate-950">Essential cookies</p>
+                    <p className="mt-0.5 text-xs leading-5 text-slate-500">Login, security, and core features. Required for the app to work.</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-bold text-blue-700">
+                    Always on
+                  </span>
+                </div>
+
+                {/* Analytics — user-controlled */}
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
+                    <Globe2 className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold leading-tight text-slate-950">Analytics cookies</p>
+                    <p className="mt-0.5 text-xs leading-5 text-slate-500">Help us understand how people use JUnited. Your content is never shared. Optional.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !analyticsConsent;
+                      setAnalyticsConsent(next);
+                      saveConsent(next);
+                      if (next) {
+                        enableAnalytics();
+                        toast.success('Analytics enabled');
+                      } else {
+                        optOutAnalytics();
+                        toast.success('Analytics disabled');
+                      }
+                    }}
+                    className={`relative h-7 w-12 shrink-0 rounded-full transition ${analyticsConsent ? 'bg-blue-600' : 'bg-slate-200'}`}
+                    aria-checked={analyticsConsent}
+                    role="switch"
+                  >
+                    <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition ${analyticsConsent ? 'left-6' : 'left-1'}`} />
+                  </button>
+                </div>
+
+                <p className="px-1 text-xs text-slate-400">
+                  Your preference is saved in this browser.{' '}
+                  <Link to="/privacy" className="text-blue-500 underline underline-offset-2">Privacy Policy</Link>
+                </p>
+              </div>
+            </SettingsCard>
+          )}
+
           {activeSection === 'app' && (
             <SettingsCard title="App Preferences" icon={Moon}>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -437,6 +559,16 @@ export default function Settings() {
                   Analytics Dashboard
                   <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
                 </Link>
+                <Link to="/AdminFeedbackInbox" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                  <Inbox className="h-4 w-4 text-violet-500" />
+                  Feedback Inbox
+                  <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
+                </Link>
+                <Link to="/AdminiOSReadiness" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                  <Smartphone className="h-4 w-4 text-slate-500" />
+                  iOS App Store Readiness
+                  <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
+                </Link>
                 <Link to="/FutureFeatures" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                   <Sparkles className="h-4 w-4 text-amber-500" />
                   Future Features
@@ -449,7 +581,7 @@ export default function Settings() {
           {activeSection === 'account' && (
             <SettingsCard title="Account Actions" icon={Lock}>
               <div className="space-y-3">
-                <InfoRow title="Account type" value={currentUser.role === 'admin' ? 'Admin' : 'Local demo member'} />
+                <InfoRow title="Account type" value={currentUser.role === 'admin' ? 'Admin' : 'Member'} />
                 <InfoRow title="User ID" value={currentUser.id} />
                 <button
                   onClick={handleLogout}
@@ -519,7 +651,7 @@ function sectionDescription(section) {
     notifications: 'Keep important messages on, and turn down the noise where you want calm.',
     privacy: 'Messaging and search settings help you stay reachable without feeling exposed.',
     app: 'Small quality-of-life preferences for how JUnited looks and behaves.',
-    account: 'Basic local account controls while the app is still running in demo mode.',
+    account: 'Basic account controls for your JUnited login.',
   };
   return descriptions[section];
 }

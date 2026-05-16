@@ -30,6 +30,8 @@ const SUPABASE_ENTITY_TABLES = {
   Block: 'user_blocks',
   FriendRequest: 'friend_requests',
   Friendship: 'friendships',
+  // In-app feedback — migration 20260516170012_app_feedback.sql
+  AppFeedback: 'app_feedback',
   // Community feature backbone — migration 020_community_feature_backbone.sql
   CommunityEvent: 'community_events',
   CommunityEventRSVP: 'community_event_rsvps',
@@ -50,6 +52,15 @@ const SUPABASE_ENTITY_TABLES = {
   CommunityMemberRemoval: 'community_member_removals',
   CommunityMemberAppeal: 'community_member_appeals',
   CommunityAdminAuditLog: 'community_admin_audit_log',
+  // Poll votes — migration 030_poll_votes.sql
+  PollVote: 'poll_votes',
+  // Local updates automation — migration 20260515180122_local_updates_automation.sql
+  LocalUpdateSource: 'local_update_sources',
+  LocalUpdateItem: 'local_update_items',
+  // Business directory MVP — migration 20260516011532_business_directory_mvp.sql
+  BusinessListing: 'business_listings',
+  BusinessClaimRequest: 'business_claim_requests',
+  BusinessManager: 'business_managers',
   // All other entities (MessageRequest, GroupMember, Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.
@@ -837,8 +848,6 @@ const normalizeRealtimeEvent = (event = {}) => {
 //   GroupResource     → group_resources
 //   Bookmark          → bookmarks
 //   SavedSearch       → saved_searches
-//   PollVote          → poll_votes
-//   BusinessListing   → business_listings
 //   BusinessReview    → business_reviews
 //   Organization      → organizations
 //   RideRequest       → ride_requests
@@ -1163,9 +1172,16 @@ const getSupabaseUser = async () => {
     });
   }
 
+  // Prefer the real name and avatar from OAuth providers (e.g. Google).
+  const metaAvatarUrl = data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture;
   const createdProfile = {
     id: data.user.id,
-    display_name: data.user.email?.split('@')[0] || 'User',
+    display_name:
+      data.user.user_metadata?.full_name ||
+      data.user.user_metadata?.name ||
+      data.user.email?.split('@')[0] ||
+      'User',
+    ...(metaAvatarUrl ? { avatar_url: metaAvatarUrl } : {}),
   };
 
   const { data: created, error: createError } = await supabase

@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 import ChatView from '@/components/messages/ChatView';
 import ConversationList from '@/components/messages/ConversationList';
 import UserSearchPanel from '@/components/messages/UserSearchPanel';
-import MessageRequestsTab from '@/components/messages/MessageRequestsTab';
 import NewMessageComposer from '@/components/messages/NewMessageComposer';
 import ReportModal from '@/components/common/ReportModal';
 import { buildAIConversation } from '@/lib/aiAgent';
@@ -281,19 +280,8 @@ export default function Messages() {
               ))}
             </div>
 
-            {/* Inbox / Requests tab switcher */}
-            <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-0.5">
-              {['inbox', 'requests'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 rounded-[10px] py-1.5 text-[13px] font-black capitalize transition-all ${
-                    activeTab === tab ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'
-                  }`}
-                >
-                  {tab === 'inbox' ? 'Inbox' : 'Requests'}
-                </button>
-              ))}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] font-semibold text-slate-500">
+              Message requests are paused while the production request system is being finalized.
             </div>
           </div>
 
@@ -305,12 +293,7 @@ export default function Messages() {
           }
 
           <div className="flex-1 overflow-y-auto">
-            {activeTab === 'requests' ?
-            <MessageRequestsTab
-              currentUser={currentUser}
-              onAccepted={(conv) => {setSelectedConversation(conv);setActiveTab('inbox');}} /> :
-
-            isLoading ?
+            {isLoading ?
             <div className="flex justify-center py-12">
                 <Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7]" />
               </div> :

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Loader2, Eye, EyeOff, CheckCircle2, AlertTriangle, Building2,
   X, Filter, Shield, Clock, Bot, User, RefreshCw,
-  FileText, ArrowLeft
+  FileText, ArrowLeft, Store, Globe2, MapPin, ExternalLink, BadgeCheck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { dataService } from '@/services';
+import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -35,6 +36,17 @@ const REASON_LABELS = {
   antisemitism: 'Antisemitism',
   other: 'Other',
 };
+
+const businessLocationLabel = (business) => {
+  if (business.listing_type === 'online') return 'Online';
+  if (business.listing_type === 'service_area') return business.service_area_text || business.neighborhood || 'Service area';
+  if (business.hide_exact_address) return business.neighborhood || business.city || 'Address hidden';
+  return business.address || business.neighborhood || business.city || 'Location pending';
+};
+
+const businessCategoryLabel = (value) => String(value || 'other')
+  .replace(/_/g, ' ')
+  .replace(/\b\w/g, (char) => char.toUpperCase());
 
 function PriorityBadge({ priority }) {
   const cfg = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.medium;
@@ -122,6 +134,18 @@ export default function AdminModerationQueue() {
     enabled: !!currentUser,
   });
 
+  const { data: businessSubmissions = [], isLoading: businessSubmissionsLoading } = useQuery({
+    queryKey: ['admin-business-submissions'],
+    queryFn: () => dataService.entities.BusinessListing.filter({ status: 'pending' }, '-created_date', 100),
+    enabled: !!currentUser,
+  });
+
+  const { data: businessClaims = [], isLoading: businessClaimsLoading } = useQuery({
+    queryKey: ['admin-business-claims'],
+    queryFn: () => dataService.entities.BusinessClaimRequest.filter({ status: 'pending' }, '-created_date', 100),
+    enabled: !!currentUser,
+  });
+
   const { data: auditLogs = [], isLoading: auditLoading } = useQuery({
     queryKey: ['admin-audit'],
     queryFn: () => dataService.entities.ModerationAuditLog.list('-created_date', 100),
@@ -183,6 +207,74 @@ export default function AdminModerationQueue() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-claims'] }); toast.success('Claim rejected'); },
   });
 
+  const approveBusinessSubmissionMutation = useMutation({
+    mutationFn: async (business) => {
+      if (!supabase) throw new Error('Supabase is not configured');
+      const { error } = await supabase.rpc('approve_business_listing_submission', {
+        p_listing_id: business.id,
+        p_review_note: null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-business-submissions'] });
+      queryClient.invalidateQueries({ queryKey: ['business-directory-published'] });
+      toast.success('Business published');
+    },
+    onError: (error) => toast.error(error.message || 'Could not approve business'),
+  });
+
+  const rejectBusinessSubmissionMutation = useMutation({
+    mutationFn: async (business) => {
+      if (!supabase) throw new Error('Supabase is not configured');
+      const { error } = await supabase.rpc('reject_business_listing_submission', {
+        p_listing_id: business.id,
+        p_review_note: null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-business-submissions'] });
+      toast.success('Business rejected');
+    },
+    onError: (error) => toast.error(error.message || 'Could not reject business'),
+  });
+
+  const approveBusinessClaimMutation = useMutation({
+    mutationFn: async ({ claim, verifyJewishOwned = false, verifyKosher = false }) => {
+      if (!supabase) throw new Error('Supabase is not configured');
+      const { error } = await supabase.rpc('approve_business_claim_request', {
+        p_claim_id: claim.id,
+        p_review_note: null,
+        p_verify_jewish_owned: verifyJewishOwned,
+        p_verify_kosher: verifyKosher,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-business-claims'] });
+      queryClient.invalidateQueries({ queryKey: ['business-directory-published'] });
+      toast.success('Business claim approved');
+    },
+    onError: (error) => toast.error(error.message || 'Could not approve claim'),
+  });
+
+  const rejectBusinessClaimMutation = useMutation({
+    mutationFn: async (claim) => {
+      if (!supabase) throw new Error('Supabase is not configured');
+      const { error } = await supabase.rpc('reject_business_claim_request', {
+        p_claim_id: claim.id,
+        p_review_note: null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-business-claims'] });
+      toast.success('Business claim rejected');
+    },
+    onError: (error) => toast.error(error.message || 'Could not reject claim'),
+  });
+
   const unhideRequestMutation = useMutation({
     mutationFn: (requestId) => dataService.entities.MitzvahRequest.update(requestId, { is_hidden: false }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-flagged-requests'] }); toast.success('Request restored'); },
@@ -196,6 +288,7 @@ export default function AdminModerationQueue() {
 
   const criticalCount = reports.filter(r => r.priority === 'critical').length;
   const highCount = reports.filter(r => r.priority === 'high').length;
+  const businessQueueCount = businessSubmissions.length + businessClaims.length;
 
   if (!currentUser) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>;
@@ -252,6 +345,11 @@ export default function AdminModerationQueue() {
               <Building2 className="w-4 h-4" />
               Claims
               {claimRequests.length > 0 && <span className="ml-1 bg-amber-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">{claimRequests.length}</span>}
+            </TabsTrigger>
+            <TabsTrigger value="businesses" className="gap-2">
+              <Store className="w-4 h-4" />
+              Businesses
+              {businessQueueCount > 0 && <span className="ml-1 bg-blue-600 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">{businessQueueCount}</span>}
             </TabsTrigger>
             <TabsTrigger value="hidden" className="gap-2">
               <EyeOff className="w-4 h-4" />
@@ -368,6 +466,147 @@ export default function AdminModerationQueue() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ── BUSINESSES TAB ── */}
+          <TabsContent value="businesses">
+            {(businessSubmissionsLoading || businessClaimsLoading) ? (
+              <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>
+            ) : businessQueueCount === 0 ? (
+              <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
+                <Store className="w-14 h-14 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-600 font-semibold">No pending business submissions or claims</p>
+                <p className="text-sm text-slate-400 mt-1">Approved businesses appear on the Map directory.</p>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {businessSubmissions.length > 0 && (
+                  <section>
+                    <div className="mb-2 flex items-center justify-between">
+                      <h2 className="text-sm font-black uppercase tracking-wide text-slate-500">Business submissions</h2>
+                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">{businessSubmissions.length} pending</span>
+                    </div>
+                    <div className="space-y-3">
+                      {businessSubmissions.map((business) => (
+                        <div key={business.id} className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                                <Badge className="bg-blue-100 text-blue-800 border border-blue-200">New Business</Badge>
+                                <Badge variant="outline" className="capitalize">{businessCategoryLabel(business.category)}</Badge>
+                                {business.listing_type === 'online' && <Globe2 className="h-4 w-4 text-blue-600" />}
+                                {business.listing_type === 'physical' && <MapPin className="h-4 w-4 text-slate-500" />}
+                              </div>
+                              <h3 className="text-base font-bold text-slate-900">{business.name}</h3>
+                              <p className="mt-1 text-sm font-medium text-slate-600">{businessLocationLabel(business)}</p>
+                              {business.description && (
+                                <p className="mt-2 rounded-lg bg-slate-50 p-2 text-sm text-slate-500">{business.description}</p>
+                              )}
+                              <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold text-slate-500">
+                                {business.submitted_by_name && <span>Submitted by {business.submitted_by_name}</span>}
+                                {business.website && (
+                                  <a href={business.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-600">
+                                    <ExternalLink className="h-3 w-3" /> Website
+                                  </a>
+                                )}
+                                {business.jewish_owned_status === 'pending' && <span>Jewish-owned claim pending review</span>}
+                                {business.kosher_status === 'pending' && <span>Kosher claim pending review</span>}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => approveBusinessSubmissionMutation.mutate(business)}
+                              disabled={approveBusinessSubmissionMutation.isPending}
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-1.5" /> Approve & Publish
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => rejectBusinessSubmissionMutation.mutate(business)}
+                              disabled={rejectBusinessSubmissionMutation.isPending}
+                            >
+                              <X className="w-4 h-4 mr-1.5" /> Reject
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {businessClaims.length > 0 && (
+                  <section>
+                    <div className="mb-2 flex items-center justify-between">
+                      <h2 className="text-sm font-black uppercase tracking-wide text-slate-500">Business claim requests</h2>
+                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-black text-amber-700">{businessClaims.length} pending</span>
+                    </div>
+                    <div className="space-y-3">
+                      {businessClaims.map((claim) => (
+                        <div key={claim.id} className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+                          <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                            <Badge className="bg-amber-100 text-amber-800 border border-amber-200">Business Claim</Badge>
+                            {claim.jewish_owned_claim && <Badge className="bg-indigo-50 text-indigo-700 border border-indigo-100"><BadgeCheck className="mr-1 h-3 w-3" /> Jewish-owned requested</Badge>}
+                          </div>
+                          <h3 className="font-bold text-slate-900">{claim.business_name || `Business claim ${claim.business_id}`}</h3>
+                          <p className="mt-1 text-sm text-slate-600">
+                            <strong>{claim.claimant_name}</strong> — {claim.role_at_business || 'Representative'}
+                          </p>
+                          <p className="mt-0.5 text-sm text-blue-600">📧 {claim.claimant_email}</p>
+                          {claim.proof_notes && (
+                            <p className="mt-2 rounded-lg bg-slate-50 p-2 text-sm italic text-slate-500">{claim.proof_notes}</p>
+                          )}
+                          {claim.kosher_claim && (
+                            <p className="mt-2 text-xs font-bold text-slate-500">Kosher claim: {claim.kosher_claim}</p>
+                          )}
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => approveBusinessClaimMutation.mutate({ claim, verifyJewishOwned: false, verifyKosher: false })}
+                              disabled={approveBusinessClaimMutation.isPending}
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-1.5" /> Approve Owner
+                            </Button>
+                            {claim.jewish_owned_claim && (
+                              <Button
+                                size="sm"
+                                className="bg-indigo-600 hover:bg-indigo-700"
+                                onClick={() => approveBusinessClaimMutation.mutate({ claim, verifyJewishOwned: true, verifyKosher: false })}
+                                disabled={approveBusinessClaimMutation.isPending}
+                              >
+                                <BadgeCheck className="w-4 h-4 mr-1.5" /> Approve + Jewish-Owned
+                              </Button>
+                            )}
+                            {claim.kosher_claim && (
+                              <Button
+                                size="sm"
+                                className="bg-emerald-600 hover:bg-emerald-700"
+                                onClick={() => approveBusinessClaimMutation.mutate({ claim, verifyJewishOwned: Boolean(claim.jewish_owned_claim), verifyKosher: true })}
+                                disabled={approveBusinessClaimMutation.isPending}
+                              >
+                                <BadgeCheck className="w-4 h-4 mr-1.5" /> Approve + Kosher
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => rejectBusinessClaimMutation.mutate(claim)}
+                              disabled={rejectBusinessClaimMutation.isPending}
+                            >
+                              <X className="w-4 h-4 mr-1.5" /> Reject
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </div>
             )}
           </TabsContent>

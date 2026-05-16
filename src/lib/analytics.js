@@ -8,15 +8,24 @@
  * To enable Sentry:  npm install @sentry/react  + set VITE_SENTRY_DSN
  * To enable PostHog: npm install posthog-js     + set VITE_POSTHOG_KEY
  *
+ * Consent rules:
+ * - initAnalytics() (called at startup) checks stored consent and does nothing
+ *   if the user has not accepted analytics cookies.
+ * - enableAnalytics() is called immediately after the user accepts.
+ * - optOutAnalytics() is called immediately after the user declines or revokes.
+ *
  * Private data rules:
  * - Never send message contents, reflections, or personal text.
  * - Never send passwords, tokens, or raw PII.
  * - User ID is used for error grouping only.
  */
 
-// Runtime references set by initAnalytics().
+import { getStoredConsent } from '@/lib/cookieConsent';
+
+// Runtime references set after consent-gated init.
 let sentry = null;
 let posthog = null;
+let analyticsLoaded = false;
 
 function optionalImport(packageName) {
   // Keep optional analytics packages out of Vite's build-time resolver.
@@ -83,6 +92,8 @@ async function loadPostHog() {
       capture_pageview: false,
       persistence: 'localStorage+cookie',
     });
+    // Respect any opt-out that was stored before the package loaded.
+    // posthog.has_opted_out_capturing() returns true if the user previously opted out.
     posthog = ph;
   } catch {
     // posthog-js not installed — safe to ignore.
@@ -122,8 +133,36 @@ export function resetAnalyticsUser() {
   try { posthog.reset(); } catch {}
 }
 
-// ── Init (call once at app startup) ──────────────────────────────────────────
+// ── Consent-aware init ────────────────────────────────────────────────────────
 
-export async function initAnalytics() {
+/**
+ * Loads analytics SDKs. Called immediately after the user grants consent.
+ * Idempotent — safe to call more than once.
+ */
+export async function enableAnalytics() {
+  if (analyticsLoaded) return;
+  analyticsLoaded = true;
   await Promise.allSettled([loadSentry(), loadPostHog()]);
+}
+
+/**
+ * Stops analytics data collection immediately.
+ * PostHog: opts out of capturing and writes an opt-out cookie.
+ * Sentry: clears the user identity so future errors are anonymous.
+ * On the next page load, initAnalytics() will see consent=false and skip loading.
+ */
+export function optOutAnalytics() {
+  setSentryUser(null);
+  if (!posthog) return;
+  try { posthog.opt_out_capturing(); } catch {}
+}
+
+/**
+ * Called once at app startup (main.jsx).
+ * Only loads analytics if the user has already accepted — new visitors get nothing.
+ */
+export async function initAnalytics() {
+  const consent = getStoredConsent();
+  if (!consent?.analytics) return; // no stored consent or analytics=false → skip
+  await enableAnalytics();
 }

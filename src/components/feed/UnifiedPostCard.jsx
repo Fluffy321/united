@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { MessageCircle, MoreHorizontal, Flag, Trash2, MapPin, Clock, CheckCircle2, Ban, Bookmark } from 'lucide-react';
+import { MessageCircle, MoreHorizontal, Flag, Trash2, MapPin, Clock, CheckCircle2, Ban } from 'lucide-react';
 import PostImage from '@/components/common/PostImage';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import PromptCard from './PromptCard';
-import PollCard from './PollCard';
 import UserAvatar from '@/components/common/UserAvatar';
 import HelperBadge from '@/components/profile/HelperBadge';
 import MessageButton from '@/components/common/MessageButton';
 import CommentsSheet from './CommentsSheet';
-import EventRSVPSection from '@/components/events/EventRSVPSection';
 import ReactionBar from './ReactionBar';
 import {
   DropdownMenu,
@@ -24,62 +22,12 @@ import { dataService, findOrCreateDirectConversation } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import { HELP_REQUEST_CATEGORIES } from '@/components/feed/RequestHelpModal';
+import PollCard from './PollCard';
 
 // Short-circuit for community prompts — thin wrapper, no memo needed
 function PromptWrapper({ post, currentUser }) {
   return <PromptCard post={post} currentUser={currentUser} />;
 }
-
-const BookmarkButton = React.memo(function BookmarkButton({ postId, currentUser }) {
-  const [bookmarked, setBookmarked] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!currentUser || !appParams.hasBackendConfig) return;
-    dataService.entities.Bookmark.filter({ post_id: postId, user_id: currentUser.id })
-      .then(r => setBookmarked(r.length > 0))
-      .catch(() => {});
-  }, [postId, currentUser]);
-
-  const handleToggle = async (e) => {
-    e.stopPropagation();
-    if (!currentUser) { dataService.auth.redirectToLogin(); return; }
-    if (loading) return;
-    setLoading(true);
-    if (!appParams.hasBackendConfig) {
-      setBookmarked(value => !value);
-      setLoading(false);
-      toast.success(bookmarked ? 'Post unsaved locally' : 'Post saved locally');
-      return;
-    }
-    try {
-      if (bookmarked) {
-        const existing = await dataService.entities.Bookmark.filter({ post_id: postId, user_id: currentUser.id });
-        if (existing[0]) await dataService.entities.Bookmark.delete(existing[0].id);
-        setBookmarked(false);
-      } else {
-        await dataService.entities.Bookmark.create({ post_id: postId, user_id: currentUser.id });
-        setBookmarked(true);
-        toast.success('Post saved!');
-      }
-    } catch {
-      toast.error('Could not update bookmark. Please try again.');
-    }
-    setLoading(false);
-  };
-
-  return (
-    <button
-      onClick={handleToggle}
-      className={`flex items-center justify-center w-6 h-6 rounded transition-colors ${
-        bookmarked ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'
-      }`}
-      title={bookmarked ? 'Remove bookmark' : 'Save post'}
-    >
-      <Bookmark className={`w-3.5 h-3.5 ${bookmarked ? 'fill-current' : ''}`} />
-    </button>
-  );
-});
 
 // Unified badge style: blue for informational, dark-blue outlined for urgent
 const BASE_BADGE = 'bg-blue-50 text-blue-700 border border-blue-200';
@@ -166,7 +114,6 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
   const [loadingRSVP, setLoadingRSVP] = useState(false);
   const [commentsOpen, setCommentsOpenState] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments_count || 0);
-  const [showEventDetails, setShowEventDetails] = useState(false);
   const [quickReplyOpen, setQuickReplyOpen] = useState(false);
   const [quickReplyText, setQuickReplyText] = useState('');
   const [submittingQuickReply, setSubmittingQuickReply] = useState(false);
@@ -187,7 +134,9 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
   }, [post.id, commentCount]);
 
   if (post.type === 'prompt') return <PromptWrapper post={post} currentUser={currentUser} />;
-  if (post.type === 'poll' || post.post_subtype === 'poll') return <PollCard post={post} currentUser={currentUser} />;
+  if (post.type === 'poll' || post.post_subtype === 'poll') {
+    return <PollCard post={post} currentUser={currentUser} />;
+  }
 
   const isOwner = currentUser?.id === post.user_id;
   const isAnonymous = post.is_anonymous;
@@ -393,7 +342,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             </button>
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -449,19 +398,11 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             <span className="text-[11px] text-slate-500 truncate">{post.user_name}</span>
             <div className="ml-auto flex-shrink-0 flex items-center gap-2">
               <ReactionBar postId={post.id} currentUser={currentUser} />
-              <button
-                onClick={() => setShowEventDetails(!showEventDetails)}
-                className="h-8 px-4 rounded-full text-[12px] font-bold bg-green-600 text-white hover:bg-green-700 transition-colors active:scale-95"
-              >
-                RSVP
-              </button>
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-500">
+                RSVP paused
+              </span>
             </div>
           </div>
-          {showEventDetails && (
-            <div className="mt-3 bg-slate-50 rounded-xl p-3 border border-slate-100">
-              <EventRSVPSection postId={post.id} currentUser={currentUser} eventDate={post.event_date} />
-            </div>
-          )}
           {recentComments.length > 0 && (
             <div className="mt-2 space-y-1.5">
               {recentComments.slice().reverse().map(c => (
@@ -486,7 +427,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             </div>
           )}
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -552,7 +493,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             )}
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -597,7 +538,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             {post.user_id !== currentUser?.id && <InterestedButton post={post} currentUser={currentUser} />}
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -678,7 +619,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             )}
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -703,7 +644,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             </div>
           </div>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -744,7 +685,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
           )}
           <span className="text-[11px] text-white/60 ml-auto">{timeAgo}</span>
         </div>
-        <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+        <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
       </motion.div>
     );
   }
@@ -938,12 +879,9 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
         {post.user_id !== currentUser?.id && (
           <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
         )}
-        <div className="ml-auto">
-          <BookmarkButton postId={post.id} currentUser={currentUser} />
-        </div>
       </div>
 
-      <CommentsSheet postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
+      <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
     </motion.div>
   );
 }

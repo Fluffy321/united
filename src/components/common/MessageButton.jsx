@@ -49,24 +49,7 @@ export default function MessageButton({
         navigate(createPageUrl(`Messages?conversation=${conv.id}`));
         toast.success('Conversation started!');
       } else {
-        // Send a message request instead
-        const existing = await dataService.entities.MessageRequest.filter({
-          sender_id: currentUser.id,
-          recipient_id: recipientId,
-          status: 'pending'
-        });
-        if (existing.length > 0) {
-          toast.info('You already sent a message request to this person.');
-          return;
-        }
-        await dataService.entities.MessageRequest.create({
-          sender_id: currentUser.id,
-          sender_name: currentUser.full_name || currentUser.display_name,
-          sender_avatar: currentUser.avatar_url || null,
-          recipient_id: recipientId,
-          status: 'pending',
-        });
-        toast.success('Message request sent! They\'ll be notified to accept.');
+        toast.info('Messaging is available for friends or people who share a community with you.');
       }
     } catch (error) {
       if (error instanceof RateLimitError) { toast.error(error.message); return; }

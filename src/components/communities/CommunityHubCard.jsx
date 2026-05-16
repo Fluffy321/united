@@ -1,19 +1,10 @@
 import React from 'react';
-import { ArrowRight, BadgeCheck, EyeOff, Flame, Lock, MapPin, MessageCircle, ShieldCheck, TrendingUp, Users, Zap } from 'lucide-react';
+import { ArrowRight, BadgeCheck, EyeOff, Lock, MapPin, MessageCircle, Settings, ShieldCheck, TrendingUp, Users } from 'lucide-react';
 import { COMMUNITY_TYPE_CONFIG, getCommunityTypeConfig } from '@/lib/communityTypes';
 
 export const categoryAccent = Object.fromEntries(
   Object.values(COMMUNITY_TYPE_CONFIG).map((config) => [config.label, config.accent])
 );
-
-function initials(name = '') {
-  return name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-}
 
 function ProfileBubbles({ count = 0, muted = false }) {
   const visible = Math.max(0, Math.min(count || 0, 4));
@@ -34,7 +25,15 @@ function ProfileBubbles({ count = 0, muted = false }) {
   );
 }
 
-export default function CommunityHubCard({ community, onOpen, onTryPrompt, onToggleJoin, loading = false }) {
+export default function CommunityHubCard({
+  community,
+  onOpen,
+  onTryPrompt,
+  onToggleJoin,
+  onManage,
+  managementRole,
+  loading = false,
+}) {
   const typeConfig = getCommunityTypeConfig(community);
   const Icon = typeConfig.icon;
   const accent = typeConfig.accent;
@@ -42,8 +41,8 @@ export default function CommunityHubCard({ community, onOpen, onTryPrompt, onTog
   const privacy = community.privacy || 'Public';
   const isSensitive = community.communityType === 'support' || typeConfig.key === 'chesed';
   const valueHook = community.valueHook || community.dailyPrompt || description;
-  const activeNow = community.activeNow || 0;
   const friendsInCommunity = community.friendsInCommunity || 0;
+  const isSeed = String(community.id || '').startsWith('seed-');
   const typeLabel = community.communityType === 'official'
     ? 'Official'
     : community.communityType === 'support'
@@ -63,8 +62,13 @@ export default function CommunityHubCard({ community, onOpen, onTryPrompt, onTog
             : { background: typeConfig.coverPattern }
         }
       >
-        {(community.verified || community.trending || activeNow > 20) && (
+        {(community.verified || community.trending || isSeed) && (
           <div className="absolute left-3 top-2.5 z-10 flex gap-1.5">
+            {isSeed && (
+              <span className="inline-flex h-5 items-center gap-1 rounded-full bg-amber-500/90 px-2 text-[10px] font-black text-white shadow-sm">
+                Sample
+              </span>
+            )}
             {community.verified && (
               <span className="inline-flex h-5 items-center gap-1 rounded-full bg-white/95 px-2 text-[10px] font-black text-blue-700 shadow-sm">
                 <BadgeCheck className="h-3 w-3" />
@@ -75,12 +79,6 @@ export default function CommunityHubCard({ community, onOpen, onTryPrompt, onTog
               <span className="inline-flex h-5 items-center gap-1 rounded-full bg-white/95 px-2 text-[10px] font-black text-emerald-700 shadow-sm">
                 <TrendingUp className="h-3 w-3" />
                 Trending
-              </span>
-            )}
-            {activeNow > 20 && (
-              <span className="inline-flex h-5 items-center gap-1 rounded-full bg-white/95 px-2 text-[10px] font-black text-rose-700 shadow-sm">
-                <Flame className="h-3 w-3" />
-                Most active
               </span>
             )}
           </div>
@@ -112,16 +110,26 @@ export default function CommunityHubCard({ community, onOpen, onTryPrompt, onTog
           <button
             onClick={(e) => {
               e.stopPropagation();
+              if (managementRole && onManage) {
+                onManage();
+                return;
+              }
+              if (community.joined) {
+                onOpen?.();
+                return;
+              }
               onToggleJoin?.(isSensitive ? { incognito: true } : {});
             }}
             disabled={loading}
             className={`shrink-0 rounded-full px-4 py-1.5 text-[12px] font-bold transition-all active:scale-[0.97] disabled:opacity-60 ${
-              community.joined
-                ? 'bg-slate-100 text-slate-700 hover:bg-red-50 hover:text-red-600'
+              managementRole
+                ? 'bg-slate-950 text-white hover:bg-slate-800'
+                : community.joined
+                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 : `bg-gradient-to-br ${accent} text-white shadow-sm hover:opacity-90`
             }`}
           >
-            {loading ? '…' : community.joined ? 'Open' : isSensitive ? 'Join Private' : 'Join'}
+            {loading ? '…' : managementRole ? 'Admin Center' : community.joined ? 'Open' : isSensitive ? 'Join Private' : 'Join'}
           </button>
         </div>
 
@@ -135,6 +143,12 @@ export default function CommunityHubCard({ community, onOpen, onTryPrompt, onTog
               {typeConfig.label}
             </span>
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">{typeLabel}</span>
+            {managementRole && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-800">
+                <ShieldCheck className="h-3 w-3" />
+                {managementRole}
+              </span>
+            )}
             {(community.memberCount || community.follower_count) > 0 && (
               <span className="flex items-center gap-1 text-[11px] text-slate-400">
                 <Users className="h-3 w-3" />
@@ -153,26 +167,17 @@ export default function CommunityHubCard({ community, onOpen, onTryPrompt, onTog
             {valueHook}
           </p>
 
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <div className="rounded-xl border border-slate-100 bg-slate-50 px-2.5 py-2">
+          {community.postsToday > 0 && (
+            <div className="mt-2 rounded-xl border border-slate-100 bg-slate-50 px-2.5 py-2">
               <p className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-slate-400">
                 <MessageCircle className="h-3 w-3" />
                 Activity
               </p>
               <p className="mt-0.5 text-[12px] font-black text-slate-800">
-                {community.postsToday || 0} posts today
+                {community.postsToday} posts today
               </p>
             </div>
-            <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-2.5 py-2">
-              <p className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-emerald-600">
-                <Zap className="h-3 w-3" />
-                Live now
-              </p>
-              <p className="mt-0.5 text-[12px] font-black text-emerald-800">
-                {activeNow} active now
-              </p>
-            </div>
-          </div>
+          )}
 
           {community.dailyPrompt && (
             <button
@@ -188,18 +193,34 @@ export default function CommunityHubCard({ community, onOpen, onTryPrompt, onTog
             </button>
           )}
 
-          <div className="mt-2 flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-2">
-            <div className="flex items-center gap-2">
-              <ProfileBubbles count={friendsInCommunity || activeNow} muted={isSensitive} />
-              <span className="text-[11px] font-black text-slate-600">
-                {isSensitive
-                  ? 'Anonymous-safe space'
-                  : friendsInCommunity > 0
-                    ? `${friendsInCommunity} friends in this community`
-                    : community.socialProof || 'Trending in Five Towns'}
-              </span>
+          {(isSensitive || friendsInCommunity > 0 || community.socialProof) && (
+            <div className="mt-2 flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-2">
+              <div className="flex items-center gap-2">
+                <ProfileBubbles count={friendsInCommunity} muted={isSensitive} />
+                <span className="text-[11px] font-black text-slate-600">
+                  {isSensitive
+                    ? 'Anonymous-safe space'
+                    : friendsInCommunity > 0
+                      ? `${friendsInCommunity} friends in this community`
+                      : community.socialProof}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
+
+          {managementRole && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onManage?.();
+              }}
+              className="motion-press mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-[12px] font-black text-amber-800 transition hover:bg-amber-100"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              Manage this community
+            </button>
+          )}
 
           <div className="mt-2 flex flex-wrap gap-1">
             {([...(typeConfig.descriptors || []), ...(community.identityTags || [])]).slice(0, 3).map((tag) => (

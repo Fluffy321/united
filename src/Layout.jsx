@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, MapPinned, User, Users } from 'lucide-react';
+import { Home, MapPinned, MessageSquarePlus, User, Users } from 'lucide-react';
 import { MitzvahIcon } from '@/components/common/JIcons';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
@@ -10,6 +10,7 @@ import CookieConsentBanner from '@/components/common/CookieConsentBanner';
 import { mitzvahReminderService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import AppErrorBoundary from '@/components/common/AppErrorBoundary';
+import FeedbackModal from '@/components/feedback/FeedbackModal';
 
 // Lazy load main pages
 const Feed = lazy(() => import('@/pages/Feed'));
@@ -65,6 +66,7 @@ export default function Layout({ children, currentPageName }) {
 
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
     const enabled = Boolean(currentUser)
@@ -138,6 +140,22 @@ export default function Layout({ children, currentPageName }) {
           children
         )}
       </main>
+
+      {/* Floating Feedback button — above bottom nav, fades while scrolling */}
+      {!hideNav && currentUser && (
+        <button
+          onClick={() => setShowFeedback(true)}
+          aria-label="Send feedback"
+          className={`fixed bottom-[88px] right-4 z-40 flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-md transition-all duration-200 hover:bg-slate-50 active:scale-95 ${
+            isScrollingDown ? 'pointer-events-none translate-y-1 opacity-0' : 'opacity-100'
+          }`}
+        >
+          <MessageSquarePlus className="h-3.5 w-3.5 text-slate-500" />
+          <span className="text-[11px] font-semibold text-slate-600">Feedback</span>
+        </button>
+      )}
+
+      <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
 
       {/* Bottom Navigation */}
       {!hideNav && (

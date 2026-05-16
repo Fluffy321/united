@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, MessageCircle, Loader2, ArrowLeft, Heart, Users, HandHeart, Calendar, FileText, UserRoundPlus, UserRoundCheck } from 'lucide-react';
-import { dataService, batchFetchByIds, findOrCreateDirectConversation, friendsService } from '@/services';
+import { dataService, findOrCreateDirectConversation, friendsService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
@@ -55,15 +55,8 @@ function SubGroupStrip({ userId }) {
 
   useEffect(() => {
     if (!userId) return;
-    dataService.entities.SubGroupMember.filter({ user_id: userId, status: 'approved' })
-      .then(async (memberships) => {
-        if (!memberships.length) { setLoading(false); return; }
-        const ids = memberships.map(m => m.subgroup_id);
-        const groups = await batchFetchByIds('SubGroup', ids);
-        setSubgroups(groups.filter(Boolean));
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    setSubgroups([]);
+    setLoading(false);
   }, [userId]);
 
   if (loading || subgroups.length === 0) return null;

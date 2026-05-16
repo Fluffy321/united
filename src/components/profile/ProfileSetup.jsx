@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { dataService, incrementCounter } from '@/services';
+import { dataService } from '@/services';
 import { toast } from 'sonner';
 import CitySelector from '@/components/common/CitySelector';
 
@@ -87,7 +87,7 @@ export default function ProfileSetup({ user, onComplete }) {
     if (avatarFile) {
       setIsSubmitting(true);
       try {
-        const { file_url } = await dataService.integrations.Core.UploadFile({ file: avatarFile });
+        const { file_url } = await dataService.integrations.Core.UploadFile({ file: avatarFile, bucket: 'avatars' });
         await dataService.auth.updateMe({ avatar_url: file_url });
         setAvatarPreview(file_url);
         setIsSubmitting(false);
@@ -119,23 +119,6 @@ export default function ProfileSetup({ user, onComplete }) {
         is_profile_complete: true,
         followed_boards: ['help_needed', 'events', 'kosher_food']
       });
-
-      // Auto-join default community groups
-      const AUTO_JOIN_GROUPS = ['Five Towns Alerts', 'Mitzvah Map Volunteers', 'Young Israel Woodmere Members', 'Pickup Basketball', 'Young Adults Hangouts', 'Daf Yomi Chat'];
-      const groups = await dataService.entities.CommunityGroup.list();
-      const autoGroups = groups.filter(g => AUTO_JOIN_GROUPS.includes(g.name));
-      // Check which ones user isn't already in
-      const existingMemberships = await dataService.entities.GroupMember.filter({ user_id: user.id });
-      const existingGroupIds = new Set(existingMemberships.map(m => m.group_id));
-      const groupsToJoin = autoGroups.filter(g => !existingGroupIds.has(g.id));
-      await Promise.allSettled([
-        ...groupsToJoin.map(g =>
-          dataService.entities.GroupMember.create({ group_id: g.id, user_id: user.id, user_name: displayName.trim(), role: 'member' })
-        ),
-        ...groupsToJoin.map(g =>
-          incrementCounter('community_groups', 'member_count', g.id, 1)
-        ),
-      ]);
 
       setIsSubmitting(false);
       onComplete?.();

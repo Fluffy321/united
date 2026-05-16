@@ -5,7 +5,6 @@ import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
-import CommentsSheet from '@/components/feed/CommentsSheet';
 import HomeFeedTabs from '@/components/feed/HomeFeedTabs';
 import EventsForYou from '@/components/feed/EventsForYou';
 import EventsFeedSection from '@/components/feed/EventsFeedSection';
@@ -13,7 +12,6 @@ import InlineFeedPrompt from '@/components/feed/InlineFeedPrompt';
 import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
 import ReportModal from '@/components/common/ReportModal';
 import PageHelp from '@/components/common/PageHelp';
-import CommunityAlertModal from '@/components/feed/CommunityAlertModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
@@ -445,11 +443,9 @@ export default function Feed() {
   const [postModalInitialBody, setPostModalInitialBody] = useState('');
   const [showPromptReply, setShowPromptReply] = useState(false);
   const [pinnedPrompt, setPinnedPrompt] = useState(null);
-  const [showComments, setShowComments] = useState(false);
-  const [selectedPost, setSelectedPost] = useState(null);
+  // CommentsSheet is now handled inside each UnifiedPostCard via createPortal
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
-  const [showAlertModal, setShowAlertModal] = useState(false);
   const [showEventsSheet, setShowEventsSheet] = useState(false);
 
   useEffect(() => {
@@ -499,7 +495,7 @@ export default function Feed() {
       return;
     }
     try {
-      const prompts = await dataService.entities.DailyPrompt.list('-created_date', 5);
+      const prompts = await dataService.entities.DailyFeedPrompt.list('-created_date', 5);
       if (prompts?.length > 0) setFeedPrompts(prompts);
     } catch {}
   }, []);
@@ -678,8 +674,6 @@ export default function Feed() {
 
   const handleComment = useCallback((p) => {
     recordInterest(p);
-    setSelectedPost(p);
-    setShowComments(true);
   }, [recordInterest]);
 
   const handleDelete = useCallback((id) => deleteMutation.mutate(id), [deleteMutation.mutate]);
@@ -1066,25 +1060,11 @@ export default function Feed() {
         promptText={pinnedPrompt?.question}
       />
 
-      <CommentsSheet
-        open={showComments}
-        onOpenChange={setShowComments}
-        post={selectedPost}
-        currentUser={currentUser}
-        onCommentAdded={() => queryClient.invalidateQueries({ queryKey: ['unified-posts'] })}
-      />
-
       <ReportModal
         open={showReport}
         onOpenChange={setShowReport}
         contentId={reportTarget.id}
         contentType={reportTarget.type}
-        currentUser={currentUser}
-      />
-
-      <CommunityAlertModal
-        open={showAlertModal}
-        onOpenChange={setShowAlertModal}
         currentUser={currentUser}
       />
 

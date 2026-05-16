@@ -1,8 +1,6 @@
 import React from 'react';
-import { Clock, MapPin, Plus, Users, ChevronRight } from 'lucide-react';
+import { Clock, MapPin, Plus } from 'lucide-react';
 import { format, parseISO, isPast, isToday, isTomorrow } from 'date-fns';
-import EventRSVPSection from '@/components/events/EventRSVPSection';
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 
 function getDateLabel(dateStr) {
@@ -13,8 +11,7 @@ function getDateLabel(dateStr) {
   return { label: format(d, 'EEE, MMM d'), color: 'text-slate-700 bg-slate-100 border-slate-200' };
 }
 
-function EventCard({ post, currentUser, onCreateEvent }) {
-  const [showRSVP, setShowRSVP] = useState(false);
+function EventCard({ post }) {
   const dateLabel = getDateLabel(post.event_date);
   const gone = post.event_date && isPast(parseISO(post.event_date + 'T23:59:59'));
 
@@ -64,30 +61,17 @@ function EventCard({ post, currentUser, onCreateEvent }) {
           )}
         </div>
 
-        {/* RSVP toggle */}
         {!gone && (
-          <>
-            <button
-              onClick={() => setShowRSVP(v => !v)}
-              className="w-full flex items-center justify-between px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-colors"
-              style={{ background: showRSVP ? '#1d4ed8' : '#2563eb' }}
-            >
-              <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> RSVP</span>
-              <ChevronRight className={`w-4 h-4 transition-transform ${showRSVP ? 'rotate-90' : ''}`} />
-            </button>
-            {showRSVP && (
-              <div className="mt-2 bg-slate-50 rounded-xl p-3 border border-slate-200">
-                <EventRSVPSection postId={post.id} currentUser={currentUser} eventDate={post.event_date} />
-              </div>
-            )}
-          </>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-[13px] font-semibold text-slate-500">
+            Feed event RSVPs are paused for beta.
+          </div>
         )}
       </div>
     </motion.div>
   );
 }
 
-export default function EventsFeedSection({ posts, currentUser, onCreateEvent }) {
+export default function EventsFeedSection({ posts, onCreateEvent }) {
   const eventPosts = posts
     .filter(p => p.type === 'event' || p.board === 'events')
     .sort((a, b) => {
@@ -135,7 +119,7 @@ export default function EventsFeedSection({ posts, currentUser, onCreateEvent })
         </div>
       ) : (
         eventPosts.map(post => (
-          <EventCard key={post.id} post={post} currentUser={currentUser} />
+          <EventCard key={post.id} post={post} />
         ))
       )}
     </div>

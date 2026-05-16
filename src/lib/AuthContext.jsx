@@ -1,4 +1,4 @@
-import { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
 import { dataService } from '@/services';
 import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 
@@ -21,10 +21,14 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [authError, setAuthError] = useState(null);
+  // Ref so onAuthStateChange closure can read current auth state without going stale.
+  const isAuthenticatedRef = useRef(false);
+  useEffect(() => { isAuthenticatedRef.current = isAuthenticated; }, [isAuthenticated]);
 
   // Stable reference — safe to use in dependency arrays and Supabase subscriptions.
-  const checkAppState = useCallback(async () => {
-    setIsLoadingAuth(true);
+  // Pass silent=true for background token refreshes to avoid flashing a spinner.
+  const checkAppState = useCallback(async (silent = false) => {
+    if (!silent) setIsLoadingAuth(true);
     setAuthError(null);
     try {
       const currentUser = await withTimeout(
@@ -81,10 +85,11 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      setIsLoadingAuth(true);
+      const alreadyAuthenticated = isAuthenticatedRef.current;
+      if (!alreadyAuthenticated) setIsLoadingAuth(true);
       refreshTimer = window.setTimeout(() => {
         refreshTimer = undefined;
-        void checkAppState();
+        void checkAppState(alreadyAuthenticated);
       }, 0);
     });
 

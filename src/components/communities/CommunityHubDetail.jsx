@@ -21,6 +21,8 @@ import { toast } from 'sonner';
 import { dataService } from '@/services';
 import { getCommunityTabLabel, getCommunityTypeConfig, getSupportedCommunityTabs } from '@/lib/communityTypes';
 import CommunityAdminCenter from './CommunityAdminCenter';
+import CommunityResourceLibrary from './CommunityResourceLibrary';
+import GroupChatSection from './GroupChatSection';
 
 function getPostTypeForTab(activeTab, typeKey) {
   if (activeTab === 'announcements' || typeKey === 'shul') return 'announcement';
@@ -53,10 +55,10 @@ export default function CommunityHubDetail({
   const typeConfig = getCommunityTypeConfig(community);
   const Icon = typeConfig.icon;
   const tabs = getSupportedCommunityTabs(community, {
-    events: false,
-    resources: false,
-    chat: false,
-    listings: false,
+    events: Boolean(community?.allow_member_events),
+    resources: Boolean(community?.allow_resources),
+    chat: Boolean(community?.allow_group_chat),
+    listings: Boolean(community?.allow_member_listings),
   });
   const [activeTab, setActiveTab] = useState(tabs.includes(initialTab) ? initialTab : (tabs[0] || 'home'));
   const [composeText, setComposeText] = useState('');
@@ -299,15 +301,13 @@ export default function CommunityHubDetail({
               <Users className="h-3.5 w-3.5 text-blue-500" />
               {(community.memberCount || 0).toLocaleString()} members
             </span>
-            <span className="inline-flex items-center gap-1.5 font-semibold text-blue-600">
-              <TrendingUp className="h-3.5 w-3.5" />
-              {community.postsToday || 0} posts today
-            </span>
-            <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-600">
-              <Sparkles className="h-3.5 w-3.5" />
-              {community.activeNow || 0} active now
-            </span>
-            {community.joined && (
+            {community.postsToday > 0 && (
+              <span className="inline-flex items-center gap-1.5 font-semibold text-blue-600">
+                <TrendingUp className="h-3.5 w-3.5" />
+                {community.postsToday} posts today
+              </span>
+            )}
+            {community.joined && !isCreator && !isCommunityManager && (
               <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-600">
                 <Shield className="h-3.5 w-3.5" />
                 You're a member
@@ -378,6 +378,18 @@ export default function CommunityHubDetail({
           )}
           {activeTab === 'members' && (
             <MembersTab community={community} memberVisibility={memberVisibility} />
+          )}
+          {activeTab === 'resources' && (
+            <CommunityResourceLibrary
+              communityId={community.id}
+              currentUser={currentUser}
+              isAdmin={isCommunityManager}
+            />
+          )}
+          {activeTab === 'chat' && (
+            <div className="mt-3 h-[60vh] overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+              <GroupChatSection communityId={community.id} currentUser={currentUser} />
+            </div>
           )}
         </div>
       </section>

@@ -32,73 +32,71 @@ export default function ModernStatsRow({
   const tier = getNextTier(impact);
 
   return (
-    <div className="px-3 py-2">
-      <div className="overflow-hidden rounded-[20px] bg-slate-950 shadow-lg shadow-slate-900/25">
-        <div className="grid grid-cols-4 divide-x divide-white/10">
+    <div className="px-4 pb-3">
+      <div className="grid grid-cols-4 gap-2 rounded-[22px] border border-slate-100 bg-slate-50/80 p-1.5">
 
           <button
             onClick={onFriendsClick}
-            className="flex flex-col items-center px-2 py-4 transition-colors active:bg-white/5"
+            className="min-w-0 rounded-2xl border border-white bg-white px-1.5 py-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
           >
-            <div className="mb-2 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/25">
-              <UserRound className="h-3 w-3 text-emerald-300" />
+            <div className="mx-auto mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50">
+              <UserRound className="h-3.5 w-3.5 text-emerald-600" />
             </div>
-            <p className="text-[22px] font-black leading-none text-white">{friends}</p>
-            <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-white/35">Friends</p>
+            <p className="text-[19px] font-black leading-none text-slate-950">{friends}</p>
+            <p className="mt-1 truncate text-[10px] font-black uppercase text-slate-400">Friends</p>
           </button>
 
           {/* ── Communities ── */}
           <button
             onClick={onFollowingClick}
-            className="flex flex-col items-center px-2 py-4 transition-colors active:bg-white/5"
+            className="min-w-0 rounded-2xl border border-white bg-white px-1.5 py-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
           >
-            <div className="mb-2 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500/25">
-              <UsersRound className="h-3 w-3 text-blue-300" />
+            <div className="mx-auto mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-blue-50">
+              <UsersRound className="h-3.5 w-3.5 text-blue-600" />
             </div>
-            <p className="text-[22px] font-black leading-none text-white">{following}</p>
-            <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-white/35">Communities</p>
+            <p className="text-[19px] font-black leading-none text-slate-950">{following}</p>
+            <p className="mt-1 truncate text-[10px] font-black uppercase text-slate-400">Communities</p>
           </button>
 
           {/* ── Posts ── */}
           <button
             onClick={onPostsClick}
-            className="flex flex-col items-center px-2 py-4 transition-colors active:bg-white/5"
+            className="min-w-0 rounded-2xl border border-white bg-white px-1.5 py-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
           >
-            <div className="mb-2 flex h-5 w-5 items-center justify-center rounded-full bg-purple-500/25">
-              <FileText className="h-3 w-3 text-purple-300" />
+            <div className="mx-auto mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-purple-50">
+              <FileText className="h-3.5 w-3.5 text-purple-600" />
             </div>
-            <p className="text-[22px] font-black leading-none text-white">{posts}</p>
-            <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-white/35">Posts</p>
+            <p className="text-[19px] font-black leading-none text-slate-950">{posts}</p>
+            <p className="mt-1 truncate text-[10px] font-black uppercase text-slate-400">Posts</p>
           </button>
 
           {/* ── Impact ── */}
           <button
             onClick={onImpactClick}
-            className="flex flex-col items-center px-2 py-4 transition-colors active:bg-white/5"
+            className="min-w-0 rounded-2xl border border-white bg-white px-1.5 py-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
           >
-            <div className="mb-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#6B8C42]/30">
-              <HeartHandshake className="h-3 w-3 text-[#A3C068]" />
+            <div className="mx-auto mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-[#EEF6DF]">
+              <HeartHandshake className="h-3.5 w-3.5 text-[#6B8C42]" />
             </div>
-            <p className="text-[22px] font-black leading-none text-white">{impact}</p>
-            <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-white/35">Impact</p>
+            <p className="text-[19px] font-black leading-none text-slate-950">{impact}</p>
+            <p className="mt-1 truncate text-[10px] font-black uppercase text-slate-400">Impact</p>
             {tier ? (
-              <div className="mt-1.5 w-full px-3">
-                <div className="h-[2px] overflow-hidden rounded-full bg-white/15">
+              <div className="mt-1.5 w-full px-1">
+                <div className="h-[3px] overflow-hidden rounded-full bg-slate-100">
                   <div
-                    className="h-full rounded-full bg-[#A3C068] transition-all duration-500"
+                    className="h-full rounded-full bg-[#6B8C42] transition-all duration-500"
                     style={{ width: `${tier.pct}%` }}
                   />
                 </div>
-                <p className="mt-0.5 text-center text-[8px] font-bold text-[#A3C068]/70">
+                <p className="mt-0.5 truncate text-center text-[8px] font-bold text-[#6B8C42]/80">
                   {tier.remaining} to {tier.name}
                 </p>
               </div>
             ) : (
-              <p className="mt-1 text-[9px] font-bold text-amber-400">Platinum ★</p>
+              <p className="mt-1 text-[9px] font-bold text-amber-500">Platinum</p>
             )}
           </button>
 
-        </div>
       </div>
     </div>
   );
