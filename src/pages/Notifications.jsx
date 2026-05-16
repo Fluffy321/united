@@ -1,58 +1,166 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2, Megaphone, Calendar, Loader2, AtSign } from 'lucide-react';
+import {
+  ArrowLeft,
+  Bell,
+  CheckCheck,
+  MessageCircle,
+  HandHeart,
+  CheckCircle2,
+  Megaphone,
+  Loader2,
+  Users,
+  ShieldAlert,
+  AlertTriangle,
+  Shield,
+} from 'lucide-react';
 import { notificationsService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { formatDistanceToNow, parseISO, isToday, isYesterday, format } from 'date-fns';
+import { formatDistanceToNow, parseISO, isToday, isYesterday, format, isValid } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import QueryError from '@/components/common/QueryError';
 
+// ── Type configuration — only production-backed types ───────────────────────
+
 const TYPE_CONFIG = {
-  like: { icon: Heart, tone: 'bg-red-50 text-red-500', label: 'Liked your post' },
-  post_reply: { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600', label: 'Replied to your post' },
-  comment_reply: { icon: MessageCircle, tone: 'bg-violet-50 text-violet-600', label: 'Also replied' },
-  comment: { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600', label: 'Commented' },
-  help_offer: { icon: HandHeart, tone: 'bg-violet-50 text-violet-600', label: 'Help offered' },
-  mitzvah_offer: { icon: HandHeart, tone: 'bg-violet-50 text-violet-600', label: 'Mitzvah offer' },
-  mitzvah_accepted: { icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-600', label: 'Mitzvah accepted' },
-  verification_request: { icon: CheckCircle2, tone: 'bg-purple-50 text-purple-600', label: 'Verification needed' },
-  request_fulfilled: { icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-600', label: 'Request fulfilled' },
-  announcement: { icon: Megaphone, tone: 'bg-amber-50 text-amber-600', label: 'Announcement' },
-  community_activity: { icon: Megaphone, tone: 'bg-amber-50 text-amber-600', label: 'Community activity' },
-  event: { icon: Calendar, tone: 'bg-cyan-50 text-cyan-600', label: 'Event reminder' },
-  new_message: { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600', label: 'New message' },
-  mention: { icon: AtSign, tone: 'bg-violet-50 text-violet-600', label: 'Mentioned you' },
-  friend_added: { icon: Users, tone: 'bg-emerald-50 text-emerald-600', label: 'New friend' },
-  default: { icon: Bell, tone: 'bg-slate-50 text-slate-500', label: 'Notification' },
+  new_message:          { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600',      label: 'Message' },
+  comment_reply:        { icon: MessageCircle, tone: 'bg-violet-50 text-violet-600',  label: 'Reply' },
+  mitzvah_offer:        { icon: HandHeart,     tone: 'bg-violet-50 text-violet-600',  label: 'Mitzvah offer' },
+  mitzvah_accepted:     { icon: CheckCircle2,  tone: 'bg-emerald-50 text-emerald-600', label: 'Mitzvah accepted' },
+  verification_request: { icon: CheckCircle2,  tone: 'bg-purple-50 text-purple-600',  label: 'Verification needed' },
+  community_activity:   { icon: Users,         tone: 'bg-amber-50 text-amber-600',    label: 'Community' },
+  announcement:         { icon: Megaphone,     tone: 'bg-amber-50 text-amber-600',    label: 'Announcement' },
+  community_removal:    { icon: ShieldAlert,   tone: 'bg-red-50 text-red-500',        label: 'Removed' },
+  appeal_resolved:      { icon: Shield,        tone: 'bg-slate-50 text-slate-500',    label: 'Appeal' },
+  deletion_vote:        { icon: AlertTriangle, tone: 'bg-orange-50 text-orange-500',  label: 'Vote required' },
+  default:              { icon: Bell,          tone: 'bg-slate-50 text-slate-400',    label: 'Notification' },
 };
 
-const FILTER_TABS = [
-  { id: 'all', label: 'All' },
-  { id: 'new_message', label: '💬 Messages' },
-  { id: 'mitzvah_offer', label: '🤝 Mitzvah' },
-  { id: 'like', label: '❤️ Likes' },
-  { id: 'comment', label: '💭 Comments' },
-  { id: 'mention', label: '@ Mentions' },
-  { id: 'community_activity', label: '📣 Community' },
-  { id: 'friend_added', label: '🤝 Friends' },
+// ── Filter definitions ──────────────────────────────────────────────────────
+
+const FILTERS = [
+  { id: 'all',       label: 'All' },
+  { id: 'unread',    label: 'Unread' },
+  { id: 'replies',   label: 'Replies' },
+  { id: 'mitzvah',   label: 'Mitzvah' },
+  { id: 'community', label: 'Community' },
+  { id: 'messages',  label: 'Messages' },
 ];
 
 const FILTER_TYPES = {
-  mitzvah_offer: ['mitzvah_offer', 'mitzvah_accepted', 'verification_request'],
-  community_activity: ['community_activity', 'announcement', 'event'],
+  replies:   ['comment_reply'],
+  mitzvah:   ['mitzvah_offer', 'mitzvah_accepted', 'verification_request'],
+  community: ['community_activity', 'announcement'],
+  messages:  ['new_message'],
 };
+
+// ── Date grouping ───────────────────────────────────────────────────────────
+
+function safeParse(dateStr) {
+  if (!dateStr) return null;
+  try {
+    const d = parseISO(dateStr);
+    return isValid(d) ? d : null;
+  } catch {
+    return null;
+  }
+}
+
+function dateGroupLabel(d) {
+  if (!d) return 'Older';
+  if (isToday(d)) return 'Today';
+  if (isYesterday(d)) return 'Yesterday';
+  return format(d, 'MMMM d');
+}
 
 function groupByDate(notifications) {
   const groups = {};
   for (const n of notifications) {
-    const d = parseISO(n.created_date || n.created_at);
-    const key = isToday(d) ? 'Today' : isYesterday(d) ? 'Yesterday' : format(d, 'MMMM d');
+    const d = safeParse(n.created_date || n.created_at);
+    const key = dateGroupLabel(d);
     if (!groups[key]) groups[key] = [];
     groups[key].push(n);
   }
   return groups;
 }
+
+// ── Notification card ───────────────────────────────────────────────────────
+
+function NotifCard({ notif, onRead, isLast }) {
+  const config = TYPE_CONFIG[notif.type] || TYPE_CONFIG.default;
+  const Icon = config.icon;
+  const d = safeParse(notif.created_date || notif.created_at);
+  const message = notif.body || notif.title || notif.message || 'Notification';
+  const hasLink = !!(
+    (notif.type === 'new_message' && notif.conversation_id) ||
+    notif.post_id ||
+    notif.link_url
+  );
+
+  return (
+    <button
+      onClick={() => onRead(notif)}
+      className={`w-full flex items-start gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-blue-50/80 ${
+        notif.is_read ? 'bg-white' : 'bg-blue-50/60'
+      } ${!isLast ? 'border-b border-slate-100' : ''}`}
+    >
+      {/* Type icon */}
+      <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${config.tone}`}>
+        <Icon className="h-[18px] w-[18px]" />
+      </div>
+
+      {/* Text */}
+      <div className="min-w-0 flex-1">
+        <p className={`text-[13.5px] leading-snug ${notif.is_read ? 'text-slate-600 font-medium' : 'text-slate-900 font-semibold'}`}>
+          {message}
+        </p>
+        <div className="mt-1.5 flex items-center gap-2">
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${config.tone}`}>
+            {config.label}
+          </span>
+          <span className="text-[11px] text-slate-400">
+            {d ? formatDistanceToNow(d, { addSuffix: true }) : '—'}
+          </span>
+          {hasLink && !notif.is_read && (
+            <span className="text-[11px] text-blue-500 font-semibold">Tap to view</span>
+          )}
+        </div>
+      </div>
+
+      {/* Unread dot */}
+      {!notif.is_read && (
+        <div className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-blue-600" />
+      )}
+    </button>
+  );
+}
+
+// ── Empty state ─────────────────────────────────────────────────────────────
+
+function EmptyState({ filter }) {
+  const messages = {
+    all:       { headline: "You're all caught up!", sub: 'Notifications will appear here as activity happens.' },
+    unread:    { headline: 'No unread notifications', sub: 'Everything is read. Check back later.' },
+    replies:   { headline: 'No replies yet', sub: 'Replies to your posts will appear here.' },
+    mitzvah:   { headline: 'No Mitzvah notifications', sub: 'Offers, acceptances, and verification requests show up here.' },
+    community: { headline: 'No community activity', sub: 'Posts and announcements from your communities will appear here.' },
+    messages:  { headline: 'No message notifications', sub: 'New message alerts will appear here.' },
+  };
+  const { headline, sub } = messages[filter] || messages.all;
+
+  return (
+    <div className="flex flex-col items-center justify-center py-24 text-center px-6">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 border border-blue-100">
+        <Bell className="h-7 w-7 text-blue-300" />
+      </div>
+      <p className="text-[15px] font-bold text-slate-800">{headline}</p>
+      <p className="mt-1.5 text-[13px] leading-5 text-slate-400">{sub}</p>
+    </div>
+  );
+}
+
+// ── Page ────────────────────────────────────────────────────────────────────
 
 export default function Notifications() {
   const navigate = useNavigate();
@@ -63,32 +171,33 @@ export default function Notifications() {
   const { data: notifications = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['notifications-page', currentUser?.id],
     queryFn: () => notificationsService.listForUser(currentUser.id),
-    enabled: !!currentUser,
-    staleTime: 30000,
-    refetchInterval: 30000,
+    enabled: !!currentUser?.id,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
   });
 
   const markAllRead = useMutation({
-    mutationFn: async () => {
-      await notificationsService.markAllRead(notifications);
-    },
+    mutationFn: () => notificationsService.markAllRead(notifications),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications-page', currentUser?.id] });
       queryClient.invalidateQueries({ queryKey: ['notification-count', currentUser?.id] });
+      toast.success('All notifications marked as read');
     },
     onError: () => toast.error('Could not mark notifications as read.'),
   });
 
-  const markOneRead = async (notif) => {
+  const handleRead = async (notif) => {
     if (!notif.is_read) {
       try {
         await notificationsService.markRead(notif.id);
         queryClient.invalidateQueries({ queryKey: ['notifications-page', currentUser?.id] });
         queryClient.invalidateQueries({ queryKey: ['notification-count', currentUser?.id] });
       } catch {
-        // non-blocking — continue navigation even if marking fails
+        // non-blocking — navigation proceeds regardless
       }
     }
+
+    // Navigate to the relevant destination
     if (notif.type === 'new_message' && notif.conversation_id) {
       navigate(`/Messages?conversation=${notif.conversation_id}`);
     } else if (notif.post_id) {
@@ -98,67 +207,91 @@ export default function Notifications() {
     }
   };
 
-  const filtered = filter === 'all'
-    ? notifications
-    : notifications.filter(n => (FILTER_TYPES[filter] || [filter]).includes(n.type));
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  const filtered =
+    filter === 'all'
+      ? notifications
+      : filter === 'unread'
+      ? notifications.filter((n) => !n.is_read)
+      : notifications.filter((n) => (FILTER_TYPES[filter] || []).includes(n.type));
+
   const grouped = groupByDate(filtered);
-  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <div className="app-page flex flex-col">
-      {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-blue-100 bg-white shadow-sm">
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors">
-            <ArrowLeft className="w-5 h-5 text-slate-700" />
+
+      {/* ── Header ── */}
+      <div className="sticky top-0 z-10 bg-white border-b border-slate-100 shadow-sm">
+        <div className="mobile-page-wide px-4 h-14 flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-[18px] font-bold text-slate-900 flex-1">Notifications</h1>
+          <div className="flex flex-1 items-center gap-2 min-w-0">
+            <h1 className="text-[18px] font-bold text-slate-900">Notifications</h1>
+            {unreadCount > 0 && (
+              <span className="min-w-[20px] rounded-full bg-blue-600 px-1.5 py-0.5 text-[11px] font-bold text-white leading-none text-center">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </div>
           {unreadCount > 0 && (
             <button
               onClick={() => markAllRead.mutate()}
               disabled={markAllRead.isPending}
-              className="flex items-center gap-1.5 text-[12px] font-semibold text-[#2563eb] active:opacity-70 px-3 py-1.5 rounded-full bg-blue-50"
+              className="flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-[12px] font-semibold text-blue-600 transition hover:bg-blue-100 disabled:opacity-60"
             >
-              {markAllRead.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCheck className="w-3.5 h-3.5" />}
+              {markAllRead.isPending
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <CheckCheck className="h-3.5 w-3.5" />
+              }
               Mark all read
             </button>
           )}
         </div>
 
         {/* Filter tabs */}
-        <div className="max-w-2xl mx-auto px-4 pb-0">
-          <div className="flex gap-0 overflow-x-auto scrollbar-hide">
-            {FILTER_TABS.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setFilter(tab.id)}
-                className={`flex-shrink-0 whitespace-nowrap border-b-2 px-4 py-2.5 text-[12px] font-semibold transition-all ${
-                  filter === tab.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-slate-400'
-                }`}
-              >
-                {tab.label}
-                {tab.id === 'all' && unreadCount > 0 && (
-                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-            ))}
+        <div className="mobile-page-wide px-4 pb-0">
+          <div className="mobile-scroll-x flex gap-0">
+            {FILTERS.map((tab) => {
+              const isActive = filter === tab.id;
+              const count = tab.id === 'unread' ? unreadCount : null;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setFilter(tab.id)}
+                  className={`flex-shrink-0 whitespace-nowrap border-b-2 px-3.5 py-2.5 text-[12.5px] font-semibold transition-all ${
+                    isActive
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {tab.label}
+                  {count !== null && count > 0 && (
+                    <span className="ml-1.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white leading-none">
+                      {count > 99 ? '99+' : count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 max-w-2xl mx-auto w-full px-4 py-4 pb-28">
+      {/* ── Content ── */}
+      <div className="flex-1 mobile-page-wide w-full px-4 py-4 mobile-safe-bottom">
         {isLoading ? (
-          <div className="space-y-2.5 mt-2">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-4 flex items-start gap-3 border border-blue-50">
-                <div className="skeleton w-10 h-10 rounded-full flex-shrink-0" />
+          <div className="space-y-2.5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-4">
+                <div className="skeleton h-10 w-10 rounded-full shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="skeleton h-3 w-3/4 rounded" />
+                  <div className="skeleton h-3.5 w-3/4 rounded" />
                   <div className="skeleton h-2.5 w-1/3 rounded" />
                 </div>
               </div>
@@ -169,61 +302,23 @@ export default function Notifications() {
             <QueryError message="Notifications could not load." onRetry={refetch} />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-16 h-16 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center mb-4">
-              <Bell className="w-7 h-7 text-blue-300" />
-            </div>
-            <p className="text-[15px] font-bold text-slate-700">All caught up!</p>
-            <p className="text-[13px] text-slate-400 mt-1">
-              {filter === 'all' ? 'Notifications will appear here.' : `No ${filter} notifications yet.`}
-            </p>
-          </div>
+          <EmptyState filter={filter} />
         ) : (
           <div className="space-y-5">
             {Object.entries(grouped).map(([dateLabel, items]) => (
               <div key={dateLabel}>
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2 px-1">{dateLabel}</p>
-                <div className="app-card overflow-hidden border-blue-50">
-                  {items.map((notif, idx) => {
-                    const config = TYPE_CONFIG[notif.type] || TYPE_CONFIG.default;
-                    const Icon = config.icon;
-                    return (
-                      <button
-                        key={notif.id}
-                        onClick={() => markOneRead(notif)}
-                        className={`w-full flex items-start gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-blue-50 ${
-                          notif.is_read ? 'bg-white' : 'bg-blue-50/80'
-                        } ${idx > 0 ? 'border-t border-blue-50' : ''}`}
-                      >
-                        {/* Icon bubble */}
-                        <div
-                          className={`mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${config.tone}`}
-                        >
-                          <Icon className="h-[18px] w-[18px]" />
-                        </div>
-
-                        {/* Text */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] text-slate-800 leading-snug font-medium">{notif.message || notif.body || notif.title}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${config.tone}`}
-                            >
-                              {config.label}
-                            </span>
-                            <span className="text-[11px] text-slate-400">
-                              {formatDistanceToNow(parseISO(notif.created_date || notif.created_at), { addSuffix: true })}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Unread dot */}
-                        {!notif.is_read && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-[#2563eb] mt-2 flex-shrink-0" />
-                        )}
-                      </button>
-                    );
-                  })}
+                <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                  {dateLabel}
+                </p>
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                  {items.map((notif, idx) => (
+                    <NotifCard
+                      key={notif.id}
+                      notif={notif}
+                      onRead={handleRead}
+                      isLast={idx === items.length - 1}
+                    />
+                  ))}
                 </div>
               </div>
             ))}

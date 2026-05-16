@@ -2,22 +2,23 @@ import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { notificationsService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { formatDistanceToNow, parseISO } from 'date-fns';
-import { Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2, UserRoundPlus, UserRoundCheck } from 'lucide-react';
+import { formatDistanceToNow, parseISO, isValid } from 'date-fns';
+import { Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2, UserRoundCheck, Users, Megaphone, Shield } from 'lucide-react';
 
 const TYPE_CONFIG = {
-  like: { icon: Heart, tone: 'bg-red-50 text-red-500', label: 'liked your post' },
-  comment: { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600', label: 'commented on your post' },
-  help_offer: { icon: HandHeart, tone: 'bg-violet-50 text-violet-600', label: 'offered to help' },
-  mitzvah_offer: { icon: HandHeart, tone: 'bg-violet-50 text-violet-600', label: 'Mitzvah offer' },
-  mitzvah_accepted: { icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-600', label: 'Mitzvah accepted' },
-  verification_request: { icon: CheckCircle2, tone: 'bg-purple-50 text-purple-600', label: 'Verification needed' },
-  request_fulfilled: { icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-600', label: 'your request was fulfilled' },
-  friend_request_received: { icon: UserRoundPlus, tone: 'bg-blue-50 text-blue-600', label: 'sent you a friend request' },
-  friend_request_accepted: { icon: UserRoundCheck, tone: 'bg-emerald-50 text-emerald-600', label: 'accepted your friend request' },
-  // Legacy type kept for backwards compatibility
-  friend_added: { icon: UserRoundCheck, tone: 'bg-emerald-50 text-emerald-600', label: 'added you as a friend' },
-  default: { icon: Bell, tone: 'bg-slate-50 text-slate-500', label: 'notification' }
+  new_message:          { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600',       label: 'Message' },
+  comment_reply:        { icon: MessageCircle, tone: 'bg-violet-50 text-violet-600',   label: 'Reply' },
+  mitzvah_offer:        { icon: HandHeart,     tone: 'bg-violet-50 text-violet-600',   label: 'Mitzvah offer' },
+  mitzvah_accepted:     { icon: CheckCircle2,  tone: 'bg-emerald-50 text-emerald-600', label: 'Mitzvah accepted' },
+  verification_request: { icon: CheckCircle2,  tone: 'bg-purple-50 text-purple-600',   label: 'Verification needed' },
+  community_activity:   { icon: Users,         tone: 'bg-amber-50 text-amber-600',     label: 'Community' },
+  announcement:         { icon: Megaphone,     tone: 'bg-amber-50 text-amber-600',     label: 'Announcement' },
+  community_removal:    { icon: Shield,        tone: 'bg-red-50 text-red-500',         label: 'Removed' },
+  appeal_resolved:      { icon: Shield,        tone: 'bg-slate-50 text-slate-500',     label: 'Appeal' },
+  // Legacy / kept for backwards compat with old notification rows
+  like:                 { icon: Heart,         tone: 'bg-red-50 text-red-500',         label: 'Liked' },
+  friend_added:         { icon: UserRoundCheck, tone: 'bg-emerald-50 text-emerald-600', label: 'Friend' },
+  default:              { icon: Bell,          tone: 'bg-slate-50 text-slate-500',     label: 'Notification' },
 };
 
 export default function NotificationCenter({ open, onOpenChange, userId }) {
@@ -99,7 +100,12 @@ export default function NotificationCenter({ open, onOpenChange, userId }) {
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] text-[#0F1C2E] leading-snug">{notif.message || notif.body || notif.title}</p>
                       <p className="text-[11px] text-[#94a3b8] mt-1">
-                        {formatDistanceToNow(parseISO(notif.created_date), { addSuffix: true })}
+                        {(() => {
+                          try {
+                            const d = parseISO(notif.created_date || notif.created_at || '');
+                            return isValid(d) ? formatDistanceToNow(d, { addSuffix: true }) : '—';
+                          } catch { return '—'; }
+                        })()}
                       </p>
                     </div>
                     {!notif.is_read && (
