@@ -120,22 +120,29 @@
     color-scheme: light;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* none: prevents iOS horizontal rubber-band panning from shifting layout */
     overscroll-behavior-x: none;
-    /* none: prevents the iOS rubber-band bounce that temporarily displaces fixed nav */
-    overscroll-behavior-y: none;
     min-height: 100%;
     width: 100%;
-    /* clip: unlike hidden, does not create a scroll container — iOS touch cannot pan horizontally */
-    overflow-x: clip;
+    /* Do NOT set overflow-x here — overflow-x: clip on html/body coerces overflow-y to
+       auto (CSS overflow pairing rule), which turns html into a height-constrained scroll
+       container and breaks document-level vertical scrolling. Use #root for clip instead. */
   }
 
   html {
     height: 100%;
+    /* none: prevents iOS vertical rubber-band bounce that displaces position:fixed nav.
+       Per spec, overscroll-behavior on <html> applies to the viewport scroll boundary,
+       NOT to the html element as a scroll container — so this is safe here. */
+    overscroll-behavior-y: none;
   }
 
   #root {
     width: 100%;
     min-height: 100dvh;
+    /* clip: cuts horizontal overflow without creating a scroll container.
+       Safe on #root because #root is not height-constrained, so it grows to fit
+       content and the Y pairing-rule auto has 0 scroll range — document scroll is unaffected. */
     overflow-x: clip;
   }
 
@@ -144,8 +151,8 @@
       linear-gradient(180deg, #F8FBFF 0%, #F7F8FD 34%, #F8FAFC 100%) !important;
     color: #0F172A;
     min-height: 100dvh;
-    overflow-y: auto;
-    /* Removed: -webkit-overflow-scrolling: touch — deprecated, causes position:fixed elements
+    /* No explicit overflow-y — document scroll works naturally at the viewport level.
+       Removed: -webkit-overflow-scrolling: touch — deprecated, causes position:fixed elements
        to shift during iOS momentum scroll. Modern iOS enables momentum scrolling by default. */
   }
 
