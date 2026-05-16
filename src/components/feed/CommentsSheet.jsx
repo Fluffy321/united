@@ -125,12 +125,13 @@ export default function CommentsSheet({
 
       // Notify post author
       if (resolvedAuthorId && resolvedAuthorId !== currentUser.id) {
-        dataService.functions.invoke('sendNotificationOnComment', {
-          post_id:       resolvedPostId,
-          commenter_id:  currentUser.id,
-          commenter_name: currentUser.full_name,
-          comment_body:  body,
-          post_author_id: resolvedAuthorId,
+        notificationsService.notifyPostCommented({
+          posterId:        resolvedAuthorId,
+          commenterId:     currentUser.id,
+          commenterName:   currentUser.display_name || currentUser.full_name,
+          commenterAvatarUrl: currentUser.avatar_url,
+          postId:          resolvedPostId,
+          preview:         body.slice(0, 90),
         }).catch(() => {});
       }
 
@@ -139,12 +140,13 @@ export default function CommentsSheet({
         const parent = comments.find(c => c.id === replyingTo);
         if (parent?.author_id && parent.author_id !== currentUser.id && parent.author_id !== resolvedAuthorId) {
           notificationsService.notifyCommentReply({
-            recipientId: parent.author_id,
-            actorId:     currentUser.id,
-            actorName:   currentUser.display_name || currentUser.full_name,
-            postId:      resolvedPostId,
-            commentId:   comment.id,
-            preview:     body.slice(0, 90),
+            recipientId:   parent.author_id,
+            actorId:       currentUser.id,
+            actorName:     currentUser.display_name || currentUser.full_name,
+            actorAvatarUrl: currentUser.avatar_url,
+            postId:        resolvedPostId,
+            commentId:     comment.id,
+            preview:       body.slice(0, 90),
           }).catch(() => {});
         }
       }
@@ -159,12 +161,13 @@ export default function CommentsSheet({
             (c.author_name || '').toLowerCase().replace(/\s+/g, '').startsWith(mentionName)
           );
           if (mentioned?.author_id) {
-            dataService.functions.invoke('notifyOnMention', {
-              mentioned_user_id: mentioned.author_id,
-              actor_id:          currentUser.id,
-              actor_name:        currentUser.full_name || currentUser.display_name,
-              post_id:           resolvedPostId,
-              context_text:      body,
+            notificationsService.notifyUserMentioned({
+              userId:       mentioned.author_id,
+              actorId:      currentUser.id,
+              actorName:    currentUser.display_name || currentUser.full_name,
+              actorAvatarUrl: currentUser.avatar_url,
+              postId:       resolvedPostId,
+              preview:      body.slice(0, 90),
             }).catch(() => {});
           }
         }

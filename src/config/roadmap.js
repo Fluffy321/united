@@ -101,6 +101,26 @@ Goals:
     shippedNote: 'Shipped. push_subscriptions table, src/lib/pushSubscription.js client helpers, supabase/functions/push-notify Edge Function (web-push@3 + VAPID), toggle in Settings Notifications section, push subscribe on onboarding completion. Respects notification_preferences and notifications_enabled per user.',
   },
 
+  {
+    id: 'notification-system-improvements',
+    category: 'Auth & Identity',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Notifications System — Round 2',
+    description: 'Actor enrichment, realtime updates, new notification types (likes, comments, mentions), swipe-to-mark-read, and deep-link reliability.',
+    shippedNote: 'Shipped. (1) actor_display_name + actor_avatar_url columns on notifications table (migration 20260516205535); (2) new notify methods: notifyPostLiked, notifyPostCommented, notifyUserMentioned; (3) CommentsSheet dead Edge Function calls replaced with direct notificationsService calls; (4) ReactionBar fires notifyPostLiked on new like; (5) Notifications page has realtime subscription via dataService.entities.Notification.subscribe; (6) SwipeableNotifCard with vertical-intent detection for right-swipe-to-mark-read; (7) actor avatar badge on type icon; (8) getNotificationRoute() shared deep-link helper in src/lib/notificationRoute.js; (9) NotificationCenter uses navigate() instead of window.location.href.',
+  },
+
+  {
+    id: 'notification-aggregation',
+    category: 'Auth & Identity',
+    status: STATUS.DEFERRED,
+    priority: PRIORITY.LOW,
+    title: 'Notification Aggregation',
+    description: 'Group multiple similar notifications (e.g. "5 people liked your post") instead of one row per event.',
+    why: 'Requires a more complex insert-time aggregation strategy or a server-side rollup job. Deferred until notification volume is high enough to warrant it.',
+  },
+
   // ── Community ─────────────────────────────────────────────────────────────
 
   {

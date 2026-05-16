@@ -336,7 +336,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             <div className="text-[13px] text-slate-700 leading-relaxed">{post.caption || post.body}</div>
           )}
           <div className="flex items-center gap-1 mt-1.5 pt-1 border-t border-slate-100">
-            <ReactionBar postId={post.id} currentUser={currentUser} />
+            <ReactionBar postId={post.id} currentUser={currentUser} postAuthorId={post.user_id} />
             <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1.5 h-7 px-2 rounded-full text-[12px] font-medium text-slate-500 hover:bg-slate-100">
               <MessageCircle className="w-3.5 h-3.5" />{commentCount > 0 && <span>{commentCount}</span>}
             </button>
@@ -397,7 +397,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             <UserAvatar user={post} name={post.user_name} size="xs" />
             <span className="text-[11px] text-slate-500 truncate">{post.user_name}</span>
             <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-              <ReactionBar postId={post.id} currentUser={currentUser} />
+              <ReactionBar postId={post.id} currentUser={currentUser} postAuthorId={post.user_id} />
               <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-500">
                 RSVP paused
               </span>
@@ -487,7 +487,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
           <div className="flex items-center gap-2">
             <UserAvatar user={post} name={post.user_name} size="xs" />
             <span className="text-[11px] text-slate-500 flex-1 truncate min-w-0">{post.user_name} · {timeAgo}</span>
-            <ReactionBar postId={post.id} currentUser={currentUser} />
+            <ReactionBar postId={post.id} currentUser={currentUser} postAuthorId={post.user_id} />
             {post.user_id !== currentUser?.id && (
               <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
             )}
@@ -534,7 +534,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
           <div className="flex items-center gap-2">
             <UserAvatar user={post} name={post.user_name} size="xs" />
             <span className="text-[11px] text-slate-500 flex-1 truncate min-w-0">{post.user_name} · {timeAgo}</span>
-            <ReactionBar postId={post.id} currentUser={currentUser} />
+            <ReactionBar postId={post.id} currentUser={currentUser} postAuthorId={post.user_id} />
             {post.user_id !== currentUser?.id && <InterestedButton post={post} currentUser={currentUser} />}
           </div>
         </div>
@@ -605,7 +605,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
           <div className="flex items-center gap-2 mt-1.5 pt-1 border-t border-slate-100">
             <UserAvatar user={post} name={post.user_name} size="xs" />
             <span className="text-[11px] text-slate-500 flex-1">{isAnonymous ? 'Anonymous' : post.user_name} · {timeAgo}</span>
-            <ReactionBar postId={post.id} currentUser={currentUser} />
+            <ReactionBar postId={post.id} currentUser={currentUser} postAuthorId={post.user_id} />
             <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1 h-7 px-2 rounded-full text-[12px] text-slate-500 hover:bg-slate-100">
               <MessageCircle className="w-3.5 h-3.5" />{commentCount > 0 && <span>{commentCount === 1 ? '1 reply' : `${commentCount} replies`}</span>}
             </button>
@@ -640,7 +640,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             {post.body && <p className="text-[12px] text-slate-500 line-clamp-2 mt-0.5">{post.body}</p>}
             <div className="flex items-center gap-2 mt-2">
               <span className="text-[11px] text-slate-400">{post.user_name} · {timeAgo}</span>
-              <ReactionBar postId={post.id} currentUser={currentUser} />
+              <ReactionBar postId={post.id} currentUser={currentUser} postAuthorId={post.user_id} />
             </div>
           </div>
         </div>
@@ -677,7 +677,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
           >
             Answer
           </button>
-          <ReactionBar postId={post.id} currentUser={currentUser} />
+          <ReactionBar postId={post.id} currentUser={currentUser} postAuthorId={post.user_id} />
           {commentCount > 0 && (
             <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1 text-[12px] text-white/70">
               <MessageCircle className="w-3.5 h-3.5" />{commentCount === 1 ? '1 person replied' : `${commentCount} people replied`}
@@ -865,7 +865,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
 
       {/* Footer: compact action row — no duplicate comment icon */}
       <div className="px-3 py-1.5 mt-1 border-t border-slate-100 flex items-center gap-2">
-        <ReactionBar postId={post.id} currentUser={currentUser} />
+        <ReactionBar postId={post.id} currentUser={currentUser} postAuthorId={post.user_id} />
         <button
           onClick={() => setCommentsOpen(true)}
           className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-blue-600 transition-colors"

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Heart } from 'lucide-react';
-import { postsService, checkRateLimit, RateLimitError } from '@/services';
+import { postsService, notificationsService, checkRateLimit, RateLimitError } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-export default function ReactionBar({ postId, currentUser }) {
+export default function ReactionBar({ postId, currentUser, postAuthorId }) {
   const queryClient = useQueryClient();
   const isRealUser = !!currentUser && currentUser.id !== 'guest';
   const [popping, setPopping] = useState(false);
@@ -44,6 +44,15 @@ export default function ReactionBar({ postId, currentUser }) {
           user_id: currentUser.id,
           reaction_type: 'like',
         });
+        if (postAuthorId && postAuthorId !== currentUser.id) {
+          notificationsService.notifyPostLiked({
+            posterId:       postAuthorId,
+            likerId:        currentUser.id,
+            likerName:      currentUser.display_name || currentUser.full_name,
+            likerAvatarUrl: currentUser.avatar_url,
+            postId,
+          }).catch(() => {});
+        }
       }
     },
     onSuccess: () => {

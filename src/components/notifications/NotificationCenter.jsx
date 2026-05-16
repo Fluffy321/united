@@ -3,11 +3,16 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { notificationsService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow, parseISO, isValid } from 'date-fns';
-import { Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2, UserRoundCheck, Users, Megaphone, Shield } from 'lucide-react';
+import { Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2, UserRoundCheck, Users, Megaphone, Shield, AtSign } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { getNotificationRoute } from '@/lib/notificationRoute';
 
 const TYPE_CONFIG = {
   new_message:          { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600',       label: 'Message' },
   comment_reply:        { icon: MessageCircle, tone: 'bg-violet-50 text-violet-600',   label: 'Reply' },
+  post_commented:       { icon: MessageCircle, tone: 'bg-violet-50 text-violet-600',   label: 'Comment' },
+  user_mentioned:       { icon: AtSign,        tone: 'bg-indigo-50 text-indigo-600',   label: 'Mention' },
+  post_liked:           { icon: Heart,         tone: 'bg-red-50 text-red-500',         label: 'Like' },
   mitzvah_offer:        { icon: HandHeart,     tone: 'bg-violet-50 text-violet-600',   label: 'Mitzvah offer' },
   mitzvah_accepted:     { icon: CheckCircle2,  tone: 'bg-emerald-50 text-emerald-600', label: 'Mitzvah accepted' },
   verification_request: { icon: CheckCircle2,  tone: 'bg-purple-50 text-purple-600',   label: 'Verification needed' },
@@ -22,6 +27,7 @@ const TYPE_CONFIG = {
 };
 
 export default function NotificationCenter({ open, onOpenChange, userId }) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: notifications = [] } = useQuery({
@@ -47,7 +53,11 @@ export default function NotificationCenter({ open, onOpenChange, userId }) {
       queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
       queryClient.invalidateQueries({ queryKey: ['notification-count', userId] });
     }
-    if (notif.link_url) window.location.href = notif.link_url;
+    const route = getNotificationRoute(notif);
+    if (route) {
+      onOpenChange?.(false);
+      navigate(route);
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -92,11 +102,20 @@ export default function NotificationCenter({ open, onOpenChange, userId }) {
                       notif.is_read ? 'bg-white' : 'bg-blue-50/70'
                     }`}
                   >
-                    <div
-                      className={`mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${config.tone}`}
-                    >
-                      <Icon className="h-4 w-4" />
+                    {/* Type icon + actor avatar badge */}
+                    <div className="relative mt-0.5 flex-shrink-0">
+                      <div className={`flex h-9 w-9 items-center justify-center rounded-full ${config.tone}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      {notif.actor_avatar_url && (
+                        <img
+                          src={notif.actor_avatar_url}
+                          alt=""
+                          className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white object-cover"
+                        />
+                      )}
                     </div>
+
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] text-[#0F1C2E] leading-snug">{notif.message || notif.body || notif.title}</p>
                       <p className="text-[11px] text-[#94a3b8] mt-1">

@@ -15,12 +15,12 @@ Claude Code sessions read `CLAUDE.md` instead, but both files share the same rul
 
 ---
 
-## ⚠️ Roadmap Maintenance Rule
+## ⚠️ Roadmap Maintenance — Two-Part Rule
 
 **`src/config/roadmap.js` is the single source of truth for the JUnited product roadmap.**
+`src/pages/FutureFeatures.jsx` is a pure renderer — it reads from the config. Do not edit the page; only edit the config.
 
-`src/pages/FutureFeatures.jsx` is a pure renderer — it reads from the config file.
-Do not edit `FutureFeatures.jsx` to change roadmap content. Only edit `src/config/roadmap.js`.
+### Part A — Status updates for work you completed
 
 You must update `src/config/roadmap.js` in the same task whenever you:
 
@@ -34,9 +34,38 @@ You must update `src/config/roadmap.js` in the same task whenever you:
 
 Valid status values: `'planned'`, `'deferred'`, `'exploring'`, `'blocked'`, `'shipped'`, `'dropped'`
 
-**Your final report for any such task must explicitly state:**
-- Whether `src/config/roadmap.js` needed updating
-- If yes, which items changed and how
+### Part B — Future-improvements scan (required after applicable tasks)
+
+Before writing the final report on any feature implementation, significant bug fix, redesign, audit, admin tool addition, or any task that surfaces recommendations or deferred work — you must perform a roadmap future-improvements scan:
+
+1. Review the session for anything that qualifies as future work: implied improvements, deferred enhancements, discovered gaps, follow-up features, recommended next steps.
+2. Open `src/config/roadmap.js` and for each candidate determine:
+   - **Already tracked** → no action; note it in the report
+   - **Belongs under an existing item** → merge or update that entry
+   - **Deserves its own entry** → add it with `status: 'planned'` or `'deferred'`
+   - **Too trivial** → skip it, but explain in the report
+3. Update the roadmap, then report what you did.
+
+**Do not list meaningful future improvements in a final report without first reviewing the roadmap.**
+This scan is not required for trivial changes (one-line fixes, copy edits) unless future work is surfaced.
+
+### Final report requirement
+
+Every applicable final report must include:
+
+```
+Roadmap future-improvements scan:
+- Added: <item> — <why>
+- Updated: <item> — <what changed>
+- Not added, with reason: <idea> — <why not tracked>
+```
+
+If nothing was found:
+
+```
+Roadmap future-improvements scan:
+- No new roadmap-worthy future improvements identified.
+```
 
 ---
 

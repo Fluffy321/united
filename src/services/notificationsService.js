@@ -25,6 +25,8 @@ const normalizeNotification = (notification = {}) => ({
 const buildNotification = ({
   userId,
   actorId = null,
+  actorDisplayName = null,
+  actorAvatarUrl = null,
   type = 'default',
   title,
   body,
@@ -35,6 +37,8 @@ const buildNotification = ({
 }) => ({
   user_id: userId,
   actor_id: actorId,
+  actor_display_name: actorDisplayName,
+  actor_avatar_url: actorAvatarUrl,
   type,
   title: title || body || 'Notification',
   body: body || title || '',
@@ -161,16 +165,62 @@ export const notificationsService = {
     });
   },
 
-  notifyCommentReply({ recipientId, actorId, actorName, postId, commentId, preview }) {
+  notifyCommentReply({ recipientId, actorId, actorName, actorAvatarUrl, postId, commentId, preview }) {
     return this.create({
       userId: recipientId,
       actorId,
+      actorDisplayName: actorName,
+      actorAvatarUrl,
       type: 'comment_reply',
       title: 'New reply in your thread',
       body: `${actorName || 'Someone'} replied${preview ? `: ${preview}` : '.'}`,
       linkUrl: postId ? `/PostDetail?id=${postId}` : '/Feed',
       postId,
       data: { comment_id: commentId, preview },
+    });
+  },
+
+  notifyPostLiked({ posterId, likerId, likerName, likerAvatarUrl, postId }) {
+    return this.create({
+      userId:           posterId,
+      actorId:          likerId,
+      actorDisplayName: likerName,
+      actorAvatarUrl:   likerAvatarUrl,
+      type:             'post_liked',
+      title:            'Someone liked your post',
+      body:             `${likerName || 'Someone'} liked your post.`,
+      linkUrl:          postId ? `/PostDetail?id=${postId}` : '/Feed',
+      postId,
+    });
+  },
+
+  notifyPostCommented({ posterId, commenterId, commenterName, commenterAvatarUrl, postId, preview }) {
+    return this.create({
+      userId:           posterId,
+      actorId:          commenterId,
+      actorDisplayName: commenterName,
+      actorAvatarUrl:   commenterAvatarUrl,
+      type:             'post_commented',
+      title:            'New comment on your post',
+      body:             `${commenterName || 'Someone'} commented${preview ? `: "${preview}"` : ' on your post.'}`,
+      linkUrl:          postId ? `/PostDetail?id=${postId}` : '/Feed',
+      postId,
+      data:             { preview },
+    });
+  },
+
+  notifyUserMentioned({ userId, actorId, actorName, actorAvatarUrl, postId, preview }) {
+    return this.create({
+      userId,
+      actorId,
+      actorDisplayName: actorName,
+      actorAvatarUrl,
+      type:             'user_mentioned',
+      title:            'You were mentioned',
+      body:             `${actorName || 'Someone'} mentioned you${preview ? `: "${preview}"` : '.'}`,
+      linkUrl:          postId ? `/PostDetail?id=${postId}` : '/Feed',
+      postId,
+      data:             { preview },
     });
   },
 

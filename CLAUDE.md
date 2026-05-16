@@ -16,9 +16,14 @@ Read it fully before starting any task.
 
 ---
 
-## ⚠️ ROADMAP MAINTENANCE RULE — READ THIS
+## ⚠️ ROADMAP MAINTENANCE — TWO-PART RULE — READ THIS
 
 **The roadmap file is `src/config/roadmap.js`. It is the single source of truth for JUnited feature planning.**
+**`src/pages/FutureFeatures.jsx` renders it automatically — only edit the config, never the page.**
+
+---
+
+### Part A — Status updates for work you completed
 
 You MUST update `src/config/roadmap.js` in the same task whenever you:
 
@@ -30,11 +35,51 @@ You MUST update `src/config/roadmap.js` in the same task whenever you:
 | Introduced a meaningful new feature idea | Add a new entry with `status: 'planned'` or `'deferred'` |
 | Unblocked a blocked feature | Update `status`, remove or update `needs` |
 
-Your final report for any such task **must explicitly state**:
-- Whether `src/config/roadmap.js` needed updating
-- If yes, what changed (which items, what status change)
+---
 
-The `FutureFeatures` admin page (`src/pages/FutureFeatures.jsx`) renders from this file automatically. You do not need to edit the page — only the config.
+### Part B — Future-improvements scan (required after applicable tasks)
+
+**Before writing the final report** on any feature implementation, significant bug fix, redesign, architecture or readiness audit, admin tool addition, or any task that surfaces recommendations or deferred work — you must perform a roadmap future-improvements scan:
+
+1. Review the session for anything that qualifies as future work:
+   - future improvements mentioned or implied during the task
+   - deferred enhancements ("we could also…", "a nice follow-up would be…")
+   - gaps or limitations discovered during an audit
+   - follow-up features that would naturally build on what was just shipped
+   - recommended next steps
+2. Open `src/config/roadmap.js` and for each candidate determine:
+   - **Already tracked** → no action; note it in the report
+   - **Belongs under an existing item** → merge or update the existing entry
+   - **Deserves its own entry** → add it with `status: 'planned'` or `'deferred'` and a `why`
+   - **Too trivial or already obvious from the code** → skip it, but explain the decision in the report
+3. Update the roadmap, then report what you did.
+
+**This scan runs after applicable tasks automatically.** For on-demand use, invoke the `/roadmap-future-improvements-scan` skill.
+
+**Do not list meaningful future improvements in a final report without first reviewing the roadmap.**
+This scan does NOT need to run after trivial changes (one-line copy edits, import fixes, etc.) unless future work is actually surfaced.
+
+---
+
+### Final report requirement
+
+Every applicable final report **must** include a roadmap scan section in this format:
+
+```
+Roadmap future-improvements scan:
+- Added: <item name> — <why it was added>
+- Updated: <item name> — <what changed>
+- Not added, with reason: <idea> — <why it wasn't tracked>
+```
+
+If nothing was found:
+
+```
+Roadmap future-improvements scan:
+- No new roadmap-worthy future improvements identified.
+```
+
+Do not omit this section from applicable final reports, even if the result is "nothing found." A missing section reads as skipped work, not as a clean scan.
 
 ---
 
