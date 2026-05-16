@@ -1,100 +1,120 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Cookie, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { storageService } from '@/services';
-
-const STORAGE_KEY = 'junited_cookie_consent';
+import { ChevronDown, ChevronUp, Cookie } from 'lucide-react';
+import { getStoredConsent, saveConsent } from '@/lib/cookieConsent';
+import { enableAnalytics, optOutAnalytics } from '@/lib/analytics';
 
 export default function CookieConsentBanner() {
-  const [visible, setVisible] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const [prefs, setPrefs] = useState({ essential: true, analytics: false });
+  const [visible, setVisible]     = useState(false);
+  const [expanded, setExpanded]   = useState(false);
+  const [wantsAnalytics, setWantsAnalytics] = useState(false);
 
   useEffect(() => {
+    // Only show the banner if the user has never made a choice.
     try {
-      const stored = storageService.getItem(STORAGE_KEY);
-      if (!stored) setVisible(true);
+      if (!getStoredConsent()) setVisible(true);
     } catch {
-      // Browser storage blocked (e.g. incognito with strict settings) — skip banner
+      // Storage blocked — skip banner gracefully.
     }
   }, []);
 
-  const save = (analyticsEnabled) => {
-    const consent = { essential: true, analytics: analyticsEnabled, timestamp: new Date().toISOString() };
-    storageService.setJson(STORAGE_KEY, consent);
-    // Expose preference globally so analytics lib can check it
-    window.__junited_analytics_enabled = analyticsEnabled;
+  const accept = (analyticsEnabled) => {
+    saveConsent(analyticsEnabled);
+    if (analyticsEnabled) {
+      enableAnalytics();
+    } else {
+      optOutAnalytics();
+    }
     setVisible(false);
   };
-
-  const handleAcceptAll = () => save(true);
-  const handleRejectOptional = () => save(false);
-  const handleSavePrefs = () => save(prefs.analytics);
 
   if (!visible) return null;
 
   return (
     <div className="app-floating-banner fixed left-0 right-0 z-[200] px-3 pb-2">
-      <div className="max-w-2xl mx-auto bg-slate-900 text-white rounded-2xl shadow-2xl overflow-hidden">
+      <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white shadow-xl">
         <div className="px-4 py-4">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div className="flex items-center gap-2">
-              <Cookie className="w-5 h-5 text-amber-400 flex-shrink-0" />
-              <p className="font-semibold text-[15px]">We use cookies</p>
-            </div>
-            <button onClick={handleRejectOptional} aria-label="Close cookie banner" className="p-1 rounded-full hover:bg-white/10 transition-colors flex-shrink-0">
-              <X className="w-4 h-4 text-slate-400" />
+
+          {/* Header */}
+          <div className="mb-2.5 flex items-center gap-2">
+            <Cookie className="h-4 w-4 shrink-0 text-amber-500" />
+            <p className="text-[14px] font-bold text-slate-900">Cookies on JUnited</p>
+          </div>
+
+          {/* Body */}
+          <p className="mb-4 text-[13px] leading-relaxed text-slate-600">
+            We use essential cookies to keep the app running. We also offer optional analytics
+            cookies that help us understand how people use JUnited — never your content or messages.{' '}
+            <Link to="/privacy" className="text-blue-600 underline underline-offset-2">
+              Privacy Policy
+            </Link>
+          </p>
+
+          {/* Primary actions */}
+          <div className="mb-3 flex gap-2">
+            <button
+              onClick={() => accept(false)}
+              className="flex-1 rounded-xl border border-slate-200 py-2.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-50 active:scale-[0.98]"
+            >
+              No thanks
+            </button>
+            <button
+              onClick={() => accept(true)}
+              className="flex-1 rounded-xl bg-blue-600 py-2.5 text-[13px] font-semibold text-white transition hover:bg-blue-500 active:scale-[0.98]"
+            >
+              Accept analytics
             </button>
           </div>
 
-          <p className="text-[13px] text-slate-300 leading-relaxed mb-3">
-            Essential cookies keep the app running. Optional analytics cookies help us improve it.{' '}
-            <Link to="/privacy" className="text-blue-400 underline">Privacy Policy</Link>
-          </p>
-
-          {/* Expandable preferences */}
-          <button onClick={() => setExpanded(e => !e)}
-            className="flex items-center gap-1 text-[12px] text-slate-400 hover:text-white transition-colors mb-3">
-            {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            {expanded ? 'Hide preferences' : 'Manage preferences'}
+          {/* Manage preferences toggle */}
+          <button
+            onClick={() => setExpanded(e => !e)}
+            className="flex items-center gap-1 text-[12px] text-slate-400 transition hover:text-slate-600"
+          >
+            {expanded
+              ? <ChevronUp className="h-3.5 w-3.5" />
+              : <ChevronDown className="h-3.5 w-3.5" />}
+            Manage preferences
           </button>
 
+          {/* Expanded preferences */}
           {expanded && (
-            <div className="space-y-2 mb-3 bg-white/5 rounded-xl p-3">
-              <div className="flex items-center justify-between">
+            <div className="mt-3 space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
+              {/* Essential — locked */}
+              <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[13px] font-semibold">Essential cookies</p>
-                  <p className="text-[11px] text-slate-400">Login, security, preferences. Required.</p>
+                  <p className="text-[13px] font-semibold text-slate-800">Essential cookies</p>
+                  <p className="text-[11px] text-slate-500">Login, security, and core app features. Required.</p>
                 </div>
-                <div className="w-8 h-5 bg-blue-600 rounded-full flex-shrink-0" />
+                <span className="shrink-0 rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-700">
+                  Always on
+                </span>
               </div>
-              <div className="flex items-center justify-between">
+
+              {/* Analytics — toggleable */}
+              <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[13px] font-semibold">Analytics cookies</p>
-                  <p className="text-[11px] text-slate-400">Help us understand usage. Optional.</p>
+                  <p className="text-[13px] font-semibold text-slate-800">Analytics cookies</p>
+                  <p className="text-[11px] text-slate-500">Help us improve the app. Your content is never shared.</p>
                 </div>
-                <button onClick={() => setPrefs(p => ({ ...p, analytics: !p.analytics }))}
-                  className={`w-8 h-5 rounded-full transition-colors flex-shrink-0 relative ${prefs.analytics ? 'bg-blue-600' : 'bg-slate-600'}`}>
-                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${prefs.analytics ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+                <button
+                  onClick={() => setWantsAnalytics(v => !v)}
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${wantsAnalytics ? 'bg-blue-600' : 'bg-slate-300'}`}
+                  aria-checked={wantsAnalytics}
+                  role="switch"
+                >
+                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${wantsAnalytics ? 'translate-x-5' : 'translate-x-0.5'}`} />
                 </button>
               </div>
-              <button onClick={handleSavePrefs}
-                className="w-full py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-[12px] font-semibold transition-colors mt-1">
+
+              <button
+                onClick={() => accept(wantsAnalytics)}
+                className="mt-1 w-full rounded-lg bg-slate-800 py-2 text-[12px] font-semibold text-white transition hover:bg-slate-700"
+              >
                 Save preferences
               </button>
             </div>
           )}
-
-          <div className="flex gap-2">
-            <button onClick={handleRejectOptional}
-              className="flex-1 py-2 rounded-xl border border-white/20 text-[13px] font-semibold hover:bg-white/5 transition-colors">
-              Essential only
-            </button>
-            <button onClick={handleAcceptAll}
-              className="flex-1 py-2 rounded-xl bg-blue-600 text-[13px] font-semibold hover:bg-blue-500 transition-colors">
-              Accept all
-            </button>
-          </div>
         </div>
       </div>
     </div>

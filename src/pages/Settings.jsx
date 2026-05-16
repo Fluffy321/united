@@ -31,6 +31,8 @@ import { dataService } from '@/services';
 import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
 import { createPageUrl } from '@/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { getStoredConsent, saveConsent } from '@/lib/cookieConsent';
+import { enableAnalytics, optOutAnalytics } from '@/lib/analytics';
 
 const interestOptions = [
   'Torah & Learning',
@@ -92,6 +94,7 @@ export default function Settings() {
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteText, setDeleteText] = useState('');
+  const [analyticsConsent, setAnalyticsConsent] = useState(() => getStoredConsent()?.analytics ?? false);
   const [form, setForm] = useState({
     display_name: '',
     bio: '',
@@ -472,6 +475,62 @@ export default function Settings() {
                 </label>
                 <ToggleRow icon={Search} title="Show profile in search" description="Allow others to find you by name." checked={form.message_settings.searchable} onChange={(value) => updateNested('message_settings', 'searchable', value)} />
                 <ToggleRow icon={Users} title="Show online status" description="Let community members see when you are active." checked={form.message_settings.showOnlineStatus} onChange={(value) => updateNested('message_settings', 'showOnlineStatus', value)} />
+              </div>
+            </SettingsCard>
+          )}
+
+          {activeSection === 'privacy' && (
+            <SettingsCard title="Cookie Preferences" icon={Lock}>
+              <div className="space-y-3">
+                {/* Essential — always on */}
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
+                    <Shield className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold leading-tight text-slate-950">Essential cookies</p>
+                    <p className="mt-0.5 text-xs leading-5 text-slate-500">Login, security, and core features. Required for the app to work.</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-bold text-blue-700">
+                    Always on
+                  </span>
+                </div>
+
+                {/* Analytics — user-controlled */}
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
+                    <Globe2 className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold leading-tight text-slate-950">Analytics cookies</p>
+                    <p className="mt-0.5 text-xs leading-5 text-slate-500">Help us understand how people use JUnited. Your content is never shared. Optional.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !analyticsConsent;
+                      setAnalyticsConsent(next);
+                      saveConsent(next);
+                      if (next) {
+                        enableAnalytics();
+                        toast.success('Analytics enabled');
+                      } else {
+                        optOutAnalytics();
+                        toast.success('Analytics disabled');
+                      }
+                    }}
+                    className={`relative h-7 w-12 shrink-0 rounded-full transition ${analyticsConsent ? 'bg-blue-600' : 'bg-slate-200'}`}
+                    aria-checked={analyticsConsent}
+                    role="switch"
+                  >
+                    <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition ${analyticsConsent ? 'left-6' : 'left-1'}`} />
+                  </button>
+                </div>
+
+                <p className="px-1 text-xs text-slate-400">
+                  Your preference is saved in this browser.{' '}
+                  <Link to="/privacy" className="text-blue-500 underline underline-offset-2">Privacy Policy</Link>
+                </p>
               </div>
             </SettingsCard>
           )}
