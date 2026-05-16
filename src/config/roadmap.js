@@ -119,6 +119,29 @@ Goals:
     title: 'Notification Aggregation',
     description: 'Group multiple similar notifications (e.g. "5 people liked your post") instead of one row per event.',
     why: 'Requires a more complex insert-time aggregation strategy or a server-side rollup job. Deferred until notification volume is high enough to warrant it.',
+    prompt: `You are implementing Notification Aggregation for JUnited.
+
+Context:
+- Notifications table: supabase/migrations/005_notifications_system.sql
+  Columns include: id, user_id, actor_id, actor_display_name, actor_avatar_url, type, title, body, post_id, conversation_id, data, is_read, created_at
+- Notification service: src/services/notificationsService.js — buildNotification(), create(), and individual notify* methods
+- Notification UI: src/pages/Notifications.jsx (full-page inbox) and src/components/notifications/NotificationCenter.jsx (sheet)
+- Active notification types that benefit most from aggregation: post_liked, post_commented, comment_reply, community_activity
+
+Goals:
+1. Add aggregation support to the notifications table:
+   - Add a migration with columns: aggregate_key text (nullable), aggregate_count int default 1
+   - aggregate_key format: "{type}:{target_id}" e.g. "post_liked:post-uuid"
+2. Update notificationsService.js buildNotification() and create() to:
+   - Compute aggregate_key for aggregatable types (post_liked, post_commented, community_activity)
+   - Before inserting, check for an existing unread notification with the same (user_id, aggregate_key)
+   - If found: UPDATE that row — increment aggregate_count, update actor_display_name to "X and N others", update body, set updated_at
+   - If not found: INSERT as normal
+3. Update src/pages/Notifications.jsx NotifCard body rendering to handle plural actor text:
+   - "Alice liked your post" (count=1) → "Alice and 4 others liked your post" (count=5)
+4. Update src/components/notifications/NotificationCenter.jsx similarly.
+5. Ensure mark-as-read still works correctly on aggregated rows (marks the single row).
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   // ── Community ─────────────────────────────────────────────────────────────
