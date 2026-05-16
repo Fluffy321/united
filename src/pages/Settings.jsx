@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { dataService } from '@/services';
+import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
 import { createPageUrl } from '@/utils';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -92,6 +93,7 @@ export default function Settings() {
   const [form, setForm] = useState({
     display_name: '',
     bio: '',
+    username: '',
     cityPreset: 'Five Towns',
     email: '',
     avatar_url: '',
@@ -106,6 +108,7 @@ export default function Settings() {
     setForm({
       display_name: currentUser.display_name || currentUser.full_name || 'Local Demo User',
       bio: currentUser.bio || 'Building stronger Jewish community connections.',
+      username: currentUser.username || '',
       cityPreset: currentUser.cityPreset || 'Five Towns',
       email: currentUser.email || 'demo@junited.local',
       avatar_url: currentUser.avatar_url || '',
@@ -129,6 +132,35 @@ export default function Settings() {
       },
     });
   }, [currentUser]);
+
+  const [usernameAvailable, setUsernameAvailable] = useState(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+
+  useEffect(() => {
+    if (!shouldUseSupabase || !supabase || !currentUser?.id) return;
+    const raw = (form.username || '').trim();
+    if (!raw || !/^[a-z0-9_]{3,30}$/.test(raw)) {
+      setUsernameAvailable(null);
+      setCheckingUsername(false);
+      return;
+    }
+    setCheckingUsername(true);
+    setUsernameAvailable(null);
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await supabase.rpc('check_username_available', {
+          p_username: raw,
+          p_exclude_user_id: currentUser.id,
+        });
+        setUsernameAvailable(data === true);
+      } catch {
+        setUsernameAvailable(null);
+      } finally {
+        setCheckingUsername(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [form.username, currentUser?.id]);
 
   const activeLabel = useMemo(
     () => sections.find((section) => section.id === activeSection)?.label || 'Settings',
@@ -204,6 +236,7 @@ export default function Settings() {
       await dataService.auth.updateMe({
         display_name: form.display_name.trim(),
         bio: form.bio.trim(),
+        username: form.username.trim() || null,
         cityPreset: form.cityPreset,
         avatar_url: form.avatar_url,
         interests: form.interests,
@@ -302,6 +335,34 @@ export default function Settings() {
             <SettingsCard title="Profile Information" icon={UserRound}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextField label="Display name" value={form.display_name} onChange={(value) => updateForm('display_name', value)} />
+                <div className="block min-w-0">
+                  <span className="mb-1.5 block text-sm font-bold text-slate-700">Username</span>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">@</span>
+                    <input
+                      value={form.username}
+                      onChange={(event) =>
+                        updateForm('username', event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 30))
+                      }
+                      placeholder="your_handle"
+                      className="h-11 w-full min-w-0 rounded-xl border border-slate-200 pl-8 pr-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </div>
+                  <p className={`mt-1 text-xs font-semibold ${
+                    checkingUsername ? 'text-slate-400' :
+                    usernameAvailable === true ? 'text-emerald-600' :
+                    usernameAvailable === false ? 'text-rose-500' :
+                    'text-slate-400'
+                  }`}>
+                    {checkingUsername
+                      ? 'Checking…'
+                      : usernameAvailable === true
+                      ? 'Username available ✓'
+                      : usernameAvailable === false
+                      ? 'That username is already taken'
+                      : 'Letters, numbers, and underscores · 3–30 characters'}
+                  </p>
+                </div>
                 <TextField label="Email" value={form.email} onChange={(value) => updateForm('email', value)} disabled />
                 <TextField label="Neighborhood" value={form.cityPreset} onChange={(value) => updateForm('cityPreset', value)} icon={MapPin} />
                 <TextField label="Profile photo URL" value={form.avatar_url} onChange={(value) => updateForm('avatar_url', value)} />

@@ -20,6 +20,8 @@ import { toast } from 'sonner';
 import { dataService } from '@/services';
 import { getCommunityTabLabel, getCommunityTypeConfig, getSupportedCommunityTabs } from '@/lib/communityTypes';
 import CommunityAdminCenter from './CommunityAdminCenter';
+import CommunityResourceLibrary from './CommunityResourceLibrary';
+import GroupChatSection from './GroupChatSection';
 
 function getPostTypeForTab(activeTab, typeKey) {
   if (activeTab === 'announcements' || typeKey === 'shul') return 'announcement';
@@ -52,10 +54,10 @@ export default function CommunityHubDetail({
   const typeConfig = getCommunityTypeConfig(community);
   const Icon = typeConfig.icon;
   const tabs = getSupportedCommunityTabs(community, {
-    events: false,
-    resources: false,
-    chat: false,
-    listings: false,
+    events: Boolean(community?.allow_member_events),
+    resources: Boolean(community?.allow_resources),
+    chat: Boolean(community?.allow_group_chat),
+    listings: Boolean(community?.allow_member_listings),
   });
   const [activeTab, setActiveTab] = useState(tabs.includes(initialTab) ? initialTab : (tabs[0] || 'home'));
   const [composeText, setComposeText] = useState('');
@@ -357,6 +359,18 @@ export default function CommunityHubDetail({
           )}
           {activeTab === 'members' && (
             <MembersTab community={community} memberVisibility={memberVisibility} />
+          )}
+          {activeTab === 'resources' && (
+            <CommunityResourceLibrary
+              communityId={community.id}
+              currentUser={currentUser}
+              isAdmin={isCommunityManager}
+            />
+          )}
+          {activeTab === 'chat' && (
+            <div className="mt-3 h-[60vh] overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+              <GroupChatSection communityId={community.id} currentUser={currentUser} />
+            </div>
           )}
         </div>
       </section>

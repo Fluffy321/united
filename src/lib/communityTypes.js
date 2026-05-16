@@ -276,14 +276,28 @@ export function getCommunityTypeConfig(community = {}) {
 
 export function getSupportedCommunityTabs(community = {}, productionCapabilities = {}) {
   const config = getCommunityTypeConfig(community);
-  const tabs = config.tabs.filter((tab) => {
+  const baseSet = new Set(config.tabs);
+
+  // Filter base tabs that require a capability.
+  const filtered = config.tabs.filter((tab) => {
     if (tab === 'events') return Boolean(productionCapabilities.events);
     if (tab === 'resources') return Boolean(productionCapabilities.resources);
     if (tab === 'chat') return Boolean(productionCapabilities.chat);
     if (tab === 'listings') return Boolean(productionCapabilities.listings);
     return true;
   });
-  return tabs.length ? tabs : COMMUNITY_TYPE_CONFIG.general.tabs;
+
+  // Admin-enabled modules may not be in the type's base tab list (e.g. resources on a
+  // neighborhood community). Inject them before 'members' so they always appear when enabled.
+  const insertIdx = filtered.includes('members') ? filtered.indexOf('members') : filtered.length;
+  const extras = [];
+  if (productionCapabilities.events && !baseSet.has('events')) extras.push('events');
+  if (productionCapabilities.resources && !baseSet.has('resources')) extras.push('resources');
+  if (productionCapabilities.listings && !baseSet.has('listings')) extras.push('listings');
+  if (productionCapabilities.chat && !baseSet.has('chat')) extras.push('chat');
+  if (extras.length) filtered.splice(insertIdx, 0, ...extras);
+
+  return filtered.length ? filtered : COMMUNITY_TYPE_CONFIG.general.tabs;
 }
 
 export function getCommunityTabLabel(tabKey) {

@@ -293,41 +293,45 @@ export default function Profile() {
     <div className="min-h-screen bg-transparent mobile-safe-bottom">
       <div className="mobile-page">
 
-        <ModernProfileHeader
-          user={profileUser}
-          isOwnProfile={isOwnProfile}
-          onMessage={handleMessage}
-          onReport={() => setShowReport(true)}
-          onBlock={handleBlock}
-          onSettings={isOwnProfile ? handleEditProfile : undefined}
-        />
+        <section className="px-3 pt-3">
+          <div className="surface-panel overflow-hidden rounded-[28px] shadow-[0_18px_48px_rgba(15,23,42,0.08)]">
+            <ModernProfileHeader
+              user={profileUser}
+              isOwnProfile={isOwnProfile}
+              onMessage={handleMessage}
+              onReport={() => setShowReport(true)}
+              onBlock={handleBlock}
+              onSettings={isOwnProfile ? handleEditProfile : undefined}
+            />
 
-        <ModernStatsRow
-          friends={friendCount}
-          following={userCommunities.length}
-          posts={unifiedPosts.length}
-          impact={mitzvahPoints}
-          onFriendsClick={isOwnProfile ? () => setShowFriendsHub(true) : undefined}
-          onPostsClick={() => scrollTo('recent-posts-section')}
-          onImpactClick={() => scrollTo('impact-section')}
-          onFollowingClick={() => scrollTo('communities-section')}
-        />
+            <ModernStatsRow
+              friends={friendCount}
+              following={userCommunities.length}
+              posts={unifiedPosts.length}
+              impact={mitzvahPoints}
+              onFriendsClick={isOwnProfile ? () => setShowFriendsHub(true) : undefined}
+              onPostsClick={() => scrollTo('recent-posts-section')}
+              onImpactClick={() => scrollTo('impact-section')}
+              onFollowingClick={() => scrollTo('communities-section')}
+            />
 
-        <ModernActionButtons
-          isOwnProfile={isOwnProfile}
-          onEditProfile={handleEditProfile}
-          onMessage={handleMessage}
-          onShare={handleShareProfile}
-          onReport={() => setShowReport(true)}
-          onBlock={handleBlock}
-          relationship={relationship}
-          onSendRequest={handleSendRequest}
-          onCancelRequest={handleCancelRequest}
-          onAcceptRequest={handleAcceptRequest}
-          onDeclineRequest={handleDeclineRequest}
-          onRemoveFriend={handleRemoveFriend}
-          friendLoading={friendLoading}
-        />
+            <ModernActionButtons
+              isOwnProfile={isOwnProfile}
+              onEditProfile={handleEditProfile}
+              onMessage={handleMessage}
+              onShare={handleShareProfile}
+              onReport={() => setShowReport(true)}
+              onBlock={handleBlock}
+              relationship={relationship}
+              onSendRequest={handleSendRequest}
+              onCancelRequest={handleCancelRequest}
+              onAcceptRequest={handleAcceptRequest}
+              onDeclineRequest={handleDeclineRequest}
+              onRemoveFriend={handleRemoveFriend}
+              friendLoading={friendLoading}
+            />
+          </div>
+        </section>
 
         <div className="space-y-3 pb-4">
 

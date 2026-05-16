@@ -20,17 +20,17 @@ export default function ModernActionButtons({
 }) {
   if (isOwnProfile) {
     return (
-      <div className="flex gap-2 px-3 pb-1">
+      <div className="flex gap-2 px-4 pb-4">
         <button
           onClick={onEditProfile}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white py-2.5 text-[13px] font-black text-slate-700 shadow-sm transition-all active:scale-95 hover:bg-slate-50"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-slate-950 py-3 text-[13px] font-black text-white shadow-[0_12px_24px_rgba(15,23,42,0.16)] transition-all hover:bg-slate-800 active:scale-95"
         >
           <Edit2 className="h-3.5 w-3.5" />
           Edit Profile
         </button>
         <button
           onClick={onShare}
-          className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-500 shadow-sm transition-all active:scale-95 hover:bg-slate-50"
+          className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-600 shadow-sm transition-all hover:border-blue-100 hover:bg-blue-50 hover:text-blue-700 active:scale-95"
           title="Share profile"
         >
           <Share2 className="h-3.5 w-3.5" />
@@ -106,32 +106,32 @@ export default function ModernActionButtons({
   };
 
   return (
-    <div className="flex gap-2 px-3 pb-1">
+    <div className="flex gap-2 px-4 pb-4">
       {renderFriendButton()}
       <button
         onClick={onMessage}
-        className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-blue-600 py-2.5 text-[13px] font-black text-white shadow-sm transition-all active:scale-95 hover:bg-blue-700"
+        className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-blue-600 py-3 text-[13px] font-black text-white shadow-[0_12px_24px_rgba(37,99,235,0.20)] transition-all active:scale-95 hover:bg-blue-700"
       >
         <MessageCircle className="h-3.5 w-3.5" />
         Message
       </button>
       <button
         onClick={onShare}
-        className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-slate-500 shadow-sm transition-all active:scale-95 hover:bg-slate-50"
+        className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-600 shadow-sm transition-all active:scale-95 hover:border-blue-100 hover:bg-blue-50 hover:text-blue-700"
         title="Share profile"
       >
         <Share2 className="h-3.5 w-3.5" />
       </button>
       <button
         onClick={onReport}
-        className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:bg-red-50 hover:text-red-500 active:scale-95"
+        className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:bg-red-50 hover:text-red-500 active:scale-95"
         title="Report"
       >
         <Flag className="h-3.5 w-3.5" />
       </button>
       <button
         onClick={onBlock}
-        className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:bg-red-50 hover:text-red-500 active:scale-95"
+        className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:bg-red-50 hover:text-red-500 active:scale-95"
         title="Block"
       >
         <Ban className="h-3.5 w-3.5" />
