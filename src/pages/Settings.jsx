@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -8,6 +8,7 @@ import {
   Clock,
   Globe2,
   HeartHandshake,
+  Inbox,
   Loader2,
   Lock,
   LogOut,
@@ -17,14 +18,13 @@ import {
   Save,
   Search,
   Shield,
+  Smartphone,
+  Sparkles,
   Trash2,
   UserRound,
   Users,
   Wrench,
   Flag,
-  Inbox,
-  Smartphone,
-  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { dataService } from '@/services';
@@ -34,52 +34,31 @@ import { useAuth } from '@/lib/AuthContext';
 import { getStoredConsent, saveConsent } from '@/lib/cookieConsent';
 import { enableAnalytics, optOutAnalytics } from '@/lib/analytics';
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const interestOptions = [
-  'Torah & Learning',
-  'Chesed',
-  'Shuls',
-  'Schools',
-  'Events',
-  'Parents',
-  'Singles',
-  'Neighborhoods',
-  'Food',
-  'Business',
-  'Volunteering',
-  'Youth Programs',
+  'Torah & Learning', 'Chesed', 'Shuls', 'Schools', 'Events',
+  'Parents', 'Singles', 'Neighborhoods', 'Food', 'Business',
+  'Volunteering', 'Youth Programs',
 ];
 
 const sections = [
-  { id: 'profile', label: 'Profile', icon: UserRound },
-  { id: 'community', label: 'Community', icon: Users },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'privacy', label: 'Privacy', icon: Shield },
-  { id: 'app', label: 'App', icon: Moon },
-  { id: 'account', label: 'Account', icon: Lock },
+  { id: 'profile',       label: 'Profile',        icon: UserRound },
+  { id: 'community',    label: 'Community',       icon: Users },
+  { id: 'notifications', label: 'Notifications',  icon: Bell },
+  { id: 'privacy',      label: 'Privacy',         icon: Shield },
+  { id: 'app',          label: 'App',             icon: Moon },
+  { id: 'account',      label: 'Account',         icon: Lock },
 ];
 
 const defaultSettings = {
   notification_settings: {
-    messages: true,
-    comments: true,
-    communityPosts: true,
-    eventReminders: true,
-    chesedRequests: true,
-    mitzvahDailyReminders: true,
-    shabbatReminders: true,
-    weeklyDigest: false,
+    messages: true, comments: true, communityPosts: true,
+    eventReminders: true, chesedRequests: true,
+    mitzvahDailyReminders: true, shabbatReminders: true, weeklyDigest: false,
   },
-  message_settings: {
-    allowMessagesFrom: 'communities',
-    searchable: true,
-    showOnlineStatus: true,
-  },
-  app_settings: {
-    compactCards: false,
-    reduceMotion: false,
-    hebrewDates: true,
-    quietMode: false,
-  },
+  message_settings: { allowMessagesFrom: 'communities', searchable: true, showOnlineStatus: true },
+  app_settings:     { compactCards: false, reduceMotion: false, hebrewDates: true, quietMode: false },
   community_settings: {
     primaryNeighborhood: 'Five Towns',
     showSuggestedCommunities: true,
@@ -88,48 +67,56 @@ const defaultSettings = {
   },
 };
 
+function sectionTitle(id) {
+  return {
+    profile:       'Your public profile',
+    community:     'How communities work for you',
+    notifications: 'What should get your attention',
+    privacy:       'Control who can find and contact you',
+    app:           'Make the app feel comfortable',
+    account:       'Login and account actions',
+  }[id] ?? '';
+}
+
+function sectionDescription(id) {
+  return {
+    profile:       "This is what people see when you post, join a community, or send a message.",
+    community:     "Tune the app around your neighborhood and the types of groups you care about.",
+    notifications: "Keep important messages on, and turn down the noise where you want calm.",
+    privacy:       "Messaging and search settings help you stay reachable without feeling exposed.",
+    app:           "Small quality-of-life preferences for how JUnited looks and behaves.",
+    account:       "Basic account controls for your JUnited login.",
+  }[id] ?? '';
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default function Settings() {
   const { user: currentUser, logout } = useAuth();
   const [activeSection, setActiveSection] = useState('profile');
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving]           = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteText, setDeleteText] = useState('');
-  const [analyticsConsent, setAnalyticsConsent] = useState(() => getStoredConsent()?.analytics ?? false);
-  const [form, setForm] = useState({
-    display_name: '',
-    bio: '',
-    username: '',
-    cityPreset: 'Five Towns',
-    email: '',
-    avatar_url: '',
-    interests: [],
-    ...defaultSettings,
-  });
+  const [analyticsConsent, setAnalyticsConsent]   = useState(
+    () => getStoredConsent()?.analytics ?? false,
+  );
+  const [form, setForm] = useState({ display_name: '', bio: '', username: '',
+    cityPreset: 'Five Towns', email: '', avatar_url: '', interests: [], ...defaultSettings });
 
   const formInitialized = useRef(false);
   useEffect(() => {
     if (!currentUser || formInitialized.current) return;
     formInitialized.current = true;
     setForm({
-      display_name: currentUser.display_name || currentUser.full_name || 'Local Demo User',
-      bio: currentUser.bio || 'Building stronger Jewish community connections.',
-      username: currentUser.username || '',
-      cityPreset: currentUser.cityPreset || 'Five Towns',
-      email: currentUser.email || 'demo@junited.local',
-      avatar_url: currentUser.avatar_url || '',
-      interests: currentUser.interests || ['Chesed', 'Events', 'Community'],
-      notification_settings: {
-        ...defaultSettings.notification_settings,
-        ...(currentUser.notification_settings || {}),
-      },
-      message_settings: {
-        ...defaultSettings.message_settings,
-        ...(currentUser.message_settings || {}),
-      },
-      app_settings: {
-        ...defaultSettings.app_settings,
-        ...(currentUser.app_settings || {}),
-      },
+      display_name: currentUser.display_name || currentUser.full_name || 'User',
+      bio:          currentUser.bio || '',
+      username:     currentUser.username || '',
+      cityPreset:   currentUser.cityPreset || 'Five Towns',
+      email:        currentUser.email || '',
+      avatar_url:   currentUser.avatar_url || '',
+      interests:    currentUser.interests || [],
+      notification_settings: { ...defaultSettings.notification_settings, ...(currentUser.notification_settings || {}) },
+      message_settings:      { ...defaultSettings.message_settings,      ...(currentUser.message_settings || {}) },
+      app_settings:          { ...defaultSettings.app_settings,          ...(currentUser.app_settings || {}) },
       community_settings: {
         ...defaultSettings.community_settings,
         ...(currentUser.community_settings || {}),
@@ -138,99 +125,60 @@ export default function Settings() {
     });
   }, [currentUser]);
 
+  // Username availability check
   const [usernameAvailable, setUsernameAvailable] = useState(null);
-  const [checkingUsername, setCheckingUsername] = useState(false);
-
+  const [checkingUsername,  setCheckingUsername]  = useState(false);
   useEffect(() => {
     if (!shouldUseSupabase || !supabase || !currentUser?.id) return;
     const raw = (form.username || '').trim();
     if (!raw || !/^[a-z0-9_]{3,30}$/.test(raw)) {
-      setUsernameAvailable(null);
-      setCheckingUsername(false);
-      return;
+      setUsernameAvailable(null); setCheckingUsername(false); return;
     }
-    setCheckingUsername(true);
-    setUsernameAvailable(null);
-    const timer = setTimeout(async () => {
+    setCheckingUsername(true); setUsernameAvailable(null);
+    const t = setTimeout(async () => {
       try {
-        const { data } = await supabase.rpc('check_username_available', {
-          p_username: raw,
-          p_exclude_user_id: currentUser.id,
-        });
+        const { data } = await supabase.rpc('check_username_available',
+          { p_username: raw, p_exclude_user_id: currentUser.id });
         setUsernameAvailable(data === true);
-      } catch {
-        setUsernameAvailable(null);
-      } finally {
-        setCheckingUsername(false);
-      }
+      } catch { setUsernameAvailable(null); } finally { setCheckingUsername(false); }
     }, 400);
-    return () => clearTimeout(timer);
+    return () => clearTimeout(t);
   }, [form.username, currentUser?.id]);
 
-  const activeLabel = useMemo(
-    () => sections.find((section) => section.id === activeSection)?.label || 'Settings',
-    [activeSection]
-  );
-
-  const updateForm = (key, value) => setForm((current) => ({ ...current, [key]: value }));
-
-  const updateNested = (group, key, value) => {
-    setForm((current) => ({
-      ...current,
-      [group]: {
-        ...current[group],
-        [key]: value,
-      },
-    }));
-  };
+  const updateForm   = (k, v)      => setForm(s => ({ ...s, [k]: v }));
+  const updateNested = (g, k, v)   => setForm(s => ({ ...s, [g]: { ...s[g], [k]: v } }));
 
   const handleShabbatReminderToggle = async (value) => {
     updateNested('notification_settings', 'shabbatReminders', value);
     if (!value || typeof Notification === 'undefined') return;
     try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        toast.success('Shabbat reminders enabled');
-      } else {
-        toast.message('Browser notifications are not enabled yet');
-      }
-    } catch {
-      toast.message('Open browser notification permissions to receive Shabbat reminders');
-    }
+      const p = await Notification.requestPermission();
+      if (p === 'granted') toast.success('Shabbat reminders enabled');
+      else toast.message('Enable browser notifications to receive Shabbat reminders');
+    } catch { toast.message('Open browser notification permissions to receive Shabbat reminders'); }
   };
 
   const handleMitzvahReminderToggle = async (value) => {
     updateNested('notification_settings', 'mitzvahDailyReminders', value);
     if (!value || typeof Notification === 'undefined') return;
     try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        toast.success('Daily mitzvah reminders enabled');
-      } else {
-        toast.message('Browser notifications are not enabled yet');
-      }
-    } catch {
-      toast.message('Open browser notification permissions to receive mitzvah reminders');
-    }
+      const p = await Notification.requestPermission();
+      if (p === 'granted') toast.success('Daily mitzvah reminders enabled');
+      else toast.message('Enable browser notifications to receive mitzvah reminders');
+    } catch { toast.message('Open browser notification permissions to receive mitzvah reminders'); }
   };
 
-  const toggleInterest = (interest) => {
-    setForm((current) => {
-      const exists = current.interests.includes(interest);
-      const nextInterests = exists
-        ? current.interests.filter((item) => item !== interest)
-        : [...current.interests, interest].slice(0, 6);
-      return { ...current, interests: nextInterests };
-    });
-  };
+  const toggleInterest = (interest) => setForm(s => {
+    const has = s.interests.includes(interest);
+    return { ...s, interests: has
+      ? s.interests.filter(i => i !== interest)
+      : [...s.interests, interest].slice(0, 6) };
+  });
 
-  const handleAvatarChange = async (event) => {
-    const file = event.target.files?.[0];
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please choose an image file');
-      return;
-    }
+    if (!file.type.startsWith('image/')) { toast.error('Please choose an image file'); return; }
     const { file_url } = await dataService.integrations.Core.UploadFile({ file, bucket: 'avatars' });
     updateForm('avatar_url', file_url);
   };
@@ -240,163 +188,145 @@ export default function Settings() {
     try {
       await dataService.auth.updateMe({
         display_name: form.display_name.trim(),
-        bio: form.bio.trim(),
-        username: form.username.trim() || null,
-        cityPreset: form.cityPreset,
-        avatar_url: form.avatar_url,
-        interests: form.interests,
+        bio:          form.bio.trim(),
+        username:     form.username.trim() || null,
+        cityPreset:   form.cityPreset,
+        avatar_url:   form.avatar_url,
+        interests:    form.interests,
         notification_settings: form.notification_settings,
-        message_settings: form.message_settings,
-        app_settings: form.app_settings,
-        community_settings: form.community_settings,
+        message_settings:      form.message_settings,
+        app_settings:          form.app_settings,
+        community_settings:    form.community_settings,
       });
       toast.success('Settings saved');
-    } catch {
-      toast.error('Could not save settings');
-    }
+    } catch { toast.error('Could not save settings'); }
     setIsSaving(false);
   };
 
-  const handleLogout = async () => {
-    await logout();
-    toast.success('Logged out');
-  };
+  const handleLogout = async () => { await logout(); toast.success('Logged out'); };
 
-  const handleDeleteAccount = () => {
-    setShowDeleteConfirm(false);
-  };
+  if (!currentUser) return (
+    <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <Loader2 className="h-7 w-7 animate-spin text-blue-600" />
+    </div>
+  );
 
-  if (!currentUser) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <Loader2 className="h-7 w-7 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  const n = form.notification_settings;
+  const a = form.app_settings;
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-slate-50 mobile-safe-bottom">
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mobile-page-wide flex min-w-0 items-center justify-between gap-2 px-3 py-3 sm:px-6">
-          <div className="flex min-w-0 items-center gap-2">
-            <Link
-              to={createPageUrl('Profile')}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Account</p>
-              <h1 className="truncate text-xl font-bold text-slate-950">Settings</h1>
-            </div>
-          </div>
+    <main className="min-h-screen bg-slate-50 mobile-safe-bottom">
 
+      {/* ── Header ── */}
+      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mobile-page-wide flex items-center gap-3 px-4 py-3">
+          <Link
+            to={createPageUrl('Profile')}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Account</p>
+            <h1 className="text-[17px] font-bold text-slate-950">Settings</h1>
+          </div>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-blue-600 px-3 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-60 sm:px-4"
+            className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-blue-600 px-4 text-[13px] font-bold text-white transition hover:bg-blue-500 disabled:opacity-60"
           >
-            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
             Save
           </button>
         </div>
       </header>
 
-      <div className="mobile-page-wide grid min-w-0 gap-4 px-3 py-4 sm:px-6 lg:grid-cols-[280px_1fr]">
-        <aside className="min-w-0 space-y-3">
-          <ProfileSummary form={form} onAvatarChange={handleAvatarChange} />
+      <div className="mobile-page-wide space-y-3 px-4 py-4">
 
-          <nav className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:grid-cols-3 lg:block lg:p-0">
-            {sections.map((section) => {
-              const Icon = section.icon;
-              const active = activeSection === section.id;
-              return (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveSection(section.id)}
-                  className={`flex min-w-0 items-center justify-between gap-2 rounded-xl px-3 py-3 text-left text-sm font-bold transition lg:w-full lg:rounded-none lg:border-b lg:border-slate-100 lg:last:border-b-0 ${
-                    active ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{section.label}</span>
-                  </span>
-                  <ChevronRight className="hidden h-4 w-4 opacity-50 lg:block" />
-                </button>
-              );
-            })}
-          </nav>
-        </aside>
+        {/* ── Sidebar: profile summary + section nav ── */}
+        <ProfileSummary form={form} onAvatarChange={handleAvatarChange} />
 
-        <section className="min-w-0 space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <p className="text-sm font-bold text-blue-700">{activeLabel}</p>
-            <h2 className="mt-1 text-xl font-bold leading-tight text-slate-950 sm:text-2xl">{sectionTitle(activeSection)}</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{sectionDescription(activeSection)}</p>
+        <nav className="grid grid-cols-3 gap-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+          {sections.map(({ id, label, icon: Icon }) => {
+            const active = activeSection === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setActiveSection(id)}
+                className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 transition ${
+                  active ? 'bg-blue-50' : 'hover:bg-slate-50'
+                }`}
+              >
+                <Icon className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-blue-600' : 'text-slate-400'}`} />
+                <span className={`text-[11px] font-semibold leading-none ${active ? 'text-blue-700' : 'text-slate-500'}`}>
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* ── Section content ── */}
+        <div className="space-y-3">
+
+          {/* Section heading */}
+          <div className="px-1 pt-1">
+            <h2 className="text-base font-bold text-slate-900">{sectionTitle(activeSection)}</h2>
+            <p className="mt-0.5 text-[13px] leading-5 text-slate-500">{sectionDescription(activeSection)}</p>
           </div>
 
+          {/* ─── Profile ─────────────────────────────── */}
           {activeSection === 'profile' && (
             <SettingsCard title="Profile Information" icon={UserRound}>
               <div className="grid gap-4 sm:grid-cols-2">
-                <TextField label="Display name" value={form.display_name} onChange={(value) => updateForm('display_name', value)} />
+                <TextField label="Display name" value={form.display_name} onChange={v => updateForm('display_name', v)} />
                 <div className="block min-w-0">
-                  <span className="mb-1.5 block text-sm font-bold text-slate-700">Username</span>
+                  <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">Username</span>
                   <div className="relative">
                     <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">@</span>
                     <input
                       value={form.username}
-                      onChange={(event) =>
-                        updateForm('username', event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 30))
-                      }
+                      onChange={e => updateForm('username', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 30))}
                       placeholder="your_handle"
                       className="h-11 w-full min-w-0 rounded-xl border border-slate-200 pl-8 pr-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                     />
                   </div>
                   <p className={`mt-1 text-xs font-semibold ${
                     checkingUsername ? 'text-slate-400' :
-                    usernameAvailable === true ? 'text-emerald-600' :
-                    usernameAvailable === false ? 'text-rose-500' :
-                    'text-slate-400'
+                    usernameAvailable === true  ? 'text-emerald-600' :
+                    usernameAvailable === false ? 'text-rose-500' : 'text-slate-400'
                   }`}>
-                    {checkingUsername
-                      ? 'Checking…'
-                      : usernameAvailable === true
-                      ? 'Username available ✓'
-                      : usernameAvailable === false
-                      ? 'That username is already taken'
-                      : 'Letters, numbers, and underscores · 3–30 characters'}
+                    {checkingUsername ? 'Checking…' :
+                     usernameAvailable === true  ? 'Username available ✓' :
+                     usernameAvailable === false ? 'That username is already taken' :
+                     'Letters, numbers, underscores · 3–30 chars'}
                   </p>
                 </div>
-                <TextField label="Email" value={form.email} onChange={(value) => updateForm('email', value)} disabled />
-                <TextField label="Neighborhood" value={form.cityPreset} onChange={(value) => updateForm('cityPreset', value)} icon={MapPin} />
-                <TextField label="Profile photo URL" value={form.avatar_url} onChange={(value) => updateForm('avatar_url', value)} />
+                <TextField label="Email" value={form.email} onChange={v => updateForm('email', v)} disabled />
+                <TextField label="Neighborhood" value={form.cityPreset} onChange={v => updateForm('cityPreset', v)} icon={MapPin} />
                 <label className="block sm:col-span-2">
-                  <span className="mb-1.5 block text-sm font-bold text-slate-700">Bio</span>
+                  <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">Bio</span>
                   <textarea
                     value={form.bio}
-                    onChange={(event) => updateForm('bio', event.target.value)}
-                    rows={4}
+                    onChange={e => updateForm('bio', e.target.value)}
+                    rows={3}
                     maxLength={220}
-                    className="w-full resize-none rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                   />
                   <p className="mt-1 text-right text-xs text-slate-400">{form.bio.length}/220</p>
                 </label>
               </div>
-
-              <div className="mt-5">
-                <p className="mb-2 text-sm font-bold text-slate-700">Interests up to 6</p>
+              <div className="mt-4 border-t border-slate-100 pt-4">
+                <p className="mb-2.5 text-[13px] font-semibold text-slate-700">Interests <span className="font-normal text-slate-400">(up to 6)</span></p>
                 <div className="flex flex-wrap gap-2">
-                  {interestOptions.map((interest) => {
+                  {interestOptions.map(interest => {
                     const active = form.interests.includes(interest);
                     return (
                       <button
                         key={interest}
                         onClick={() => toggleInterest(interest)}
-                        className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
-                          active
-                            ? 'border-blue-200 bg-blue-50 text-blue-700'
-                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                        className={`rounded-full border px-3 py-1.5 text-[13px] font-semibold transition ${
+                          active ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                         }`}
                       >
                         {interest}
@@ -408,223 +338,243 @@ export default function Settings() {
             </SettingsCard>
           )}
 
+          {/* ─── Community ────────────────────────────── */}
           {activeSection === 'community' && (
-            <SettingsCard title="Community Preferences" icon={HeartHandshake}>
-              <div className="space-y-3">
+            <SettingsCard title="Community Preferences" icon={Users}>
+              <div className="mb-4">
                 <TextField
                   label="Primary neighborhood"
                   value={form.community_settings.primaryNeighborhood}
-                  onChange={(value) => updateNested('community_settings', 'primaryNeighborhood', value)}
+                  onChange={v => updateNested('community_settings', 'primaryNeighborhood', v)}
                   icon={MapPin}
                 />
-                <ToggleRow
-                  icon={Users}
-                  title="Show suggested communities"
-                  description="Recommend shuls, schools, chesed groups, and neighborhood boards."
-                  checked={form.community_settings.showSuggestedCommunities}
-                  onChange={(value) => updateNested('community_settings', 'showSuggestedCommunities', value)}
-                />
-                <ToggleRow
-                  icon={Search}
-                  title="Show profile to shared communities"
-                  description="Let members of your joined communities discover your profile."
-                  checked={form.community_settings.showPublicProfileToCommunities}
-                  onChange={(value) => updateNested('community_settings', 'showPublicProfileToCommunities', value)}
-                />
-                <ToggleRow
-                  icon={HeartHandshake}
-                  title="Follow joined communities automatically"
-                  description="Add new joined communities to your Feed and notifications."
-                  checked={form.community_settings.autoFollowJoinedCommunities}
-                  onChange={(value) => updateNested('community_settings', 'autoFollowJoinedCommunities', value)}
-                />
+              </div>
+              <div className="divide-y divide-slate-100">
+                <SettingsRow icon={Users} title="Show suggested communities" description="Recommend shuls, schools, chesed groups, and neighborhood boards.">
+                  <Toggle checked={form.community_settings.showSuggestedCommunities} onChange={v => updateNested('community_settings', 'showSuggestedCommunities', v)} label="Show suggested communities" />
+                </SettingsRow>
+                <SettingsRow icon={Search} title="Show profile to shared communities" description="Let members of your joined communities discover your profile.">
+                  <Toggle checked={form.community_settings.showPublicProfileToCommunities} onChange={v => updateNested('community_settings', 'showPublicProfileToCommunities', v)} label="Show profile to communities" />
+                </SettingsRow>
+                <SettingsRow icon={HeartHandshake} title="Follow joined communities automatically" description="Add new joined communities to your Feed and notifications.">
+                  <Toggle checked={form.community_settings.autoFollowJoinedCommunities} onChange={v => updateNested('community_settings', 'autoFollowJoinedCommunities', v)} label="Auto-follow joined communities" />
+                </SettingsRow>
               </div>
             </SettingsCard>
           )}
 
+          {/* ─── Notifications ────────────────────────── */}
           {activeSection === 'notifications' && (
             <SettingsCard title="Notification Settings" icon={Bell}>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <ToggleRow icon={Mail} title="Messages" description="New direct messages." checked={form.notification_settings.messages} onChange={(value) => updateNested('notification_settings', 'messages', value)} />
-                <ToggleRow icon={Bell} title="Comments" description="Replies to your posts." checked={form.notification_settings.comments} onChange={(value) => updateNested('notification_settings', 'comments', value)} />
-                <ToggleRow icon={Users} title="Community posts" description="Updates from joined groups." checked={form.notification_settings.communityPosts} onChange={(value) => updateNested('notification_settings', 'communityPosts', value)} />
-                <ToggleRow icon={Globe2} title="Event reminders" description="Upcoming local events." checked={form.notification_settings.eventReminders} onChange={(value) => updateNested('notification_settings', 'eventReminders', value)} />
-                <ToggleRow icon={HeartHandshake} title="Chesed requests" description="Nearby help requests." checked={form.notification_settings.chesedRequests} onChange={(value) => updateNested('notification_settings', 'chesedRequests', value)} />
-                <ToggleRow icon={HeartHandshake} title="Daily mitzvah tracker" description="Morning and evening nudges to log 2 mitzvot and keep your streak." checked={form.notification_settings.mitzvahDailyReminders} onChange={handleMitzvahReminderToggle} />
-                <ToggleRow icon={Clock} title="Shabbat reminders" description="Notify 20 minutes before candle lighting and when Shabbat ends." checked={form.notification_settings.shabbatReminders} onChange={handleShabbatReminderToggle} />
-                <ToggleRow icon={Mail} title="Weekly digest" description="A calm weekly summary." checked={form.notification_settings.weeklyDigest} onChange={(value) => updateNested('notification_settings', 'weeklyDigest', value)} />
+              <div className="divide-y divide-slate-100">
+                <SettingsRow icon={Mail} title="Messages" description="Get notified when someone sends you a direct message.">
+                  <Toggle checked={n.messages} onChange={v => updateNested('notification_settings', 'messages', v)} label="Messages" />
+                </SettingsRow>
+                <SettingsRow icon={Bell} title="Comments" description="Replies to your posts and comments.">
+                  <Toggle checked={n.comments} onChange={v => updateNested('notification_settings', 'comments', v)} label="Comments" />
+                </SettingsRow>
+                <SettingsRow icon={Users} title="Community posts" description="Updates from communities you've joined.">
+                  <Toggle checked={n.communityPosts} onChange={v => updateNested('notification_settings', 'communityPosts', v)} label="Community posts" />
+                </SettingsRow>
+                <SettingsRow icon={Globe2} title="Event reminders" description="Upcoming events in your communities.">
+                  <Toggle checked={n.eventReminders} onChange={v => updateNested('notification_settings', 'eventReminders', v)} label="Event reminders" />
+                </SettingsRow>
+                <SettingsRow icon={HeartHandshake} title="Chesed requests" description="Help requests posted near you.">
+                  <Toggle checked={n.chesedRequests} onChange={v => updateNested('notification_settings', 'chesedRequests', v)} label="Chesed requests" />
+                </SettingsRow>
+                <SettingsRow icon={HeartHandshake} title="Daily mitzvah tracker" description="Morning and evening nudges to log your mitzvot and keep your streak.">
+                  <Toggle checked={n.mitzvahDailyReminders} onChange={handleMitzvahReminderToggle} label="Daily mitzvah tracker" />
+                </SettingsRow>
+                <SettingsRow icon={Clock} title="Shabbat reminders" description="Alert 20 minutes before candle lighting and when Shabbat ends.">
+                  <Toggle checked={n.shabbatReminders} onChange={handleShabbatReminderToggle} label="Shabbat reminders" />
+                </SettingsRow>
+                <SettingsRow icon={Mail} title="Weekly digest" description="A calm weekly summary of your communities.">
+                  <Toggle checked={n.weeklyDigest} onChange={v => updateNested('notification_settings', 'weeklyDigest', v)} label="Weekly digest" />
+                </SettingsRow>
               </div>
             </SettingsCard>
           )}
 
+          {/* ─── Privacy ──────────────────────────────── */}
           {activeSection === 'privacy' && (
-            <SettingsCard title="Privacy & Safety" icon={Shield}>
-              <div className="space-y-4">
-                <label className="block">
-                  <span className="mb-1.5 block text-sm font-bold text-slate-700">Who can message you?</span>
-                  <select
-                    value={form.message_settings.allowMessagesFrom}
-                    onChange={(event) => updateNested('message_settings', 'allowMessagesFrom', event.target.value)}
-                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-                  >
-                    <option value="everyone">Anyone</option>
-                    <option value="communities">People in my communities</option>
-                    <option value="connections">Only connections</option>
-                    <option value="nobody">Nobody</option>
-                  </select>
-                </label>
-                <ToggleRow icon={Search} title="Show profile in search" description="Allow others to find you by name." checked={form.message_settings.searchable} onChange={(value) => updateNested('message_settings', 'searchable', value)} />
-                <ToggleRow icon={Users} title="Show online status" description="Let community members see when you are active." checked={form.message_settings.showOnlineStatus} onChange={(value) => updateNested('message_settings', 'showOnlineStatus', value)} />
-              </div>
-            </SettingsCard>
-          )}
+            <>
+              <SettingsCard title="Privacy & Safety" icon={Shield}>
+                <div className="mb-4">
+                  <label className="block">
+                    <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">Who can message you?</span>
+                    <select
+                      value={form.message_settings.allowMessagesFrom}
+                      onChange={e => updateNested('message_settings', 'allowMessagesFrom', e.target.value)}
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    >
+                      <option value="everyone">Anyone</option>
+                      <option value="communities">People in my communities</option>
+                      <option value="connections">Only connections</option>
+                      <option value="nobody">Nobody</option>
+                    </select>
+                  </label>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  <SettingsRow icon={Search} title="Show profile in search" description="Allow others to find you by name or username.">
+                    <Toggle checked={form.message_settings.searchable} onChange={v => updateNested('message_settings', 'searchable', v)} label="Show profile in search" />
+                  </SettingsRow>
+                  <SettingsRow icon={Users} title="Show online status" description="Let community members see when you're active.">
+                    <Toggle checked={form.message_settings.showOnlineStatus} onChange={v => updateNested('message_settings', 'showOnlineStatus', v)} label="Show online status" />
+                  </SettingsRow>
+                </div>
+              </SettingsCard>
 
-          {activeSection === 'privacy' && (
-            <SettingsCard title="Cookie Preferences" icon={Lock}>
-              <div className="space-y-3">
-                {/* Essential — always on */}
-                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
-                    <Shield className="h-5 w-5" />
+              <SettingsCard title="Cookie Preferences" icon={Lock}>
+                {/* Essential — locked */}
+                <div className="flex items-center gap-3 border-b border-slate-100 py-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                    <Shield className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold leading-tight text-slate-950">Essential cookies</p>
-                    <p className="mt-0.5 text-xs leading-5 text-slate-500">Login, security, and core features. Required for the app to work.</p>
+                    <p className="text-[13.5px] font-semibold text-slate-900">Essential cookies</p>
+                    <p className="mt-0.5 text-xs text-slate-500">Login, security, and core features. Required for the app to work.</p>
                   </div>
                   <span className="shrink-0 rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-bold text-blue-700">
                     Always on
                   </span>
                 </div>
-
                 {/* Analytics — user-controlled */}
-                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
-                    <Globe2 className="h-5 w-5" />
+                <div className="flex items-center gap-3 py-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                    <Globe2 className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold leading-tight text-slate-950">Analytics cookies</p>
-                    <p className="mt-0.5 text-xs leading-5 text-slate-500">Help us understand how people use JUnited. Your content is never shared. Optional.</p>
+                    <p className="text-[13.5px] font-semibold text-slate-900">Analytics cookies</p>
+                    <p className="mt-0.5 text-xs text-slate-500">Help us improve the app. Your content is never shared. Optional.</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = !analyticsConsent;
+                  <Toggle
+                    checked={analyticsConsent}
+                    label="Analytics cookies"
+                    onChange={next => {
                       setAnalyticsConsent(next);
                       saveConsent(next);
-                      if (next) {
-                        enableAnalytics();
-                        toast.success('Analytics enabled');
-                      } else {
-                        optOutAnalytics();
-                        toast.success('Analytics disabled');
-                      }
+                      if (next) { enableAnalytics(); toast.success('Analytics enabled'); }
+                      else      { optOutAnalytics(); toast.success('Analytics disabled'); }
                     }}
-                    className={`relative h-7 w-12 shrink-0 rounded-full transition ${analyticsConsent ? 'bg-blue-600' : 'bg-slate-200'}`}
-                    aria-checked={analyticsConsent}
-                    role="switch"
-                  >
-                    <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition ${analyticsConsent ? 'left-6' : 'left-1'}`} />
-                  </button>
+                  />
                 </div>
-
-                <p className="px-1 text-xs text-slate-400">
+                <p className="pb-2 text-xs text-slate-400">
                   Your preference is saved in this browser.{' '}
                   <Link to="/privacy" className="text-blue-500 underline underline-offset-2">Privacy Policy</Link>
                 </p>
-              </div>
-            </SettingsCard>
+              </SettingsCard>
+            </>
           )}
 
+          {/* ─── App ──────────────────────────────────── */}
           {activeSection === 'app' && (
             <SettingsCard title="App Preferences" icon={Moon}>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <ToggleRow icon={Moon} title="Quiet mode" description="Reduce attention-grabbing alerts." checked={form.app_settings.quietMode} onChange={(value) => updateNested('app_settings', 'quietMode', value)} />
-                <ToggleRow icon={Users} title="Compact cards" description="Show denser Feed and community cards." checked={form.app_settings.compactCards} onChange={(value) => updateNested('app_settings', 'compactCards', value)} />
-                <ToggleRow icon={Shield} title="Reduce motion" description="Limit animations and transitions." checked={form.app_settings.reduceMotion} onChange={(value) => updateNested('app_settings', 'reduceMotion', value)} />
-                <ToggleRow icon={Globe2} title="Hebrew dates" description="Show Hebrew dates where available." checked={form.app_settings.hebrewDates} onChange={(value) => updateNested('app_settings', 'hebrewDates', value)} />
+              <div className="divide-y divide-slate-100">
+                <SettingsRow icon={Moon} title="Quiet mode" description="Reduce attention-grabbing alerts and motion.">
+                  <Toggle checked={a.quietMode} onChange={v => updateNested('app_settings', 'quietMode', v)} label="Quiet mode" />
+                </SettingsRow>
+                <SettingsRow icon={Users} title="Compact cards" description="Show denser Feed and community cards.">
+                  <Toggle checked={a.compactCards} onChange={v => updateNested('app_settings', 'compactCards', v)} label="Compact cards" />
+                </SettingsRow>
+                <SettingsRow icon={Shield} title="Reduce motion" description="Limit animations and page transitions.">
+                  <Toggle checked={a.reduceMotion} onChange={v => updateNested('app_settings', 'reduceMotion', v)} label="Reduce motion" />
+                </SettingsRow>
+                <SettingsRow icon={Globe2} title="Hebrew dates" description="Show the Hebrew calendar date where available.">
+                  <Toggle checked={a.hebrewDates} onChange={v => updateNested('app_settings', 'hebrewDates', v)} label="Hebrew dates" />
+                </SettingsRow>
               </div>
             </SettingsCard>
           )}
 
-          {activeSection === 'account' && currentUser.role === 'admin' && (
-            <SettingsCard title="Admin Tools" icon={Wrench}>
-              <div className="space-y-2">
-                <Link to="/AdminModerationQueue" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                  <Flag className="h-4 w-4 text-rose-500" />
-                  Moderation Queue
-                  <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
-                </Link>
-                <Link to="/AdminAnalyticsDashboard" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                  <Shield className="h-4 w-4 text-blue-500" />
-                  Analytics Dashboard
-                  <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
-                </Link>
-                <Link to="/AdminFeedbackInbox" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                  <Inbox className="h-4 w-4 text-violet-500" />
-                  Feedback Inbox
-                  <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
-                </Link>
-                <Link to="/AdminiOSReadiness" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                  <Smartphone className="h-4 w-4 text-slate-500" />
-                  iOS App Store Readiness
-                  <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
-                </Link>
-                <Link to="/FutureFeatures" className="flex h-11 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                  <Sparkles className="h-4 w-4 text-amber-500" />
-                  Future Features
-                  <ChevronRight className="ml-auto h-4 w-4 text-slate-300" />
-                </Link>
-              </div>
-            </SettingsCard>
-          )}
-
+          {/* ─── Account ──────────────────────────────── */}
           {activeSection === 'account' && (
-            <SettingsCard title="Account Actions" icon={Lock}>
-              <div className="space-y-3">
-                <InfoRow title="Account type" value={currentUser.role === 'admin' ? 'Admin' : 'Member'} />
-                <InfoRow title="User ID" value={currentUser.id} />
+            <>
+              {/* Admin Tools — only for admins */}
+              {currentUser.role === 'admin' && (
+                <SettingsCard title="Admin Tools" icon={Wrench}>
+                  <div className="divide-y divide-slate-100">
+                    {[
+                      { to: '/AdminModerationQueue',   icon: Flag,        label: 'Moderation Queue',         color: 'text-rose-500' },
+                      { to: '/AdminAnalyticsDashboard', icon: Shield,     label: 'Analytics Dashboard',      color: 'text-blue-500' },
+                      { to: '/AdminFeedbackInbox',      icon: Inbox,      label: 'Feedback Inbox',           color: 'text-violet-500' },
+                      { to: '/AdminiOSReadiness',       icon: Smartphone, label: 'iOS App Store Readiness',  color: 'text-slate-500' },
+                      { to: '/FutureFeatures',          icon: Sparkles,   label: 'Future Features',          color: 'text-amber-500' },
+                    ].map(({ to, icon: Icon, label, color }) => (
+                      <Link
+                        key={to}
+                        to={to}
+                        className="flex items-center gap-3 py-3.5 text-slate-700 transition hover:text-slate-900"
+                      >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                          <Icon className={`h-4 w-4 ${color}`} />
+                        </div>
+                        <span className="flex-1 text-[13.5px] font-semibold">{label}</span>
+                        <ChevronRight className="h-4 w-4 text-slate-300" />
+                      </Link>
+                    ))}
+                  </div>
+                </SettingsCard>
+              )}
+
+              {/* Account info */}
+              <SettingsCard title="Account" icon={Lock}>
+                <div className="divide-y divide-slate-100">
+                  <div className="flex items-center justify-between py-3.5">
+                    <span className="text-[13.5px] font-semibold text-slate-700">Account type</span>
+                    <span className="text-[13px] text-slate-500 capitalize">{currentUser.role ?? 'member'}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 py-3.5">
+                    <span className="shrink-0 text-[13.5px] font-semibold text-slate-700">User ID</span>
+                    <span className="min-w-0 truncate text-right font-mono text-[11px] text-slate-400">{currentUser.id}</span>
+                  </div>
+                </div>
+              </SettingsCard>
+
+              {/* Sign out */}
+              <button
+                onClick={handleLogout}
+                className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 text-[13.5px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+              >
+                <LogOut className="h-4 w-4 text-slate-400" />
+                Sign out
+              </button>
+
+              {/* Danger zone */}
+              <div className="rounded-2xl border border-red-100 bg-red-50 p-4">
+                <p className="mb-1 text-[11px] font-black uppercase tracking-wide text-red-500">Danger Zone</p>
+                <p className="mb-3 text-[13px] text-red-700">Permanently delete your account and all your data.</p>
                 <button
-                  onClick={handleLogout}
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Log out locally
-                </button>
-                <button
-                  onClick={() => {
-                    setDeleteText('');
-                    setShowDeleteConfirm(true);
-                  }}
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition hover:bg-red-100"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-[13px] font-bold text-red-600 transition hover:bg-red-100"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Delete account
+                  Delete my account
                 </button>
               </div>
-            </SettingsCard>
+            </>
           )}
-        </section>
-      </div>
 
+        </div>{/* end space-y-3 content */}
+      </div>{/* end mobile-page-wide */}
+
+      {/* ── Delete confirmation sheet ── */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-[90] flex items-end bg-slate-950/40 p-0 sm:items-center sm:justify-center sm:p-4">
+        <div className="fixed inset-0 z-[90] flex items-end bg-slate-950/40 sm:items-center sm:justify-center sm:p-4">
           <div className="w-full rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-md sm:rounded-3xl">
             <h2 className="text-lg font-bold text-slate-950">Delete account</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
+            <p className="mt-2 text-[13px] leading-6 text-slate-500">
               To permanently delete your account and all associated data, email{' '}
               <a href="mailto:support@junited.org" className="font-semibold text-blue-600 underline">
                 support@junited.org
               </a>{' '}
               from the address you used to sign up. We process deletion requests within 30 days.
             </p>
-            <div className="mt-5 flex gap-3">
-              <button
-                onClick={handleDeleteAccount}
-                className="h-11 flex-1 rounded-xl bg-slate-100 text-sm font-bold text-slate-700"
-              >
-                Close
-              </button>
-            </div>
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="mt-5 h-11 w-full rounded-xl bg-slate-100 text-sm font-bold text-slate-700 transition hover:bg-slate-200"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
@@ -632,118 +582,102 @@ export default function Settings() {
   );
 }
 
-function sectionTitle(section) {
-  const titles = {
-    profile: 'Your public profile',
-    community: 'How communities work for you',
-    notifications: 'What should get your attention',
-    privacy: 'Control who can find and contact you',
-    app: 'Make the app feel comfortable',
-    account: 'Login and account actions',
-  };
-  return titles[section];
-}
-
-function sectionDescription(section) {
-  const descriptions = {
-    profile: 'This is what people see when you post, join a community, or send a message.',
-    community: 'Tune the app around your neighborhood and the types of groups you care about.',
-    notifications: 'Keep important messages on, and turn down the noise where you want calm.',
-    privacy: 'Messaging and search settings help you stay reachable without feeling exposed.',
-    app: 'Small quality-of-life preferences for how JUnited looks and behaves.',
-    account: 'Basic account controls for your JUnited login.',
-  };
-  return descriptions[section];
-}
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function ProfileSummary({ form, onAvatarChange }) {
-  const initials = (form.display_name || 'User')
-    .split(' ')
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
+  const initials = (form.display_name || 'U')
+    .split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase();
 
   return (
-    <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-      <div className="flex items-center gap-3">
-        <div className="relative shrink-0">
-          {form.avatar_url ? (
-            <img src={form.avatar_url} alt="" className="h-16 w-16 rounded-2xl object-cover" />
-          ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-950 text-lg font-black text-white">
-              {initials}
-            </div>
-          )}
-          <label className="absolute -bottom-2 -right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm">
-            <Camera className="h-4 w-4" />
-            <input type="file" accept="image/*" className="hidden" onChange={onAvatarChange} />
-          </label>
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-base font-bold text-slate-950">{form.display_name}</p>
-          <p className="truncate text-sm text-slate-500">{form.cityPreset}</p>
-        </div>
+    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+      <div className="relative shrink-0">
+        {form.avatar_url ? (
+          <img src={form.avatar_url} alt="" className="h-14 w-14 rounded-xl object-cover" />
+        ) : (
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-900 text-base font-black text-white">
+            {initials}
+          </div>
+        )}
+        <label className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-slate-800 text-white shadow-sm transition hover:bg-slate-700">
+          <Camera className="h-3.5 w-3.5" />
+          <input type="file" accept="image/*" className="hidden" onChange={onAvatarChange} />
+        </label>
+      </div>
+      <div className="min-w-0">
+        <p className="truncate text-[15px] font-bold text-slate-950">{form.display_name || 'Your Name'}</p>
+        <p className="truncate text-[13px] text-slate-500">{form.cityPreset}</p>
       </div>
     </div>
   );
 }
 
+/** White card with a header row (icon + title) and padded content below */
 function SettingsCard({ title, icon: Icon, children }) {
   return (
-    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-      <h3 className="mb-4 flex min-w-0 items-center gap-2 text-base font-bold text-slate-950 sm:text-lg">
-        <Icon className="h-5 w-5 shrink-0 text-blue-600" />
-        {title}
-      </h3>
-      {children}
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      {title && (
+        <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-3">
+          {Icon && <Icon className="h-4 w-4 shrink-0 text-blue-600" />}
+          <h3 className="text-[13px] font-bold text-slate-800">{title}</h3>
+        </div>
+      )}
+      <div className="px-4 pb-1">{children}</div>
     </section>
+  );
+}
+
+/** Full-width settings row: icon + label/description on left, children (toggle) on right.
+ *  Used inside a divide-y container inside SettingsCard. */
+function SettingsRow({ icon: Icon, title, description, children }) {
+  return (
+    <div className="flex min-w-0 min-h-[52px] items-center gap-3 py-3.5">
+      {Icon && (
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+          <Icon className="h-[17px] w-[17px]" />
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-[13.5px] font-semibold leading-tight text-slate-900">{title}</p>
+        {description && <p className="mt-0.5 text-[12px] leading-4 text-slate-500">{description}</p>}
+      </div>
+      {children && <div className="ml-2 shrink-0">{children}</div>}
+    </div>
+  );
+}
+
+/** The toggle switch control — used inside SettingsRow */
+function Toggle({ checked, onChange, label }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+        checked ? 'bg-blue-600' : 'bg-slate-200'
+      }`}
+    >
+      <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-transform ${
+        checked ? 'translate-x-5' : 'translate-x-0'
+      }`} />
+    </button>
   );
 }
 
 function TextField({ label, value, onChange, disabled = false, icon: Icon }) {
   return (
     <label className="block min-w-0">
-      <span className="mb-1.5 block text-sm font-bold text-slate-700">{label}</span>
+      <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">{label}</span>
       <div className="relative">
         {Icon && <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />}
         <input
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={e => onChange(e.target.value)}
           disabled={disabled}
           className={`h-11 w-full min-w-0 rounded-xl border border-slate-200 px-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-400 ${Icon ? 'pl-10' : ''}`}
         />
       </div>
     </label>
-  );
-}
-
-function ToggleRow({ icon: Icon, title, description, checked, onChange }) {
-  return (
-    <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
-        <Icon className="h-5 w-5" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold leading-tight text-slate-950">{title}</p>
-        <p className="mt-0.5 text-xs leading-5 text-slate-500">{description}</p>
-      </div>
-      <button
-        type="button"
-        onClick={() => onChange(!checked)}
-        className={`relative h-7 w-12 shrink-0 rounded-full transition ${checked ? 'bg-blue-600' : 'bg-slate-200'}`}
-      >
-        <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition ${checked ? 'left-6' : 'left-1'}`} />
-      </button>
-    </div>
-  );
-}
-
-function InfoRow({ title, value }) {
-  return (
-    <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3">
-      <p className="shrink-0 text-sm font-bold text-slate-700">{title}</p>
-      <p className="min-w-0 truncate text-right text-sm text-slate-500">{value}</p>
-    </div>
   );
 }
