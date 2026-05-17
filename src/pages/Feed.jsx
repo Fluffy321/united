@@ -22,8 +22,8 @@ import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import { getShabbatTimes } from '@/lib/hebrewDate';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
-import useHideOnScroll from '@/hooks/useHideOnScroll';
 import { useFloatingActions } from '@/components/layout/FloatingActionsContext';
+import DestinationHeader from '@/components/layout/DestinationHeader';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
 const minutesAgo = (minutes) => new Date(Date.now() - minutes * 60 * 1000).toISOString();
@@ -451,8 +451,6 @@ export default function Feed({ isActive = true }) {
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [showEventsSheet, setShowEventsSheet] = useState(false);
-  const headerHidden = useHideOnScroll();
-
   const { location: candleLocation, locationLoading: candleLocationLoading } = useShabbatLocation({ autoRequest: true });
   const shabbat = useShabbosCountdown(candleLocation, candleLocationLoading);
 
@@ -808,20 +806,19 @@ export default function Feed({ isActive = true }) {
         </div>
       )}
 
-      <div
-        className="sticky top-0 z-[60] px-3 pt-3 transition-transform duration-300 ease-out"
-        style={{ transform: headerHidden ? 'translateY(-120%)' : 'translateY(0)' }}
-      >
-        <div className="glass-toolbar mobile-page flex min-h-[56px] items-center justify-between rounded-[24px] px-3 py-2">
+      <DestinationHeader
+        leading={(
           <button
             onClick={() => setShowLocationPicker(v => !v)}
-            className="app-chip app-chip-active min-h-[44px] border-blue-200 bg-blue-50 shadow-sm touch-manipulation active:scale-95"
+            className="app-chip app-chip-active min-h-[44px] min-w-0 border-blue-200 bg-blue-50 shadow-sm touch-manipulation active:scale-95"
           >
             <span>{primaryNetwork.emoji}</span>
-            <span>{primaryNetwork.shortLabel}</span>
-            <ChevronDown className="w-3 h-3 text-blue-400 transition-transform" style={{ transform: showLocationPicker ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+            <span className="truncate">{primaryNetwork.shortLabel}</span>
+            <ChevronDown className="w-3 h-3 shrink-0 text-blue-400 transition-transform" style={{ transform: showLocationPicker ? 'rotate(180deg)' : 'rotate(0deg)' }} />
           </button>
-          <div className="flex items-center gap-1">
+        )}
+        actions={(
+          <>
             <button onClick={() => navigate('/SupportJUnited')} className="app-icon-button surface-tile-hover touch-manipulation" aria-label="Support JUnited">
               <Heart className="h-[18px] w-[18px] text-rose-400" />
             </button>
@@ -829,9 +826,9 @@ export default function Feed({ isActive = true }) {
               <Search className="h-[18px] w-[18px] text-slate-500" />
             </button>
             <NotificationBell userId={currentUser?.id} />
-          </div>
-        </div>
-      </div>
+          </>
+        )}
+      />
 
       {showLocationPicker && (
         <div className="sticky top-[78px] z-20">

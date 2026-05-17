@@ -143,6 +143,8 @@ Do not omit this section from applicable final reports, even if the result is "n
 - Use the shared layout utilities in `src/index.css`: `mobile-page`, `mobile-page-wide`, `mobile-safe-bottom`, `app-fixed-layer`, `app-fixed-frame`, and `app-floating-stack`.
 - Do not hardcode new fixed button offsets such as `bottom: calc(144px + env(safe-area-inset-bottom))`.
 - Page-level floating buttons should register through `FloatingActionsContext` so global actions like Feedback and page actions like Feed Create Post share one safe, responsive stack.
+- Feed, Communities, and Map share a persistent `DestinationHeader` glass-toolbar. Keep primary destination utility headers stable and consistent; do not bring back one-off hide-on-scroll behavior for only some main tabs.
+- Mitzvah Circle and Profile are intentionally hero-led. Align them with the shared shell spacing/card rhythm, but avoid duplicate top utility bars unless a future full shell redesign calls for it.
 
 ---
 

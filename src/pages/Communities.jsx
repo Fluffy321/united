@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import useHideOnScroll from '@/hooks/useHideOnScroll';
 import { useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -25,6 +24,7 @@ import CommunityHubDetail from '@/components/communities/CommunityHubDetail';
 import CommunityAdminCenter from '@/components/communities/CommunityAdminCenter';
 import CreateCommunityForm from '@/components/communities/CreateCommunityForm';
 import MessagesDrawer from '@/components/communities/MessagesDrawer';
+import DestinationHeader from '@/components/layout/DestinationHeader';
 import { COMMUNITY_TYPE_OPTIONS, getCommunityTypeConfig, getCommunityTypeKey } from '@/lib/communityTypes';
 
 const COMMUNITY_FILTERS = [{ key: 'all', label: 'All' }, ...COMMUNITY_TYPE_OPTIONS.map(({ key, label }) => ({ key, label }))];
@@ -482,7 +482,6 @@ function getManagementRole(community, currentUser, membershipsByCommunity) {
 export default function Communities() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
-  const headerHidden = useHideOnScroll();
   const searchBarRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const urlCommunityId = searchParams.get('community');
@@ -865,17 +864,11 @@ export default function Communities() {
 
   return (
     <main className="app-page mobile-safe-bottom">
-      {/* Sticky glass header — hide on downward scroll, reveal on upward */}
-      <div
-        className="sticky top-0 z-[60] px-3 pt-3 transition-transform duration-300 ease-out"
-        style={{ transform: headerHidden ? 'translateY(-120%)' : 'translateY(0)' }}
-      >
-        <div className="glass-toolbar mobile-page flex min-h-[56px] items-center justify-between rounded-[24px] px-3 py-2">
-          <div className="flex items-center gap-2">
-            <Users className="h-[18px] w-[18px] shrink-0 text-blue-600" strokeWidth={2.5} />
-            <h1 className="text-[17px] font-black text-slate-950">Communities</h1>
-          </div>
-          <div className="flex items-center gap-1">
+      <DestinationHeader
+        icon={Users}
+        title="Communities"
+        actions={(
+          <>
             <button
               onClick={() => searchBarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
               className="app-icon-button surface-tile-hover touch-manipulation"
@@ -897,9 +890,9 @@ export default function Communities() {
             >
               <Plus className="h-[18px] w-[18px] text-slate-500" />
             </button>
-          </div>
-        </div>
-      </div>
+          </>
+        )}
+      />
 
       <div className="mobile-page-wide px-3 pb-6 pt-3 sm:px-4 sm:pt-4">
         <Hero joinedCount={joinedCount} />

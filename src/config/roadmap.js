@@ -1003,62 +1003,29 @@ Goals:
     category: 'Admin & Platform',
     status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
-    title: 'Extend Hide-on-Scroll Header to Other Pages',
-    description: 'Universal app-shell header consistency across major JUnited pages. Feed and Communities share a glass-toolbar sticky header with hide-on-scroll. Map gets the glass-toolbar visual treatment (no hide-on-scroll — wrong scroll architecture). Profile intentionally remains unique.',
-    shippedNote: 'Shipped 2026-05-17 (cross-app header consistency pass). Extracted useHideOnScroll() hook to src/hooks/useHideOnScroll.js — used by Feed and Communities. Communities gained a new sticky glass-toolbar header (title + search/messages/create actions); Hero card simplified to remove the duplicated title and CTA buttons. Map.jsx header row restyled as glass-toolbar pill for visual consistency — no hide-on-scroll because the page uses overflow-y-auto (window scroll never fires). Profile left structurally unique: the ModernProfileHeader card IS the page identity and a secondary header would create clutter. Feed refactored to use the shared hook (behavior unchanged). Files: src/hooks/useHideOnScroll.js (new), src/pages/Feed.jsx, src/pages/Communities.jsx, src/pages/Map.jsx.',
+    title: 'Primary Destination Header Consistency',
+    description: 'Universal app-shell header consistency across major JUnited pages. Feed, Communities, and Map use the same persistent glass-toolbar header primitive. Mitzvah Circle and Profile remain hero-led, but share the same mobile shell spacing and card rhythm.',
+    shippedNote: 'Updated 2026-05-17 after UX architecture review. The earlier hide-on-scroll approach made Feed/Communities behave differently from Map and felt arbitrary. Replaced it with a persistent DestinationHeader shared by Feed, Communities, and Map; removed the unused useHideOnScroll hook. Mitzvah Circle stays mission/hero-led and Profile stays identity/hero-led to avoid duplicate headers.',
   },
 
   {
     id: 'mitzvah-circle-glass-header',
     category: 'Admin & Platform',
-    status: STATUS.PLANNED,
+    status: STATUS.DROPPED,
     priority: PRIORITY.LOW,
     title: 'MitzvahCircle Glass-Toolbar Header',
     description: 'Apply the same glass-toolbar sticky header pattern to MitzvahCircle that was applied to Communities (2026-05-17). Currently the h1 title and Post Request button are buried inside a scrollable card in the content area.',
-    why: 'Surfaced during the 2026-05-17 cross-app header consistency pass. MitzvahCircle is a SwipeableTab (window scroll), so useHideOnScroll() applies directly. Deferred from the current task to keep scope bounded.',
-    prompt: `You are adding a glass-toolbar sticky header to MitzvahCircle for JUnited.
-
-Context:
-  - src/pages/MitzvahCircle.jsx — the page; currently the h1 "Mitzvah Circle" is in a scrollable gradient card at the top, along with a "Post Request" button (src around line 1560–1590)
-  - src/hooks/useHideOnScroll.js — shared hook (8px threshold, 60px MIN_SCROLL)
-  - src/pages/Communities.jsx — reference implementation of the pattern (added 2026-05-17)
-  - src/pages/Feed.jsx — also uses useHideOnScroll; glass-toolbar header with icon + title + action icons
-
-Pattern to follow (same as Communities):
-  1. Add import useHideOnScroll from '@/hooks/useHideOnScroll' to MitzvahCircle.jsx.
-  2. Call const headerHidden = useHideOnScroll(); in the component body.
-  3. Add a sticky glass-toolbar header as the first child of the main element:
-       - Left: HandHeart icon + "Mitzvah Circle" h1 in the same style as Feed/Communities
-       - Right: Plus icon button to trigger setShowCreate(true)
-  4. Simplify the existing gradient header card: remove the h1 "Mitzvah Circle" and the create button. Keep the description text, metrics (Open/In Progress/Completed), and the "Community help hub" chip.
-  5. Run npm run lint && npm run typecheck && npm run build.
-  6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+    why: 'Dropped 2026-05-17 after the broader page-shell review. Mitzvah Circle should remain mission/hero-led, not gain a duplicate utility header. Its future polish should focus on hero/card rhythm and sticky activity controls inside the shared shell.',
   },
 
   {
     id: 'map-window-scroll-redesign',
     category: 'Admin & Platform',
-    status: STATUS.DEFERRED,
+    status: STATUS.DROPPED,
     priority: PRIORITY.LOW,
     title: 'Map Page Window-Scroll Architecture Redesign',
     description: 'Map currently uses flex h-dvh with an overflow-y-auto inner container. This prevents hide-on-scroll from working on the Map header. A future redesign to use window scroll would enable hide-on-scroll consistency with Feed/Communities, but requires a significant layout change.',
-    why: 'Deferred 2026-05-17. The current overflow-y-auto architecture is intentional — it gives the map section a fixed height. Redesigning to window scroll would require the map component itself to handle its own internal sizing. Not worth the risk/effort until Map has more usage and a clear UX reason to change.',
-    prompt: `You are redesigning the Map page layout to use window scroll instead of overflow-y-auto for JUnited.
-
-Context:
-  - src/pages/Map.jsx — currently uses: <main className="flex h-dvh flex-col overflow-hidden"> with an inner <div className="...overflow-y-auto"> for content
-  - This prevents window.scrollY from firing, so useHideOnScroll() cannot work on the Map header
-  - src/components/business/BusinessMap.jsx — uses Leaflet, needs a height-constrained container
-  - src/components/mitzvah/MitzvahMap.jsx — also uses Leaflet, same constraint
-
-Goals:
-1. Audit what height constraint the map components actually need. Leaflet maps need an explicit height.
-2. Redesign the Map page so the main layout uses document/window scroll (no overflow-y-auto wrapper).
-3. Give the map components their height via a fixed/calculated CSS value or a ResizeObserver approach rather than relying on flex fill.
-4. After redesign, add useHideOnScroll() to the Map header using the standard pattern.
-5. Verify the maps render correctly and have no height collapse.
-6. Run npm run lint && npm run typecheck && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+    why: 'Dropped 2026-05-17 after the broader page-shell review. Map should keep its internal scroll/fixed-height map architecture; Feed and Communities now match Map with persistent headers instead of forcing Map into hide-on-scroll.',
   },
 
   {

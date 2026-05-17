@@ -101,3 +101,4 @@ Roadmap future-improvements scan:
 - **Lint/build**: Run `npm run lint` and `npm run build` before completing any task.
 - **Responsive shell**: Use the shared layout utilities in `src/index.css` (`mobile-page`, `mobile-page-wide`, `mobile-safe-bottom`, `app-fixed-layer`, `app-fixed-frame`, `app-floating-stack`) instead of hardcoding viewport widths or floating button offsets.
 - **Floating actions**: Page-level floating buttons should register through `FloatingActionsContext` so they share one stack with global actions like Feedback and stay above the bottom nav/safe area.
+- **Primary destination headers**: Feed, Communities, and Map use `DestinationHeader` for a persistent glass-toolbar header. Do not reintroduce per-page hide-on-scroll headers unless the whole shell strategy is intentionally redesigned. Mitzvah Circle and Profile are hero-led pages; keep them aligned through shared shell spacing instead of adding duplicate utility bars by default.
