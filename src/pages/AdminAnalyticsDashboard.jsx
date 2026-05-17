@@ -9,6 +9,65 @@ import { subDays, format, startOfDay } from 'date-fns';
 
 const COLORS = ['#2563EB', '#7C3AED', '#EC4899', '#F59E0B', '#10B981', '#06B6D4', '#EF4444', '#84CC16'];
 
+const FUNNEL_META = {
+  Signups: {
+    label: 'Signups',
+    description: 'Total user accounts',
+    tone: 'blue',
+  },
+  'First post': {
+    label: 'Posts created',
+    description: 'Total posts, not unique posters',
+    tone: 'purple',
+  },
+  'Community join': {
+    label: 'Community joins',
+    description: 'Total joins; one user can join many communities',
+    tone: 'emerald',
+  },
+  WAU: {
+    label: 'WAU',
+    description: 'Users active in the last 7 days',
+    tone: 'amber',
+  },
+  MAU: {
+    label: 'MAU',
+    description: 'Users active in the last 30 days',
+    tone: 'teal',
+  },
+};
+
+const FUNNEL_TONES = {
+  blue: 'bg-blue-50 text-blue-700 border-blue-100',
+  purple: 'bg-purple-50 text-purple-700 border-purple-100',
+  emerald: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+  amber: 'bg-amber-50 text-amber-700 border-amber-100',
+  teal: 'bg-teal-50 text-teal-700 border-teal-100',
+};
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString();
+}
+
+function getSignalPercent(count, baseline) {
+  if (!baseline) return 0;
+  return Math.round((Number(count || 0) / baseline) * 100);
+}
+
+function getSignalRows(funnel) {
+  const baseline = Number(funnel?.[0]?.count || 0);
+  return (funnel || []).map((step) => {
+    const pct = step.stage === 'Signups' ? 100 : getSignalPercent(step.count, baseline);
+    return {
+      ...step,
+      meta: FUNNEL_META[step.stage] || { label: step.stage, description: 'Activation signal', tone: 'blue' },
+      pct,
+      cappedPct: Math.min(Math.max(pct, 0), 100),
+      exceedsBaseline: pct > 100,
+    };
+  });
+}
+
 function StatCard({ icon, label, value, sub, trend, color = 'blue' }) {
   const colorMap = { blue: 'bg-blue-50 text-blue-600', purple: 'bg-purple-50 text-purple-600', green: 'bg-emerald-50 text-emerald-600', amber: 'bg-amber-50 text-amber-600', red: 'bg-red-50 text-red-600', teal: 'bg-teal-50 text-teal-600' };
   return (
@@ -54,6 +113,63 @@ function exportCSV(data, filename) {
   const a = document.createElement('a');
   a.href = url; a.download = filename; document.body.appendChild(a); a.click();
   document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function ActivationMetricCard({ row }) {
+  const tone = FUNNEL_TONES[row.meta.tone] || FUNNEL_TONES.blue;
+
+  return (
+    <div className="min-w-0 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-[12px] font-bold text-slate-500">{row.meta.label}</p>
+          <p className="mt-1 text-2xl font-black text-slate-950">{formatNumber(row.count)}</p>
+        </div>
+        <span className={`shrink-0 rounded-full border px-2 py-1 text-[11px] font-black ${tone}`}>
+          {row.pct}%
+        </span>
+      </div>
+      <p className="mt-2 line-clamp-2 text-[11px] font-medium leading-4 text-slate-400">{row.meta.description}</p>
+    </div>
+  );
+}
+
+function ActivationSignalRow({ row }) {
+  const tone = row.meta.tone === 'purple'
+    ? 'bg-purple-600'
+    : row.meta.tone === 'emerald'
+      ? 'bg-emerald-600'
+      : row.meta.tone === 'amber'
+        ? 'bg-amber-500'
+        : row.meta.tone === 'teal'
+          ? 'bg-teal-600'
+          : 'bg-blue-600';
+
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-3">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[13px] font-black text-slate-900">{row.meta.label}</p>
+          <p className="mt-0.5 text-[11px] font-medium text-slate-500">{row.meta.description}</p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className="text-[13px] font-black text-slate-900">{formatNumber(row.count)}</p>
+          <p className="text-[11px] font-bold text-slate-400">{row.pct}% of signups</p>
+        </div>
+      </div>
+      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white shadow-inner ring-1 ring-slate-100">
+        <div
+          className={`${tone} h-full rounded-full transition-[width] duration-300`}
+          style={{ width: `${row.cappedPct}%` }}
+        />
+      </div>
+      {row.exceedsBaseline && (
+        <p className="mt-2 inline-flex rounded-full bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-700">
+          Above signup baseline because this counts total activity, not unique users.
+        </p>
+      )}
+    </div>
+  );
 }
 
 // Build daily buckets for last N days
@@ -168,6 +284,7 @@ export default function AdminAnalyticsDashboard() {
     { key: 'moderation', label: 'Moderation' },
     { key: 'funnel', label: 'Growth Funnel' },
   ];
+  const activationRows = getSignalRows(data.funnel);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
@@ -344,29 +461,56 @@ export default function AdminAnalyticsDashboard() {
         {/* FUNNEL TAB */}
         {tab === 'funnel' && (
           <div className="space-y-6">
-            <ChartCard title="Growth Funnel" onExport={() => exportCSV(data.funnel, 'funnel.csv')}>
+            <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-5 shadow-sm">
+              <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <p className="text-[12px] font-black uppercase tracking-wide text-blue-600">Growth Funnel</p>
+                  <h2 className="mt-1 text-xl font-black text-slate-950">Activation signals, not a strict step-by-step funnel</h2>
+                  <p className="mt-2 max-w-3xl text-[13px] font-medium leading-5 text-slate-600">
+                    These metrics compare important platform activity against total signups. Some signals can be higher than signups because they count total activity, such as multiple community joins by the same user.
+                  </p>
+                </div>
+                <button
+                  onClick={() => exportCSV(data.funnel, 'funnel.csv')}
+                  className="inline-flex items-center gap-1.5 self-start rounded-full border border-blue-100 bg-white px-3 py-2 text-[12px] font-bold text-slate-600 shadow-sm hover:text-blue-600"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  CSV
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {activationRows.map((row) => (
+                <ActivationMetricCard key={row.stage} row={row} />
+              ))}
+            </div>
+
+            <ChartCard title="Activation Signal Counts" onExport={() => exportCSV(data.funnel, 'funnel.csv')}>
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={data.funnel} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
                   <XAxis type="number" tick={{ fontSize: 10 }} tickLine={false} />
                   <YAxis dataKey="stage" type="category" width={120} tick={{ fontSize: 12 }} tickLine={false} />
                   <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
-                  <Bar dataKey="count" fill="#2563EB" radius={[0, 8, 8, 0]} name="Users" />
+                  <Bar dataKey="count" fill="#2563EB" radius={[0, 8, 8, 0]} name="Count" />
                 </BarChart>
               </ResponsiveContainer>
-              <div className="mt-4 space-y-2">
-                {data.funnel.map((step, i) => {
-                  const pct = i === 0 ? 100 : Math.round((step.count / data.funnel[0].count) * 100);
-                  return (
-                    <div key={step.stage} className="flex items-center gap-3">
-                      <span className="text-[12px] font-semibold text-slate-600 w-32 flex-shrink-0">{step.stage}</span>
-                      <div className="flex-1 bg-slate-100 rounded-full h-2">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${pct}%` }} />
-                      </div>
-                      <span className="text-[12px] text-slate-500 w-16 text-right">{step.count} ({pct}%)</span>
-                    </div>
-                  );
-                })}
+
+              <div className="mt-5 border-t border-slate-100 pt-5">
+                <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h3 className="text-[14px] font-black text-slate-950">Signup baseline comparison</h3>
+                    <p className="text-[12px] font-medium text-slate-500">
+                      Bar fills are capped at 100% so high activity never breaks the layout. The actual percentage is still shown.
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {activationRows.map((row) => (
+                    <ActivationSignalRow key={row.stage} row={row} />
+                  ))}
+                </div>
               </div>
             </ChartCard>
           </div>
