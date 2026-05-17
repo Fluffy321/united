@@ -1,57 +1,92 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, Heart, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, Heart, Loader2, RefreshCw } from 'lucide-react';
 import { paymentsService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 
-// Tier amounts are authoritative on the server (create-checkout-session/index.ts).
+// Tier amounts are authoritative on the server.
 // $18/$36/$72 = chai / double chai / quadruple chai.
+// Annual = 10× monthly (2 months free).
 const TIERS = [
   {
-    key: 'supporter',
-    label: 'Supporter',
-    amount: 18,
-    description: 'Help keep JUnited free and community-first.',
+    key:           'supporter',
+    label:         'Supporter',
+    onceAmount:    18,
+    monthlyAmount: 18,
+    annualAmount:  180,
+    annualSavings: 36,
+    description:   'Help keep JUnited free and community-first.',
   },
   {
-    key: 'builder',
-    label: 'Community Builder',
-    amount: 36,
-    popular: true,
-    description: 'Support new tools that help local Jewish communities connect.',
+    key:           'builder',
+    label:         'Community Builder',
+    onceAmount:    36,
+    monthlyAmount: 36,
+    annualAmount:  360,
+    annualSavings: 72,
+    popular:       true,
+    description:   'Support new tools that help local Jewish communities connect.',
   },
   {
-    key: 'champion',
-    label: 'JUnited Champion',
-    amount: 72,
-    description: 'Help us build faster while keeping the platform independent.',
+    key:           'champion',
+    label:         'JUnited Champion',
+    onceAmount:    72,
+    monthlyAmount: 72,
+    annualAmount:  720,
+    annualSavings: 144,
+    description:   'Help us build faster while keeping the platform independent.',
   },
 ];
 
 const MIN_CUSTOM_AMOUNT = 5;
 
+const BILLING_MODES = [
+  { key: 'once',    label: 'One-time' },
+  { key: 'monthly', label: 'Monthly'  },
+  { key: 'annual',  label: 'Annual'   },
+];
+
+function getTierAmount(tier, billingMode) {
+  if (billingMode === 'monthly') return tier.monthlyAmount;
+  if (billingMode === 'annual')  return tier.annualAmount;
+  return tier.onceAmount;
+}
+
 export default function SupportJUnited() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
-  const [selectedTier, setSelectedTier] = useState('builder');
-  const [customAmount, setCustomAmount] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [billingMode,   setBillingMode]   = useState('once');
+  const [selectedTier,  setSelectedTier]  = useState('builder');
+  const [customAmount,  setCustomAmount]  = useState('');
+  const [loading,       setLoading]       = useState(false);
   const customInputRef = useRef(null);
 
-  const isCustom = selectedTier === 'custom';
-  const preset = TIERS.find(t => t.key === selectedTier);
+  const isCustom  = billingMode === 'once' && selectedTier === 'custom';
+  const isRecurring = billingMode !== 'once';
+  const preset    = TIERS.find(t => t.key === selectedTier);
 
   useEffect(() => {
     if (isCustom) customInputRef.current?.focus();
   }, [isCustom]);
 
-  const parsedCustom = parseFloat(customAmount);
-  const customValid = !isNaN(parsedCustom) && parsedCustom >= MIN_CUSTOM_AMOUNT;
-  const displayAmount = isCustom ? (customValid ? parsedCustom : null) : preset?.amount;
+  const parsedCustom  = parseFloat(customAmount);
+  const customValid   = !isNaN(parsedCustom) && parsedCustom >= MIN_CUSTOM_AMOUNT;
+  const displayAmount = isCustom
+    ? (customValid ? parsedCustom : null)
+    : preset
+    ? getTierAmount(preset, billingMode)
+    : null;
 
   const ctaDisabled = loading || (isCustom && !customValid);
+
+  function handleBillingModeChange(mode) {
+    setBillingMode(mode);
+    // Reset to builder when switching away from one-time (custom not valid for recurring)
+    if (mode !== 'once' && selectedTier === 'custom') setSelectedTier('builder');
+    setCustomAmount('');
+  }
 
   const handleSupport = async () => {
     if (!currentUser) { navigate(createPageUrl('Login')); return; }
@@ -65,12 +100,22 @@ export default function SupportJUnited() {
 
     setLoading(true);
     try {
-      const payload = isCustom
-        ? { checkoutType: 'support_junited', amount: parsedCustom }
-        : { checkoutType: 'support_junited', tier: selectedTier };
+      let checkoutUrl;
 
-      const res = await paymentsService.createCheckout(payload);
-      const checkoutUrl = res.data?.checkoutUrl;
+      if (billingMode === 'once') {
+        const payload = isCustom
+          ? { checkoutType: 'support_junited', amount: parsedCustom }
+          : { checkoutType: 'support_junited', tier: selectedTier };
+        const res = await paymentsService.createCheckout(payload);
+        checkoutUrl = res.data?.checkoutUrl;
+      } else {
+        const res = await paymentsService.createSubscriptionCheckout({
+          tier:     selectedTier,
+          interval: billingMode, // 'monthly' | 'annual'
+        });
+        checkoutUrl = res.data?.checkoutUrl;
+      }
+
       if (checkoutUrl) {
         window.location.href = checkoutUrl;
       } else {
@@ -84,9 +129,20 @@ export default function SupportJUnited() {
     }
   };
 
-  const ctaLabel = displayAmount != null
-    ? `Support JUnited · $${Number.isInteger(displayAmount) ? displayAmount : displayAmount.toFixed(2)}`
-    : 'Support JUnited';
+  const ctaLabel = (() => {
+    const amt = displayAmount;
+    const fmtAmt = amt != null
+      ? `$${Number.isInteger(amt) ? amt : amt.toFixed(2)}`
+      : null;
+
+    if (billingMode === 'monthly') return fmtAmt ? `Subscribe monthly · ${fmtAmt}/mo` : 'Subscribe monthly';
+    if (billingMode === 'annual')  return fmtAmt ? `Subscribe annually · ${fmtAmt}/yr` : 'Subscribe annually';
+    return fmtAmt ? `Support JUnited · ${fmtAmt}` : 'Support JUnited';
+  })();
+
+  const footerText = billingMode === 'once'
+    ? 'Secure checkout by Stripe · One-time · No recurring charges'
+    : 'Secure checkout by Stripe · Cancel anytime';
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24">
@@ -127,10 +183,33 @@ export default function SupportJUnited() {
           💛 <strong>All features stay free.</strong> This is purely a way to say thank you and help us keep building.
         </div>
 
+        {/* Billing mode toggle */}
+        <div className="flex rounded-2xl bg-slate-100 p-1 gap-1">
+          {BILLING_MODES.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => handleBillingModeChange(key)}
+              className={`relative flex-1 rounded-xl py-2 text-[13px] font-bold transition-all ${
+                billingMode === key
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {label}
+              {key === 'annual' && (
+                <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-black text-white leading-none">
+                  SAVE
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* Tier cards */}
         <div className="space-y-2.5">
           {TIERS.map(t => {
             const selected = selectedTier === t.key;
+            const amount   = getTierAmount(t, billingMode);
             return (
               <button
                 key={t.key}
@@ -148,13 +227,24 @@ export default function SupportJUnited() {
                 )}
                 <div className="flex items-center gap-3">
                   <div className={`w-14 shrink-0 text-center ${selected ? 'text-rose-600' : 'text-slate-700'}`}>
-                    <span className="text-[22px] font-black leading-none">${t.amount}</span>
+                    <span className="text-[22px] font-black leading-none">${amount}</span>
+                    {billingMode === 'monthly' && (
+                      <p className="text-[10px] text-slate-400">/mo</p>
+                    )}
+                    {billingMode === 'annual' && (
+                      <p className="text-[10px] text-slate-400">/yr</p>
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className={`text-[13.5px] font-bold leading-tight ${selected ? 'text-rose-700' : 'text-slate-900'}`}>
                       {t.label}
                     </p>
                     <p className="mt-0.5 text-[12px] leading-relaxed text-slate-500">{t.description}</p>
+                    {billingMode === 'annual' && (
+                      <p className="mt-1 text-[11px] font-semibold text-emerald-600">
+                        Save ${t.annualSavings}/yr · 2 months free
+                      </p>
+                    )}
                   </div>
                   <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors ${
                     selected ? 'bg-rose-500' : 'bg-slate-200'
@@ -166,53 +256,67 @@ export default function SupportJUnited() {
             );
           })}
 
-          {/* Custom amount tile */}
-          <button
-            onClick={() => setSelectedTier('custom')}
-            className={`relative w-full rounded-2xl border-2 p-4 text-left transition-all ${
-              isCustom
-                ? 'border-rose-400 bg-rose-50 shadow-sm'
-                : 'border-slate-200 bg-white hover:border-slate-300'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div className={`w-14 shrink-0 text-center font-black text-[22px] leading-none ${isCustom ? 'text-rose-500' : 'text-slate-300'}`}>
-                $—
+          {/* Custom amount tile — one-time only */}
+          {billingMode === 'once' && (
+            <button
+              onClick={() => setSelectedTier('custom')}
+              className={`relative w-full rounded-2xl border-2 p-4 text-left transition-all ${
+                isCustom
+                  ? 'border-rose-400 bg-rose-50 shadow-sm'
+                  : 'border-slate-200 bg-white hover:border-slate-300'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-14 shrink-0 text-center font-black text-[22px] leading-none ${isCustom ? 'text-rose-500' : 'text-slate-300'}`}>
+                  $—
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-[13.5px] font-bold leading-tight ${isCustom ? 'text-rose-700' : 'text-slate-900'}`}>
+                    Custom Amount
+                  </p>
+                  {isCustom ? (
+                    <div
+                      className="mt-1.5 flex items-center gap-1"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <span className="text-[14px] font-bold text-slate-500">$</span>
+                      <input
+                        ref={customInputRef}
+                        type="number"
+                        min={MIN_CUSTOM_AMOUNT}
+                        step="1"
+                        placeholder={`${MIN_CUSTOM_AMOUNT}+`}
+                        value={customAmount}
+                        onChange={e => setCustomAmount(e.target.value)}
+                        className="w-28 bg-transparent text-[14px] font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                      />
+                      <span className="ml-1 text-[11px] text-slate-400">min ${MIN_CUSTOM_AMOUNT}</span>
+                    </div>
+                  ) : (
+                    <p className="mt-0.5 text-[12px] text-slate-500">Choose your own amount.</p>
+                  )}
+                </div>
+                <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors ${
+                  isCustom ? 'bg-rose-500' : 'bg-slate-200'
+                }`}>
+                  <Check className={`h-3 w-3 text-white transition-opacity ${isCustom ? 'opacity-100' : 'opacity-0'}`} />
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className={`text-[13.5px] font-bold leading-tight ${isCustom ? 'text-rose-700' : 'text-slate-900'}`}>
-                  Custom Amount
-                </p>
-                {isCustom ? (
-                  <div
-                    className="mt-1.5 flex items-center gap-1"
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <span className="text-[14px] font-bold text-slate-500">$</span>
-                    <input
-                      ref={customInputRef}
-                      type="number"
-                      min={MIN_CUSTOM_AMOUNT}
-                      step="1"
-                      placeholder={`${MIN_CUSTOM_AMOUNT}+`}
-                      value={customAmount}
-                      onChange={e => setCustomAmount(e.target.value)}
-                      className="w-28 bg-transparent text-[14px] font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none"
-                    />
-                    <span className="ml-1 text-[11px] text-slate-400">min ${MIN_CUSTOM_AMOUNT}</span>
-                  </div>
-                ) : (
-                  <p className="mt-0.5 text-[12px] text-slate-500">Choose your own amount.</p>
-                )}
-              </div>
-              <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors ${
-                isCustom ? 'bg-rose-500' : 'bg-slate-200'
-              }`}>
-                <Check className={`h-3 w-3 text-white transition-opacity ${isCustom ? 'opacity-100' : 'opacity-0'}`} />
-              </div>
-            </div>
-          </button>
+            </button>
+          )}
         </div>
+
+        {/* Recurring callout */}
+        {isRecurring && (
+          <div className="flex items-start gap-2.5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+            <RefreshCw className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+            <p className="text-[12.5px] leading-relaxed text-blue-700">
+              {billingMode === 'monthly'
+                ? 'Billed monthly. Cancel anytime from Settings → Account → Manage Subscription.'
+                : 'Billed once per year. Cancel anytime from Settings → Account → Manage Subscription.'}
+            </p>
+          </div>
+        )}
 
         {/* CTA */}
         <div className="pt-1">
@@ -228,7 +332,7 @@ export default function SupportJUnited() {
             )}
           </button>
           <p className="mt-2 text-center text-[11px] text-slate-400">
-            Secure checkout by Stripe · One-time · No recurring charges
+            {footerText}
           </p>
         </div>
       </div>

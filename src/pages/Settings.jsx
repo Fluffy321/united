@@ -6,6 +6,7 @@ import {
   Camera,
   ChevronRight,
   Clock,
+  CreditCard,
   Globe2,
   Heart,
   HeartHandshake,
@@ -28,7 +29,7 @@ import {
   Flag,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { dataService } from '@/services';
+import { dataService, paymentsService } from '@/services';
 import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
 import { createPageUrl } from '@/utils';
 import { useAuth } from '@/lib/AuthContext';
@@ -116,6 +117,10 @@ export default function Settings() {
   const [pushSubscribed, setPushSubscribed] = useState(false);
   const [pushLoading, setPushLoading]       = useState(false);
 
+  const [activeSubscription,    setActiveSubscription]    = useState(null);
+  const [subscriptionLoading,   setSubscriptionLoading]   = useState(false);
+  const [portalLoading,         setPortalLoading]         = useState(false);
+
   const {
     location: candleLocation,
     locationLoading: candleLocationLoading,
@@ -157,6 +162,15 @@ export default function Settings() {
     isPushSubscribed().then(setPushSubscribed);
   }, []);
 
+  useEffect(() => {
+    if (!currentUser) return;
+    setSubscriptionLoading(true);
+    paymentsService.getActiveSubscription()
+      .then(setActiveSubscription)
+      .catch(() => setActiveSubscription(null))
+      .finally(() => setSubscriptionLoading(false));
+  }, [currentUser]);
+
   const handlePushToggle = async (enable) => {
     setPushLoading(true);
     try {
@@ -178,6 +192,23 @@ export default function Settings() {
       toast.error('Could not update push notifications');
     } finally {
       setPushLoading(false);
+    }
+  };
+
+  const handleOpenPortal = async () => {
+    setPortalLoading(true);
+    try {
+      const res = await paymentsService.createPortalSession();
+      const portalUrl = res.data?.portalUrl;
+      if (portalUrl) {
+        window.location.href = portalUrl;
+      } else {
+        toast.error('Could not open subscription portal — please try again.');
+      }
+    } catch {
+      toast.error('Could not open subscription portal — please try again.');
+    } finally {
+      setPortalLoading(false);
     }
   };
 
@@ -758,6 +789,29 @@ export default function Settings() {
                     <span className="shrink-0 text-[13.5px] font-semibold text-slate-700">User ID</span>
                     <span className="min-w-0 truncate text-right font-mono text-[11px] text-slate-400">{currentUser.id}</span>
                   </div>
+                  {/* Manage Subscription — visible only when an active subscription exists */}
+                  {!subscriptionLoading && activeSubscription && (
+                    <div className="flex items-center justify-between py-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <CreditCard className="h-4 w-4 shrink-0 text-rose-400" />
+                        <div>
+                          <p className="text-[13.5px] font-semibold text-slate-700">Manage Subscription</p>
+                          <p className="text-[11.5px] text-slate-400 capitalize">
+                            {activeSubscription.tier} · {activeSubscription.interval}
+                            {activeSubscription.cancel_at_period_end ? ' · Cancels at period end' : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleOpenPortal}
+                        disabled={portalLoading}
+                        className="flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-50"
+                      >
+                        {portalLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3" />}
+                        {portalLoading ? 'Opening…' : 'Manage'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </SettingsCard>
 

@@ -862,11 +862,11 @@ Goals:
   {
     id: 'stripe-subscriptions',
     category: 'Growth & Monetization',
-    status: STATUS.DEFERRED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Recurring Supporter Subscriptions (Stripe)',
     description: 'Monthly/annual recurring support tiers via Stripe Subscriptions. Requires Stripe Price/Product setup for recurring billing and subscription lifecycle handling (Customer objects, cancellation, proration). SupportJUnited page currently handles one-time only.',
-    why: 'Current implementation uses one-time Checkout (simpler, safer for launch). Recurring subscriptions require additional Stripe infrastructure and a cancel/manage-subscription flow. Deferred until one-time payments are validated in production.',
+    shippedNote: `Code complete 2026-05-17. New: (1) migration 20260517200000_subscriptions — adds stripe_customer_id to profiles + subscriptions table with full lifecycle columns; (2) create-subscription-session Edge Function — auth required, creates/retrieves Stripe Customer, resolves Price IDs from STRIPE_PRICE_{TIER}_{MONTHLY|ANNUAL} secrets, returns checkoutUrl; (3) create-portal-session Edge Function — opens Stripe Customer Portal, returns portalUrl; (4) stripe-webhook extended — handles checkout.session.completed (subscription branch), invoice.paid, invoice.payment_failed, customer.subscription.updated, customer.subscription.deleted; (5) SupportJUnited.jsx — One-time / Monthly / Annual segmented toggle, annual savings shown (2 months free, exact math), custom amount hidden for recurring modes; (6) paymentsService.js — createSubscriptionCheckout, createPortalSession, getActiveSubscription; (7) Settings → Account — "Manage Subscription" row with tier/interval/cancel status, opens portal. LIVE requires: create 6 Stripe Prices (supporter/builder/champion × monthly/annual), add price IDs as Supabase Edge Function secrets (STRIPE_PRICE_SUPPORTER_MONTHLY etc.), configure Stripe Customer Portal in dashboard, add checkout.session.completed + invoice.paid + invoice.payment_failed + customer.subscription.updated + customer.subscription.deleted to the stripe-webhook endpoint in Stripe dashboard.`,
     prompt: `You are implementing Recurring Supporter Subscriptions (Stripe) for JUnited.
 
 Context: One-time payments are live. Key files:
@@ -900,6 +900,57 @@ Goals:
 6. Update paymentsService.js to expose createSubscriptionCheckout({ tier, interval }).
 7. Run npm run lint && npm run typecheck && npm run build.
 8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'subscription-status-ui',
+    category: 'Growth & Monetization',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Subscription Status on Support Page',
+    description: 'When a logged-in user already has an active subscription, SupportJUnited should show their current tier/interval and a link to manage it — not the full tier picker again.',
+    why: 'Without this, a subscriber who revisits the page may accidentally start a second checkout. A personalized "You\'re supporting at the Builder level — manage or upgrade" state is both safer and more delightful.',
+    prompt: `You are adding a subscription-aware state to SupportJUnited for JUnited.
+
+Context:
+  - src/pages/SupportJUnited.jsx — the support page (billingMode toggle, tier cards, CTA)
+  - src/services/paymentsService.js — exposes getActiveSubscription() and createPortalSession()
+  - The getActiveSubscription() call returns { tier, interval, status, current_period_end, cancel_at_period_end } or null.
+
+Goals:
+1. At the top of SupportJUnited, call paymentsService.getActiveSubscription() (show a loading skeleton while fetching).
+2. If the user has an active/trialing subscription, replace the tier picker + CTA with a "You're already supporting JUnited" card:
+   - Show their current tier and interval (e.g. "Community Builder · Monthly")
+   - Show the next renewal date formatted as "Renews {date}" or "Cancels {date}" if cancel_at_period_end is true
+   - A "Manage or cancel" button that calls paymentsService.createPortalSession() and redirects to the portal URL
+   - A "Upgrade tier" link/button that dismisses the card and shows the tier picker so they can switch plans
+3. If no subscription (or user not logged in), show the existing UI unchanged.
+4. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'subscription-admin-metrics',
+    category: 'Growth & Monetization',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Subscription Metrics in Admin Dashboard',
+    description: 'Add a Supporters section to AdminAnalyticsDashboard showing subscriber count, MRR (monthly recurring revenue), tier breakdown, and churn rate.',
+    why: 'Once subscriptions are live, the operator needs basic visibility into recurring revenue. Currently AdminAnalyticsDashboard has no payment metrics at all.',
+    prompt: `You are adding subscription metrics to AdminAnalyticsDashboard for JUnited.
+
+Context:
+  - src/pages/AdminAnalyticsDashboard.jsx — the admin analytics page
+  - supabase/migrations/20260517200000_subscriptions.sql — subscriptions table schema
+  - Monthly amounts: supporter=$18, builder=$36, champion=$72. Annual amounts: 180/360/720 (stored in subscriptions table as interval column).
+  - Query the subscriptions table (service role or admin RLS policy already allows admin reads).
+
+Goals:
+1. Add a "Supporters" section/tab in AdminAnalyticsDashboard.
+2. Show: total active subscribers, MRR (sum of monthly equivalents), breakdown by tier, breakdown by interval (monthly vs annual), and count of past_due subscriptions.
+3. MRR formula: for each active/trialing row, annualAmount/12 if interval='annual', else monthlyAmount.
+4. Show a simple time series of new subscriptions per week (last 8 weeks) as a bar chart or sparkline.
+5. All data comes from a direct Supabase query (admin role); no new Edge Function needed.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
