@@ -21,6 +21,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import { getFiveTownsShabbatTimes } from '@/lib/hebrewDate';
+import { useFloatingActions } from '@/components/layout/FloatingActionsContext';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
 const minutesAgo = (minutes) => new Date(Date.now() - minutes * 60 * 1000).toISOString();
@@ -426,11 +427,12 @@ const DEMO_POSTS = [
 ];
 
 
-export default function Feed() {
+export default function Feed({ isActive = true }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user: currentUser } = useAuth();
+  const { registerFloatingAction } = useFloatingActions();
   const [activeTab, setActiveTab] = useState('for_you');
   const [primaryNetwork, setPrimaryNetwork] = useState(LOCAL_NETWORKS[0]);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('All');
@@ -455,12 +457,10 @@ export default function Feed() {
     shabbatReminderService.start({ enabled });
     return () => shabbatReminderService.stop();
   }, [currentUser?.notification_settings?.shabbatReminders, currentUser?.app_settings?.quietMode]);
-  const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [interestSignals, setInterestSignals] = useState({ types: {}, subtypes: {}, keywords: [] }); // track user interactions
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [userGeo, setUserGeo] = useState(null); // { lat, lng }
-  const lastScrollY = useRef(0);
   const [feedPrompts, setFeedPrompts] = useState([]);
   const [communityGroups, setCommunityGroups] = useState([]);
   const [cachedPosts, setCachedPosts] = useState([]);
@@ -472,6 +472,31 @@ export default function Feed() {
   const [showNetworkBanner, setShowNetworkBanner] = useState(() => !storageService.getItem('junited_network_banner_v2_dismissed'));
   const [dailyPrompt, setDailyPrompt] = useState(null);
   const [publishedBrief, setPublishedBrief] = useState(null);
+
+  const openCreatePost = useCallback(() => {
+    setPostModalType('feed');
+    setPostModalSubtype(null);
+    setPostModalInitialBody('');
+    setShowPostModal(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isActive || !currentUser) return undefined;
+
+    return registerFloatingAction('feed-create-post', {
+      order: 100,
+      render: () => (
+        <button
+          onClick={openCreatePost}
+          className="app-fab app-floating-action flex h-14 w-14 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-95"
+          style={{ background: 'linear-gradient(135deg, #2563EB, #4F46E5)' }}
+          aria-label="Create post"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+      ),
+    });
+  }, [currentUser, isActive, openCreatePost, registerFloatingAction]);
 
   useEffect(() => {
     if (!currentUser?.cityPreset) return;
@@ -588,16 +613,6 @@ export default function Feed() {
   useEffect(() => {
     const timer = setTimeout(() => setLoadTimedOut(true), 5000);
     return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentY = window.scrollY;
-      setIsScrollingDown(currentY > lastScrollY.current);
-      lastScrollY.current = currentY;
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const likeMutation = useMutation({
@@ -1067,23 +1082,6 @@ export default function Feed() {
         contentType={reportTarget.type}
         currentUser={currentUser}
       />
-
-      {/* Create Post FAB — same column-anchored container pattern as Feedback in Layout.jsx */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40" style={{ height: 0 }}>
-        <div className="mobile-page relative" style={{ height: 0 }}>
-          <button
-            onClick={() => { setPostModalType('feed'); setPostModalSubtype(null); setPostModalInitialBody(''); setShowPostModal(true); }}
-            className={`app-fab pointer-events-auto absolute right-5 flex h-14 w-14 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-95 ${isScrollingDown ? 'opacity-0 pointer-events-none translate-y-2' : 'opacity-100 translate-y-0'}`}
-            style={{
-              background: 'linear-gradient(135deg, #2563EB, #4F46E5)',
-              bottom: 'calc(144px + env(safe-area-inset-bottom, 0px))',
-            }}
-            aria-label="Create post"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-        </div>
-      </div>
 
       <UpcomingEventsSheet
         open={showEventsSheet}

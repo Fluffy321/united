@@ -63,8 +63,11 @@ Deno.serve(async (req: Request) => {
         break;
     }
   } catch (err) {
-    // Return 200 so Stripe doesn't retry — the error is in our handler, not delivery.
     console.error(`Handler error for ${event.type}:`, (err as Error).message);
+    return new Response(JSON.stringify({ error: 'Internal error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   return new Response(JSON.stringify({ received: true }), {
@@ -99,5 +102,8 @@ async function setTransactionStatus(sessionId: string, status: string) {
     .eq('stripe_session_id', sessionId)
     .eq('status', 'pending');
 
-  if (error) console.error(`Failed to set status ${status}:`, error.message);
+  if (error) {
+    console.error(`Failed to set status ${status}:`, error.message);
+    throw error;
+  }
 }

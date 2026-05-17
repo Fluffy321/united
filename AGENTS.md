@@ -76,3 +76,5 @@ Roadmap future-improvements scan:
 - **Migrations**: All schema changes go in `supabase/migrations/` as timestamped SQL files. Run `npx supabase db push --linked --dry-run` before pushing.
 - **Disabled routes**: Future pages use `<Navigate to={mainPagePath} replace />` in `App.jsx` rather than being deleted.
 - **Lint/build**: Run `npm run lint` and `npm run build` before completing any task.
+- **Responsive shell**: Use the shared layout utilities in `src/index.css` (`mobile-page`, `mobile-page-wide`, `mobile-safe-bottom`, `app-fixed-layer`, `app-fixed-frame`, `app-floating-stack`) instead of hardcoding viewport widths or floating button offsets.
+- **Floating actions**: Page-level floating buttons should register through `FloatingActionsContext` so they share one stack with global actions like Feedback and stay above the bottom nav/safe area.

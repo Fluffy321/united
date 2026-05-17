@@ -111,6 +111,11 @@ Do not omit this section from applicable final reports, even if the result is "n
 - Disabled/future pages use `<Navigate to={mainPagePath} replace />` in `App.jsx` rather than being deleted.
 - Re-enabling a page = remove the redirect, add the real `<Route>`, add it to `pages.config.js`.
 
+### Responsive App Shell
+- Use the shared layout utilities in `src/index.css`: `mobile-page`, `mobile-page-wide`, `mobile-safe-bottom`, `app-fixed-layer`, `app-fixed-frame`, and `app-floating-stack`.
+- Do not hardcode new fixed button offsets such as `bottom: calc(144px + env(safe-area-inset-bottom))`.
+- Page-level floating buttons should register through `FloatingActionsContext` so global actions like Feedback and page actions like Feed Create Post share one safe, responsive stack.
+
 ---
 
 ## What to Test After Changes

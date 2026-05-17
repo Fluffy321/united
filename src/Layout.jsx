@@ -11,6 +11,7 @@ import { mitzvahReminderService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import AppErrorBoundary from '@/components/common/AppErrorBoundary';
 import FeedbackModal from '@/components/feedback/FeedbackModal';
+import { FloatingActionsProvider, useFloatingActions } from '@/components/layout/FloatingActionsContext';
 
 // Lazy load main pages
 const Feed = lazy(() => import('@/pages/Feed'));
@@ -57,15 +58,22 @@ function InlinePageSkeleton() {
   );
 }
 
-export default function Layout({ children, currentPageName }) {
+export default function Layout(props) {
+  return (
+    <FloatingActionsProvider>
+      <LayoutContent {...props} />
+    </FloatingActionsProvider>
+  );
+}
+
+function LayoutContent({ children, currentPageName }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isChatOpen = currentPageName === 'Messages' && new URLSearchParams(location.search).get('chat') === '1';
   const hideNav = ['Settings', 'ShulPage'].includes(currentPageName) || isChatOpen;
   const { user: currentUser } = useAuth();
+  const { actions: floatingActions } = useFloatingActions();
 
-  const [isScrollingDown, setIsScrollingDown] = useState(false);
-  const [lastScrollY, setLastScrollY] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
@@ -75,24 +83,6 @@ export default function Layout({ children, currentPageName }) {
     mitzvahReminderService.start({ enabled });
     return () => mitzvahReminderService.stop();
   }, [currentUser?.notification_settings?.mitzvahDailyReminders, currentUser?.app_settings?.quietMode]);
-
-  useEffect(() => {
-    let scrollTimeout;
-    const handleScroll = () => {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        const currentScrollY = window.scrollY;
-        setIsScrollingDown(currentScrollY > lastScrollY);
-        setLastScrollY(currentScrollY);
-      }, 100);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      clearTimeout(scrollTimeout);
-    };
-  }, [lastScrollY]);
 
   const activeNavKey = currentPageName === 'MitzvahCircle' ? 'Mitzvah' : currentPageName;
   const swipeablePages = ['Feed', 'MitzvahCircle', 'Communities'];
@@ -122,7 +112,7 @@ export default function Layout({ children, currentPageName }) {
           >
             <AppErrorBoundary inline fallbackMessage="Feed could not load.">
               <Suspense fallback={<InlinePageSkeleton />}>
-                <Feed />
+                <Feed isActive={currentIndex === 0} />
               </Suspense>
             </AppErrorBoundary>
             <AppErrorBoundary inline fallbackMessage="Mitzvah Circle could not load.">
@@ -141,24 +131,27 @@ export default function Layout({ children, currentPageName }) {
         )}
       </main>
 
-      {/* Floating Feedback — full-width fixed anchor, mobile-page inner as positioning context */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40" style={{ height: 0 }}>
-        <div className="mobile-page relative" style={{ height: 0 }}>
-          {!hideNav && currentUser && (
-            <button
-              onClick={() => setShowFeedback(true)}
-              aria-label="Send feedback"
-              className={`pointer-events-auto absolute right-4 flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-md transition-all duration-200 hover:bg-slate-50 active:scale-95 ${
-                isScrollingDown ? 'pointer-events-none translate-y-1 opacity-0' : 'opacity-100'
-              }`}
-              style={{ bottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}
-            >
-              <MessageSquarePlus className="h-3.5 w-3.5 text-slate-500" />
-              <span className="text-[11px] font-semibold text-slate-600">Feedback</span>
-            </button>
-          )}
+      {!hideNav && currentUser && (
+        <div className="app-fixed-layer">
+          <div className="app-fixed-frame">
+            <div className="app-floating-stack">
+              {floatingActions.map((action) => (
+                <React.Fragment key={action.id}>
+                  {action.render?.()}
+                </React.Fragment>
+              ))}
+              <button
+                onClick={() => setShowFeedback(true)}
+                aria-label="Send feedback"
+                className="app-floating-action flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-md transition-all duration-200 hover:bg-slate-50 active:scale-95"
+              >
+                <MessageSquarePlus className="h-3.5 w-3.5 text-slate-500" />
+                <span className="text-[11px] font-semibold text-slate-600">Feedback</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
 

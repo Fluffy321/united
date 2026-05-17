@@ -67,6 +67,15 @@
     --sidebar-border: 220 25% 22%;
     --sidebar-ring: 43 55% 55%;
 
+    /* ── Responsive app shell ── */
+    --app-content-max: 430px;
+    --app-page-gutter: 12px;
+    --app-bottom-safe: env(safe-area-inset-bottom, 0px);
+    --app-bottom-nav-height: 96px;
+    --app-floating-gutter: 18px;
+    --app-floating-gap: 10px;
+    --app-floating-bottom: calc(var(--app-bottom-nav-height) + var(--app-bottom-safe) + 14px);
+
     /* ── Typography ── */
     --font-display: 'Fraunces', Georgia, serif;
     --font-body:    'Inter', system-ui, sans-serif;
@@ -433,7 +442,7 @@
   }
 
   .app-bottom-nav {
-    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(8px + var(--app-bottom-safe));
   }
 
   .app-fab {
@@ -443,24 +452,56 @@
 
   .mobile-page {
     width: 100%;
-    max-width: 430px;
+    max-width: var(--app-content-max);
     margin-left: auto;
     margin-right: auto;
   }
 
   .mobile-page-wide {
     width: 100%;
-    max-width: 430px;
+    max-width: var(--app-content-max);
     margin-left: auto;
     margin-right: auto;
   }
 
   .mobile-safe-bottom {
-    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(var(--app-bottom-nav-height) + var(--app-bottom-safe) + 16px);
   }
 
   .app-floating-banner {
-    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+    bottom: var(--app-floating-bottom);
+  }
+
+  .app-fixed-layer {
+    pointer-events: none;
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 40;
+    height: 0;
+  }
+
+  .app-fixed-frame {
+    position: relative;
+    width: 100%;
+    max-width: var(--app-content-max);
+    height: 0;
+    margin-inline: auto;
+  }
+
+  .app-floating-stack {
+    pointer-events: none;
+    position: absolute;
+    right: var(--app-floating-gutter);
+    bottom: var(--app-floating-bottom);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--app-floating-gap);
+  }
+
+  .app-floating-action {
+    pointer-events: auto;
   }
 
   @media (min-width: 1024px) {
@@ -495,6 +536,11 @@
   }
 
   @media (min-width: 768px) {
+    :root {
+      --app-content-max: 672px;
+      --app-floating-gutter: 22px;
+    }
+
     .app-shell {
       max-width: 672px;
     }

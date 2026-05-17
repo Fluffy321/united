@@ -807,7 +807,17 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'In-App Feedback System',
     description: 'Global floating Feedback button visible throughout the authenticated app opens a polished bottom-sheet form. Submissions captured in app_feedback table with rich page context. Admin Feedback Inbox at /AdminFeedbackInbox for reviewing, triaging, and noting submissions. Includes Spam/Junk bucket, rule-based junk signal detection, deterministic triage summary, Copy Fix Prompt, and status/type/urgency filters.',
-    shippedNote: 'Shipped. FeedbackModal in Layout.jsx. Migration 20260516170012_app_feedback.sql (schema) + 20260516195749_feedback_inbox_junk.sql (is_junk column). AdminFeedbackInbox: Inbox/Junk tabs, 6 client-side junk heuristics (advisory only, never auto-move), triage summary from structured fields, Copy Fix Prompt for Claude Code/Codex, status/type/urgency filters.',
+    shippedNote: 'Shipped. FeedbackModal in Layout.jsx. Migration 20260516170012_app_feedback.sql (schema) + 20260516195749_feedback_inbox_junk.sql (is_junk column). AdminFeedbackInbox: Inbox/Junk tabs, 6 client-side junk heuristics (advisory only, never auto-move), triage summary from structured fields, Copy Fix Prompt for Claude Code/Codex, status/type/urgency filters. Floating button now uses the shared responsive floating-actions stack so it does not collide with Feed create-post controls.',
+  },
+
+  {
+    id: 'desktop-responsive-shell',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Desktop Responsive App Shell',
+    description: 'Evolve the current mobile-first shell into a more intentional wide-screen experience, potentially with a desktop side navigation, wider content regions for dense pages, and page-specific responsive layouts.',
+    why: 'The shared floating-actions layer stabilizes mobile and desktop positioning, but the broader desktop experience is still mostly a widened mobile frame. This is useful after the mobile beta is stable.',
   },
 
   {
