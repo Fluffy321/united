@@ -516,11 +516,12 @@ Goals:
   {
     id: 'candle-lighting-yom-tov',
     category: 'Jewish Life',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Yom Tov & Holiday Candle-Lighting Times',
     description: 'Extend the candle-lighting feature to show Yom Tov candle-lighting times for major holidays (Rosh Hashana, Yom Kippur, Sukkot, Pesach, Shavuot). The Hebcal API already returns holiday events — this just needs to be surfaced in the UI.',
-    why: 'Shipped 2026-05-17: weekly Shabbat times are accurate and location-aware. Holiday candle-lighting is the natural next step for completeness. Hebcal API returns candles category events for Yom Tov too.',
+    shippedNote: 'Shipped 2026-05-17: getShabbatTimes() updated to return allCandles, allHavdalah, and majorHolidays arrays. useShabbosCountdown() now iterates all events, shows "Shavuot", "Rosh Hashana", etc. instead of "Candle lighting" during holiday weeks, and handles two-day Yom Tov (2 candles, 1 havdalah). Yom Kippur covered by general Yom Tov logic.',
+    why: 'Hebcal /shabbat returns candles+havdalah for both Shabbat and Yom Tov. Live API audit on Erev Shavuot 5786 confirmed two candle items and one final havdalah.',
     prompt: `You are implementing Yom Tov candle-lighting times for JUnited.
 
 Context:

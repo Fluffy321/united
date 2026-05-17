@@ -86,16 +86,31 @@ export async function getShabbatTimes(lat, lng, tzid = 'America/New_York', date 
       `${HEBCAL_BASE}/shabbat?cfg=json&geo=pos&latitude=${lat}&longitude=${lng}&tzid=${encodeURIComponent(tzid)}&m=20&b=${CANDLE_LIGHTING_MINUTES}&date=${dateStr}`
     );
     const data = await res.json();
-    const candle = data.items?.find((item) => item.category === 'candles');
-    const havdalah = data.items?.find((item) => item.category === 'havdalah');
+    const items = data.items || [];
+
+    // All candles/havdalah items sorted chronologically — needed for multi-day Yom Tov
+    const allCandles  = items.filter(i => i.category === 'candles' ).sort((a, b) => new Date(a.date) - new Date(b.date));
+    const allHavdalah = items.filter(i => i.category === 'havdalah').sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Major Yom Tov items for holiday labeling. Excludes "Erev X" (eve-of notices)
+    // since we want the holiday name itself ("Shavuot I"), not the eve marker.
+    const majorHolidays = items
+      .filter(i => i.category === 'holiday' && i.subcat === 'major' && !i.title?.startsWith('Erev '))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
     return {
       location: data.location?.title || null,
-      candleLighting: candle?.date || null,
-      candleTitle: candle?.title || 'Candle lighting',
-      havdalah: havdalah?.date || null,
-      havdalahTitle: havdalah?.title || 'Havdalah',
-      parsha: data.items?.find((item) => item.category === 'parashat')?.title || null,
+      // Scalar fields kept for backwards compat (shabbatReminderService etc.)
+      candleLighting:        allCandles[0]?.date  || null,
+      candleTitle:           allCandles[0]?.title || 'Candle lighting',
+      havdalah:              allHavdalah[0]?.date  || null,
+      havdalahTitle:         allHavdalah[0]?.title || 'Havdalah',
+      parsha: items.find(i => i.category === 'parashat')?.title || null,
       candleLightingMinutes: CANDLE_LIGHTING_MINUTES,
+      // Full item arrays for multi-event weeks (2-day Yom Tov, holiday + Shabbat)
+      allCandles,
+      allHavdalah,
+      majorHolidays,
     };
   } catch {
     return null;
