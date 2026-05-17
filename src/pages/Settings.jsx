@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Clock,
   Globe2,
+  Heart,
   HeartHandshake,
   Inbox,
   Loader2,
@@ -522,22 +523,40 @@ export default function Settings() {
 
           {/* ─── App ──────────────────────────────────── */}
           {activeSection === 'app' && (
-            <SettingsCard title="App Preferences" icon={Moon}>
-              <div className="divide-y divide-slate-100">
-                <SettingsRow icon={Moon} title="Quiet mode" description="Reduce attention-grabbing alerts and motion.">
-                  <Toggle checked={a.quietMode} onChange={v => updateNested('app_settings', 'quietMode', v)} label="Quiet mode" />
-                </SettingsRow>
-                <SettingsRow icon={Users} title="Compact cards" description="Show denser Feed and community cards.">
-                  <Toggle checked={a.compactCards} onChange={v => updateNested('app_settings', 'compactCards', v)} label="Compact cards" />
-                </SettingsRow>
-                <SettingsRow icon={Shield} title="Reduce motion" description="Limit animations and page transitions.">
-                  <Toggle checked={a.reduceMotion} onChange={v => updateNested('app_settings', 'reduceMotion', v)} label="Reduce motion" />
-                </SettingsRow>
-                <SettingsRow icon={Globe2} title="Hebrew dates" description="Show the Hebrew calendar date where available.">
-                  <Toggle checked={a.hebrewDates} onChange={v => updateNested('app_settings', 'hebrewDates', v)} label="Hebrew dates" />
-                </SettingsRow>
-              </div>
-            </SettingsCard>
+            <>
+              <SettingsCard title="App Preferences" icon={Moon}>
+                <div className="divide-y divide-slate-100">
+                  <SettingsRow icon={Moon} title="Quiet mode" description="Reduce attention-grabbing alerts and motion.">
+                    <Toggle checked={a.quietMode} onChange={v => updateNested('app_settings', 'quietMode', v)} label="Quiet mode" />
+                  </SettingsRow>
+                  <SettingsRow icon={Users} title="Compact cards" description="Show denser Feed and community cards.">
+                    <Toggle checked={a.compactCards} onChange={v => updateNested('app_settings', 'compactCards', v)} label="Compact cards" />
+                  </SettingsRow>
+                  <SettingsRow icon={Shield} title="Reduce motion" description="Limit animations and page transitions.">
+                    <Toggle checked={a.reduceMotion} onChange={v => updateNested('app_settings', 'reduceMotion', v)} label="Reduce motion" />
+                  </SettingsRow>
+                  <SettingsRow icon={Globe2} title="Hebrew dates" description="Show the Hebrew calendar date where available.">
+                    <Toggle checked={a.hebrewDates} onChange={v => updateNested('app_settings', 'hebrewDates', v)} label="Hebrew dates" />
+                  </SettingsRow>
+                </div>
+              </SettingsCard>
+
+              <SettingsCard>
+                <Link
+                  to="/SupportJUnited"
+                  className="flex items-center gap-3 py-3.5 text-slate-700 transition hover:text-slate-900"
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-50">
+                    <Heart className="h-4 w-4 text-rose-500" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13.5px] font-semibold text-slate-900">Support JUnited</p>
+                    <p className="mt-0.5 text-[12px] leading-4 text-slate-500">Help us keep building community tools.</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-slate-300" />
+                </Link>
+              </SettingsCard>
+            </>
           )}
 
           {/* ─── Account ──────────────────────────────── */}
