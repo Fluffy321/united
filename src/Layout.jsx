@@ -146,7 +146,8 @@ export default function Layout({ children, currentPageName }) {
         <button
           onClick={() => setShowFeedback(true)}
           aria-label="Send feedback"
-          className={`fixed bottom-[88px] right-4 z-40 flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-md transition-all duration-200 hover:bg-slate-50 active:scale-95 ${
+          style={{ right: 'max(16px, calc((100vw - 430px) / 2 + 16px))' }}
+          className={`fixed bottom-[88px] z-40 flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-md transition-all duration-200 hover:bg-slate-50 active:scale-95 ${
             isScrollingDown ? 'pointer-events-none translate-y-1 opacity-0' : 'opacity-100'
           }`}
         >
