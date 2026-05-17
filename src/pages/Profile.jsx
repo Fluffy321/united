@@ -21,6 +21,7 @@ import BadgesSection from '@/components/profile/BadgesSection.jsx';
 import MitzvahJourneySection from '@/components/profile/MitzvahJourneySection.jsx';
 import CommunitiesSection from '@/components/profile/CommunitiesSection.jsx';
 import RecentPostsSection from '@/components/profile/RecentPostsSection.jsx';
+import SavedPostsSection from '@/components/profile/SavedPostsSection.jsx';
 import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
 import FriendsHub from '@/components/profile/FriendsHub.jsx';
 
@@ -371,6 +372,12 @@ export default function Profile() {
           <div id="recent-posts-section" className="mx-3 motion-soft-in">
             <RecentPostsSection posts={unifiedPosts} currentUser={currentUser} profileUser={profileUser} isOwnProfile={isOwnProfile} />
           </div>
+
+          {isOwnProfile && (
+            <div id="saved-posts-section" className="mx-3 motion-soft-in">
+              <SavedPostsSection userId={profileUser.id} />
+            </div>
+          )}
         </div>
       </div>
 

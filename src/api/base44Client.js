@@ -30,6 +30,8 @@ const SUPABASE_ENTITY_TABLES = {
   Block: 'user_blocks',
   FriendRequest: 'friend_requests',
   Friendship: 'friendships',
+  // Bookmarks — migration 20260517030617_bookmarks.sql
+  Bookmark: 'bookmarks',
   // In-app feedback — migration 20260516170012_app_feedback.sql
   AppFeedback: 'app_feedback',
   // Community feature backbone — migration 020_community_feature_backbone.sql

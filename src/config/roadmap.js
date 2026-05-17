@@ -256,11 +256,11 @@ Goals:
   {
     id: 'saved-posts',
     category: 'Community',
-    status: STATUS.DEFERRED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Saved Posts / Bookmarks',
     description: 'Users can save posts to revisit them. Accessible from their profile.',
-    why: 'SavedPostsSection.jsx is built and queries bookmarks table. Not exposed in Profile.jsx UI. Deferred to keep profile simple for beta.',
+    shippedNote: 'Shipped. Migration 20260517030617_bookmarks.sql creates the bookmarks table with unique (user_id, post_id) constraint and RLS (users manage only their own). Bookmark entity added to SUPABASE_ENTITY_TABLES. BookmarkButton.jsx with optimistic toggle added to standard feed, help, listing, and compact card variants in UnifiedPostCard. SavedPostsSection.jsx rewritten with direct Supabase query, remove-bookmark button, clickable cards (→ PostDetail), defensive date parsing, and correct section header. Section added to Profile.jsx (own profile only).',
     prompt: `You are enabling Saved Posts / Bookmarks in JUnited.
 
 Context: SavedPostsSection.jsx (src/components/profile/SavedPostsSection.jsx) already exists and

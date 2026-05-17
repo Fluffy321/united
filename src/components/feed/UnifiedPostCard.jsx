@@ -8,6 +8,7 @@ import HelperBadge from '@/components/profile/HelperBadge';
 import MessageButton from '@/components/common/MessageButton';
 import CommentsSheet from './CommentsSheet';
 import ReactionBar from './ReactionBar';
+import BookmarkButton from './BookmarkButton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -340,6 +341,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             <button onClick={() => setCommentsOpen(true)} className="flex items-center gap-1.5 h-7 px-2 rounded-full text-[12px] font-medium text-slate-500 hover:bg-slate-100">
               <MessageCircle className="w-3.5 h-3.5" />{commentCount > 0 && <span>{commentCount}</span>}
             </button>
+            <BookmarkButton postId={post.id} currentUser={currentUser} />
           </div>
         </div>
         <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
@@ -491,6 +493,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             {post.user_id !== currentUser?.id && (
               <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
             )}
+            <BookmarkButton postId={post.id} currentUser={currentUser} />
           </div>
         </div>
         <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
@@ -617,6 +620,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             {post.user_id !== currentUser?.id && helpStatus === 'open' && (
               <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
             )}
+            <BookmarkButton postId={post.id} currentUser={currentUser} />
           </div>
         </div>
         <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
@@ -879,6 +883,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
         {post.user_id !== currentUser?.id && (
           <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
         )}
+        <BookmarkButton postId={post.id} currentUser={currentUser} />
       </div>
 
       <CommentsSheet post={post} postId={post.id} postAuthorId={post.user_id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} currentUser={currentUser} blockedIds={blockedIds ?? []} onCommentAdded={() => setCommentCount(c => c + 1)} />
