@@ -141,23 +141,24 @@ export default function Layout({ children, currentPageName }) {
         )}
       </main>
 
-      {/* Floating Feedback button — above bottom nav, fades while scrolling */}
-      {!hideNav && currentUser && (
-        <button
-          onClick={() => setShowFeedback(true)}
-          aria-label="Send feedback"
-          style={{
-            right: 'max(16px, calc((100vw - 430px) / 2 + 16px))',
-            bottom: 'calc(100px + env(safe-area-inset-bottom, 0px))',
-          }}
-          className={`fixed z-40 flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-md transition-all duration-200 hover:bg-slate-50 active:scale-95 ${
-            isScrollingDown ? 'pointer-events-none translate-y-1 opacity-0' : 'opacity-100'
-          }`}
-        >
-          <MessageSquarePlus className="h-3.5 w-3.5 text-slate-500" />
-          <span className="text-[11px] font-semibold text-slate-600">Feedback</span>
-        </button>
-      )}
+      {/* Floating Feedback — full-width fixed anchor, mobile-page inner as positioning context */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40" style={{ height: 0 }}>
+        <div className="mobile-page relative" style={{ height: 0 }}>
+          {!hideNav && currentUser && (
+            <button
+              onClick={() => setShowFeedback(true)}
+              aria-label="Send feedback"
+              className={`pointer-events-auto absolute right-4 flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-md transition-all duration-200 hover:bg-slate-50 active:scale-95 ${
+                isScrollingDown ? 'pointer-events-none translate-y-1 opacity-0' : 'opacity-100'
+              }`}
+              style={{ bottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}
+            >
+              <MessageSquarePlus className="h-3.5 w-3.5 text-slate-500" />
+              <span className="text-[11px] font-semibold text-slate-600">Feedback</span>
+            </button>
+          )}
+        </div>
+      </div>
 
       <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
 

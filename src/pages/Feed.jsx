@@ -1068,18 +1068,22 @@ export default function Feed() {
         currentUser={currentUser}
       />
 
-      <button
-        onClick={() => { setPostModalType('feed'); setPostModalSubtype(null); setPostModalInitialBody(''); setShowPostModal(true); }}
-        className={`app-fab fixed z-40 flex h-14 w-14 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-95 ${isScrollingDown ? 'opacity-0 pointer-events-none translate-y-2' : 'opacity-100 translate-y-0'}`}
-        style={{
-          background: 'linear-gradient(135deg, #2563EB, #4F46E5)',
-          right: 'max(20px, calc((100vw - 430px) / 2 + 20px))',
-          bottom: 'calc(144px + env(safe-area-inset-bottom, 0px))',
-        }}
-        aria-label="Create post"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
+      {/* Create Post FAB — same column-anchored container pattern as Feedback in Layout.jsx */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40" style={{ height: 0 }}>
+        <div className="mobile-page relative" style={{ height: 0 }}>
+          <button
+            onClick={() => { setPostModalType('feed'); setPostModalSubtype(null); setPostModalInitialBody(''); setShowPostModal(true); }}
+            className={`app-fab pointer-events-auto absolute right-5 flex h-14 w-14 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-95 ${isScrollingDown ? 'opacity-0 pointer-events-none translate-y-2' : 'opacity-100 translate-y-0'}`}
+            style={{
+              background: 'linear-gradient(135deg, #2563EB, #4F46E5)',
+              bottom: 'calc(144px + env(safe-area-inset-bottom, 0px))',
+            }}
+            aria-label="Create post"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
 
       <UpcomingEventsSheet
         open={showEventsSheet}

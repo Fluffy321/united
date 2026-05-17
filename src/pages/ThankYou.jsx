@@ -1,37 +1,52 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, Home, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { CheckCircle2, Clock, Home, Loader2 } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { dataService } from '@/services';
+import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
+
+function formatDollars(cents) {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+function purposeLabel(purpose) {
+  if (!purpose) return 'Contribution';
+  if (purpose.startsWith('support_junited_')) {
+    const tier = purpose.replace('support_junited_', '');
+    return `JUnited ${tier.charAt(0).toUpperCase() + tier.slice(1)} Supporter`;
+  }
+  if (purpose === 'donation') return 'Donation';
+  return purpose.replace(/_/g, ' ');
+}
 
 export default function ThankYou() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('session_id');
+
   const [transaction, setTransaction] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadTransaction = async () => {
+    if (!sessionId) { setIsLoading(false); return; }
+
+    const load = async () => {
       try {
-        if (user) {
-          const transactions = await dataService.entities.Transaction.filter(
-            { user_id: user.id, status: 'completed' },
-            '-created_date',
-            1
-          );
-          if (transactions.length > 0) {
-            setTransaction(transactions[0]);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load transaction:', error);
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('amount, currency, purpose, tier, status, stripe_session_id, created_at')
+          .eq('stripe_session_id', sessionId)
+          .maybeSingle();
+
+        if (!error && data) setTransaction(data);
+      } catch (err) {
+        console.error('Failed to load transaction:', err);
       }
       setIsLoading(false);
     };
 
-    loadTransaction();
-  }, [user?.id]);
+    load();
+  }, [sessionId]);
 
   if (isLoading) {
     return (
@@ -41,46 +56,76 @@ export default function ThankYou() {
     );
   }
 
+  const isConfirmed = transaction?.status === 'completed';
+  const isPending   = !transaction || transaction.status === 'pending';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
-      <div className="text-center max-w-md">
+      <div className="text-center max-w-md w-full">
+
+        {/* Icon */}
         <div className="mb-6 flex justify-center">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-            <CheckCircle2 className="w-12 h-12 text-green-600" />
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center ${
+            isConfirmed ? 'bg-green-100' : 'bg-blue-50'
+          }`}>
+            {isConfirmed ? (
+              <CheckCircle2 className="w-12 h-12 text-green-600" />
+            ) : (
+              <Clock className="w-12 h-12 text-blue-500" />
+            )}
           </div>
         </div>
 
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Thank You!</h1>
+        {/* Heading */}
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">
+          {isConfirmed ? 'Thank You!' : 'Thank You for Your Support!'}
+        </h1>
         <p className="text-slate-600 mb-6">
-          Your payment has been received successfully. Thank you for supporting our community.
+          {isConfirmed
+            ? 'Your contribution has been confirmed. We truly appreciate your support of the JUnited community.'
+            : 'Your payment is being processed. This usually takes just a moment — no further action is needed.'}
         </p>
 
+        {/* Transaction details (only when we have data) */}
         {transaction && (
           <div className="bg-white rounded-lg border border-slate-200 p-6 mb-6 text-left">
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-slate-600">Amount</span>
-                <span className="font-semibold text-slate-900">${parseFloat(transaction.amount).toFixed(2)}</span>
+                <span className="text-slate-500 text-[13px]">Amount</span>
+                <span className="font-semibold text-slate-900">{formatDollars(transaction.amount)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-600">Type</span>
-                <span className="font-semibold text-slate-900 capitalize">
-                  {transaction.type.replace('_', ' ')}
+                <span className="text-slate-500 text-[13px]">Purpose</span>
+                <span className="font-semibold text-slate-900 capitalize text-right max-w-[60%]">
+                  {purposeLabel(transaction.purpose)}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">Order ID</span>
-                <span className="font-mono text-xs text-slate-500">{transaction.order_id}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 text-[13px]">Status</span>
+                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${
+                  isConfirmed
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-amber-100 text-amber-700'
+                }`}>
+                  {isConfirmed ? 'Confirmed' : 'Processing'}
+                </span>
               </div>
             </div>
           </div>
         )}
 
+        {/* Note about pending state */}
+        {isPending && (
+          <p className="text-[12px] text-slate-400 mb-4">
+            Payment confirmation is processed securely in the background. You'll receive email confirmation from Stripe once complete.
+          </p>
+        )}
+
         <Link to={createPageUrl('Feed')}>
-          <Button className="w-full bg-blue-600 hover:bg-blue-700 gap-2">
+          <button className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
             <Home className="w-4 h-4" />
             Back to Home
-          </Button>
+          </button>
         </Link>
       </div>
     </div>

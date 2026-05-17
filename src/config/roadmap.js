@@ -711,37 +711,21 @@ Goals:
   {
     id: 'payments',
     category: 'Growth & Monetization',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.HIGH,
     title: 'Payments & Checkout (Stripe)',
-    description: 'In-app payments for paid tasks, donations, premium community features, and the community store.',
-    why: 'Needs Stripe account setup and STRIPE_SECRET_KEY in production Edge Function env. Blocker for Community Store and Verified Community.',
-    prompt: `You are implementing Stripe Payments for JUnited.
-
-Context: paymentsService.js, PaymentModal.jsx, SupportJUnited.jsx, and ThankYou.jsx exist
-        as files. The current create-checkout call is a stub. Routes redirect to Feed.
-
-Goals:
-1. Set up Stripe account; add STRIPE_SECRET_KEY to Supabase Edge Function secrets.
-2. Add VITE_STRIPE_PUBLISHABLE_KEY to .env.local / production env.
-3. Create a Supabase Edge Function create-checkout-session that calls Stripe.
-4. Wire paymentsService.createCheckout() to the real Edge Function.
-5. Connect PaymentModal.jsx to real checkout.
-6. Create a Stripe webhook handler Edge Function for payment completion events.
-7. Re-add /SupportJUnited and /ThankYou routes.
-8. Create transactions table (user_id, amount, stripe_session_id, purpose, status) with RLS.
-9. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+    description: 'One-time support/donation payments via Stripe Checkout. SupportJUnited page with 3 tiers, PaymentModal for generic donation flows, transactions table with RLS, webhook handler.',
+    shippedNote: `Code complete 2026-05-17. Two Edge Functions deployed: create-checkout-session (validates amounts server-side, creates Stripe session, inserts pending transaction) and stripe-webhook (verifies signature, marks transaction completed). ThankYou page shows processing vs confirmed state driven by webhook, not browser redirect. LIVE requires manual Stripe dashboard setup: add STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET to Supabase Edge Function secrets and register the webhook endpoint.`,
   },
 
   {
     id: 'community-store',
     category: 'Growth & Monetization',
-    status: STATUS.BLOCKED,
+    status: STATUS.DEFERRED,
     priority: PRIORITY.MEDIUM,
     title: 'Community Store',
     description: 'Digital storefront for communities to sell merchandise, tickets, and fundraise.',
-    why: 'CommunityStoreTab.jsx exists but is deferred. Blocked on Stripe Payments being live first.',
-    needs: 'payments',
+    why: 'Stripe payments code is now live. Community Store is deferred until core usage grows — the PaymentModal is already wired and ready to use for store purchases.',
     prompt: `You are implementing the Community Store for JUnited.
 
 Context: CommunityStoreTab.jsx exists. CommunityDetailView already has a 'listings' tab that
@@ -755,6 +739,16 @@ Goals:
 5. Add admin UI in CommunityAdminCenter for managing store items.
 6. Track orders in a community_orders table.
 7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'stripe-subscriptions',
+    category: 'Growth & Monetization',
+    status: STATUS.DEFERRED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Recurring Supporter Subscriptions (Stripe)',
+    description: 'Monthly/annual recurring support tiers via Stripe Subscriptions. SupportJUnited UI already has monthly/annual toggle ready; requires Stripe Price/Product setup and subscription lifecycle handling (Customer objects, cancellation, proration).',
+    why: 'Current implementation uses one-time Checkout (simpler, safer for launch). Recurring subscriptions require additional Stripe infrastructure and a cancel/manage-subscription flow. Deferred until one-time payments are validated in production.',
   },
 
   {

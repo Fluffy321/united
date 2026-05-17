@@ -66,6 +66,8 @@ const SUPABASE_ENTITY_TABLES = {
   BusinessClaimRequest: 'business_claim_requests',
   BusinessManager: 'business_managers',
   BusinessReview: 'business_reviews',
+  // Stripe payments — migration transactions.sql
+  Transaction: 'transactions',
   // All other entities (GroupMember, Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.
@@ -875,7 +877,7 @@ const normalizeRealtimeEvent = (event = {}) => {
 //   Like              → (use togglePostLike RPC — not a generic entity)
 //   UserConnection    → user_connections
 //   WeeklyStats       → weekly_stats
-//   Transaction       → transactions
+//   Transaction       → transactions  (mapped — see SUPABASE_ENTITY_TABLES)
 //   ChalkboardPost    → chalkboard_posts
 //   CommunityAlert    → community_alerts
 //   DailyPrompt       → daily_prompts
@@ -1488,15 +1490,17 @@ export const base44 = {
         return { data: await publishLocalDailyTorah(payload) };
       }
 
-      if (name === 'create-checkout') {
-        return {
-          data: {
-            url: null,
-            checkoutUrl: null,
-            paymentLive: false,
-            error: 'Payments are not connected yet.',
-          },
-        };
+      if (name === 'create-checkout' || name === 'create-checkout-session') {
+        // paymentsService.js calls supabase.functions.invoke() directly and bypasses
+        // this router. This stub is a safety fallback only.
+        if (shouldUseSupabase && supabase) {
+          const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+            body: { ...payload, origin: typeof window !== 'undefined' ? window.location.origin : '' },
+          });
+          if (error) throw error;
+          return { data };
+        }
+        return { data: { checkoutUrl: null, error: 'Payments require Supabase to be connected.' } };
       }
 
       if (name === 'deleteUserAccount') {

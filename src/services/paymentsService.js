@@ -1,12 +1,22 @@
-import dataService from './dataService';
+import { supabase } from '@/api/supabaseClient';
 
 export const paymentsService = {
-  isLive: false,
+  /**
+   * Creates a Stripe Checkout session via the create-checkout-session Edge Function
+   * and returns { data: { checkoutUrl } } on success.
+   *
+   * The Edge Function validates amounts server-side — never pass a raw
+   * client-supplied price for named tiers.
+   */
   async createCheckout(payload = {}) {
-    return dataService.functions.invoke('create-checkout', payload);
-  },
-  getComingSoonMessage() {
-    return 'Payments are coming soon. No money was processed.';
+    const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+      body: {
+        ...payload,
+        origin: window.location.origin,
+      },
+    });
+    if (error) throw error;
+    return { data };
   },
 };
 

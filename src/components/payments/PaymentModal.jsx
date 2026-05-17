@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { X, Heart, Ticket, Users, CreditCard } from 'lucide-react';
+import { X, Heart, Ticket, Users, CreditCard, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { paymentsService } from '@/services';
 import { toast } from 'sonner';
-import FeatureStatusNotice, { StatusBadge } from '@/components/common/FeatureStatusNotice';
 
 const DONATION_PRESETS = [10, 25, 50, 100];
 
@@ -15,6 +14,7 @@ const TYPE_CONFIG = {
     title: 'Support Our Community',
     subtitle: 'Your donation helps fund essential community services.',
     buttonLabel: 'Donate',
+    checkoutType: 'donation',
   },
   event_registration: {
     icon: Ticket,
@@ -23,6 +23,7 @@ const TYPE_CONFIG = {
     title: 'Event Registration',
     subtitle: 'Complete your registration to secure your spot.',
     buttonLabel: 'Register & Pay',
+    checkoutType: 'donation',
   },
   service_payment: {
     icon: Users,
@@ -31,21 +32,22 @@ const TYPE_CONFIG = {
     title: 'Community Membership',
     subtitle: 'Join as a member and gain access to exclusive benefits.',
     buttonLabel: 'Join Now',
+    checkoutType: 'donation',
   },
 };
 
 /**
- * PaymentModal — unified payment flow
+ * PaymentModal — generic payment bottom sheet
  * Props:
  *   open: boolean
- *   onOpenChange: (open) => void
+ *   onOpenChange: (open: boolean) => void
  *   type: 'donation' | 'event_registration' | 'service_payment'
- *   fixedAmount: number (optional — if set, user can't change amount)
- *   defaultAmount: number (optional)
- *   description: string (optional — pre-filled description)
- *   relatedEntityId: string (optional)
- *   relatedEntityType: string (optional)
- *   quantity: number (optional, default 1)
+ *   fixedAmount: number | null   (if set, user cannot change amount)
+ *   defaultAmount: number
+ *   description: string
+ *   relatedEntityId: string | null
+ *   relatedEntityType: string | null
+ *   quantity: number
  */
 export default function PaymentModal({
   open,
@@ -69,29 +71,29 @@ export default function PaymentModal({
   const displayAmount = isNaN(finalAmount) ? 0 : finalAmount;
 
   const handlePay = async () => {
-    toast.info('Checkout is coming soon. No money was processed.');
-    return;
-
-    if (!displayAmount || displayAmount < 1) {
+    if (displayAmount < 1) {
       toast.error('Please enter a valid amount (minimum $1)');
       return;
     }
+    if (isLoading) return;
 
     const desc = propDescription || `${cfg.title} — $${displayAmount.toFixed(2)}`;
 
     setIsLoading(true);
     try {
-      const response = await paymentsService.createCheckout( {
+      const response = await paymentsService.createCheckout({
+        checkoutType: cfg.checkoutType,
         amount: displayAmount,
-        type,
-        description: desc,
-        relatedEntityId: relatedEntityId || null,
-        relatedEntityType: relatedEntityType || null,
+        purpose: desc,
+        relatedEntityId: relatedEntityId ?? null,
+        relatedEntityType: relatedEntityType ?? null,
         quantity,
       });
 
-      if (response.data?.checkoutUrl) {
-        window.location.href = response.data.checkoutUrl;
+      const checkoutUrl = response.data?.checkoutUrl;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+        // Don't reset loading — user is navigating away
       } else {
         throw new Error('No checkout URL returned');
       }
@@ -112,20 +114,17 @@ export default function PaymentModal({
           <div className={`w-10 h-10 rounded-xl ${cfg.bg} flex items-center justify-center`}>
             <Icon className={`w-5 h-5 ${cfg.color}`} />
           </div>
-          <button onClick={() => onOpenChange(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
+          <button
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+            className="p-1.5 hover:bg-slate-100 rounded-lg disabled:opacity-40"
+          >
             <X className="w-5 h-5 text-slate-400" />
           </button>
         </div>
 
-        <div className="mb-1 flex items-center gap-2">
-          <h2 className="text-[18px] font-bold text-slate-900">{cfg.title}</h2>
-          <StatusBadge>Coming Soon</StatusBadge>
-        </div>
+        <h2 className="text-[18px] font-bold text-slate-900 mb-1">{cfg.title}</h2>
         <p className="text-[13px] text-slate-500 mb-4">{cfg.subtitle}</p>
-
-        <FeatureStatusNotice className="mb-4" title="Checkout is not live yet">
-          No money will be processed from this screen. This is a placeholder until the real payment system is connected.
-        </FeatureStatusNotice>
 
         {propDescription && (
           <div className="bg-slate-50 rounded-xl p-3 mb-4 text-[13px] text-slate-700 font-medium">
@@ -176,28 +175,33 @@ export default function PaymentModal({
           <div className="flex items-center gap-2 text-[13px] text-slate-600">
             <CreditCard className="w-4 h-4 text-blue-500" />
             <span>Total</span>
-            {quantity > 1 && <span className="text-slate-400">({quantity}x)</span>}
+            {quantity > 1 && <span className="text-slate-400">({quantity}×)</span>}
           </div>
           <span className="text-[16px] font-bold text-slate-900">${displayAmount.toFixed(2)}</span>
         </div>
 
         <Button
           onClick={handlePay}
-          disabled
-          className="w-full bg-slate-300 text-white font-bold py-3 rounded-xl text-[14px] cursor-not-allowed"
+          disabled={isLoading || displayAmount < 1}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-[14px] flex items-center justify-center gap-2 disabled:opacity-60"
         >
-          Checkout Coming Soon
+          {isLoading ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Opening Checkout…</>
+          ) : (
+            `${cfg.buttonLabel} · $${displayAmount.toFixed(2)}`
+          )}
         </Button>
 
         <button
           onClick={() => onOpenChange(false)}
-          className="w-full mt-3 py-2.5 text-[13px] text-slate-500 font-semibold hover:bg-slate-50 rounded-xl transition-colors"
+          disabled={isLoading}
+          className="w-full mt-3 py-2.5 text-[13px] text-slate-500 font-semibold hover:bg-slate-50 rounded-xl transition-colors disabled:opacity-40"
         >
           Cancel
         </button>
 
         <p className="text-center text-[11px] text-slate-400 mt-3">
-          Demo only · no card is charged
+          Secure checkout powered by Stripe
         </p>
       </div>
     </div>

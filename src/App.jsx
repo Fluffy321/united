@@ -80,6 +80,8 @@ const Events                  = lazy(() => import('@/pages/Events'));
 const MyEvents                = lazy(() => import('@/pages/MyEvents'));
 const AdminFeedbackInbox      = lazy(() => import('@/pages/AdminFeedbackInbox'));
 const AdminiOSReadiness       = lazy(() => import('@/pages/AdminiOSReadiness'));
+const SupportJUnited          = lazy(() => import('@/pages/SupportJUnited'));
+const ThankYou                = lazy(() => import('@/pages/ThankYou'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -202,8 +204,8 @@ const AuthenticatedApp = () => {
             <Route path="/BusinessDirectory" element={<Navigate to={mainPagePath} replace />} />
             <Route path="/BusinessListing" element={<Navigate to={mainPagePath} replace />} />
             <Route path="/CreateBusinessListing" element={<Navigate to={mainPagePath} replace />} />
-            <Route path="/SupportJUnited" element={<Navigate to={mainPagePath} replace />} />
-            <Route path="/ThankYou" element={<Navigate to={mainPagePath} replace />} />
+            <Route path="/SupportJUnited" element={<PageTransition><SupportJUnited /></PageTransition>} />
+            <Route path="/ThankYou" element={<PageTransition><ThankYou /></PageTransition>} />
             <Route path="/yahrzeits" element={<Navigate to={mainPagePath} replace />} />
             <Route path="/tehillim" element={<Navigate to={mainPagePath} replace />} />
           </Route>
