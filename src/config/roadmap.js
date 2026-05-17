@@ -10,8 +10,25 @@
  *   - introduces a meaningful new future idea → add a new entry here
  *   - changes product direction on any item here
  *
- * The final report for any such task must explicitly state whether this file
- * was updated and what changed.
+ * PROMPT FIELD — REQUIRED FOR AI-IMPLEMENTABLE ITEMS
+ * ---------------------------------------------------
+ * The `prompt` field powers the "Copy Prompt" button in /FutureFeatures.
+ * Any entry that an AI agent could implement MUST include a `prompt`.
+ * A missing prompt means the Copy Prompt button silently disappears.
+ *
+ * Required format:
+ *   prompt: `You are implementing X for JUnited.
+ *
+ *   Context: <relevant files, migrations, existing code>
+ *
+ *   Goals:
+ *   1. ...
+ *   N. Update src/config/roadmap.js: change this item's status to 'shipped'.`
+ *
+ * Omit ONLY if the item is genuinely manual-only (e.g., "set up billing account").
+ * If omitting, add a comment in the entry explaining why.
+ *
+ * Run `npm run check-prompts` to verify all applicable entries have prompts.
  *
  * See also: CLAUDE.md at the project root.
  */
@@ -704,6 +721,30 @@ Goals:
     title: 'AI Community Setup Wizard',
     description: 'AI-assisted flow for creating a new community: suggests name, type, description, and initial settings based on a few prompts.',
     why: 'Could dramatically lower the barrier to community creation. No implementation started. Exploring whether it meaningfully improves creation rates.',
+    prompt: `You are implementing the AI Community Setup Wizard for JUnited.
+
+Context: Community creation currently uses a manual form. Find it by searching for
+        "CreateCommunity" or the community creation modal/page in src/. This task adds an
+        optional AI-assisted path that suggests name, description, type, and tags from a
+        short natural-language description. This is EXPLORING-status — ship a basic version
+        and measure before committing to full build.
+
+Goals:
+1. Add an "AI Setup" toggle/button to the existing community creation form.
+2. When enabled, show a 2-step wizard:
+   Step 1: Free-text input — "Describe your community in a sentence or two."
+   Step 2: AI-generated suggestions for name, type, description, privacy setting, and 3 tags.
+3. Create a Supabase Edge Function \`ai-community-suggest\` that:
+   - Accepts { userDescription: string } in the request body (require auth header)
+   - Calls Anthropic API (claude-haiku-4-5-20251001 for cost efficiency)
+   - Returns { name, communityType, description, privacySetting, suggestedTags: string[] }
+   - Validates and sanitizes the AI response before returning
+4. Allow the user to accept, edit individual fields, or regenerate suggestions.
+5. Add a boolean \`ai_assisted\` column to the communities table (nullable, default false)
+   via a new timestamped migration — set it to true when the wizard is used.
+6. Keep the standard manual path fully intact; AI wizard is purely opt-in.
+7. Run npm run lint && npm run typecheck && npm run build.
+8. Update src/config/roadmap.js: change this item's status to 'shipped' if the basic version works.`,
   },
 
   // ── Growth & Monetization ─────────────────────────────────────────────────
@@ -749,6 +790,39 @@ Goals:
     title: 'Recurring Supporter Subscriptions (Stripe)',
     description: 'Monthly/annual recurring support tiers via Stripe Subscriptions. Requires Stripe Price/Product setup for recurring billing and subscription lifecycle handling (Customer objects, cancellation, proration). SupportJUnited page currently handles one-time only.',
     why: 'Current implementation uses one-time Checkout (simpler, safer for launch). Recurring subscriptions require additional Stripe infrastructure and a cancel/manage-subscription flow. Deferred until one-time payments are validated in production.',
+    prompt: `You are implementing Recurring Supporter Subscriptions (Stripe) for JUnited.
+
+Context: One-time payments are live. Key files:
+  - supabase/functions/create-checkout-session/index.ts — one-time Stripe Checkout
+  - supabase/functions/stripe-webhook/index.ts — webhook handler (marks transactions completed)
+  - supabase/migrations/20260517191230_transactions.sql — transactions table schema
+  - src/services/paymentsService.js — frontend service (thin wrapper over supabase.functions.invoke)
+  - src/pages/SupportJUnited.jsx — support page with $18/$36/$72 tiers + custom amount
+
+Prerequisites (manual setup required before this prompt):
+  - Create monthly and annual Stripe Prices in the Stripe dashboard for each tier.
+  - Add the Price IDs as Supabase Edge Function secrets (e.g. STRIPE_PRICE_SUPPORTER_MONTHLY).
+
+Goals:
+1. Create a timestamped migration adding a \`subscriptions\` table:
+   user_id, stripe_subscription_id, stripe_customer_id, tier, status (active/canceled/past_due),
+   current_period_end, created_at, updated_at.
+2. Create a Supabase Edge Function \`create-subscription-session\` that:
+   - Authenticates the user via Bearer token
+   - Creates or retrieves a Stripe Customer for the user (store customer ID in profiles or new table)
+   - Creates a Stripe Checkout session with mode: 'subscription' using the requested Price ID
+   - Returns { checkoutUrl }
+3. Extend \`stripe-webhook\` (or create \`stripe-subscription-webhook\`) to handle:
+   - checkout.session.completed (subscription mode) → upsert subscriptions row
+   - customer.subscription.updated → update status and current_period_end
+   - customer.subscription.deleted → set status to 'canceled'
+4. Update SupportJUnited.jsx to add a Monthly/Annual billing toggle above the tier cards.
+   Monthly = current tiers; Annual = ~17% discount (2 months free). Show savings clearly.
+5. Add a "Manage Subscription" row in Settings → Account section that links to the Stripe
+   Customer Portal (create a \`create-portal-session\` Edge Function that returns { portalUrl }).
+6. Update paymentsService.js to expose createSubscriptionCheckout({ tier, interval }).
+7. Run npm run lint && npm run typecheck && npm run build.
+8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -818,6 +892,33 @@ Goals:
     title: 'Desktop Responsive App Shell',
     description: 'Evolve the current mobile-first shell into a more intentional wide-screen experience, potentially with a desktop side navigation, wider content regions for dense pages, and page-specific responsive layouts.',
     why: 'The shared floating-actions layer stabilizes mobile and desktop positioning, but the broader desktop experience is still mostly a widened mobile frame. This is useful after the mobile beta is stable.',
+    prompt: `You are implementing the Desktop Responsive App Shell for JUnited.
+
+Context: The app is mobile-first. Key layout files:
+  - src/Layout.jsx — app shell, bottom nav (fixed, z-50), floating actions stack
+  - src/index.css — layout utilities: mobile-page (max-w-2xl), mobile-page-wide, app-fixed-layer,
+                    app-floating-stack, glass-toolbar, --app-bottom-nav-height CSS variable
+  - tailwind.config.js — breakpoints (sm: 640px, md: 768px, lg: 1024px, xl: 1280px)
+
+Goals:
+1. At ≥1024px (lg breakpoint), replace the fixed bottom nav with a left sidebar nav:
+   - Width: 72px collapsed (icon-only) or 220px expanded
+   - Same 5 nav items, same active-state logic
+   - Remove bottom padding (mobile-safe-bottom) on desktop — no bottom nav means no offset needed
+2. Widen key content regions with responsive max-widths:
+   - Feed → max-w-2xl (unchanged, feels editorial)
+   - Communities → max-w-4xl with optional 2-column grid for community cards
+   - Map → full-width (already works)
+   - Messages → max-w-3xl sidebar+thread layout
+   - Profile → max-w-3xl
+3. Move floating action buttons (Create Post, Feedback) to bottom-right on desktop using the
+   existing FloatingActionsContext — update --app-floating-bottom and --app-floating-gutter
+   CSS variables at the lg breakpoint.
+4. Ensure Settings, Community detail, and chat pages remain clean at 1280px.
+5. All changes must be purely additive via Tailwind responsive prefixes (lg:, xl:).
+   Mobile layout must be completely unaffected.
+6. Run npm run lint && npm run typecheck && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -828,6 +929,28 @@ Goals:
     title: 'Extend Hide-on-Scroll Header to Other Pages',
     description: 'The Feed top header now hides on downward scroll and reveals on upward scroll (Instagram-style). The same pattern could improve Communities, Map, and Profile page headers for a more immersive feel.',
     why: 'Implemented Feed-only first (2026-05-17) because it was the highest-value page. Extending to other pages requires per-page audit of sticky header structure and scroll container. Deferred until those pages get design attention.',
+    prompt: `You are extending the hide-on-scroll header pattern to other JUnited pages.
+
+Context: Feed.jsx already implements this pattern. Reference implementation:
+  - src/pages/Feed.jsx — search for "headerHidden" to see the full pattern
+  - Pattern: const [headerHidden, setHeaderHidden] = useState(false) + lastScrollY ref +
+    passive window scroll listener (8px threshold, 60px MIN_SCROLL) + translateY(-120%) transition
+    on the sticky header div (transition-transform duration-300 ease-out)
+  - The scroll is on window (document scroll, no overflow container)
+
+Pages to extend (audit each before editing):
+  1. src/pages/Communities.jsx — check if it has a sticky top header; apply pattern if so
+  2. src/pages/Map.jsx — check if it has a sticky top header; apply pattern if so
+  3. src/pages/Profile.jsx — check if it has a sticky top header; apply pattern if so
+
+For each applicable page:
+1. Read the current header structure to confirm it uses sticky top-0.
+2. Add headerHidden state + lastScrollY ref.
+3. Add the passive scroll useEffect (copy from Feed.jsx, same constants).
+4. Add transition-transform duration-300 ease-out + style={{ transform: ... }} to the sticky div.
+5. Verify any sub-headers or dropdowns (like LocationNetworkPicker in Feed) still behave correctly.
+6. Run npm run lint && npm run typecheck && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -838,7 +961,36 @@ Goals:
     title: 'AI-Assisted Feedback Triage (Future)',
     description: 'Connect the Feedback Inbox to an LLM to auto-summarize free-text feedback, suggest priority, detect duplicate themes, and draft responses. The current free rule-based system is the foundation — a paid AI layer would read the same app_feedback table and write AI-generated summaries to an admin-only field.',
     why: 'Free rule-based triage is live and sufficient for beta. AI adds value only once feedback volume is high enough to warrant the cost.',
-    needs: ['Paid AI inference budget (OpenAI, Anthropic, or equivalent)', 'Supabase Edge Function to call AI API on new submissions', 'New nullable column: ai_summary text on app_feedback'],
+    needs: ['Paid AI inference budget (Anthropic or OpenAI)', 'ANTHROPIC_API_KEY or OPENAI_API_KEY added to Supabase Edge Function secrets'],
+    prompt: `You are implementing AI-Assisted Feedback Triage for JUnited.
+
+Context: Key files:
+  - src/pages/AdminFeedbackInbox.jsx — the admin feedback inbox UI
+  - supabase/migrations/20260516170012_app_feedback.sql — app_feedback table schema
+    (columns: id, user_id, page_context, category, message, urgency, status, is_junk, created_at)
+  - supabase/migrations/20260516195749_feedback_inbox_junk.sql — is_junk column
+  The current triage is rule-based client-side heuristics in AdminFeedbackInbox.jsx.
+
+Prerequisites (must be done manually before running this prompt):
+  - Add ANTHROPIC_API_KEY to Supabase Edge Function secrets (preferred) OR OPENAI_API_KEY.
+  - Confirm billing is active for the chosen provider.
+
+Goals:
+1. Create a timestamped migration adding \`ai_summary text\` (nullable) to app_feedback.
+2. Create a Supabase Edge Function \`triage-feedback\` (no JWT required — triggered server-side):
+   - Accepts { feedbackId: string } in the request body
+   - Reads the feedback row from app_feedback using the service role
+   - Calls Anthropic API (claude-haiku-4-5-20251001) with the message, category, urgency, page_context
+   - Generates a 1–2 sentence plain-English summary and a suggested priority (low/medium/high/urgent)
+   - Updates app_feedback SET ai_summary = '...' WHERE id = feedbackId
+3. Wire the Edge Function to trigger on new app_feedback INSERT via a Supabase Database Webhook
+   pointing to the triage-feedback function URL.
+4. In AdminFeedbackInbox.jsx, show ai_summary below the message if present:
+   - Style it as a subtle italic note prefixed with "AI:" in slate-400
+   - Only show to admins (the page is already admin-gated)
+5. Add a "Re-triage" button per feedback row to manually re-trigger triage for a submission.
+6. Run npm run lint && npm run typecheck && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {

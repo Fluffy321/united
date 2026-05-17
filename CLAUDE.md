@@ -37,6 +37,34 @@ You MUST update `src/config/roadmap.js` in the same task whenever you:
 
 ---
 
+### Prompt field rule — REQUIRED for AI-implementable items
+
+The `prompt` field in each roadmap entry powers the **Copy Prompt** button in `/FutureFeatures`. When present, admins can one-click-copy it into Claude Code or Codex to implement the feature. When absent, the button silently disappears — the entry becomes actionable only by someone who writes the prompt from scratch.
+
+**Any new roadmap entry that an AI agent could reasonably implement MUST include a `prompt` field.** This applies equally whether the entry is `planned`, `deferred`, `exploring`, or `blocked`.
+
+**Prompt format:**
+```
+prompt: `You are implementing X for JUnited.
+
+Context: <point to the exact files, migrations, and existing code that are relevant>
+
+Goals:
+1. <specific, ordered implementation steps>
+N. Update src/config/roadmap.js: change this item's status to 'shipped'.`
+```
+
+**When a prompt MAY be omitted:**
+- The item is purely manual (e.g., "set up App Store Connect account", "configure billing")
+- No code needs to be written at all
+- If omitting, you MUST add an explanatory comment in the entry's `why` or `description` field
+
+**Do not add incomplete shells.** A new entry without a prompt is not a complete entry — it is a placeholder that will silently break the FutureFeatures UI. Write the prompt at the same time as the entry.
+
+Run `npm run check-prompts` to verify all applicable entries have prompts.
+
+---
+
 ### Part B — Future-improvements scan (required after applicable tasks)
 
 **Before writing the final report** on any feature implementation, significant bug fix, redesign, architecture or readiness audit, admin tool addition, or any task that surfaces recommendations or deferred work — you must perform a roadmap future-improvements scan:

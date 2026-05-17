@@ -34,6 +34,29 @@ You must update `src/config/roadmap.js` in the same task whenever you:
 
 Valid status values: `'planned'`, `'deferred'`, `'exploring'`, `'blocked'`, `'shipped'`, `'dropped'`
 
+### Prompt field rule — REQUIRED for AI-implementable items
+
+The `prompt` field in each roadmap entry powers the **Copy Prompt** button in `/FutureFeatures`. When present, admins can one-click-copy it into an AI agent to implement the feature. When absent, the button silently disappears.
+
+**Any new roadmap entry that an AI agent could reasonably implement MUST include a `prompt` field.** This applies to `planned`, `deferred`, `exploring`, and `blocked` entries.
+
+**Prompt format:**
+```
+prompt: `You are implementing X for JUnited.
+
+Context: <point to exact files, migrations, and existing code>
+
+Goals:
+1. <specific, ordered implementation steps>
+N. Update src/config/roadmap.js: change this item's status to 'shipped'.`
+```
+
+**When a prompt MAY be omitted:** Only if the item is purely manual (no code to write). If omitting, explain why in `why` or `description`.
+
+**Do not add incomplete shells.** Write the prompt at the same time as the entry. Run `npm run check-prompts` to verify.
+
+---
+
 ### Part B — Future-improvements scan (required after applicable tasks)
 
 Before writing the final report on any feature implementation, significant bug fix, redesign, audit, admin tool addition, or any task that surfaces recommendations or deferred work — you must perform a roadmap future-improvements scan:
