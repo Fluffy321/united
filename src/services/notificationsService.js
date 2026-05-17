@@ -20,6 +20,7 @@ const normalizeNotification = (notification = {}) => ({
   body: notification.body || notification.message || '',
   created_date: notification.created_date || notification.created_at || nowISO(),
   is_read: Boolean(notification.is_read || notification.read),
+  aggregate_count: notification.aggregate_count || 1,
 });
 
 const buildNotification = ({
@@ -34,6 +35,7 @@ const buildNotification = ({
   postId = null,
   conversationId = null,
   data = {},
+  aggregateKey = null,
 }) => ({
   user_id: userId,
   actor_id: actorId,
@@ -46,6 +48,8 @@ const buildNotification = ({
   post_id: postId,
   conversation_id: conversationId,
   data,
+  aggregate_key: aggregateKey,
+  aggregate_count: 1,
   is_read: false,
   created_date: nowISO(),
 });
@@ -53,6 +57,16 @@ const buildNotification = ({
 export const notificationsService = {
   async listForUser(userId, limit = 80) {
     if (!userId) return [];
+    if (shouldUseSupabase && supabase) {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return (data || []).map(normalizeNotification);
+    }
     const notifications = await dataService.entities.Notification.filter({ user_id: userId }, '-created_date', limit);
     return notifications.map(normalizeNotification);
   },
@@ -78,7 +92,33 @@ export const notificationsService = {
 
   async create(input) {
     if (!input?.userId || input.userId === input.actorId) return null;
-    const notification = await dataService.entities.Notification.create(buildNotification(input));
+
+    const payload = buildNotification(input);
+    let notification;
+
+    if (shouldUseSupabase && supabase && payload.aggregate_key) {
+      // Aggregated path — atomic upsert via RPC (bypasses RLS UPDATE restriction)
+      const { data, error } = await supabase.rpc('upsert_aggregated_notification', {
+        p_user_id:            payload.user_id,
+        p_actor_id:           payload.actor_id,
+        p_actor_display_name: payload.actor_display_name,
+        p_actor_avatar_url:   payload.actor_avatar_url,
+        p_type:               payload.type,
+        p_title:              payload.title,
+        p_body:               payload.body,
+        p_link_url:           payload.link_url,
+        p_post_id:            payload.post_id,
+        p_conversation_id:    payload.conversation_id,
+        p_data:               payload.data,
+        p_aggregate_key:      payload.aggregate_key,
+      });
+      if (error) throw error;
+      if (!data) return null; // RPC returned null (self-notification guard in the function)
+      notification = data;
+    } else {
+      notification = await dataService.entities.Notification.create(payload);
+    }
+
     sendPush({
       userId: input.userId,
       title: input.title || input.body || 'JUnited',
@@ -156,27 +196,29 @@ export const notificationsService = {
     return this.create({
       userId,
       actorId,
-      type: 'community_activity',
-      title: 'Community activity',
-      body: `${actorName || 'Someone'} posted in ${communityName || 'your community'}.`,
-      linkUrl: postId ? `/PostDetail?id=${postId}` : '/Communities',
+      type:         'community_activity',
+      title:        'Community activity',
+      body:         `${actorName || 'Someone'} posted in ${communityName || 'your community'}.`,
+      linkUrl:      postId ? `/PostDetail?id=${postId}` : '/Communities',
       postId,
-      data: { community_id: communityId },
+      data:         { community_id: communityId },
+      aggregateKey: communityId ? `community_activity:${communityId}` : null,
     });
   },
 
   notifyCommentReply({ recipientId, actorId, actorName, actorAvatarUrl, postId, commentId, preview }) {
     return this.create({
-      userId: recipientId,
+      userId:           recipientId,
       actorId,
       actorDisplayName: actorName,
       actorAvatarUrl,
-      type: 'comment_reply',
-      title: 'New reply in your thread',
-      body: `${actorName || 'Someone'} replied${preview ? `: ${preview}` : '.'}`,
-      linkUrl: postId ? `/PostDetail?id=${postId}` : '/Feed',
+      type:             'comment_reply',
+      title:            'New reply in your thread',
+      body:             `${actorName || 'Someone'} replied${preview ? `: ${preview}` : '.'}`,
+      linkUrl:          postId ? `/PostDetail?id=${postId}` : '/Feed',
       postId,
-      data: { comment_id: commentId, preview },
+      data:             { comment_id: commentId, preview },
+      aggregateKey:     postId ? `comment_reply:${postId}` : null,
     });
   },
 
@@ -191,6 +233,7 @@ export const notificationsService = {
       body:             `${likerName || 'Someone'} liked your post.`,
       linkUrl:          postId ? `/PostDetail?id=${postId}` : '/Feed',
       postId,
+      aggregateKey:     postId ? `post_liked:${postId}` : null,
     });
   },
 
@@ -206,6 +249,7 @@ export const notificationsService = {
       linkUrl:          postId ? `/PostDetail?id=${postId}` : '/Feed',
       postId,
       data:             { preview },
+      aggregateKey:     postId ? `post_commented:${postId}` : null,
     });
   },
 

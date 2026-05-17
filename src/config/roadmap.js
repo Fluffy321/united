@@ -114,11 +114,11 @@ Goals:
   {
     id: 'notification-aggregation',
     category: 'Auth & Identity',
-    status: STATUS.DEFERRED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Notification Aggregation',
     description: 'Group multiple similar notifications (e.g. "5 people liked your post") instead of one row per event.',
-    why: 'Requires a more complex insert-time aggregation strategy or a server-side rollup job. Deferred until notification volume is high enough to warrant it.',
+    shippedNote: 'Shipped. Migration 20260517025900 adds aggregate_key and aggregate_count columns plus a SECURITY DEFINER RPC (upsert_aggregated_notification) for atomic upsert. Client calls RPC instead of plain INSERT for post_liked, post_commented, comment_reply, community_activity. Body is pluralized in SQL ("Alice and 3 others liked your post"). listForUser now sorts by updated_at so aggregated rows bubble to top. Count badge shown in both Notifications.jsx and NotificationCenter.jsx.',
     prompt: `You are implementing Notification Aggregation for JUnited.
 
 Context:

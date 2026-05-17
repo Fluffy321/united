@@ -118,14 +118,21 @@ export default function NotificationCenter({ open, onOpenChange, userId }) {
 
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] text-[#0F1C2E] leading-snug">{notif.message || notif.body || notif.title}</p>
-                      <p className="text-[11px] text-[#94a3b8] mt-1">
-                        {(() => {
-                          try {
-                            const d = parseISO(notif.created_date || notif.created_at || '');
-                            return isValid(d) ? formatDistanceToNow(d, { addSuffix: true }) : '—';
-                          } catch { return '—'; }
-                        })()}
-                      </p>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span className="text-[11px] text-[#94a3b8]">
+                          {(() => {
+                            try {
+                              const d = parseISO(notif.updated_at || notif.created_date || notif.created_at || '');
+                              return isValid(d) ? formatDistanceToNow(d, { addSuffix: true }) : '—';
+                            } catch { return '—'; }
+                          })()}
+                        </span>
+                        {notif.aggregate_count > 1 && (
+                          <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-500">
+                            {notif.aggregate_count}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {!notif.is_read && (
                       <div className="w-2 h-2 rounded-full bg-[#2563eb] mt-2 flex-shrink-0" />

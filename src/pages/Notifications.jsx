@@ -84,7 +84,9 @@ function dateGroupLabel(d) {
 function groupByDate(notifications) {
   const groups = {};
   for (const n of notifications) {
-    const d = safeParse(n.created_date || n.created_at);
+    // Use updated_at for grouping so aggregated notifications appear in "Today"
+    // after receiving new activity, matching where they appear in the sorted list.
+    const d = safeParse(n.updated_at || n.created_date || n.created_at);
     const key = dateGroupLabel(d);
     if (!groups[key]) groups[key] = [];
     groups[key].push(n);
@@ -196,6 +198,11 @@ function SwipeableNotifCard({ notif, onRead, isLast }) {
             <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${config.tone}`}>
               {config.label}
             </span>
+            {notif.aggregate_count > 1 && (
+              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-500">
+                {notif.aggregate_count}
+              </span>
+            )}
             <span className="text-[11px] text-slate-400">
               {d ? formatDistanceToNow(d, { addSuffix: true }) : '—'}
             </span>
