@@ -932,11 +932,11 @@ Goals:
   {
     id: 'subscription-admin-metrics',
     category: 'Growth & Monetization',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Subscription Metrics in Admin Dashboard',
     description: 'Add a Supporters section to AdminAnalyticsDashboard showing subscriber count, MRR (monthly recurring revenue), tier breakdown, and churn rate.',
-    why: 'Once subscriptions are live, the operator needs basic visibility into recurring revenue. Currently AdminAnalyticsDashboard has no payment metrics at all.',
+    shippedNote: 'Shipped 2026-05-17. Added "Supporters" tab to AdminAnalyticsDashboard. KPI row: Active Subscribers, MRR ($X/mo with ARR sub-label), Annual Plan count (% of active), Past Due. Tier breakdown table (Supporter/Community Builder/Champion with subscriber count + MRR/mo). Monthly vs Annual split with CSS progress bars and MRR contribution per interval. New subscriptions per week (8-week BarChart, rose color). All data from a direct supabase.from("subscriptions") query in the existing loadData() Promise.all — gracefully returns [] if table not yet migrated so other tabs stay functional. MRR formula: monthly=$18/$36/$72, annual=$15/$30/$60 (annual ÷ 12).',
     prompt: `You are adding subscription metrics to AdminAnalyticsDashboard for JUnited.
 
 Context:
