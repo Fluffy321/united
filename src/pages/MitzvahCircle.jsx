@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Clock,
   Eye,
+  GraduationCap,
   HandHeart,
   ListFilter,
   Loader2,
@@ -18,7 +19,10 @@ import {
   Plus,
   Search,
   Send,
+  ShoppingBag,
   ShieldCheck,
+  Sparkles,
+  Utensils,
   UserCheck,
   Users,
   X,
@@ -40,6 +44,89 @@ const CATEGORIES = [
   'Tech Help',
   'Other',
 ];
+
+const CATEGORY_GROUPS = [
+  {
+    id: 'all',
+    label: 'All Needs',
+    shortLabel: 'All',
+    description: 'Every open mitzvah request',
+    categories: null,
+    icon: HandHeart,
+    tone: 'border-blue-200 bg-blue-50 text-blue-700',
+  },
+  {
+    id: 'meals',
+    label: 'Meals',
+    shortLabel: 'Meals',
+    description: 'Food, meals, and hospitality',
+    categories: ['Food / Meals'],
+    icon: Utensils,
+    tone: 'border-amber-200 bg-amber-50 text-amber-700',
+  },
+  {
+    id: 'rides',
+    label: 'Rides',
+    shortLabel: 'Rides',
+    description: 'Rides, pickup, and carpool help',
+    categories: ['Transportation'],
+    icon: Car,
+    tone: 'border-sky-200 bg-sky-50 text-sky-700',
+  },
+  {
+    id: 'errands',
+    label: 'Errands',
+    shortLabel: 'Errands',
+    description: 'Shopping, pickup, and quick favors',
+    categories: ['Errands'],
+    icon: ShoppingBag,
+    tone: 'border-violet-200 bg-violet-50 text-violet-700',
+  },
+  {
+    id: 'care',
+    label: 'Care & Check-ins',
+    shortLabel: 'Care',
+    description: 'Visits, elderly support, and babysitting',
+    categories: ['Elderly Support', 'Babysitting'],
+    icon: Users,
+    tone: 'border-rose-200 bg-rose-50 text-rose-700',
+  },
+  {
+    id: 'hands_on',
+    label: 'Hands-On Help',
+    shortLabel: 'Hands-On',
+    description: 'Shul, simcha, setup, and physical help',
+    categories: ['Simcha Help', 'Shul Help'],
+    icon: HandHeart,
+    tone: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  },
+  {
+    id: 'skills',
+    label: 'Learning & Tech',
+    shortLabel: 'Skills',
+    description: 'Tutoring, tech help, and skill-based chesed',
+    categories: ['Tutoring', 'Tech Help'],
+    icon: GraduationCap,
+    tone: 'border-indigo-200 bg-indigo-50 text-indigo-700',
+  },
+  {
+    id: 'other',
+    label: 'Other Chesed',
+    shortLabel: 'Other',
+    description: 'Everything else the community can help with',
+    categories: ['Other'],
+    icon: Sparkles,
+    tone: 'border-slate-200 bg-slate-50 text-slate-700',
+  },
+];
+
+const getCategoryGroup = (groupId) =>
+  CATEGORY_GROUPS.find((group) => group.id === groupId) || CATEGORY_GROUPS[0];
+
+const requestMatchesCategoryGroup = (request, groupId) => {
+  const group = getCategoryGroup(groupId);
+  return !group.categories || group.categories.includes(request.category);
+};
 
 const MITZVAH_MAP_LOCATION_FALLBACKS = {
   cedarhurst: { lat: 40.6224, lng: -73.7268, label: 'Cedarhurst' },
@@ -373,7 +460,7 @@ function RequestCard({
 
   return (
     <article
-      className={`app-card relative cursor-pointer overflow-hidden border p-4 transition hover:shadow-md ${urgencyCardTone}`}
+      className={`relative cursor-pointer overflow-hidden rounded-[26px] border p-4 shadow-sm transition hover:shadow-md ${urgencyCardTone}`}
       onClick={handleCardClick}
       role={onOpenMap ? 'button' : undefined}
       tabIndex={onOpenMap ? 0 : undefined}
@@ -381,8 +468,8 @@ function RequestCard({
       <div className={`absolute inset-y-0 left-0 w-1.5 ${urgencyRail}`} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-700">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-[11px] font-black text-slate-700 shadow-sm">
               {request.category}
             </span>
             <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-black ${urgencyInfo.tone}`}>
@@ -390,10 +477,6 @@ function RequestCard({
               {urgencyInfo.label}
             </span>
             <StatusPill status={request.status} />
-            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
-              <HandHeart className="h-3 w-3" />
-              Chesed
-            </span>
           </div>
           {canAdjustUrgency && (
             <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -418,9 +501,12 @@ function RequestCard({
               })}
             </div>
           )}
-          <h2 className="text-[17px] font-black leading-snug text-slate-950">{request.title}</h2>
+          <h2 className="text-[18px] font-black leading-snug text-slate-950">{request.title}</h2>
+          <p className="mt-2 line-clamp-3 text-[13px] font-medium leading-5 text-slate-600">
+            {request.description}
+          </p>
 
-          <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr]">
+          <div className="mt-3 grid gap-2 sm:grid-cols-[0.9fr_1.1fr]">
             <div className={`rounded-2xl border px-3 py-2 ${urgencyInfo.tone}`}>
               <p className="flex items-center gap-2 text-[12px] font-black">
                 <Clock className="h-4 w-4" />
@@ -429,7 +515,7 @@ function RequestCard({
               <p className="mt-0.5 text-[11px] font-black opacity-80">{urgencyInfo.remaining}</p>
             </div>
 
-            <div className="mt-3 rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
+            <div className="rounded-2xl border border-slate-100 bg-white/85 p-3 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate text-[13px] font-black text-slate-950">{progress.title}</p>
@@ -447,10 +533,6 @@ function RequestCard({
               </div>
             </div>
           </div>
-
-          <p className="mt-3 text-[13px] font-medium leading-5 text-slate-600">
-            {request.description}
-          </p>
 
           {request.status === STATUSES.VERIFIED && (
             <div className="mt-3 flex items-center gap-2 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white px-3 py-2.5">
@@ -1077,15 +1159,17 @@ function QuickViewSheet({ request, offers, comments = [], currentUser, onClose, 
 
 function Metric({ icon: Icon, label, value, tone }) {
   const tones = {
-    blue: 'bg-blue-50 text-blue-700',
-    amber: 'bg-amber-50 text-amber-700',
-    emerald: 'bg-emerald-50 text-emerald-700',
+    blue: 'border-blue-100 bg-blue-50/80 text-blue-700',
+    amber: 'border-amber-100 bg-amber-50/80 text-amber-700',
+    emerald: 'border-emerald-100 bg-emerald-50/80 text-emerald-700',
   };
   return (
-    <div className={`rounded-xl p-3 ${tones[tone]}`}>
-      <Icon className="mb-2 h-4 w-4" />
-      <p className="text-xl font-black">{value}</p>
-      <p className="text-[10px] font-black uppercase">{label}</p>
+    <div className={`rounded-2xl border p-3 shadow-sm ${tones[tone]}`}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-black uppercase tracking-wide opacity-75">{label}</p>
+        <Icon className="h-4 w-4" />
+      </div>
+      <p className="mt-1 text-2xl font-black leading-none">{value}</p>
     </div>
   );
 }
@@ -1097,30 +1181,45 @@ export default function MitzvahCircle() {
   const { user: currentUser, isLoadingAuth } = useAuth();
   const queryClient = useQueryClient();
 
-  const VALID_TABS = ['open', 'carpool', 'offers', 'posted', 'completed'];
-  const [activeTab, setActiveTab] = React.useState(() => {
+  const VALID_VIEWS = ['browse', 'offers', 'posted', 'completed'];
+  const [activeView, setActiveView] = React.useState(() => {
     const tab = searchParams.get('tab');
-    return VALID_TABS.includes(tab) ? tab : 'open';
+    if (tab === 'open' || tab === 'carpool') return 'browse';
+    return VALID_VIEWS.includes(tab) ? tab : 'browse';
   });
+  const [activeCategory, setActiveCategory] = React.useState(() =>
+    searchParams.get('tab') === 'carpool' ? 'rides' : 'all'
+  );
   const [query, setQuery] = React.useState('');
-  const [categoryFilter, setCategoryFilter] = React.useState('All');
+  const [detailCategoryFilter, setDetailCategoryFilter] = React.useState('All');
   const [showCreate, setShowCreate] = React.useState(false);
   const [carpoolCreateMode, setCarpoolCreateMode] = React.useState(null);
   const [quickViewRequest, setQuickViewRequest] = React.useState(null);
 
   React.useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && tab !== activeTab && VALID_TABS.includes(tab)) setActiveTab(tab);
+    const nextView = tab === 'open' || tab === 'carpool'
+      ? 'browse'
+      : VALID_VIEWS.includes(tab)
+        ? tab
+        : 'browse';
+    if (nextView !== activeView) setActiveView(nextView);
+    if (tab === 'carpool' && activeCategory !== 'rides') setActiveCategory('rides');
   }, [searchParams]);
 
-  const changeTab = (tab) => {
-    setActiveTab(tab);
+  const changeView = (view) => {
+    setActiveView(view);
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      if (tab === 'open') next.delete('tab');
-      else next.set('tab', tab);
+      if (view === 'browse') next.delete('tab');
+      else next.set('tab', view);
       return next;
     }, { replace: true });
+  };
+
+  const changeBrowseCategory = (categoryId) => {
+    setActiveCategory(categoryId);
+    if (activeView !== 'browse') changeView('browse');
   };
 
   const openRequestOnMap = (request) => {
@@ -1225,7 +1324,7 @@ export default function MitzvahCircle() {
         created_by_name: currentUser.display_name || currentUser.full_name,
       });
       setShowCreate(false);
-      changeTab('posted');
+      changeView('posted');
       toast.success('Request posted.');
     } catch (err) {
       toast.error(err.message || 'Could not post request.');
@@ -1259,7 +1358,7 @@ export default function MitzvahCircle() {
         created_by_name: currentUser.display_name || currentUser.full_name,
       });
       setCarpoolCreateMode(null);
-      changeTab('carpool');
+      changeBrowseCategory('rides');
       toast.success(mode === 'offer' ? 'Carpool offer posted.' : 'Ride request posted.');
     } catch (err) {
       toast.error(err.message || 'Could not post carpool.');
@@ -1388,7 +1487,7 @@ export default function MitzvahCircle() {
 
   // ── Derived data ───────────────────────────────────────────────────────────
 
-  const filteredRequests = React.useMemo(() => {
+  const searchFilteredRequests = React.useMemo(() => {
     const needle = query.trim().toLowerCase();
     return requests.filter((r) => {
       const matchesQuery =
@@ -1396,16 +1495,17 @@ export default function MitzvahCircle() {
         [r.title, r.description, r.category, r.neighborhood, r.poster_name].some((v) =>
           String(v || '').toLowerCase().includes(needle)
         );
-      const matchesCat = categoryFilter === 'All' || r.category === categoryFilter;
-      return matchesQuery && matchesCat;
+      return matchesQuery;
     });
-  }, [requests, query, categoryFilter]);
+  }, [requests, query]);
 
-  const openRequests = filteredRequests.filter(
+  const browseRequests = searchFilteredRequests.filter(
     (r) => ![STATUSES.VERIFIED, STATUSES.CANCELLED].includes(r.status)
+      && requestMatchesCategoryGroup(r, activeCategory)
   );
-  const completedRequests = filteredRequests.filter((r) =>
+  const completedRequests = searchFilteredRequests.filter((r) =>
     [STATUSES.VERIFIED, STATUSES.CANCELLED].includes(r.status)
+    && (detailCategoryFilter === 'All' || r.category === detailCategoryFilter)
   );
   const myOfferRequests = requests
     .map((r) => ({
@@ -1413,7 +1513,10 @@ export default function MitzvahCircle() {
       offer: offers.find((o) => o.requestId === r.id && o.volunteerId === currentUser?.id),
     }))
     .filter((item) => item.offer);
-  const myPosted = filteredRequests.filter((r) => r.poster_id === currentUser?.id);
+  const myPosted = searchFilteredRequests.filter((r) =>
+    r.poster_id === currentUser?.id
+    && (detailCategoryFilter === 'All' || r.category === detailCategoryFilter)
+  );
   const carpoolRequests = requests
     .filter((r) =>
       r.request_kind === 'carpool'
@@ -1435,11 +1538,10 @@ export default function MitzvahCircle() {
     completedCount: requests.filter((r) => r.status === STATUSES.VERIFIED).length,
   }), [requests]);
 
-  const tabs = [
-    { id: 'open', label: 'Help Requests' },
-    { id: 'carpool', label: 'Carpool' },
+  const workflowTabs = [
+    { id: 'browse', label: 'Browse Needs' },
     { id: 'offers', label: 'My Offers' },
-    { id: 'posted', label: 'My Posted' },
+    { id: 'posted', label: 'My Requests' },
     { id: 'completed', label: 'Completed' },
   ];
 
@@ -1455,127 +1557,185 @@ export default function MitzvahCircle() {
     <main className="app-page mobile-safe-bottom">
       <section className="mobile-page-wide px-3 pt-3 sm:px-4 sm:pt-4">
         {/* Header */}
-        <div className="surface-panel overflow-hidden rounded-[28px]">
-          <div className="graphic-stripes relative p-4 sm:p-5">
-            <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[48px] bg-blue-50/80" />
-            <div className="relative">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-1.5">
-                  <h1 className="text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">
-                    Mitzvah Circle
-                  </h1>
-                  <PageHelp text="Ask for help, offer help, and follow mitzvah requests from open to completed." />
+        <div className="overflow-hidden rounded-[30px] border border-blue-100 bg-gradient-to-br from-white via-blue-50/70 to-indigo-50 shadow-sm">
+          <div className="relative p-4 sm:p-5">
+            <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full bg-white/50 blur-2xl" />
+            <div className="relative space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/75 px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-blue-700">
+                    <HandHeart className="h-3.5 w-3.5" />
+                    Community help hub
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <h1 className="text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">
+                      Mitzvah Circle
+                    </h1>
+                    <PageHelp text="Give help, ask for help, and follow mitzvah requests from open to completed." />
+                  </div>
+                  <p className="mt-1.5 max-w-xl text-[13px] font-semibold leading-5 text-slate-600">
+                    Give help. Ask for help. Strengthen the community.
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowCreate(true)}
-                  className="app-button-primary h-11 self-start sm:self-auto"
+                  className="app-button-primary h-11 shrink-0 px-3 sm:px-4"
                 >
                   <Plus className="h-4 w-4" />
-                  Post Request
+                  <span className="hidden sm:inline">Post Request</span>
+                  <span className="sm:hidden">Post</span>
                 </button>
               </div>
 
-              <div className="mt-4 grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <Metric icon={HandHeart} label="Open" value={totals.openCount} tone="blue" />
                 <Metric icon={Clock} label="In Progress" value={totals.offeredCount} tone="amber" />
                 <Metric icon={Award} label="Completed" value={totals.completedCount} tone="emerald" />
               </div>
-
             </div>
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Activity views */}
         <div className="sticky top-0 z-20 -mx-3 mt-3 bg-[#F6F8FB]/78 px-3 py-2 backdrop-blur sm:-mx-4 sm:px-4">
-          <div className="surface-panel-soft mobile-scroll-x flex gap-2 rounded-[22px] p-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => changeTab(tab.id)}
-                className={`motion-press shrink-0 rounded-xl px-3.5 py-2 text-[13px] font-black transition ${
-                  activeTab === tab.id
-                    ? 'bg-slate-950 text-white shadow-sm'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-950'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="surface-panel-soft rounded-[24px] p-2">
+            <p className="px-2 pb-1 text-[11px] font-black uppercase tracking-wide text-slate-400">My activity</p>
+            <div className="mobile-scroll-x flex gap-2">
+              {workflowTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => changeView(tab.id)}
+                  className={`motion-press shrink-0 rounded-xl px-3.5 py-2 text-[13px] font-black transition ${
+                    activeView === tab.id
+                      ? 'bg-slate-950 text-white shadow-sm'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-950'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Search/filter bar for list views */}
-        {['open', 'posted'].includes(activeTab) && (
-          <div className="surface-panel-soft mb-3 grid gap-2 rounded-[24px] p-3 sm:grid-cols-[1fr_220px]">
-            <label className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search requests"
-                className="app-input h-11 pl-10 pr-3 text-sm"
-              />
-            </label>
-            <label className="relative">
-              <ListFilter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="app-input h-11 pl-10 pr-3 text-sm font-black"
-              >
-                <option>All</option>
-                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </label>
+        {/* Search/filter bar */}
+        {activeView !== 'offers' && (
+          <div className="surface-panel-soft mb-3 space-y-3 rounded-[24px] p-3">
+            {activeView === 'browse' && (
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[13px] font-black text-slate-950">Browse by need</p>
+                    <p className="text-[12px] font-semibold text-slate-500">
+                      Choose the kind of chesed you want to help with.
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-500">
+                    {browseRequests.length} open
+                  </span>
+                </div>
+                <div className="mobile-scroll-x flex gap-2">
+                  {CATEGORY_GROUPS.map((group) => {
+                    const Icon = group.icon;
+                    const selected = activeCategory === group.id;
+                    return (
+                      <button
+                        key={group.id}
+                        type="button"
+                        onClick={() => changeBrowseCategory(group.id)}
+                        className={`motion-press shrink-0 rounded-2xl border px-3 py-2 text-left transition ${
+                          selected
+                            ? `${group.tone} shadow-sm`
+                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2 text-[12px] font-black">
+                          <Icon className="h-4 w-4" />
+                          {group.shortLabel}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className={activeView === 'browse' ? 'grid gap-2' : 'grid gap-2 sm:grid-cols-[1fr_220px]'}>
+              <label className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search requests"
+                  className="app-input h-11 pl-10 pr-3 text-sm"
+                />
+              </label>
+              {activeView !== 'browse' && (
+                <label className="relative">
+                  <ListFilter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <select
+                    value={detailCategoryFilter}
+                    onChange={(e) => setDetailCategoryFilter(e.target.value)}
+                    className="app-input h-11 pl-10 pr-3 text-sm font-black"
+                  >
+                    <option>All</option>
+                    {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </label>
+              )}
+            </div>
           </div>
         )}
 
         {/* Tab content */}
-        <div key={activeTab} className="motion-stagger space-y-3">
-          {activeTab === 'open' && (
+        <div key={`${activeView}-${activeCategory}`} className="motion-stagger space-y-3">
+          {activeView === 'browse' && (
             loadingRequests ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
               </div>
-            ) : openRequests.length ? (
-              openRequests.map((r) => (
-                <RequestCard
-                  key={r.id}
-                  request={r}
-                  offers={offers}
-                  comments={commentsByRequest[r.id] || []}
-                  currentUser={currentUser}
-                  onOffer={handleOffer}
-                  onAcceptOffer={handleAcceptOffer}
-                  onStart={handleStart}
-                  onComplete={handleComplete}
-                  onVerify={handleVerify}
-                  onComment={handleCommentOnRequest}
-                  onOpenMap={openRequestOnMap}
-                  onQuickView={setQuickViewRequest}
-                  onUrgencyChange={handleUrgencyChange}
-                />
-              ))
+            ) : browseRequests.length || activeCategory === 'rides' ? (
+              <>
+                {activeCategory === 'rides' && (
+                  <CarpoolBoard
+                    rideRequests={carpoolRequests}
+                    signupsByRequest={signupsByRequest}
+                    onCreateRide={(mode) => setCarpoolCreateMode(mode)}
+                    onSelectRide={setQuickViewRequest}
+                    onClaimRide={(_, ride) => handleOffer(ride)}
+                    isClaiming={isOffering}
+                  />
+                )}
+                {activeCategory !== 'rides' && browseRequests.map((r) => (
+                  <RequestCard
+                    key={r.id}
+                    request={r}
+                    offers={offers}
+                    comments={commentsByRequest[r.id] || []}
+                    currentUser={currentUser}
+                    onOffer={handleOffer}
+                    onAcceptOffer={handleAcceptOffer}
+                    onStart={handleStart}
+                    onComplete={handleComplete}
+                    onVerify={handleVerify}
+                    onComment={handleCommentOnRequest}
+                    onOpenMap={openRequestOnMap}
+                    onQuickView={setQuickViewRequest}
+                    onUrgencyChange={handleUrgencyChange}
+                  />
+                ))}
+              </>
             ) : (
               <EmptyState
-                title="No open requests"
-                text="Be the first to post a chesed request in your community."
+                title={`No ${getCategoryGroup(activeCategory).shortLabel.toLowerCase()} requests`}
+                text={activeCategory === 'all'
+                  ? 'Be the first to post a chesed request in your community.'
+                  : `${getCategoryGroup(activeCategory).description} will appear here when someone posts one.`}
               />
             )
           )}
 
-          {activeTab === 'carpool' && (
-            <CarpoolBoard
-              rideRequests={carpoolRequests}
-              signupsByRequest={signupsByRequest}
-              onCreateRide={(mode) => setCarpoolCreateMode(mode)}
-              onSelectRide={setQuickViewRequest}
-              onClaimRide={(_, ride) => handleOffer(ride)}
-              isClaiming={isOffering}
-            />
-          )}
-
-          {activeTab === 'offers' && (
+          {activeView === 'offers' && (
             myOfferRequests.length ? (
               myOfferRequests.map(({ request, offer }) => (
                 <RequestCard
@@ -1602,7 +1762,7 @@ export default function MitzvahCircle() {
             )
           )}
 
-          {activeTab === 'posted' && (
+          {activeView === 'posted' && (
             myPosted.length ? (
               myPosted.map((r) => (
                 <RequestCard
@@ -1629,7 +1789,7 @@ export default function MitzvahCircle() {
             )
           )}
 
-          {activeTab === 'completed' && (
+          {activeView === 'completed' && (
             completedRequests.length ? (
               completedRequests.map((r) => (
                 <RequestCard

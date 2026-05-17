@@ -1,27 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { CalendarDays, Car, CheckCircle2, Clock, MapPin, MessageCircle, Plus, Route, ShieldCheck, Users } from 'lucide-react';
 
-const SAMPLE_RIDES = [
-  {
-    id: 'sample-school',
-    title: 'Morning school run',
-    description: 'Two seats available from Cedarhurst toward Woodmere. Can swing by nearby blocks.',
-    category: 'Ride',
-    locationLabel: 'Cedarhurst to Woodmere',
-    pickup_window: '7:45-8:10 AM',
-    direction: 'offering'
-  },
-  {
-    id: 'sample-jfk',
-    title: 'Need a ride to JFK',
-    description: 'Early pickup for one adult and one suitcase. Flexible by 15 minutes.',
-    category: 'Ride',
-    locationLabel: 'Lawrence to JFK',
-    pickup_window: '6:15 AM',
-    direction: 'needed'
-  }
-];
-
 const CARPOOL_STEPS = [
   'Confirm driver and rider names',
   'Set pickup window',
@@ -44,7 +23,7 @@ export default function CarpoolBoard({ rideRequests = [], signupsByRequest = {},
     seats: '2'
   });
 
-  const rides = rideRequests.length > 0 ? rideRequests : SAMPLE_RIDES;
+  const rides = rideRequests;
   const offeredCount = useMemo(() => rides.filter(isRideOffer).length, [rides]);
   const neededCount = rides.length - offeredCount;
 
@@ -60,10 +39,10 @@ export default function CarpoolBoard({ rideRequests = [], signupsByRequest = {},
   const plannerSummary = `${planner.from || 'Pickup'} to ${planner.to || 'destination'} at ${planner.pickup || 'time TBD'} · ${planner.seats || 1} seat${planner.seats === '1' ? '' : 's'}`;
 
   return (
-    <div className="mobile-page px-3 space-y-3">
-      <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
+    <div className="space-y-3">
+      <div className="overflow-hidden rounded-[24px] border border-sky-100 bg-gradient-to-br from-white via-sky-50/70 to-white shadow-sm">
         <div className="relative p-4">
-          <div className="absolute right-0 top-0 h-28 w-28 rounded-bl-[46px] bg-sky-50" />
+          <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-sky-100/60 blur-2xl" />
           <div className="relative space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
@@ -120,22 +99,46 @@ export default function CarpoolBoard({ rideRequests = [], signupsByRequest = {},
         <div className="mb-3 flex items-center justify-between">
           <div>
             <h2 className="text-[17px] font-black text-slate-950">Open rides</h2>
-            <p className="text-[12px] font-medium text-slate-500">Live requests plus demo examples when local backend is empty</p>
+            <p className="text-[12px] font-medium text-slate-500">Real ride requests from Mitzvah Circle.</p>
           </div>
           <Route className="h-5 w-5 text-sky-600" />
         </div>
 
+        {rides.length === 0 ? (
+          <div className="rounded-[18px] border border-dashed border-slate-200 bg-slate-50/70 p-4 text-center">
+            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
+              <Car className="h-5 w-5" />
+            </div>
+            <p className="text-[14px] font-black text-slate-950">No open rides right now</p>
+            <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-500">
+              Post a ride need or offer seats, and it will appear here for coordination.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => onCreateRide('need')}
+                className="rounded-2xl bg-slate-950 px-3 py-2.5 text-[12px] font-black text-white active:scale-[0.98]"
+              >
+                Need a ride
+              </button>
+              <button
+                onClick={() => onCreateRide('offer')}
+                className="rounded-2xl border border-sky-100 bg-white px-3 py-2.5 text-[12px] font-black text-sky-700 active:scale-[0.98]"
+              >
+                Offer seats
+              </button>
+            </div>
+          </div>
+        ) : (
         <div className="space-y-2.5">
           {rides.map((ride) => {
             const helpers = signupsByRequest[ride.id] || [];
             const offering = isRideOffer(ride);
-            const isSample = String(ride.id).startsWith('sample-');
 
             return (
               <div
                 key={ride.id}
                 className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-sm active:scale-[0.99]"
-                onClick={() => !isSample && onSelectRide(ride)}
+                onClick={() => onSelectRide(ride)}
               >
                 <div className="mb-2 flex items-start gap-3">
                   <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${offering ? 'bg-emerald-50 text-emerald-700' : 'bg-sky-50 text-sky-700'}`}>
@@ -167,30 +170,22 @@ export default function CarpoolBoard({ rideRequests = [], signupsByRequest = {},
                   <p className="text-[11px] font-semibold text-slate-400">
                     {helpers.length > 0 ? `${helpers.length} helping coordinate` : 'Share exact address only in chat'}
                   </p>
-                  {isSample ? (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onCreateRide(offering ? 'offer' : 'need'); }}
-                      className="rounded-full bg-slate-950 px-3 py-1.5 text-[11px] font-black text-white active:scale-95"
-                    >
-                      Use this
-                    </button>
-                  ) : (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onClaimRide(e, ride); }}
-                      disabled={isClaiming}
-                      className="rounded-full bg-slate-950 px-3 py-1.5 text-[11px] font-black text-white active:scale-95 disabled:opacity-50"
-                    >
-                      <span className="inline-flex items-center gap-1">
-                        <MessageCircle className="h-3.5 w-3.5" />
-                        Coordinate
-                      </span>
-                    </button>
-                  )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onClaimRide(e, ride); }}
+                    disabled={isClaiming}
+                    className="rounded-full bg-slate-950 px-3 py-1.5 text-[11px] font-black text-white active:scale-95 disabled:opacity-50"
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      Coordinate
+                    </span>
+                  </button>
                 </div>
               </div>
             );
           })}
         </div>
+        )}
       </div>
 
       <div className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">

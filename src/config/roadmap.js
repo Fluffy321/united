@@ -398,6 +398,28 @@ Goals:
 6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
+  {
+    id: 'mitzvah-recurring-needs',
+    category: 'Chesed & Mitzvah',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Recurring Mitzvah Needs & Saved Filters',
+    description: 'Support repeat chesed needs, saved mitzvah searches, and alerts for categories a user wants to help with.',
+    why: 'The Mitzvah Circle redesign clarified the MVP browse taxonomy, but recurring rides, weekly visits, meal slots, and saved category alerts need real backend support before they should appear as live features.',
+    prompt: `You are implementing recurring mitzvah needs and saved filters for JUnited.
+
+Context: MitzvahCircle currently groups existing mitzvah_requests categories into UI browse groups only.
+
+Goals:
+1. Audit the existing mitzvah_requests, mitzvah_offers, notifications, and user privacy/RLS patterns.
+2. Create migrations for recurring_mitzvah_requests and saved_mitzvah_filters with RLS.
+3. Add entity mappings in base44Client.js and service helpers in the existing mitzvah service layer.
+4. Add optional recurrence controls to the create-request flow without making the default form heavier.
+5. Add saved filter alerts only after notification preferences are production-backed.
+6. Verify recurring requests do not create duplicate spam and can be paused by the creator.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
   // ── Jewish Life ───────────────────────────────────────────────────────────
 
   {
