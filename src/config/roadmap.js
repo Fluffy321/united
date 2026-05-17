@@ -928,7 +928,7 @@ Goals:
     priority: PRIORITY.LOW,
     title: 'Extend Hide-on-Scroll Header to Other Pages',
     description: 'The Feed top header now hides on downward scroll and reveals on upward scroll (Instagram-style). The same pattern could improve Communities, Map, and Profile page headers for a more immersive feel.',
-    why: 'Implemented Feed-only first (2026-05-17) because it was the highest-value page. Extending to other pages requires per-page audit of sticky header structure and scroll container. Deferred until those pages get design attention.',
+    why: 'Implemented Feed-only first (2026-05-17) because it was the highest-value page. Audited all three candidate pages on 2026-05-17 — none are applicable: Communities has no sticky header (scrollable hero card in content flow); Map uses overflow-y-auto on a contained div, not window scroll, so the pattern cannot apply; Profile has no sticky header either. Deferred until these pages are redesigned with sticky headers.',
     prompt: `You are extending the hide-on-scroll header pattern to other JUnited pages.
 
 Context: Feed.jsx already implements this pattern. Reference implementation:
