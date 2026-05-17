@@ -15,7 +15,7 @@ import PageHelp from '@/components/common/PageHelp';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
-import { Activity, ArrowRight, CalendarDays, ChevronDown, MessageCircle, Plus, RefreshCw, Search, Sparkles } from 'lucide-react';
+import { Activity, ArrowRight, CalendarDays, ChevronDown, Heart, MessageCircle, Plus, RefreshCw, Search, Sparkles } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
@@ -813,6 +813,9 @@ export default function Feed({ isActive = true }) {
             <ChevronDown className="w-3 h-3 text-blue-400 transition-transform" style={{ transform: showLocationPicker ? 'rotate(180deg)' : 'rotate(0deg)' }} />
           </button>
           <div className="flex items-center gap-1">
+            <button onClick={() => navigate('/SupportJUnited')} className="app-icon-button surface-tile-hover touch-manipulation" aria-label="Support JUnited">
+              <Heart className="h-[18px] w-[18px] text-rose-400" />
+            </button>
             <button onClick={() => navigate('/search')} className="app-icon-button surface-tile-hover touch-manipulation" aria-label="Search">
               <Search className="h-[18px] w-[18px] text-slate-500" />
             </button>

@@ -715,7 +715,7 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'Payments & Checkout (Stripe)',
     description: 'One-time support/donation payments via Stripe Checkout. SupportJUnited page with 3 tiers, PaymentModal for generic donation flows, transactions table with RLS, webhook handler.',
-    shippedNote: `Code complete 2026-05-17. Two Edge Functions deployed: create-checkout-session (validates amounts server-side, creates Stripe session, inserts pending transaction) and stripe-webhook (verifies signature, marks transaction completed). ThankYou page shows processing vs confirmed state driven by webhook, not browser redirect. In-app entry point added 2026-05-17: Settings → App section shows a polished "Support JUnited" card (heart icon, description, chevron) linking to /SupportJUnited. LIVE requires manual Stripe dashboard setup: add STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET to Supabase Edge Function secrets and register the webhook endpoint.`,
+    shippedNote: `Code complete 2026-05-17. Two Edge Functions deployed: create-checkout-session (validates amounts server-side, creates Stripe session, inserts pending transaction) and stripe-webhook (verifies signature, marks transaction completed). ThankYou page shows processing vs confirmed state driven by webhook, not browser redirect. In-app entry points added 2026-05-17: (1) Settings → App section — polished card with heart icon, description, and chevron; (2) Feed header — subtle rose heart icon button in the top-right utility cluster alongside Search and Notifications. LIVE requires manual Stripe dashboard setup: add STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET to Supabase Edge Function secrets and register the webhook endpoint.`,
   },
 
   {
