@@ -30,6 +30,8 @@ const SUPABASE_ENTITY_TABLES = {
   Block: 'user_blocks',
   FriendRequest: 'friend_requests',
   Friendship: 'friendships',
+  // Messaging permissions — migration 20260517033459_message_requests.sql
+  MessageRequest: 'message_requests',
   // Bookmarks — migration 20260517030617_bookmarks.sql
   Bookmark: 'bookmarks',
   // In-app feedback — migration 20260516170012_app_feedback.sql
@@ -63,7 +65,8 @@ const SUPABASE_ENTITY_TABLES = {
   BusinessListing: 'business_listings',
   BusinessClaimRequest: 'business_claim_requests',
   BusinessManager: 'business_managers',
-  // All other entities (MessageRequest, GroupMember, Shul, etc.) are
+  BusinessReview: 'business_reviews',
+  // All other entities (GroupMember, Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.
   // See the UNMAPPED ENTITIES section in base44Client.js for the full list and
@@ -607,6 +610,7 @@ const toAppRow = (row = {}) => ({
   created_date: row.created_date || row.created_at,
   updated_date: row.updated_date || row.updated_at,
   full_name: row.full_name || row.display_name || 'User',
+  user_name: row.user_name || row.author_name,
   cityPreset: row.cityPreset || row.city,
   locationLabel: row.locationLabel || row.location_label || row.location_label_legacy,
   approxLat: firstPresent(row.approxLat, row.approx_lat),
@@ -834,7 +838,6 @@ const normalizeRealtimeEvent = (event = {}) => {
 //
 // Required DB tables and the entities that need them:
 //
-//   MessageRequest    → message_requests  (messaging permissions flow)
 //   GroupMember       → group_members     (community groups)
 //   Shul              → shuls             (shul directory)
 //   ShulMember        → shul_members
@@ -850,7 +853,6 @@ const normalizeRealtimeEvent = (event = {}) => {
 //   GroupResource     → group_resources
 //   Bookmark          → bookmarks
 //   SavedSearch       → saved_searches
-//   BusinessReview    → business_reviews
 //   Organization      → organizations
 //   RideRequest       → ride_requests
 //   MealSlot          → meal_slots

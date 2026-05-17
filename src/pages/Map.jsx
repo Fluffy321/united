@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   BadgeCheck,
+  BarChart3,
+  Edit3,
   EyeOff,
   ExternalLink,
   Globe2,
@@ -13,9 +15,11 @@ import {
   MapPin,
   Navigation,
   Plus,
+  Save,
   Search,
   ShieldCheck,
   Sparkles,
+  Star,
   Store,
   UsersRound,
   X,
@@ -27,6 +31,7 @@ import BusinessMap from '@/components/business/BusinessMap';
 import MitzvahMap from '@/components/mitzvah/MitzvahMap';
 import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
+import { supabase } from '@/api/supabaseClient';
 
 const MAP_FILTER_STORAGE = 'junited-map-community-filters';
 const MAP_LOCATION_PROMPT_KEY = 'junited-map-location-prompted';
@@ -505,6 +510,11 @@ function ClaimBusinessModal({ business, onClose, currentUser }) {
 }
 
 function BusinessDetailModal({ business, onClose, onClaim }) {
+  useEffect(() => {
+    if (!business?.id || !supabase) return;
+    supabase.rpc('increment_business_listing_view', { p_listing_id: business.id }).catch(() => {});
+  }, [business?.id]);
+
   if (!business) return null;
   const hasDirections = business.listing_type === 'physical' && (business.address || (business.location_lat && business.location_lng)) && !business.hide_exact_address;
 
@@ -592,12 +602,252 @@ function ToggleRow({ checked, onChange, title, body }) {
   );
 }
 
+function BusinessOwnerDashboard({ open, onClose, currentUser, ownerListings = [], managerRows = [], claimRequests = [], reviews = [] }) {
+  const queryClient = useQueryClient();
+  const [selectedId, setSelectedId] = useState('');
+  const [form, setForm] = useState({
+    description: '',
+    phone: '',
+    email: '',
+    website: '',
+    instagram_url: '',
+    logo_url: '',
+    cover_url: '',
+    hours: '',
+  });
+
+  const selectedBusiness = useMemo(
+    () => ownerListings.find((business) => business.id === selectedId) || ownerListings[0] || null,
+    [ownerListings, selectedId]
+  );
+  const selectedManager = useMemo(
+    () => managerRows.find((row) => row.business_id === selectedBusiness?.id),
+    [managerRows, selectedBusiness?.id]
+  );
+  const canEditSelected = ['owner', 'admin'].includes(selectedManager?.role);
+  const selectedReviews = useMemo(
+    () => reviews.filter((review) => review.business_id === selectedBusiness?.id),
+    [reviews, selectedBusiness?.id]
+  );
+  const averageRating = selectedReviews.length
+    ? (selectedReviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / selectedReviews.length).toFixed(1)
+    : null;
+
+  useEffect(() => {
+    if (!open) return;
+    if (!selectedId && ownerListings[0]?.id) setSelectedId(ownerListings[0].id);
+  }, [open, ownerListings, selectedId]);
+
+  useEffect(() => {
+    if (!selectedBusiness) return;
+    setForm({
+      description: selectedBusiness.description || '',
+      phone: selectedBusiness.phone || '',
+      email: selectedBusiness.email || '',
+      website: selectedBusiness.website || '',
+      instagram_url: selectedBusiness.instagram_url || '',
+      logo_url: selectedBusiness.logo_url || '',
+      cover_url: selectedBusiness.cover_url || '',
+      hours: selectedBusiness.business_hours?.summary || selectedBusiness.business_hours?.text || '',
+    });
+  }, [selectedBusiness]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedBusiness?.id) throw new Error('Choose a business first.');
+      if (!canEditSelected) throw new Error('Only business owners and admins can edit this listing.');
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const { data, error } = await supabase.rpc('update_business_owner_profile', {
+        p_listing_id: selectedBusiness.id,
+        p_description: form.description.trim() || null,
+        p_phone: form.phone.trim() || null,
+        p_email: form.email.trim() || null,
+        p_website: cleanUrl(form.website.trim()) || null,
+        p_instagram_url: cleanUrl(form.instagram_url.trim()) || null,
+        p_logo_url: form.logo_url.trim() || null,
+        p_cover_url: form.cover_url.trim() || null,
+        p_business_hours: { summary: form.hours.trim() },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['business-directory-published'] });
+      queryClient.invalidateQueries({ queryKey: ['business-owner-listings', currentUser?.id] });
+      toast.success('Business listing updated.');
+    },
+    onError: (error) => toast.error(error.message || 'Could not update listing.'),
+  });
+
+  if (!open) return null;
+
+  return (
+    <ModalShell title="Business Owner Tools" onClose={onClose}>
+      <div className="space-y-4">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-2xl bg-blue-50 p-3">
+            <p className="text-xl font-black text-blue-700">{ownerListings.length}</p>
+            <p className="text-[10px] font-black uppercase text-blue-700">Managed</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 p-3">
+            <p className="text-xl font-black text-slate-950">
+              {ownerListings.reduce((sum, business) => sum + Number(business.view_count || 0), 0)}
+            </p>
+            <p className="text-[10px] font-black uppercase text-slate-500">Views</p>
+          </div>
+          <div className="rounded-2xl bg-amber-50 p-3">
+            <p className="text-xl font-black text-amber-700">
+              {claimRequests.filter((claim) => ['pending', 'under_review', 'more_info_requested'].includes(claim.status)).length}
+            </p>
+            <p className="text-[10px] font-black uppercase text-amber-700">Open Claims</p>
+          </div>
+        </div>
+
+        {claimRequests.length > 0 && (
+          <section className="rounded-[22px] border border-slate-200 bg-white p-3">
+            <p className="text-sm font-black text-slate-950">Claim status</p>
+            <div className="mt-2 space-y-2">
+              {claimRequests.map((claim) => (
+                <div key={claim.id} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-black text-slate-900">{claim.business_name || 'Business claim'}</p>
+                    <p className="text-[11px] font-semibold text-slate-500">{claim.review_note || 'Admin review status'}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-600">
+                    {badgeLabel(claim.status)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {ownerListings.length === 0 ? (
+          <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50 p-5 text-center">
+            <Store className="mx-auto h-9 w-9 text-slate-300" />
+            <p className="mt-2 text-sm font-black text-slate-900">No approved business yet</p>
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+              Once a claim is approved, owner tools for that listing will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-3 lg:grid-cols-[220px_1fr]">
+            <section className="space-y-2">
+              {ownerListings.map((business) => {
+                const manager = managerRows.find((row) => row.business_id === business.id);
+                const selected = selectedBusiness?.id === business.id;
+                return (
+                  <button
+                    key={business.id}
+                    type="button"
+                    onClick={() => setSelectedId(business.id)}
+                    className={`w-full rounded-2xl border p-3 text-left transition ${
+                      selected ? 'border-blue-200 bg-blue-50' : 'border-slate-200 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    <p className="truncate text-[13px] font-black text-slate-950">{business.name}</p>
+                    <p className="mt-1 text-[11px] font-black uppercase text-slate-500">{badgeLabel(manager?.role || 'member')}</p>
+                    <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[10px] font-black text-slate-500">
+                      <BarChart3 className="h-3 w-3" />
+                      {Number(business.view_count || 0)} views
+                    </p>
+                  </button>
+                );
+              })}
+            </section>
+
+            <section className="rounded-[22px] border border-slate-200 bg-white p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide text-blue-700">Editing</p>
+                  <h3 className="text-lg font-black text-slate-950">{selectedBusiness?.name}</h3>
+                  <p className="text-xs font-semibold text-slate-500">
+                    {canEditSelected ? 'Owner/admin access confirmed.' : 'You can view this listing, but editing is limited to owners and admins.'}
+                  </p>
+                </div>
+                <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-black text-blue-700">
+                  {badgeLabel(selectedBusiness?.claim_status || 'claimed')}
+                </span>
+              </div>
+
+              <div className="mt-4 grid gap-3">
+                <Field label="Description">
+                  <textarea disabled={!canEditSelected} className="app-input min-h-[90px] disabled:bg-slate-50" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                </Field>
+                <Field label="Hours">
+                  <textarea disabled={!canEditSelected} className="app-input min-h-[72px] disabled:bg-slate-50" value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} placeholder="Sun-Thu 9-5, Friday by appointment" />
+                </Field>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Phone">
+                    <input disabled={!canEditSelected} className="app-input disabled:bg-slate-50" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  </Field>
+                  <Field label="Public email">
+                    <input disabled={!canEditSelected} className="app-input disabled:bg-slate-50" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                  </Field>
+                  <Field label="Website">
+                    <input disabled={!canEditSelected} className="app-input disabled:bg-slate-50" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
+                  </Field>
+                  <Field label="Instagram / social">
+                    <input disabled={!canEditSelected} className="app-input disabled:bg-slate-50" value={form.instagram_url} onChange={(e) => setForm({ ...form, instagram_url: e.target.value })} />
+                  </Field>
+                  <Field label="Logo image URL">
+                    <input disabled={!canEditSelected} className="app-input disabled:bg-slate-50" value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} />
+                  </Field>
+                  <Field label="Cover image URL">
+                    <input disabled={!canEditSelected} className="app-input disabled:bg-slate-50" value={form.cover_url} onChange={(e) => setForm({ ...form, cover_url: e.target.value })} />
+                  </Field>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => saveMutation.mutate()}
+                  disabled={!canEditSelected || saveMutation.isPending}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-black text-white disabled:opacity-50"
+                >
+                  <Save className="h-4 w-4" />
+                  {saveMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                <div className="flex items-center justify-between">
+                  <p className="flex items-center gap-2 text-sm font-black text-slate-950">
+                    <Star className="h-4 w-4 text-amber-500" />
+                    Reviews
+                  </p>
+                  <span className="text-xs font-black text-slate-500">
+                    {averageRating ? `${averageRating} avg` : 'No rating yet'}
+                  </span>
+                </div>
+                {selectedReviews.length === 0 ? (
+                  <p className="mt-2 text-xs font-semibold leading-5 text-slate-500">
+                    Reviews are production-backed, but this business does not have published reviews yet.
+                  </p>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    {selectedReviews.slice(0, 4).map((review) => (
+                      <div key={review.id} className="rounded-2xl bg-white p-3">
+                        <p className="text-[12px] font-black text-slate-900">{review.rating}/5 · {review.reviewer_name || 'Community member'}</p>
+                        {review.body && <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-600">{review.body}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        )}
+      </div>
+    </ModalShell>
+  );
+}
+
 function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser }) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [type, setType] = useState('all');
   const [mode, setMode] = useState('list');
   const [showSubmit, setShowSubmit] = useState(false);
+  const [showOwnerTools, setShowOwnerTools] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [claimBusiness, setClaimBusiness] = useState(null);
 
@@ -606,6 +856,53 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
     queryFn: () => dataService.entities.BusinessListing.filter({ status: 'published' }, '-created_date', 200),
     staleTime: 120000,
   });
+
+  const { data: managerRows = [] } = useQuery({
+    queryKey: ['business-manager-rows', currentUser?.id],
+    queryFn: () => dataService.entities.BusinessManager.filter({ user_id: currentUser.id }, '-created_date', 100),
+    enabled: Boolean(currentUser?.id),
+    staleTime: 120000,
+  });
+
+  const ownerManagerRows = useMemo(
+    () => managerRows.filter((row) => ['owner', 'admin'].includes(row.role)),
+    [managerRows]
+  );
+  const ownerBusinessIds = useMemo(
+    () => new Set(ownerManagerRows.map((row) => row.business_id)),
+    [ownerManagerRows]
+  );
+
+  const { data: ownerReadableListings = [] } = useQuery({
+    queryKey: ['business-owner-listings', currentUser?.id],
+    queryFn: () => dataService.entities.BusinessListing.list('-updated_date', 300),
+    enabled: Boolean(currentUser?.id && ownerManagerRows.length),
+    staleTime: 120000,
+  });
+
+  const ownerListings = useMemo(
+    () => ownerReadableListings.filter((business) => ownerBusinessIds.has(business.id)),
+    [ownerBusinessIds, ownerReadableListings]
+  );
+
+  const { data: claimRequests = [] } = useQuery({
+    queryKey: ['business-claim-status', currentUser?.id],
+    queryFn: () => dataService.entities.BusinessClaimRequest.filter({ requester_id: currentUser.id }, '-created_date', 100),
+    enabled: Boolean(currentUser?.id),
+    staleTime: 120000,
+  });
+
+  const { data: allBusinessReviews = [] } = useQuery({
+    queryKey: ['business-owner-reviews', currentUser?.id],
+    queryFn: () => dataService.entities.BusinessReview.list('-created_date', 300),
+    enabled: Boolean(currentUser?.id && ownerManagerRows.length),
+    staleTime: 120000,
+  });
+
+  const ownerReviews = useMemo(
+    () => allBusinessReviews.filter((review) => ownerBusinessIds.has(review.business_id)),
+    [allBusinessReviews, ownerBusinessIds]
+  );
 
   const filteredBusinesses = useMemo(() => businesses.filter((business) => {
     const q = search.trim().toLowerCase();
@@ -646,6 +943,12 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
             <Plus className="h-4 w-4" />
             Submit a Business
           </button>
+          {(ownerManagerRows.length > 0 || claimRequests.length > 0) && (
+            <button type="button" onClick={() => setShowOwnerTools(true)} className="motion-press inline-flex h-11 items-center gap-2 rounded-full border border-blue-100 bg-white px-5 text-sm font-black text-blue-700">
+              <Edit3 className="h-4 w-4" />
+              Owner Tools
+            </button>
+          )}
           <button type="button" onClick={() => setMode('map')} className="motion-press inline-flex h-11 items-center gap-2 rounded-full border border-blue-100 bg-white px-5 text-sm font-black text-blue-700">
             <MapIcon className="h-4 w-4" />
             Explore Map
@@ -751,6 +1054,15 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
       </section>
 
       <SubmitBusinessModal open={showSubmit} onClose={() => setShowSubmit(false)} currentUser={currentUser} />
+      <BusinessOwnerDashboard
+        open={showOwnerTools}
+        onClose={() => setShowOwnerTools(false)}
+        currentUser={currentUser}
+        ownerListings={ownerListings}
+        managerRows={ownerManagerRows}
+        claimRequests={claimRequests}
+        reviews={ownerReviews}
+      />
       <ClaimBusinessModal business={claimBusiness} onClose={() => setClaimBusiness(null)} currentUser={currentUser} />
       <BusinessDetailModal business={selectedBusiness} onClose={() => setSelectedBusiness(null)} onClaim={(business) => { setSelectedBusiness(null); setClaimBusiness(business); }} />
     </>

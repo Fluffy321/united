@@ -312,11 +312,11 @@ Goals:
   {
     id: 'message-requests',
     category: 'Messaging',
-    status: STATUS.DEFERRED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Message Requests',
     description: 'Inbox for message requests from users you do not follow, with accept/decline.',
-    why: 'MessageRequestsTab.jsx is built and queries MessageRequest entity. Not wired into Messages.jsx UI. Deferred to keep messaging simple for beta.',
+    shippedNote: 'Migration created (20260517033459_message_requests.sql), MessageRequest entity mapped in base44Client.js, Inbox/Requests tab switcher added to Messages.jsx with red badge for pending count. Accept converts request to real conversation and switches to Inbox.',
     prompt: `You are enabling Message Requests in JUnited.
 
 Context: MessageRequestsTab.jsx (src/components/messages/MessageRequestsTab.jsx) is fully built.
@@ -505,11 +505,11 @@ Goals:
   {
     id: 'business-owner-tools',
     category: 'Businesses & Map',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Business Owner Analytics & Richer Editing',
     description: 'Dashboard for claimed business owners: view traffic, update hours, manage photos, respond to reviews.',
-    why: 'Build after claim workflow has real usage in beta.',
+    shippedNote: 'Shipped. Migration 20260517034050_business_owner_tools.sql adds view_count, business_hours, business_reviews, and owner/admin role support. Map.jsx exposes Owner Tools for approved business managers.',
     prompt: `You are implementing Business Owner Tools for JUnited.
 
 Context: business_listings and business_managers tables are live. Claim flow exists in Map.jsx.
@@ -573,7 +573,33 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'Five Towns Local Updates Automation',
     description: 'Automated pipeline ingesting local updates from monitored sources and publishing to the local_updates feed.',
-    shippedNote: 'Shipped. Migration 20260515180122_local_updates_automation.sql + cron job. Cron secret verified in 20260515184322.',
+    shippedNote: 'Shipped. Migration 20260515180122_local_updates_automation.sql + cron job. Cron secret verified in 20260515184322. Community post identity fix (migration 20260517034309) added community name denormalization to publish_local_update_item so feed cards show community as author.',
+  },
+
+  {
+    id: 'feed-author-enrichment',
+    category: 'Automation & AI',
+    status: STATUS.DEFERRED,
+    priority: PRIORITY.LOW,
+    title: 'Feed Post Author Enrichment via JOIN',
+    description: 'Replace author denormalization with a Supabase view (posts + profiles + communities JOIN) so feed cards always reflect current author/community name even after renames.',
+    why: 'Current approach writes author_name at publish time — stale if community is later renamed. Low priority while community renames are rare and the app is in beta. Build when data quality at scale becomes a concern.',
+    prompt: `You are implementing feed post author enrichment via JOIN for JUnited.
+
+Context:
+- Posts table stores author_name (denormalized at write time) and community_id (UUID only).
+- Feed query: dataService.entities.UnifiedPost.list() → supabase.from('posts').select('*').
+- There is no posts_feed_view or join-based enrichment yet.
+
+Goals:
+1. Create a Postgres view posts_feed_view that joins posts + profiles (on user_id) + communities (on community_id).
+   Include: all post columns, display_name as profile_display_name, avatar_url as profile_avatar_url,
+            communities.name as community_name_fresh, communities.logo_url as community_logo_fresh.
+2. Add 'PostFeedView' entity to SUPABASE_ENTITY_TABLES pointing at posts_feed_view (read-only).
+3. Update the Feed.jsx query to use PostFeedView instead of UnifiedPost.
+4. Update toAppRow to prefer community_name_fresh and profile_display_name when present.
+5. Ensure writes still go to posts (not the view) — view is read-only.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {

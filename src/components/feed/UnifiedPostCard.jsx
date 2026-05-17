@@ -145,11 +145,21 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
   const helpCat = HELP_REQUEST_CATEGORIES.find(c => c.value === post.category);
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
+  const communityData = useMemo(() =>
+    communities?.find(c => c.id === post.community_id) || null,
+  [communities, post.community_id]);
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const communityName = useMemo(() =>
-    post.community_name || (communities && post.community_id
-      ? communities.find(c => c.id === post.community_id)?.name
-      : null),
-  [post.community_name, post.community_id, communities]);
+    post.community_name || communityData?.name || null,
+  [post.community_name, communityData]);
+
+  // A community-authored post: published by the community itself (not a user posting
+  // into a community). Triggered by is_official=true or post_kind='local_update'.
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const isCommunityPost = useMemo(() =>
+    post.is_official === true || post.post_kind === 'local_update',
+  [post.is_official, post.post_kind]);
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const allImages = useMemo(() =>
@@ -721,7 +731,32 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
       {/* Header */}
       <div className="flex items-center justify-between px-3 pt-2 pb-0">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          {isAnonymous ? (
+          {isCommunityPost ? (
+            <button
+              onClick={() => onCommunityClick?.(post.community_id)}
+              className="flex items-center gap-2 min-w-0 text-left"
+            >
+              <UserAvatar
+                user={{ avatar_url: communityData?.logo_url || null }}
+                name={post.user_name || communityName || 'Community'}
+                size="xs"
+                className="w-7 h-7"
+              />
+              <div className="min-w-0">
+                <div className="flex items-center gap-1 flex-wrap">
+                  <span className="font-semibold text-slate-900 text-[13px] truncate">
+                    {post.user_name || communityName || 'Community'}
+                  </span>
+                  <span className="text-slate-300 text-[10px]">·</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    {post.post_kind === 'local_update' ? 'Local update' : 'Community post'}
+                  </span>
+                  <span className="text-slate-300 text-[10px]">·</span>
+                  <span className={`text-[10px] font-medium ${isVeryRecent ? 'text-green-600' : 'text-slate-400'}`}>{timeAgo}</span>
+                </div>
+              </div>
+            </button>
+          ) : isAnonymous ? (
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-sm flex-shrink-0 font-semibold">?</div>
               <div>

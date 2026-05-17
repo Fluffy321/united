@@ -10,6 +10,7 @@ import ChatView from '@/components/messages/ChatView';
 import ConversationList from '@/components/messages/ConversationList';
 import UserSearchPanel from '@/components/messages/UserSearchPanel';
 import NewMessageComposer from '@/components/messages/NewMessageComposer';
+import MessageRequestsTab from '@/components/messages/MessageRequestsTab';
 import ReportModal from '@/components/common/ReportModal';
 import { buildAIConversation } from '@/lib/aiAgent';
 
@@ -130,6 +131,13 @@ export default function Messages() {
     ...conversations,
     ...communityConversations,
   ];
+
+  const { data: pendingRequests = [] } = useQuery({
+    queryKey: ['message-requests', currentUser?.id],
+    queryFn: () => dataService.entities.MessageRequest.filter({ recipient_id: currentUser.id, status: 'pending' }, '-created_date', 50),
+    enabled: !!currentUser,
+    staleTime: 60000,
+  });
 
 
   const unreadCount = allConversations.reduce((sum, conv) =>
@@ -258,62 +266,93 @@ export default function Messages() {
               )}
             </div>
 
-            {/* Filter pills */}
-            <div className="mobile-scroll-x flex gap-1.5 pb-3">
-              {[
-                { key: 'all', label: 'All' },
-                { key: 'unread', label: 'Unread' },
-                { key: 'communities', label: 'Communities' },
-                { key: 'requests', label: 'Requests' },
-              ].map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => setActiveFilter(f.key)}
-                  className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
-                    activeFilter === f.key
-                      ? 'border-slate-950 bg-slate-950 text-white'
-                      : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
+            {/* Tab switcher: Inbox / Requests */}
+            <div className="flex gap-1.5 pb-3">
+              <button
+                onClick={() => setActiveTab('inbox')}
+                className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
+                  activeTab === 'inbox'
+                    ? 'border-slate-950 bg-slate-950 text-white'
+                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                Inbox
+              </button>
+              <button
+                onClick={() => setActiveTab('requests')}
+                className={`relative flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
+                  activeTab === 'requests'
+                    ? 'border-slate-950 bg-slate-950 text-white'
+                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                Requests
+                {pendingRequests.length > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white">
+                    {pendingRequests.length}
+                  </span>
+                )}
+              </button>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] font-semibold text-slate-500">
-              Message requests are paused while the production request system is being finalized.
-            </div>
+            {activeTab === 'inbox' && (
+              <div className="mobile-scroll-x flex gap-1.5 pb-3">
+                {[
+                  { key: 'all', label: 'All' },
+                  { key: 'unread', label: 'Unread' },
+                  { key: 'communities', label: 'Communities' },
+                  { key: 'requests', label: 'Requests' },
+                ].map(f => (
+                  <button
+                    key={f.key}
+                    onClick={() => setActiveFilter(f.key)}
+                    className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
+                      activeFilter === f.key
+                        ? 'border-slate-800 bg-slate-800 text-white'
+                        : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {activeTab === 'inbox' &&
-          <UserSearchPanel
-            currentUser={currentUser}
-            onConversationOpened={(conv) => {setSelectedConversation(conv);setActiveTab('inbox');}} />
-
-          }
+          {activeTab === 'inbox' && (
+            <UserSearchPanel
+              currentUser={currentUser}
+              onConversationOpened={(conv) => { setSelectedConversation(conv); setActiveTab('inbox'); }} />
+          )}
 
           <div className="flex-1 overflow-y-auto">
-            {isLoading ?
-            <div className="flex justify-center py-12">
+            {activeTab === 'requests' ? (
+              <MessageRequestsTab
+                currentUser={currentUser}
+                onAccepted={(conv) => {
+                  setActiveTab('inbox');
+                  openConversation(conv);
+                }}
+              />
+            ) : isLoading ? (
+              <div className="flex justify-center py-12">
                 <Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7]" />
-              </div> :
-
-            isConversationsError ?
-            <div className="mx-3 my-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
+              </div>
+            ) : isConversationsError ? (
+              <div className="mx-3 my-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
                 <AlertCircle className="mx-auto mb-2 h-5 w-5 text-amber-600" />
                 <p className="text-[13px] font-bold text-amber-900">Messages could not refresh.</p>
                 <p className="mt-1 text-[12px] font-medium leading-5 text-amber-700">You can keep using the app. Try refreshing this page in a moment.</p>
-              </div> :
-
-            <ConversationList
-              conversations={visibleConversations}
-              currentUser={currentUser}
-              selectedId={selectedConversation?.id}
-              onSelect={openConversation}
-              onArchive={handleArchive}
-              onMarkUnread={handleMarkUnread} />
-
-            }
+              </div>
+            ) : (
+              <ConversationList
+                conversations={visibleConversations}
+                currentUser={currentUser}
+                selectedId={selectedConversation?.id}
+                onSelect={openConversation}
+                onArchive={handleArchive}
+                onMarkUnread={handleMarkUnread} />
+            )}
           </div>
         </div>
 
