@@ -449,6 +449,22 @@ export default function Feed({ isActive = true }) {
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [showEventsSheet, setShowEventsSheet] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
+
+  // Hide header on downward scroll, reveal on upward (Instagram-style)
+  useEffect(() => {
+    const THRESHOLD = 8;   // ignore micro-movements to prevent jitter
+    const MIN_SCROLL = 60; // never hide when near the top
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (Math.abs(y - lastScrollY.current) < THRESHOLD) return;
+      setHeaderHidden(y > lastScrollY.current && y > MIN_SCROLL);
+      lastScrollY.current = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const enabled = Boolean(currentUser)
@@ -802,7 +818,10 @@ export default function Feed({ isActive = true }) {
         </div>
       )}
 
-      <div className="sticky top-0 z-[60] px-3 pt-3">
+      <div
+        className="sticky top-0 z-[60] px-3 pt-3 transition-transform duration-300 ease-out"
+        style={{ transform: headerHidden ? 'translateY(-120%)' : 'translateY(0)' }}
+      >
         <div className="glass-toolbar mobile-page flex min-h-[56px] items-center justify-between rounded-[24px] px-3 py-2">
           <button
             onClick={() => setShowLocationPicker(v => !v)}

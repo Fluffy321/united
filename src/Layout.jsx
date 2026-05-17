@@ -216,17 +216,16 @@ function LayoutContent({ children, currentPageName }) {
                         <span className="text-[10px] font-bold text-blue-600">{item.name}</span>
                       </div>
                     ) : (
-                      /* Inactive: white + mix-blend-mode:difference
-                         The glass-toolbar bg (~88% white) composites with the blurred page
-                         behind it, so white icons invert to near-black on light pages and
-                         lighter on dark content — always readable. */
-                      <div className="relative z-10 flex flex-col items-center gap-0.5" style={{ mixBlendMode: 'difference' }}>
+                      /* Inactive: slate-500 on glass surface.
+                         Glass is 70% white + 24px blur — reliably light enough that
+                         medium-dark text stays readable without blend-mode tricks. */
+                      <div className="relative z-10 flex flex-col items-center gap-0.5">
                         {item.isMitzvah ? (
-                          <MitzvahIcon size={20} strokeWidth={1.8} className="text-white" />
+                          <MitzvahIcon size={20} strokeWidth={1.8} className="text-slate-500" />
                         ) : (
-                          <Icon className="h-[21px] w-[21px] text-white" strokeWidth={1.8} />
+                          <Icon className="h-[21px] w-[21px] text-slate-500" strokeWidth={1.8} />
                         )}
-                        <span className="text-[10px] font-normal text-white">{item.name}</span>
+                        <span className="text-[10px] font-medium text-slate-500">{item.name}</span>
                       </div>
                     )}
                   </button>

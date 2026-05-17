@@ -12,14 +12,16 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 // Server-authoritative tier amounts — client never controls the price for named tiers
+// Amounts are chai-based ($18 = chai, $36 = double chai, $72 = quadruple chai)
 const SUPPORT_TIERS: Record<string, { amount_cents: number; label: string }> = {
-  supporter: { amount_cents: 5000,  label: 'JUnited Supporter – Thank You' },   // $50
-  champion:  { amount_cents: 9500,  label: 'JUnited Community Champion' },       // $95
-  patron:    { amount_cents: 17000, label: 'JUnited Patron' },                   // $170
+  supporter: { amount_cents: 1800, label: 'JUnited Supporter' },          // $18 — chai
+  builder:   { amount_cents: 3600, label: 'JUnited Community Builder' },  // $36 — double chai
+  champion:  { amount_cents: 7200, label: 'JUnited Champion' },           // $72 — quadruple chai
 };
 
-const MIN_DONATION_CENTS = 100;     // $1 minimum
-const MAX_DONATION_CENTS = 1000000; // $10,000 maximum
+const MIN_CUSTOM_SUPPORT_CENTS = 500;  // $5 minimum for custom support amounts
+const MIN_DONATION_CENTS = 100;        // $1 minimum for generic PaymentModal donations
+const MAX_DONATION_CENTS = 1000000;    // $10,000 maximum
 
 const ALLOWED_ORIGINS = new Set([
   'https://www.junited.us',
@@ -90,8 +92,17 @@ Deno.serve(async (req: Request) => {
     lineItemName = tierConfig.label;
     resolvedPurpose = `support_junited_${tier}`;
 
+  } else if (checkoutType === 'support_junited' && rawAmount != null) {
+    // Custom support amount — user chose their own amount on the Support page
+    amountCents = Math.round(Number(rawAmount) * 100);
+    if (!Number.isFinite(amountCents) || amountCents < MIN_CUSTOM_SUPPORT_CENTS || amountCents > MAX_DONATION_CENTS) {
+      return errorResponse(400, 'Custom support amount must be between $5 and $10,000');
+    }
+    lineItemName = 'JUnited — Custom Support';
+    resolvedPurpose = 'support_junited_custom';
+
   } else if (checkoutType === 'donation' && rawAmount != null) {
-    // Free-amount donation: validate server-side
+    // Generic donation via PaymentModal — validate server-side
     amountCents = Math.round(Number(rawAmount) * 100);
     if (!Number.isFinite(amountCents) || amountCents < MIN_DONATION_CENTS || amountCents > MAX_DONATION_CENTS) {
       return errorResponse(400, 'Donation amount must be between $1 and $10,000');
@@ -102,7 +113,7 @@ Deno.serve(async (req: Request) => {
     resolvedPurpose = 'donation';
 
   } else {
-    return errorResponse(400, 'checkoutType must be "support_junited" (with tier) or "donation" (with amount)');
+    return errorResponse(400, 'checkoutType must be "support_junited" (with tier or amount) or "donation" (with amount)');
   }
 
   const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });

@@ -715,7 +715,7 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'Payments & Checkout (Stripe)',
     description: 'One-time support/donation payments via Stripe Checkout. SupportJUnited page with 3 tiers, PaymentModal for generic donation flows, transactions table with RLS, webhook handler.',
-    shippedNote: `Code complete 2026-05-17. Two Edge Functions deployed: create-checkout-session (validates amounts server-side, creates Stripe session, inserts pending transaction) and stripe-webhook (verifies signature, marks transaction completed). ThankYou page shows processing vs confirmed state driven by webhook, not browser redirect. In-app entry points added 2026-05-17: (1) Settings → App section — polished card with heart icon, description, and chevron; (2) Feed header — subtle rose heart icon button in the top-right utility cluster alongside Search and Notifications. LIVE requires manual Stripe dashboard setup: add STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET to Supabase Edge Function secrets and register the webhook endpoint.`,
+    shippedNote: `Code complete 2026-05-17. Two Edge Functions deployed: create-checkout-session (validates amounts server-side, creates Stripe session, inserts pending transaction) and stripe-webhook (verifies signature, marks transaction completed). ThankYou page shows processing vs confirmed state driven by webhook, not browser redirect. In-app entry points added 2026-05-17: (1) Settings → App section — polished card with heart icon, description, and chevron; (2) Feed header — subtle rose heart icon button in the top-right utility cluster alongside Search and Notifications. SupportJUnited page redesigned 2026-05-17: chai-based pricing ($18/$36/$72), mission-driven copy, no fake perks, custom amount option (min $5, server-validated). LIVE requires manual Stripe dashboard setup: add STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET to Supabase Edge Function secrets and register the webhook endpoint.`,
   },
 
   {
@@ -747,7 +747,7 @@ Goals:
     status: STATUS.DEFERRED,
     priority: PRIORITY.MEDIUM,
     title: 'Recurring Supporter Subscriptions (Stripe)',
-    description: 'Monthly/annual recurring support tiers via Stripe Subscriptions. SupportJUnited UI already has monthly/annual toggle ready; requires Stripe Price/Product setup and subscription lifecycle handling (Customer objects, cancellation, proration).',
+    description: 'Monthly/annual recurring support tiers via Stripe Subscriptions. Requires Stripe Price/Product setup for recurring billing and subscription lifecycle handling (Customer objects, cancellation, proration). SupportJUnited page currently handles one-time only.',
     why: 'Current implementation uses one-time Checkout (simpler, safer for launch). Recurring subscriptions require additional Stripe infrastructure and a cancel/manage-subscription flow. Deferred until one-time payments are validated in production.',
   },
 
@@ -818,6 +818,16 @@ Goals:
     title: 'Desktop Responsive App Shell',
     description: 'Evolve the current mobile-first shell into a more intentional wide-screen experience, potentially with a desktop side navigation, wider content regions for dense pages, and page-specific responsive layouts.',
     why: 'The shared floating-actions layer stabilizes mobile and desktop positioning, but the broader desktop experience is still mostly a widened mobile frame. This is useful after the mobile beta is stable.',
+  },
+
+  {
+    id: 'hide-on-scroll-header-extension',
+    category: 'Admin & Platform',
+    status: STATUS.DEFERRED,
+    priority: PRIORITY.LOW,
+    title: 'Extend Hide-on-Scroll Header to Other Pages',
+    description: 'The Feed top header now hides on downward scroll and reveals on upward scroll (Instagram-style). The same pattern could improve Communities, Map, and Profile page headers for a more immersive feel.',
+    why: 'Implemented Feed-only first (2026-05-17) because it was the highest-value page. Extending to other pages requires per-page audit of sticky header structure and scroll container. Deferred until those pages get design attention.',
   },
 
   {
