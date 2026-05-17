@@ -905,11 +905,12 @@ Goals:
   {
     id: 'subscription-status-ui',
     category: 'Growth & Monetization',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Subscription Status on Support Page',
     description: 'When a logged-in user already has an active subscription, SupportJUnited should show their current tier/interval and a link to manage it — not the full tier picker again.',
     why: 'Without this, a subscriber who revisits the page may accidentally start a second checkout. A personalized "You\'re supporting at the Builder level — manage or upgrade" state is both safer and more delightful.',
+    shippedNote: 'Shipped 2026-05-17. SupportJUnited fetches getActiveSubscription() on mount for logged-in users, shows a skeleton while loading, then renders a subscriber card (tier/interval, renewal/cancels date, past_due warning) with "Manage or cancel" (opens portal) and "Upgrade or switch tier" (reveals tier picker pre-set to current interval). In upgrade mode, the CTA opens the portal for plan switching rather than creating a duplicate subscription.',
     prompt: `You are adding a subscription-aware state to SupportJUnited for JUnited.
 
 Context:
