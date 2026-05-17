@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -41,6 +41,8 @@ import {
   subscribeToPush,
   unsubscribeFromPush,
 } from '@/lib/pushSubscription';
+import useShabbatLocation from '@/hooks/useShabbatLocation';
+import { forwardGeocode, PRESET_LOCATIONS } from '@/lib/shabbatLocation';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -113,6 +115,42 @@ export default function Settings() {
   const [pushSupported, setPushSupported]   = useState(false);
   const [pushSubscribed, setPushSubscribed] = useState(false);
   const [pushLoading, setPushLoading]       = useState(false);
+
+  const {
+    location: candleLocation,
+    locationLoading: candleLocationLoading,
+    locationError: candleLocationError,
+    isDefault: candleIsDefault,
+    requestGPS: requestCandleGPS,
+    setManualCity: setCandleManualCity,
+    resetToDefault: resetCandleLocation,
+  } = useShabbatLocation({ autoRequest: false });
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [cityQuery, setCityQuery] = useState('');
+  const [cityResults, setCityResults] = useState([]);
+  const [searchingCity, setSearchingCity] = useState(false);
+
+  const handleCandleGPS = useCallback(async () => {
+    await requestCandleGPS();
+    setShowLocationPicker(false);
+    toast.success('Location updated');
+  }, [requestCandleGPS]);
+
+  const handleCitySearch = useCallback(async () => {
+    if (!cityQuery.trim()) return;
+    setSearchingCity(true);
+    const results = await forwardGeocode(cityQuery);
+    setCityResults(results.slice(0, 4));
+    setSearchingCity(false);
+  }, [cityQuery]);
+
+  const handleCitySelect = useCallback((result) => {
+    setCandleManualCity(result.lat, result.lng, result.label);
+    setShowLocationPicker(false);
+    setCityQuery('');
+    setCityResults([]);
+    toast.success(`Candle-lighting location set to ${result.label}`);
+  }, [setCandleManualCity]);
 
   useEffect(() => {
     setPushSupported(isPushSupported());
@@ -406,6 +444,7 @@ export default function Settings() {
 
           {/* ─── Notifications ────────────────────────── */}
           {activeSection === 'notifications' && (
+            <>
             <SettingsCard title="Notification Settings" icon={Bell}>
               <div className="divide-y divide-slate-100">
                 {pushSupported && (
@@ -448,6 +487,125 @@ export default function Settings() {
                 </SettingsRow>
               </div>
             </SettingsCard>
+
+            {/* ─── Candle-lighting location ───────────── */}
+            <SettingsCard title="Candle-lighting location" icon={MapPin}>
+              <p className="mb-3 text-[12.5px] text-slate-500 leading-relaxed">
+                Candle-lighting and Shabbat reminder times are calculated for this location.
+                Times use the standard 18-minute candle-lighting offset before sunset.
+              </p>
+
+              {/* Current location status */}
+              <div className="mb-3 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 flex items-center gap-3">
+                <MapPin className="h-4 w-4 shrink-0 text-rose-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13.5px] font-semibold text-slate-900 truncate">{candleLocation.label}</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    {candleLocationLoading
+                      ? 'Detecting location…'
+                      : candleLocation.type === 'gps'
+                        ? 'Using your device location'
+                        : candleLocation.type === 'manual'
+                          ? 'Manually set'
+                          : 'Default location'}
+                  </p>
+                  {candleLocationError === 'declined' && (
+                    <p className="text-[11px] text-amber-600 mt-0.5">Location permission denied — using default.</p>
+                  )}
+                </div>
+              </div>
+
+              {!showLocationPicker ? (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setShowLocationPicker(true)}
+                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[12.5px] font-semibold text-slate-700 hover:bg-slate-50 active:scale-[0.98] transition"
+                  >
+                    <MapPin className="h-3.5 w-3.5 text-blue-500" />
+                    Change location
+                  </button>
+                  {!candleIsDefault && (
+                    <button
+                      onClick={() => { resetCandleLocation(); toast.success('Reset to Five Towns default'); }}
+                      className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[12.5px] font-semibold text-slate-500 hover:bg-slate-50 active:scale-[0.98] transition"
+                    >
+                      Reset to default
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <button
+                    onClick={handleCandleGPS}
+                    disabled={candleLocationLoading}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-2.5 text-[13px] font-bold text-white disabled:opacity-60 active:scale-[0.98] transition"
+                  >
+                    {candleLocationLoading
+                      ? <Loader2 className="h-4 w-4 animate-spin" />
+                      : <MapPin className="h-4 w-4" />}
+                    Use my device's location
+                  </button>
+
+                  <p className="text-[11px] font-semibold text-slate-400 text-center uppercase tracking-wide">or choose a city</p>
+
+                  {/* Preset cities */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {PRESET_LOCATIONS.map((preset) => (
+                      <button
+                        key={preset.label}
+                        onClick={() => handleCitySelect(preset)}
+                        className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-left text-[12px] font-semibold text-slate-700 hover:bg-blue-50 hover:border-blue-200 active:scale-[0.98] transition truncate"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Free-text search */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={cityQuery}
+                      onChange={e => { setCityQuery(e.target.value); setCityResults([]); }}
+                      onKeyDown={e => e.key === 'Enter' && handleCitySearch()}
+                      placeholder="Search any city…"
+                      className="flex-1 h-10 rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
+                    />
+                    <button
+                      onClick={handleCitySearch}
+                      disabled={searchingCity || !cityQuery.trim()}
+                      className="h-10 rounded-xl bg-slate-100 px-3 text-[12px] font-bold text-slate-600 disabled:opacity-50 hover:bg-slate-200 transition"
+                    >
+                      {searchingCity ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}
+                    </button>
+                  </div>
+                  {cityResults.length > 0 && (
+                    <div className="rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                      {cityResults.map((r, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleCitySelect(r)}
+                          className="w-full px-3 py-2.5 text-left text-[13px] font-medium text-slate-800 hover:bg-blue-50 transition"
+                        >
+                          {r.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {cityResults.length === 0 && cityQuery && !searchingCity && (
+                    <p className="text-[12px] text-slate-400 text-center py-1">No results found — try a different search.</p>
+                  )}
+
+                  <button
+                    onClick={() => { setShowLocationPicker(false); setCityQuery(''); setCityResults([]); }}
+                    className="w-full text-center text-[12.5px] text-slate-400 py-1 hover:text-slate-600 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </SettingsCard>
+            </>
           )}
 
           {/* ─── Privacy ──────────────────────────────── */}

@@ -20,7 +20,8 @@ import SkeletonCard from '@/components/common/SkeletonCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
-import { getFiveTownsShabbatTimes } from '@/lib/hebrewDate';
+import { getShabbatTimes } from '@/lib/hebrewDate';
+import useShabbatLocation from '@/hooks/useShabbatLocation';
 import { useFloatingActions } from '@/components/layout/FloatingActionsContext';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
@@ -466,6 +467,9 @@ export default function Feed({ isActive = true }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const { location: candleLocation, locationLoading: candleLocationLoading } = useShabbatLocation({ autoRequest: true });
+  const shabbat = useShabbosCountdown(candleLocation, candleLocationLoading);
+
   useEffect(() => {
     const enabled = Boolean(currentUser)
       && currentUser?.notification_settings?.shabbatReminders !== false
@@ -890,6 +894,7 @@ export default function Feed({ isActive = true }) {
 
         <DailyRetentionPrompt
           prompt={dailyPrompt}
+          shabbat={shabbat}
           onPost={(prompt) => {
             setPostModalType(prompt?.suggested_post_type || 'feed');
             setPostModalSubtype(prompt?.suggested_post_subtype || null);
@@ -1116,21 +1121,23 @@ export default function Feed({ isActive = true }) {
   );
 }
 
-function useShabbosCountdown() {
-  const [state, setState] = useState({ label: 'Shabbat', countdown: 'Loading…', time: '' });
+function useShabbosCountdown(location, locationLoading) {
+  const [state, setState] = useState({ label: 'Shabbat', countdown: 'Loading…', time: '', locationLabel: null });
 
   useEffect(() => {
+    if (locationLoading) return;
     let cancelled = false;
     let times = null;
 
     const load = async () => {
-      times = await getFiveTownsShabbatTimes();
+      times = await getShabbatTimes(location.lat, location.lng, location.tzid);
       if (!cancelled) update();
     };
 
     const update = () => {
+      const displayLabel = location.type !== 'default' ? location.label : null;
       if (!times?.candleLighting || !times?.havdalah) {
-        setState({ label: 'Shabbat', countdown: 'Soon', time: '' });
+        setState({ label: 'Shabbat', countdown: 'Soon', time: '', locationLabel: displayLabel });
         return;
       }
       const now = new Date();
@@ -1140,14 +1147,14 @@ function useShabbosCountdown() {
       const label = now < candleLighting ? 'Candle lighting' : 'Havdalah';
       const ms = target - now;
       if (ms <= 0) {
-        setState({ label: 'Shabbat', countdown: 'Shavua tov', time: '' });
+        setState({ label: 'Shabbat', countdown: 'Shavua tov', time: '', locationLabel: displayLabel });
         return;
       }
       const totalH = Math.floor(ms / 3600000);
       const d = Math.floor(totalH / 24);
       const h = totalH % 24;
       const time = target.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-      setState({ label, countdown: d > 0 ? `${d}d ${h}h away` : `${h}h away`, time });
+      setState({ label, countdown: d > 0 ? `${d}d ${h}h away` : `${h}h away`, time, locationLabel: displayLabel });
     };
 
     load();
@@ -1156,7 +1163,7 @@ function useShabbosCountdown() {
       cancelled = true;
       clearInterval(t);
     };
-  }, []);
+  }, [location.lat, location.lng, location.tzid, locationLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return state;
 }
@@ -1395,8 +1402,7 @@ function QuickActionDock({ onCreate, onOpenEvents, onOpenMap }) {
   );
 }
 
-function DailyRetentionPrompt({ prompt, onPost }) {
-  const shabbat = useShabbosCountdown();
+function DailyRetentionPrompt({ prompt, onPost, shabbat }) {
   if (!prompt) return null;
 
   return (
@@ -1410,10 +1416,15 @@ function DailyRetentionPrompt({ prompt, onPost }) {
             <p className="text-[11px] font-black uppercase tracking-wider text-blue-200">Daily Prompt</p>
             <h2 className="mt-1.5 text-[16px] font-black leading-snug text-white">{prompt.question}</h2>
           </div>
-          <div className="shrink-0 rounded-2xl bg-white/15 backdrop-blur-sm px-3 py-2 text-center min-w-[72px]">
+          <div className="shrink-0 rounded-2xl bg-white/15 backdrop-blur-sm px-3 py-2 text-center min-w-[80px]">
             <p className="text-[9px] font-black uppercase tracking-wide text-amber-200">🕯 {shabbat.label}</p>
             <p className="mt-0.5 text-[12px] font-black text-white leading-tight">{shabbat.countdown}</p>
             {shabbat.time && <p className="mt-0.5 text-[10px] font-bold text-blue-100">{shabbat.time}</p>}
+            {shabbat.locationLabel && (
+              <p className="mt-0.5 text-[9px] text-white/55 leading-tight truncate max-w-[88px]">
+                📍 {shabbat.locationLabel}
+              </p>
+            )}
           </div>
         </div>
       </div>

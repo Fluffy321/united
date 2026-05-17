@@ -71,6 +71,37 @@ export async function getZmanim(lat, lng, date = new Date()) {
   }
 }
 
+// Standard Ashkenazi candle-lighting offset (minutes before sunset).
+// Used as the `b` parameter in Hebcal API calls.
+export const CANDLE_LIGHTING_MINUTES = 18;
+
+/**
+ * Get candle-lighting and Havdalah times for any lat/lng.
+ * tzid should be an IANA timezone string (e.g. 'America/New_York').
+ */
+export async function getShabbatTimes(lat, lng, tzid = 'America/New_York', date = new Date()) {
+  const dateStr = date.toISOString().split('T')[0];
+  try {
+    const res = await fetch(
+      `${HEBCAL_BASE}/shabbat?cfg=json&geo=pos&latitude=${lat}&longitude=${lng}&tzid=${encodeURIComponent(tzid)}&m=20&b=${CANDLE_LIGHTING_MINUTES}&date=${dateStr}`
+    );
+    const data = await res.json();
+    const candle = data.items?.find((item) => item.category === 'candles');
+    const havdalah = data.items?.find((item) => item.category === 'havdalah');
+    return {
+      location: data.location?.title || null,
+      candleLighting: candle?.date || null,
+      candleTitle: candle?.title || 'Candle lighting',
+      havdalah: havdalah?.date || null,
+      havdalahTitle: havdalah?.title || 'Havdalah',
+      parsha: data.items?.find((item) => item.category === 'parashat')?.title || null,
+      candleLightingMinutes: CANDLE_LIGHTING_MINUTES,
+    };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Get this week's parsha.
  */
@@ -86,28 +117,11 @@ export async function getParsha() {
 }
 
 /**
- * Get the next Shabbat candle lighting and Havdalah times for the Five Towns.
+ * Five Towns convenience wrapper — kept for backwards compatibility.
+ * Prefer getShabbatTimes() for location-aware calls.
  */
 export async function getFiveTownsShabbatTimes(date = new Date()) {
-  const dateStr = date.toISOString().split('T')[0];
-  try {
-    const res = await fetch(
-      `${HEBCAL_BASE}/shabbat?cfg=json&geo=pos&latitude=40.6157&longitude=-73.7296&tzid=America/New_York&m=20&b=18&date=${dateStr}`
-    );
-    const data = await res.json();
-    const candle = data.items?.find((item) => item.category === 'candles');
-    const havdalah = data.items?.find((item) => item.category === 'havdalah');
-    return {
-      location: data.location?.title || 'Five Towns',
-      candleLighting: candle?.date || null,
-      candleTitle: candle?.title || 'Candle lighting',
-      havdalah: havdalah?.date || null,
-      havdalahTitle: havdalah?.title || 'Havdalah',
-      parsha: data.items?.find((item) => item.category === 'parashat')?.title || null,
-    };
-  } catch {
-    return null;
-  }
+  return getShabbatTimes(40.6157, -73.7296, 'America/New_York', date);
 }
 
 /**

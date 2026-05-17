@@ -1,4 +1,5 @@
-import { getFiveTownsShabbatTimes } from '@/lib/hebrewDate';
+import { getShabbatTimes } from '@/lib/hebrewDate';
+import { getStoredCandleLocation, DEFAULT_LOCATION } from '@/lib/shabbatLocation';
 import { storageService } from './storageService';
 
 const SENT_KEY = 'junited_shabbat_reminders_sent';
@@ -80,7 +81,13 @@ export const shabbatReminderService = {
     if (!enabled || typeof window === 'undefined' || typeof Notification === 'undefined') return null;
     if (Notification.permission !== 'granted') return null;
 
-    const times = await getFiveTownsShabbatTimes();
+    const stored = getStoredCandleLocation();
+    const loc = (stored && stored.type !== 'declined') ? stored : DEFAULT_LOCATION;
+    const locationText = (loc.type === 'gps' || loc.type === 'manual')
+      ? `in ${loc.label}`
+      : 'in the Five Towns';
+
+    const times = await getShabbatTimes(loc.lat, loc.lng, loc.tzid);
     if (!times?.candleLighting || !times?.havdalah) return null;
 
     const candleLighting = new Date(times.candleLighting);
@@ -92,7 +99,7 @@ export const shabbatReminderService = {
       key: `${weekKey}:before`,
       runAt: preShabbat,
       title: 'Shabbat starts soon',
-      body: `Candle lighting is at ${formatTime(times.candleLighting)} in the Five Towns. Wrap up posts, rides, and chesed plans.`,
+      body: `Candle lighting is at ${formatTime(times.candleLighting)} ${locationText}. Wrap up posts, rides, and chesed plans.`,
     });
 
     scheduleReminder({

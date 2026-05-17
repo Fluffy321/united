@@ -485,6 +485,83 @@ Goals:
 7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
+  {
+    id: 'candle-lighting-minhag-offset',
+    category: 'Jewish Life',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'User-Selectable Candle-Lighting Offset',
+    description: 'Let users choose their community\'s candle-lighting offset (e.g., 18 min standard Ashkenazi, 15 min Sephardic, 30 min, 40 min Jerusalem-area). Currently hardcoded to 18 minutes.',
+    why: 'Shipped 2026-05-17: candle-lighting times now use actual GPS/saved location via Hebcal API. The offset is correctly set to 18 min but is not user-configurable. Different communities use different offsets and one-size-fits-all is not fully accurate for all minhagim.',
+    prompt: `You are implementing user-selectable candle-lighting offset for JUnited.
+
+Context:
+  - src/lib/hebrewDate.js — CANDLE_LIGHTING_MINUTES constant (currently 18) is the \`b\` parameter passed to the Hebcal /shabbat API endpoint
+  - src/lib/shabbatLocation.js — stores candle location preference; add offset here too (STORAGE_KEY: 'junited_candle_location')
+  - src/hooks/useShabbatLocation.js — exposes setManualCity/requestGPS; add setOffset(minutes)
+  - src/pages/Settings.jsx — Candle-lighting location card (added 2026-05-17); add offset picker here
+  - src/services/shabbatReminderService.js — reads stored location including offset for getShabbatTimes call
+
+Goals:
+1. Add an \`offset\` field to the stored candle location object in shabbatLocation.js (default 18).
+2. Add a getStoredCandleOffset() helper that reads the offset from the stored location (fallback: 18).
+3. Update getShabbatTimes() in hebrewDate.js to accept an optional \`offsetMinutes\` param (default: CANDLE_LIGHTING_MINUTES).
+4. Update shabbatReminderService.js to pass the stored offset to getShabbatTimes().
+5. Update useShabbatLocation.js hook to expose setOffset(minutes) and return current offset.
+6. Add an offset picker in the Settings Candle-lighting location card: chips for 15 / 18 / 20 / 30 / 40 min with a label explaining what each represents.
+7. Update the countdown widget (DailyRetentionPrompt chip in Feed.jsx) to show the offset if it differs from the default.
+8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'candle-lighting-yom-tov',
+    category: 'Jewish Life',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Yom Tov & Holiday Candle-Lighting Times',
+    description: 'Extend the candle-lighting feature to show Yom Tov candle-lighting times for major holidays (Rosh Hashana, Yom Kippur, Sukkot, Pesach, Shavuot). The Hebcal API already returns holiday events — this just needs to be surfaced in the UI.',
+    why: 'Shipped 2026-05-17: weekly Shabbat times are accurate and location-aware. Holiday candle-lighting is the natural next step for completeness. Hebcal API returns candles category events for Yom Tov too.',
+    prompt: `You are implementing Yom Tov candle-lighting times for JUnited.
+
+Context:
+  - src/lib/hebrewDate.js — getShabbatTimes() calls the Hebcal /shabbat endpoint which also returns holiday items
+  - The Hebcal /shabbat endpoint returns category:'candles' items for both Shabbat and Yom Tov
+  - src/hooks/useShabbatLocation.js — location and offset management
+  - src/pages/Feed.jsx — useShabbosCountdown() drives the DailyRetentionPrompt chip
+
+Goals:
+1. Audit: verify that getShabbatTimes() already returns Yom Tov candle-lighting items from Hebcal (it may already handle this — check the API response for a holiday week).
+2. If Yom Tov items are already in the response, update useShabbosCountdown() to handle multiple candles/havdalah items in the same week (e.g., two-day Yom Tov).
+3. Update the countdown chip label to reflect Yom Tov (e.g., "Rosh Hashana" instead of "Candle lighting") using the candleTitle from the API.
+4. Handle the Yom Kippur case (no actual candles but still a candle-lighting time).
+5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'candle-lighting-location-sync',
+    category: 'Jewish Life',
+    status: STATUS.DEFERRED,
+    priority: PRIORITY.LOW,
+    title: 'Sync Candle-Lighting Location to User Profile',
+    description: 'Currently the candle-lighting location preference is stored in localStorage only (device-specific). Syncing it to the user profile in Supabase would make it available across devices.',
+    why: 'Deferred 2026-05-17: localStorage is correct for privacy (location is sensitive) and sufficient for most single-device use. Cross-device sync adds a migration and raises data-residency considerations. Revisit once the feature has real usage.',
+    prompt: `You are syncing the candle-lighting location preference to the Supabase user profile for JUnited.
+
+Context:
+  - src/lib/shabbatLocation.js — STORAGE_KEY 'junited_candle_location', setCandleLocation(), getStoredCandleLocation()
+  - src/hooks/useShabbatLocation.js — reads/writes localStorage via shabbatLocation.js helpers
+  - supabase/migrations/ — schema changes go here as timestamped SQL files
+  - src/api/supabaseClient.js — for direct Supabase queries
+
+Goals:
+1. Create a migration adding a candle_location JSONB column (nullable) to the profiles table.
+2. Update setCandleLocation() / getStoredCandleLocation() to also read/write to the profiles table when the user is authenticated.
+3. On login, hydrate localStorage from the profile's candle_location if localStorage is empty.
+4. On change, write to both localStorage and the profiles table (optimistically, with silent error handling).
+5. Keep localStorage as the authoritative read source for speed; Supabase as the sync layer.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
   // ── Businesses & Map ──────────────────────────────────────────────────────
 
   {
