@@ -1341,17 +1341,21 @@ export default function MapPage() {
 
   return (
     <main className="flex h-dvh flex-col overflow-hidden mobile-safe-bottom">
-      <div className="mobile-page-wide flex shrink-0 items-center gap-2 px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
-        <MapPin className="h-5 w-5 shrink-0 text-blue-600" />
-        <h1 className="text-2xl font-black text-slate-950">Map</h1>
-        <PageHelp text="Discover Jewish businesses, services, mitzvah needs, and community posts around you." />
-        <button
-          onClick={handleUseMyLocation}
-          className="motion-press ml-auto inline-flex h-9 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 text-xs font-black text-blue-700 shadow-sm transition hover:bg-blue-100"
-        >
-          <Navigation className="h-3.5 w-3.5" />
-          {locationStatus === 'requesting' ? 'Locating...' : userLocation ? 'Using location' : 'Near me'}
-        </button>
+      <div className="mobile-page-wide shrink-0 px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
+        <div className="glass-toolbar mobile-page flex min-h-[56px] items-center justify-between rounded-[24px] px-3 py-2">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-[18px] w-[18px] shrink-0 text-blue-600" />
+            <h1 className="text-[17px] font-black text-slate-950">Map</h1>
+            <PageHelp text="Discover Jewish businesses, services, mitzvah needs, and community posts around you." />
+          </div>
+          <button
+            onClick={handleUseMyLocation}
+            className="motion-press inline-flex h-9 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 text-xs font-black text-blue-700 shadow-sm transition hover:bg-blue-100"
+          >
+            <Navigation className="h-3.5 w-3.5" />
+            {locationStatus === 'requesting' ? 'Locating...' : userLocation ? 'Using location' : 'Near me'}
+          </button>
+        </div>
       </div>
 
       <div className="mobile-page-wide min-h-0 flex-1 overflow-y-auto px-3 pb-3 sm:px-4 sm:pb-4">

@@ -22,6 +22,7 @@ import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import { getShabbatTimes } from '@/lib/hebrewDate';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
+import useHideOnScroll from '@/hooks/useHideOnScroll';
 import { useFloatingActions } from '@/components/layout/FloatingActionsContext';
 
 const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
@@ -450,22 +451,7 @@ export default function Feed({ isActive = true }) {
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   const [showEventsSheet, setShowEventsSheet] = useState(false);
-  const [headerHidden, setHeaderHidden] = useState(false);
-  const lastScrollY = useRef(0);
-
-  // Hide header on downward scroll, reveal on upward (Instagram-style)
-  useEffect(() => {
-    const THRESHOLD = 8;   // ignore micro-movements to prevent jitter
-    const MIN_SCROLL = 60; // never hide when near the top
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (Math.abs(y - lastScrollY.current) < THRESHOLD) return;
-      setHeaderHidden(y > lastScrollY.current && y > MIN_SCROLL);
-      lastScrollY.current = y;
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  const headerHidden = useHideOnScroll();
 
   const { location: candleLocation, locationLoading: candleLocationLoading } = useShabbatLocation({ autoRequest: true });
   const shabbat = useShabbosCountdown(candleLocation, candleLocationLoading);

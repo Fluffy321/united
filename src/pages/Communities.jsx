@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import useHideOnScroll from '@/hooks/useHideOnScroll';
 import { useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -14,7 +15,6 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
-import PageHelp from '@/components/common/PageHelp';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { dataService, incrementCounter } from '@/services';
@@ -482,6 +482,8 @@ function getManagementRole(community, currentUser, membershipsByCommunity) {
 export default function Communities() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
+  const headerHidden = useHideOnScroll();
+  const searchBarRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const urlCommunityId = searchParams.get('community');
   const selectedTab = searchParams.get('tab') || 'home';
@@ -863,12 +865,44 @@ export default function Communities() {
 
   return (
     <main className="app-page mobile-safe-bottom">
+      {/* Sticky glass header — hide on downward scroll, reveal on upward */}
+      <div
+        className="sticky top-0 z-[60] px-3 pt-3 transition-transform duration-300 ease-out"
+        style={{ transform: headerHidden ? 'translateY(-120%)' : 'translateY(0)' }}
+      >
+        <div className="glass-toolbar mobile-page flex min-h-[56px] items-center justify-between rounded-[24px] px-3 py-2">
+          <div className="flex items-center gap-2">
+            <Users className="h-[18px] w-[18px] shrink-0 text-blue-600" strokeWidth={2.5} />
+            <h1 className="text-[17px] font-black text-slate-950">Communities</h1>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => searchBarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              className="app-icon-button surface-tile-hover touch-manipulation"
+              aria-label="Search communities"
+            >
+              <Search className="h-[18px] w-[18px] text-slate-500" />
+            </button>
+            <button
+              onClick={() => setShowMessages(true)}
+              className="app-icon-button surface-tile-hover touch-manipulation"
+              aria-label="Community messages"
+            >
+              <MessageCircle className="h-[18px] w-[18px] text-slate-500" />
+            </button>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="app-icon-button surface-tile-hover touch-manipulation"
+              aria-label="Create community"
+            >
+              <Plus className="h-[18px] w-[18px] text-slate-500" />
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="mobile-page-wide px-3 pb-6 pt-3 sm:px-4 sm:pt-4">
-        <Hero
-          joinedCount={joinedCount}
-          onCreate={() => setShowCreate(true)}
-          onMessages={() => setShowMessages(true)}
-        />
+        <Hero joinedCount={joinedCount} />
 
         <CommunityPulseDock
           items={communityPulse}
@@ -884,12 +918,14 @@ export default function Communities() {
 
         <ViewSwitch view={view} onChange={setView} joinedCount={joinedCount} />
 
-        <SearchBar
-          query={query}
-          onQueryChange={setQuery}
-          typeFilter={typeFilter}
-          onTypeFilterChange={setTypeFilter}
-        />
+        <div ref={searchBarRef}>
+          <SearchBar
+            query={query}
+            onQueryChange={setQuery}
+            typeFilter={typeFilter}
+            onTypeFilterChange={setTypeFilter}
+          />
+        </div>
 
         {isLoading ? (
           <div className="flex justify-center py-16">
@@ -1012,37 +1048,17 @@ export default function Communities() {
   );
 }
 
-function Hero({ joinedCount, onCreate, onMessages }) {
+function Hero({ joinedCount }) {
   return (
-    <section className="surface-panel mb-4 overflow-hidden rounded-[24px]">
-      <div className="grid gap-0 sm:grid-cols-[1fr_auto]">
-        <div className="relative p-4">
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-blue-700">
-            <Sparkles className="h-3.5 w-3.5" />
-            Community hub
-          </div>
-          <div className="flex items-center gap-1.5">
-            <h1 className="text-2xl font-black text-slate-950 sm:text-3xl">Communities</h1>
-            <PageHelp text="Communities define what you care about, where you belong, and who you connect with." />
-          </div>
-          <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
-            Find your people: private support, local updates, Torah, Shabbos, sports, creative circles, chesed, and the spaces that make JUnited worth checking every day.
-          </p>
-          <HeroPill label={`${joinedCount} joined`} />
-        </div>
-        <div className="border-t border-slate-200 bg-slate-50/80 p-4 sm:border-l sm:border-t-0 sm:w-64">
-          <div className="grid gap-2">
-            <button onClick={onCreate} className="motion-press inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-black text-white">
-              <Plus className="h-4 w-4" />
-              Create Community
-            </button>
-            <button onClick={onMessages} className="motion-press inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700">
-              <MessageCircle className="h-4 w-4" />
-              Community Messages
-            </button>
-          </div>
-        </div>
+    <section className="surface-panel mb-4 rounded-[24px] p-4">
+      <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-blue-700">
+        <Sparkles className="h-3.5 w-3.5" />
+        Community hub
       </div>
+      <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+        Find your people: private support, local updates, Torah, Shabbos, sports, creative circles, chesed, and the spaces that make JUnited worth checking every day.
+      </p>
+      <HeroPill label={`${joinedCount} joined`} />
     </section>
   );
 }
