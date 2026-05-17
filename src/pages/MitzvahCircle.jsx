@@ -30,6 +30,7 @@ import {
 import { mitzvahService, notificationsService } from '@/services';
 import { toast } from 'sonner';
 import PageHelp from '@/components/common/PageHelp';
+import DestinationHeader from '@/components/layout/DestinationHeader';
 import CarpoolBoard from '@/components/mitzvah/CarpoolBoard';
 
 const CATEGORIES = [
@@ -1555,6 +1556,21 @@ export default function MitzvahCircle() {
 
   return (
     <main className="app-page mobile-safe-bottom">
+      <DestinationHeader
+        icon={HandHeart}
+        title="Mitzvah Circle"
+        help={<PageHelp text="Give help, ask for help, and follow mitzvah requests from open to completed." />}
+        actions={(
+          <button
+            onClick={() => setShowCreate(true)}
+            className="app-icon-button surface-tile-hover touch-manipulation"
+            aria-label="Post mitzvah request"
+          >
+            <Plus className="h-[18px] w-[18px] text-slate-500" />
+          </button>
+        )}
+      />
+
       <section className="mobile-page-wide px-3 pt-3 sm:px-4 sm:pt-4">
         {/* Header */}
         <div className="overflow-hidden rounded-[30px] border border-blue-100 bg-gradient-to-br from-white via-blue-50/70 to-indigo-50 shadow-sm">
@@ -1567,13 +1583,7 @@ export default function MitzvahCircle() {
                     <HandHeart className="h-3.5 w-3.5" />
                     Community help hub
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <h1 className="text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">
-                      Mitzvah Circle
-                    </h1>
-                    <PageHelp text="Give help, ask for help, and follow mitzvah requests from open to completed." />
-                  </div>
-                  <p className="mt-1.5 max-w-xl text-[13px] font-semibold leading-5 text-slate-600">
+                  <p className="max-w-xl text-[15px] font-black leading-6 text-slate-950">
                     Give help. Ask for help. Strengthen the community.
                   </p>
                 </div>

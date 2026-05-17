@@ -1004,8 +1004,8 @@ Goals:
     status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Primary Destination Header Consistency',
-    description: 'Universal app-shell header consistency across major JUnited pages. Feed, Communities, and Map use the same persistent glass-toolbar header primitive. Mitzvah Circle and Profile remain hero-led, but share the same mobile shell spacing and card rhythm.',
-    shippedNote: 'Updated 2026-05-17 after UX architecture review. The earlier hide-on-scroll approach made Feed/Communities behave differently from Map and felt arbitrary. Replaced it with a persistent DestinationHeader shared by Feed, Communities, and Map; removed the unused useHideOnScroll hook. Mitzvah Circle stays mission/hero-led and Profile stays identity/hero-led to avoid duplicate headers.',
+    description: 'Universal app-shell header consistency across major JUnited pages. Feed, Mitzvah Circle, Communities, Map, and Profile use the same persistent glass-toolbar header primitive, while page interiors remain specialized.',
+    shippedNote: 'Updated 2026-05-17 after UX architecture review. The earlier hide-on-scroll approach made Feed/Communities behave differently from Map and felt arbitrary. Replaced it with a persistent DestinationHeader shared by all five primary destinations; removed the unused useHideOnScroll hook. Map now sits on the same app-page background so the header reads as glass, and Mitzvah/Profile keep their hero-led interiors below the shared top shell.',
   },
 
   {

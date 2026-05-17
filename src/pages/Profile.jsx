@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Settings, Share2, UserRound } from 'lucide-react';
 import { dataService, findOrCreateDirectConversation, friendsService } from '@/services';
 import { FRIEND_STATUS } from '@/services/friendsService';
 import { useAuth } from '@/lib/AuthContext';
@@ -24,6 +24,7 @@ import RecentPostsSection from '@/components/profile/RecentPostsSection.jsx';
 import SavedPostsSection from '@/components/profile/SavedPostsSection.jsx';
 import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
 import FriendsHub from '@/components/profile/FriendsHub.jsx';
+import DestinationHeader from '@/components/layout/DestinationHeader';
 
 export default function Profile() {
   const [searchParams] = useSearchParams();
@@ -292,6 +293,31 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-transparent mobile-safe-bottom">
+      <DestinationHeader
+        icon={UserRound}
+        title={isOwnProfile ? 'Profile' : 'Member Profile'}
+        actions={(
+          <>
+            {isOwnProfile && (
+              <button
+                onClick={handleEditProfile}
+                className="app-icon-button surface-tile-hover touch-manipulation"
+                aria-label="Edit profile settings"
+              >
+                <Settings className="h-[18px] w-[18px] text-slate-500" />
+              </button>
+            )}
+            <button
+              onClick={handleShareProfile}
+              className="app-icon-button surface-tile-hover touch-manipulation"
+              aria-label="Share profile"
+            >
+              <Share2 className="h-[18px] w-[18px] text-slate-500" />
+            </button>
+          </>
+        )}
+      />
+
       <div className="mobile-page">
 
         <section className="px-3 pt-3">

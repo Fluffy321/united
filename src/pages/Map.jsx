@@ -1341,7 +1341,7 @@ export default function MapPage() {
   const handleUseMyLocation = () => requestUserLocation(true);
 
   return (
-    <main className="flex h-dvh flex-col overflow-hidden mobile-safe-bottom">
+    <main className="app-page flex h-dvh flex-col overflow-hidden mobile-safe-bottom">
       <DestinationHeader
         sticky={false}
         icon={MapPin}
