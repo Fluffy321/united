@@ -24,6 +24,7 @@ const Communities          = lazy(() => import('./pages/Communities'));
 const Feed                 = lazy(() => import('./pages/Feed'));
 const InviteJoin           = lazy(() => import('./pages/InviteJoin'));
 const Map                  = lazy(() => import('./pages/Map'));
+const Marketplace          = lazy(() => import('./pages/Marketplace'));
 const Messages             = lazy(() => import('./pages/Messages'));
 const MitzvahCircle        = lazy(() => import('./pages/MitzvahCircle'));
 const Profile              = lazy(() => import('./pages/Profile'));
@@ -37,6 +38,7 @@ export const PAGES = {
   Feed,
   InviteJoin,
   Map,
+  Marketplace,
   Messages,
   MitzvahCircle,
   Profile,
