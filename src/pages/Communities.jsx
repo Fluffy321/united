@@ -509,6 +509,7 @@ export default function Communities() {
 
   useEffect(() => {
     setSelectedCommunityIdState(urlCommunityId);
+    setInitialComposePrompt('');
   }, [urlCommunityId]);
 
   const [showCreate, setShowCreate] = useState(false);
@@ -840,6 +841,7 @@ export default function Communities() {
         community={selectedCommunity}
         currentUser={currentUser}
         initialComposePrompt={initialComposePrompt}
+        onInitialComposeConsumed={() => setInitialComposePrompt('')}
         onBack={() => {
           setSelectedCommunityId(null);
           setInitialComposePrompt('');
