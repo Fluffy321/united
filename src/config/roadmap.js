@@ -968,7 +968,7 @@ Goals:
     title: 'Premium Community Plans',
     description: 'SaaS-style paid community subscriptions for community owners/admins. Free communities remain useful, while Premium unlocks advanced admin, automation, branding, events/resources/listings, and growth tools.',
     why: 'This is the primary subscription model for JUnited. The existing recurring supporter subscription is secondary and should not be used to determine community feature access.',
-    shippedNote: 'Shipped 2026-05-17. Added community_plan_subscriptions plus community plan state fields, owner/admin-only Stripe Checkout and Billing Portal Edge Functions, webhook sync for community-scoped subscriptions, Community Admin Center Billing UI, Premium gating for Events/Resources/Marketplace/Group Chat, and separate Premium Communities analytics.',
+    shippedNote: 'Shipped 2026-05-17. Added community_plan_subscriptions plus community plan state fields, owner/admin-only Stripe Checkout and Billing Portal Edge Functions, webhook sync for community-scoped subscriptions, Community Admin Center Billing UI, and separate Premium Communities analytics. Revised 2026-05-17: Free communities include posts, members, basic admin tools, limited Events (3 upcoming published) and limited Resources (10 total). Premium unlocks unlimited events/resources, group chat, marketplace/listings, stronger admin controls, and basic analytics.',
     prompt: `You are implementing Premium Community Plans for JUnited.
 
 Context:
@@ -1004,6 +1004,47 @@ Goals:
 6. Gate Premium-only community features in UI from community plan state, not from currentUser.subscription_status.
 7. Add admin analytics for Premium Communities separately from Supporters.
 8. Run npm run lint && npm run typecheck && npm run build.
+9. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-pro-plan',
+    category: 'Growth & Monetization',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Community Pro Plan',
+    description: 'Future higher-tier community plan for larger shuls, schools, organizations, and high-activity groups that need deeper analytics, automation, exports, advanced communications, and stronger customization.',
+    why: 'Free should drive adoption and Premium should run a complete community hub. Pro should become the future tier for serious institutions with heavier admin, reporting, workflow, and monetization needs.',
+    prompt: `You are designing and implementing the future Community Pro Plan for JUnited.
+
+Context:
+  - Current community plans are Free and Premium.
+  - Free includes posts, members, basic admin tools, limited Events, and limited Resources.
+  - Premium includes unlimited Events/Resources, Group Chat, Marketplace/Listings, billing controls, and basic community analytics.
+  - Existing plan state lives on communities.plan_key / plan_status and community_plan_subscriptions.
+  - Existing community admin UI lives in CommunityAdminCenter.jsx.
+  - Existing admin analytics lives in AdminAnalyticsDashboard.jsx.
+
+Goals:
+1. Audit the shipped Free/Premium plan model and identify which capabilities are truly production-backed.
+2. Design Community Pro as a higher tier for larger shuls, schools, organizations, and high-activity communities.
+3. Evaluate and implement only production-backed Pro features. Candidate Pro features include:
+   - advanced community analytics,
+   - engagement and growth dashboards,
+   - scheduled posts and announcements,
+   - automations/workflows,
+   - advanced moderation and audit history,
+   - multiple subgroup chats or advanced communication tools,
+   - CSV/data exports,
+   - stronger customization and branding,
+   - higher storage/resource limits if caps exist,
+   - lower future JUnited transaction fees for in-app payments,
+   - community admin AI/growth tools if a secure AI backend exists.
+4. Add or update Stripe Billing price IDs and checkout/webhook handling for the Pro tier without breaking existing Premium subscriptions.
+5. Update community entitlement helpers so Free, Premium, and Pro checks are centralized.
+6. Update CommunityAdminCenter billing copy and plan comparison UI.
+7. Add analytics that separately tracks Premium vs Pro communities.
+8. Run npm run lint, npm run typecheck, npm run build, and npm run check-prompts.
 9. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 

@@ -20,8 +20,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { dataService } from '@/services';
 import { getCommunityTabLabel, getCommunityTypeConfig, getSupportedCommunityTabs } from '@/lib/communityTypes';
-import { isCommunityPremium } from '@/lib/communityPlans';
+import {
+  canUseCommunityChat,
+  canUseCommunityEvents,
+  canUseCommunityMarketplace,
+  canUseCommunityResources,
+} from '@/lib/communityPlans';
 import CommunityAdminCenter from './CommunityAdminCenter';
+import CommunityEventsTab from './CommunityEventsTab';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import GroupChatSection from './GroupChatSection';
 
@@ -56,12 +62,11 @@ export default function CommunityHubDetail({
 }) {
   const typeConfig = getCommunityTypeConfig(community);
   const Icon = typeConfig.icon;
-  const premiumEnabled = isCommunityPremium(community);
   const tabs = getSupportedCommunityTabs(community, {
-    events: Boolean(premiumEnabled && community?.allow_member_events),
-    resources: Boolean(premiumEnabled && community?.allow_resources),
-    chat: Boolean(premiumEnabled && community?.allow_group_chat),
-    listings: Boolean(premiumEnabled && community?.allow_member_listings),
+    events: canUseCommunityEvents(community),
+    resources: canUseCommunityResources(community),
+    chat: Boolean(canUseCommunityChat(community) && community?.allow_group_chat),
+    listings: Boolean(canUseCommunityMarketplace(community) && community?.allow_member_listings),
   });
   const [activeTab, setActiveTab] = useState(tabs.includes(initialTab) ? initialTab : (tabs[0] || 'home'));
   const [composeText, setComposeText] = useState('');
@@ -152,6 +157,13 @@ export default function CommunityHubDetail({
     queryKey: ['community-hub-open-needs', community.id],
     queryFn: () => dataService.entities.MitzvahRequest.filter({ community_id: community.id }, '-created_date', 30),
     enabled: Boolean(community.id) && !isSeedCommunity && typeConfig.key === 'chesed',
+    staleTime: 30000,
+  });
+
+  const { data: events = [] } = useQuery({
+    queryKey: ['community-hub-events', community.id],
+    queryFn: () => dataService.entities.CommunityEvent.filter({ community_id: community.id }, 'start_date', 50),
+    enabled: Boolean(community.id) && !isSeedCommunity,
     staleTime: 30000,
   });
 
@@ -388,9 +400,19 @@ export default function CommunityHubDetail({
           {activeTab === 'members' && (
             <MembersTab community={community} memberVisibility={memberVisibility} />
           )}
+          {activeTab === 'events' && (
+            <CommunityEventsTab
+              events={events}
+              community={community}
+              currentUser={currentUser}
+              communityId={community.id}
+              isAdmin={isCommunityManager}
+            />
+          )}
           {activeTab === 'resources' && (
             <CommunityResourceLibrary
               communityId={community.id}
+              community={community}
               currentUser={currentUser}
               isAdmin={isCommunityManager}
             />

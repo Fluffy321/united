@@ -31,8 +31,8 @@ const TABS = [
 ];
 
 const MODULE_CONFIG = [
-  { key: 'allow_member_events',   label: 'Events',      description: 'Members can create and view events', premium: true },
-  { key: 'allow_resources',       label: 'Resources',   description: 'Resource library tab for files and links', premium: true },
+  { key: 'allow_member_events',   label: 'Events',      description: 'Free includes up to 3 upcoming published events; Premium is unlimited' },
+  { key: 'allow_resources',       label: 'Resources',   description: 'Free includes up to 10 resources; Premium is unlimited' },
   { key: 'allow_member_listings', label: 'Marketplace', description: 'Members can post buy/sell listings', premium: true },
   { key: 'allow_group_chat',      label: 'Group Chat',  description: 'Real-time group chat tab', premium: true },
 ];
@@ -534,8 +534,8 @@ function BillingTab({ communityId, community, currentUser, onCommunityUpdated })
             </h2>
             <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">
               {premiumActive
-                ? 'Advanced modules are unlocked for this community.'
-                : 'Keep the basics free, then upgrade when this community needs more tools.'}
+                ? 'Unlimited events, unlimited resources, chat, and marketplace are unlocked for this community.'
+                : 'Free communities include posts, members, basic admin tools, limited events, and limited resources.'}
             </p>
           </div>
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-700 shadow-sm ring-1 ring-blue-100">
@@ -544,8 +544,8 @@ function BillingTab({ communityId, community, currentUser, onCommunityUpdated })
         </div>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
-          <PlanFeature label="Free" detail="Posts, members, about page" active />
-          <PlanFeature label="Premium" detail="Events, resources, listings, chat" active={premiumActive} />
+          <PlanFeature label="Free" detail="Posts, members, 3 events, 10 resources" active />
+          <PlanFeature label="Premium" detail="Unlimited events/resources, chat, marketplace" active={premiumActive} />
           <PlanFeature
             label={renewalDate ? (latestPlan?.cancel_at_period_end ? 'Cancels' : 'Renews') : 'Status'}
             detail={renewalDate || statusLabel}
@@ -606,14 +606,14 @@ function BillingTab({ communityId, community, currentUser, onCommunityUpdated })
       </div>
 
       <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-        <SectionHeader title="Premium unlocks" />
+        <SectionHeader title="Plan features" />
         <div className="mt-3 grid gap-2">
           {MODULE_CONFIG.map((module) => (
             <div key={module.key} className="flex items-start gap-3 rounded-2xl bg-slate-50 px-3 py-3">
               <div className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full ${
-                premiumActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'
+                premiumActive || !module.premium ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'
               }`}>
-                {premiumActive ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+                {premiumActive || !module.premium ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
               </div>
               <div className="min-w-0">
                 <p className="text-[13px] font-black text-slate-900">{module.label}</p>
@@ -2016,7 +2016,7 @@ function ModulesSection({ communityId, community, onCommunityUpdated }) {
 
   const toggle = (key) => {
     const moduleConfig = MODULE_CONFIG.find((module) => module.key === key);
-    if (moduleConfig?.premium && !premiumActive) {
+    if (moduleConfig?.premium && !premiumActive && !flags[key]) {
       toast.info('Upgrade to Premium to enable this module.');
       return;
     }
@@ -2044,9 +2044,9 @@ function ModulesSection({ communityId, community, onCommunityUpdated }) {
     <div className="space-y-4">
       {!premiumActive && (
         <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3">
-          <p className="text-[13px] font-black text-blue-900">Advanced modules are Premium</p>
+          <p className="text-[13px] font-black text-blue-900">Free includes limited events and resources</p>
           <p className="mt-0.5 text-[12px] font-semibold leading-5 text-blue-700">
-            Posts, members, and the About page stay free. Events, resources, marketplace, and group chat unlock after upgrading in Billing.
+            Free communities can run up to 3 upcoming events and share up to 10 resources. Marketplace and group chat unlock after upgrading in Billing.
           </p>
         </div>
       )}
@@ -2081,7 +2081,7 @@ function ModulesSection({ communityId, community, onCommunityUpdated }) {
             <button
               type="button"
               onClick={() => toggle(key)}
-              disabled={locked}
+              disabled={locked && !flags[key]}
               className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 flex-shrink-0 disabled:cursor-not-allowed disabled:opacity-50 ${
                 flags[key] ? 'bg-blue-600 justify-end' : 'bg-slate-200 justify-start'
               }`}

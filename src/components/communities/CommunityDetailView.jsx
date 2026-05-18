@@ -9,7 +9,12 @@ import {
   getCommunityTypeConfig,
   getSupportedCommunityTabs,
 } from '@/lib/communityTypes';
-import { isCommunityPremium } from '@/lib/communityPlans';
+import {
+  canUseCommunityChat,
+  canUseCommunityEvents,
+  canUseCommunityMarketplace,
+  canUseCommunityResources,
+} from '@/lib/communityPlans';
 import { supabase } from '@/api/supabaseClient';
 import CommunityHero from './CommunityHero';
 import ClaimModal from './ClaimModal';
@@ -135,14 +140,13 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   const isFollowing = membershipRecord.length > 0 || isCreator;
   const isAdmin = currentUser?.role === 'admin' || isCreator || ['admin', 'moderator', 'owner'].includes(membershipRole);
   const canPost = isAdmin || (community?.posting_mode || 'open') === 'open';
-  const premiumEnabled = isCommunityPremium(community);
   const actualMemberCount = members.length;
   const activeNeeds = openNeeds.filter((need) => OPEN_NEED_STATUSES.has(String(need.status || 'open')));
   const featureCapabilities = {
-    events: Boolean(premiumEnabled && (community?.allow_member_events || ['events', 'shul'].includes(typeConfig.key))),
-    resources: Boolean(premiumEnabled && (community?.allow_resources || ['learning', 'shul'].includes(typeConfig.key))),
-    chat: Boolean(premiumEnabled && community?.allow_group_chat),
-    listings: Boolean(premiumEnabled && (community?.allow_member_listings || typeConfig.key === 'marketplace')),
+    events: canUseCommunityEvents(community),
+    resources: canUseCommunityResources(community),
+    chat: Boolean(canUseCommunityChat(community) && community?.allow_group_chat),
+    listings: Boolean(canUseCommunityMarketplace(community) && (community?.allow_member_listings || typeConfig.key === 'marketplace')),
   };
   const visibleTabs = getSupportedCommunityTabs(community || fallbackCommunity || {}, featureCapabilities);
   const setTab = (tab) => {
@@ -385,6 +389,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         {activeTab === 'events' && featureCapabilities.events && (
           <CommunityEventsTab
             events={events}
+            community={community}
             currentUser={currentUser}
             communityId={communityId}
             isAdmin={isAdmin}
@@ -394,6 +399,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         {activeTab === 'resources' && featureCapabilities.resources && (
           <CommunityResourceLibrary
             communityId={communityId}
+            community={community}
             currentUser={currentUser}
             isAdmin={isAdmin}
           />

@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { X, Calendar, Clock, MapPin, AlignLeft, Sparkles, Loader2, Tag, ChevronDown, Ticket, DollarSign, Users } from 'lucide-react';
+import {
+  FREE_COMMUNITY_LIMITS,
+  canCreateCommunityEvent,
+  isUpcomingPublishedCommunityEvent,
+} from '@/lib/communityPlans';
 
 const EVENT_CATEGORIES = [
   { value: 'shabbos', label: '🕯️ Shabbos & Holidays', color: 'bg-amber-50 text-amber-700 border-amber-200' },
@@ -21,7 +26,14 @@ const SUGGESTED_TIMES = [
   { label: 'Friday Afternoon', start_time: '14:00', end_time: '16:00', note: 'Pre-Shabbos energy' },
 ];
 
-export default function CreateCommunityEventModal({ communityId, currentUser, onCreated, onClose }) {
+export default function CreateCommunityEventModal({
+  communityId,
+  community,
+  currentUser,
+  upcomingPublishedEventCount = 0,
+  onCreated,
+  onClose,
+}) {
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -158,6 +170,15 @@ Return a JSON object with a "suggestions" array of exactly 3 items, each with:
     e.preventDefault();
     if (!form.title.trim() || !form.start_date) {
       toast.error('Title and start date are required');
+      return;
+    }
+    const wouldCountTowardFreeLimit = isUpcomingPublishedCommunityEvent({
+      status: 'published',
+      start_date: form.start_date,
+      start_time: form.start_time,
+    });
+    if (wouldCountTowardFreeLimit && !canCreateCommunityEvent(community, upcomingPublishedEventCount)) {
+      toast.error(`Free communities can have up to ${FREE_COMMUNITY_LIMITS.upcomingPublishedEvents} upcoming events. Upgrade to Premium for unlimited events.`);
       return;
     }
     setSaving(true);
