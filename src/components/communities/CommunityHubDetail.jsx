@@ -20,13 +20,26 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { dataService } from '@/services';
 import { getCommunityTabLabel, getCommunityTypeConfig, getSupportedCommunityTabs } from '@/lib/communityTypes';
-import { isCommunityPremium } from '@/lib/communityPlans';
+import {
+  canUseCommunityChat,
+  canUseCommunityEvents,
+  canUseCommunityMarketplace,
+  canUseCommunityResources,
+} from '@/lib/communityPlans';
 import CommunityAdminCenter from './CommunityAdminCenter';
+import CommunityEventsTab from './CommunityEventsTab';
+import CommunityGroupsTab from './CommunityGroupsTab';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import GroupChatSection from './GroupChatSection';
+import {
+  CommunityFeaturedSection,
+  CommunityMemberDirectory,
+  CommunityPostPreview,
+  CommunityWelcomeHub,
+} from './CommunityOperatingSystem';
 
 function getPostTypeForTab(activeTab, typeKey) {
-  if (activeTab === 'announcements' || typeKey === 'shul') return 'announcement';
+  if (activeTab === 'announcements') return 'announcement';
   if (activeTab === 'questions' || typeKey === 'parents') return 'question';
   if (activeTab === 'discussions' || typeKey === 'learning') return 'discussion';
   if (typeKey === 'chesed') return 'chesed';
@@ -56,12 +69,12 @@ export default function CommunityHubDetail({
 }) {
   const typeConfig = getCommunityTypeConfig(community);
   const Icon = typeConfig.icon;
-  const premiumEnabled = isCommunityPremium(community);
   const tabs = getSupportedCommunityTabs(community, {
-    events: Boolean(premiumEnabled && community?.allow_member_events),
-    resources: Boolean(premiumEnabled && community?.allow_resources),
-    chat: Boolean(premiumEnabled && community?.allow_group_chat),
-    listings: Boolean(premiumEnabled && community?.allow_member_listings),
+    events: canUseCommunityEvents(community),
+    resources: canUseCommunityResources(community),
+    chat: Boolean(canUseCommunityChat(community) && community?.allow_group_chat),
+    listings: Boolean(canUseCommunityMarketplace(community) && community?.allow_member_listings),
+    groups: true,
   });
   const [activeTab, setActiveTab] = useState(tabs.includes(initialTab) ? initialTab : (tabs[0] || 'home'));
   const [composeText, setComposeText] = useState('');
@@ -71,12 +84,12 @@ export default function CommunityHubDetail({
     Boolean(community.supportsAnonymousPosting && (community.joinedIncognito || community.hideMembership))
   );
   const [showAdminCenter, setShowAdminCenter] = useState(false);
+  const [adminInitialTab, setAdminInitialTab] = useState('overview');
   const queryClient = useQueryClient();
   const accent = typeConfig.accent;
   const prompts = community.quickActions || typeConfig.prompts;
   const isJoining = joiningId === community.id;
   const isSensitive = community.communityType === 'support' || typeConfig.key === 'chesed';
-  const memberVisibility = isSensitive ? 'Hidden unless opted in' : community.privacy || 'Public';
   const isSeedCommunity = String(community.id || '').startsWith('seed-');
   const isDailyTorahCommunity = community.id === 'seed-daily-torah';
 
@@ -100,6 +113,11 @@ export default function CommunityHubDetail({
     const nextTab = tabs.includes(tab) ? tab : (tabs[0] || 'home');
     setActiveTab(nextTab);
     onTabChange?.(nextTab);
+  };
+
+  const openAdminCenter = (tab = 'overview') => {
+    setAdminInitialTab(tab);
+    setShowAdminCenter(true);
   };
 
   useEffect(() => {
@@ -155,6 +173,27 @@ export default function CommunityHubDetail({
     staleTime: 30000,
   });
 
+  const { data: events = [] } = useQuery({
+    queryKey: ['community-hub-events', community.id],
+    queryFn: () => dataService.entities.CommunityEvent.filter({ community_id: community.id }, 'start_date', 50),
+    enabled: Boolean(community.id) && !isSeedCommunity,
+    staleTime: 30000,
+  });
+
+  const { data: resources = [] } = useQuery({
+    queryKey: ['community-hub-resources', community.id],
+    queryFn: () => dataService.entities.CommunityResource.filter({ community_id: community.id }, '-created_date', 50),
+    enabled: Boolean(community.id) && !isSeedCommunity && canUseCommunityResources(community),
+    staleTime: 30000,
+  });
+
+  const { data: members = [] } = useQuery({
+    queryKey: ['community-hub-members', community.id],
+    queryFn: () => dataService.entities.UserCommunity.filter({ community_id: community.id }, '-created_date', 100),
+    enabled: Boolean(community.id) && !isSeedCommunity,
+    staleTime: 30000,
+  });
+
   const visiblePosts = useMemo(() => {
     if (realPosts.length > 0) return realPosts;
     return isSeedCommunity ? (community.posts || []) : [];
@@ -177,6 +216,10 @@ export default function CommunityHubDetail({
       toast.info('Preview communities show sample content only. Open a real community to post.');
       setComposePlaceholder('');
       setShowCompose(false);
+      return;
+    }
+    if (activeTab === 'announcements' && !isCommunityManager) {
+      toast.error('Only community managers can post official announcements.');
       return;
     }
 
@@ -273,7 +316,7 @@ export default function CommunityHubDetail({
             <button
               onClick={() => {
                 if (isCreator) {
-                  setShowAdminCenter(true);
+                  openAdminCenter('overview');
                   return;
                 }
                 onToggleJoin?.(isSensitive ? { incognito: true } : {});
@@ -322,7 +365,7 @@ export default function CommunityHubDetail({
                 You're a member
               </span>
             )}
-            {isCommunityManager && (
+              {isCommunityManager && (
               <span className="inline-flex items-center gap-1.5 font-semibold text-slate-700">
                 <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
                 {isCreator ? 'Owner' : 'Admin'}
@@ -360,11 +403,15 @@ export default function CommunityHubDetail({
               typeConfig={typeConfig}
               posts={visiblePosts}
               openNeeds={openNeeds}
+              events={events}
+              resources={resources}
+              members={members}
               prompts={prompts}
               onCompose={openCompose}
               onTabChange={setTab}
               isCommunityManager={isCommunityManager}
-              onManage={() => setShowAdminCenter(true)}
+              onManage={() => openAdminCenter('content')}
+              isJoined={isJoined}
             />
           )}
           {activeTab === 'openNeeds' && (
@@ -377,19 +424,48 @@ export default function CommunityHubDetail({
             <PostsTab community={community} typeConfig={typeConfig} prompts={prompts} posts={visiblePosts} onCompose={openCompose} filter="discussion" />
           )}
           {activeTab === 'announcements' && (
-            <PostsTab community={community} typeConfig={typeConfig} prompts={prompts} posts={visiblePosts} onCompose={openCompose} filter="announcement" />
+            <PostsTab
+              community={community}
+              typeConfig={typeConfig}
+              prompts={prompts}
+              posts={visiblePosts}
+              onCompose={openCompose}
+              filter="announcement"
+              canCompose={isCommunityManager}
+            />
           )}
           {activeTab === 'posts' && (
-            <PostsTab community={community} typeConfig={typeConfig} prompts={prompts} posts={visiblePosts} onCompose={openCompose} />
+            <PostsTab community={community} typeConfig={typeConfig} prompts={prompts} posts={visiblePosts} onCompose={openCompose} canCompose />
           )}
           {activeTab === 'about' && (
             <AboutTab community={community} typeConfig={typeConfig} />
           )}
           {activeTab === 'members' && (
-            <MembersTab community={community} memberVisibility={memberVisibility} />
+            <CommunityMemberDirectory
+              community={community}
+              members={members}
+              memberCount={community.memberCount || members.length || 0}
+            />
+          )}
+          {activeTab === 'events' && (
+            <CommunityEventsTab
+              events={events}
+              community={community}
+              currentUser={currentUser}
+              communityId={community.id}
+              isAdmin={isCommunityManager}
+            />
           )}
           {activeTab === 'resources' && (
             <CommunityResourceLibrary
+              communityId={community.id}
+              community={community}
+              currentUser={currentUser}
+              isAdmin={isCommunityManager}
+            />
+          )}
+          {activeTab === 'groups' && (
+            <CommunityGroupsTab
               communityId={community.id}
               currentUser={currentUser}
               isAdmin={isCommunityManager}
@@ -488,7 +564,11 @@ export default function CommunityHubDetail({
         onCommunityUpdated={() => {
           queryClient.invalidateQueries({ queryKey: ['communities-list'] });
           queryClient.invalidateQueries({ queryKey: ['community-hub-membership', community.id, currentUser?.id] });
+          queryClient.invalidateQueries({ queryKey: ['community-hub-posts', community.id] });
+          queryClient.invalidateQueries({ queryKey: ['community-hub-members', community.id] });
+          queryClient.invalidateQueries({ queryKey: ['community-hub-resources', community.id] });
         }}
+        initialTab={adminInitialTab}
         onDeleted={() => {
           setShowAdminCenter(false);
           onBack?.();
@@ -498,47 +578,46 @@ export default function CommunityHubDetail({
   );
 }
 
-function HomeTab({ community, typeConfig, posts, openNeeds, prompts, onCompose, onTabChange, isCommunityManager, onManage }) {
+function HomeTab({
+  community,
+  typeConfig,
+  posts,
+  openNeeds,
+  events,
+  resources,
+  members,
+  prompts,
+  onCompose,
+  onTabChange,
+  isCommunityManager,
+  onManage,
+  isJoined,
+}) {
   const featuredPosts = posts.slice(0, 3);
-  const Icon = typeConfig.icon;
 
   return (
     <div className="space-y-3">
-      <div className={`rounded-2xl border p-4 ${typeConfig.softClass}`}>
-        <div className="flex items-start gap-3">
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${typeConfig.accent} text-white shadow-sm`}>
-            <Icon className="h-5 w-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-black text-slate-950">{typeConfig.primaryCta}</p>
-            <p className="mt-1 text-[13px] font-semibold leading-5 text-slate-600">{typeConfig.emptyBody}</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {isCommunityManager && (
-                <button
-                  onClick={onManage}
-                  className="motion-press rounded-xl bg-slate-950 px-3 py-2 text-xs font-black text-white"
-                >
-                  Manage Community
-                </button>
-              )}
-              <button
-                onClick={() => onCompose(prompts[0] || '')}
-                className={`motion-press rounded-xl bg-gradient-to-br ${typeConfig.accent} px-3 py-2 text-xs font-black text-white`}
-              >
-                {typeConfig.primaryCta}
-              </button>
-              {typeConfig.secondaryCta && (
-                <button
-                  onClick={() => onCompose(prompts[1] || '')}
-                  className="motion-press rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700"
-                >
-                  {typeConfig.secondaryCta}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      <CommunityWelcomeHub
+        community={community}
+        typeConfig={typeConfig}
+        posts={posts}
+        events={events}
+        resources={resources}
+        members={members}
+        isCommunityManager={isCommunityManager}
+        isFollowing={isJoined}
+        onTabChange={onTabChange}
+        onManage={onManage}
+        onCompose={onCompose}
+      />
+
+      <CommunityFeaturedSection
+        typeConfig={typeConfig}
+        posts={posts}
+        events={events}
+        resources={resources}
+        onTabChange={onTabChange}
+      />
 
       {typeConfig.key === 'chesed' && (
         <OpenNeedsPreview openNeeds={openNeeds} onTabChange={() => onTabChange('openNeeds')} />
@@ -550,6 +629,7 @@ function HomeTab({ community, typeConfig, posts, openNeeds, prompts, onCompose, 
         prompts={prompts}
         posts={featuredPosts}
         onCompose={onCompose}
+        canCompose
         compact
       />
     </div>
@@ -629,7 +709,7 @@ function TypeEmptyState({ typeConfig, onCompose }) {
   );
 }
 
-function PostsTab({ community, typeConfig, prompts, posts, onCompose, filter, compact = false }) {
+function PostsTab({ community, typeConfig, prompts, posts, onCompose, filter, compact = false, canCompose = true }) {
   const isOfficial = community.communityType === 'official';
   const isPublic = (community.privacy || 'Public') === 'Public';
   const shouldHideFeed = !community.joined && !isOfficial && !isPublic;
@@ -655,38 +735,49 @@ function PostsTab({ community, typeConfig, prompts, posts, onCompose, filter, co
         </div>
       )}
 
-      <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5 shadow-sm">
-        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-blue-700">
-          <Sparkles className="h-4 w-4" />
-          Suggested prompt
-        </div>
-        <h3 className="mt-2 text-lg font-black leading-6 text-slate-950">
-          {community.dailyPrompt || prompts[0] || typeConfig.primaryCta}
-        </h3>
-      </div>
-
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <button
-          onClick={() => onCompose('')}
-          className="flex w-full items-center gap-3 pb-4 border-b border-slate-100 text-left"
-        >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-            <MessageCircle className="h-4 w-4" />
+      {canCompose ? (
+        <>
+          <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-blue-700">
+              <Sparkles className="h-4 w-4" />
+              Suggested prompt
+            </div>
+            <h3 className="mt-2 text-lg font-black leading-6 text-slate-950">
+              {community.dailyPrompt || prompts[0] || typeConfig.primaryCta}
+            </h3>
           </div>
-          <p className="text-sm font-semibold text-slate-400">{typeConfig.primaryCta}...</p>
-        </button>
-        <div className="mt-4 space-y-2">
-          {prompts.map((prompt) => (
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <button
-              key={prompt}
-              onClick={() => onCompose(prompt)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-[13px] font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 active:scale-[0.99]"
+              onClick={() => onCompose('')}
+              className="flex w-full items-center gap-3 pb-4 border-b border-slate-100 text-left"
             >
-              {prompt}
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                <MessageCircle className="h-4 w-4" />
+              </div>
+              <p className="text-sm font-semibold text-slate-400">{typeConfig.primaryCta}...</p>
             </button>
-          ))}
+            <div className="mt-4 space-y-2">
+              {prompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  onClick={() => onCompose(prompt)}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-[13px] font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 active:scale-[0.99]"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 shadow-sm">
+          <p className="text-sm font-black text-amber-950">Official announcements are manager-only</p>
+          <p className="mt-1 text-[13px] font-semibold leading-5 text-amber-700">
+            Members can read community announcements here. Owners, admins, and moderators can create them from the Admin Center.
+          </p>
         </div>
-      </div>
+      )}
 
       {(community.announcements?.length > 0 || community.updates?.length > 0) && (
         <div className="grid gap-3 md:grid-cols-2">
@@ -700,18 +791,8 @@ function PostsTab({ community, typeConfig, prompts, posts, onCompose, filter, co
       )}
 
       {filteredPosts.map((seedPost) => (
-        <article key={seedPost.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-slate-950 px-2.5 py-1 text-[11px] font-black text-white">{seedPost.type || seedPost.post_type || 'Post'}</span>
-            {(seedPost.is_official || seedPost.source_name) && (
-              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
-                Verified source
-              </span>
-            )}
-            {(seedPost.meta || seedPost.created_date) && <span className="text-[11px] font-semibold text-slate-400">{seedPost.meta || 'Community post'}</span>}
-          </div>
-          <h3 className="text-[15px] font-black text-slate-950">{seedPost.title}</h3>
-          <p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-600">{seedPost.body || seedPost.content}</p>
+        <div key={seedPost.id}>
+          <CommunityPostPreview post={seedPost} typeConfig={typeConfig} />
           {(seedPost.source_url || seedPost.link_url || seedPost.url) && (
             <a
               href={seedPost.source_url || seedPost.link_url || seedPost.url}
@@ -723,38 +804,11 @@ function PostsTab({ community, typeConfig, prompts, posts, onCompose, filter, co
               <ArrowUpRight className="h-3.5 w-3.5" />
             </a>
           )}
-          <p className="mt-3 text-xs font-bold text-slate-500">Posted by {seedPost.author || seedPost.author_name || seedPost.user_name || 'Community member'}</p>
-        </article>
+        </div>
       ))}
 
       {filteredPosts.length === 0 && !compact && (
         <TypeEmptyState typeConfig={typeConfig} onCompose={() => onCompose(prompts[0] || '')} />
-      )}
-    </div>
-  );
-}
-
-function MembersTab({ community, memberVisibility }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-          <Users className="h-4 w-4" />
-        </div>
-        <div>
-          <p className="text-sm font-bold text-slate-900">{(community.memberCount || 0).toLocaleString()} members</p>
-          <p className="text-xs text-slate-500">in this community</p>
-        </div>
-      </div>
-
-      {community.joined ? (
-        <p className="mt-4 text-sm text-slate-500">
-          You're a member of this community. Visibility: {memberVisibility}.
-        </p>
-      ) : (
-        <p className="mt-4 text-sm text-slate-500">
-          Join this community to connect with its members.
-        </p>
       )}
     </div>
   );

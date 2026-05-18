@@ -291,10 +291,12 @@ export function getSupportedCommunityTabs(community = {}, productionCapabilities
   // neighborhood community). Inject them before 'members' so they always appear when enabled.
   const insertIdx = filtered.includes('members') ? filtered.indexOf('members') : filtered.length;
   const extras = [];
+  if (!baseSet.has('announcements')) extras.push('announcements');
   if (productionCapabilities.events && !baseSet.has('events')) extras.push('events');
   if (productionCapabilities.resources && !baseSet.has('resources')) extras.push('resources');
   if (productionCapabilities.listings && !baseSet.has('listings')) extras.push('listings');
   if (productionCapabilities.chat && !baseSet.has('chat')) extras.push('chat');
+  if (productionCapabilities.groups && !baseSet.has('groups')) extras.push('groups');
   if (extras.length) filtered.splice(insertIdx, 0, ...extras);
 
   return filtered.length ? filtered : COMMUNITY_TYPE_CONFIG.general.tabs;
@@ -315,6 +317,7 @@ export function getCommunityTabLabel(tabKey) {
     resources: 'Resources',
     chat: 'Chat',
     listings: 'Listings',
+    groups: 'Groups',
   };
   return labels[tabKey] || tabKey;
 }

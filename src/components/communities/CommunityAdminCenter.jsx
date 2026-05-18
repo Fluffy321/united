@@ -7,7 +7,7 @@ import {
   Search, Loader2, Save, CheckCircle2, XCircle, ExternalLink,
   UserMinus, UserCheck, Crown, ShieldCheck, MoreVertical, Clock, TrendingUp,
   AlertCircle, ShieldAlert, Gavel, Activity, Trash2, AlertTriangle,
-  Pin, Image, Lock, Globe, Upload, CreditCard,
+  Pin, Image, Lock, Globe, Upload, CreditCard, Megaphone, Send,
 } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
 import { dataService } from '@/services';
@@ -31,8 +31,8 @@ const TABS = [
 ];
 
 const MODULE_CONFIG = [
-  { key: 'allow_member_events',   label: 'Events',      description: 'Members can create and view events', premium: true },
-  { key: 'allow_resources',       label: 'Resources',   description: 'Resource library tab for files and links', premium: true },
+  { key: 'allow_member_events',   label: 'Events',      description: 'Free includes up to 3 upcoming published events; Premium is unlimited' },
+  { key: 'allow_resources',       label: 'Resources',   description: 'Free includes up to 10 resources; Premium is unlimited' },
   { key: 'allow_member_listings', label: 'Marketplace', description: 'Members can post buy/sell listings', premium: true },
   { key: 'allow_group_chat',      label: 'Group Chat',  description: 'Real-time group chat tab', premium: true },
 ];
@@ -534,8 +534,8 @@ function BillingTab({ communityId, community, currentUser, onCommunityUpdated })
             </h2>
             <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">
               {premiumActive
-                ? 'Advanced modules are unlocked for this community.'
-                : 'Keep the basics free, then upgrade when this community needs more tools.'}
+                ? 'Unlimited events, unlimited resources, chat, and marketplace are unlocked for this community.'
+                : 'Free communities include posts, members, basic admin tools, limited events, and limited resources.'}
             </p>
           </div>
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-700 shadow-sm ring-1 ring-blue-100">
@@ -544,8 +544,8 @@ function BillingTab({ communityId, community, currentUser, onCommunityUpdated })
         </div>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
-          <PlanFeature label="Free" detail="Posts, members, about page" active />
-          <PlanFeature label="Premium" detail="Events, resources, listings, chat" active={premiumActive} />
+          <PlanFeature label="Free" detail="Posts, members, 3 events, 10 resources" active />
+          <PlanFeature label="Premium" detail="Unlimited events/resources, chat, marketplace" active={premiumActive} />
           <PlanFeature
             label={renewalDate ? (latestPlan?.cancel_at_period_end ? 'Cancels' : 'Renews') : 'Status'}
             detail={renewalDate || statusLabel}
@@ -606,14 +606,14 @@ function BillingTab({ communityId, community, currentUser, onCommunityUpdated })
       </div>
 
       <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-        <SectionHeader title="Premium unlocks" />
+        <SectionHeader title="Plan features" />
         <div className="mt-3 grid gap-2">
           {MODULE_CONFIG.map((module) => (
             <div key={module.key} className="flex items-start gap-3 rounded-2xl bg-slate-50 px-3 py-3">
               <div className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full ${
-                premiumActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'
+                premiumActive || !module.premium ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'
               }`}>
-                {premiumActive ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+                {premiumActive || !module.premium ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
               </div>
               <div className="min-w-0">
                 <p className="text-[13px] font-black text-slate-900">{module.label}</p>
@@ -721,14 +721,19 @@ function ContentTab({ communityId, currentUser }) {
   const queryClient = useQueryClient();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pinning, setPinning] = useState(false);
+  const [announcementTitle, setAnnouncementTitle] = useState('');
+  const [announcementBody, setAnnouncementBody] = useState('');
+  const [pinAnnouncement, setPinAnnouncement] = useState(true);
+  const [creatingAnnouncement, setCreatingAnnouncement] = useState(false);
 
   const { data: pinnedPost = null } = useQuery({
     queryKey: ['community-pinned-post', communityId],
     queryFn: async () => {
       const { data } = await supabase.from('posts')
-        .select('id, title, content, type, created_at')
+        .select('id, title, body, content, type, post_type, post_kind, is_official, created_at')
         .eq('community_id', communityId)
         .eq('is_pinned', true)
+        .order('pinned_at', { ascending: false })
         .limit(1)
         .maybeSingle();
       return data;
@@ -739,7 +744,7 @@ function ContentTab({ communityId, currentUser }) {
     queryKey: ['community-content-posts', communityId],
     queryFn: async () => {
       const { data } = await supabase.from('posts')
-        .select('id, title, content, type, created_at')
+        .select('id, title, body, content, type, post_type, post_kind, is_official, created_at')
         .eq('community_id', communityId)
         .eq('is_pinned', false)
         .order('created_at', { ascending: false })
@@ -753,6 +758,46 @@ function ContentTab({ communityId, currentUser }) {
     queryClient.invalidateQueries({ queryKey: ['community-pinned-post', communityId] });
     queryClient.invalidateQueries({ queryKey: ['community-content-posts', communityId] });
     queryClient.invalidateQueries({ queryKey: ['community-posts', communityId] });
+    queryClient.invalidateQueries({ queryKey: ['community-hub-posts', communityId] });
+  };
+
+  const handleCreateAnnouncement = async () => {
+    const body = announcementBody.trim();
+    const title = announcementTitle.trim();
+    if (!body) {
+      toast.error('Add announcement text first.');
+      return;
+    }
+    setCreatingAnnouncement(true);
+    try {
+      if (pinAnnouncement && pinnedPost) {
+        const { error: unpinError } = await supabase.from('posts').update({ is_pinned: false }).eq('id', pinnedPost.id);
+        if (unpinError) throw unpinError;
+      }
+      await dataService.entities.UnifiedPost.create({
+        community_id: communityId,
+        user_id: currentUser?.id,
+        author_user_id: currentUser?.id,
+        author_name: currentUser?.display_name || currentUser?.full_name || 'Community admin',
+        title: title || (body.length > 72 ? body.slice(0, 72) : 'Community announcement'),
+        body,
+        content: body,
+        type: 'announcement',
+        post_type: 'announcement',
+        post_kind: 'announcement',
+        is_official: true,
+        is_pinned: pinAnnouncement,
+      });
+      setAnnouncementTitle('');
+      setAnnouncementBody('');
+      setPinAnnouncement(true);
+      invalidatePins();
+      toast.success(pinAnnouncement ? 'Announcement posted and featured' : 'Announcement posted');
+    } catch (err) {
+      toast.error(err?.message || 'Could not create announcement');
+    } finally {
+      setCreatingAnnouncement(false);
+    }
   };
 
   const handlePin = async (postId) => {
@@ -796,7 +841,59 @@ function ContentTab({ communityId, currentUser }) {
   return (
     <div className="max-w-2xl mx-auto px-4 py-5 space-y-5">
       <div>
-        <SectionHeader title="Pinned post" />
+        <SectionHeader title="Official announcement" />
+        <div className="rounded-3xl border border-amber-100 bg-gradient-to-br from-amber-50 via-white to-blue-50 p-4 shadow-sm">
+          <div className="mb-4 flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+              <Megaphone className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-black text-slate-950">Create an official update</p>
+              <p className="mt-1 text-[13px] font-semibold leading-5 text-slate-600">
+                Announcements are labeled as official community updates and appear in the community experience.
+              </p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <input
+              value={announcementTitle}
+              onChange={(event) => setAnnouncementTitle(event.target.value)}
+              placeholder="Optional headline"
+              className="h-11 w-full rounded-2xl border border-amber-100 bg-white px-4 text-sm font-semibold text-slate-900 outline-none focus:border-amber-300"
+            />
+            <textarea
+              value={announcementBody}
+              onChange={(event) => setAnnouncementBody(event.target.value)}
+              rows={4}
+              placeholder="Write the update members should see..."
+              className="w-full resize-none rounded-2xl border border-amber-100 bg-white px-4 py-3 text-sm font-semibold leading-6 text-slate-900 outline-none focus:border-amber-300"
+            />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-bold text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={pinAnnouncement}
+                  onChange={(event) => setPinAnnouncement(event.target.checked)}
+                  className="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                />
+                Feature this announcement
+              </label>
+              <button
+                type="button"
+                onClick={handleCreateAnnouncement}
+                disabled={creatingAnnouncement || !announcementBody.trim()}
+                className="inline-flex h-10 items-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-black text-white disabled:opacity-50"
+              >
+                {creatingAnnouncement ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {creatingAnnouncement ? 'Posting...' : 'Post announcement'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <SectionHeader title="Featured post" />
         <div className="rounded-2xl bg-white border border-slate-100 shadow-sm p-4">
           {pinnedPost ? (
             <div className="space-y-3">
@@ -878,7 +975,7 @@ function ContentTab({ communityId, currentUser }) {
 
       <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
         <p className="text-[11px] text-slate-500 leading-relaxed">
-          The pinned post appears at the top of the community home for all members. Only one post can be pinned at a time.
+          Featured posts appear in the community welcome area for all members. Use this for one important announcement, post, event reminder, or start-here update.
         </p>
       </div>
     </div>
@@ -1771,6 +1868,7 @@ function ProfileSection({ communityId, community, settings, onCommunityUpdated, 
     location:    community?.location || community?.neighborhood || '',
     category:    community?.category || COMMUNITY_TYPE_OPTIONS[0]?.label || 'Community',
     privacy:     community?.privacy || 'Public',
+    welcomeMessage: settings.welcome_message || community?.welcome_message || '',
     rulesText:   Array.isArray(settings.rules) ? settings.rules.join('\n') : (settings.rules || community?.rules || ''),
   }));
 
@@ -1797,7 +1895,7 @@ function ProfileSection({ communityId, community, settings, onCommunityUpdated, 
         type:        typeKey,
         template_key: typeKey,
         privacy:     form.privacy,
-        settings:    { ...settings, rules },
+        settings:    { ...settings, rules, welcome_message: form.welcomeMessage.trim() || null },
       });
       toast.success('Community updated');
       onCommunityUpdated?.(updated);
@@ -1832,6 +1930,17 @@ function ProfileSection({ communityId, community, settings, onCommunityUpdated, 
           )}
         </label>
       ))}
+
+      <label className="block">
+        <span className="mb-1.5 block text-[13px] font-black text-slate-700">Welcome message</span>
+        <textarea
+          value={form.welcomeMessage}
+          onChange={e => setField('welcomeMessage', e.target.value)}
+          rows={3}
+          placeholder="A short welcome note that appears at the top of your community home."
+          className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-blue-400 focus:bg-white"
+        />
+      </label>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block">
@@ -2016,7 +2125,7 @@ function ModulesSection({ communityId, community, onCommunityUpdated }) {
 
   const toggle = (key) => {
     const moduleConfig = MODULE_CONFIG.find((module) => module.key === key);
-    if (moduleConfig?.premium && !premiumActive) {
+    if (moduleConfig?.premium && !premiumActive && !flags[key]) {
       toast.info('Upgrade to Premium to enable this module.');
       return;
     }
@@ -2044,9 +2153,9 @@ function ModulesSection({ communityId, community, onCommunityUpdated }) {
     <div className="space-y-4">
       {!premiumActive && (
         <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3">
-          <p className="text-[13px] font-black text-blue-900">Advanced modules are Premium</p>
+          <p className="text-[13px] font-black text-blue-900">Free includes limited events and resources</p>
           <p className="mt-0.5 text-[12px] font-semibold leading-5 text-blue-700">
-            Posts, members, and the About page stay free. Events, resources, marketplace, and group chat unlock after upgrading in Billing.
+            Free communities can run up to 3 upcoming events and share up to 10 resources. Marketplace and group chat unlock after upgrading in Billing.
           </p>
         </div>
       )}
@@ -2081,7 +2190,7 @@ function ModulesSection({ communityId, community, onCommunityUpdated }) {
             <button
               type="button"
               onClick={() => toggle(key)}
-              disabled={locked}
+              disabled={locked && !flags[key]}
               className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 flex-shrink-0 disabled:cursor-not-allowed disabled:opacity-50 ${
                 flags[key] ? 'bg-blue-600 justify-end' : 'bg-slate-200 justify-start'
               }`}

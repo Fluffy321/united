@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { BookOpen, Globe, Heart, Loader2, Lock, MapPin, MessageCircle, Phone, Pin, Send, Shield, Users } from 'lucide-react';
+import { BookOpen, Globe, Heart, Loader2, Lock, MapPin, MessageCircle, Phone, Send, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { dataService, incrementCounter } from '@/services';
 import {
@@ -9,15 +9,27 @@ import {
   getCommunityTypeConfig,
   getSupportedCommunityTabs,
 } from '@/lib/communityTypes';
-import { isCommunityPremium } from '@/lib/communityPlans';
+import {
+  canUseCommunityChat,
+  canUseCommunityEvents,
+  canUseCommunityMarketplace,
+  canUseCommunityResources,
+} from '@/lib/communityPlans';
 import { supabase } from '@/api/supabaseClient';
 import CommunityHero from './CommunityHero';
 import ClaimModal from './ClaimModal';
 import CommunityEventsTab from './CommunityEventsTab';
+import CommunityGroupsTab from './CommunityGroupsTab';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import CommunityStoreTab from './CommunityStoreTab';
 import GroupChatSection from './GroupChatSection';
 import CommunityAdminCenter, { AppealSubmitModal } from './CommunityAdminCenter';
+import {
+  CommunityFeaturedSection,
+  CommunityMemberDirectory,
+  CommunityPostPreview,
+  CommunityWelcomeHub,
+} from './CommunityOperatingSystem';
 
 const CLAIM_COPY = {
   School: { question: 'Is this your school?', cta: 'Claim this school' },
@@ -31,7 +43,7 @@ const CLAIM_COPY = {
 const OPEN_NEED_STATUSES = new Set(['open', 'offered', 'accepted', 'in_progress', 'volunteer_offered']);
 
 function getPostTypeForTab(tab, typeKey) {
-  if (tab === 'announcements' || typeKey === 'shul') return 'announcement';
+  if (tab === 'announcements') return 'announcement';
   if (tab === 'questions' || typeKey === 'parents') return 'question';
   if (tab === 'discussions' || typeKey === 'learning') return 'discussion';
   if (typeKey === 'chesed') return 'chesed';
@@ -52,6 +64,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'home');
   const [showClaim, setShowClaim] = useState(false);
   const [showAdminCenter, setShowAdminCenter] = useState(false);
+  const [adminInitialTab, setAdminInitialTab] = useState('overview');
   const [showAppealModal, setShowAppealModal] = useState(false);
   const [composeText, setComposeText] = useState('');
   const [posting, setPosting] = useState(false);
@@ -116,33 +129,19 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     enabled: !!communityId && typeConfig.key === 'chesed',
   });
 
-  const { data: pinnedPost = null } = useQuery({
-    queryKey: ['community-pinned-post', communityId],
-    queryFn: async () => {
-      const { data } = await supabase.from('posts')
-        .select('id, title, content, type, created_at')
-        .eq('community_id', communityId)
-        .eq('is_pinned', true)
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!communityId,
-  });
-
   const membershipRole = String(membershipRecord[0]?.role || '').toLowerCase();
   const isCreator = Boolean(currentUser?.id && community?.created_by_user_id === currentUser.id);
   const isFollowing = membershipRecord.length > 0 || isCreator;
   const isAdmin = currentUser?.role === 'admin' || isCreator || ['admin', 'moderator', 'owner'].includes(membershipRole);
   const canPost = isAdmin || (community?.posting_mode || 'open') === 'open';
-  const premiumEnabled = isCommunityPremium(community);
   const actualMemberCount = members.length;
   const activeNeeds = openNeeds.filter((need) => OPEN_NEED_STATUSES.has(String(need.status || 'open')));
   const featureCapabilities = {
-    events: Boolean(premiumEnabled && (community?.allow_member_events || ['events', 'shul'].includes(typeConfig.key))),
-    resources: Boolean(premiumEnabled && (community?.allow_resources || ['learning', 'shul'].includes(typeConfig.key))),
-    chat: Boolean(premiumEnabled && community?.allow_group_chat),
-    listings: Boolean(premiumEnabled && (community?.allow_member_listings || typeConfig.key === 'marketplace')),
+    events: canUseCommunityEvents(community),
+    resources: canUseCommunityResources(community),
+    chat: Boolean(canUseCommunityChat(community) && community?.allow_group_chat),
+    listings: Boolean(canUseCommunityMarketplace(community) && (community?.allow_member_listings || typeConfig.key === 'marketplace')),
+    groups: true,
   };
   const visibleTabs = getSupportedCommunityTabs(community || fallbackCommunity || {}, featureCapabilities);
   const setTab = (tab) => {
@@ -155,10 +154,21 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     }, { replace: true });
   };
 
+  const openAdminCenter = (tab = 'overview') => {
+    setAdminInitialTab(tab);
+    setShowAdminCenter(true);
+  };
+
   const { data: events = [] } = useQuery({
     queryKey: ['community-events', communityId],
     queryFn: () => dataService.entities.CommunityEvent.filter({ community_id: communityId }, 'start_date', 50),
     enabled: !!communityId && featureCapabilities.events,
+  });
+
+  const { data: resources = [] } = useQuery({
+    queryKey: ['community-resources', communityId],
+    queryFn: () => dataService.entities.CommunityResource.filter({ community_id: communityId }, '-created_date', 50),
+    enabled: !!communityId && featureCapabilities.resources,
   });
 
   const handleFollow = async () => {
@@ -200,6 +210,10 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
     setPosting(true);
     try {
+      if (activeTab === 'announcements' && !isAdmin) {
+        toast.error('Only community managers can post official announcements.');
+        return;
+      }
       await dataService.entities.UnifiedPost.create({
         user_id: currentUser.id,
         community_id: communityId,
@@ -258,7 +272,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         isAdmin={isAdmin}
         isCreator={isCreator}
         onFollow={handleFollow}
-        onManage={() => setShowAdminCenter(true)}
+        onManage={() => openAdminCenter('overview')}
         onClaim={() => setShowClaim(true)}
         onBack={onBack}
         eventCount={events.length}
@@ -351,8 +365,15 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             submitPost={submitPost}
             posting={posting}
             onTabChange={setTab}
-            pinnedPost={pinnedPost}
             canPost={canPost}
+            community={community}
+            typeConfig={typeConfig}
+            members={members}
+            events={events}
+            resources={resources}
+            isAdmin={isAdmin}
+            isFollowing={isFollowing}
+            onManage={() => openAdminCenter('content')}
           />
         )}
 
@@ -361,7 +382,11 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         )}
 
         {activeTab === 'members' && (
-          <SimpleMembersTab members={members} memberCount={actualMemberCount || community.follower_count || 0} />
+          <CommunityMemberDirectory
+            community={community}
+            members={members}
+            memberCount={actualMemberCount || community.follower_count || 0}
+          />
         )}
 
         {['posts', 'questions', 'discussions', 'announcements'].includes(activeTab) && (
@@ -374,7 +399,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             setComposeText={setComposeText}
             submitPost={submitPost}
             posting={posting}
-            canPost={canPost}
+            canPost={activeTab === 'announcements' ? isAdmin : canPost}
           />
         )}
 
@@ -385,6 +410,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         {activeTab === 'events' && featureCapabilities.events && (
           <CommunityEventsTab
             events={events}
+            community={community}
             currentUser={currentUser}
             communityId={communityId}
             isAdmin={isAdmin}
@@ -394,6 +420,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         {activeTab === 'resources' && featureCapabilities.resources && (
           <CommunityResourceLibrary
             communityId={communityId}
+            community={community}
             currentUser={currentUser}
             isAdmin={isAdmin}
           />
@@ -403,6 +430,14 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
           <CommunityStoreTab
             communityId={communityId}
             community={community}
+            currentUser={currentUser}
+            isAdmin={isAdmin}
+          />
+        )}
+
+        {activeTab === 'groups' && (
+          <CommunityGroupsTab
+            communityId={communityId}
             currentUser={currentUser}
             isAdmin={isAdmin}
           />
@@ -436,6 +471,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
           queryClient.invalidateQueries({ queryKey: ['communities-list'] });
           queryClient.invalidateQueries({ queryKey: ['community-pinned-post', communityId] });
         }}
+        initialTab={adminInitialTab}
         onDeleted={() => {
           setShowAdminCenter(false);
           onBack?.();
@@ -489,21 +525,47 @@ function ComposerBox({ typeConfig, composeText, setComposeText, submitPost, post
   );
 }
 
-function RoutedCommunityHome({ typeConfig, posts, activeNeeds, composeText, setComposeText, submitPost, posting, onTabChange, pinnedPost, canPost }) {
-  const Icon = typeConfig.icon;
+function RoutedCommunityHome({
+  community,
+  typeConfig,
+  posts,
+  activeNeeds,
+  composeText,
+  setComposeText,
+  submitPost,
+  posting,
+  onTabChange,
+  canPost,
+  members,
+  events,
+  resources,
+  isAdmin,
+  isFollowing,
+  onManage,
+}) {
   return (
     <div className="space-y-4 pt-4">
-      <div className={`rounded-3xl border p-5 ${typeConfig.softClass}`}>
-        <div className="flex items-start gap-3">
-          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${typeConfig.accent} text-white shadow-sm`}>
-            <Icon className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-base font-black text-slate-950">{typeConfig.label} hub</p>
-            <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">{typeConfig.tagline}</p>
-          </div>
-        </div>
-      </div>
+      <CommunityWelcomeHub
+        community={community}
+        typeConfig={typeConfig}
+        posts={posts}
+        events={events}
+        resources={resources}
+        members={members}
+        isCommunityManager={isAdmin}
+        isFollowing={isFollowing}
+        onTabChange={onTabChange}
+        onManage={onManage}
+        onCompose={() => {}}
+      />
+
+      <CommunityFeaturedSection
+        typeConfig={typeConfig}
+        posts={posts}
+        events={events}
+        resources={resources}
+        onTabChange={onTabChange}
+      />
 
       {typeConfig.key === 'chesed' && (
         <button
@@ -515,18 +577,6 @@ function RoutedCommunityHome({ typeConfig, posts, activeNeeds, composeText, setC
             {activeNeeds.length ? `${activeNeeds.length} request${activeNeeds.length === 1 ? '' : 's'} connected to this community.` : 'No open needs connected here yet.'}
           </p>
         </button>
-      )}
-
-      {pinnedPost && (
-        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 flex items-start gap-3">
-          <Pin className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-black text-blue-600 uppercase tracking-wide mb-0.5">Pinned</p>
-            <p className="text-[13px] font-semibold text-slate-800 line-clamp-2">
-              {pinnedPost.title || pinnedPost.content || ''}
-            </p>
-          </div>
-        </div>
       )}
 
       {canPost ? (
@@ -596,16 +646,7 @@ function RoutedPostsList({ posts, typeConfig, emptyCompact = false }) {
   return (
     <div className="space-y-3">
       {posts.map((post) => (
-        <article key={post.id} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className={`rounded-full px-2.5 py-1 text-[11px] font-black ${typeConfig.badgeClass}`}>
-              {post.type || post.post_type || typeConfig.label}
-            </span>
-            {post.created_date && <span className="text-[11px] font-semibold text-slate-400">Community post</span>}
-          </div>
-          {post.title && <h3 className="text-[15px] font-black text-slate-950">{post.title}</h3>}
-          <p className="mt-1 text-sm leading-6 text-slate-600">{post.body || post.content}</p>
-        </article>
+        <CommunityPostPreview key={post.id} post={post} typeConfig={typeConfig} />
       ))}
     </div>
   );
@@ -641,30 +682,6 @@ function RoutedOpenNeedsTab({ activeNeeds, typeConfig }) {
             </p>
           )}
         </article>
-      ))}
-    </div>
-  );
-}
-
-function SimpleMembersTab({ members, memberCount }) {
-  return (
-    <div className="space-y-3 pt-4">
-      <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-            <Users className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-sm font-black text-slate-950">{memberCount.toLocaleString()} members</p>
-            <p className="text-[12px] font-semibold text-slate-500">Membership is backed by community_memberships.</p>
-          </div>
-        </div>
-      </div>
-      {members.slice(0, 20).map((member) => (
-        <div key={member.id} className="rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
-          <p className="text-sm font-bold text-slate-900">{member.user_name || member.user_id || 'Community member'}</p>
-          <p className="text-[12px] font-semibold text-slate-400">{member.role || 'member'}</p>
-        </div>
       ))}
     </div>
   );

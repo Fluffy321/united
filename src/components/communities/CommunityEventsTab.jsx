@@ -4,6 +4,12 @@ import { MapPin, Clock, Plus, Ticket, Users } from 'lucide-react';
 import CreateCommunityEventModal from './CreateCommunityEventModal';
 import EventTicketSection from './EventTicketSection';
 import EventAttendeesAdmin from './EventAttendeesAdmin';
+import {
+  FREE_COMMUNITY_LIMITS,
+  canCreateCommunityEvent,
+  countUpcomingPublishedCommunityEvents,
+  isCommunityPremium,
+} from '@/lib/communityPlans';
 
 function EventCard({ event, past, currentUser, isAdmin }) {
   const [showAdminAttendees, setShowAdminAttendees] = useState(false);
@@ -83,7 +89,7 @@ function EventCard({ event, past, currentUser, isAdmin }) {
   );
 }
 
-export default function CommunityEventsTab({ events: initialEvents, currentUser, communityId, isAdmin }) {
+export default function CommunityEventsTab({ events: initialEvents, community, currentUser, communityId, isAdmin }) {
   const [events, setEvents] = useState(initialEvents || []);
   const [showCreate, setShowCreate] = useState(false);
 
@@ -104,16 +110,39 @@ export default function CommunityEventsTab({ events: initialEvents, currentUser,
     setShowCreate(false);
   };
 
+  const upcomingPublishedCount = countUpcomingPublishedCommunityEvents(events);
+  const premium = isCommunityPremium(community);
+  const canCreate = canCreateCommunityEvent(community, upcomingPublishedCount);
+  const freeLimit = FREE_COMMUNITY_LIMITS.upcomingPublishedEvents;
+
+  const handleAddEvent = () => {
+    if (!canCreate) return;
+    setShowCreate(true);
+  };
+
   return (
     <div className="space-y-4 py-4">
       {/* Admin: create button */}
-      {isAdmin && (
+      {isAdmin && canCreate && (
         <button
-          onClick={() => setShowCreate(true)}
+          onClick={handleAddEvent}
           className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white rounded-2xl py-3 text-[14px] font-bold hover:bg-blue-700 active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" /> Add Event
         </button>
+      )}
+      {isAdmin && !canCreate && (
+        <div className="rounded-3xl border border-blue-100 bg-blue-50 p-4">
+          <p className="text-[14px] font-black text-blue-950">Free event limit reached</p>
+          <p className="mt-1 text-[13px] font-semibold leading-5 text-blue-700">
+            Free communities can have up to {freeLimit} upcoming published events. Upgrade to Premium for unlimited events.
+          </p>
+        </div>
+      )}
+      {!premium && (
+        <p className="rounded-2xl border border-slate-100 bg-white px-4 py-2 text-[12px] font-semibold text-slate-500">
+          Free plan: {Math.min(upcomingPublishedCount, freeLimit)} of {freeLimit} upcoming published events used.
+        </p>
       )}
 
       {events.length === 0 ? (
@@ -148,7 +177,9 @@ export default function CommunityEventsTab({ events: initialEvents, currentUser,
       {showCreate && (
         <CreateCommunityEventModal
           communityId={communityId}
+          community={community}
           currentUser={currentUser}
+          upcomingPublishedEventCount={upcomingPublishedCount}
           onCreated={handleCreated}
           onClose={() => setShowCreate(false)}
         />

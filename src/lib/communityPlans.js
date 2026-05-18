@@ -5,9 +5,12 @@ export const COMMUNITY_PLAN_KEYS = {
 
 export const COMMUNITY_PREMIUM_STATUSES = new Set(['active', 'trialing', 'past_due']);
 
+export const FREE_COMMUNITY_LIMITS = {
+  upcomingPublishedEvents: 3,
+  totalResources: 10,
+};
+
 export const PREMIUM_COMMUNITY_MODULES = new Set([
-  'events',
-  'resources',
   'listings',
   'chat',
 ]);
@@ -15,6 +18,52 @@ export const PREMIUM_COMMUNITY_MODULES = new Set([
 export function isCommunityPremium(community = {}) {
   return community?.plan_key === COMMUNITY_PLAN_KEYS.PREMIUM
     && COMMUNITY_PREMIUM_STATUSES.has(String(community?.plan_status || '').toLowerCase());
+}
+
+export function canUseCommunityEvents() {
+  return true;
+}
+
+export function canUseCommunityResources() {
+  return true;
+}
+
+export function canUseCommunityMarketplace(community = {}) {
+  return isCommunityPremium(community);
+}
+
+export function canUseCommunityChat(community = {}) {
+  return isCommunityPremium(community);
+}
+
+export function getCommunityEventStartTime(event = {}) {
+  const raw = event.starts_at
+    || (event.start_date ? `${event.start_date}T${event.start_time || '00:00:00'}` : null)
+    || (event.event_date ? `${event.event_date}T${event.event_time || '00:00:00'}` : null);
+  if (!raw) return null;
+  const time = new Date(raw).getTime();
+  return Number.isFinite(time) ? time : null;
+}
+
+export function isUpcomingPublishedCommunityEvent(event = {}, now = Date.now()) {
+  const status = String(event.status || 'published').toLowerCase();
+  if (status !== 'published') return false;
+  const startTime = getCommunityEventStartTime(event);
+  return startTime !== null && startTime >= now;
+}
+
+export function countUpcomingPublishedCommunityEvents(events = [], now = Date.now()) {
+  return events.filter((event) => isUpcomingPublishedCommunityEvent(event, now)).length;
+}
+
+export function canCreateCommunityEvent(community = {}, upcomingPublishedEventCount = 0) {
+  return isCommunityPremium(community)
+    || Number(upcomingPublishedEventCount || 0) < FREE_COMMUNITY_LIMITS.upcomingPublishedEvents;
+}
+
+export function canCreateCommunityResource(community = {}, resourceCount = 0) {
+  return isCommunityPremium(community)
+    || Number(resourceCount || 0) < FREE_COMMUNITY_LIMITS.totalResources;
 }
 
 export function getCommunityPlanStatusLabel(status) {

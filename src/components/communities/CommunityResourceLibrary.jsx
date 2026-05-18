@@ -8,6 +8,11 @@ import { dataService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import {
+  FREE_COMMUNITY_LIMITS,
+  canCreateCommunityResource,
+  isCommunityPremium,
+} from '@/lib/communityPlans';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const CATEGORIES = ['General', 'Guidelines', 'Forms', 'Templates', 'FAQs', 'Budget', 'Events', 'Calendar', 'Other'];
@@ -45,7 +50,15 @@ function FileBgColor({ fileName, linkUrl }) {
 }
 
 // ── Add Resource Sheet ────────────────────────────────────────────────────────
-function AddResourceSheet({ open, onClose, communityId, currentUser, onAdded }) {
+function AddResourceSheet({
+  open,
+  onClose,
+  communityId,
+  community,
+  currentUser,
+  resourceCount = 0,
+  onAdded,
+}) {
   const [resourceType, setResourceType] = useState('link');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -74,6 +87,10 @@ function AddResourceSheet({ open, onClose, communityId, currentUser, onAdded }) 
     e.preventDefault();
     if (!title.trim()) { toast.error('Title is required'); return; }
     if (resourceType === 'link' && !linkUrl.trim()) { toast.error('URL is required'); return; }
+    if (!canCreateCommunityResource(community, resourceCount)) {
+      toast.error(`Free communities can share up to ${FREE_COMMUNITY_LIMITS.totalResources} resources. Upgrade to Premium for an unlimited resource library.`);
+      return;
+    }
     setUploading(true);
     try {
       let fileUrl = null;
@@ -319,7 +336,7 @@ function ResourceCard({ resource, canDelete, onDelete }) {
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export default function CommunityResourceLibrary({ communityId, currentUser, isAdmin }) {
+export default function CommunityResourceLibrary({ communityId, community, currentUser, isAdmin }) {
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
@@ -339,6 +356,20 @@ export default function CommunityResourceLibrary({ communityId, currentUser, isA
       toast.success('Resource deleted');
     },
   });
+
+  const premium = isCommunityPremium(community);
+  const canAddByRole = Boolean(currentUser && (isAdmin || community?.allow_resources));
+  const canAddByPlan = canCreateCommunityResource(community, resources.length);
+  const canAddResource = canAddByRole && canAddByPlan;
+
+  const openAddSheet = () => {
+    if (!canAddByRole) return;
+    if (!canAddByPlan) {
+      toast.info(`Free communities can share up to ${FREE_COMMUNITY_LIMITS.totalResources} resources. Upgrade to Premium for an unlimited resource library.`);
+      return;
+    }
+    setShowAddSheet(true);
+  };
 
   // Derive categories that actually have resources
   const usedCategories = ['All', ...Array.from(new Set(resources.map(r => r.category || 'General'))).sort()];
@@ -370,16 +401,30 @@ export default function CommunityResourceLibrary({ communityId, currentUser, isA
             className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-[13px] focus:outline-none focus:border-blue-400 bg-white"
           />
         </div>
-        {currentUser && (
+        {canAddByRole && (
           <button
-            onClick={() => setShowAddSheet(true)}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-bold flex-shrink-0 active:scale-95 transition-all"
+            onClick={openAddSheet}
+            disabled={!canAddResource}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-bold flex-shrink-0 active:scale-95 transition-all disabled:bg-slate-200 disabled:text-slate-500"
           >
             <Plus className="w-4 h-4" />
             Add
           </button>
         )}
       </div>
+
+      {!premium && (
+        <div className={`rounded-2xl border px-4 py-3 ${canAddByPlan ? 'border-slate-100 bg-white' : 'border-blue-100 bg-blue-50'}`}>
+          <p className={`text-[13px] font-black ${canAddByPlan ? 'text-slate-800' : 'text-blue-950'}`}>
+            {resources.length} of {FREE_COMMUNITY_LIMITS.totalResources} free resources used
+          </p>
+          <p className={`mt-0.5 text-[12px] font-semibold leading-5 ${canAddByPlan ? 'text-slate-500' : 'text-blue-700'}`}>
+            {canAddByPlan
+              ? 'Free communities can share up to 10 resources.'
+              : 'Free communities can share up to 10 resources. Upgrade to Premium for an unlimited resource library.'}
+          </p>
+        </div>
+      )}
 
       {/* Type filter */}
       <div className="flex gap-2">
@@ -439,9 +484,10 @@ export default function CommunityResourceLibrary({ communityId, currentUser, isA
           <div className="text-4xl mb-3">📂</div>
           <p className="font-bold text-slate-700 text-[15px]">No resources yet</p>
           <p className="text-[13px] text-slate-400 mt-1 mb-4">Share documents, links, and files with your community</p>
-          {currentUser && (
+          {canAddByRole && (
             <button
-              onClick={() => setShowAddSheet(true)}
+              onClick={openAddSheet}
+              disabled={!canAddResource}
               className="px-5 py-2.5 rounded-full bg-blue-600 text-white text-[13px] font-bold"
             >
               Add First Resource
@@ -491,7 +537,9 @@ export default function CommunityResourceLibrary({ communityId, currentUser, isA
         open={showAddSheet}
         onClose={() => setShowAddSheet(false)}
         communityId={communityId}
+        community={community}
         currentUser={currentUser}
+        resourceCount={resources.length}
         onAdded={() => queryClient.invalidateQueries({ queryKey: ['community-resources', communityId] })}
       />
     </div>

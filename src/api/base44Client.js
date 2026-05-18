@@ -70,7 +70,12 @@ const SUPABASE_ENTITY_TABLES = {
   Transaction: 'transactions',
   // Premium Community Plans — migration 20260517204500_premium_community_plans.sql
   CommunityPlanSubscription: 'community_plan_subscriptions',
-  // All other entities (GroupMember, Shul, etc.) are
+  // Community Groups — migration 20260517221000_community_groups.sql
+  CommunityGroup:    'community_groups',
+  GroupMember:       'group_members',
+  GroupPost:         'group_posts',
+  GroupJoinRequest:  'group_join_requests',
+  // All other entities (Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.
   // See the UNMAPPED ENTITIES section in base44Client.js for the full list and
@@ -1223,7 +1228,7 @@ const COUNTER_TABLE_TO_ENTITY = {
 };
 
 // Tables that have a server-side increment_counter RPC in Supabase.
-const SUPABASE_COUNTER_TABLES = new Set(['posts', 'communities']);
+const SUPABASE_COUNTER_TABLES = new Set(['posts', 'communities', 'community_groups']);
 
 /**
  * Atomically increment (positive delta) or decrement (negative delta) a counter
