@@ -29,11 +29,11 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 function safeOrigin(raw: string | undefined): string {
-  if (!raw) return 'https://www.junited.us';
+  if (!raw) return 'https://junited.us';
   if (ALLOWED_ORIGINS.has(raw)) return raw;
   // Allow localhost only during development
   if (raw.startsWith('http://localhost:') || raw.startsWith('http://127.0.0.1:')) return raw;
-  return 'https://www.junited.us';
+  return 'https://junited.us';
 }
 
 function errorResponse(status: number, message: string): Response {
