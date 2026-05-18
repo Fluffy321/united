@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, MapPinned, MessageSquarePlus, ShoppingBag, User, Users } from 'lucide-react';
+import { Home, MapPinned, MessageSquarePlus, User, Users } from 'lucide-react';
 import { MitzvahIcon } from '@/components/common/JIcons';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
@@ -23,7 +23,6 @@ const navItems = [
   { key: 'Feed',        name: 'Feed',        icon: Home,      page: 'Feed' },
   { key: 'Mitzvah',    name: 'Mitzvah',     icon: null,      page: 'MitzvahCircle', to: '/MitzvahCircle', isMitzvah: true },
   { key: 'Communities',name: 'Communities', icon: Users,     page: 'Communities' },
-  { key: 'Marketplace',name: 'Market',      icon: ShoppingBag, page: 'Marketplace' },
   { key: 'Map',        name: 'Map',         icon: MapPinned, page: 'Map',          to: '/Map' },
   { key: 'Profile',    name: 'Profile',     icon: User,      page: 'Profile', isProfile: true },
 ];
@@ -182,7 +181,7 @@ function LayoutContent({ children, currentPageName }) {
                         navigate(createPageUrl(item.page));
                       }
                     }}
-                    className={`motion-press relative flex min-h-[58px] min-w-[46px] flex-1 flex-col items-center justify-center rounded-[20px] py-[7px] touch-manipulation ${
+                    className={`motion-press relative flex min-h-[58px] min-w-[54px] flex-1 flex-col items-center justify-center rounded-[20px] py-[7px] touch-manipulation ${
                       isActive ? 'bg-white shadow-[0_12px_24px_rgba(37,99,235,0.14)] ring-1 ring-blue-100' : 'text-slate-500 hover:bg-white/70 active:bg-slate-100/60'
                     }`}
                   >

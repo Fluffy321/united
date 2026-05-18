@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   CalendarDays,
@@ -9,6 +9,7 @@ import {
   MessageCircle,
   Plus,
   Search,
+  ShoppingBag,
   ShieldCheck,
   Sparkles,
   Users,
@@ -482,6 +483,7 @@ function getManagementRole(community, currentUser, membershipsByCommunity) {
 export default function Communities() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const searchBarRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const urlCommunityId = searchParams.get('community');
@@ -871,6 +873,13 @@ export default function Communities() {
         title="Communities"
         actions={(
           <>
+            <button
+              onClick={() => navigate('/Marketplace')}
+              className="app-icon-button surface-tile-hover touch-manipulation"
+              aria-label="Open marketplace"
+            >
+              <ShoppingBag className="h-[18px] w-[18px] text-slate-500" />
+            </button>
             <button
               onClick={() => searchBarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
               className="app-icon-button surface-tile-hover touch-manipulation"
