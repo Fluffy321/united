@@ -4,7 +4,7 @@ import { dataService } from '@/services';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Loader2, TrendingUp, Users, MessageSquare, Calendar, Activity, AlertTriangle, Download, ArrowUpRight, ArrowDownRight, ArrowLeft } from 'lucide-react';
+import { Heart, Loader2, TrendingUp, Users, MessageSquare, Calendar, Activity, AlertTriangle, Download, ArrowUpRight, ArrowDownRight, ArrowLeft, CreditCard, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 import { subDays, format, startOfDay } from 'date-fns';
 
@@ -241,7 +241,7 @@ export default function AdminAnalyticsDashboard() {
 
   const loadData = async () => {
     try {
-      const [communities, posts, users, reports, events, userCommunities, subsResult] = await Promise.all([
+      const [communities, posts, users, reports, events, userCommunities, subsResult, communityPlansResult] = await Promise.all([
         dataService.entities.Community.list('-follower_count', 200),
         dataService.entities.UnifiedPost.list('-created_date', 500),
         dataService.entities.User.list('-created_date', 500),
@@ -252,10 +252,15 @@ export default function AdminAnalyticsDashboard() {
           .from('subscriptions')
           .select('id, tier, interval, status, created_at')
           .order('created_at', { ascending: false }),
+        supabase
+          .from('community_plan_subscriptions')
+          .select('id, community_id, billing_interval, status, current_period_end, cancel_at_period_end, created_at')
+          .order('created_at', { ascending: false }),
       ]);
 
       // subscriptions — gracefully handle if table doesn't exist yet
       const subscriptions = subsResult?.data ?? [];
+      const communityPlanSubscriptions = communityPlansResult?.data ?? [];
 
       const now = Date.now();
       const DAY = 86400000;
@@ -343,6 +348,15 @@ export default function AdminAnalyticsDashboard() {
 
       const subsPerWeek = buildWeeklyBuckets(subscriptions, 'created_at', 8);
 
+      // ── Premium Community metrics ───────────────────────────────────────
+      const activeCommunityPlans = communityPlanSubscriptions.filter(s => s.status === 'active' || s.status === 'trialing');
+      const pastDueCommunityPlans = communityPlanSubscriptions.filter(s => s.status === 'past_due');
+      const monthlyCommunityPlans = activeCommunityPlans.filter(s => s.billing_interval === 'monthly');
+      const annualCommunityPlans = activeCommunityPlans.filter(s => s.billing_interval === 'annual');
+      const premiumCommunityIds = new Set(activeCommunityPlans.map(s => s.community_id));
+      const premiumCommunities = communities.filter(c => premiumCommunityIds.has(c.id) || c.plan_key === 'community_premium');
+      const communityPlansPerWeek = buildWeeklyBuckets(communityPlanSubscriptions, 'created_at', 8);
+
       setData({
         dau, wau, mau,
         signupsPerDay, postsPerDay, postTypeData, topCommunities,
@@ -355,6 +369,13 @@ export default function AdminAnalyticsDashboard() {
         monthlyCount, annualCount, annualPct,
         mrr, arr, monthlyMrr, annualMrr,
         tierBreakdown, subsPerWeek,
+        communityPlanSubscriptions,
+        activeCommunityPlans,
+        pastDueCommunityPlans,
+        monthlyCommunityPlans,
+        annualCommunityPlans,
+        premiumCommunities,
+        communityPlansPerWeek,
       });
     } catch (e) {
       toast.error('Failed to load analytics');
@@ -375,6 +396,7 @@ export default function AdminAnalyticsDashboard() {
     { key: 'moderation',  label: 'Moderation' },
     { key: 'funnel',      label: 'Growth Funnel' },
     { key: 'supporters',  label: 'Supporters' },
+    { key: 'premiumCommunities', label: 'Premium Communities' },
   ];
   const activationRows = getSignalRows(data.funnel);
 
@@ -723,6 +745,123 @@ export default function AdminAnalyticsDashboard() {
                 <p className="mt-3 text-center text-[12px] text-slate-400">
                   No subscription data — apply the migration and configure Stripe to see data here.
                 </p>
+              )}
+            </ChartCard>
+          </div>
+        )}
+
+        {/* PREMIUM COMMUNITIES TAB */}
+        {tab === 'premiumCommunities' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard
+                icon={<Crown className="w-5 h-5" />}
+                label="Premium Communities"
+                value={data.activeCommunityPlans.length}
+                sub={`${data.premiumCommunities.length} premium community record${data.premiumCommunities.length !== 1 ? 's' : ''}`}
+                color="blue"
+              />
+              <StatCard
+                icon={<CreditCard className="w-5 h-5" />}
+                label="Monthly Plans"
+                value={data.monthlyCommunityPlans.length}
+                sub="Community SaaS subscriptions"
+                color="purple"
+              />
+              <StatCard
+                icon={<Calendar className="w-5 h-5" />}
+                label="Annual Plans"
+                value={data.annualCommunityPlans.length}
+                sub="Premium communities billed yearly"
+                color="teal"
+              />
+              <StatCard
+                icon={<AlertTriangle className="w-5 h-5" />}
+                label="Past Due"
+                value={data.pastDueCommunityPlans.length}
+                sub={data.pastDueCommunityPlans.length > 0 ? 'Needs billing follow-up' : 'All community plans current'}
+                color={data.pastDueCommunityPlans.length > 0 ? 'amber' : 'green'}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ChartCard
+                title="New Premium Community Plans Per Week"
+                onExport={() => exportCSV(data.communityPlansPerWeek, 'premium-community-plans-per-week.csv')}
+              >
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={data.communityPlansPerWeek}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} allowDecimals={false} />
+                    <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
+                    <Bar dataKey="count" fill="#2563EB" radius={[6, 6, 0, 0]} name="New premium plans" />
+                  </BarChart>
+                </ResponsiveContainer>
+                {data.communityPlanSubscriptions.length === 0 && (
+                  <p className="mt-3 text-center text-[12px] text-slate-400">
+                    No Premium Community subscription data yet.
+                  </p>
+                )}
+              </ChartCard>
+
+              <ChartCard title="Billing Interval Split">
+                <div className="space-y-5">
+                  {[
+                    { label: 'Monthly', count: data.monthlyCommunityPlans.length, color: 'bg-blue-500' },
+                    { label: 'Annual', count: data.annualCommunityPlans.length, color: 'bg-emerald-500' },
+                  ].map(({ label, count, color }) => {
+                    const total = data.activeCommunityPlans.length;
+                    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                    return (
+                      <div key={label} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[13.5px] font-semibold text-slate-700">{label}</span>
+                          <span className="text-[13px] font-bold text-slate-800">
+                            {count} <span className="font-normal text-slate-400">({pct}%)</span>
+                          </span>
+                        </div>
+                        <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                          <div className={`${color} h-full rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {data.activeCommunityPlans.length === 0 && (
+                    <p className="pt-4 text-center text-[13px] text-slate-400">No active Premium Community plans yet</p>
+                  )}
+                </div>
+              </ChartCard>
+            </div>
+
+            <ChartCard title="Premium Community Records" onExport={() => exportCSV(data.communityPlanSubscriptions, 'premium-community-subscriptions.csv')}>
+              {data.communityPlanSubscriptions.length === 0 ? (
+                <p className="py-8 text-center text-[13px] text-slate-400">No community plan subscriptions yet</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[13px]">
+                    <thead>
+                      <tr className="border-b border-slate-100">
+                        <th className="py-2 text-left font-semibold text-slate-500">Community ID</th>
+                        <th className="py-2 text-left font-semibold text-slate-500">Interval</th>
+                        <th className="py-2 text-left font-semibold text-slate-500">Status</th>
+                        <th className="py-2 text-right font-semibold text-slate-500">Period end</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.communityPlanSubscriptions.map(plan => (
+                        <tr key={plan.id} className="border-b border-slate-50 hover:bg-slate-50">
+                          <td className="py-2.5 font-medium text-slate-900">{plan.community_id}</td>
+                          <td className="py-2.5 text-slate-500">{plan.billing_interval}</td>
+                          <td className="py-2.5 text-slate-700">{plan.status}</td>
+                          <td className="py-2.5 text-right text-slate-500">
+                            {plan.current_period_end ? format(new Date(plan.current_period_end), 'MMM d, yyyy') : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </ChartCard>
           </div>

@@ -45,6 +45,29 @@ export const paymentsService = {
   },
 
   /**
+   * Creates a Stripe Checkout session for a community-scoped Premium plan.
+   * This is separate from user-level supporter subscriptions.
+   */
+  async createCommunityPlanCheckout({ communityId, interval }) {
+    const { data, error } = await supabase.functions.invoke('create-community-plan-checkout', {
+      body: { communityId, interval, origin: window.location.origin },
+    });
+    if (error) throw error;
+    return { data };
+  },
+
+  /**
+   * Opens Stripe Customer Portal for a community's Premium plan.
+   */
+  async createCommunityPlanPortalSession({ communityId }) {
+    const { data, error } = await supabase.functions.invoke('create-community-plan-portal-session', {
+      body: { communityId, origin: window.location.origin },
+    });
+    if (error) throw error;
+    return { data };
+  },
+
+  /**
    * Returns the user's most recent active/trialing/past_due subscription row,
    * or null if no active subscription exists.
    */

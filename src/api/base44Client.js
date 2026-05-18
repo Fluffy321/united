@@ -68,6 +68,8 @@ const SUPABASE_ENTITY_TABLES = {
   BusinessReview: 'business_reviews',
   // Stripe payments — migration transactions.sql
   Transaction: 'transactions',
+  // Premium Community Plans — migration 20260517204500_premium_community_plans.sql
+  CommunityPlanSubscription: 'community_plan_subscriptions',
   // All other entities (GroupMember, Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.

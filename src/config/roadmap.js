@@ -963,11 +963,12 @@ Goals:
   {
     id: 'premium-community-plans',
     category: 'Growth & Monetization',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.HIGH,
     title: 'Premium Community Plans',
     description: 'SaaS-style paid community subscriptions for community owners/admins. Free communities remain useful, while Premium unlocks advanced admin, automation, branding, events/resources/listings, and growth tools.',
     why: 'This is the primary subscription model for JUnited. The existing recurring supporter subscription is secondary and should not be used to determine community feature access.',
+    shippedNote: 'Shipped 2026-05-17. Added community_plan_subscriptions plus community plan state fields, owner/admin-only Stripe Checkout and Billing Portal Edge Functions, webhook sync for community-scoped subscriptions, Community Admin Center Billing UI, Premium gating for Events/Resources/Marketplace/Group Chat, and separate Premium Communities analytics.',
     prompt: `You are implementing Premium Community Plans for JUnited.
 
 Context:
