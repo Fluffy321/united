@@ -477,7 +477,7 @@ Goals:
     priority: PRIORITY.MEDIUM,
     title: 'Standalone Events System',
     description: 'Full events pages: event listings, RSVP, calendar view, MyEvents, and ticket support. (Community-level events tab is already shipped.)',
-    shippedNote: 'Shipped. /Events queries community_events for user\'s followed communities. /MyEvents shows going RSVPs + created events. /CommunityCalendar redirects to /Events. EventTicketSection reused for RSVP. Routes live in App.jsx.',
+    shippedNote: 'Shipped. /Events queries community_events for user\'s followed communities. /MyEvents shows going RSVPs + created events. /CommunityCalendar redirects to /Events; the old CommunityCalendar page file was removed during the canonical-route cleanup. EventTicketSection reused for RSVP. Routes live in App.jsx.',
     prompt: `You are implementing the standalone Events System for JUnited.
 
 Context: Community-level events (CommunityEventsTab.jsx) are already live. These are the
@@ -501,16 +501,16 @@ Goals:
     priority: PRIORITY.MEDIUM,
     title: 'Community Groups & Sub-Groups',
     description: 'Private groups within communities, with posts, chat, resources, and member management.',
-    shippedNote: 'Shipped 2026-05-17. Migration 20260517221000_community_groups.sql creates community_groups, group_members, group_posts, group_join_requests with RLS. CommunityGroup, GroupMember, GroupPost, GroupJoinRequest wired in base44Client.js. /Groups route live + /groups/:groupId detail route. CommunityGroupPage.jsx connected to real DB (posts, members, announcements tabs). Groups discoverable from both CommunityDetailView and CommunityHubDetail via CommunityGroupsTab.jsx. Join/leave flows with member_count incrementing via RPC. Private groups use join-request approval flow. Groups are free (no Premium gate).',
+    shippedNote: 'Shipped 2026-05-17, then consolidated 2026-05-18. Migration 20260517221000_community_groups.sql creates community_groups, group_members, group_posts, group_join_requests with RLS. CommunityGroup, GroupMember, GroupPost, GroupJoinRequest remain wired in base44Client.js for sub-groups inside Communities. Standalone /Groups and /groups/:groupId now redirect to /Communities so Communities stays the canonical social layer. CommunityGroupsTab.jsx is the intended discovery surface.',
     prompt: `You are implementing Community Groups for JUnited.
 
-Context: The Groups page exists at src/pages/Groups.jsx but is disabled (redirects to Communities).
-        CommunityGroupPage.jsx exists but is not routed.
+Context: The standalone Groups page was removed after Communities became the canonical
+        social layer. CommunityGroupPage.jsx remains available inside Communities.
 
 Goals:
 1. Create migrations: community_groups, group_members, group_posts tables with RLS.
 2. Wire GroupMember, GroupPost entities in base44Client.js SUPABASE_ENTITY_TABLES.
-3. Re-add /Groups route to App.jsx and pages.config.js.
+3. Keep /Groups as a redirect to /Communities unless groups are intentionally promoted again.
 4. Connect CommunityGroupPage.jsx to real DB data.
 5. Add join/leave group flows with role management (owner, member).
 6. Groups should be discoverable from the community detail page.
@@ -528,9 +528,9 @@ Goals:
     prompt: `You are implementing the Group Join Request Approval UI for JUnited.
 
 Context: The group_join_requests table exists (migration 20260517221000_community_groups.sql).
-        Pending requests are created in GroupPage.jsx handleJoin when is_private is true.
+        Pending requests should be created from the Communities sub-group surface when is_private is true.
         CommunityGroupPage.jsx is at src/components/communities/CommunityGroupPage.jsx.
-        GroupPage.jsx is at src/pages/GroupPage.jsx.
+        The old standalone GroupPage.jsx file was removed during canonical-route cleanup.
         group_members.role can be 'owner', 'admin', or 'member'.
 
 Goals:

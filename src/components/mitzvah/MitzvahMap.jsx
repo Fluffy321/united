@@ -32,6 +32,7 @@ const PRIMARY_FILTERS = [
 
 const CLUSTER_BUCKET_SCALE = 1000;
 const CLUSTER_BASE_RADIUS = 0.00042;
+const DIRECTORY_LAST_REVIEWED = 'May 2026';
 
 const STATIC_POINTS = [
   {
@@ -1167,6 +1168,15 @@ function getMapLinks(point, userLocation) {
   };
 }
 
+function getTrustLabel(point) {
+  if (!point) return '';
+  if (point.verification) return point.verification;
+  if (point.source_url) return 'Source-backed listing';
+  if (point.isCommunityPoint) return 'Community post';
+  if (point.isRequest) return 'Member request';
+  return '';
+}
+
 export default function MitzvahMap({
   requests,
   userLocation,
@@ -1521,9 +1531,14 @@ export default function MitzvahMap({
                     {selectedDistance}
                   </span>
                 )}
-                {selectedPoint.verification && (
+                {getTrustLabel(selectedPoint) && (
                   <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700 ring-1 ring-emerald-100">
-                    {selectedPoint.verification}
+                    {getTrustLabel(selectedPoint)}
+                  </span>
+                )}
+                {selectedPoint.source_url && (
+                  <span className="rounded-full bg-white px-2 py-1 text-slate-600 ring-1 ring-slate-200">
+                    Reviewed {selectedPoint.last_verified || DIRECTORY_LAST_REVIEWED}
                   </span>
                 )}
                 {selectedPoint.communityName && (
@@ -1564,6 +1579,16 @@ export default function MitzvahMap({
                     Waze
                   </a>
                 </div>
+              )}
+              {selectedPoint.source_url && (
+                <a
+                  href={selectedPoint.source_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="motion-press mt-2 inline-flex w-full items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-[11px] font-black text-emerald-700"
+                >
+                  Open verification source
+                </a>
               )}
             </div>
           </div>
@@ -1611,9 +1636,9 @@ export default function MitzvahMap({
                     >
                       {config.label}
                     </span>
-                    {point.verification && (
+                    {getTrustLabel(point) && (
                       <span className="truncate text-[10px] font-black text-emerald-700">
-                        Verified
+                        {point.source_url ? 'Source-backed' : 'Verified'}
                       </span>
                     )}
                   </div>
