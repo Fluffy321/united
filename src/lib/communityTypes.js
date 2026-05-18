@@ -291,6 +291,7 @@ export function getSupportedCommunityTabs(community = {}, productionCapabilities
   // neighborhood community). Inject them before 'members' so they always appear when enabled.
   const insertIdx = filtered.includes('members') ? filtered.indexOf('members') : filtered.length;
   const extras = [];
+  if (!baseSet.has('announcements')) extras.push('announcements');
   if (productionCapabilities.events && !baseSet.has('events')) extras.push('events');
   if (productionCapabilities.resources && !baseSet.has('resources')) extras.push('resources');
   if (productionCapabilities.listings && !baseSet.has('listings')) extras.push('listings');

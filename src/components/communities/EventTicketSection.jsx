@@ -4,15 +4,15 @@ import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 const RSVP_OPTIONS = [
-  { value: 'going', label: '✅ Going', activeClass: 'bg-green-100 text-green-700 border-green-300' },
-  { value: 'maybe', label: '🤔 Maybe', activeClass: 'bg-amber-100 text-amber-700 border-amber-300' },
-  { value: 'not_attending', label: "❌ Can't go", activeClass: 'bg-red-100 text-red-600 border-red-200' },
+  { value: 'going', label: 'Going', activeClass: 'bg-emerald-600 text-white border-emerald-600' },
+  { value: 'maybe', label: 'Maybe', activeClass: 'bg-amber-500 text-white border-amber-500' },
+  { value: 'not_attending', label: 'Not going', activeClass: 'bg-slate-700 text-white border-slate-700' },
 ];
 
 export default function EventTicketSection({ event, currentUser, past }) {
   const [rsvp, setRsvp] = useState(null);
   const [rsvpRecord, setRsvpRecord] = useState(null);
-  const [rsvpCounts, setRsvpCounts] = useState({ going: 0, maybe: 0 });
+  const [rsvpCounts, setRsvpCounts] = useState({ going: 0, maybe: 0, not_attending: 0 });
   const [attendees, setAttendees] = useState([]);
   const [showAttendees, setShowAttendees] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -39,6 +39,7 @@ export default function EventTicketSection({ event, currentUser, past }) {
     setRsvpCounts({
       going: allRsvps.filter(r => r.status === 'going').length,
       maybe: allRsvps.filter(r => r.status === 'maybe').length,
+      not_attending: allRsvps.filter(r => r.status === 'not_attending' || r.status === 'not_going').length,
     });
     setAttendees(allRsvps.filter(r => r.status === 'going'));
     if (userRsvps[0]) {
@@ -255,17 +256,32 @@ export default function EventTicketSection({ event, currentUser, past }) {
   // --- Render: Standard RSVP (no tickets) ---
   if (!past) {
     return (
-      <div className="mt-3 space-y-2">
-        <div className="flex gap-2 flex-wrap">
+      <div className="mt-3 space-y-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-[12px] font-black text-slate-800">Your RSVP</p>
+            <p className="text-[11px] font-semibold text-slate-500">
+              {rsvp === 'going' ? "You're going" : rsvp === 'maybe' ? 'You marked maybe' : rsvp ? 'You are not going' : 'Let the community know if you can make it.'}
+            </p>
+          </div>
+          {(rsvpCounts.going > 0 || rsvpCounts.maybe > 0) && (
+            <div className="flex items-center gap-1.5">
+              <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-black text-emerald-700">{rsvpCounts.going} Going</span>
+              <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-black text-amber-700">{rsvpCounts.maybe} Maybe</span>
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
           {RSVP_OPTIONS.map(opt => (
             <button
               key={opt.value}
               onClick={() => handleFreeRsvp(opt.value)}
               disabled={loading}
-              className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold border transition-all active:scale-95 disabled:opacity-60 ${
+              className={`flex h-9 items-center justify-center gap-1 rounded-xl px-2 text-[11px] font-black border transition-all active:scale-95 disabled:opacity-60 ${
                 rsvp === opt.value
                   ? opt.activeClass
-                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
+                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
               }`}
             >
               {loading && rsvp === opt.value ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
@@ -277,7 +293,7 @@ export default function EventTicketSection({ event, currentUser, past }) {
         {(rsvpCounts.going > 0 || rsvpCounts.maybe > 0) && (
           <button
             onClick={() => setShowAttendees(v => !v)}
-            className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-700 transition-colors"
+            className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-500 hover:text-slate-700 transition-colors"
           >
             <Users className="w-3.5 h-3.5" />
             {rsvpCounts.going > 0 && <span className="text-green-600 font-semibold">{rsvpCounts.going} going</span>}

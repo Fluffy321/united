@@ -11,6 +11,7 @@ export default function EventAttendeesAdmin({ event, onClose }) {
 
   const going = rsvps.filter(r => r.status === 'going');
   const maybe = rsvps.filter(r => r.status === 'maybe');
+  const notGoing = rsvps.filter(r => r.status === 'not_attending' || r.status === 'not_going');
   const purchased = going.filter(r => r.ticket_purchased);
   const pending = going.filter(r => !r.ticket_purchased && event.has_tickets && !event.is_free);
 
@@ -54,8 +55,24 @@ export default function EventAttendeesAdmin({ event, onClose }) {
         </div>
 
         {/* Stats */}
-        {event.has_tickets && (
-          <div className="grid grid-cols-3 gap-3 px-5 py-3 border-b border-slate-50 flex-shrink-0">
+        <div className="grid grid-cols-3 gap-3 px-5 py-3 border-b border-slate-50 flex-shrink-0">
+          {!event.has_tickets ? (
+            <>
+              <div className="text-center">
+                <p className="text-[20px] font-black text-emerald-600">{going.length}</p>
+                <p className="text-[10px] text-slate-500 font-medium">Going</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[20px] font-black text-amber-500">{maybe.length}</p>
+                <p className="text-[10px] text-slate-500 font-medium">Maybe</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[20px] font-black text-slate-400">{notGoing.length}</p>
+                <p className="text-[10px] text-slate-500 font-medium">Not going</p>
+              </div>
+            </>
+          ) : (
+            <>
             <div className="text-center">
               <p className="text-[20px] font-black text-slate-900">{going.length}</p>
               <p className="text-[10px] text-slate-500 font-medium">Going</p>
@@ -84,8 +101,9 @@ export default function EventAttendeesAdmin({ event, onClose }) {
                 </div>
               </>
             )}
-          </div>
-        )}
+            </>
+          )}
+        </div>
 
         {/* List */}
         <div className="overflow-y-auto flex-1 px-5 py-3 space-y-2">

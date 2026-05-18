@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { MessageCircle, MoreHorizontal, Flag, Trash2, MapPin, Clock, CheckCircle2, Ban } from 'lucide-react';
+import { MessageCircle, MoreHorizontal, Flag, Trash2, MapPin, Clock, CheckCircle2, Ban, Megaphone, Pin } from 'lucide-react';
 import PostImage from '@/components/common/PostImage';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import PromptCard from './PromptCard';
@@ -46,6 +46,7 @@ const TYPE_CONFIGS = {
   shul:         { label: 'Shul',        color: BASE_BADGE },
   news:         { label: 'News',        color: MUTED_BADGE },
   prompt_reply: { label: 'Prompt',      color: BASE_BADGE },
+  announcement:  { label: 'Official Update', color: 'bg-amber-100 text-amber-800 border border-amber-200' },
 };
 
 const SUBTYPE_CONFIGS = {
@@ -158,8 +159,9 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
   // into a community). Triggered by is_official=true or post_kind='local_update'.
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const isCommunityPost = useMemo(() =>
-    post.is_official === true || post.post_kind === 'local_update',
-  [post.is_official, post.post_kind]);
+    post.is_official === true || post.post_kind === 'local_update' || post.post_kind === 'announcement' || post.type === 'announcement' || post.post_type === 'announcement',
+  [post.is_official, post.post_kind, post.post_type, post.type]);
+  const isOfficialAnnouncement = post.is_official === true || post.post_kind === 'announcement' || post.type === 'announcement' || post.post_type === 'announcement';
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const allImages = useMemo(() =>
@@ -715,6 +717,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
       whileTap={{ scale: 0.997 }}
       transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1], layout: { duration: 0.2 } }}
       className={`relative ${
+        isOfficialAnnouncement ? 'bg-gradient-to-br from-amber-50 via-white to-blue-50 border-l-[3px] border-l-amber-400' :
         isQuestion ? 'bg-blue-50/60 border-l-2 border-l-blue-400' :
         post.post_subtype === 'alert' ? 'border-l-2 border-l-red-500 bg-red-50/30' :
         isActiveNow ? 'bg-white border-l-2 border-l-blue-500' :
@@ -723,6 +726,9 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
       style={isHotPost ? { boxShadow: '0 2px 16px rgba(251,146,60,0.12), 0 1px 4px rgba(0,0,0,0.04)' } : undefined}
     >
       {/* Community boost label */}
+      {isOfficialAnnouncement && (
+        <div className="h-1 bg-gradient-to-r from-amber-400 via-orange-400 to-blue-500" />
+      )}
       {isFromJoinedCommunity && !isQuestion && post.post_subtype !== 'alert' && (
         <div className="h-0.5 bg-gradient-to-r from-indigo-400 to-violet-400" />
       )}
@@ -749,7 +755,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
                   </span>
                   <span className="text-slate-300 text-[10px]">·</span>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
-                    {post.post_kind === 'local_update' ? 'Local update' : 'Community post'}
+                    {post.post_kind === 'local_update' ? 'Local update' : isOfficialAnnouncement ? 'Official update' : 'Community post'}
                   </span>
                   <span className="text-slate-300 text-[10px]">·</span>
                   <span className={`text-[10px] font-medium ${isVeryRecent ? 'text-green-600' : 'text-slate-400'}`}>{timeAgo}</span>
@@ -817,6 +823,18 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
               {SUBTYPE_CONFIGS[post.post_subtype].label}
             </span>
           ) : null}
+          {isOfficialAnnouncement && (
+            <span className="j-chip bg-amber-100 text-amber-800 border border-amber-200">
+              <Megaphone className="h-3 w-3" />
+              Official
+            </span>
+          )}
+          {post.is_pinned && (
+            <span className="j-chip bg-blue-50 text-blue-700 border border-blue-100">
+              <Pin className="h-3 w-3" />
+              Featured
+            </span>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="w-7 h-7 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 transition-colors">

@@ -1,19 +1,23 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { Pin, Calendar, MapPin, Clock } from 'lucide-react';
+import { Pin, Calendar, MapPin, Clock, Megaphone } from 'lucide-react';
 
 export default function CommunityPostCard({ post }) {
   const timeAgo = post.created_date
     ? formatDistanceToNow(new Date(post.created_date), { addSuffix: true })
     : '';
+  const isAnnouncement = post.is_official || post.type === 'announcement' || post.post_type === 'announcement' || post.post_kind === 'announcement';
 
   return (
-    <div className="bg-white border border-slate-100 rounded-2xl p-4">
+    <div className={`rounded-2xl border p-4 ${isAnnouncement ? 'border-amber-200 bg-gradient-to-br from-amber-50 via-white to-blue-50' : 'border-slate-100 bg-white'}`}>
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2 flex-wrap">
-          {post.is_official && (
-            <Badge className="bg-blue-100 text-blue-700 border-0 text-[10px] font-semibold">Official</Badge>
+          {isAnnouncement && (
+            <Badge className="bg-amber-100 text-amber-800 border-0 text-[10px] font-semibold">
+              <Megaphone className="mr-1 h-3 w-3" />
+              Official update
+            </Badge>
           )}
           {post.is_pinned && (
             <span className="flex items-center gap-0.5 text-[10px] text-amber-600 font-semibold">

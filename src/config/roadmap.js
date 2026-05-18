@@ -204,6 +204,253 @@ Goals:
   },
 
   {
+    id: 'community-announcements-official-updates',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Announcements / Official Updates',
+    description: 'Official manager-created announcement posts for important community updates.',
+    shippedNote: 'Shipped 2026-05-18. Reuses the existing posts table with announcement post_kind/type. Admin Center Content tab can create official announcements and optionally feature them. Database trigger prevents non-managers from forging announcement/official/local-update posts.',
+  },
+
+  {
+    id: 'community-featured-content',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Pinned / Featured Community Content',
+    description: 'A featured Start Here section using pinned posts plus clean event/resource previews.',
+    shippedNote: 'Shipped 2026-05-18. Reuses posts.is_pinned/pinned_at/pinned_by guarded by trigger. Featured section appears in both active community detail systems and stays intentionally compact.',
+  },
+
+  {
+    id: 'community-event-rsvp-foundation',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Event RSVP Foundation',
+    description: 'Going / Maybe / Not Going RSVPs with attendee counts and admin visibility.',
+    shippedNote: 'Shipped 2026-05-18. Reuses community_event_rsvps table and CommunityEventRSVP mapping. RSVP controls, counts, and admin attendee summary were polished. Attendance/check-in remains future work.',
+  },
+
+  {
+    id: 'community-member-directory-role-labels',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Member Directory + Role Labels',
+    description: 'Professional member directory with Owner/Admin/Moderator/Member labels and leadership section.',
+    shippedNote: 'Shipped 2026-05-18. Built from existing community_memberships/UserCommunity data and shared across CommunityHubDetail and CommunityDetailView. Custom community titles intentionally deferred.',
+  },
+
+  {
+    id: 'community-welcome-onboarding-hub',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Welcome / Onboarding Hub',
+    description: 'A stronger community landing experience that surfaces welcome/about, featured content, key contacts, upcoming events, resources, and next actions.',
+    shippedNote: 'Shipped 2026-05-18. Added shared CommunityWelcomeHub and CommunityFeaturedSection used by both active community detail systems. Admins can set a welcome message from Community Admin Center settings.',
+  },
+
+  {
+    id: 'community-custom-key-contacts',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Custom Community Titles & Key Contacts',
+    description: 'Allow communities to label leadership contacts with titles like Rabbi, President, Organizer, or Volunteer Coordinator.',
+    why: 'Phase 1 derives leadership from owner/admin/moderator roles. Custom titles need a dedicated data model and privacy review.',
+    prompt: `You are implementing Custom Community Titles & Key Contacts for JUnited.
+
+Context:
+- Phase 1 member directory is shipped in src/components/communities/CommunityOperatingSystem.jsx.
+- Membership data comes from community_memberships/UserCommunity.
+- Community Admin Center is src/components/communities/CommunityAdminCenter.jsx.
+
+Goals:
+1. Audit community_memberships and profiles fields.
+2. Choose a safe data model: either community_key_contacts table or community_memberships contact_title/contact_visibility columns.
+3. Create a migration with RLS so community managers can edit titles and members can only read visible contact records.
+4. Add Admin Center UI to assign/edit/remove contact titles.
+5. Update CommunityMemberDirectory and CommunityWelcomeHub to show custom key contacts without exposing private data.
+6. Run npm run lint && npm run typecheck && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-scheduled-announcements-digests',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Scheduled Posts, Announcements & Community Digest',
+    description: 'Schedule announcements/posts and generate weekly or monthly community digest summaries.',
+    why: 'Phase 1 ships manual announcements only. Scheduling and digests need background jobs, notification/email choices, and admin controls.',
+    prompt: `You are implementing Scheduled Posts, Announcements & Community Digest for JUnited.
+
+Context:
+- Announcements reuse the posts table with post_kind/type announcement.
+- Admin creation lives in CommunityAdminCenter Content tab.
+- Notifications service exists in src/services/notificationsService.js.
+
+Goals:
+1. Add scheduled_at, published_at, and publishing_status fields or a community_scheduled_posts table.
+2. Create RLS so only community managers can schedule or edit scheduled content.
+3. Add Admin Center scheduling UI for announcements and posts.
+4. Add a Supabase Edge Function/cron process that publishes due scheduled posts safely.
+5. Design a digest generator that summarizes recent announcements/events/resources without sending emails until the email provider is configured.
+6. Add clear failure/retry states.
+7. Run npm run lint && npm run typecheck && npm run build.
+8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-notification-targeting-reminders',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Announcement Notifications, Event Reminders & Attendance',
+    description: 'Targeted announcement notifications, RSVP reminders, and future check-in/attendance tracking.',
+    why: 'Phase 1 deliberately avoided notification overbuild and did not add check-in columns. Build when notification preferences and event operations are mature.',
+    prompt: `You are implementing Announcement Notifications, Event Reminders & Attendance for JUnited.
+
+Context:
+- community_event_rsvps table is live.
+- EventTicketSection and EventAttendeesAdmin are the RSVP UI.
+- Notifications service is src/services/notificationsService.js.
+
+Goals:
+1. Add notification preference checks for community announcement and event reminder types.
+2. Add optional announcement notification targeting in CommunityAdminCenter.
+3. Add event reminder scheduling for users with Going/Maybe RSVPs.
+4. Add attendance/check-in fields or a separate community_event_attendance table with RLS.
+5. Add admin check-in UI without exposing private attendee data to normal members.
+6. Run npm run lint && npm run typecheck && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'advanced-community-analytics-dashboard',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Advanced Community Analytics Dashboard',
+    description: 'Community-level growth, engagement, announcement reach, RSVP trends, resource usage, and moderation health.',
+    why: 'Basic admin overview exists. Advanced analytics fit Premium/Pro positioning and need clean event tracking.',
+    prompt: `You are implementing Advanced Community Analytics Dashboard for JUnited.
+
+Context:
+- Community Admin Center has overview/analytics tabs.
+- Posts, memberships, events, RSVPs, resources, reports, and plan fields are production-backed.
+
+Goals:
+1. Audit current analytics queries in CommunityAdminCenter and AdminAnalyticsDashboard.
+2. Define community metrics: member growth, active members, posts, announcements, RSVP conversion, resource usage, moderation load.
+3. Add any missing indexes or summary views with security_invoker where appropriate.
+4. Build a polished analytics tab for community managers with 7d/30d/90d ranges.
+5. Gate advanced metrics by Premium/Pro plan as appropriate.
+6. Run npm run lint && npm run typecheck && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-resource-library-2',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Resource Library 2.0',
+    description: 'Folders, pinning controls, improved previews, versioning, permissions, and stronger resource discovery.',
+    why: 'Phase 1 previews existing resources only. Larger communities need a more durable knowledge base.',
+    prompt: `You are implementing Resource Library 2.0 for JUnited.
+
+Context:
+- CommunityResourceLibrary.jsx is live.
+- community_resources table and community-resources storage bucket are production-backed.
+
+Goals:
+1. Audit community_resources schema, upload paths, RLS, and current free/premium resource limits.
+2. Add folders/categories, pinned controls, and improved preview metadata if missing.
+3. Add manager controls for resource ordering and featured resources.
+4. Preserve Free limit of 10 resources and Premium unlimited behavior.
+5. Improve empty states and search/filter behavior.
+6. Run npm run lint && npm run typecheck && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-forms-signups-volunteer-coordination',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Community Forms, Signups & Volunteer Coordination',
+    description: 'Lightweight forms, signup sheets, volunteer slots, and admin export for community operations.',
+    why: 'High-value for shuls, schools, nonprofits, and chesed groups, but should be built as a real operating tool instead of ad hoc post comments.',
+    prompt: `You are implementing Community Forms, Signups & Volunteer Coordination for JUnited.
+
+Context:
+- Communities have posts, events, resources, memberships, and admin roles.
+- Mitzvah Circle has request/offer flows that may inform volunteer coordination.
+
+Goals:
+1. Audit existing event RSVP, Mitzvah request, and resource patterns.
+2. Design tables for community_forms, community_form_fields, community_form_submissions, and optional volunteer_slots.
+3. Add RLS: managers create/manage forms; eligible members submit; submissions are private to managers and submitter.
+4. Build Admin Center form creation/listing UI.
+5. Add member-facing form/signup cards inside community pages.
+6. Add CSV export if privacy-safe.
+7. Run npm run lint && npm run typecheck && npm run build.
+8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-notification-preferences',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Community Notification Preferences',
+    description: 'Per-community notification controls for announcements, events, replies, resources, and reminders.',
+    why: 'Push notifications and notification preferences exist at the app level, but communities need member-level controls before targeted alerts scale.',
+    prompt: `You are implementing Community Notification Preferences for JUnited.
+
+Context:
+- Push notifications and notification_preferences are production-backed.
+- Community announcements and RSVPs are live.
+
+Goals:
+1. Audit existing notification_preferences schema and Settings UI.
+2. Create or extend tables for per-community preferences by user_id/community_id.
+3. Add RLS so users manage only their own preferences.
+4. Add a compact preferences surface inside community detail/about or member settings.
+5. Update notificationsService.js to respect per-community settings for announcement/event types.
+6. Run npm run lint && npm run typecheck && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-recognition-badges',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Community Recognition & Badges',
+    description: 'Community-specific recognition for volunteers, helpful members, organizers, and milestone contributors.',
+    why: 'Useful for community health and chesed culture, but should come after core operating tools and privacy rules are stable.',
+    prompt: `You are implementing Community Recognition & Badges for JUnited.
+
+Context:
+- Profiles already show badges/impact concepts.
+- Communities have memberships, roles, posts, events, and RSVP data.
+
+Goals:
+1. Audit existing profile badge and impact components.
+2. Design community_badges and community_member_badges tables with RLS.
+3. Let managers award/remove badges, with optional reason text.
+4. Show badges tastefully in CommunityMemberDirectory and profile/community sections.
+5. Avoid gamifying sensitive support communities unless explicitly enabled.
+6. Run npm run lint && npm run typecheck && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'poll-voting',
     category: 'Community',
     status: STATUS.SHIPPED,
