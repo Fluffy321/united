@@ -46,6 +46,7 @@ export default function CommunityHubDetail({
   community,
   currentUser,
   initialComposePrompt = '',
+  onInitialComposeConsumed,
   initialTab = 'home',
   onBack,
   onToggleJoin,
@@ -62,6 +63,7 @@ export default function CommunityHubDetail({
   });
   const [activeTab, setActiveTab] = useState(tabs.includes(initialTab) ? initialTab : (tabs[0] || 'home'));
   const [composeText, setComposeText] = useState('');
+  const [composePlaceholder, setComposePlaceholder] = useState('');
   const [showCompose, setShowCompose] = useState(false);
   const [postAnonymously, setPostAnonymously] = useState(
     Boolean(community.supportsAnonymousPosting && (community.joinedIncognito || community.hideMembership))
@@ -100,9 +102,11 @@ export default function CommunityHubDetail({
 
   useEffect(() => {
     if (!initialComposePrompt) return;
-    setComposeText(initialComposePrompt);
+    setComposeText('');
+    setComposePlaceholder(initialComposePrompt);
     setShowCompose(true);
-  }, [initialComposePrompt, community.id]);
+    onInitialComposeConsumed?.();
+  }, [initialComposePrompt, community.id, onInitialComposeConsumed]);
 
   useEffect(() => {
     setPostAnonymously(Boolean(community.supportsAnonymousPosting && (community.joinedIncognito || community.hideMembership)));
@@ -155,7 +159,8 @@ export default function CommunityHubDetail({
   }, [community.posts, isSeedCommunity, realPosts]);
 
   const openCompose = (prefill = '') => {
-    setComposeText(prefill);
+    setComposeText('');
+    setComposePlaceholder(prefill || typeConfig.prompts[0] || 'Share something with the community...');
     setShowCompose(true);
   };
 
@@ -168,6 +173,7 @@ export default function CommunityHubDetail({
     }
     if (isSeedCommunity) {
       toast.info('Preview communities show sample content only. Open a real community to post.');
+      setComposePlaceholder('');
       setShowCompose(false);
       return;
     }
@@ -183,6 +189,7 @@ export default function CommunityHubDetail({
       });
       await queryClient.invalidateQueries({ queryKey: ['community-hub-posts', community.id] });
       setComposeText('');
+      setComposePlaceholder('');
       setShowCompose(false);
       toast.success('Posted');
     } catch {
@@ -412,7 +419,10 @@ export default function CommunityHubDetail({
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-base font-bold text-slate-900">{typeConfig.primaryCta} in {community.name}</h3>
               <button
-                onClick={() => setShowCompose(false)}
+                onClick={() => {
+                  setShowCompose(false);
+                  setComposePlaceholder('');
+                }}
                 className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100"
               >
                 <X className="h-4 w-4" />
@@ -423,7 +433,7 @@ export default function CommunityHubDetail({
               rows={4}
               value={composeText}
               onChange={(e) => setComposeText(e.target.value)}
-              placeholder={typeConfig.prompts[0] || 'Share something with the community...'}
+              placeholder={composePlaceholder || typeConfig.prompts[0] || 'Share something with the community...'}
               className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none focus:border-blue-400 focus:bg-white transition-colors placeholder:text-slate-400"
             />
             {community.supportsAnonymousPosting && (
@@ -447,7 +457,10 @@ export default function CommunityHubDetail({
             )}
             <div className="mt-3 flex items-center justify-end gap-2">
               <button
-                onClick={() => setShowCompose(false)}
+                onClick={() => {
+                  setShowCompose(false);
+                  setComposePlaceholder('');
+                }}
                 className="h-9 rounded-xl px-4 text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
               >
                 Cancel

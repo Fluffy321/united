@@ -74,9 +74,9 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
     if (open) {
       const placeholderList = postType === 'help' ? PLACEHOLDERS.help : PLACEHOLDERS.feed;
       const randomPlaceholder = placeholderList[Math.floor(Math.random() * placeholderList.length)];
-      setPlaceholder(randomPlaceholder);
+      setPlaceholder(initialBody || randomPlaceholder);
       if (initialSubtype) setPostSubtype(initialSubtype);
-      if (initialBody) setBody(initialBody);
+      setBody('');
       setSelectedCommunityId(initialCommunityId || '');
       // Default city to user's primary network
       setSelectedCity(currentUser?.cityPreset || 'Five Towns');
@@ -123,6 +123,7 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
   };
 
   const getPlaceholderBySubtype = () => {
+    if (placeholder) return placeholder;
     if (postSubtype === 'question') return 'Ask the community something...';
     if (postSubtype === 'event') return 'Tell people about this event...';
     if (postSubtype === 'alert') return 'Share an important update...';
