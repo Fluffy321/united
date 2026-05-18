@@ -9,6 +9,7 @@ import {
   getCommunityTypeConfig,
   getSupportedCommunityTabs,
 } from '@/lib/communityTypes';
+import { isCommunityPremium } from '@/lib/communityPlans';
 import { supabase } from '@/api/supabaseClient';
 import CommunityHero from './CommunityHero';
 import ClaimModal from './ClaimModal';
@@ -134,13 +135,14 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   const isFollowing = membershipRecord.length > 0 || isCreator;
   const isAdmin = currentUser?.role === 'admin' || isCreator || ['admin', 'moderator', 'owner'].includes(membershipRole);
   const canPost = isAdmin || (community?.posting_mode || 'open') === 'open';
+  const premiumEnabled = isCommunityPremium(community);
   const actualMemberCount = members.length;
   const activeNeeds = openNeeds.filter((need) => OPEN_NEED_STATUSES.has(String(need.status || 'open')));
   const featureCapabilities = {
-    events: Boolean(community?.allow_member_events || isAdmin || ['events', 'shul'].includes(typeConfig.key)),
-    resources: Boolean(community?.allow_resources || isAdmin || ['learning', 'shul'].includes(typeConfig.key)),
-    chat: Boolean(community?.allow_group_chat || isAdmin),
-    listings: Boolean(community?.allow_member_listings || isAdmin || typeConfig.key === 'marketplace'),
+    events: Boolean(premiumEnabled && (community?.allow_member_events || ['events', 'shul'].includes(typeConfig.key))),
+    resources: Boolean(premiumEnabled && (community?.allow_resources || ['learning', 'shul'].includes(typeConfig.key))),
+    chat: Boolean(premiumEnabled && community?.allow_group_chat),
+    listings: Boolean(premiumEnabled && (community?.allow_member_listings || typeConfig.key === 'marketplace')),
   };
   const visibleTabs = getSupportedCommunityTabs(community || fallbackCommunity || {}, featureCapabilities);
   const setTab = (tab) => {

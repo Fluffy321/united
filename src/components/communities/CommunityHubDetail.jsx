@@ -20,6 +20,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { dataService } from '@/services';
 import { getCommunityTabLabel, getCommunityTypeConfig, getSupportedCommunityTabs } from '@/lib/communityTypes';
+import { isCommunityPremium } from '@/lib/communityPlans';
 import CommunityAdminCenter from './CommunityAdminCenter';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import GroupChatSection from './GroupChatSection';
@@ -55,11 +56,12 @@ export default function CommunityHubDetail({
 }) {
   const typeConfig = getCommunityTypeConfig(community);
   const Icon = typeConfig.icon;
+  const premiumEnabled = isCommunityPremium(community);
   const tabs = getSupportedCommunityTabs(community, {
-    events: Boolean(community?.allow_member_events),
-    resources: Boolean(community?.allow_resources),
-    chat: Boolean(community?.allow_group_chat),
-    listings: Boolean(community?.allow_member_listings),
+    events: Boolean(premiumEnabled && community?.allow_member_events),
+    resources: Boolean(premiumEnabled && community?.allow_resources),
+    chat: Boolean(premiumEnabled && community?.allow_group_chat),
+    listings: Boolean(premiumEnabled && community?.allow_member_listings),
   });
   const [activeTab, setActiveTab] = useState(tabs.includes(initialTab) ? initialTab : (tabs[0] || 'home'));
   const [composeText, setComposeText] = useState('');

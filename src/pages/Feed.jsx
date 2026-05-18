@@ -1104,6 +1104,16 @@ export default function Feed({ isActive = true }) {
   );
 }
 
+function extractHolidayName(title) {
+  if (!title) return 'Yom Tov';
+  return title
+    .replace(/\s+\d{4}$/, '')
+    .replace(/:\s*.+$/, '')
+    .replace(/\s*\([^)]*\)/g, '')
+    .replace(/\s+(?:I{1,3}|IV|VI{0,3}|VII|VIII)\s*$/i, '')
+    .trim() || 'Yom Tov';
+}
+
 function useShabbosCountdown(location, locationLoading) {
   const [state, setState] = useState({ label: 'Shabbat', countdown: 'Loading…', time: '', locationLabel: null });
 
@@ -1119,25 +1129,48 @@ function useShabbosCountdown(location, locationLoading) {
 
     const update = () => {
       const displayLabel = location.type !== 'default' ? location.label : null;
-      if (!times?.candleLighting || !times?.havdalah) {
+      if (!times) {
         setState({ label: 'Shabbat', countdown: 'Soon', time: '', locationLabel: displayLabel });
         return;
       }
       const now = new Date();
-      const candleLighting = new Date(times.candleLighting);
-      const havdalah = new Date(times.havdalah);
-      const target = now < candleLighting ? candleLighting : havdalah;
-      const label = now < candleLighting ? 'Candle lighting' : 'Havdalah';
-      const ms = target - now;
-      if (ms <= 0) {
+      const majorHolidays = times.majorHolidays || [];
+      const allEvents = [
+        ...(times.allCandles  || []).map(c => ({ date: new Date(c.date), type: 'candles'  })),
+        ...(times.allHavdalah || []).map(h => ({ date: new Date(h.date), type: 'havdalah' })),
+      ].sort((a, b) => a.date - b.date);
+      // backwards compat if allCandles/allHavdalah not yet populated
+      if (allEvents.length === 0) {
+        if (times.candleLighting) allEvents.push({ date: new Date(times.candleLighting), type: 'candles' });
+        if (times.havdalah)       allEvents.push({ date: new Date(times.havdalah),       type: 'havdalah' });
+      }
+      const upcoming = allEvents.find(e => e.date > now);
+      if (!upcoming) {
         setState({ label: 'Shabbat', countdown: 'Shavua tov', time: '', locationLabel: displayLabel });
         return;
       }
+      const ms = upcoming.date - now;
       const totalH = Math.floor(ms / 3600000);
       const d = Math.floor(totalH / 24);
       const h = totalH % 24;
-      const time = target.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-      setState({ label, countdown: d > 0 ? `${d}d ${h}h away` : `${h}h away`, time, locationLabel: displayLabel });
+      const time = upcoming.date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      const countdown = d > 0 ? `${d}d ${h}h away` : `${h}h away`;
+
+      let label;
+      if (upcoming.type === 'candles') {
+        const pad2 = n => String(n).padStart(2, '0');
+        const candleDateStr = [
+          upcoming.date.getFullYear(),
+          pad2(upcoming.date.getMonth() + 1),
+          pad2(upcoming.date.getDate()),
+        ].join('-');
+        const matchedHoliday = majorHolidays.find(hol => hol.date >= candleDateStr);
+        label = matchedHoliday ? extractHolidayName(matchedHoliday.title) : 'Candle lighting';
+      } else {
+        label = 'Havdalah';
+      }
+
+      setState({ label, countdown, time, locationLabel: displayLabel });
     };
 
     load();

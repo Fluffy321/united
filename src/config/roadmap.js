@@ -516,11 +516,12 @@ Goals:
   {
     id: 'candle-lighting-yom-tov',
     category: 'Jewish Life',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Yom Tov & Holiday Candle-Lighting Times',
     description: 'Extend the candle-lighting feature to show Yom Tov candle-lighting times for major holidays (Rosh Hashana, Yom Kippur, Sukkot, Pesach, Shavuot). The Hebcal API already returns holiday events — this just needs to be surfaced in the UI.',
-    why: 'Shipped 2026-05-17: weekly Shabbat times are accurate and location-aware. Holiday candle-lighting is the natural next step for completeness. Hebcal API returns candles category events for Yom Tov too.',
+    shippedNote: 'Shipped 2026-05-17: getShabbatTimes() updated to return allCandles, allHavdalah, and majorHolidays arrays. useShabbosCountdown() now iterates all events, shows "Shavuot", "Rosh Hashana", etc. instead of "Candle lighting" during holiday weeks, and handles two-day Yom Tov (2 candles, 1 havdalah). Yom Kippur covered by general Yom Tov logic.',
+    why: 'Hebcal /shabbat returns candles+havdalah for both Shabbat and Yom Tov. Live API audit on Erev Shavuot 5786 confirmed two candle items and one final havdalah.',
     prompt: `You are implementing Yom Tov candle-lighting times for JUnited.
 
 Context:
@@ -841,32 +842,37 @@ Goals:
     category: 'Growth & Monetization',
     status: STATUS.DEFERRED,
     priority: PRIORITY.MEDIUM,
-    title: 'Community Store',
-    description: 'Digital storefront for communities to sell merchandise, tickets, and fundraise.',
-    why: 'Stripe payments code is now live. Community Store is deferred until core usage grows — the PaymentModal is already wired and ready to use for store purchases.',
+    title: 'Community Store / Paid Community Transactions',
+    description: 'Digital storefront for communities to sell merchandise, tickets, and fundraise using Stripe Connect, not direct JUnited donation checkout.',
+    why: 'Deferred until the Stripe Connect payout foundation is built. The old PaymentModal can collect money for JUnited only; it must not be used for marketplace/community recipient payments because funds need to route to connected recipients with an application fee.',
     prompt: `You are implementing the Community Store for JUnited.
 
 Context: CommunityStoreTab.jsx exists. CommunityDetailView already has a 'listings' tab that
-        renders it when allow_member_listings is enabled. Stripe must be live first.
+        renders it when allow_member_listings is enabled. Do not use the old PaymentModal for this.
+        This must use the Stripe Connect platform payment foundation once it is shipped.
 
 Goals:
 1. Verify community_listings table migration exists; create if not.
 2. Wire CommunityListing entity in base44Client.js.
-3. Connect CommunityStoreTab.jsx to real data (list, create, purchase).
-4. Integrate with Stripe for product purchases (create-checkout-session).
-5. Add admin UI in CommunityAdminCenter for managing store items.
-6. Track orders in a community_orders table.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+3. Add a community_orders table with buyer_id, community_id, listing_id, amount_cents,
+   currency, status, stripe_checkout_session_id, stripe_payment_intent_id,
+   destination_connected_account_id, application_fee_amount, created_at, updated_at.
+4. Connect CommunityStoreTab.jsx to real data (list, create, purchase).
+5. Integrate purchases through the Stripe Connect payment function, using destination charges
+   with transfer_data.destination and application_fee_amount.
+6. Add admin UI in CommunityAdminCenter for managing store items and viewing orders.
+7. Run npm run lint && npm run typecheck && npm run build.
+8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
     id: 'stripe-subscriptions',
     category: 'Growth & Monetization',
-    status: STATUS.DEFERRED,
-    priority: PRIORITY.MEDIUM,
-    title: 'Recurring Supporter Subscriptions (Stripe)',
-    description: 'Monthly/annual recurring support tiers via Stripe Subscriptions. Requires Stripe Price/Product setup for recurring billing and subscription lifecycle handling (Customer objects, cancellation, proration). SupportJUnited page currently handles one-time only.',
-    why: 'Current implementation uses one-time Checkout (simpler, safer for launch). Recurring subscriptions require additional Stripe infrastructure and a cancel/manage-subscription flow. Deferred until one-time payments are validated in production.',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.LOW,
+    title: 'Recurring Supporter Subscriptions (Secondary)',
+    description: 'Optional monthly/annual supporter tiers for users who want to support JUnited directly. This is not the primary SaaS monetization model; Premium Communities are primary.',
+    shippedNote: `Code complete 2026-05-17. New: (1) migration 20260517200000_subscriptions — adds stripe_customer_id to profiles + subscriptions table with full lifecycle columns; (2) create-subscription-session Edge Function — auth required, creates/retrieves Stripe Customer, resolves Price IDs from STRIPE_PRICE_{TIER}_{MONTHLY|ANNUAL} secrets, returns checkoutUrl; (3) create-portal-session Edge Function — opens Stripe Customer Portal, returns portalUrl; (4) stripe-webhook extended — handles checkout.session.completed (subscription branch), invoice.paid, invoice.payment_failed, customer.subscription.updated, customer.subscription.deleted; (5) SupportJUnited.jsx — One-time / Monthly / Annual segmented toggle, annual savings shown (2 months free, exact math), custom amount hidden for recurring modes; (6) paymentsService.js — createSubscriptionCheckout, createPortalSession, getActiveSubscription; (7) Settings → Account — "Manage Subscription" row with tier/interval/cancel status, opens portal. Product correction 2026-05-17: this should remain optional "Support JUnited" funding, not the main subscription model. Future premium community billing must use a separate community-scoped subscription model instead of reusing this user-supporter table blindly. LIVE requires: create 6 Stripe Prices (supporter/builder/champion × monthly/annual), add price IDs as Supabase Edge Function secrets (STRIPE_PRICE_SUPPORTER_MONTHLY etc.), configure Stripe Customer Portal in dashboard, add checkout.session.completed + invoice.paid + invoice.payment_failed + customer.subscription.updated + customer.subscription.deleted to the stripe-webhook endpoint in Stripe dashboard.`,
     prompt: `You are implementing Recurring Supporter Subscriptions (Stripe) for JUnited.
 
 Context: One-time payments are live. Key files:
@@ -900,6 +906,268 @@ Goals:
 6. Update paymentsService.js to expose createSubscriptionCheckout({ tier, interval }).
 7. Run npm run lint && npm run typecheck && npm run build.
 8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'subscription-status-ui',
+    category: 'Growth & Monetization',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.LOW,
+    title: 'Subscription Status on Support Page',
+    description: 'When a logged-in user already has an active subscription, SupportJUnited should show their current tier/interval and a link to manage it — not the full tier picker again.',
+    why: 'Without this, a subscriber who revisits the page may accidentally start a second checkout. A personalized "You\'re supporting at the Builder level — manage or upgrade" state is both safer and more delightful.',
+    shippedNote: 'Shipped 2026-05-17. SupportJUnited fetches getActiveSubscription() on mount for logged-in users, shows a skeleton while loading, then renders a subscriber card (tier/interval, renewal/cancels date, past_due warning) with "Manage or cancel" (opens portal) and "Upgrade or switch tier" (reveals tier picker pre-set to current interval). In upgrade mode, the CTA opens the portal for plan switching rather than creating a duplicate subscription.',
+    prompt: `You are adding a subscription-aware state to SupportJUnited for JUnited.
+
+Context:
+  - src/pages/SupportJUnited.jsx — the support page (billingMode toggle, tier cards, CTA)
+  - src/services/paymentsService.js — exposes getActiveSubscription() and createPortalSession()
+  - The getActiveSubscription() call returns { tier, interval, status, current_period_end, cancel_at_period_end } or null.
+
+Goals:
+1. At the top of SupportJUnited, call paymentsService.getActiveSubscription() (show a loading skeleton while fetching).
+2. If the user has an active/trialing subscription, replace the tier picker + CTA with a "You're already supporting JUnited" card:
+   - Show their current tier and interval (e.g. "Community Builder · Monthly")
+   - Show the next renewal date formatted as "Renews {date}" or "Cancels {date}" if cancel_at_period_end is true
+   - A "Manage or cancel" button that calls paymentsService.createPortalSession() and redirects to the portal URL
+   - A "Upgrade tier" link/button that dismisses the card and shows the tier picker so they can switch plans
+3. If no subscription (or user not logged in), show the existing UI unchanged.
+4. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'subscription-admin-metrics',
+    category: 'Growth & Monetization',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.LOW,
+    title: 'Supporter Subscription Metrics in Admin Dashboard',
+    description: 'Supporter-only subscription analytics in AdminAnalyticsDashboard. Premium community subscription analytics should be tracked separately once built.',
+    shippedNote: 'Shipped 2026-05-17. Added "Supporters" tab to AdminAnalyticsDashboard. KPI row: Active Subscribers, MRR ($X/mo with ARR sub-label), Annual Plan count (% of active), Past Due. Tier breakdown table (Supporter/Community Builder/Champion with subscriber count + MRR/mo). Monthly vs Annual split with CSS progress bars and MRR contribution per interval. New subscriptions per week (8-week BarChart, rose color). All data from a direct supabase.from("subscriptions") query in the existing loadData() Promise.all — gracefully returns [] if table not yet migrated so other tabs stay functional. MRR formula: monthly=$18/$36/$72, annual=$15/$30/$60 (annual ÷ 12). Product correction 2026-05-17: these are supporter metrics only, not the future Premium Communities SaaS metrics.',
+    prompt: `You are adding subscription metrics to AdminAnalyticsDashboard for JUnited.
+
+Context:
+  - src/pages/AdminAnalyticsDashboard.jsx — the admin analytics page
+  - supabase/migrations/20260517200000_subscriptions.sql — subscriptions table schema
+  - Monthly amounts: supporter=$18, builder=$36, champion=$72. Annual amounts: 180/360/720 (stored in subscriptions table as interval column).
+  - Query the subscriptions table (service role or admin RLS policy already allows admin reads).
+
+Goals:
+1. Add a "Supporters" section/tab in AdminAnalyticsDashboard.
+2. Show: total active subscribers, MRR (sum of monthly equivalents), breakdown by tier, breakdown by interval (monthly vs annual), and count of past_due subscriptions.
+3. MRR formula: for each active/trialing row, annualAmount/12 if interval='annual', else monthlyAmount.
+4. Show a simple time series of new subscriptions per week (last 8 weeks) as a bar chart or sparkline.
+5. All data comes from a direct Supabase query (admin role); no new Edge Function needed.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'premium-community-plans',
+    category: 'Growth & Monetization',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Premium Community Plans',
+    description: 'SaaS-style paid community subscriptions for community owners/admins. Free communities remain useful, while Premium unlocks advanced admin, automation, branding, events/resources/listings, and growth tools.',
+    why: 'This is the primary subscription model for JUnited. The existing recurring supporter subscription is secondary and should not be used to determine community feature access.',
+    shippedNote: 'Shipped 2026-05-17. Added community_plan_subscriptions plus community plan state fields, owner/admin-only Stripe Checkout and Billing Portal Edge Functions, webhook sync for community-scoped subscriptions, Community Admin Center Billing UI, Premium gating for Events/Resources/Marketplace/Group Chat, and separate Premium Communities analytics.',
+    prompt: `You are implementing Premium Community Plans for JUnited.
+
+Context:
+  - Existing supporter subscriptions live in supabase/migrations/20260517200000_subscriptions.sql
+    and are user-level optional support subscriptions. Do not reuse that table blindly for
+    community feature gating.
+  - Community settings live on communities and CommunityAdminCenter.jsx.
+  - Community templates live in src/lib/communityTypes.js.
+  - Stripe Edge Functions currently exist for supporter checkout:
+    create-subscription-session, create-portal-session, stripe-webhook.
+
+Goals:
+1. Create a migration for community_plan_subscriptions:
+   id, community_id, purchaser_user_id, stripe_customer_id, stripe_subscription_id,
+   stripe_price_id, plan_key ('community_premium'), billing_interval ('monthly'|'annual'),
+   status ('active'|'trialing'|'past_due'|'canceled'|'incomplete'), current_period_start,
+   current_period_end, cancel_at_period_end, canceled_at, created_at, updated_at.
+2. Add community premium state fields or a derived view:
+   communities.plan_key default 'free', communities.plan_status default 'free',
+   communities.plan_current_period_end nullable. Keep these synchronized from webhooks.
+3. Create create-community-plan-checkout Edge Function:
+   - Auth required.
+   - Verify the user is owner/admin of the community.
+   - Create/reuse a Stripe Customer for the purchaser.
+   - Create a Stripe Checkout Session mode='subscription' using configured Premium Community Price IDs.
+   - Include community_id and purchaser_user_id in metadata.
+4. Extend stripe-webhook to handle community plan subscription events separately from supporter subscriptions.
+5. Add CommunityAdminCenter billing UI:
+   - Free plan summary.
+   - Upgrade to Premium CTA.
+   - Current plan status, renewal/cancel date, payment issue state.
+   - Manage billing portal button.
+6. Gate Premium-only community features in UI from community plan state, not from currentUser.subscription_status.
+7. Add admin analytics for Premium Communities separately from Supporters.
+8. Run npm run lint && npm run typecheck && npm run build.
+9. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'stripe-connect-payout-foundation',
+    category: 'Growth & Monetization',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.HIGH,
+    title: 'Stripe Connect Payout Foundation',
+    description: 'Recipient onboarding and payout setup for users, communities, and businesses that receive money through JUnited. The user-facing language should be "Set up payouts" or "Connect bank account," not "create a Stripe account."',
+    why: 'Required before JUnited can safely process in-app payments to community/business/user recipients and take platform fees.',
+    prompt: `You are implementing the Stripe Connect payout foundation for JUnited.
+
+Context:
+  - Current Stripe checkout functions route money only to JUnited.
+  - Business listings use business_listings/business_managers.
+  - Communities use communities/community_memberships.
+  - Individual users are profiles.
+  - Use current Stripe Connect best practice: Accounts v2 where supported, explicit account
+    responsibilities, and Stripe-hosted or embedded onboarding. Do not expose secret keys
+    in the frontend.
+
+Goals:
+1. Create tables:
+   - connected_payout_accounts:
+     id, owner_type ('user'|'community'|'business'), owner_id, created_by,
+     stripe_connected_account_id, onboarding_status, payouts_enabled,
+     charges_enabled, requirements_currently_due jsonb, default_currency,
+     country, created_at, updated_at.
+   - connected_payout_account_members:
+     id, payout_account_id, user_id, role ('owner'|'admin'), created_at.
+2. Add RLS:
+   - Owners/admins can read their payout account.
+   - Only server/RPC can insert/update Stripe account IDs and verification status.
+3. Create Edge Function create-connect-onboarding-session:
+   - Auth required.
+   - Verify the requester can manage the target user/community/business.
+   - Create or retrieve the Stripe connected account.
+   - Return either a Stripe-hosted onboarding URL or embedded Account Session client secret.
+4. Use UI language:
+   - "Set up payouts"
+   - "Connect bank account"
+   - "Finish payout setup"
+   Avoid "you need your own Stripe account" in normal user-facing copy.
+5. Add lightweight payout setup UI in:
+   - business owner dashboard,
+   - Community Admin Center billing/payments area,
+   - future user payout settings for Mitzvah reimbursement flows.
+6. Store and refresh payout status from Stripe account requirements through a webhook or server refresh function.
+7. Run npm run lint && npm run typecheck && npm run build.
+8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'connect-platform-payments-application-fees',
+    category: 'Growth & Monetization',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.HIGH,
+    title: 'Stripe Connect In-App Payments & Application Fees',
+    description: 'JUnited marketplace-style payments where a payer pays in-app, the recipient receives funds through Connect payouts, and JUnited takes an application/platform fee.',
+    why: 'This is the foundation for event payments, paid listings/services, business transactions, and approved payment flows inside communities.',
+    needs: 'stripe-connect-payout-foundation',
+    prompt: `You are implementing Stripe Connect in-app payments and application fees for JUnited.
+
+Context:
+  - Existing create-checkout-session routes payments to JUnited only.
+  - Stripe Connect payout foundation must already exist.
+  - Community events, community listings, and business listings are production-backed.
+
+Goals:
+1. Create platform_payments table:
+   id, payer_user_id, recipient_owner_type ('user'|'community'|'business'),
+   recipient_owner_id, connected_payout_account_id, amount_cents, currency,
+   application_fee_amount_cents, fee_basis_points, payment_type
+   ('event_ticket'|'community_listing'|'business_payment'|'mitzvah_reimbursement'|'contribution'),
+   related_entity_type, related_entity_id, status
+   ('pending'|'requires_action'|'paid'|'failed'|'refunded'|'canceled'),
+   stripe_checkout_session_id, stripe_payment_intent_id, stripe_transfer_id,
+   created_at, updated_at, completed_at.
+2. Create create-connect-checkout-session Edge Function:
+   - Auth required.
+   - Validate the related entity and amount server-side.
+   - Verify the recipient has payouts enabled.
+   - Create a Checkout Session with mode='payment'.
+   - Use Connect destination charges with transfer_data.destination and application_fee_amount
+     for single-recipient payments.
+   - Store a pending platform_payments row.
+3. Extend stripe-webhook for platform payment completion/failure/refund events.
+4. Add application fee configuration in code or a platform_settings table:
+   - Start with a simple percentage plus optional minimum fee.
+   - Keep fees transparent in checkout summaries.
+5. Replace any old PaymentModal usage for community/business recipient payments with the Connect flow.
+6. Add receipt/record UI so users see payment status inside JUnited.
+7. Run npm run lint && npm run typecheck && npm run build.
+8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'mitzvah-payments-reimbursements',
+    category: 'Growth & Monetization',
+    status: STATUS.DEFERRED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Mitzvah Reimbursements & Contributions',
+    description: 'Careful in-app payment flows for reimbursements, voluntary contributions, or community fundraising tied to Mitzvah requests.',
+    why: 'Potentially valuable, but product-sensitive. Mitzvah Circle should not become a gig marketplace by accident. Build only after Connect payouts and platform payments are stable.',
+    needs: ['stripe-connect-payout-foundation', 'connect-platform-payments-application-fees'],
+    prompt: `You are implementing Mitzvah reimbursement and contribution payments for JUnited.
+
+Context:
+  - Mitzvah requests are managed through mitzvahService and MitzvahCircle.jsx.
+  - Stripe Connect payout foundation and platform_payments must already be shipped.
+  - This feature must preserve the chesed/community-help tone and avoid turning Mitzvah Circle
+    into a generic labor marketplace.
+
+Goals:
+1. Audit Mitzvah request types and identify only payment-appropriate flows:
+   - reimburse groceries/medicine/errands,
+   - contribute to a verified community need,
+   - optional thank-you contribution where appropriate.
+2. Add fields to mitzvah_requests only if needed:
+   reimbursement_allowed boolean, requested_amount_cents nullable,
+   payment_recipient_owner_type, payment_recipient_owner_id.
+3. Add UI language that says "Reimburse" or "Contribute" instead of "Pay for help"
+   except in explicitly paid-service contexts.
+4. Use platform_payments with payment_type='mitzvah_reimbursement' or 'contribution'.
+5. Add completion states tied to payment records where helpful:
+   requested, paid, reimbursed, completed.
+6. Add guardrails:
+   - clear disclosure of optionality,
+   - no pressure language,
+   - report/moderation path for abuse.
+7. Run npm run lint && npm run typecheck && npm run build.
+8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'in-app-payment-retention-trust-layer',
+    category: 'Growth & Monetization',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'In-App Payment Trust & Retention Layer',
+    description: 'UX and policy system that makes in-app payments easier and more useful than Zelle/Venmo without pretending off-platform payment can be fully prevented.',
+    why: 'JUnited can encourage in-app payment through convenience, records, status, receipts, admin visibility, and safer workflows, but should not overpromise enforcement.',
+    needs: 'connect-platform-payments-application-fees',
+    prompt: `You are implementing the in-app payment trust and retention layer for JUnited.
+
+Context:
+  - platform_payments must already be shipped.
+  - Existing UI includes comments, messages, community events, listings, and Mitzvah flows.
+
+Goals:
+1. Add clear in-app payment benefits in payment-eligible contexts:
+   - receipt stored in JUnited,
+   - payment-linked completion state,
+   - admin/community record,
+   - easier refund/dispute/support path,
+   - no need to exchange payment handles.
+2. Add payment_status displays on eligible event/listing/mitzvah cards where a user is involved.
+3. Add light policy copy discouraging payment handles in transaction contexts when an in-app
+   payment option exists. Do not over-block ordinary conversation.
+4. Add moderation/report signal for suspicious payment-handle pressure.
+5. Add admin/community transaction summaries where relevant.
+6. Run npm run lint && npm run typecheck && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {

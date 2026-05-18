@@ -7,17 +7,20 @@ import {
   Search, Loader2, Save, CheckCircle2, XCircle, ExternalLink,
   UserMinus, UserCheck, Crown, ShieldCheck, MoreVertical, Clock, TrendingUp,
   AlertCircle, ShieldAlert, Gavel, Activity, Trash2, AlertTriangle,
-  Pin, Image, Lock, Globe, Upload,
+  Pin, Image, Lock, Globe, Upload, CreditCard,
 } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
 import { dataService } from '@/services';
+import paymentsService from '@/services/paymentsService';
 import { notificationsService } from '@/services/notificationsService';
 import { COMMUNITY_TYPE_OPTIONS, getCommunityTypeKey } from '@/lib/communityTypes';
+import { formatPlanDate, getCommunityPlanStatusLabel, isCommunityPremium } from '@/lib/communityPlans';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TABS = [
   { key: 'overview',    label: 'Overview',    Icon: LayoutDashboard },
+  { key: 'billing',     label: 'Billing',     Icon: CreditCard },
   { key: 'analytics',   label: 'Analytics',   Icon: BarChart2 },
   { key: 'content',     label: 'Content',     Icon: Pin },
   { key: 'members',     label: 'Members',     Icon: Users },
@@ -28,10 +31,10 @@ const TABS = [
 ];
 
 const MODULE_CONFIG = [
-  { key: 'allow_member_events',   label: 'Events',      description: 'Members can create and view events' },
-  { key: 'allow_resources',       label: 'Resources',   description: 'Resource library tab for files and links' },
-  { key: 'allow_member_listings', label: 'Marketplace', description: 'Members can post buy/sell listings' },
-  { key: 'allow_group_chat',      label: 'Group Chat',  description: 'Real-time group chat tab' },
+  { key: 'allow_member_events',   label: 'Events',      description: 'Members can create and view events', premium: true },
+  { key: 'allow_resources',       label: 'Resources',   description: 'Resource library tab for files and links', premium: true },
+  { key: 'allow_member_listings', label: 'Marketplace', description: 'Members can post buy/sell listings', premium: true },
+  { key: 'allow_group_chat',      label: 'Group Chat',  description: 'Real-time group chat tab', premium: true },
 ];
 
 const SETTINGS_SECTIONS = [
@@ -244,7 +247,7 @@ export default function CommunityAdminCenter({
 
   if (!open || typeof document === 'undefined') return null;
 
-  const tabProps = { communityId, community, currentUser, onNavigateTo: setActiveTab, onDeleted };
+  const tabProps = { communityId, community, currentUser, onNavigateTo: setActiveTab, onCommunityUpdated, onDeleted };
 
   return createPortal(
     <div className="fixed inset-0 z-[110] flex flex-col bg-[#F8FAFB]">
@@ -294,6 +297,7 @@ export default function CommunityAdminCenter({
       {/* Tab content */}
       <main className="flex-1 overflow-y-auto">
         {activeTab === 'overview'   && <OverviewTab   {...tabProps} />}
+        {activeTab === 'billing'    && <BillingTab    {...tabProps} />}
         {activeTab === 'analytics'  && <AnalyticsTab  {...tabProps} />}
         {activeTab === 'content'    && <ContentTab    {...tabProps} />}
         {activeTab === 'members'    && <MembersTab    {...tabProps} />}
@@ -432,6 +436,204 @@ function OverviewTab({ communityId, community, onNavigateTo }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ─── Billing tab ─────────────────────────────────────────────────────────────
+
+function BillingTab({ communityId, community, currentUser, onCommunityUpdated }) {
+  const queryClient = useQueryClient();
+  const premiumActive = isCommunityPremium(community);
+  const { data: myMembershipRows = [] } = useQuery({
+    queryKey: ['community-billing-membership', communityId, currentUser?.id],
+    queryFn: () => dataService.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id }),
+    enabled: Boolean(communityId && currentUser?.id),
+  });
+  const membershipRole = String(myMembershipRows[0]?.role || community?.myRole || community?.role || '').toLowerCase();
+  const membershipStatus = String(myMembershipRows[0]?.status || 'active').toLowerCase();
+  const canManageBilling = Boolean(
+    currentUser?.role === 'admin'
+    || community?.created_by_user_id === currentUser?.id
+    || (membershipStatus === 'active' && ['owner', 'admin'].includes(membershipRole))
+  );
+
+  const { data: planRows = [], isLoading } = useQuery({
+    queryKey: ['community-plan-subscriptions', communityId],
+    queryFn: () => dataService.entities.CommunityPlanSubscription.filter(
+      { community_id: communityId },
+      '-created_at',
+      5
+    ),
+    enabled: Boolean(communityId && canManageBilling),
+  });
+
+  const latestPlan = planRows[0] || null;
+  const renewalDate = formatPlanDate(community?.plan_current_period_end || latestPlan?.current_period_end);
+  const statusLabel = getCommunityPlanStatusLabel(community?.plan_status || latestPlan?.status);
+
+  const checkoutMutation = useMutation({
+    mutationFn: (interval) => paymentsService.createCommunityPlanCheckout({ communityId, interval }),
+    onSuccess: ({ data }) => {
+      if (data?.checkoutUrl) window.location.href = data.checkoutUrl;
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Could not open Premium checkout');
+    },
+  });
+
+  const portalMutation = useMutation({
+    mutationFn: () => paymentsService.createCommunityPlanPortalSession({ communityId }),
+    onSuccess: ({ data }) => {
+      if (data?.portalUrl) window.location.href = data.portalUrl;
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Could not open billing portal');
+    },
+  });
+
+  const refreshBilling = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['community-plan-subscriptions', communityId] }),
+      queryClient.invalidateQueries({ queryKey: ['community', communityId] }),
+    ]);
+    onCommunityUpdated?.(community);
+  };
+
+  if (!canManageBilling) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-5">
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
+            <Lock className="h-5 w-5" />
+          </div>
+          <h2 className="text-lg font-black text-slate-950">Billing is limited to owners and admins</h2>
+          <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">
+            Moderators can help manage content and members, but only community owners and admins can change the paid plan.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-4 px-4 py-5">
+      <div className={`rounded-3xl border p-5 shadow-sm ${
+        premiumActive
+          ? 'border-blue-100 bg-gradient-to-br from-blue-50 via-white to-emerald-50'
+          : 'border-slate-100 bg-white'
+      }`}>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-slate-950 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white">
+              <Crown className="h-3.5 w-3.5" />
+              {statusLabel}
+            </p>
+            <h2 className="mt-3 text-xl font-black text-slate-950">
+              {premiumActive ? 'Premium Community Plan' : 'Free Community Plan'}
+            </h2>
+            <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">
+              {premiumActive
+                ? 'Advanced modules are unlocked for this community.'
+                : 'Keep the basics free, then upgrade when this community needs more tools.'}
+            </p>
+          </div>
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-700 shadow-sm ring-1 ring-blue-100">
+            <CreditCard className="h-5 w-5" />
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <PlanFeature label="Free" detail="Posts, members, about page" active />
+          <PlanFeature label="Premium" detail="Events, resources, listings, chat" active={premiumActive} />
+          <PlanFeature
+            label={renewalDate ? (latestPlan?.cancel_at_period_end ? 'Cancels' : 'Renews') : 'Status'}
+            detail={renewalDate || statusLabel}
+            active={premiumActive}
+          />
+        </div>
+
+        {community?.plan_status === 'past_due' && (
+          <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="text-[13px] font-black text-amber-900">Payment needs attention</p>
+            <p className="mt-0.5 text-[12px] font-semibold text-amber-800">
+              Premium features stay visible for now, but billing should be updated soon.
+            </p>
+          </div>
+        )}
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          {premiumActive || latestPlan ? (
+            <button
+              type="button"
+              onClick={() => portalMutation.mutate()}
+              disabled={portalMutation.isPending}
+              className="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-black text-white disabled:opacity-60"
+            >
+              {portalMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+              Manage billing
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => checkoutMutation.mutate('monthly')}
+                disabled={checkoutMutation.isPending}
+                className="inline-flex h-11 items-center gap-2 rounded-2xl bg-blue-600 px-5 text-sm font-black text-white shadow-sm shadow-blue-600/20 disabled:opacity-60"
+              >
+                {checkoutMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
+                Upgrade monthly
+              </button>
+              <button
+                type="button"
+                onClick={() => checkoutMutation.mutate('annual')}
+                disabled={checkoutMutation.isPending}
+                className="inline-flex h-11 items-center gap-2 rounded-2xl border border-blue-100 bg-blue-50 px-5 text-sm font-black text-blue-700 disabled:opacity-60"
+              >
+                Annual plan
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            onClick={refreshBilling}
+            disabled={isLoading}
+            className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-600 disabled:opacity-60"
+          >
+            Refresh status
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+        <SectionHeader title="Premium unlocks" />
+        <div className="mt-3 grid gap-2">
+          {MODULE_CONFIG.map((module) => (
+            <div key={module.key} className="flex items-start gap-3 rounded-2xl bg-slate-50 px-3 py-3">
+              <div className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full ${
+                premiumActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'
+              }`}>
+                {premiumActive ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[13px] font-black text-slate-900">{module.label}</p>
+                <p className="mt-0.5 text-[12px] font-semibold leading-5 text-slate-500">{module.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlanFeature({ label, detail, active }) {
+  return (
+    <div className={`rounded-2xl border px-3 py-3 ${
+      active ? 'border-blue-100 bg-white text-slate-900' : 'border-slate-100 bg-slate-50 text-slate-500'
+    }`}>
+      <p className="text-[11px] font-black uppercase tracking-wide">{label}</p>
+      <p className="mt-1 text-[12px] font-bold leading-5">{detail}</p>
     </div>
   );
 }
@@ -1803,6 +2005,7 @@ function AppearanceSection({ communityId, community, onCommunityUpdated }) {
 }
 
 function ModulesSection({ communityId, community, onCommunityUpdated }) {
+  const premiumActive = isCommunityPremium(community);
   const [flags, setFlags] = useState({
     allow_member_events:   Boolean(community?.allow_member_events),
     allow_resources:       Boolean(community?.allow_resources),
@@ -1811,9 +2014,20 @@ function ModulesSection({ communityId, community, onCommunityUpdated }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const toggle = (key) => setFlags(f => ({ ...f, [key]: !f[key] }));
+  const toggle = (key) => {
+    const moduleConfig = MODULE_CONFIG.find((module) => module.key === key);
+    if (moduleConfig?.premium && !premiumActive) {
+      toast.info('Upgrade to Premium to enable this module.');
+      return;
+    }
+    setFlags(f => ({ ...f, [key]: !f[key] }));
+  };
 
   const handleSave = async () => {
+    if (!premiumActive && MODULE_CONFIG.some(({ key, premium }) => premium && flags[key])) {
+      toast.info('Premium modules need an active community plan.');
+      return;
+    }
     setSaving(true);
     try {
       const updated = await dataService.entities.Community.update(communityId, flags);
@@ -1828,6 +2042,14 @@ function ModulesSection({ communityId, community, onCommunityUpdated }) {
 
   return (
     <div className="space-y-4">
+      {!premiumActive && (
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3">
+          <p className="text-[13px] font-black text-blue-900">Advanced modules are Premium</p>
+          <p className="mt-0.5 text-[12px] font-semibold leading-5 text-blue-700">
+            Posts, members, and the About page stay free. Events, resources, marketplace, and group chat unlock after upgrading in Billing.
+          </p>
+        </div>
+      )}
       <div className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-4 py-3.5 flex items-center justify-between border-b border-slate-100">
           <div className="flex-1 min-w-0 pr-4">
@@ -1838,19 +2060,29 @@ function ModulesSection({ communityId, community, onCommunityUpdated }) {
             <div className="w-5 h-5 rounded-full bg-white shadow-sm" />
           </div>
         </div>
-        {MODULE_CONFIG.map(({ key, label, description }, idx) => (
+        {MODULE_CONFIG.map(({ key, label, description, premium }, idx) => {
+          const locked = premium && !premiumActive;
+          return (
           <div
             key={key}
-            className={`px-4 py-3.5 flex items-center justify-between ${idx < MODULE_CONFIG.length - 1 ? 'border-b border-slate-100' : ''}`}
+            className={`px-4 py-3.5 flex items-center justify-between ${idx < MODULE_CONFIG.length - 1 ? 'border-b border-slate-100' : ''} ${locked ? 'bg-slate-50/70' : ''}`}
           >
             <div className="flex-1 min-w-0 pr-4">
-              <p className="text-[14px] font-bold text-slate-900">{label}</p>
+              <p className="flex items-center gap-1.5 text-[14px] font-bold text-slate-900">
+                {label}
+                {premium && (
+                  <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-blue-700">
+                    Premium
+                  </span>
+                )}
+              </p>
               <p className="text-[12px] text-slate-400 mt-0.5">{description}</p>
             </div>
             <button
               type="button"
               onClick={() => toggle(key)}
-              className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 flex-shrink-0 ${
+              disabled={locked}
+              className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 flex-shrink-0 disabled:cursor-not-allowed disabled:opacity-50 ${
                 flags[key] ? 'bg-blue-600 justify-end' : 'bg-slate-200 justify-start'
               }`}
               aria-checked={flags[key]}
@@ -1859,7 +2091,8 @@ function ModulesSection({ communityId, community, onCommunityUpdated }) {
               <div className="w-5 h-5 rounded-full bg-white shadow-sm" />
             </button>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <button

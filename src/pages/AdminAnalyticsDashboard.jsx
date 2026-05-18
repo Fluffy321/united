@@ -1,13 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { dataService } from '@/services';
+import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, TrendingUp, Users, MessageSquare, Calendar, Activity, AlertTriangle, Download, ArrowUpRight, ArrowDownRight, ArrowLeft } from 'lucide-react';
+import { Heart, Loader2, TrendingUp, Users, MessageSquare, Calendar, Activity, AlertTriangle, Download, ArrowUpRight, ArrowDownRight, ArrowLeft, CreditCard, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 import { subDays, format, startOfDay } from 'date-fns';
 
 const COLORS = ['#2563EB', '#7C3AED', '#EC4899', '#F59E0B', '#10B981', '#06B6D4', '#EF4444', '#84CC16'];
+
+// Server-authoritative MRR amounts per tier+interval (monthly equivalent)
+const MRR_AMOUNTS = {
+  supporter: { monthly: 18, annual: 15 },  // $180/yr ÷ 12
+  builder:   { monthly: 36, annual: 30 },  // $360/yr ÷ 12
+  champion:  { monthly: 72, annual: 60 },  // $720/yr ÷ 12
+};
+
+const SUB_TIER_LABELS = {
+  supporter: 'Supporter',
+  builder:   'Community Builder',
+  champion:  'JUnited Champion',
+};
+
+const SUB_TIER_COLORS = {
+  supporter: 'bg-blue-400',
+  builder:   'bg-violet-400',
+  champion:  'bg-rose-400',
+};
 
 const FUNNEL_META = {
   Signups: {
@@ -69,7 +89,7 @@ function getSignalRows(funnel) {
 }
 
 function StatCard({ icon, label, value, sub, trend, color = 'blue' }) {
-  const colorMap = { blue: 'bg-blue-50 text-blue-600', purple: 'bg-purple-50 text-purple-600', green: 'bg-emerald-50 text-emerald-600', amber: 'bg-amber-50 text-amber-600', red: 'bg-red-50 text-red-600', teal: 'bg-teal-50 text-teal-600' };
+  const colorMap = { blue: 'bg-blue-50 text-blue-600', purple: 'bg-purple-50 text-purple-600', green: 'bg-emerald-50 text-emerald-600', amber: 'bg-amber-50 text-amber-600', red: 'bg-red-50 text-red-600', teal: 'bg-teal-50 text-teal-600', rose: 'bg-rose-50 text-rose-600' };
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${colorMap[color]}`}>{icon}</div>
@@ -186,6 +206,27 @@ function buildDailyBuckets(items, dateField, days = 30) {
   return Object.entries(buckets).map(([date, count]) => ({ date, count }));
 }
 
+// Build weekly buckets for last N weeks (week starts on Sunday)
+function buildWeeklyBuckets(items, dateField, weeks = 8) {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0 = Sun
+  const buckets = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - dayOfWeek - i * 7);
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+    buckets.push({ weekStart, weekEnd, date: format(weekStart, 'MMM d'), count: 0 });
+  }
+  (items || []).forEach(item => {
+    if (!item[dateField]) return;
+    const d = new Date(item[dateField]);
+    const bucket = buckets.find(b => d >= b.weekStart && d < b.weekEnd);
+    if (bucket) bucket.count++;
+  });
+  return buckets.map(({ date, count }) => ({ date, count }));
+}
+
 export default function AdminAnalyticsDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -200,14 +241,26 @@ export default function AdminAnalyticsDashboard() {
 
   const loadData = async () => {
     try {
-      const [communities, posts, users, reports, events, userCommunities] = await Promise.all([
+      const [communities, posts, users, reports, events, userCommunities, subsResult, communityPlansResult] = await Promise.all([
         dataService.entities.Community.list('-follower_count', 200),
         dataService.entities.UnifiedPost.list('-created_date', 500),
         dataService.entities.User.list('-created_date', 500),
         dataService.entities.Report.list('-created_date', 200),
         dataService.entities.CommunityEvent.list('-created_date', 200),
         dataService.entities.UserCommunity.list('-created_date', 500),
+        supabase
+          .from('subscriptions')
+          .select('id, tier, interval, status, created_at')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('community_plan_subscriptions')
+          .select('id, community_id, billing_interval, status, current_period_end, cancel_at_period_end, created_at')
+          .order('created_at', { ascending: false }),
       ]);
+
+      // subscriptions — gracefully handle if table doesn't exist yet
+      const subscriptions = subsResult?.data ?? [];
+      const communityPlanSubscriptions = communityPlansResult?.data ?? [];
 
       const now = Date.now();
       const DAY = 86400000;
@@ -264,7 +317,66 @@ export default function AdminAnalyticsDashboard() {
         return { id: c.id, name: c.name, members: c.follower_count || 0, postsThisWeek: recentPosts, type: c.type };
       }).sort((a, b) => b.postsThisWeek - a.postsThisWeek);
 
-      setData({ dau, wau, mau, signupsPerDay, postsPerDay, postTypeData, topCommunities, reportsPerDay, unresolvedReports, resolvedReports, funnel, engByType, communityHealth, totalUsers: users.length, totalPosts: posts.length, totalCommunities: communities.length, totalEvents: events.length });
+      // ── Subscription metrics ──────────────────────────────────────────────
+      const activeSubs      = subscriptions.filter(s => s.status === 'active' || s.status === 'trialing');
+      const monthlyActiveSubs = activeSubs.filter(s => s.interval === 'monthly');
+      const annualActiveSubs  = activeSubs.filter(s => s.interval === 'annual');
+      const pastDueSubs     = subscriptions.filter(s => s.status === 'past_due');
+
+      const totalActiveSubs = activeSubs.length;
+      const pastDueCount    = pastDueSubs.length;
+      const monthlyCount    = monthlyActiveSubs.length;
+      const annualCount     = annualActiveSubs.length;
+      const annualPct       = totalActiveSubs > 0 ? Math.round((annualCount / totalActiveSubs) * 100) : 0;
+
+      const monthlyMrr = monthlyActiveSubs.reduce((sum, s) => sum + (MRR_AMOUNTS[s.tier]?.monthly ?? 0), 0);
+      const annualMrr  = annualActiveSubs.reduce((sum, s) => sum + (MRR_AMOUNTS[s.tier]?.annual ?? 0), 0);
+      const mrr        = monthlyMrr + annualMrr;
+      const arr        = mrr * 12;
+
+      const tierBreakdown = ['supporter', 'builder', 'champion'].map(tier => {
+        const tierSubs = activeSubs.filter(s => s.tier === tier);
+        const amounts  = MRR_AMOUNTS[tier];
+        const tierMrr  = tierSubs.reduce((sum, s) => sum + (s.interval === 'annual' ? (amounts?.annual ?? 0) : (amounts?.monthly ?? 0)), 0);
+        return {
+          tier,
+          label: SUB_TIER_LABELS[tier] ?? tier,
+          count: tierSubs.length,
+          mrr:   tierMrr,
+        };
+      });
+
+      const subsPerWeek = buildWeeklyBuckets(subscriptions, 'created_at', 8);
+
+      // ── Premium Community metrics ───────────────────────────────────────
+      const activeCommunityPlans = communityPlanSubscriptions.filter(s => s.status === 'active' || s.status === 'trialing');
+      const pastDueCommunityPlans = communityPlanSubscriptions.filter(s => s.status === 'past_due');
+      const monthlyCommunityPlans = activeCommunityPlans.filter(s => s.billing_interval === 'monthly');
+      const annualCommunityPlans = activeCommunityPlans.filter(s => s.billing_interval === 'annual');
+      const premiumCommunityIds = new Set(activeCommunityPlans.map(s => s.community_id));
+      const premiumCommunities = communities.filter(c => premiumCommunityIds.has(c.id) || c.plan_key === 'community_premium');
+      const communityPlansPerWeek = buildWeeklyBuckets(communityPlanSubscriptions, 'created_at', 8);
+
+      setData({
+        dau, wau, mau,
+        signupsPerDay, postsPerDay, postTypeData, topCommunities,
+        reportsPerDay, unresolvedReports, resolvedReports,
+        funnel, engByType, communityHealth,
+        totalUsers: users.length, totalPosts: posts.length,
+        totalCommunities: communities.length, totalEvents: events.length,
+        // subscription metrics
+        subscriptions, totalActiveSubs, pastDueCount,
+        monthlyCount, annualCount, annualPct,
+        mrr, arr, monthlyMrr, annualMrr,
+        tierBreakdown, subsPerWeek,
+        communityPlanSubscriptions,
+        activeCommunityPlans,
+        pastDueCommunityPlans,
+        monthlyCommunityPlans,
+        annualCommunityPlans,
+        premiumCommunities,
+        communityPlansPerWeek,
+      });
     } catch (e) {
       toast.error('Failed to load analytics');
       console.error(e);
@@ -278,11 +390,13 @@ export default function AdminAnalyticsDashboard() {
   if (!data) return null;
 
   const TABS = [
-    { key: 'platform', label: 'Platform' },
+    { key: 'platform',    label: 'Platform' },
     { key: 'communities', label: 'Communities' },
-    { key: 'feed', label: 'Feed Health' },
-    { key: 'moderation', label: 'Moderation' },
-    { key: 'funnel', label: 'Growth Funnel' },
+    { key: 'feed',        label: 'Feed Health' },
+    { key: 'moderation',  label: 'Moderation' },
+    { key: 'funnel',      label: 'Growth Funnel' },
+    { key: 'supporters',  label: 'Supporters' },
+    { key: 'premiumCommunities', label: 'Premium Communities' },
   ];
   const activationRows = getSignalRows(data.funnel);
 
@@ -515,6 +629,244 @@ export default function AdminAnalyticsDashboard() {
             </ChartCard>
           </div>
         )}
+
+        {/* SUPPORTERS TAB */}
+        {tab === 'supporters' && (
+          <div className="space-y-6">
+            {/* KPI row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard
+                icon={<Heart className="w-5 h-5" />}
+                label="Active Subscribers"
+                value={data.totalActiveSubs}
+                sub={data.totalActiveSubs === 0 ? 'No active subscriptions' : `${data.totalActiveSubs} supporter${data.totalActiveSubs !== 1 ? 's' : ''}`}
+                color="rose"
+              />
+              <StatCard
+                icon={<TrendingUp className="w-5 h-5" />}
+                label="MRR"
+                value={`$${data.mrr.toLocaleString()}`}
+                sub={`$${data.arr.toLocaleString()} ARR`}
+                color="blue"
+              />
+              <StatCard
+                icon={<Calendar className="w-5 h-5" />}
+                label="Annual Plan"
+                value={data.annualCount}
+                sub={data.totalActiveSubs > 0 ? `${data.annualPct}% of active subscribers` : '—'}
+                color="teal"
+              />
+              <StatCard
+                icon={<AlertTriangle className="w-5 h-5" />}
+                label="Past Due"
+                value={data.pastDueCount}
+                sub={data.pastDueCount > 0 ? 'Need payment update' : 'All payments current'}
+                color={data.pastDueCount > 0 ? 'amber' : 'green'}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Tier breakdown */}
+              <ChartCard title="Breakdown by Tier" onExport={() => exportCSV(data.tierBreakdown, 'tier-breakdown.csv')}>
+                {data.totalActiveSubs === 0 ? (
+                  <p className="py-8 text-center text-[13px] text-slate-400">No active subscribers yet</p>
+                ) : (
+                  <div className="divide-y divide-slate-100">
+                    {data.tierBreakdown.map(row => (
+                      <div key={row.tier} className="flex items-center justify-between py-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`h-2.5 w-2.5 rounded-full ${SUB_TIER_COLORS[row.tier] ?? 'bg-slate-400'}`} />
+                          <span className="text-[13.5px] font-semibold text-slate-700">{row.label}</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[13.5px] font-bold text-slate-900">
+                            {row.count} {row.count === 1 ? 'subscriber' : 'subscribers'}
+                          </p>
+                          <p className="text-[11.5px] text-slate-400">${row.mrr}/mo MRR</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ChartCard>
+
+              {/* Monthly vs Annual split */}
+              <ChartCard title="Monthly vs Annual">
+                <div className="space-y-5">
+                  {[
+                    { label: 'Monthly', count: data.monthlyCount, mrrContrib: data.monthlyMrr, color: 'bg-blue-500' },
+                    { label: 'Annual',  count: data.annualCount,  mrrContrib: data.annualMrr,  color: 'bg-emerald-500' },
+                  ].map(({ label, count, mrrContrib, color }) => {
+                    const pct = data.totalActiveSubs > 0
+                      ? Math.round((count / data.totalActiveSubs) * 100)
+                      : 0;
+                    return (
+                      <div key={label} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[13.5px] font-semibold text-slate-700">{label}</span>
+                            <span className="text-[11.5px] text-slate-400">${mrrContrib}/mo</span>
+                          </div>
+                          <span className="text-[13px] font-bold text-slate-800">
+                            {count} <span className="font-normal text-slate-400">({pct}%)</span>
+                          </span>
+                        </div>
+                        <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className={`${color} h-full rounded-full transition-all duration-500`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {data.totalActiveSubs === 0 && (
+                    <p className="pt-4 text-center text-[13px] text-slate-400">No active subscribers yet</p>
+                  )}
+                </div>
+              </ChartCard>
+            </div>
+
+            {/* New subscriptions per week */}
+            <ChartCard
+              title="New Subscriptions Per Week (last 8 weeks)"
+              onExport={() => exportCSV(data.subsPerWeek, 'subs-per-week.csv')}
+            >
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={data.subsPerWeek}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                  <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} allowDecimals={false} />
+                  <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
+                  <Bar dataKey="count" fill="#F43F5E" radius={[6, 6, 0, 0]} name="New subscribers" />
+                </BarChart>
+              </ResponsiveContainer>
+              {data.subscriptions.length === 0 && (
+                <p className="mt-3 text-center text-[12px] text-slate-400">
+                  No subscription data — apply the migration and configure Stripe to see data here.
+                </p>
+              )}
+            </ChartCard>
+          </div>
+        )}
+
+        {/* PREMIUM COMMUNITIES TAB */}
+        {tab === 'premiumCommunities' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard
+                icon={<Crown className="w-5 h-5" />}
+                label="Premium Communities"
+                value={data.activeCommunityPlans.length}
+                sub={`${data.premiumCommunities.length} premium community record${data.premiumCommunities.length !== 1 ? 's' : ''}`}
+                color="blue"
+              />
+              <StatCard
+                icon={<CreditCard className="w-5 h-5" />}
+                label="Monthly Plans"
+                value={data.monthlyCommunityPlans.length}
+                sub="Community SaaS subscriptions"
+                color="purple"
+              />
+              <StatCard
+                icon={<Calendar className="w-5 h-5" />}
+                label="Annual Plans"
+                value={data.annualCommunityPlans.length}
+                sub="Premium communities billed yearly"
+                color="teal"
+              />
+              <StatCard
+                icon={<AlertTriangle className="w-5 h-5" />}
+                label="Past Due"
+                value={data.pastDueCommunityPlans.length}
+                sub={data.pastDueCommunityPlans.length > 0 ? 'Needs billing follow-up' : 'All community plans current'}
+                color={data.pastDueCommunityPlans.length > 0 ? 'amber' : 'green'}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ChartCard
+                title="New Premium Community Plans Per Week"
+                onExport={() => exportCSV(data.communityPlansPerWeek, 'premium-community-plans-per-week.csv')}
+              >
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={data.communityPlansPerWeek}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} allowDecimals={false} />
+                    <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
+                    <Bar dataKey="count" fill="#2563EB" radius={[6, 6, 0, 0]} name="New premium plans" />
+                  </BarChart>
+                </ResponsiveContainer>
+                {data.communityPlanSubscriptions.length === 0 && (
+                  <p className="mt-3 text-center text-[12px] text-slate-400">
+                    No Premium Community subscription data yet.
+                  </p>
+                )}
+              </ChartCard>
+
+              <ChartCard title="Billing Interval Split">
+                <div className="space-y-5">
+                  {[
+                    { label: 'Monthly', count: data.monthlyCommunityPlans.length, color: 'bg-blue-500' },
+                    { label: 'Annual', count: data.annualCommunityPlans.length, color: 'bg-emerald-500' },
+                  ].map(({ label, count, color }) => {
+                    const total = data.activeCommunityPlans.length;
+                    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                    return (
+                      <div key={label} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[13.5px] font-semibold text-slate-700">{label}</span>
+                          <span className="text-[13px] font-bold text-slate-800">
+                            {count} <span className="font-normal text-slate-400">({pct}%)</span>
+                          </span>
+                        </div>
+                        <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                          <div className={`${color} h-full rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {data.activeCommunityPlans.length === 0 && (
+                    <p className="pt-4 text-center text-[13px] text-slate-400">No active Premium Community plans yet</p>
+                  )}
+                </div>
+              </ChartCard>
+            </div>
+
+            <ChartCard title="Premium Community Records" onExport={() => exportCSV(data.communityPlanSubscriptions, 'premium-community-subscriptions.csv')}>
+              {data.communityPlanSubscriptions.length === 0 ? (
+                <p className="py-8 text-center text-[13px] text-slate-400">No community plan subscriptions yet</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[13px]">
+                    <thead>
+                      <tr className="border-b border-slate-100">
+                        <th className="py-2 text-left font-semibold text-slate-500">Community ID</th>
+                        <th className="py-2 text-left font-semibold text-slate-500">Interval</th>
+                        <th className="py-2 text-left font-semibold text-slate-500">Status</th>
+                        <th className="py-2 text-right font-semibold text-slate-500">Period end</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.communityPlanSubscriptions.map(plan => (
+                        <tr key={plan.id} className="border-b border-slate-50 hover:bg-slate-50">
+                          <td className="py-2.5 font-medium text-slate-900">{plan.community_id}</td>
+                          <td className="py-2.5 text-slate-500">{plan.billing_interval}</td>
+                          <td className="py-2.5 text-slate-700">{plan.status}</td>
+                          <td className="py-2.5 text-right text-slate-500">
+                            {plan.current_period_end ? format(new Date(plan.current_period_end), 'MMM d, yyyy') : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </ChartCard>
+          </div>
+        )}
+
       </div>
     </div>
   );
