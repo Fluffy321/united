@@ -1074,6 +1074,8 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
   const { user: currentUser } = useAuth();
   const [selectedCommunityIds, setSelectedCommunityIds] = useState(() => new Set());
   const [{ hiddenCommunityIds, hiddenPosterIds }, setMapFilterState] = useState(readMapFilterState);
+  const categoryParam = searchParams.get('category') || '';
+  const placeParam = searchParams.get('place') || '';
 
   const { data: requests = [] } = useQuery({
     queryKey: ['mitzvah-requests-map'],
@@ -1298,7 +1300,9 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
           userLocation={userLocation}
           communityPoints={communityPoints}
           personalized
-          includeStaticPoints={false}
+          includeStaticPoints
+          initialPrimaryFilter={categoryParam}
+          highlightedPlace={placeParam}
           mapHeight="clamp(520px, 68dvh, 760px)"
         />
       </div>
@@ -1309,7 +1313,9 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
 export default function MapPage() {
   const { user: currentUser } = useAuth();
   const [searchParams] = useSearchParams();
-  const [activeView, setActiveView] = useState('businesses');
+  const [activeView, setActiveView] = useState(() => (
+    searchParams.get('category') ? 'community' : 'businesses'
+  ));
   const [userLocation, setUserLocation] = useState(null);
   const [locationStatus, setLocationStatus] = useState('idle');
 
@@ -1337,6 +1343,12 @@ export default function MapPage() {
     if (window.sessionStorage.getItem(MAP_LOCATION_PROMPT_KEY)) return;
     requestUserLocation(true);
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get('category') || searchParams.get('requestId')) {
+      setActiveView('community');
+    }
+  }, [searchParams]);
 
   const handleUseMyLocation = () => requestUserLocation(true);
 

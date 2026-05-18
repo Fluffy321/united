@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 import PageHelp from '@/components/common/PageHelp';
 import DestinationHeader from '@/components/layout/DestinationHeader';
 import CarpoolBoard from '@/components/mitzvah/CarpoolBoard';
+import ShulMinyanBoard from '@/components/mitzvah/ShulMinyanBoard';
 
 const CATEGORIES = [
   'Transportation',
@@ -1182,7 +1183,7 @@ export default function MitzvahCircle() {
   const { user: currentUser, isLoadingAuth } = useAuth();
   const queryClient = useQueryClient();
 
-  const VALID_VIEWS = ['browse', 'offers', 'posted', 'completed'];
+  const VALID_VIEWS = ['browse', 'shuls', 'offers', 'posted', 'completed'];
   const [activeView, setActiveView] = React.useState(() => {
     const tab = searchParams.get('tab');
     if (tab === 'open' || tab === 'carpool') return 'browse';
@@ -1541,6 +1542,7 @@ export default function MitzvahCircle() {
 
   const workflowTabs = [
     { id: 'browse', label: 'Browse Needs' },
+    { id: 'shuls', label: 'Shuls & Minyan' },
     { id: 'offers', label: 'My Offers' },
     { id: 'posted', label: 'My Requests' },
     { id: 'completed', label: 'Completed' },
@@ -1573,38 +1575,40 @@ export default function MitzvahCircle() {
 
       <section className="mobile-page-wide px-3 pt-3 sm:px-4 sm:pt-4">
         {/* Header */}
-        <div className="overflow-hidden rounded-[30px] border border-blue-100 bg-gradient-to-br from-white via-blue-50/70 to-indigo-50 shadow-sm">
-          <div className="relative p-4 sm:p-5">
-            <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full bg-white/50 blur-2xl" />
-            <div className="relative space-y-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/75 px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-blue-700">
-                    <HandHeart className="h-3.5 w-3.5" />
-                    Community help hub
+        {activeView !== 'shuls' && (
+          <div className="overflow-hidden rounded-[30px] border border-blue-100 bg-gradient-to-br from-white via-blue-50/70 to-indigo-50 shadow-sm">
+            <div className="relative p-4 sm:p-5">
+              <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full bg-white/50 blur-2xl" />
+              <div className="relative space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/75 px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-blue-700">
+                      <HandHeart className="h-3.5 w-3.5" />
+                      Community help hub
+                    </div>
+                    <p className="max-w-xl text-[15px] font-black leading-6 text-slate-950">
+                      Give help. Ask for help. Strengthen the community.
+                    </p>
                   </div>
-                  <p className="max-w-xl text-[15px] font-black leading-6 text-slate-950">
-                    Give help. Ask for help. Strengthen the community.
-                  </p>
+                  <button
+                    onClick={() => setShowCreate(true)}
+                    className="app-button-primary h-11 shrink-0 px-3 sm:px-4"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">Post Request</span>
+                    <span className="sm:hidden">Post</span>
+                  </button>
                 </div>
-                <button
-                  onClick={() => setShowCreate(true)}
-                  className="app-button-primary h-11 shrink-0 px-3 sm:px-4"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Post Request</span>
-                  <span className="sm:hidden">Post</span>
-                </button>
-              </div>
 
-              <div className="grid grid-cols-3 gap-2">
-                <Metric icon={HandHeart} label="Open" value={totals.openCount} tone="blue" />
-                <Metric icon={Clock} label="In Progress" value={totals.offeredCount} tone="amber" />
-                <Metric icon={Award} label="Completed" value={totals.completedCount} tone="emerald" />
+                <div className="grid grid-cols-3 gap-2">
+                  <Metric icon={HandHeart} label="Open" value={totals.openCount} tone="blue" />
+                  <Metric icon={Clock} label="In Progress" value={totals.offeredCount} tone="amber" />
+                  <Metric icon={Award} label="Completed" value={totals.completedCount} tone="emerald" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Activity views */}
         <div className="sticky top-0 z-20 -mx-3 mt-3 bg-[#F6F8FB]/78 px-3 py-2 backdrop-blur sm:-mx-4 sm:px-4">
@@ -1629,7 +1633,7 @@ export default function MitzvahCircle() {
         </div>
 
         {/* Search/filter bar */}
-        {activeView !== 'offers' && (
+        {activeView !== 'offers' && activeView !== 'shuls' && (
           <div className="surface-panel-soft mb-3 space-y-3 rounded-[24px] p-3">
             {activeView === 'browse' && (
               <div>
@@ -1699,6 +1703,10 @@ export default function MitzvahCircle() {
 
         {/* Tab content */}
         <div key={`${activeView}-${activeCategory}`} className="motion-stagger space-y-3">
+          {activeView === 'shuls' && (
+            <ShulMinyanBoard currentUser={currentUser} />
+          )}
+
           {activeView === 'browse' && (
             loadingRequests ? (
               <div className="flex justify-center py-8">

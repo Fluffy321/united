@@ -1167,7 +1167,17 @@ function getMapLinks(point, userLocation) {
   };
 }
 
-export default function MitzvahMap({ requests, userLocation, onSelectRequest, communityPoints = [], personalized = true, mapHeight, includeStaticPoints = false }) {
+export default function MitzvahMap({
+  requests,
+  userLocation,
+  onSelectRequest,
+  communityPoints = [],
+  personalized = true,
+  mapHeight,
+  includeStaticPoints = false,
+  initialPrimaryFilter = '',
+  highlightedPlace = '',
+}) {
   const [mapCenter, setMapCenter] = useState(null);
   const [activeTypes, setActiveTypes] = useState(() => new Set());
   const [selectedPoint, setSelectedPoint] = useState(null);
@@ -1248,14 +1258,29 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
   const selectedDistance = formatDistance(getDistanceMiles(userLocation, selectedPoint));
 
   useEffect(() => {
-    if (userLocation) {
+    if (!initialPrimaryFilter) return;
+    const filter = PRIMARY_FILTERS.find((item) => item.key === initialPrimaryFilter);
+    if (!filter) return;
+    setActiveTypes(new Set(filter.types));
+  }, [initialPrimaryFilter]);
+
+  useEffect(() => {
+    const normalizedPlace = String(highlightedPlace || '').trim().toLowerCase();
+    const highlightedPoint = normalizedPlace
+      ? allPoints.find((point) => String(point.title || '').trim().toLowerCase() === normalizedPlace)
+      : null;
+
+    if (highlightedPoint?.location_lat && highlightedPoint?.location_lng) {
+      setMapCenter([highlightedPoint.location_lat, highlightedPoint.location_lng]);
+      setSelectedPoint(highlightedPoint);
+    } else if (userLocation) {
       setMapCenter([userLocation.lat, userLocation.lng]);
     } else if (allPoints.length > 0 && allPoints[0].location_lat) {
       setMapCenter([allPoints[0].location_lat, allPoints[0].location_lng]);
     } else {
       setMapCenter([40.6249, -73.7178]);
     }
-  }, [userLocation, allPoints]);
+  }, [userLocation, allPoints, highlightedPlace]);
 
   useEffect(() => {
     if (!selectedPoint) return;
