@@ -81,7 +81,15 @@ export default function CommunityGroupsTab({ communityId, currentUser, isAdmin }
     return (
       <div className="pt-4 space-y-3">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="h-20 rounded-2xl bg-slate-100 animate-pulse" />
+          <div key={i} className="flex items-center gap-3 rounded-[20px] border border-slate-100 bg-white px-4 py-3">
+            <div className="skeleton h-12 w-12 rounded-2xl flex-shrink-0" />
+            <div className="flex-1 space-y-2 min-w-0">
+              <div className="skeleton h-3.5 w-2/3 rounded" />
+              <div className="skeleton h-2.5 w-5/6 rounded" />
+              <div className="skeleton h-2.5 w-1/3 rounded" />
+            </div>
+            <div className="skeleton h-7 w-14 rounded-full flex-shrink-0" />
+          </div>
         ))}
       </div>
     );

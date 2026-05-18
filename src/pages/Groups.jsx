@@ -3,12 +3,57 @@ import { useNavigate } from 'react-router-dom';
 import { dataService, incrementCounter } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, Users } from 'lucide-react';
 import GroupCard from '@/components/groups/GroupCard';
 import CreateGroupModal from '@/components/groups/CreateGroupModal';
 import { toast } from 'sonner';
 
 const CATEGORIES = ['All', 'Torah Learning', 'Shabbat', 'Chesed', 'Events', 'Youth', 'Families', 'Seniors', 'General'];
+
+function GroupsLoadingSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="j-card overflow-hidden">
+          <div className="skeleton h-[72px] rounded-none" />
+          <div className="p-3 space-y-2">
+            <div className="skeleton h-3.5 w-3/4 rounded" />
+            <div className="skeleton h-2.5 w-full rounded" />
+            <div className="skeleton h-2.5 w-1/2 rounded" />
+            <div className="skeleton h-7 w-full rounded-full mt-2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EmptyGroupsState({ search, onCreateClick }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-14 text-center px-4">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[18px] bg-blue-600 text-white shadow-md">
+        <Users className="h-7 w-7" />
+      </div>
+      <p className="text-[15px] font-bold text-slate-900">
+        {search ? 'No matching groups' : 'No groups yet'}
+      </p>
+      <p className="mt-1.5 text-[13px] text-slate-500 leading-5 max-w-[220px]">
+        {search
+          ? 'Try a different search or browse all categories.'
+          : 'Be the first to create a group for your community.'}
+      </p>
+      {!search && (
+        <button
+          onClick={onCreateClick}
+          className="mt-4 flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-full text-[13px] font-bold active:scale-95 transition-all"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Create a Group
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function Groups() {
   const { user: currentUser } = useAuth();
@@ -26,11 +71,11 @@ export default function Groups() {
     });
   }, [currentUser?.id]);
 
-  const { data: groups = [], refetch } = useQuery({
+  const { data: groups = [], isLoading, refetch } = useQuery({
     queryKey: ['community-groups'],
     queryFn: () => dataService.entities.CommunityGroup.list('-created_date', 100),
     staleTime: 60000,
-    enabled: !!currentUser
+    enabled: !!currentUser,
   });
 
   const handleJoin = async (group) => {
@@ -39,7 +84,7 @@ export default function Groups() {
         group_id: group.id,
         user_id: currentUser.id,
         user_name: currentUser.full_name || currentUser.display_name,
-        role: 'member'
+        role: 'member',
       });
       await incrementCounter('community_groups', 'member_count', group.id, 1);
       setMembershipSet(prev => new Set([...prev, group.id]));
@@ -73,15 +118,14 @@ export default function Groups() {
   const discoverGroups = filtered.filter(g => !membershipSet.has(g.id));
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
+    <div className="min-h-screen bg-[#FDFCF8]">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-white" style={{ borderBottom: '1px solid var(--border)' }}>
-        <div className="max-w-2xl mx-auto px-4 h-12 flex items-center justify-between">
-          <span className="font-bold text-[17px] text-[#0F1C2E]">Groups</span>
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-slate-100">
+        <div className="mobile-page px-4 h-14 flex items-center justify-between">
+          <span className="font-bold text-[17px] text-slate-900">Groups</span>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-[13px] font-bold active:scale-95 transition-all"
-            style={{ background: 'var(--primary)' }}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-600 text-white text-[13px] font-bold active:scale-95 transition-all hover:bg-blue-500"
           >
             <Plus className="w-3.5 h-3.5" />
             Create Group
@@ -89,29 +133,30 @@ export default function Groups() {
         </div>
 
         {/* Search */}
-        <div className="px-4 pb-3 max-w-2xl mx-auto">
-          <div className="flex items-center gap-2 bg-[#f1f5f9] rounded-xl px-3 py-2">
-            <Search className="w-4 h-4 text-[#94a3b8]" />
+        <div className="px-4 pb-3 mobile-page">
+          <label className="flex items-center gap-2 bg-slate-100 rounded-xl px-3 py-2.5 focus-within:ring-2 focus-within:ring-blue-200 transition-all">
+            <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
             <input
-              className="flex-1 bg-transparent text-[14px] outline-none placeholder:text-[#94a3b8]"
+              className="flex-1 bg-transparent text-[14px] outline-none placeholder:text-slate-400 text-slate-900"
               placeholder="Search groups…"
               value={search}
               onChange={e => setSearch(e.target.value)}
+              aria-label="Search groups"
             />
-          </div>
+          </label>
         </div>
 
         {/* Category filter */}
-        <div className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide max-w-2xl mx-auto">
+        <div className="mobile-scroll-x flex gap-1.5 px-4 pb-3 mobile-page">
           {CATEGORIES.map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className="flex-shrink-0 px-3 py-1 rounded-full text-[12px] font-semibold transition-all"
-              style={activeCategory === cat
-                ? { background: 'var(--accent)', color: 'white' }
-                : { background: '#f1f5f9', color: '#64748b' }
-              }
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap ${
+                activeCategory === cat
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
             >
               {cat}
             </button>
@@ -119,50 +164,59 @@ export default function Groups() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pt-4 pb-28 space-y-6">
-        {/* My Groups */}
-        {myGroups.length > 0 && (
-          <section>
-            <p className="text-[12px] font-bold uppercase tracking-widest text-[#94a3b8] mb-3">My Groups</p>
-            <div className="grid grid-cols-2 gap-3">
-              {myGroups.map(g => (
-                <GroupCard
-                  key={g.id}
-                  group={g}
-                  isMember={true}
-                  onJoin={handleJoin}
-                  onLeave={handleLeave}
-                  onClick={() => navigate(`/groups/${g.id}`)}
-                />
-              ))}
+      <div className="mobile-page px-4 pt-4 mobile-safe-bottom space-y-6">
+        {isLoading ? (
+          <>
+            <div>
+              <p className="j-text-meta mb-3">My Groups</p>
+              <GroupsLoadingSkeleton />
             </div>
-          </section>
-        )}
+          </>
+        ) : (
+          <>
+            {/* My Groups */}
+            {myGroups.length > 0 && (
+              <section>
+                <p className="j-text-meta mb-3">My Groups</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {myGroups.map(g => (
+                    <GroupCard
+                      key={g.id}
+                      group={g}
+                      isMember={true}
+                      onJoin={handleJoin}
+                      onLeave={handleLeave}
+                      onClick={() => navigate(`/groups/${g.id}`)}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
-        {/* Discover */}
-        <section>
-          <p className="text-[12px] font-bold uppercase tracking-widest text-[#94a3b8] mb-3">
-            {myGroups.length > 0 ? 'Discover More' : 'All Groups'}
-          </p>
-          {discoverGroups.length === 0 ? (
-            <div className="text-center py-12 text-[#94a3b8] text-[13px]">
-              {search ? 'No groups match your search.' : 'No groups yet. Create the first one!'}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {discoverGroups.map(g => (
-                <GroupCard
-                  key={g.id}
-                  group={g}
-                  isMember={false}
-                  onJoin={handleJoin}
-                  onLeave={handleLeave}
-                  onClick={() => navigate(`/groups/${g.id}`)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+            {/* Discover */}
+            <section>
+              <p className="j-text-meta mb-3">
+                {myGroups.length > 0 ? 'Discover More' : 'All Groups'}
+              </p>
+              {discoverGroups.length === 0 ? (
+                <EmptyGroupsState search={search} onCreateClick={() => setShowCreate(true)} />
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {discoverGroups.map(g => (
+                    <GroupCard
+                      key={g.id}
+                      group={g}
+                      isMember={false}
+                      onJoin={handleJoin}
+                      onLeave={handleLeave}
+                      onClick={() => navigate(`/groups/${g.id}`)}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        )}
       </div>
 
       <CreateGroupModal

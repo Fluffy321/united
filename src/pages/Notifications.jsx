@@ -169,9 +169,9 @@ function SwipeableNotifCard({ notif, onRead, isLast }) {
           transform:  `translateX(${offset}px)`,
           transition: settling ? 'transform 0.22s ease' : 'none',
         }}
-        className={`w-full flex items-start gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-blue-50/80 ${
-          notif.is_read ? 'bg-white' : 'bg-blue-50/60'
-        } ${!isLast ? 'border-b border-slate-100' : ''}`}
+        className={`w-full flex items-start gap-3.5 py-3.5 text-left transition-colors active:bg-blue-50/80 ${
+          notif.is_read ? 'bg-white pl-4' : 'bg-blue-50/40 pl-[13px] border-l-[3px] border-l-blue-500'
+        } pr-4 ${!isLast ? 'border-b border-slate-100' : ''}`}
       >
         {/* Type icon + optional actor avatar badge */}
         <div className="relative mt-0.5 shrink-0">
@@ -206,9 +206,6 @@ function SwipeableNotifCard({ notif, onRead, isLast }) {
             <span className="text-[11px] text-slate-400">
               {d ? formatDistanceToNow(d, { addSuffix: true }) : '—'}
             </span>
-            {route && !notif.is_read && (
-              <span className="text-[11px] text-blue-500 font-semibold">Tap to view</span>
-            )}
           </div>
         </div>
 
@@ -312,7 +309,7 @@ export default function Notifications() {
     <div className="app-page flex flex-col">
 
       {/* ── Header ── */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-100 shadow-sm">
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-slate-100">
         <div className="mobile-page-wide px-4 h-14 flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}

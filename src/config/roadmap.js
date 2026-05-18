@@ -1686,6 +1686,61 @@ Goals:
   },
 
   {
+    id: 'ux-accessibility-audit',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Accessibility Audit & Remediation',
+    description: 'WCAG 2.1 AA review across all pages: color contrast, focus states, touch targets, screen reader labels, motion preferences, and keyboard navigation.',
+    why: 'Discovered during 2026-05-17 UX pass — JUnited has strong visual design but focus states, aria labels on icon buttons, and color-only signals need review before App Store launch.',
+    prompt: `You are performing an accessibility audit and remediation for JUnited.
+
+Context: The app is a mobile-first React 18 app. Stack: Tailwind CSS, shadcn/ui, Lucide icons.
+        Known gaps from 2026-05-17 UX audit:
+        - Icon-only buttons (search, share, back arrow) may lack aria-label
+        - Some color-only unread indicators (blue dot) have no text alternative
+        - Focus-visible ring may not be visible on all interactive elements
+        - Touch targets should be min 44×44px per Apple HIG
+        - src/index.css has @media (prefers-reduced-motion) not consistently applied
+
+Goals:
+1. Audit all icon-only buttons (Lucide icons with no visible text) and add aria-label if missing.
+2. Verify focus-visible outlines are visible on all interactive elements — add :focus-visible CSS if any are missing.
+3. Audit minimum touch target sizes — any button < 44px height that is not inside a larger touch target.
+4. Add aria-live region for toast notifications so screen readers announce them.
+5. Check color-contrast ratios on: j-text-meta (slate-500 on white), notification unread dot, chip labels.
+6. Verify prefers-reduced-motion disables appFadeSlide, navPillIn, reactionPop, chesedPulse animations.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'ux-design-token-system',
+    category: 'Admin & Platform',
+    status: STATUS.DEFERRED,
+    priority: PRIORITY.LOW,
+    title: 'Full Design Token System',
+    description: 'Replace all hardcoded color/size values with CSS variables. Standardize card radius, spacing scale, and typography to eliminate the ~50+ hardcoded values scattered across component files.',
+    why: 'Low priority until the design language is fully stable. Currently the app has a working token system (j-navy, j-gold, j-olive, semantic chips) but many components still use hardcoded Tailwind values like text-[#94a3b8] and rounded-2xl. Tackle post-v1 launch when the design is locked.',
+    prompt: `You are implementing a full design token system for JUnited.
+
+Context: src/index.css has a solid token foundation (--j-navy, --j-gold, --j-olive, j-chip classes, j-card,
+        .j-text-* typography scale). The gap is that many component files bypass these tokens and use
+        Tailwind utility classes with hardcoded values. Examples:
+        - text-[#94a3b8] → should be text-slate-400 or var(--c-muted)
+        - text-[#0F1C2E] → should be text-slate-900 or var(--j-navy)
+        - rounded-2xl (16px) on cards → should be rounded-[20px] (the j-card standard)
+        - bg-[#f1f5f9] on inputs/chips → should be bg-slate-100
+
+Goals:
+1. Audit all .jsx files for hardcoded hex values — compile a list and map each to the nearest token.
+2. Add CSS variable aliases for any missing semantic gaps (e.g., --c-input-bg, --c-page-bg).
+3. Replace hardcoded values in GroupCard, CommunityGroupsTab, CreateGroupModal, Groups page.
+4. Document the complete token reference in a comment block at the top of index.css.
+5. Run npm run build to verify no visual regressions.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'admin-seed-hardening',
     category: 'Admin & Platform',
     status: STATUS.PLANNED,
