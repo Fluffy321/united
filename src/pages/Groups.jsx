@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { dataService, incrementCounter } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus } from 'lucide-react';
 import GroupCard from '@/components/groups/GroupCard';
-import GroupDetailSheet from '@/components/groups/GroupDetailSheet';
 import CreateGroupModal from '@/components/groups/CreateGroupModal';
 import { toast } from 'sonner';
 
@@ -12,9 +12,8 @@ const CATEGORIES = ['All', 'Torah Learning', 'Shabbat', 'Chesed', 'Events', 'You
 
 export default function Groups() {
   const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
   const [membershipSet, setMembershipSet] = useState(new Set());
-  const [selectedGroup, setSelectedGroup] = useState(null);
-  const [showDetail, setShowDetail] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
@@ -35,25 +34,33 @@ export default function Groups() {
   });
 
   const handleJoin = async (group) => {
-    await dataService.entities.GroupMember.create({
-      group_id: group.id,
-      user_id: currentUser.id,
-      user_name: currentUser.full_name,
-      role: 'member'
-    });
-    await incrementCounter('community_groups', 'member_count', group.id, 1);
-    setMembershipSet(prev => new Set([...prev, group.id]));
-    queryClient.invalidateQueries({ queryKey: ['community-groups'] });
-    toast.success(`Joined ${group.name}!`);
+    try {
+      await dataService.entities.GroupMember.create({
+        group_id: group.id,
+        user_id: currentUser.id,
+        user_name: currentUser.full_name || currentUser.display_name,
+        role: 'member'
+      });
+      await incrementCounter('community_groups', 'member_count', group.id, 1);
+      setMembershipSet(prev => new Set([...prev, group.id]));
+      queryClient.invalidateQueries({ queryKey: ['community-groups'] });
+      toast.success(`Joined ${group.name}!`);
+    } catch {
+      toast.error('Could not join group');
+    }
   };
 
   const handleLeave = async (group) => {
-    const memberships = await dataService.entities.GroupMember.filter({ group_id: group.id, user_id: currentUser.id });
-    if (memberships[0]) await dataService.entities.GroupMember.delete(memberships[0].id);
-    await incrementCounter('community_groups', 'member_count', group.id, -1);
-    setMembershipSet(prev => { const s = new Set(prev); s.delete(group.id); return s; });
-    queryClient.invalidateQueries({ queryKey: ['community-groups'] });
-    toast.success(`Left ${group.name}`);
+    try {
+      const memberships = await dataService.entities.GroupMember.filter({ group_id: group.id, user_id: currentUser.id });
+      if (memberships[0]) await dataService.entities.GroupMember.delete(memberships[0].id);
+      await incrementCounter('community_groups', 'member_count', group.id, -1);
+      setMembershipSet(prev => { const s = new Set(prev); s.delete(group.id); return s; });
+      queryClient.invalidateQueries({ queryKey: ['community-groups'] });
+      toast.success(`Left ${group.name}`);
+    } catch {
+      toast.error('Could not leave group');
+    }
   };
 
   const filtered = groups.filter(g => {
@@ -77,7 +84,7 @@ export default function Groups() {
             style={{ background: 'var(--primary)' }}
           >
             <Plus className="w-3.5 h-3.5" />
-            Create Community
+            Create Group
           </button>
         </div>
 
@@ -125,7 +132,7 @@ export default function Groups() {
                   isMember={true}
                   onJoin={handleJoin}
                   onLeave={handleLeave}
-                  onClick={() => { setSelectedGroup(g); setShowDetail(true); }}
+                  onClick={() => navigate(`/groups/${g.id}`)}
                 />
               ))}
             </div>
@@ -150,23 +157,13 @@ export default function Groups() {
                   isMember={false}
                   onJoin={handleJoin}
                   onLeave={handleLeave}
-                  onClick={() => { setSelectedGroup(g); setShowDetail(true); }}
+                  onClick={() => navigate(`/groups/${g.id}`)}
                 />
               ))}
             </div>
           )}
         </section>
       </div>
-
-      <GroupDetailSheet
-        group={selectedGroup}
-        open={showDetail}
-        onOpenChange={setShowDetail}
-        currentUser={currentUser}
-        isMember={selectedGroup ? membershipSet.has(selectedGroup.id) : false}
-        onJoin={handleJoin}
-        onLeave={handleLeave}
-      />
 
       <CreateGroupModal
         open={showCreate}

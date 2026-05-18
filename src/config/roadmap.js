@@ -250,11 +250,11 @@ Goals:
   {
     id: 'community-groups',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Community Groups & Sub-Groups',
     description: 'Private groups within communities, with posts, chat, resources, and member management.',
-    why: 'Good idea but not needed for initial community growth. Build after communities reach meaningful membership.',
+    shippedNote: 'Shipped 2026-05-17. Migration 20260517221000_community_groups.sql creates community_groups, group_members, group_posts, group_join_requests with RLS. CommunityGroup, GroupMember, GroupPost, GroupJoinRequest wired in base44Client.js. /Groups route live + /groups/:groupId detail route. CommunityGroupPage.jsx connected to real DB (posts, members, announcements tabs). Groups discoverable from both CommunityDetailView and CommunityHubDetail via CommunityGroupsTab.jsx. Join/leave flows with member_count incrementing via RPC. Private groups use join-request approval flow. Groups are free (no Premium gate).',
     prompt: `You are implementing Community Groups for JUnited.
 
 Context: The Groups page exists at src/pages/Groups.jsx but is disabled (redirects to Communities).
@@ -268,6 +268,58 @@ Goals:
 5. Add join/leave group flows with role management (owner, member).
 6. Groups should be discoverable from the community detail page.
 7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'group-join-request-admin-ui',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Group Join Request Approval UI',
+    description: 'Admin UI for private group owners/admins to approve or deny pending join requests.',
+    why: 'group_join_requests table and DB flow are live but group admins have no UI surface to approve or deny pending requests. Private groups are unusable without this.',
+    prompt: `You are implementing the Group Join Request Approval UI for JUnited.
+
+Context: The group_join_requests table exists (migration 20260517221000_community_groups.sql).
+        Pending requests are created in GroupPage.jsx handleJoin when is_private is true.
+        CommunityGroupPage.jsx is at src/components/communities/CommunityGroupPage.jsx.
+        GroupPage.jsx is at src/pages/GroupPage.jsx.
+        group_members.role can be 'owner', 'admin', or 'member'.
+
+Goals:
+1. In CommunityGroupPage.jsx, add a "Requests" tab visible only to admins/owners (role check against membership).
+2. On the Requests tab, query group_join_requests where group_id = current group and status = 'pending'.
+3. Show each requester's user_name and joined date, with Approve and Deny buttons.
+4. Approve: insert into group_members (role: 'member'), update group_join_requests status to 'approved', increment member_count via incrementCounter.
+5. Deny: update group_join_requests status to 'denied'.
+6. Invalidate relevant queries after each action.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'group-extended-tabs',
+    category: 'Community',
+    status: STATUS.DEFERRED,
+    priority: PRIORITY.LOW,
+    title: 'Group Events, Discussion & Resources Tabs',
+    description: 'Re-enable Events, Forum, and Resources tabs in CommunityGroupPage once their backing tables and entity mappings are built.',
+    why: 'Deferred during Community Groups MVP — these three tabs were removed because GroupEvent, GroupDiscussion, DiscussionLike, DiscussionComment, and GroupResource entities have no DB tables or entity mappings yet. Build after group adoption is confirmed.',
+    prompt: `You are re-enabling the Events, Discussion, and Resources tabs in the Group detail page for JUnited.
+
+Context: CommunityGroupPage.jsx is at src/components/communities/CommunityGroupPage.jsx.
+        The three tabs were removed during Community Groups MVP (2026-05-17) because their
+        backing entities (GroupEvent, GroupDiscussion, DiscussionLike, DiscussionComment,
+        GroupResource, RSVP) have no migrations or entity mappings yet.
+        Entity mappings live in src/api/base44Client.js SUPABASE_ENTITY_TABLES.
+        Migrations go in supabase/migrations/ as timestamped .sql files.
+
+Goals:
+1. Create migrations for group_events, group_discussions, discussion_likes, discussion_comments, group_resources tables with RLS (members can read; admins can post).
+2. Add entity mappings in base44Client.js.
+3. Restore the Events, Forum, and Resources tab definitions in CommunityGroupPage TABS array.
+4. Restore the tab content blocks (GroupEventsTab, GroupDiscussionTab, GroupResourcesTab) in CommunityGroupPage JSX.
+5. Verify GroupEventsTab.jsx, GroupDiscussionTab.jsx, GroupResourcesTab.jsx at src/components/groups/ work with real data.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1238,12 +1290,11 @@ Goals:
   {
     id: 'premium-analytics',
     category: 'Growth & Monetization',
-    status: STATUS.BLOCKED,
+    status: STATUS.PLANNED,
     priority: PRIORITY.LOW,
     title: 'Group Premium Analytics',
     description: 'Analytics dashboard for community group admins: member growth, post engagement, and trend data.',
-    why: 'Blocked on Community Groups being live first.',
-    needs: 'community-groups',
+    why: 'Community Groups are now live — this is the natural next step for group admin tooling.',
     prompt: `You are implementing Premium Group Analytics for JUnited.
 
 Context: GroupAnalyticsDashboard.jsx exists in src/components/groups/. Community Groups must

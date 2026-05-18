@@ -22,6 +22,7 @@ const AdminSeedControl     = lazy(() => import('./pages/AdminSeedControl'));
 const Notifications        = lazy(() => import('./pages/Notifications'));
 const Communities          = lazy(() => import('./pages/Communities'));
 const Feed                 = lazy(() => import('./pages/Feed'));
+const Groups               = lazy(() => import('./pages/Groups'));
 const InviteJoin           = lazy(() => import('./pages/InviteJoin'));
 const Map                  = lazy(() => import('./pages/Map'));
 const Messages             = lazy(() => import('./pages/Messages'));
@@ -35,6 +36,7 @@ export const PAGES = {
   Notifications,
   Communities,
   Feed,
+  Groups,
   InviteJoin,
   Map,
   Messages,

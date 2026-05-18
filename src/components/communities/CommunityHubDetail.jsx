@@ -28,6 +28,7 @@ import {
 } from '@/lib/communityPlans';
 import CommunityAdminCenter from './CommunityAdminCenter';
 import CommunityEventsTab from './CommunityEventsTab';
+import CommunityGroupsTab from './CommunityGroupsTab';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import GroupChatSection from './GroupChatSection';
 
@@ -67,6 +68,7 @@ export default function CommunityHubDetail({
     resources: canUseCommunityResources(community),
     chat: Boolean(canUseCommunityChat(community) && community?.allow_group_chat),
     listings: Boolean(canUseCommunityMarketplace(community) && community?.allow_member_listings),
+    groups: true,
   });
   const [activeTab, setActiveTab] = useState(tabs.includes(initialTab) ? initialTab : (tabs[0] || 'home'));
   const [composeText, setComposeText] = useState('');
@@ -413,6 +415,13 @@ export default function CommunityHubDetail({
             <CommunityResourceLibrary
               communityId={community.id}
               community={community}
+              currentUser={currentUser}
+              isAdmin={isCommunityManager}
+            />
+          )}
+          {activeTab === 'groups' && (
+            <CommunityGroupsTab
+              communityId={community.id}
               currentUser={currentUser}
               isAdmin={isCommunityManager}
             />

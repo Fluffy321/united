@@ -19,6 +19,7 @@ import { supabase } from '@/api/supabaseClient';
 import CommunityHero from './CommunityHero';
 import ClaimModal from './ClaimModal';
 import CommunityEventsTab from './CommunityEventsTab';
+import CommunityGroupsTab from './CommunityGroupsTab';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import CommunityStoreTab from './CommunityStoreTab';
 import GroupChatSection from './GroupChatSection';
@@ -147,6 +148,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     resources: canUseCommunityResources(community),
     chat: Boolean(canUseCommunityChat(community) && community?.allow_group_chat),
     listings: Boolean(canUseCommunityMarketplace(community) && (community?.allow_member_listings || typeConfig.key === 'marketplace')),
+    groups: true,
   };
   const visibleTabs = getSupportedCommunityTabs(community || fallbackCommunity || {}, featureCapabilities);
   const setTab = (tab) => {
@@ -409,6 +411,14 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
           <CommunityStoreTab
             communityId={communityId}
             community={community}
+            currentUser={currentUser}
+            isAdmin={isAdmin}
+          />
+        )}
+
+        {activeTab === 'groups' && (
+          <CommunityGroupsTab
+            communityId={communityId}
             currentUser={currentUser}
             isAdmin={isAdmin}
           />

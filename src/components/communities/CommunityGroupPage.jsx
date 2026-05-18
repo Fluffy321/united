@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, MapPin, Send, Calendar, UserCheck, Loader2, Check, X, Clock, Megaphone, UserPlus, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Users, MapPin, Send, Loader2, Check, X, Clock, Megaphone, UserPlus } from 'lucide-react';
 import { dataService, incrementCounter } from '@/services';
 import InviteLinkButton from './InviteLinkButton';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
-import GroupEventsTab from '@/components/groups/GroupEventsTab';
-import GroupDiscussionTab from '@/components/groups/GroupDiscussionTab';
-import GroupResourcesTab from '@/components/groups/GroupResourcesTab';
 import FileAttachmentButton from '@/components/common/FileAttachmentButton';
 import { AttachmentPreview, PendingAttachmentChip } from '@/components/common/FileAttachmentPreview';
 
@@ -17,17 +14,16 @@ const CATEGORY_EMOJIS = {
   Business: '💼', Learning: '📚', Social: '🎉', Other: '🌍',
 };
 
+// Events, Forum, and Resources tabs require additional migrations (group_discussions,
+// group_resources). They are deferred — wire them back once those tables ship.
 const TABS = [
-  { id: 'events', label: 'Events', icon: Calendar },
-  { id: 'discussion', label: 'Forum', icon: MessageSquare },
-  { id: 'resources', label: 'Resources', icon: UserCheck },
   { id: 'posts', label: 'Posts', icon: Send },
   { id: 'members', label: 'Members', icon: UserPlus },
   { id: 'announcements', label: 'Announce', icon: Megaphone },
 ];
 
 export default function CommunityGroupPage({ group, currentUser, isMember, isPendingRequest, onJoin, onLeave, onBack, onMemberApproved }) {
-  const [tab, setTab] = useState('events');
+  const [tab, setTab] = useState('posts');
   const [posts, setPosts] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [members, setMembers] = useState([]);
@@ -207,21 +203,6 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
           </div>
         ) : (
           <div>
-            {/* Events Tab */}
-            {tab === 'events' && (
-              <GroupEventsTab group={group} currentUser={currentUser} isMember={isMember} />
-            )}
-
-            {/* Discussion/Forum Tab */}
-            {tab === 'discussion' && (
-              <GroupDiscussionTab group={group} currentUser={currentUser} isMember={isMember} />
-            )}
-
-            {/* Resources Tab */}
-            {tab === 'resources' && (
-              <GroupResourcesTab group={group} currentUser={currentUser} isMember={isMember} isAdmin={isAdmin} />
-            )}
-
             {/* Posts Tab */}
             {tab === 'posts' && (
               <div className="p-4 space-y-3">

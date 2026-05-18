@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 const CATEGORIES = ['Torah Learning', 'Shabbat', 'Chesed', 'Events', 'Youth', 'Families', 'Seniors', 'General'];
 
-export default function CreateGroupModal({ open, onOpenChange, currentUser, onCreated }) {
+export default function CreateGroupModal({ open, onOpenChange, currentUser, onCreated, communityId = null }) {
   const [form, setForm] = useState({ name: '', description: '', category: 'General', location: '', is_private: false });
   const [loading, setLoading] = useState(false);
 
@@ -15,6 +15,7 @@ export default function CreateGroupModal({ open, onOpenChange, currentUser, onCr
     setLoading(true);
     const group = await dataService.entities.CommunityGroup.create({
       ...form,
+      community_id: communityId || null,
       created_by_user_id: currentUser.id,
       created_by_name: currentUser.full_name,
       member_count: 1
