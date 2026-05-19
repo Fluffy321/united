@@ -32,6 +32,7 @@ import CommunityGroupsTab from './CommunityGroupsTab';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import GroupChatSection from './GroupChatSection';
 import {
+  CommunityAdminQuickActions,
   CommunityFeaturedSection,
   CommunityMemberDirectory,
   CommunityPostPreview,
@@ -255,9 +256,9 @@ export default function CommunityHubDetail({
 
         {/* Header card */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          {/* Cover / gradient banner */}
+          {/* Cover / gradient banner — compact for joined members */}
           <div
-            className={`relative h-24 bg-gradient-to-br ${accent}`}
+            className={`relative bg-gradient-to-br ${accent} ${isJoined ? 'h-14' : 'h-24'}`}
             style={
               community.cover_url
                 ? { backgroundImage: `url(${community.cover_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
@@ -334,18 +335,20 @@ export default function CommunityHubDetail({
             </button>
           </div>
 
-          <div className="px-4 pb-4">
-            <p className="text-sm font-semibold leading-relaxed text-slate-600">
-              {community.valueHook || community.description || typeConfig.cardFallback}
-            </p>
-            {community.description && community.valueHook && (
-              <p className="mt-2 text-[13px] font-semibold leading-5 text-slate-500">{community.description}</p>
-            )}
-            <div className={`mt-3 rounded-2xl border px-3 py-2 ${typeConfig.softClass}`}>
-              <p className="text-[11px] font-black uppercase tracking-wide opacity-80">This space is for</p>
-              <p className="mt-0.5 text-[13px] font-bold leading-5 text-slate-800">{typeConfig.tagline}</p>
+          {!isJoined && (
+            <div className="px-4 pb-4">
+              <p className="text-sm font-semibold leading-relaxed text-slate-600">
+                {community.valueHook || community.description || typeConfig.cardFallback}
+              </p>
+              {community.description && community.valueHook && (
+                <p className="mt-2 text-[13px] font-semibold leading-5 text-slate-500">{community.description}</p>
+              )}
+              <div className={`mt-3 rounded-2xl border px-3 py-2 ${typeConfig.softClass}`}>
+                <p className="text-[11px] font-black uppercase tracking-wide opacity-80">This space is for</p>
+                <p className="mt-0.5 text-[13px] font-bold leading-5 text-slate-800">{typeConfig.tagline}</p>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Stats bar */}
           <div className="flex items-center gap-4 border-t border-slate-100 px-4 py-3 text-[12px] text-slate-500">
@@ -377,16 +380,16 @@ export default function CommunityHubDetail({
             </span>
           </div>
 
-          {/* Tabs */}
-          <div className="mobile-scroll-x flex border-t border-slate-100">
+          {/* Tabs — pill style */}
+          <div className="mobile-scroll-x flex gap-1 border-t border-slate-100 px-2 py-2">
             {tabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setTab(tab)}
-                className={`shrink-0 px-4 py-3 text-[13px] font-bold transition ${
+                className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-bold transition ${
                   activeTab === tab
-                    ? 'border-b-2 border-blue-600 text-blue-700'
-                    : 'text-slate-500 hover:text-slate-700'
+                    ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/80'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                 }`}
               >
                 {getCommunityTabLabel(tab)}
@@ -595,8 +598,55 @@ function HomeTab({
 }) {
   const featuredPosts = posts.slice(0, 3);
 
+  if (!isJoined) {
+    // ── Visitor landing page ─────────────────────────────────────────────────
+    return (
+      <div className="space-y-3">
+        <CommunityWelcomeHub
+          community={community}
+          typeConfig={typeConfig}
+          posts={posts}
+          events={events}
+          resources={resources}
+          members={members}
+          isCommunityManager={false}
+          isFollowing={false}
+          onTabChange={onTabChange}
+          onManage={onManage}
+          onCompose={onCompose}
+        />
+        <CommunityFeaturedSection
+          typeConfig={typeConfig}
+          posts={posts}
+          events={events}
+          resources={resources}
+          onTabChange={onTabChange}
+        />
+        <PostsTab
+          community={community}
+          typeConfig={typeConfig}
+          prompts={prompts}
+          posts={featuredPosts}
+          onCompose={onCompose}
+          canCompose={false}
+          compact
+        />
+      </div>
+    );
+  }
+
+  // ── Joined member: community dashboard ──────────────────────────────────────
   return (
     <div className="space-y-3">
+      {isCommunityManager && (
+        <CommunityAdminQuickActions
+          onAnnouncement={() => { onTabChange('announcements'); onCompose(''); }}
+          onEvent={() => onTabChange('events')}
+          onResource={() => onTabChange('resources')}
+          onAdminCenter={onManage}
+        />
+      )}
+
       <CommunityWelcomeHub
         community={community}
         typeConfig={typeConfig}
@@ -605,7 +655,7 @@ function HomeTab({
         resources={resources}
         members={members}
         isCommunityManager={isCommunityManager}
-        isFollowing={isJoined}
+        isFollowing={true}
         onTabChange={onTabChange}
         onManage={onManage}
         onCompose={onCompose}

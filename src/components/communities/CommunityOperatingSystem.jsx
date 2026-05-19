@@ -8,6 +8,7 @@ import {
   Megaphone,
   Pin,
   Search,
+  Settings,
   ShieldCheck,
   Sparkles,
   Users,
@@ -225,6 +226,7 @@ export function CommunityWelcomeHub({
     || community?.description
     || typeConfig?.cardFallback;
   const announcementCount = posts.filter(isAnnouncementPost).length;
+  const latestAnnouncement = posts.find(isAnnouncementPost);
   const leadership = members
     .filter((member) => MANAGER_ROLES.has(getMemberRole(member, community)))
     .slice(0, 3);
@@ -232,6 +234,84 @@ export function CommunityWelcomeHub({
   const resourcePreview = resources[0];
   const Icon = typeConfig?.icon || Users;
 
+  if (isFollowing) {
+    // ── Joined member: compact dashboard ──────────────────────────────────────
+    return (
+      <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+        {/* Compact identity row */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-50">
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig?.accent || 'from-blue-600 to-slate-800'} text-white`}>
+            <Icon className="h-[18px] w-[18px]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] font-black leading-tight text-slate-950 truncate">{community?.name}</p>
+          </div>
+          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
+            <ShieldCheck className="h-3 w-3" />
+            Joined
+          </span>
+        </div>
+
+        {/* Latest announcement — prominent if available */}
+        {latestAnnouncement && (
+          <button
+            type="button"
+            onClick={() => onTabChange?.('announcements')}
+            className="w-full border-b border-slate-50 bg-amber-50/70 px-4 py-3 text-left transition-colors hover:bg-amber-50"
+          >
+            <div className="mb-1 flex items-center gap-2">
+              <Megaphone className="h-3.5 w-3.5 flex-shrink-0 text-amber-700" />
+              <span className="text-[10px] font-black uppercase tracking-wide text-amber-700">Latest announcement</span>
+              {announcementCount > 1 && (
+                <span className="ml-auto rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                  +{announcementCount - 1} more
+                </span>
+              )}
+            </div>
+            <p className="line-clamp-2 text-[13px] font-bold leading-snug text-slate-900">
+              {postSnippet(latestAnnouncement, 120)}
+            </p>
+          </button>
+        )}
+
+        {/* Quick-nav stats grid */}
+        <div className="grid grid-cols-3 divide-x divide-slate-50">
+          <button
+            type="button"
+            onClick={() => onTabChange?.('members')}
+            className="px-3 py-3 text-left transition-colors hover:bg-slate-50"
+          >
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Leadership</p>
+            <p className="mt-0.5 truncate text-[13px] font-black text-slate-900">
+              {leadership.length ? getMemberName(leadership[0]) : 'View all'}
+            </p>
+          </button>
+          <button
+            type="button"
+            onClick={() => onTabChange?.('events')}
+            className="px-3 py-3 text-left transition-colors hover:bg-slate-50"
+          >
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Next event</p>
+            <p className="mt-0.5 line-clamp-1 text-[13px] font-black text-slate-900">
+              {upcomingEvent ? (upcomingEvent.title || upcomingEvent.name) : 'None yet'}
+            </p>
+          </button>
+          <button
+            type="button"
+            onClick={() => onTabChange?.('resources')}
+            className="px-3 py-3 text-left transition-colors hover:bg-slate-50"
+          >
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Resource</p>
+            <p className="mt-0.5 line-clamp-1 text-[13px] font-black text-slate-900">
+              {resourcePreview ? resourcePreview.title : 'None yet'}
+            </p>
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  // ── Visitor / non-member: community landing page ───────────────────────────
   return (
     <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
       <div className="flex items-start gap-3">
@@ -239,44 +319,17 @@ export function CommunityWelcomeHub({
           <Icon className="h-6 w-6" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-black uppercase tracking-wide text-blue-700">Welcome hub</p>
+          <p className="text-[11px] font-black uppercase tracking-wide text-blue-700">About this community</p>
           <h2 className="text-lg font-black leading-tight text-slate-950">{community?.name}</h2>
           <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{welcomeText}</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            {!isFollowing ? (
-              <button
-                type="button"
-                onClick={() => onTabChange?.('about')}
-                className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white"
-              >
-                Learn more
-              </button>
-            ) : announcementCount > 0 ? (
-              <button
-                type="button"
-                onClick={() => onTabChange?.('announcements')}
-                className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white"
-              >
-                Read announcements
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => onCompose?.('')}
-                className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white"
-              >
-                Start a post
-              </button>
-            )}
-            {isCommunityManager ? (
-              <button
-                type="button"
-                onClick={onManage}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700"
-              >
-                Manage hub
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={() => onTabChange?.('about')}
+              className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white"
+            >
+              Learn more
+            </button>
           </div>
         </div>
       </div>
@@ -289,7 +342,7 @@ export function CommunityWelcomeHub({
         >
           <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">Leadership</p>
           <p className="mt-1 text-sm font-black text-slate-900">
-            {leadership.length ? leadership.map(getMemberName).slice(0, 2).join(', ') : 'Add admins'}
+            {leadership.length ? leadership.map(getMemberName).slice(0, 2).join(', ') : 'View members'}
           </p>
         </button>
         <button
@@ -419,5 +472,57 @@ export function CommunityMemberDirectory({ community, members = [], memberCount 
         </div>
       )}
     </div>
+  );
+}
+
+export function CommunityAdminQuickActions({ onAnnouncement, onEvent, onResource, onAdminCenter }) {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-100 bg-slate-50 px-4 py-2">
+        <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Admin — quick actions</p>
+      </div>
+      <div className="grid grid-cols-2 gap-px bg-slate-100">
+        <button
+          type="button"
+          onClick={onAnnouncement}
+          className="flex items-start gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-slate-50 active:scale-[0.99]"
+        >
+          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+            <Megaphone className="h-3.5 w-3.5 text-amber-700" />
+          </span>
+          <span className="text-[12px] font-black text-slate-800">Post Announcement</span>
+        </button>
+        <button
+          type="button"
+          onClick={onEvent}
+          className="flex items-start gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-slate-50 active:scale-[0.99]"
+        >
+          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
+            <CalendarDays className="h-3.5 w-3.5 text-emerald-700" />
+          </span>
+          <span className="text-[12px] font-black text-slate-800">Create Event</span>
+        </button>
+        <button
+          type="button"
+          onClick={onResource}
+          className="flex items-start gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-slate-50 active:scale-[0.99]"
+        >
+          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-100">
+            <FileText className="h-3.5 w-3.5 text-violet-700" />
+          </span>
+          <span className="text-[12px] font-black text-slate-800">Add Resource</span>
+        </button>
+        <button
+          type="button"
+          onClick={onAdminCenter}
+          className="flex items-start gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-slate-50 active:scale-[0.99]"
+        >
+          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+            <Settings className="h-3.5 w-3.5 text-slate-700" />
+          </span>
+          <span className="text-[12px] font-black text-slate-800">Admin Center</span>
+        </button>
+      </div>
+    </section>
   );
 }

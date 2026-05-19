@@ -25,6 +25,7 @@ import CommunityStoreTab from './CommunityStoreTab';
 import GroupChatSection from './GroupChatSection';
 import CommunityAdminCenter, { AppealSubmitModal } from './CommunityAdminCenter';
 import {
+  CommunityAdminQuickActions,
   CommunityFeaturedSection,
   CommunityMemberDirectory,
   CommunityPostPreview,
@@ -285,25 +286,24 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         typeConfig={typeConfig}
       />
 
-      <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto overflow-x-auto scrollbar-hide">
-          <div className="flex min-w-max">
+      <div className="sticky top-0 z-10 border-b border-slate-100 bg-white/95 backdrop-blur-sm">
+        <div className="mx-auto max-w-2xl overflow-x-auto scrollbar-hide">
+          <div className="flex min-w-max gap-1 px-3 py-2">
             {tabsWithCounts.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setTab(tab.key)}
-                className={`px-4 py-3 text-[13px] font-medium whitespace-nowrap transition-colors relative ${
-                  activeTab === tab.key ? 'text-[#0F5ED7]' : 'text-slate-500'
+                className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-bold transition-colors ${
+                  activeTab === tab.key
+                    ? 'bg-blue-50 text-[#0F5ED7] ring-1 ring-blue-200/80'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                 }`}
               >
                 {tab.label}
                 {tab.count > 0 && (
-                  <span className="ml-1 text-[10px] bg-[#E0EDFF] text-[#2563EB] rounded-full px-1.5 py-0.5 font-bold">
+                  <span className="ml-1.5 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-black text-blue-700">
                     {tab.count}
                   </span>
-                )}
-                {activeTab === tab.key && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0F5ED7] rounded-full" />
                 )}
               </button>
             ))}
@@ -374,6 +374,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             isAdmin={isAdmin}
             isFollowing={isFollowing}
             onManage={() => openAdminCenter('content')}
+            openAdminCenter={openAdminCenter}
           />
         )}
 
@@ -542,9 +543,49 @@ function RoutedCommunityHome({
   isAdmin,
   isFollowing,
   onManage,
+  openAdminCenter,
 }) {
+  if (!isFollowing) {
+    // ── Visitor landing page ───────────────────────────────────────────────────
+    return (
+      <div className="space-y-4 pt-4">
+        <CommunityWelcomeHub
+          community={community}
+          typeConfig={typeConfig}
+          posts={posts}
+          events={events}
+          resources={resources}
+          members={members}
+          isCommunityManager={false}
+          isFollowing={false}
+          onTabChange={onTabChange}
+          onManage={onManage}
+          onCompose={() => {}}
+        />
+        <CommunityFeaturedSection
+          typeConfig={typeConfig}
+          posts={posts}
+          events={events}
+          resources={resources}
+          onTabChange={onTabChange}
+        />
+        <RoutedPostsList posts={posts.slice(0, 3)} typeConfig={typeConfig} emptyCompact />
+      </div>
+    );
+  }
+
+  // ── Joined member: community dashboard ────────────────────────────────────
   return (
     <div className="space-y-4 pt-4">
+      {isAdmin && (
+        <CommunityAdminQuickActions
+          onAnnouncement={() => onTabChange('announcements')}
+          onEvent={() => onTabChange('events')}
+          onResource={() => onTabChange('resources')}
+          onAdminCenter={() => openAdminCenter?.('overview') ?? onManage?.()}
+        />
+      )}
+
       <CommunityWelcomeHub
         community={community}
         typeConfig={typeConfig}
@@ -553,7 +594,7 @@ function RoutedCommunityHome({
         resources={resources}
         members={members}
         isCommunityManager={isAdmin}
-        isFollowing={isFollowing}
+        isFollowing={true}
         onTabChange={onTabChange}
         onManage={onManage}
         onCompose={() => {}}
@@ -569,6 +610,7 @@ function RoutedCommunityHome({
 
       {typeConfig.key === 'chesed' && (
         <button
+          type="button"
           onClick={() => onTabChange('openNeeds')}
           className="w-full rounded-2xl border border-emerald-100 bg-white p-4 text-left shadow-sm"
         >
@@ -588,8 +630,8 @@ function RoutedCommunityHome({
           posting={posting}
         />
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 flex items-center gap-3">
-          <Lock className="h-5 w-5 text-slate-400 flex-shrink-0" />
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+          <Lock className="h-5 w-5 flex-shrink-0 text-slate-400" />
           <p className="text-[13px] font-semibold text-slate-500">Posting is restricted to community admins.</p>
         </div>
       )}

@@ -254,6 +254,91 @@ Goals:
   },
 
   {
+    id: 'community-detail-dashboard-redesign',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Detail — Joined Dashboard vs Visitor Landing',
+    description: 'Community pages now behave like mini-apps: joined members see a compact dashboard (no repeated description, admin quick actions, latest announcement, stats grid), while non-members see a full landing page with description and join CTA.',
+    shippedNote: 'Shipped 2026-05-19. CommunityWelcomeHub is now membership-state-aware. CommunityHubDetail hides description block for joined users and compacts the cover. CommunityDetailView RoutedCommunityHome splits visitor/member layouts. CommunityAdminQuickActions added for community managers. Pill-style tab navigation in both detail systems.',
+  },
+
+  {
+    id: 'community-personalization-home',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Community Home Personalization',
+    description: 'Let members customize their community home: pin a section, choose what appears first, set a personal welcome message or shortcut row.',
+    why: 'Current dashboard is community-driven. Member-level personalization ("I always want to see Events first") increases retention and belonging.',
+    prompt: `You are implementing Community Home Personalization for JUnited.
+
+Context:
+- Community home is rendered in CommunityWelcomeHub (joined mode) and HomeTab in CommunityHubDetail.jsx.
+- CommunityDetailView uses RoutedCommunityHome which also calls CommunityWelcomeHub.
+- Community settings can be stored per user via a new community_member_preferences table.
+
+Goals:
+1. Add a community_member_preferences table with columns: user_id, community_id, pinned_section (text), home_section_order (text[]), created_at, updated_at. Add RLS so users manage only their own rows.
+2. Add a "Customize home" entry point (gear icon) in the joined member home header.
+3. Build a simple sheet/modal where members can drag/reorder home sections or pick a pinned section.
+4. Persist choices via upsert on community_member_preferences.
+5. Apply ordering in CommunityWelcomeHub and HomeTab for joined users.
+6. Run npm run lint && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-activity-digest-module',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Community Activity Digest on Home',
+    description: '"What changed since you were last here" module on the community home for joined members: new announcements, new events, new posts since last visit.',
+    why: 'The current home shows static data. A "since your last visit" signal immediately answers "what matters now" without users needing to scan every tab.',
+    prompt: `You are implementing the Community Activity Digest module for JUnited.
+
+Context:
+- CommunityWelcomeHub (joined mode) is the top card on community home.
+- Posts, events, announcements are queried in CommunityHubDetail.jsx and CommunityDetailView.jsx.
+- User's last visit to a community could be tracked via a community_last_visit table.
+
+Goals:
+1. Create community_last_visits table (user_id, community_id, visited_at). Add RLS.
+2. Record visit on community open via an upsert (debounced, fire-and-forget).
+3. In CommunityWelcomeHub joined mode, compute new_since_last = count of posts/announcements/events created after visited_at.
+4. Show a compact "X new since your last visit" pill or row if new_since > 0.
+5. Clicking it navigates to the Posts or Announcements tab as appropriate.
+6. Run npm run lint && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-custom-branding',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Custom Community Branding',
+    description: 'Let Premium communities set a custom accent color, cover pattern, and visual theme for their community pages.',
+    why: 'Community identity and distinctiveness increase retention. Branding is a natural Premium upsell without requiring costly design tooling.',
+    prompt: `You are implementing Custom Community Branding for JUnited.
+
+Context:
+- CommunityHubDetail uses typeConfig.accent (Tailwind gradient classes) for the cover/avatar.
+- CommunityHero uses communityGradient() which already supports featured_accent_color.
+- Community settings can be saved via Admin Center (CommunityAdminCenter Settings tab).
+
+Goals:
+1. Add accent_color (hex string) and cover_style (enum) columns to communities via migration.
+2. Update Admin Center Appearance section with a color picker and cover style preview (Premium only).
+3. Update CommunityHubDetail header and CommunityHero to apply accent_color when set, falling back to typeConfig.accent.
+4. Make the joined-member compact header also use the custom accent color.
+5. Preserve all gating: only Premium communities can set custom branding.
+6. Run npm run lint && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'community-custom-key-contacts',
     category: 'Community',
     status: STATUS.PLANNED,
