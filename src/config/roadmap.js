@@ -296,10 +296,11 @@ Goals:
   {
     id: 'community-creation-upgrade-in-flow',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'In-Creation Premium Upgrade CTA',
     description: 'Let admins complete a community premium checkout directly from Step 4 of CreateCommunityFlow when they activate the Premium Layout Preview, so their chosen tab/emphasis/composer layout saves immediately on launch.',
+    shippedNote: 'Shipped 2026-05-19. Step 4 amber notice replaced with real Monthly ($9.99/mo) / Annual ($7.99/mo) plan selection buttons. Selecting a plan sets premiumUpgradeRequested + premiumInterval, shows green confirmation with "Change" link to deselect. StepLaunch shows a violet premium indicator card when upgrade is committed. On submit: community is created first (free tier), layout + communityId saved to localStorage key community_premium_layout_pending, createCommunityPlanCheckout edge function called, user redirected to Stripe checkout. On return from Stripe at /Communities?community=ID&billing=success: layout merged into communities.settings.layout, queries invalidated, success toast shown, URL cleaned. ?billing=cancel clears localStorage and shows info toast. Graceful degradation: if checkout throws (Stripe not configured), localStorage cleared and normal free-tier launch completes with info toast.',
     why: 'Step 4 now shows an interactive premium preview with a "Upgrade to publish this layout" notice, but tapping it does nothing — the layout choices are discarded on free-tier launch. Completing checkout in-flow turns the preview from an aspiration into an immediate action.',
     prompt: `You are wiring up the in-creation premium upgrade CTA for JUnited community creation.
 

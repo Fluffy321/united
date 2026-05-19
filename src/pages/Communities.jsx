@@ -18,6 +18,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { dataService, incrementCounter } from '@/services';
+import { storageService } from '@/services/storageService';
 import { supabase } from '@/api/supabaseClient';
 import { toast } from 'sonner';
 import { appParams } from '@/lib/app-params';
@@ -514,6 +515,64 @@ export default function Communities() {
     setSelectedCommunityIdState(urlCommunityId);
     setInitialComposePrompt('');
   }, [urlCommunityId]);
+
+  // Handle post-Stripe-redirect billing result
+  useEffect(() => {
+    const billing = searchParams.get('billing');
+    if (!billing) return;
+
+    const pending = storageService.getJson('community_premium_layout_pending');
+
+    if (billing === 'success' && pending?.communityId && pending?.layout) {
+      const { communityId, layout } = pending;
+      storageService.removeItem('community_premium_layout_pending');
+
+      (async () => {
+        try {
+          const { data: existing, error: fetchErr } = await supabase
+            .from('communities')
+            .select('settings')
+            .eq('id', communityId)
+            .single();
+          if (fetchErr) throw fetchErr;
+
+          const mergedSettings = {
+            ...(existing?.settings || {}),
+            layout: {
+              ...(existing?.settings?.layout || {}),
+              ...layout,
+            },
+          };
+
+          const { error: updateErr } = await supabase
+            .from('communities')
+            .update({ settings: mergedSettings })
+            .eq('id', communityId);
+          if (updateErr) throw updateErr;
+
+          await queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+          toast.success('Premium layout applied to your community! ✦');
+        } catch {
+          toast.error('Could not apply layout — set it manually in Admin Center → Layout.');
+        }
+
+        setSearchParams((p) => {
+          const next = new URLSearchParams(p);
+          next.delete('billing');
+          return next;
+        }, { replace: true });
+      })();
+    } else if (billing === 'cancel') {
+      storageService.removeItem('community_premium_layout_pending');
+      toast.info('Upgrade cancelled — your community launched on the free tier.');
+      setSearchParams((p) => {
+        const next = new URLSearchParams(p);
+        next.delete('billing');
+        return next;
+      }, { replace: true });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [showCreate, setShowCreate] = useState(false);
   const [showMessages, setShowMessages] = useState(false);

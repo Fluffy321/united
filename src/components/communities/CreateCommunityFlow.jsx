@@ -112,6 +112,8 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
   const [error, setError] = useState('');
   const [premiumPreviewEnabled, setPremiumPreviewEnabled] = useState(false);
   const [premiumPreviewLayout, setPremiumPreviewLayout] = useState({});
+  const [premiumUpgradeRequested, setPremiumUpgradeRequested] = useState(false);
+  const [premiumInterval, setPremiumInterval] = useState('monthly');
   const [form, setForm] = useState({
     name: '',
     archetype: '',
@@ -130,10 +132,18 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
   const setPremiumField = (key, val) => setPremiumPreviewLayout((prev) => ({ ...prev, [key]: val }));
   const togglePremiumPreview = () => {
     setPremiumPreviewEnabled((v) => {
-      if (v) setPremiumPreviewLayout({});
+      if (v) {
+        setPremiumPreviewLayout({});
+        setPremiumUpgradeRequested(false);
+      }
       return !v;
     });
   };
+  const handleUpgradeRequest = (interval) => {
+    setPremiumInterval(interval);
+    setPremiumUpgradeRequested(true);
+  };
+  const handleUpgradeClear = () => setPremiumUpgradeRequested(false);
 
   const typeConfig = form.archetype ? COMMUNITY_TYPE_CONFIG[form.archetype] : null;
   const progress = ((step + 1) / STEPS.length) * 100;
@@ -174,6 +184,8 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
         home_emphasis: tc.homeEmphasis,
         primary_tabs: tc.primaryTabs,
       },
+      premiumLayoutRequest: premiumUpgradeRequested ? premiumPreviewLayout : null,
+      premiumInterval: premiumUpgradeRequested ? premiumInterval : null,
     });
   };
 
@@ -241,9 +253,13 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
                   premiumPreviewLayout={premiumPreviewLayout}
                   onPremiumField={setPremiumField}
                   onPremiumToggle={togglePremiumPreview}
+                  premiumUpgradeRequested={premiumUpgradeRequested}
+                  premiumInterval={premiumInterval}
+                  onUpgradeRequest={handleUpgradeRequest}
+                  onUpgradeClear={handleUpgradeClear}
                 />
               )}
-              {step === 4 && <StepLaunch form={form} typeConfig={typeConfig} onField={setField} />}
+              {step === 4 && <StepLaunch form={form} typeConfig={typeConfig} onField={setField} premiumUpgradeRequested={premiumUpgradeRequested} premiumInterval={premiumInterval} />}
             </section>
 
             {error && (
@@ -426,7 +442,7 @@ function StepMakeItYours({ form, typeConfig, onField }) {
   );
 }
 
-function StepShape({ form, onField, premiumPreviewEnabled, premiumPreviewLayout, onPremiumField, onPremiumToggle }) {
+function StepShape({ form, onField, premiumPreviewEnabled, premiumPreviewLayout, onPremiumField, onPremiumToggle, premiumUpgradeRequested, premiumInterval, onUpgradeRequest, onUpgradeClear }) {
   const PRIVACY_OPTIONS = [
     { value: 'Public', label: 'Public', emoji: '🌍', body: 'Anyone can discover and join this community.' },
     { value: 'Community-only', label: 'Community-only', emoji: '🏘️', body: 'Discoverable but feels more local and member-focused.' },
@@ -614,11 +630,56 @@ function StepShape({ form, onField, premiumPreviewEnabled, premiumPreviewLayout,
               </div>
             </div>
 
-            {/* Upgrade notice */}
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
-              <p className="text-[11px] font-black text-amber-800">Premium Preview — upgrade to publish this layout</p>
-              <p className="text-[10px] font-semibold text-amber-600 mt-0.5 leading-tight">These choices save to your community after upgrading. You can configure all of this in Admin Center → Layout after launch.</p>
-            </div>
+            {/* Upgrade CTA */}
+            {premiumUpgradeRequested ? (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-black text-emerald-800">
+                      ✓ Premium layout selected · {premiumInterval === 'annual' ? 'Annual plan' : 'Monthly plan'} · applied after launch
+                    </p>
+                    <p className="text-[10px] font-semibold text-emerald-600 mt-0.5 leading-tight">
+                      Your layout choices will be saved when billing completes. You can manage them in Admin Center → Layout.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onUpgradeClear}
+                    className="flex-shrink-0 text-[10px] font-black text-emerald-600 underline underline-offset-2 hover:text-emerald-800"
+                  >
+                    Change
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 space-y-2">
+                <p className="text-[11px] font-black text-amber-800">Upgrade to publish this layout</p>
+                <p className="text-[10px] font-semibold text-amber-600 leading-tight">
+                  Your layout choices are saved after you upgrade. Launch free, then upgrade — or commit now.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onUpgradeRequest('monthly')}
+                    className="flex-1 rounded-lg border border-amber-300 bg-white py-2 text-center"
+                  >
+                    <span className="block text-[12px] font-black text-slate-900">Monthly</span>
+                    <span className="block text-[10px] font-semibold text-slate-500">$9.99 / mo</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpgradeRequest('annual')}
+                    className="flex-1 rounded-lg border border-amber-300 bg-amber-100 py-2 text-center"
+                  >
+                    <span className="block text-[12px] font-black text-slate-900">Annual</span>
+                    <span className="block text-[10px] font-semibold text-amber-700">$7.99 / mo · save 20%</span>
+                  </button>
+                </div>
+                <p className="text-[9px] font-semibold text-amber-500 text-center">
+                  Billing starts after your community is created
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -626,7 +687,7 @@ function StepShape({ form, onField, premiumPreviewEnabled, premiumPreviewLayout,
   );
 }
 
-function StepLaunch({ form, typeConfig, onField }) {
+function StepLaunch({ form, typeConfig, onField, premiumUpgradeRequested, premiumInterval }) {
   const archType = ARCHETYPES.find((a) => a.key === form.archetype);
   const smartPost = SMART_FIRST_POST[form.archetype] || SMART_FIRST_POST.general;
   React.useEffect(() => {
@@ -660,6 +721,18 @@ function StepLaunch({ form, typeConfig, onField }) {
         />
         <p className="mt-1.5 text-[11px] font-semibold text-slate-400">This will be your community's first post. You can edit or delete it after launch.</p>
       </div>
+
+      {premiumUpgradeRequested && (
+        <div className="rounded-2xl border border-violet-300 bg-violet-50 px-4 py-3 flex items-start gap-2">
+          <span className="text-violet-600 mt-px text-base flex-shrink-0">✦</span>
+          <div>
+            <p className="text-[12px] font-black text-violet-900">Premium Layout · {premiumInterval === 'annual' ? 'Annual plan' : 'Monthly plan'}</p>
+            <p className="text-[11px] font-semibold text-violet-600 mt-0.5 leading-tight">
+              After launch, you'll be redirected to billing. Your layout choices are applied automatically on return.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-2xl bg-gradient-to-br from-slate-950 to-blue-900 p-4 text-white">
         <p className="text-[15px] font-black">Ready to launch 🚀</p>

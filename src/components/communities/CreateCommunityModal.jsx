@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, Plus, ImagePlus, X, Lock, Globe, Check, Sparkles, ChevronRight } from 'lucide-react';
 import { dataService, incrementCounter } from '@/services';
+import { paymentsService } from '@/services/paymentsService';
+import { storageService } from '@/services/storageService';
 import { toast } from 'sonner';
 import CreateCommunityFlow from './CreateCommunityFlow';
 
@@ -57,7 +59,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
     setFirstPostBody('');
   };
 
-  const handleCreateFromFlow = async ({ name, description, category, community_type, privacy, posting_mode, rules, firstPost, settings }) => {
+  const handleCreateFromFlow = async ({ name, description, category, community_type, privacy, posting_mode, rules, firstPost, settings, premiumLayoutRequest, premiumInterval }) => {
     if (!currentUser) return toast.error('You must be signed in to create a community.');
     setSubmitting(true);
     try {
@@ -105,6 +107,32 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
           comments_count: 0,
         }).catch(() => {});
         await incrementCounter('communities', 'post_count', community.id, 1).catch(() => {});
+      }
+
+      // If user chose to upgrade, save pending layout and redirect to Stripe
+      if (premiumLayoutRequest) {
+        storageService.setJson('community_premium_layout_pending', {
+          communityId: community.id,
+          layout: premiumLayoutRequest,
+        });
+        try {
+          const { data } = await paymentsService.createCommunityPlanCheckout({
+            communityId: community.id,
+            interval: premiumInterval || 'monthly',
+          });
+          reset();
+          onOpenChange(false);
+          window.location.href = data.checkoutUrl;
+          return;
+        } catch {
+          // Billing not configured — clear pending, proceed with normal launch
+          storageService.removeItem('community_premium_layout_pending');
+          toast.info('Community launched! Billing is not active yet — your layout can be set in Admin Center.');
+          onCreated?.(community);
+          reset();
+          onOpenChange(false);
+          return;
+        }
       }
 
       toast.success('Community launched! 🎉');
@@ -223,6 +251,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
       <CreateCommunityFlow
         onCreate={handleCreateFromFlow}
         onClose={() => { reset(); onOpenChange(false); }}
+        currentUser={currentUser}
       />
     );
   }
