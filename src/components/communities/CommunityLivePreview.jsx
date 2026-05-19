@@ -1,6 +1,21 @@
 import React from 'react';
 import { COMMUNITY_TYPE_CONFIG } from '@/lib/communityTypes';
 
+const COMPOSER_PROMPTS_BY_MODE = {
+  message:  'Share a quick update or question...',
+  post:     'Write a post for your community...',
+  chesed:   'Request help · Offer help · Share a need',
+  official: 'Post an official announcement...',
+};
+
+const HOME_EMPHASIS_LABELS = {
+  feed:          '💬 Feed-first home',
+  announcements: '📣 Announcements at the top',
+  events:        '📅 Events-forward',
+  resources:     '📎 Resources-forward',
+  chesed:        '🤝 Action-forward',
+};
+
 const TAB_LABELS = {
   home: 'Home', posts: 'Posts', events: 'Events', members: 'Members',
   openNeeds: 'Needs', questions: 'Q&A', discussions: 'Topics',
@@ -94,14 +109,29 @@ const STEP_CAPTIONS = [
   'This is how your community will look on launch day',
 ];
 
-export default function CommunityLivePreview({ form, step }) {
+export default function CommunityLivePreview({ form, step, premiumPreview = { enabled: false, layout: {} } }) {
   const typeConfig = form.archetype ? COMMUNITY_TYPE_CONFIG[form.archetype] : null;
   const sample = PREVIEW_SAMPLES[form.archetype] || null;
   const name = form.name || 'Your Community';
   const hasType = Boolean(typeConfig);
   const coverBg = typeConfig?.coverPattern || 'linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%)';
-  const primaryTabs = typeConfig?.primaryTabs || [];
   const stripClass = STRIP_CLASSES[form.archetype] || STRIP_CLASSES.general;
+
+  const isPremiumActive = premiumPreview.enabled;
+  const pLayout = premiumPreview.layout || {};
+
+  // When premium preview is active, override tabs and composer from the premium selections.
+  const primaryTabs = (isPremiumActive && pLayout.primaryTabs?.length)
+    ? pLayout.primaryTabs
+    : (typeConfig?.primaryTabs || []);
+
+  const effectiveComposerPrompt = (isPremiumActive && pLayout.composerMode)
+    ? (COMPOSER_PROMPTS_BY_MODE[pLayout.composerMode] || typeConfig?.prompts?.[0] || 'Share something...')
+    : (typeConfig?.prompts?.[0] || 'Share something...');
+
+  const showEmphasisIndicator = isPremiumActive
+    && pLayout.homeEmphasis
+    && pLayout.homeEmphasis !== 'feed';
 
   const showStrip = hasType && step >= 1 && sample;
   const showDescription = Boolean(form.description?.trim().length > 5 && step >= 2);
@@ -130,6 +160,14 @@ export default function CommunityLivePreview({ form, step }) {
           <span className="text-[8px] font-black text-white/70 drop-shadow">9:41</span>
           <span className="text-[7px] font-black text-white/60 drop-shadow">●●●</span>
         </div>
+
+        {/* Premium preview badge — top-right corner of phone */}
+        {isPremiumActive && (
+          <div className="absolute right-2 top-2 z-30 flex items-center gap-0.5 rounded-md bg-violet-600 px-1.5 py-0.5" style={{ pointerEvents: 'none' }}>
+            <span className="text-[7px] font-black text-white">✦</span>
+            <span className="text-[7px] font-black text-white">Premium</span>
+          </div>
+        )}
 
         {/* Cover */}
         <div className="relative flex-shrink-0" style={{ height: 92 }}>
@@ -237,11 +275,23 @@ export default function CommunityLivePreview({ form, step }) {
             </div>
           )}
 
+          {/* Home emphasis indicator (premium) */}
+          {showEmphasisIndicator && (
+            <div className="flex-shrink-0 rounded-lg border border-violet-200 bg-violet-50 px-2 py-1.5">
+              <p className="font-black text-violet-700 leading-tight" style={{ fontSize: 7 }}>
+                {HOME_EMPHASIS_LABELS[pLayout.homeEmphasis] || 'Custom section'}
+              </p>
+              <p className="text-violet-500 leading-tight" style={{ fontSize: 7 }}>
+                Promoted to top of home
+              </p>
+            </div>
+          )}
+
           {/* Composer */}
           {hasType && (
-            <div className="flex-shrink-0 rounded-lg border border-slate-100 bg-white px-2 py-1.5">
+            <div className={`flex-shrink-0 rounded-lg border px-2 py-1.5 ${isPremiumActive ? 'border-violet-100 bg-white' : 'border-slate-100 bg-white'}`}>
               <p className="leading-tight text-slate-400" style={{ fontSize: 8 }}>
-                {typeConfig.prompts?.[0] || 'Share something...'}
+                {effectiveComposerPrompt}
               </p>
             </div>
           )}
@@ -297,8 +347,10 @@ export default function CommunityLivePreview({ form, step }) {
       </div>
 
       {/* Step caption */}
-      <p className="mt-3 max-w-[220px] text-center text-[10px] font-semibold leading-snug text-white/45">
-        {STEP_CAPTIONS[step] || STEP_CAPTIONS[0]}
+      <p className={`mt-3 max-w-[220px] text-center text-[10px] font-semibold leading-snug ${isPremiumActive ? 'text-violet-300/80' : 'text-white/45'}`}>
+        {isPremiumActive
+          ? '✦ Premium Preview · Upgrade to publish this layout'
+          : (STEP_CAPTIONS[step] || STEP_CAPTIONS[0])}
       </p>
     </div>
   );

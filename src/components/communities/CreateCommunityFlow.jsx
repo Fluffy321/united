@@ -1,7 +1,84 @@
 import React, { createPortal, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, Eye, Lock, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, Eye, Lock, Sparkles, X } from 'lucide-react';
 import { COMMUNITY_TYPE_CONFIG } from '@/lib/communityTypes';
 import CommunityLivePreview from './CommunityLivePreview';
+
+// ── Premium preview constants ─────────────────────────────────────────────────
+
+const TAB_ARRANGEMENTS = {
+  neighborhood: [
+    { label: 'Default',      tabs: ['home', 'posts', 'events', 'members'] },
+    { label: 'Feed-forward', tabs: ['home', 'posts', 'members', 'about'] },
+    { label: 'Events-first', tabs: ['home', 'events', 'posts', 'members'] },
+  ],
+  shul: [
+    { label: 'Default',        tabs: ['home', 'events', 'resources', 'members'] },
+    { label: 'Announce-first', tabs: ['home', 'announcements', 'events', 'members'] },
+    { label: 'Community',      tabs: ['home', 'posts', 'events', 'members'] },
+  ],
+  chesed: [
+    { label: 'Default',    tabs: ['home', 'openNeeds', 'posts', 'members'] },
+    { label: 'Needs-first',tabs: ['home', 'openNeeds', 'members', 'about'] },
+    { label: 'Community',  tabs: ['home', 'posts', 'openNeeds', 'members'] },
+  ],
+  parents: [
+    { label: 'Default',     tabs: ['home', 'questions', 'events', 'members'] },
+    { label: 'Q&A-forward', tabs: ['home', 'questions', 'members', 'about'] },
+    { label: 'Events-first',tabs: ['home', 'events', 'questions', 'members'] },
+  ],
+  learning: [
+    { label: 'Default',          tabs: ['home', 'discussions', 'resources', 'members'] },
+    { label: 'Resources-first',  tabs: ['home', 'resources', 'discussions', 'members'] },
+    { label: 'Discussion-first', tabs: ['home', 'discussions', 'posts', 'members'] },
+  ],
+  events: [
+    { label: 'Default',       tabs: ['home', 'events', 'posts', 'members'] },
+    { label: 'Calendar-first',tabs: ['home', 'events', 'members', 'about'] },
+    { label: 'Community',     tabs: ['home', 'posts', 'events', 'members'] },
+  ],
+  marketplace: [
+    { label: 'Default',       tabs: ['home', 'listings', 'posts', 'members'] },
+    { label: 'Listings-first',tabs: ['home', 'listings', 'members', 'about'] },
+    { label: 'Community',     tabs: ['home', 'posts', 'listings', 'members'] },
+  ],
+  general: [
+    { label: 'Default',     tabs: ['home', 'posts', 'members', 'about'] },
+    { label: 'Community',   tabs: ['home', 'posts', 'chat', 'members'] },
+    { label: 'Open feed',   tabs: ['home', 'posts', 'members', 'about'] },
+  ],
+};
+
+const HOME_EMPHASIS_OPTIONS = [
+  { key: 'feed',          label: 'Feed-first',        emoji: '💬', desc: 'Conversations and updates lead the home' },
+  { key: 'announcements', label: 'Announce-first',    emoji: '📣', desc: 'Official posts sit above the feed' },
+  { key: 'events',        label: 'Events-forward',    emoji: '📅', desc: 'Upcoming events appear at the top' },
+  { key: 'resources',     label: 'Resources-forward', emoji: '📎', desc: 'Links and resources are most prominent' },
+  { key: 'chesed',        label: 'Action-forward',    emoji: '🤝', desc: 'Needs and help requests lead' },
+];
+
+const EMPHASIS_BY_TYPE = {
+  neighborhood: ['feed', 'events'],
+  shul:         ['announcements', 'events', 'feed'],
+  chesed:       ['chesed', 'feed'],
+  parents:      ['feed', 'events'],
+  learning:     ['resources', 'feed'],
+  events:       ['events', 'feed'],
+  marketplace:  ['feed'],
+  general:      ['feed'],
+};
+
+const PREVIEW_COMPOSER_MODES = [
+  { key: 'message',  label: 'Conversational', emoji: '💬' },
+  { key: 'post',     label: 'Posts & Content', emoji: '📝' },
+  { key: 'official', label: 'Official Updates', emoji: '📣' },
+];
+
+const TAB_LABELS_SHORT = {
+  home: 'Home', posts: 'Posts', events: 'Events', members: 'Members',
+  openNeeds: 'Needs', questions: 'Q&A', discussions: 'Topics',
+  resources: 'Resources', about: 'About', listings: 'Listings',
+  announcements: 'Announce', chat: 'Chat',
+};
 
 const DEFAULT_RULES = 'Be respectful.\nKeep posts relevant.\nProtect member privacy.';
 
@@ -33,6 +110,10 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
   const [step, setStep] = useState(0);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [error, setError] = useState('');
+  const [premiumPreviewEnabled, setPremiumPreviewEnabled] = useState(false);
+  const [premiumPreviewLayout, setPremiumPreviewLayout] = useState({});
+  const [premiumUpgradeRequested, setPremiumUpgradeRequested] = useState(false);
+  const [premiumInterval, setPremiumInterval] = useState('monthly');
   const [form, setForm] = useState({
     name: '',
     archetype: '',
@@ -47,6 +128,22 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
     setError('');
     setForm((prev) => ({ ...prev, [field]: value }));
   };
+
+  const setPremiumField = (key, val) => setPremiumPreviewLayout((prev) => ({ ...prev, [key]: val }));
+  const togglePremiumPreview = () => {
+    setPremiumPreviewEnabled((v) => {
+      if (v) {
+        setPremiumPreviewLayout({});
+        setPremiumUpgradeRequested(false);
+      }
+      return !v;
+    });
+  };
+  const handleUpgradeRequest = (interval) => {
+    setPremiumInterval(interval);
+    setPremiumUpgradeRequested(true);
+  };
+  const handleUpgradeClear = () => setPremiumUpgradeRequested(false);
 
   const typeConfig = form.archetype ? COMMUNITY_TYPE_CONFIG[form.archetype] : null;
   const progress = ((step + 1) / STEPS.length) * 100;
@@ -87,6 +184,8 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
         home_emphasis: tc.homeEmphasis,
         primary_tabs: tc.primaryTabs,
       },
+      premiumLayoutRequest: premiumUpgradeRequested ? premiumPreviewLayout : null,
+      premiumInterval: premiumUpgradeRequested ? premiumInterval : null,
     });
   };
 
@@ -146,8 +245,21 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
               {step === 0 && <StepName form={form} onField={setField} />}
               {step === 1 && <StepArchetype form={form} onField={setField} />}
               {step === 2 && <StepMakeItYours form={form} typeConfig={typeConfig} onField={setField} />}
-              {step === 3 && <StepShape form={form} onField={setField} />}
-              {step === 4 && <StepLaunch form={form} typeConfig={typeConfig} onField={setField} />}
+              {step === 3 && (
+                <StepShape
+                  form={form}
+                  onField={setField}
+                  premiumPreviewEnabled={premiumPreviewEnabled}
+                  premiumPreviewLayout={premiumPreviewLayout}
+                  onPremiumField={setPremiumField}
+                  onPremiumToggle={togglePremiumPreview}
+                  premiumUpgradeRequested={premiumUpgradeRequested}
+                  premiumInterval={premiumInterval}
+                  onUpgradeRequest={handleUpgradeRequest}
+                  onUpgradeClear={handleUpgradeClear}
+                />
+              )}
+              {step === 4 && <StepLaunch form={form} typeConfig={typeConfig} onField={setField} premiumUpgradeRequested={premiumUpgradeRequested} premiumInterval={premiumInterval} />}
             </section>
 
             {error && (
@@ -180,7 +292,7 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
           {/* Desktop preview panel */}
           <div className="hidden lg:flex flex-1 flex-col items-center justify-center gap-3 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-8 py-8">
             <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/25">Live Preview</p>
-            <CommunityLivePreview form={form} step={step} />
+            <CommunityLivePreview form={form} step={step} premiumPreview={{ enabled: premiumPreviewEnabled, layout: premiumPreviewLayout }} />
           </div>
 
         </div>
@@ -203,7 +315,7 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
             </button>
           </div>
           <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 pb-8">
-            <CommunityLivePreview form={form} step={step} />
+            <CommunityLivePreview form={form} step={step} premiumPreview={{ enabled: premiumPreviewEnabled, layout: premiumPreviewLayout }} />
           </div>
         </div>
       )}
@@ -330,14 +442,30 @@ function StepMakeItYours({ form, typeConfig, onField }) {
   );
 }
 
-function StepShape({ form, onField }) {
+function StepShape({ form, onField, premiumPreviewEnabled, premiumPreviewLayout, onPremiumField, onPremiumToggle, premiumUpgradeRequested, premiumInterval, onUpgradeRequest, onUpgradeClear }) {
   const PRIVACY_OPTIONS = [
     { value: 'Public', label: 'Public', emoji: '🌍', body: 'Anyone can discover and join this community.' },
     { value: 'Community-only', label: 'Community-only', emoji: '🏘️', body: 'Discoverable but feels more local and member-focused.' },
     { value: 'Private', label: 'Private', emoji: '🔒', body: 'Not publicly discoverable. Invite or link only.' },
   ];
+
+  const archetype = form.archetype || 'general';
+  const typeConfig = COMMUNITY_TYPE_CONFIG[archetype] || COMMUNITY_TYPE_CONFIG.general;
+  const tabArrangements = TAB_ARRANGEMENTS[archetype] || TAB_ARRANGEMENTS.general;
+  const selectedTabPreset = premiumPreviewLayout.tabPreset ?? 0;
+  const emphasisKeys = EMPHASIS_BY_TYPE[archetype] || ['feed'];
+  const emphasisOptions = HOME_EMPHASIS_OPTIONS.filter((o) => emphasisKeys.includes(o.key));
+  const selectedEmphasis = premiumPreviewLayout.homeEmphasis || emphasisKeys[0];
+  const selectedComposerMode = premiumPreviewLayout.composerMode || typeConfig.composerMode || 'message';
+
+  const handleTabPreset = (idx) => {
+    onPremiumField('tabPreset', idx);
+    onPremiumField('primaryTabs', tabArrangements[idx].tabs);
+  };
+
   return (
     <div className="space-y-4">
+      {/* Privacy */}
       <div>
         <p className="mb-2 text-[12px] font-black text-slate-900">Privacy</p>
         <div className="space-y-2">
@@ -355,6 +483,8 @@ function StepShape({ form, onField }) {
           ))}
         </div>
       </div>
+
+      {/* Posting mode */}
       <div>
         <p className="mb-2 text-[12px] font-black text-slate-900">Who can post?</p>
         <div className="flex gap-2">
@@ -365,21 +495,199 @@ function StepShape({ form, onField }) {
           ))}
         </div>
       </div>
-      {/* Premium teaser */}
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <div className="flex items-start gap-2">
-          <Lock className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-[12px] font-black text-slate-600">Advanced layout control <span className="text-[11px] font-bold text-blue-600 ml-1">Premium</span></p>
-            <p className="text-[11px] font-semibold text-slate-400 mt-0.5">Customize your navigation tabs, home section order, and feed behavior. Upgrade after launch.</p>
+
+      {/* ── Premium layout preview ── */}
+      <div className={`rounded-2xl border transition-all ${premiumPreviewEnabled ? 'border-violet-300 bg-violet-50' : 'border-slate-200 bg-slate-50'}`}>
+        {/* Header row */}
+        <button
+          type="button"
+          onClick={onPremiumToggle}
+          className="flex w-full items-center gap-2 px-4 py-3 text-left"
+        >
+          <span className="text-base">{premiumPreviewEnabled ? '✦' : <Lock className="h-3.5 w-3.5 text-slate-400 inline" />}</span>
+          <span className={`flex-1 text-[12px] font-black ${premiumPreviewEnabled ? 'text-violet-900' : 'text-slate-700'}`}>
+            Advanced Community Layout
+          </span>
+          <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-violet-700">
+            Premium
+          </span>
+          {premiumPreviewEnabled
+            ? <ChevronUp className="h-3.5 w-3.5 text-violet-500 flex-shrink-0" />
+            : <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />}
+        </button>
+
+        {!premiumPreviewEnabled && (
+          <div className="px-4 pb-3">
+            <ul className="space-y-0.5 mb-3">
+              {[
+                'Choose your primary navigation tabs',
+                'Shape what appears at the top of home',
+                'Tune how your community app feels to members',
+              ].map((b) => (
+                <li key={b} className="flex items-start gap-1.5 text-[11px] font-semibold text-slate-500">
+                  <span className="text-violet-400 flex-shrink-0 mt-px">✦</span> {b}
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              onClick={onPremiumToggle}
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-violet-600 px-4 text-[12px] font-black text-white hover:bg-violet-700 active:scale-[0.98]"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              Preview Premium Layout
+            </button>
           </div>
-        </div>
+        )}
+
+        {premiumPreviewEnabled && (
+          <div className="border-t border-violet-200 px-4 pb-4 pt-3 space-y-4">
+
+            {/* Tab arrangement */}
+            <div>
+              <p className="mb-2 text-[11px] font-black text-violet-800">Tab arrangement</p>
+              <div className="space-y-1.5">
+                {tabArrangements.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleTabPreset(idx)}
+                    className={`flex w-full items-center gap-2 rounded-xl border p-2 text-left transition ${
+                      selectedTabPreset === idx
+                        ? 'border-violet-400 bg-violet-100'
+                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className={`flex-shrink-0 text-[11px] font-black w-16 ${selectedTabPreset === idx ? 'text-violet-700' : 'text-slate-500'}`}>
+                      {preset.label}
+                    </span>
+                    <div className="flex flex-1 gap-1 overflow-hidden">
+                      {preset.tabs.map((tab) => (
+                        <span
+                          key={tab}
+                          className={`flex-shrink-0 rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide ${
+                            selectedTabPreset === idx
+                              ? 'bg-violet-200 text-violet-800'
+                              : 'bg-slate-100 text-slate-500'
+                          }`}
+                        >
+                          {TAB_LABELS_SHORT[tab] || tab}
+                        </span>
+                      ))}
+                    </div>
+                    {selectedTabPreset === idx && <Check className="h-3.5 w-3.5 text-violet-600 flex-shrink-0" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Home emphasis */}
+            {emphasisOptions.length > 1 && (
+              <div>
+                <p className="mb-2 text-[11px] font-black text-violet-800">Home emphasis</p>
+                <div className="space-y-1">
+                  {emphasisOptions.map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => onPremiumField('homeEmphasis', opt.key)}
+                      className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition ${
+                        selectedEmphasis === opt.key
+                          ? 'border-violet-400 bg-violet-100'
+                          : 'border-slate-200 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>{opt.emoji}</span>
+                      <span className="flex-1">
+                        <span className={`block text-[11px] font-black ${selectedEmphasis === opt.key ? 'text-violet-800' : 'text-slate-700'}`}>{opt.label}</span>
+                        <span className="block text-[10px] font-semibold text-slate-400 leading-tight">{opt.desc}</span>
+                      </span>
+                      {selectedEmphasis === opt.key && <Check className="h-3.5 w-3.5 text-violet-600 flex-shrink-0" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Composer style */}
+            <div>
+              <p className="mb-2 text-[11px] font-black text-violet-800">Composer style</p>
+              <div className="flex gap-1.5 flex-wrap">
+                {PREVIEW_COMPOSER_MODES.map((mode) => (
+                  <button
+                    key={mode.key}
+                    type="button"
+                    onClick={() => onPremiumField('composerMode', mode.key)}
+                    className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[11px] font-black transition ${
+                      selectedComposerMode === mode.key
+                        ? 'border-violet-400 bg-violet-100 text-violet-800'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {mode.emoji} {mode.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Upgrade CTA */}
+            {premiumUpgradeRequested ? (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-black text-emerald-800">
+                      ✓ Premium layout selected · {premiumInterval === 'annual' ? 'Annual plan' : 'Monthly plan'} · applied after launch
+                    </p>
+                    <p className="text-[10px] font-semibold text-emerald-600 mt-0.5 leading-tight">
+                      Your layout choices will be saved when billing completes. You can manage them in Admin Center → Layout.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onUpgradeClear}
+                    className="flex-shrink-0 text-[10px] font-black text-emerald-600 underline underline-offset-2 hover:text-emerald-800"
+                  >
+                    Change
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 space-y-2">
+                <p className="text-[11px] font-black text-amber-800">Upgrade to publish this layout</p>
+                <p className="text-[10px] font-semibold text-amber-600 leading-tight">
+                  Your layout choices are saved after you upgrade. Launch free, then upgrade — or commit now.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onUpgradeRequest('monthly')}
+                    className="flex-1 rounded-lg border border-amber-300 bg-white py-2 text-center"
+                  >
+                    <span className="block text-[12px] font-black text-slate-900">Monthly</span>
+                    <span className="block text-[10px] font-semibold text-slate-500">$9.99 / mo</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpgradeRequest('annual')}
+                    className="flex-1 rounded-lg border border-amber-300 bg-amber-100 py-2 text-center"
+                  >
+                    <span className="block text-[12px] font-black text-slate-900">Annual</span>
+                    <span className="block text-[10px] font-semibold text-amber-700">$7.99 / mo · save 20%</span>
+                  </button>
+                </div>
+                <p className="text-[9px] font-semibold text-amber-500 text-center">
+                  Billing starts after your community is created
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function StepLaunch({ form, typeConfig, onField }) {
+function StepLaunch({ form, typeConfig, onField, premiumUpgradeRequested, premiumInterval }) {
   const archType = ARCHETYPES.find((a) => a.key === form.archetype);
   const smartPost = SMART_FIRST_POST[form.archetype] || SMART_FIRST_POST.general;
   React.useEffect(() => {
@@ -413,6 +721,18 @@ function StepLaunch({ form, typeConfig, onField }) {
         />
         <p className="mt-1.5 text-[11px] font-semibold text-slate-400">This will be your community's first post. You can edit or delete it after launch.</p>
       </div>
+
+      {premiumUpgradeRequested && (
+        <div className="rounded-2xl border border-violet-300 bg-violet-50 px-4 py-3 flex items-start gap-2">
+          <span className="text-violet-600 mt-px text-base flex-shrink-0">✦</span>
+          <div>
+            <p className="text-[12px] font-black text-violet-900">Premium Layout · {premiumInterval === 'annual' ? 'Annual plan' : 'Monthly plan'}</p>
+            <p className="text-[11px] font-semibold text-violet-600 mt-0.5 leading-tight">
+              After launch, you'll be redirected to billing. Your layout choices are applied automatically on return.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-2xl bg-gradient-to-br from-slate-950 to-blue-900 p-4 text-white">
         <p className="text-[15px] font-black">Ready to launch 🚀</p>
