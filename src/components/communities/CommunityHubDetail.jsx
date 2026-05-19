@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -27,6 +27,7 @@ import {
   canUseCommunityResources,
 } from '@/lib/communityPlans';
 import CommunityAdminCenter from './CommunityAdminCenter';
+import { useSwipeableTabs } from '@/hooks/useSwipeableTabs';
 import CommunityEventsTab from './CommunityEventsTab';
 import CommunityGroupsTab from './CommunityGroupsTab';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
@@ -120,6 +121,14 @@ export default function CommunityHubDetail({
     setAdminInitialTab(tab);
     setShowAdminCenter(true);
   };
+
+  // Tab button refs for scrolling active pill into view after swipe
+  const tabButtonRefs = useRef({});
+  useEffect(() => {
+    tabButtonRefs.current[activeTab]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  }, [activeTab]);
+
+  const swipeHandlers = useSwipeableTabs({ tabs, activeTab, onTabChange: setTab });
 
   useEffect(() => {
     if (!initialComposePrompt) return;
@@ -385,6 +394,7 @@ export default function CommunityHubDetail({
             {tabs.map((tab) => (
               <button
                 key={tab}
+                ref={(el) => { tabButtonRefs.current[tab] = el; }}
                 onClick={() => setTab(tab)}
                 className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-bold transition ${
                   activeTab === tab
@@ -398,8 +408,8 @@ export default function CommunityHubDetail({
           </div>
         </div>
 
-        {/* Tab content */}
-        <div className="mt-3">
+        {/* Tab content — swipeable */}
+        <div className="mt-3" {...swipeHandlers}>
           {activeTab === 'home' && (
             <HomeTab
               community={community}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BookOpen, Globe, Heart, Loader2, Lock, MapPin, MessageCircle, Phone, Send, Shield } from 'lucide-react';
@@ -24,6 +24,7 @@ import CommunityResourceLibrary from './CommunityResourceLibrary';
 import CommunityStoreTab from './CommunityStoreTab';
 import GroupChatSection from './GroupChatSection';
 import CommunityAdminCenter, { AppealSubmitModal } from './CommunityAdminCenter';
+import { useSwipeableTabs } from '@/hooks/useSwipeableTabs';
 import {
   CommunityAdminQuickActions,
   CommunityFeaturedSection,
@@ -160,6 +161,14 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     setShowAdminCenter(true);
   };
 
+  // Tab button refs for scrolling active pill into view after swipe
+  const tabButtonRefs = useRef({});
+  useEffect(() => {
+    tabButtonRefs.current[activeTab]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  }, [activeTab]);
+
+  const swipeHandlers = useSwipeableTabs({ tabs: visibleTabs, activeTab, onTabChange: setTab });
+
   const { data: events = [] } = useQuery({
     queryKey: ['community-events', communityId],
     queryFn: () => dataService.entities.CommunityEvent.filter({ community_id: communityId }, 'start_date', 50),
@@ -292,6 +301,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             {tabsWithCounts.map((tab) => (
               <button
                 key={tab.key}
+                ref={(el) => { tabButtonRefs.current[tab.key] = el; }}
                 onClick={() => setTab(tab.key)}
                 className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-bold transition-colors ${
                   activeTab === tab.key
@@ -355,7 +365,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         );
       })()}
 
-      <div className="max-w-2xl mx-auto w-full px-4 pb-28">
+      <div className="max-w-2xl mx-auto w-full px-4 pb-28" {...swipeHandlers}>
         {activeTab === 'home' && (
           <RoutedCommunityHome
             posts={posts}

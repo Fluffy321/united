@@ -264,6 +264,16 @@ Goals:
   },
 
   {
+    id: 'community-detail-swipeable-tabs',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Community Detail — Swipeable Tab Navigation',
+    description: 'Horizontal swipe gestures on the community detail content area advance or retreat through the visible tab list. Active pill auto-scrolls into view after swipe.',
+    shippedNote: 'Shipped 2026-05-19. useSwipeableTabs hook in src/hooks/useSwipeableTabs.js detects touch/pen horizontal swipes (48px threshold, 1.5× direction ratio, ignores nested horizontal scrollers). Wired into CommunityHubDetail.jsx and CommunityDetailView.jsx content areas. Tab button refs auto-scroll active pill on change in both detail systems.',
+  },
+
+  {
     id: 'community-personalization-home',
     category: 'Community',
     status: STATUS.PLANNED,
