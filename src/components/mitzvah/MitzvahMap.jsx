@@ -32,6 +32,7 @@ const PRIMARY_FILTERS = [
 
 const CLUSTER_BUCKET_SCALE = 1000;
 const CLUSTER_BASE_RADIUS = 0.00042;
+const DIRECTORY_LAST_REVIEWED = 'May 2026';
 
 const STATIC_POINTS = [
   {
@@ -1167,7 +1168,26 @@ function getMapLinks(point, userLocation) {
   };
 }
 
-export default function MitzvahMap({ requests, userLocation, onSelectRequest, communityPoints = [], personalized = true, mapHeight, includeStaticPoints = false }) {
+function getTrustLabel(point) {
+  if (!point) return '';
+  if (point.verification) return point.verification;
+  if (point.source_url) return 'Source-backed listing';
+  if (point.isCommunityPoint) return 'Community post';
+  if (point.isRequest) return 'Member request';
+  return '';
+}
+
+export default function MitzvahMap({
+  requests,
+  userLocation,
+  onSelectRequest,
+  communityPoints = [],
+  personalized = true,
+  mapHeight,
+  includeStaticPoints = false,
+  initialPrimaryFilter = '',
+  highlightedPlace = '',
+}) {
   const [mapCenter, setMapCenter] = useState(null);
   const [activeTypes, setActiveTypes] = useState(() => new Set());
   const [selectedPoint, setSelectedPoint] = useState(null);
@@ -1248,14 +1268,29 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
   const selectedDistance = formatDistance(getDistanceMiles(userLocation, selectedPoint));
 
   useEffect(() => {
-    if (userLocation) {
+    if (!initialPrimaryFilter) return;
+    const filter = PRIMARY_FILTERS.find((item) => item.key === initialPrimaryFilter);
+    if (!filter) return;
+    setActiveTypes(new Set(filter.types));
+  }, [initialPrimaryFilter]);
+
+  useEffect(() => {
+    const normalizedPlace = String(highlightedPlace || '').trim().toLowerCase();
+    const highlightedPoint = normalizedPlace
+      ? allPoints.find((point) => String(point.title || '').trim().toLowerCase() === normalizedPlace)
+      : null;
+
+    if (highlightedPoint?.location_lat && highlightedPoint?.location_lng) {
+      setMapCenter([highlightedPoint.location_lat, highlightedPoint.location_lng]);
+      setSelectedPoint(highlightedPoint);
+    } else if (userLocation) {
       setMapCenter([userLocation.lat, userLocation.lng]);
     } else if (allPoints.length > 0 && allPoints[0].location_lat) {
       setMapCenter([allPoints[0].location_lat, allPoints[0].location_lng]);
     } else {
       setMapCenter([40.6249, -73.7178]);
     }
-  }, [userLocation, allPoints]);
+  }, [userLocation, allPoints, highlightedPlace]);
 
   useEffect(() => {
     if (!selectedPoint) return;
@@ -1496,9 +1531,14 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
                     {selectedDistance}
                   </span>
                 )}
-                {selectedPoint.verification && (
+                {getTrustLabel(selectedPoint) && (
                   <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700 ring-1 ring-emerald-100">
-                    {selectedPoint.verification}
+                    {getTrustLabel(selectedPoint)}
+                  </span>
+                )}
+                {selectedPoint.source_url && (
+                  <span className="rounded-full bg-white px-2 py-1 text-slate-600 ring-1 ring-slate-200">
+                    Reviewed {selectedPoint.last_verified || DIRECTORY_LAST_REVIEWED}
                   </span>
                 )}
                 {selectedPoint.communityName && (
@@ -1539,6 +1579,16 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
                     Waze
                   </a>
                 </div>
+              )}
+              {selectedPoint.source_url && (
+                <a
+                  href={selectedPoint.source_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="motion-press mt-2 inline-flex w-full items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-[11px] font-black text-emerald-700"
+                >
+                  Open verification source
+                </a>
               )}
             </div>
           </div>
@@ -1586,9 +1636,9 @@ export default function MitzvahMap({ requests, userLocation, onSelectRequest, co
                     >
                       {config.label}
                     </span>
-                    {point.verification && (
+                    {getTrustLabel(point) && (
                       <span className="truncate text-[10px] font-black text-emerald-700">
-                        Verified
+                        {point.source_url ? 'Source-backed' : 'Verified'}
                       </span>
                     )}
                   </div>

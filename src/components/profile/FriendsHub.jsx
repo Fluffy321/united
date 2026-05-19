@@ -5,8 +5,9 @@ import { friendsService, FRIEND_STATUS } from '@/services/friendsService';
 import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Loader2, UserRound, UserRoundX, UserRoundPlus, UserRoundCheck, X, Check, Clock, Search } from 'lucide-react';
+import { Loader2, UserRound, UserRoundX, UserRoundPlus, UserRoundCheck, X, Check, Clock, Search, ContactRound, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { dataService, findOrCreateDirectConversation } from '@/services';
 
 const TABS = [
   { key: 'find',     label: 'Find' },
@@ -17,6 +18,7 @@ const TABS = [
 
 const DEBOUNCE_MS = 280;
 const escapeIlike = (s) => s.replace(/[\\%_]/g, '\\$&');
+const normalizeContactValue = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9@.+]/g, '');
 
 function Avatar({ user, size = 'w-10 h-10' }) {
   const initials = (user?.display_name || '?').slice(0, 2).toUpperCase();
@@ -55,6 +57,8 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [contactsLoading, setContactsLoading] = useState(false);
+  const [contactsMessage, setContactsMessage] = useState('');
   const debounceRef = useRef(null);
   const latestRef = useRef('');
   // Track which user IDs have in-flight request actions
@@ -140,6 +144,17 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
           .limit(25);
         if (error) throw error;
         results = data || [];
+      } else {
+        const users = await dataService.entities.User.list('-created_date', 200);
+        const needle = q.toLowerCase();
+        results = users
+          .filter((user) => user.id !== uid)
+          .filter((user) => (
+            user.display_name?.toLowerCase().includes(needle) ||
+            user.full_name?.toLowerCase().includes(needle) ||
+            user.username?.toLowerCase().includes(needle)
+          ))
+          .slice(0, 25);
       }
       if (q !== latestRef.current) return;
       setSearchResults(results);
@@ -202,6 +217,77 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
     }
   };
 
+  const handleImportContacts = async () => {
+    setContactsMessage('');
+    setContactsLoading(true);
+    try {
+      if (!navigator.contacts?.select) {
+        setContactsMessage('Contact linking is not supported in this browser yet. You can still search by name.');
+        return;
+      }
+
+      const contacts = await navigator.contacts.select(['name', 'email', 'tel'], { multiple: true });
+      const emails = [...new Set(contacts.flatMap((contact) => contact.email || []).map(normalizeContactValue).filter(Boolean))];
+      const phones = [...new Set(contacts.flatMap((contact) => contact.tel || []).map(normalizeContactValue).filter(Boolean))];
+      const values = new Set([...emails, ...phones]);
+
+      if (values.size === 0) {
+        setContactsMessage('No usable email or phone details were found in those contacts.');
+        return;
+      }
+
+      let matches = [];
+
+      if (shouldUseSupabase && supabase) {
+        const { data, error } = await supabase.rpc('match_contact_profiles', {
+          p_emails: emails,
+          p_phones: phones,
+        });
+        if (error) throw error;
+        matches = data || [];
+      } else {
+        const users = await dataService.entities.User.list('-created_date', 500);
+        matches = users.filter((candidate) => {
+          if (candidate.id === uid) return false;
+          const candidateValues = [candidate.email, candidate.phone, candidate.phone_number]
+            .map(normalizeContactValue)
+            .filter(Boolean);
+          return candidateValues.some((value) => values.has(value));
+        });
+      }
+
+      setSearchResults(matches);
+      setSearchQuery('');
+      setContactsMessage(matches.length
+        ? `${matches.length} JUnited ${matches.length === 1 ? 'member' : 'members'} matched your contacts.`
+        : 'No current JUnited members matched those contacts yet.'
+      );
+    } catch {
+      setContactsMessage('Contacts access was not completed. You can still search by name.');
+    } finally {
+      setContactsLoading(false);
+    }
+  };
+
+  const handleMessageFriend = async (friendProfile) => {
+    if (!friendProfile?.id || !currentUser?.id) return;
+    setActionLoading(friendProfile.id);
+    try {
+      const conv = await findOrCreateDirectConversation(currentUser, {
+        id: friendProfile.id,
+        name: friendProfile.display_name || friendProfile.full_name?.split(' ')[0] || 'Friend',
+        avatar_url: friendProfile.avatar_url || '',
+        age_range: friendProfile.age_range || '18+',
+      });
+      onOpenChange(false);
+      navigate(createPageUrl('Messages') + `?conversation=${conv.id}`);
+    } catch {
+      toast.error('Could not open messages');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // ── Helpers ───────────────────────────────────────────────────────────────
   const openProfile = (userId) => {
     onOpenChange(false);
@@ -244,6 +330,20 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
             <div className="flex flex-col h-full">
               {/* Search input */}
               <div className="px-5 pb-3">
+                <button
+                  type="button"
+                  onClick={handleImportContacts}
+                  disabled={contactsLoading}
+                  className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-[13px] font-black text-blue-700 transition hover:bg-blue-100 active:scale-[0.99] disabled:opacity-60"
+                >
+                  {contactsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ContactRound className="h-4 w-4" />}
+                  {contactsLoading ? 'Checking contacts...' : 'Link contacts to find friends'}
+                </button>
+                {contactsMessage && (
+                  <p className="mb-3 rounded-2xl bg-slate-50 px-3 py-2 text-center text-[12px] font-semibold text-slate-500">
+                    {contactsMessage}
+                  </p>
+                )}
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   <input
@@ -347,7 +447,7 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
                 <p className="px-5 py-8 text-center text-[13px] text-slate-400">No users found for "{searchQuery}"</p>
               )}
 
-              {!searchQuery.trim() && (
+              {!searchQuery.trim() && searchResults.length === 0 && (
                 <EmptyState
                   icon={Search}
                   title="Search for people"
@@ -391,12 +491,22 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
                           </div>
                         </button>
                         <button
+                          type="button"
                           onClick={() => removeMutation.mutate(f.friend_id)}
                           disabled={removeMutation.isPending}
                           className="shrink-0 rounded-xl border border-slate-200 p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500 active:scale-95 disabled:opacity-50"
                           title="Remove friend"
                         >
                           <UserRoundX className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMessageFriend(profile)}
+                          disabled={actionLoading === profile?.id}
+                          className="shrink-0 rounded-xl bg-slate-950 px-3 py-2 text-white transition hover:bg-slate-800 active:scale-95 disabled:opacity-50"
+                          title="Message friend"
+                        >
+                          {actionLoading === profile?.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
                         </button>
                       </li>
                     );

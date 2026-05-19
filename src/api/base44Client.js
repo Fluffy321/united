@@ -66,6 +66,7 @@ const SUPABASE_ENTITY_TABLES = {
   BusinessClaimRequest: 'business_claim_requests',
   BusinessManager: 'business_managers',
   BusinessReview: 'business_reviews',
+  RetentionEvent: 'retention_events',
   // Stripe payments — migration transactions.sql
   Transaction: 'transactions',
   // Premium Community Plans — migration 20260517204500_premium_community_plans.sql
@@ -788,6 +789,59 @@ const updateProfileWithSchemaRetry = async (userId, patch) => {
   throw new Error('Could not update profile because Supabase schema cache is missing required columns.');
 };
 
+const createWithSchemaRetry = async (table, entityName, data) => {
+  const dbPatch = toDbPatch(data, entityName);
+  const removedColumns = new Set();
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const { data: created, error } = await supabase
+      .from(table)
+      .insert(dbPatch)
+      .select()
+      .single();
+
+    if (!error) return created;
+
+    const missingColumn = getMissingSchemaColumn(error);
+    if (!missingColumn || removedColumns.has(missingColumn) || !(missingColumn in dbPatch)) {
+      throw error;
+    }
+
+    removedColumns.add(missingColumn);
+    delete dbPatch[missingColumn];
+    console.warn(`Skipping ${entityName} column "${missingColumn}" because it is not in the current Supabase schema cache yet.`);
+  }
+
+  throw new Error(`Could not create ${entityName} because Supabase schema cache is missing required columns.`);
+};
+
+const updateWithSchemaRetry = async (table, entityName, id, patch) => {
+  const dbPatch = { ...toDbPatch(patch, entityName), updated_at: new Date().toISOString() };
+  const removedColumns = new Set();
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const { data, error } = await supabase
+      .from(table)
+      .update(dbPatch)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (!error) return data;
+
+    const missingColumn = getMissingSchemaColumn(error);
+    if (!missingColumn || removedColumns.has(missingColumn) || !(missingColumn in dbPatch)) {
+      throw error;
+    }
+
+    removedColumns.add(missingColumn);
+    delete dbPatch[missingColumn];
+    console.warn(`Skipping ${entityName} column "${missingColumn}" because it is not in the current Supabase schema cache yet.`);
+  }
+
+  throw new Error(`Could not update ${entityName} because Supabase schema cache is missing required columns.`);
+};
+
 const runWithLocalFallback = async (action, fallback, label, isWrite = false) => {
   try {
     return await action();
@@ -981,12 +1035,7 @@ const createSupabaseEntityApi = (entityName) => {
 
     async create(data) {
       return runWithLocalFallback(async () => {
-        const { data: created, error } = await supabase
-          .from(table)
-          .insert(toDbPatch(data, entityName))
-          .select()
-          .single();
-        if (error) throw error;
+        const created = await createWithSchemaRetry(table, entityName, data);
         return toAppRow(created);
       }, () => localApi.create(data), entityName, true);
     },
@@ -1004,13 +1053,7 @@ const createSupabaseEntityApi = (entityName) => {
 
     async update(id, patch) {
       return runWithLocalFallback(async () => {
-        const { data, error } = await supabase
-          .from(table)
-          .update({ ...toDbPatch(patch, entityName), updated_at: new Date().toISOString() })
-          .eq('id', id)
-          .select()
-          .single();
-        if (error) throw error;
+        const data = await updateWithSchemaRetry(table, entityName, id, patch);
         return toAppRow(data);
       }, () => localApi.update(id, patch), entityName, true);
     },
@@ -1059,19 +1102,23 @@ const escapeIlikePattern = (str) =>
 
 const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
   const needle = query.trim();
-  if (!needle) return { posts: [], communities: [], events: [], people: [] };
+  if (!needle) return { posts: [], communities: [], events: [], people: [], mitzvahRequests: [], businesses: [], marketplace: [] };
 
   // Local / demo mode: filter tiny in-memory datasets on the client.
   if (!shouldUseSupabase) {
-    const [postsResult, communitiesResult, peopleResult] = await Promise.allSettled([
+    const [postsResult, communitiesResult, peopleResult, mitzvahResult, businessResult] = await Promise.allSettled([
       activeEntities.UnifiedPost.list('-created_date', 120),
       activeEntities.Community.list('-follower_count', 80),
       activeEntities.User.list('-created_date', 80),
+      activeEntities.MitzvahRequest.list('-created_date', 120),
+      activeEntities.BusinessListing.list('-created_date', 120),
     ]);
 
     const allPosts = postsResult.status === 'fulfilled' ? postsResult.value : [];
     const allCommunities = communitiesResult.status === 'fulfilled' ? communitiesResult.value : [];
     const allPeople = peopleResult.status === 'fulfilled' ? peopleResult.value : [];
+    const allMitzvahRequests = mitzvahResult.status === 'fulfilled' ? mitzvahResult.value : [];
+    const allBusinesses = businessResult.status === 'fulfilled' ? businessResult.value : [];
 
     const postMatches = allPosts
       .filter((post) => {
@@ -1100,6 +1147,15 @@ const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
       events,
       people: allPeople
         .filter((person) => includesSearchText(person, ['full_name', 'display_name', 'username', 'bio', 'public_community', 'city'], needle))
+        .slice(0, 12),
+      mitzvahRequests: allMitzvahRequests
+        .filter((request) => includesSearchText(request, ['title', 'description', 'category', 'location_label', 'location_text', 'neighborhood', 'urgency'], needle))
+        .slice(0, 12),
+      businesses: allBusinesses
+        .filter((business) => includesSearchText(business, ['name', 'description', 'category', 'address', 'neighborhood', 'city', 'source_label'], needle))
+        .slice(0, 12),
+      marketplace: postMatches
+        .filter((post) => post.activity_kind === 'marketplace_listing' || post.type === 'marketplace')
         .slice(0, 12),
     };
   }
@@ -1132,11 +1188,26 @@ const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
     .select(PUBLIC_PROFILE_SELECT)
     .or(`display_name.ilike.%${esc}%,username.ilike.%${esc}%,bio.ilike.%${esc}%,city.ilike.%${esc}%,public_community.ilike.%${esc}%`)
     .limit(12);
+  const businessesQuery = supabase
+    .from('business_listings')
+    .select('*')
+    .eq('status', 'published')
+    .or(`name.ilike.%${esc}%,description.ilike.%${esc}%,category.ilike.%${esc}%,address.ilike.%${esc}%,neighborhood.ilike.%${esc}%,city.ilike.%${esc}%`)
+    .order('updated_at', { ascending: false })
+    .limit(12);
+  const mitzvahQuery = supabase
+    .from('mitzvah_requests')
+    .select('*')
+    .or(`title.ilike.%${esc}%,description.ilike.%${esc}%,category.ilike.%${esc}%,location_label.ilike.%${esc}%,neighborhood.ilike.%${esc}%`)
+    .order('created_at', { ascending: false })
+    .limit(12);
 
-  const [postsResult, communitiesResult, peopleResult] = await Promise.allSettled([
+  const [postsResult, communitiesResult, peopleResult, businessesResult, mitzvahResult] = await Promise.allSettled([
     postsQuery,
     communitiesQuery,
     peopleQuery,
+    businessesQuery,
+    mitzvahQuery,
   ]);
 
   const allPosts = (postsResult.status === 'fulfilled' && !postsResult.value.error)
@@ -1147,6 +1218,12 @@ const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
     : [];
   const allPeople = (peopleResult.status === 'fulfilled' && !peopleResult.value.error)
     ? (peopleResult.value.data || []).map(toAppRow)
+    : [];
+  const allBusinesses = (businessesResult.status === 'fulfilled' && !businessesResult.value.error)
+    ? (businessesResult.value.data || []).map(toAppRow)
+    : [];
+  const allMitzvahRequests = (mitzvahResult.status === 'fulfilled' && !mitzvahResult.value.error)
+    ? (mitzvahResult.value.data || []).map(toAppRow)
     : [];
 
   const events = allPosts
@@ -1163,6 +1240,9 @@ const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
     communities: allCommunities,
     events,
     people: allPeople,
+    mitzvahRequests: allMitzvahRequests,
+    businesses: allBusinesses,
+    marketplace: allPosts.filter((post) => post.activity_kind === 'marketplace_listing' || post.type === 'marketplace').slice(0, 12),
   };
 };
 

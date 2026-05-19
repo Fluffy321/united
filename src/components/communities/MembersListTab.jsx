@@ -196,9 +196,10 @@ export default function MembersListTab({ communityId }) {
       const conv = await findOrCreateDirectConversation(currentUser, {
         id: member.user_id,
         name: member.user_name || 'Member',
+        avatar_url: member.avatar_url || member.user_avatar_url || '',
       });
       navigate(`/Messages?conversation=${conv.id}`);
-    } catch { toast.error('Could not start conversation'); }
+    } catch (error) { toast.error(error?.message || 'Could not start conversation'); }
     setMessagingId(null);
   };
 

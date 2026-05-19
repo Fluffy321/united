@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Search, X } from 'lucide-react';
-import { dataService, messagesService } from '@/services';
+import { dataService, messagesService, findOrCreateDirectConversation } from '@/services';
 import UserAvatar from '@/components/common/UserAvatar';
+import { toast } from 'sonner';
 
 export default function NewMessageComposer({ currentUser, onConversationSelect, onCancel }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,30 +44,16 @@ export default function NewMessageComposer({ currentUser, onConversationSelect, 
 
   const handleSelectMember = async (member) => {
     try {
-      // Check if conversation exists
-      let conversation = null;
-      const existing = await messagesService.filterConversations({
-        participant_ids: [currentUser.id, member.id]
+      const conversation = await findOrCreateDirectConversation(currentUser, {
+        id: member.id,
+        name: member.display_name || member.full_name || 'User',
+        avatar_url: member.avatar_url || '',
+        age_range: member.age_range || '18+',
       });
-
-      if (existing.length > 0) {
-        conversation = existing[0];
-      } else {
-        // Create new conversation
-        conversation = await messagesService.createConversation({
-          participant_ids: [currentUser.id, member.id],
-          participant_names: [currentUser.full_name, member.full_name],
-          participant_ages: [currentUser.age_range || '18+', member.age_range || '18+'],
-          participant_avatars: [currentUser.avatar_url || '', member.avatar_url || ''],
-          last_message: '',
-          last_message_at: new Date().toISOString(),
-          unread_count: {}
-        });
-      }
-
       onConversationSelect(conversation);
     } catch (e) {
       console.error('Failed to create/find conversation:', e);
+      toast.error(e?.message || 'Could not start conversation');
     }
   };
 

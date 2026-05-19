@@ -82,7 +82,6 @@ const AdminFeedbackInbox      = lazy(() => import('@/pages/AdminFeedbackInbox'))
 const AdminiOSReadiness       = lazy(() => import('@/pages/AdminiOSReadiness'));
 const SupportJUnited          = lazy(() => import('@/pages/SupportJUnited'));
 const ThankYou                = lazy(() => import('@/pages/ThankYou'));
-const GroupPage               = lazy(() => import('@/pages/GroupPage'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -196,9 +195,9 @@ const AuthenticatedApp = () => {
             <Route path="/MyEvents" element={<PageTransition><LayoutWrapper currentPageName="MyEvents"><MyEvents /></LayoutWrapper></PageTransition>} />
             <Route path="/CommunityCalendar" element={<Navigate to="/Events" replace />} />
 
-            {/* Groups routes */}
-            <Route path="/Groups" element={<PageTransition><LayoutWrapper currentPageName="Groups"><Pages.Groups /></LayoutWrapper></PageTransition>} />
-            <Route path="/groups/:groupId" element={<PageTransition><LayoutWrapper currentPageName="GroupDetail"><GroupPage /></LayoutWrapper></PageTransition>} />
+            {/* Legacy group routes now resolve into Communities, the canonical social layer. */}
+            <Route path="/Groups" element={<Navigate to="/Communities" replace />} />
+            <Route path="/groups/:groupId" element={<Navigate to="/Communities" replace />} />
 
             {/* Non-MVP routes — redirect to home rather than 404 to avoid confusing beta users */}
             <Route path="/News" element={<Navigate to={mainPagePath} replace />} />

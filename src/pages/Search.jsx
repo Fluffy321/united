@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, X, Clock, TrendingUp, Filter, ChevronLeft, Users, Calendar, FileText, User, Loader2 } from 'lucide-react';
+import { Search, X, Clock, TrendingUp, Filter, ChevronLeft, Users, Calendar, FileText, User, Loader2, Store, ShoppingBag, HeartHandshake, MapPin } from 'lucide-react';
 import { dataService, storageService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { formatDistanceToNow } from 'date-fns';
 
-const TRENDING = ['Five Towns minyan', 'Shabbos carpool', 'TAG school', 'kosher restaurant', 'tehillim', 'Purim event'];
+const TRENDING = ['Five Towns minyan', 'Shabbos carpool', 'TAG school', 'kosher restaurant', 'marketplace crib', 'urgent mitzvah'];
 const POST_TYPES = [
   { value: '', label: 'All types' },
   { value: 'feed', label: 'Posts' },
+  { value: 'community_post', label: 'Community posts' },
   { value: 'event', label: 'Events' },
   { value: 'help', label: 'Help requests' },
+  { value: 'marketplace_listing', label: 'Marketplace' },
+  { value: 'map_post', label: 'Map posts' },
   { value: 'job', label: 'Jobs' },
   { value: 'housing', label: 'Housing' },
 ];
@@ -49,6 +52,18 @@ const DEMO_RESULTS = {
   people: [
     { id: 'demo-person-1', full_name: 'Demo Member', bio: 'Local placeholder profile' },
   ],
+  mitzvahRequests: [
+    { id: 'demo-mitzvah-1', title: 'Ride needed to Cedarhurst appointment', description: 'Today if possible. One passenger, can meet near Central Ave.', urgency: 'today', location_label: 'Cedarhurst' },
+    { id: 'demo-mitzvah-2', title: 'Two meals needed for a new family', description: 'Flexible this week. Volunteers can split nights.', urgency: 'flexible', location_label: 'Woodmere' },
+  ],
+  businesses: [
+    { id: 'demo-business-1', name: 'Traditions Eatery', category: 'Restaurant', address: '302 Central Ave, Lawrence', trust_status: 'source_backed' },
+    { id: 'demo-business-2', name: 'Chabad of the Five Towns', category: 'Shul / community place', address: '74 Maple Ave, Cedarhurst', trust_status: 'source_backed' },
+  ],
+  marketplace: [
+    { id: 'demo-market-1', title: 'White crib + mattress', price: '$120', category: 'Baby / Kids gear', neighborhood: 'Woodmere', urgencyLabel: 'Need gone by Friday' },
+    { id: 'demo-market-2', title: 'Extra challah rolls and kugel', price: 'Free', category: 'Food / Shabbos extras', neighborhood: 'Cedarhurst', urgencyLabel: 'Before Shabbos' },
+  ],
 };
 
 const searchDemoResults = (query) => {
@@ -59,6 +74,9 @@ const searchDemoResults = (query) => {
     communities: DEMO_RESULTS.communities.filter(community => matches(community.name) || matches(community.type)),
     events: DEMO_RESULTS.events.filter(event => matches(event.title) || matches(event.location)),
     people: DEMO_RESULTS.people.filter(person => matches(person.full_name) || matches(person.bio)),
+    mitzvahRequests: DEMO_RESULTS.mitzvahRequests.filter(request => matches(request.title) || matches(request.description) || matches(request.location_label) || matches(request.urgency)),
+    businesses: DEMO_RESULTS.businesses.filter(business => matches(business.name) || matches(business.category) || matches(business.address)),
+    marketplace: DEMO_RESULTS.marketplace.filter(listing => matches(listing.title) || matches(listing.category) || matches(listing.neighborhood) || matches(listing.price)),
   };
 };
 
@@ -139,6 +157,20 @@ function PersonResult({ person }) {
   );
 }
 
+function SimpleResult({ item, icon: Icon, title, subtitle, onClick }) {
+  return (
+    <button onClick={onClick} className="flex w-full items-center gap-3 rounded-xl border border-slate-100 bg-white p-3 text-left transition-all hover:border-blue-200 hover:bg-blue-50/30 active:scale-[0.99]">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-bold text-slate-900">{title}</p>
+        <p className="truncate text-[12px] text-slate-500">{subtitle}</p>
+      </div>
+    </button>
+  );
+}
+
 export default function SearchPage() {
   const navigate = useNavigate();
   const inputRef = useRef(null);
@@ -174,7 +206,7 @@ export default function SearchPage() {
     }
     dataService.functions.invoke('universalSearch', { query: debouncedQuery, filters, user_id: user?.id })
       .then(res => {
-        setResults(res.data?.results || { posts: [], communities: [], events: [], people: [] });
+        setResults(res.data?.results || { posts: [], communities: [], events: [], people: [], mitzvahRequests: [], businesses: [], marketplace: [] });
         setSearching(false);
         // Save to recent
         const updated = [debouncedQuery, ...recentSearches.filter(s => s !== debouncedQuery)].slice(0, 8);
@@ -182,7 +214,7 @@ export default function SearchPage() {
         storageService.setJson('junited_recent_searches', updated);
       })
       .catch(() => {
-        setResults({ posts: [], communities: [], events: [], people: [] });
+        setResults({ posts: [], communities: [], events: [], people: [], mitzvahRequests: [], businesses: [], marketplace: [] });
         setSearching(false);
       });
   }, [debouncedQuery, filters, user?.id]);
@@ -196,7 +228,15 @@ export default function SearchPage() {
     storageService.removeItem('junited_recent_searches');
   };
 
-  const totalResults = results ? (results.posts?.length + results.communities?.length + results.events?.length + results.people?.length) : 0;
+  const totalResults = results
+    ? (results.posts?.length || 0)
+      + (results.communities?.length || 0)
+      + (results.events?.length || 0)
+      + (results.people?.length || 0)
+      + (results.mitzvahRequests?.length || 0)
+      + (results.businesses?.length || 0)
+      + (results.marketplace?.length || 0)
+    : 0;
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
@@ -213,7 +253,7 @@ export default function SearchPage() {
                 ref={inputRef}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Search posts, people, communities, events…"
+                placeholder="Search people, shuls, businesses, posts, marketplace…"
                 className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-slate-100 text-[14px] text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white transition-all"
               />
               {query && (
@@ -326,6 +366,45 @@ export default function SearchPage() {
 
             <ResultSection title="People" icon={User} count={results.people?.length}>
               {results.people?.map(p => <PersonResult key={p.id} person={p} />)}
+            </ResultSection>
+
+            <ResultSection title="Mitzvah requests" icon={HeartHandshake} count={results.mitzvahRequests?.length}>
+              {results.mitzvahRequests?.map(r => (
+                <SimpleResult
+                  key={r.id}
+                  item={r}
+                  icon={HeartHandshake}
+                  title={r.title}
+                  subtitle={`${r.urgency || 'help'} · ${r.location_label || r.neighborhood || 'Five Towns'}`}
+                  onClick={() => navigate(`/MitzvahCircle?requestId=${r.id}`)}
+                />
+              ))}
+            </ResultSection>
+
+            <ResultSection title="Businesses, shuls, schools, map pins" icon={MapPin} count={results.businesses?.length}>
+              {results.businesses?.map(b => (
+                <SimpleResult
+                  key={b.id}
+                  item={b}
+                  icon={Store}
+                  title={b.name}
+                  subtitle={`${b.category || 'Directory'} · ${b.address || b.location_text || 'Five Towns'}`}
+                  onClick={() => navigate(`/Map?place=${encodeURIComponent(b.name)}`)}
+                />
+              ))}
+            </ResultSection>
+
+            <ResultSection title="Marketplace" icon={ShoppingBag} count={results.marketplace?.length}>
+              {results.marketplace?.map(m => (
+                <SimpleResult
+                  key={m.id}
+                  item={m}
+                  icon={ShoppingBag}
+                  title={m.title}
+                  subtitle={`${m.price || 'Listing'} · ${m.category || 'Marketplace'} · ${m.neighborhood || 'nearby'}`}
+                  onClick={() => navigate(`/Marketplace?listing=${m.id}`)}
+                />
+              ))}
             </ResultSection>
           </>
         )}

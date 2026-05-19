@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bell, Camera, Check, ChevronLeft, ChevronRight, Home, Loader2, Map, MapPin, MessageCircle, Sparkles, Users, UserRoundPlus, X } from 'lucide-react';
+import { Bell, Camera, Check, ChevronLeft, ChevronRight, Home, Loader2, Map, MapPin, MessageCircle, School, Shield, Sparkles, Users, UserRoundPlus, X } from 'lucide-react';
 import { communitiesService, dataService, friendsService, storageService } from '@/services';
 import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
 import { requestPushPermission, subscribeToPush } from '@/lib/pushSubscription';
@@ -28,6 +28,13 @@ const DEFAULT_COMMUNITIES = [
   { id: 'demo-community', name: 'Five Towns Community', description: 'Local updates, events, and neighbor-to-neighbor support.' },
   { id: 'demo-chesed', name: 'Chesed Volunteers', description: 'Mitzvah requests, rides, meals, and volunteer opportunities.' },
   { id: 'demo-events', name: 'Community Events', description: 'Shiurim, simchas, school events, and local gatherings.' },
+];
+const SHUL_OPTIONS = ['Not sure yet', 'Young Israel', 'Chabad', 'Sephardic minyan', 'Yeshiva minyan', 'Other'];
+const SCHOOL_OPTIONS = ['No school connection', 'HAFTR', 'HALB', 'DRS', 'Shulamith', 'YOSS', 'TAG', 'Other'];
+const PRIVACY_OPTIONS = [
+  { key: 'public', label: 'Public community profile', body: 'People can see your name, interests, and public communities.' },
+  { key: 'friends', label: 'Friends first', body: 'Keep more personal info limited to friends and joined communities.' },
+  { key: 'private', label: 'More private', body: 'Hide sensitive memberships and prefer private posting controls.' },
 ];
 
 export const getOnboardingStorageKey = (userId) => `${ONBOARDING_KEY_PREFIX}${userId || 'guest'}`;
@@ -166,6 +173,50 @@ function NeighborhoodStep({ neighborhood, setNeighborhood }) {
             </button>
           );
         })}
+      </div>
+    </StepShell>
+  );
+}
+
+function IdentityContextStep({ shulPreference, setShulPreference, schoolPreference, setSchoolPreference, privacyPreference, setPrivacyPreference }) {
+  return (
+    <StepShell
+      eyebrow="Step 4"
+      title="Personalize your Jewish community world"
+      text="Your town, shul, school, and privacy preferences help JUnited tune the Feed, Map, Mitzvah Circle, and Communities."
+    >
+      <div className="space-y-4">
+        <section>
+          <p className="mb-2 flex items-center gap-1.5 text-[13px] font-black text-slate-700"><Home className="h-4 w-4 text-blue-600" /> Shul / minyan style</p>
+          <div className="grid grid-cols-2 gap-2">
+            {SHUL_OPTIONS.map((item) => (
+              <button key={item} type="button" onClick={() => setShulPreference(item)} className={`rounded-2xl border px-3 py-2 text-left text-[12px] font-black ${shulPreference === item ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-600'}`}>
+                {item}
+              </button>
+            ))}
+          </div>
+        </section>
+        <section>
+          <p className="mb-2 flex items-center gap-1.5 text-[13px] font-black text-slate-700"><School className="h-4 w-4 text-blue-600" /> School connection</p>
+          <div className="grid grid-cols-2 gap-2">
+            {SCHOOL_OPTIONS.map((item) => (
+              <button key={item} type="button" onClick={() => setSchoolPreference(item)} className={`rounded-2xl border px-3 py-2 text-left text-[12px] font-black ${schoolPreference === item ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-600'}`}>
+                {item}
+              </button>
+            ))}
+          </div>
+        </section>
+        <section>
+          <p className="mb-2 flex items-center gap-1.5 text-[13px] font-black text-slate-700"><Shield className="h-4 w-4 text-blue-600" /> Privacy default</p>
+          <div className="space-y-2">
+            {PRIVACY_OPTIONS.map((item) => (
+              <button key={item.key} type="button" onClick={() => setPrivacyPreference(item.key)} className={`w-full rounded-2xl border p-3 text-left ${privacyPreference === item.key ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white'}`}>
+                <p className="text-[13px] font-black text-slate-900">{item.label}</p>
+                <p className="mt-0.5 text-[12px] font-medium leading-5 text-slate-500">{item.body}</p>
+              </button>
+            ))}
+          </div>
+        </section>
       </div>
     </StepShell>
   );
@@ -364,6 +415,9 @@ export default function OnboardingFlow({ user, onComplete }) {
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [neighborhood, setNeighborhood] = useState(user?.neighborhood || user?.cityPreset || user?.city || '');
+  const [shulPreference, setShulPreference] = useState(user?.shul_preference || 'Not sure yet');
+  const [schoolPreference, setSchoolPreference] = useState(user?.school_preference || 'No school connection');
+  const [privacyPreference, setPrivacyPreference] = useState(user?.privacy_preference || 'friends');
   const [communities, setCommunities] = useState(DEFAULT_COMMUNITIES);
   const [selectedCommunityIds, setSelectedCommunityIds] = useState(new Set());
   const [contactMatches, setContactMatches] = useState([]);
@@ -390,6 +444,7 @@ export default function OnboardingFlow({ user, onComplete }) {
     'Name',
     'Photo',
     'Neighborhood',
+    'Identity',
     'Friends',
     'Communities',
     'App Tour',
@@ -450,7 +505,7 @@ export default function OnboardingFlow({ user, onComplete }) {
       return (
         name.trim().length >= 2 &&
         USERNAME_REGEX.test(username.trim()) &&
-        usernameAvailable === true &&
+        (!shouldUseSupabase || usernameAvailable === true) &&
         !checkingUsername
       );
     }
@@ -527,6 +582,16 @@ export default function OnboardingFlow({ user, onComplete }) {
         city: neighborhood,
         notifications_enabled: Object.values(notificationPrefs).some(Boolean),
         notification_preferences: notificationPrefs,
+        shul_preference: shulPreference,
+        school_preference: schoolPreference,
+        privacy_preference: privacyPreference,
+        personalization_profile: {
+          town: neighborhood,
+          shul: shulPreference,
+          school: schoolPreference,
+          privacy: privacyPreference,
+          interests: user?.interests || [],
+        },
         onboarding_complete: true,
         is_profile_complete: true,
       };
@@ -604,7 +669,7 @@ export default function OnboardingFlow({ user, onComplete }) {
           </button>
         </div>
 
-        <div className="mb-5 grid grid-cols-7 gap-1.5">
+        <div className="mb-5 grid gap-1.5" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
           {steps.map((item, index) => (
             <div key={item} className={`h-1.5 rounded-full ${index <= step ? 'bg-blue-600' : 'bg-blue-100'}`} />
           ))}
@@ -633,6 +698,16 @@ export default function OnboardingFlow({ user, onComplete }) {
           )}
           {step === 2 && <NeighborhoodStep neighborhood={neighborhood} setNeighborhood={setNeighborhood} />}
           {step === 3 && (
+            <IdentityContextStep
+              shulPreference={shulPreference}
+              setShulPreference={setShulPreference}
+              schoolPreference={schoolPreference}
+              setSchoolPreference={setSchoolPreference}
+              privacyPreference={privacyPreference}
+              setPrivacyPreference={setPrivacyPreference}
+            />
+          )}
+          {step === 4 && (
             <ContactsStep
               matches={contactMatches}
               selectedIds={selectedFriendIds}
@@ -642,7 +717,7 @@ export default function OnboardingFlow({ user, onComplete }) {
               onFindContacts={handleFindContacts}
             />
           )}
-          {step === 4 && (
+          {step === 5 && (
             <CommunitiesStep
               communities={communities}
               selectedIds={selectedCommunityIds}
@@ -650,8 +725,8 @@ export default function OnboardingFlow({ user, onComplete }) {
               loading={loadingCommunities}
             />
           )}
-          {step === 5 && <AppTourStep />}
-          {step === 6 && <NotificationsStep preferences={notificationPrefs} setPreferences={setNotificationPrefs} />}
+          {step === 6 && <AppTourStep />}
+          {step === 7 && <NotificationsStep preferences={notificationPrefs} setPreferences={setNotificationPrefs} />}
         </div>
 
         <div className="mt-4 flex items-center gap-2">
@@ -681,7 +756,7 @@ export default function OnboardingFlow({ user, onComplete }) {
               </>
             )}
           </button>
-          {(step === 1 || step === 3 || step === 4 || step === 5 || step === 6) && (
+          {(step === 1 || step === 3 || step === 4 || step === 5 || step === 6 || step === 7) && (
             <button type="button" onClick={skip} className="h-12 rounded-2xl px-3 text-[13px] font-bold text-slate-400">
               Skip
             </button>

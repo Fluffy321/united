@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Loader2, MessageCircle, Users, Bot } from 'lucide-react';
-import { dataService, findDirectConversation, createDirectConversation, checkRateLimit, RateLimitError } from '@/services';
+import { dataService, findOrCreateDirectConversation, checkRateLimit, RateLimitError } from '@/services';
 import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 import { canMessage } from '@/lib/messagingPermissions';
 import { AI_AGENT, buildAIConversation } from '@/lib/aiAgent';
@@ -99,16 +99,6 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
         return;
       }
 
-      // Check for existing conversation
-      const allConvs = await dataService.entities.Conversation.list('-updated_date', 100);
-      const existing = findDirectConversation(currentUser.id, recipient.id, allConvs);
-      if (existing) {
-        onConversationOpened(existing);
-        setQuery('');
-        setResults([]);
-        return;
-      }
-
       // Server-side rate limit check for new conversations
       await checkRateLimit('new_conversation');
 
@@ -116,9 +106,10 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
       const { canMessage: allowed } = await canMessage(currentUser, recipient.id);
 
       if (allowed) {
-        const conv = await createDirectConversation(currentUser, {
+        const conv = await findOrCreateDirectConversation(currentUser, {
           id: recipient.id,
           name: recipient.full_name,
+          avatar_url: recipient.avatar_url || '',
           age_range: recipient.age_range,
         });
         onConversationOpened(conv);

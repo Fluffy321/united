@@ -1,4 +1,5 @@
 import dataService from './dataService';
+import { ACTIVITY_KIND, normalizeUnifiedActivity } from '@/lib/productInfrastructure';
 
 export const postsService = {
   listPosts(sort = '-created_date', limit = 100) {
@@ -11,7 +12,19 @@ export const postsService = {
     return dataService.entities.UnifiedPost.get(id);
   },
   createPost(payload) {
-    return dataService.entities.UnifiedPost.create(payload);
+    return dataService.entities.UnifiedPost.create(normalizeUnifiedActivity(payload));
+  },
+  createCommunityPost(payload) {
+    return dataService.entities.UnifiedPost.create(normalizeUnifiedActivity(payload, { kind: ACTIVITY_KIND.COMMUNITY_POST }));
+  },
+  createMapPost(payload) {
+    return dataService.entities.UnifiedPost.create(normalizeUnifiedActivity({ ...payload, post_to_map: true }, { kind: ACTIVITY_KIND.MAP_POST }));
+  },
+  createMarketplaceListing(payload) {
+    return dataService.entities.UnifiedPost.create(normalizeUnifiedActivity(payload, { kind: ACTIVITY_KIND.MARKETPLACE_LISTING }));
+  },
+  createMitzvahRequestPost(payload) {
+    return dataService.entities.UnifiedPost.create(normalizeUnifiedActivity(payload, { kind: ACTIVITY_KIND.MITZVAH_REQUEST }));
   },
   updatePost(id, patch) {
     return dataService.entities.UnifiedPost.update(id, patch);

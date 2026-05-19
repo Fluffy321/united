@@ -224,12 +224,22 @@ export default function Profile() {
   // ── Other handlers ───────────────────────────────────────────────────────
 
   const handleMessage = async () => {
-    const conv = await findOrCreateDirectConversation(currentUser, {
-      id: profileUser.id,
-      name: profileUser.display_name || profileUser.full_name?.split(' ')[0] || 'User',
-      age_range: profileUser.age_range,
-    });
-    navigate(createPageUrl('Messages') + `?conversation=${conv.id}`);
+    if (!currentUser) {
+      dataService.auth.redirectToLogin();
+      return;
+    }
+    try {
+      const conv = await findOrCreateDirectConversation(currentUser, {
+        id: profileUser.id,
+        name: profileUser.display_name || profileUser.full_name?.split(' ')[0] || 'User',
+        avatar_url: profileUser.avatar_url || '',
+        age_range: profileUser.age_range,
+      });
+      toast.success('Opening messages...');
+      navigate(createPageUrl('Messages') + `?conversation=${conv.id}`);
+    } catch (error) {
+      toast.error(error?.message || 'Could not open messages');
+    }
   };
 
   const handleBlock = async () => {
@@ -345,6 +355,7 @@ export default function Profile() {
             <ModernActionButtons
               isOwnProfile={isOwnProfile}
               onEditProfile={handleEditProfile}
+              onFindFriends={() => setShowFriendsHub(true)}
               onMessage={handleMessage}
               onShare={handleShareProfile}
               onReport={() => setShowReport(true)}

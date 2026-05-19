@@ -21,7 +21,10 @@ export const messagesService = {
     return dataService.entities.Message.filter({ conversation_id: conversationId }, sort);
   },
   async createMessage(payload) {
-    const message = await dataService.entities.Message.create(payload);
+    const message = await dataService.entities.Message.create({
+      ...payload,
+      sender_avatar_url: payload.sender_avatar_url || payload.sender_avatar || null,
+    });
     notificationsService.notifyMessageReceived({
       recipientId: payload.recipient_id,
       senderId: payload.sender_id,
@@ -42,6 +45,12 @@ export const messagesService = {
   },
 };
 
+const displayNameFor = (user = {}) =>
+  user.display_name || user.full_name?.split(' ')[0] || user.name || 'User';
+
+const compactPayload = (payload) =>
+  Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined));
+
 // recipient: { id, name, age_range? }
 export function findDirectConversation(currentUserId, recipientId, conversations) {
   return conversations.find(c =>
@@ -52,21 +61,32 @@ export function findDirectConversation(currentUserId, recipientId, conversations
 }
 
 export async function createDirectConversation(currentUser, recipient, options = {}) {
-  return dataService.entities.Conversation.create({
+  const payload = compactPayload({
     participant_ids: [currentUser.id, recipient.id],
     participant_names: [
-      currentUser.display_name || currentUser.full_name?.split(' ')[0] || 'User',
-      recipient.name,
+      displayNameFor(currentUser),
+      recipient.name || displayNameFor(recipient),
+    ],
+    participant_avatars: [
+      currentUser.avatar_url || '',
+      recipient.avatar_url || recipient.avatar || '',
     ],
     participant_ages: [currentUser.age_range || '18+', recipient.age_range || '18+'],
     unread_count: { [recipient.id]: 0 },
-    request_id: options.request_id ?? null,
-    request_title: options.request_title ?? null,
+    last_message: '',
+    last_message_at: new Date().toISOString(),
+    request_id: options.request_id || undefined,
+    request_title: options.request_title || undefined,
     request_type: options.request_type ?? 'general',
   });
+  return dataService.entities.Conversation.create(payload);
 }
 
 export async function findOrCreateDirectConversation(currentUser, recipient, options = {}) {
+  if (!currentUser?.id) throw new Error('Please log in to message.');
+  if (!recipient?.id) throw new Error('This member is missing a profile id.');
+  if (currentUser.id === recipient.id) throw new Error("You can't message yourself.");
+
   const conversations = await dataService.entities.Conversation.list('-updated_date', 100);
   const existing = findDirectConversation(currentUser.id, recipient.id, conversations);
   if (existing) return existing;

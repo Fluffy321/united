@@ -279,6 +279,70 @@ export const notificationsService = {
     });
   },
 
+  notifyShabbatReminder({ userId, startsAt, endsAt, networkLabel = 'Five Towns', phase = 'before' }) {
+    const before = phase === 'before';
+    return this.create({
+      userId,
+      type: before ? 'shabbat_starting_soon' : 'shabbat_ended',
+      title: before ? 'Shabbos is coming soon' : 'Shabbos has ended',
+      body: before
+        ? `Candle lighting is coming up${startsAt ? ` at ${startsAt}` : ''} in ${networkLabel}.`
+        : `Shabbos is over${endsAt ? ` at ${endsAt}` : ''}. Good vach.`,
+      linkUrl: '/Feed',
+      data: { starts_at: startsAt, ends_at: endsAt, network: networkLabel, phase },
+      aggregateKey: `shabbat:${phase}:${networkLabel}`,
+    });
+  },
+
+  notifyMinyanNeed({ userId, shulName, minyanName, startsIn, neededCount, shulId }) {
+    return this.create({
+      userId,
+      type: 'minyan_need',
+      title: `${minyanName || 'Minyan'} needs people`,
+      body: `${shulName || 'A nearby shul'}${startsIn ? ` starts in ${startsIn}` : ' has an upcoming minyan'}${neededCount ? ` and needs ${neededCount} more.` : '.'}`,
+      linkUrl: shulId ? `/MitzvahCircle?tab=shuls&shul=${encodeURIComponent(shulId)}` : '/MitzvahCircle?tab=shuls',
+      data: { shul_id: shulId, shul_name: shulName, minyan_name: minyanName, starts_in: startsIn, needed_count: neededCount },
+      aggregateKey: shulId ? `minyan_need:${shulId}:${minyanName || 'minyan'}` : null,
+    });
+  },
+
+  notifyMitzvahUrgency({ userId, requestId, requestTitle, urgency = 'urgent', neededBy, distanceLabel }) {
+    return this.create({
+      userId,
+      type: 'mitzvah_urgent',
+      title: urgency === 'urgent' ? 'Urgent help needed' : 'Help needed today',
+      body: `${requestTitle || 'A mitzvah request'}${neededBy ? ` is needed by ${neededBy}` : ' needs help'}${distanceLabel ? ` · ${distanceLabel}` : ''}.`,
+      linkUrl: requestId ? `/MitzvahCircle?requestId=${requestId}` : '/MitzvahCircle',
+      data: { request_id: requestId, urgency, needed_by: neededBy, distance: distanceLabel },
+      aggregateKey: requestId ? `mitzvah_urgent:${requestId}` : null,
+    });
+  },
+
+  notifyMarketplaceMessage({ sellerId, buyerId, buyerName, listingId, listingTitle, preview }) {
+    return this.create({
+      userId: sellerId,
+      actorId: buyerId,
+      type: 'marketplace_message',
+      title: 'Marketplace message',
+      body: `${buyerName || 'Someone'} asked about "${listingTitle || 'your listing'}"${preview ? `: ${preview}` : '.'}`,
+      linkUrl: listingId ? `/Marketplace?listing=${listingId}` : '/Marketplace',
+      data: { listing_id: listingId, listing_title: listingTitle, preview },
+      aggregateKey: listingId ? `marketplace_message:${listingId}` : null,
+    });
+  },
+
+  notifyNearYouAlert({ userId, title = 'Something nearby', body, locationLabel, linkUrl = '/Map', alertType = 'near_you' }) {
+    return this.create({
+      userId,
+      type: alertType,
+      title,
+      body: body || `There is a new local update${locationLabel ? ` near ${locationLabel}` : ''}.`,
+      linkUrl,
+      data: { location_label: locationLabel },
+      aggregateKey: locationLabel ? `near_you:${alertType}:${locationLabel}` : null,
+    });
+  },
+
   notifyMemberRemoved({ removedUserId, adminId, communityName, communityId, removalId }) {
     return this.create({
       userId: removedUserId,
