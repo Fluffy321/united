@@ -40,6 +40,7 @@ import {
   CommunityPostPreview,
   CommunityWelcomeHub,
 } from './CommunityOperatingSystem';
+import CommunityPersonalizationHub from './CommunityPersonalizationHub';
 
 function getPostTypeForTab(activeTab, typeKey) {
   if (activeTab === 'announcements') return 'announcement';
@@ -458,6 +459,7 @@ export default function CommunityHubDetail({
               onManage={() => openAdminCenter('content')}
               isJoined={isJoined}
               lastVisitedAt={lastVisit?.visited_at}
+              currentUser={currentUser}
             />
           )}
           {activeTab === 'openNeeds' && (
@@ -639,6 +641,7 @@ function HomeTab({
   onManage,
   isJoined,
   lastVisitedAt,
+  currentUser,
 }) {
   const featuredPosts = posts.slice(0, 3);
 
@@ -704,6 +707,14 @@ function HomeTab({
         onTabChange={onTabChange}
         onManage={onManage}
         onCompose={onCompose}
+      />
+
+      <CommunityPersonalizationHub
+        communityId={community.id}
+        currentUser={currentUser}
+        events={events}
+        typeConfig={typeConfig}
+        onTabChange={onTabChange}
       />
 
       <CommunityFeaturedSection

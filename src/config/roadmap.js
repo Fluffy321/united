@@ -276,24 +276,35 @@ Goals:
   {
     id: 'community-personalization-home',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
-    title: 'Community Home Personalization',
-    description: 'Let members customize their community home: pin a section, choose what appears first, set a personal welcome message or shortcut row.',
-    why: 'Current dashboard is community-driven. Member-level personalization ("I always want to see Events first") increases retention and belonging.',
-    prompt: `You are implementing Community Home Personalization for JUnited.
+    title: 'Community Home Personalization — For You Module',
+    description: 'Surfaces personally relevant signals on the joined-member community home: upcoming events the user has RSVPed for, and active chesed commitments the user is volunteering for.',
+    why: 'Current dashboard shows community-level activity. Member-level signals ("you RSVPed for this event", "you are helping with this chesed need") answer what matters to this specific user right now.',
+    shippedNote: 'CommunityPersonalizationHub component with two targeted queries: community_event_rsvps (cross-referenced with already-fetched events array) and mitzvah_requests claimed_by_user_id (chesed communities only). Dynamic title: "For you" / "Your upcoming events" / "Your commitments". Hidden entirely when no personal activity. Placed after CommunityWelcomeHub in both HubDetail and DetailView.',
+  },
+
+  {
+    id: 'community-home-section-ordering',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Community Home Section Reordering',
+    description: 'Let members pin a section or reorder community home sections (e.g. always show Events first). Requires a community_member_preferences table.',
+    why: 'Some members always want Events; others live in Posts. User-controlled ordering is a natural follow-up to the data-driven For You module.',
+    prompt: `You are implementing Community Home Section Reordering for JUnited.
 
 Context:
-- Community home is rendered in CommunityWelcomeHub (joined mode) and HomeTab in CommunityHubDetail.jsx.
-- CommunityDetailView uses RoutedCommunityHome which also calls CommunityWelcomeHub.
-- Community settings can be stored per user via a new community_member_preferences table.
+- Community home joined mode: CommunityHubDetail.jsx HomeTab and CommunityDetailView.jsx RoutedCommunityHome.
+- Sections currently rendered in order: AdminQuickActions (if admin), CommunityWelcomeHub (with digest), CommunityPersonalizationHub (For You), CommunityFeaturedSection, posts/chesed/composer.
+- No per-user preferences table exists yet.
 
 Goals:
-1. Add a community_member_preferences table with columns: user_id, community_id, pinned_section (text), home_section_order (text[]), created_at, updated_at. Add RLS so users manage only their own rows.
-2. Add a "Customize home" entry point (gear icon) in the joined member home header.
-3. Build a simple sheet/modal where members can drag/reorder home sections or pick a pinned section.
-4. Persist choices via upsert on community_member_preferences.
-5. Apply ordering in CommunityWelcomeHub and HomeTab for joined users.
+1. Add community_member_preferences table (user_id, community_id, home_section_order text[], created_at, updated_at) with RLS.
+2. Add a gear/customize icon to the joined-member CommunityWelcomeHub identity row.
+3. Build a compact bottom-sheet where members can tap sections to reorder or pin one.
+4. Persist via upsert to community_member_preferences.
+5. Apply stored order in HomeTab / RoutedCommunityHome for joined members.
 6. Run npm run lint && npm run build.
 7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },

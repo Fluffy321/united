@@ -32,6 +32,7 @@ import {
   CommunityPostPreview,
   CommunityWelcomeHub,
 } from './CommunityOperatingSystem';
+import CommunityPersonalizationHub from './CommunityPersonalizationHub';
 
 const CLAIM_COPY = {
   School: { question: 'Is this your school?', cta: 'Claim this school' },
@@ -415,6 +416,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             isAdmin={isAdmin}
             isFollowing={isFollowing}
             lastVisitedAt={lastVisit?.visited_at}
+            currentUser={currentUser}
             onManage={() => openAdminCenter('content')}
             openAdminCenter={openAdminCenter}
           />
@@ -585,6 +587,7 @@ function RoutedCommunityHome({
   isAdmin,
   isFollowing,
   lastVisitedAt,
+  currentUser,
   onManage,
   openAdminCenter,
 }) {
@@ -642,6 +645,14 @@ function RoutedCommunityHome({
         onTabChange={onTabChange}
         onManage={onManage}
         onCompose={() => {}}
+      />
+
+      <CommunityPersonalizationHub
+        communityId={community.id}
+        currentUser={currentUser}
+        events={events}
+        typeConfig={typeConfig}
+        onTabChange={onTabChange}
       />
 
       <CommunityFeaturedSection
