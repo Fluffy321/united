@@ -181,6 +181,37 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     enabled: !!communityId && featureCapabilities.resources,
   });
 
+  const { data: lastVisit = null } = useQuery({
+    queryKey: ['community-last-visit', communityId, currentUser?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('community_last_visits')
+        .select('visited_at')
+        .eq('user_id', currentUser.id)
+        .eq('community_id', communityId)
+        .maybeSingle();
+      return data;
+    },
+    enabled: Boolean(currentUser?.id && communityId && isFollowing),
+    staleTime: 60000,
+  });
+
+  const visitTimerRef = useRef(null);
+  useEffect(() => {
+    if (!currentUser?.id || !communityId || !isFollowing) return;
+    visitTimerRef.current = setTimeout(async () => {
+      try {
+        await supabase
+          .from('community_last_visits')
+          .upsert(
+            { user_id: currentUser.id, community_id: communityId, visited_at: new Date().toISOString() },
+            { onConflict: 'user_id,community_id' }
+          );
+      } catch {} // fire-and-forget
+    }, 4000);
+    return () => clearTimeout(visitTimerRef.current);
+  }, [communityId, currentUser?.id, isFollowing]);
+
   const handleFollow = async () => {
     if (!currentUser) {
       dataService.auth.redirectToLogin();
@@ -383,6 +414,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             resources={resources}
             isAdmin={isAdmin}
             isFollowing={isFollowing}
+            lastVisitedAt={lastVisit?.visited_at}
             onManage={() => openAdminCenter('content')}
             openAdminCenter={openAdminCenter}
           />
@@ -552,6 +584,7 @@ function RoutedCommunityHome({
   resources,
   isAdmin,
   isFollowing,
+  lastVisitedAt,
   onManage,
   openAdminCenter,
 }) {
@@ -605,6 +638,7 @@ function RoutedCommunityHome({
         members={members}
         isCommunityManager={isAdmin}
         isFollowing={true}
+        lastVisitedAt={lastVisitedAt}
         onTabChange={onTabChange}
         onManage={onManage}
         onCompose={() => {}}

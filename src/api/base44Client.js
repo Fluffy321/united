@@ -76,6 +76,8 @@ const SUPABASE_ENTITY_TABLES = {
   GroupMember:       'group_members',
   GroupPost:         'group_posts',
   GroupJoinRequest:  'group_join_requests',
+  // Activity digest — migration 20260519000000_community_last_visits.sql
+  CommunityLastVisit: 'community_last_visits',
   // All other entities (Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.

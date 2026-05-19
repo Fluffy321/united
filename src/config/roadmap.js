@@ -301,26 +301,37 @@ Goals:
   {
     id: 'community-activity-digest-module',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Community Activity Digest on Home',
     description: '"What changed since you were last here" module on the community home for joined members: new announcements, new events, new posts since last visit.',
     why: 'The current home shows static data. A "since your last visit" signal immediately answers "what matters now" without users needing to scan every tab.',
-    prompt: `You are implementing the Community Activity Digest module for JUnited.
+    shippedNote: 'community_last_visits table with RLS; debounced 4s upsert on open; "X new since your last visit" pill in CommunityWelcomeHub joined mode clicking into announcements or posts.',
+  },
+
+  {
+    id: 'community-list-new-activity-indicator',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'New-Activity Dot on Community List Cards',
+    description: 'Show a subtle indicator on community cards in the Communities list when there are posts or events newer than the user\'s last visit, so users know which communities have new content before opening them.',
+    why: 'The digest pill inside the community is useful once you\'re already in. A list-level signal closes the loop so members know where to go next without opening every community.',
+    prompt: `You are implementing the New-Activity Indicator on community list cards for JUnited.
 
 Context:
-- CommunityWelcomeHub (joined mode) is the top card on community home.
-- Posts, events, announcements are queried in CommunityHubDetail.jsx and CommunityDetailView.jsx.
-- User's last visit to a community could be tracked via a community_last_visit table.
+- community_last_visits table was added in migration 20260519000000_community_last_visits.sql (user_id, community_id, visited_at, primary key on both).
+- The Communities list renders community cards in src/components/communities/ (CommunityCard or similar).
+- Posts and events per community are available via posts.created_at and community_events.created_at.
+- RLS on community_last_visits: authenticated users can only read/write their own rows.
 
 Goals:
-1. Create community_last_visits table (user_id, community_id, visited_at). Add RLS.
-2. Record visit on community open via an upsert (debounced, fire-and-forget).
-3. In CommunityWelcomeHub joined mode, compute new_since_last = count of posts/announcements/events created after visited_at.
-4. Show a compact "X new since your last visit" pill or row if new_since > 0.
-5. Clicking it navigates to the Posts or Announcements tab as appropriate.
-6. Run npm run lint && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+1. Add a Supabase RPC or direct query that returns, for the current user, the set of community_ids where max(post.created_at OR event.created_at) > community_last_visits.visited_at (or where no visit record exists and the community has any content).
+2. Expose this as a React Query hook (e.g. useCommunitiesWithNewActivity) that returns a Set of community_ids.
+3. In the Communities list, pass this set to community card components and render a small blue dot badge when the community's id is in the set.
+4. Do not show the dot for the currently-open community (if a detail panel is open).
+5. Run npm run lint && npm run build.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {

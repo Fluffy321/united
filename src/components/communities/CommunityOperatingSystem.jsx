@@ -215,6 +215,7 @@ export function CommunityWelcomeHub({
   members = [],
   isCommunityManager = false,
   isFollowing = false,
+  lastVisitedAt = null,
   onTabChange,
   onManage,
   onCompose,
@@ -234,6 +235,15 @@ export function CommunityWelcomeHub({
   const resourcePreview = resources[0];
   const Icon = typeConfig?.icon || Users;
 
+  const { newSinceLast, hasNewAnnouncements } = useMemo(() => {
+    if (!lastVisitedAt) return { newSinceLast: 0, hasNewAnnouncements: false };
+    const since = new Date(lastVisitedAt);
+    const newPosts = posts.filter((p) => new Date(p.created_at || p.created_date) > since);
+    const newEvents = events.filter((e) => new Date(e.created_at) > since);
+    const _hasNewAnnouncements = newPosts.some(isAnnouncementPost);
+    return { newSinceLast: newPosts.length + newEvents.length, hasNewAnnouncements: _hasNewAnnouncements };
+  }, [lastVisitedAt, posts, events]);
+
   if (isFollowing) {
     // ── Joined member: compact dashboard ──────────────────────────────────────
     return (
@@ -251,6 +261,21 @@ export function CommunityWelcomeHub({
             Joined
           </span>
         </div>
+
+        {/* New-since-last-visit digest pill */}
+        {newSinceLast > 0 && (
+          <button
+            type="button"
+            onClick={() => onTabChange?.(hasNewAnnouncements ? 'announcements' : 'posts')}
+            className="flex w-full items-center gap-2 border-b border-slate-50 bg-blue-50/60 px-4 py-2.5 text-left transition-colors hover:bg-blue-50"
+          >
+            <Sparkles className="h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
+            <span className="flex-1 text-[13px] font-bold text-blue-700">
+              {newSinceLast} new since your last visit
+            </span>
+            <ArrowRight className="h-3.5 w-3.5 text-blue-400" />
+          </button>
+        )}
 
         {/* Latest announcement — prominent if available */}
         {latestAnnouncement && (

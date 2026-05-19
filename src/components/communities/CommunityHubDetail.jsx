@@ -19,6 +19,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { dataService } from '@/services';
+import { supabase } from '@/api/supabaseClient';
 import { getCommunityTabLabel, getCommunityTypeConfig, getSupportedCommunityTabs } from '@/lib/communityTypes';
 import {
   canUseCommunityChat,
@@ -203,6 +204,37 @@ export default function CommunityHubDetail({
     enabled: Boolean(community.id) && !isSeedCommunity,
     staleTime: 30000,
   });
+
+  const { data: lastVisit = null } = useQuery({
+    queryKey: ['community-last-visit', community.id, currentUser?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('community_last_visits')
+        .select('visited_at')
+        .eq('user_id', currentUser.id)
+        .eq('community_id', community.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: Boolean(currentUser?.id && community.id && isJoined && !isSeedCommunity),
+    staleTime: 60000,
+  });
+
+  const visitTimerRef = useRef(null);
+  useEffect(() => {
+    if (!currentUser?.id || !community.id || !isJoined || isSeedCommunity) return;
+    visitTimerRef.current = setTimeout(async () => {
+      try {
+        await supabase
+          .from('community_last_visits')
+          .upsert(
+            { user_id: currentUser.id, community_id: community.id, visited_at: new Date().toISOString() },
+            { onConflict: 'user_id,community_id' }
+          );
+      } catch {} // fire-and-forget
+    }, 4000);
+    return () => clearTimeout(visitTimerRef.current);
+  }, [community.id, currentUser?.id, isJoined, isSeedCommunity]);
 
   const visiblePosts = useMemo(() => {
     if (realPosts.length > 0) return realPosts;
@@ -425,6 +457,7 @@ export default function CommunityHubDetail({
               isCommunityManager={isCommunityManager}
               onManage={() => openAdminCenter('content')}
               isJoined={isJoined}
+              lastVisitedAt={lastVisit?.visited_at}
             />
           )}
           {activeTab === 'openNeeds' && (
@@ -605,6 +638,7 @@ function HomeTab({
   isCommunityManager,
   onManage,
   isJoined,
+  lastVisitedAt,
 }) {
   const featuredPosts = posts.slice(0, 3);
 
@@ -666,6 +700,7 @@ function HomeTab({
         members={members}
         isCommunityManager={isCommunityManager}
         isFollowing={true}
+        lastVisitedAt={lastVisitedAt}
         onTabChange={onTabChange}
         onManage={onManage}
         onCompose={onCompose}
