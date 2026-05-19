@@ -290,7 +290,32 @@ Goals:
     priority: PRIORITY.MEDIUM,
     title: 'Community Live Preview Builder',
     description: 'Full real-time side-by-side preview during community creation showing exactly how the community will look, including nav tabs, home sections, and composer style.',
-    shippedNote: 'Shipped 2026-05-19. CommunityLivePreview.jsx: new standalone component (248px phone shell with status bar, 92px branded cover with gradient+name overlay, action bar, nav tabs, step-aware content area). PREVIEW_SAMPLES provides archetype-specific content per type (8 archetypes): type-colored important strip, composer placeholder, 2 sample feed cards with badges/likes/replies. Step awareness: step 0 shows placeholder; step 1+ reveals strip+feed; step 2+ adds description card; step 3+ adds privacy+posting mode badges; step 4+ swaps feed for the typed first post draft. CreateCommunityFlow.jsx: desktop (lg+) renders side-by-side with dark gradient preview panel on right (max-w-[860px]); mobile retains "Preview" button in header that opens a full-screen dark overlay sheet (z-[110]) with the same CommunityLivePreview; inline toggle preview removed. Step caption rendered below phone shell. All preview state derives directly from form state with no data fetches.',
+    shippedNote: 'Shipped 2026-05-19. CommunityLivePreview.jsx: new standalone component (248px phone shell with status bar, 92px branded cover with gradient+name overlay, action bar, nav tabs, step-aware content area). PREVIEW_SAMPLES provides archetype-specific content per type (8 archetypes): type-colored important strip, composer placeholder, 2 sample feed cards with badges/likes/replies. Step awareness: step 0 shows placeholder; step 1+ reveals strip+feed; step 2+ adds description card; step 3+ adds privacy+posting mode badges; step 4+ swaps feed for the typed first post draft. CreateCommunityFlow.jsx: desktop (lg+) renders side-by-side with dark gradient preview panel on right (max-w-[860px]); mobile retains "Preview" button in header that opens a full-screen dark overlay sheet (z-[110]) with the same CommunityLivePreview. Updated 2026-05-19 (premium preview correction): Step 4 passive teaser replaced with interactive "Advanced Community Layout" section. When expanded: tab arrangement (3 archetype-specific presets per all 8 types, shown as clickable rows with mini tab pills), home emphasis (2–3 relevant options per archetype), composer style (3 modes). Premium state (premiumPreviewEnabled + premiumPreviewLayout) lives separately from creation payload — free users can explore but choices do not save unless they upgrade. CommunityLivePreview accepts premiumPreview prop: when active, overrides nav tabs in phone shell, shows home emphasis indicator (violet card), overrides composer prompt, adds violet ✦ Premium badge to phone corner, changes step caption to "✦ Premium Preview · Upgrade to publish this layout". Payload on launch unchanged for free users.',
+  },
+
+  {
+    id: 'community-creation-upgrade-in-flow',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'In-Creation Premium Upgrade CTA',
+    description: 'Let admins complete a community premium checkout directly from Step 4 of CreateCommunityFlow when they activate the Premium Layout Preview, so their chosen tab/emphasis/composer layout saves immediately on launch.',
+    why: 'Step 4 now shows an interactive premium preview with a "Upgrade to publish this layout" notice, but tapping it does nothing — the layout choices are discarded on free-tier launch. Completing checkout in-flow turns the preview from an aspiration into an immediate action.',
+    prompt: `You are wiring up the in-creation premium upgrade CTA for JUnited community creation.
+
+Context:
+- src/components/communities/CreateCommunityFlow.jsx: Step 4 (StepShape) has premiumPreviewEnabled state and shows "Upgrade to publish this layout" amber notice when premium preview is active. The notice currently has no interaction.
+- src/components/communities/CreateCommunityModal.jsx: calls onCreate(payload) after CreateCommunityFlow submits. Has access to currentUser prop.
+- supabase/migrations/*_community_plan_subscriptions.sql: community premium billing table (plan_key='community_premium').
+- src/services/paymentsService.js or equivalent: createCommunityPlanCheckout Edge Function exists from premium-community-plans sprint.
+- communities.settings.layout: the JSONB path where premium layout is saved post-creation (used by CommunityAdminCenter Layout tab).
+
+Goals:
+1. In CreateCommunityFlow, wire the "Upgrade to publish this layout" amber notice to call onRequestUpgrade() if provided.
+2. CreateCommunityModal passes onRequestUpgrade to CreateCommunityFlow; when called, it opens the community plan checkout (using createCommunityPlanCheckout edge function or the Admin Center billing flow, whichever exists).
+3. On successful upgrade (webhook completes or user returns from checkout), the premiumPreviewLayout choices should be committed to community.settings.layout via Supabase update.
+4. If checkout is not yet wired (Stripe prices not set up), show a graceful fallback: "Upgrade available after launch in Admin Center → Billing."
+5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
