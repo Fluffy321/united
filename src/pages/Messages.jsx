@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle, Inbox, Loader2, MessageCircle, Plus, Users } from 'lucide-react';
 import PageHelp from '@/components/common/PageHelp';
@@ -26,16 +26,12 @@ export default function Messages() {
   const [showNewMessage, setShowNewMessage] = useState(false);
   const queryClient = useQueryClient();
 
-  // Fires once, after currentUser is resolved, so the ownership check has a
-  // real user ID to compare against. The ref prevents re-running on
-  // subsequent renders where currentUser refreshes (e.g. token rotation).
-  const hasHandledUrlConv = useRef(false);
   useEffect(() => {
-    if (!currentUser || hasHandledUrlConv.current) return;
-    hasHandledUrlConv.current = true;
     const convId = new URLSearchParams(window.location.search).get('conversation');
+    if (!currentUser || !convId) return;
+    if (selectedConversation?.id === convId) return;
     if (convId) loadConversation(convId);
-  }, [currentUser?.id]);
+  }, [currentUser?.id, location.search, selectedConversation?.id]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -59,7 +55,11 @@ export default function Messages() {
   const loadConversation = async (id) => {
     try {
       const [conv] = await dataService.entities.Conversation.filter({ id });
-      if (!conv) return;
+      if (!conv) {
+        toast.error('That conversation could not be found.');
+        navigate('/Messages', { replace: true });
+        return;
+      }
 
       // IDOR guard: reject any conversation the current user is not part of.
       // This catches direct URL manipulation (?conversation=<other-user-uuid>).

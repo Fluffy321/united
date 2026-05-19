@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import UserAvatar from '@/components/common/UserAvatar';
+import { toast } from 'sonner';
 
 // ── Avatar color helper ───────────────────────────────────────────────────────
 const AVATAR_COLORS = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899','#0891B2'];
@@ -165,11 +166,13 @@ export default function PublicProfile() {
       const conv = await findOrCreateDirectConversation(currentUser, {
         id: profileUser.id,
         name: profileUser.display_name || profileUser.full_name?.split(' ')[0] || 'User',
+        avatar_url: profileUser.avatar_url || '',
         age_range: profileUser.age_range,
       });
+      toast.success('Opening messages...');
       navigate(`/Messages?conversation=${conv.id}`);
-    } catch {
-      // silently handle
+    } catch (error) {
+      toast.error(error?.message || 'Could not open messages');
     } finally {
       setMessagingLoading(false);
     }

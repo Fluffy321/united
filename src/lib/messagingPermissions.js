@@ -30,9 +30,10 @@ export async function canMessage(sender, recipientId) {
   if (!recipient) return { canMessage: false };
 
   const settings = recipient.message_settings || {};
-  const rule = settings.allowMessagesFrom || 'communities';
+  const rule = settings.allowMessagesFrom || settings.allow_messages_from || 'communities';
 
   if (rule === 'everyone') return { canMessage: true };
+  if (rule === 'members') return { canMessage: true };
   if (rule === 'nobody') return { canMessage: false };
   if (rule === 'communities') {
     const shared = await shareCommunity(sender.id, recipientId);

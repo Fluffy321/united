@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MessageCircle, Loader2 } from 'lucide-react';
-import { dataService, findDirectConversation, createDirectConversation, checkRateLimit, RateLimitError } from '@/services';
+import { findOrCreateDirectConversation, checkRateLimit, RateLimitError } from '@/services';
 import { toast } from 'sonner';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
@@ -25,15 +25,6 @@ export default function MessageButton({
 
     setLoading(true);
     try {
-      // Check for existing conversation first
-      const allConvs = await dataService.entities.Conversation.list('-updated_date', 100);
-      const existing = findDirectConversation(currentUser.id, recipientId, allConvs);
-
-      if (existing) {
-        navigate(createPageUrl(`Messages?conversation=${existing.id}`));
-        return;
-      }
-
       // New conversation — server-side rate limit check
       await checkRateLimit('new_conversation');
 
@@ -41,7 +32,7 @@ export default function MessageButton({
       const { canMessage: allowed } = await canMessage(currentUser, recipientId);
 
       if (allowed) {
-        const conv = await createDirectConversation(currentUser, { id: recipientId, name: recipientName }, {
+        const conv = await findOrCreateDirectConversation(currentUser, { id: recipientId, name: recipientName }, {
           request_id: postId || null,
           request_title: postTitle || null,
           request_type: postType,
