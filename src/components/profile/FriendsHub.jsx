@@ -1,11 +1,11 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { friendsService, FRIEND_STATUS } from '@/services/friendsService';
 import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Loader2, UserRound, UserRoundX, UserRoundPlus, UserRoundCheck, X, Check, Clock, Search, ContactRound, MessageCircle } from 'lucide-react';
+import { ClipboardPaste, Loader2, UserRound, UserRoundX, UserRoundPlus, UserRoundCheck, X, Check, Clock, Search, ContactRound, MessageCircle, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { dataService, findOrCreateDirectConversation } from '@/services';
 
@@ -17,8 +17,10 @@ const TABS = [
 ];
 
 const DEBOUNCE_MS = 280;
-const escapeIlike = (s) => s.replace(/[\\%_]/g, '\\$&');
+const escapeIlike = (s) => s.replace(/[\\%_]/g, '\\$&').replace(/,/g, ' ');
 const normalizeContactValue = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9@.+]/g, '');
+const extractEmails = (text = '') => [...new Set((text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || []).map(normalizeContactValue).filter(Boolean))];
+const extractPhones = (text = '') => [...new Set((text.match(/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g) || []).map(normalizeContactValue).filter(Boolean))];
 
 function Avatar({ user, size = 'w-10 h-10' }) {
   const initials = (user?.display_name || '?').slice(0, 2).toUpperCase();
@@ -59,8 +61,12 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
   const [searching, setSearching] = useState(false);
   const [contactsLoading, setContactsLoading] = useState(false);
   const [contactsMessage, setContactsMessage] = useState('');
+  const [showContactTools, setShowContactTools] = useState(false);
+  const [contactPaste, setContactPaste] = useState('');
+  const [suggestedPeople, setSuggestedPeople] = useState([]);
   const debounceRef = useRef(null);
   const latestRef = useRef('');
+  const fileInputRef = useRef(null);
   // Track which user IDs have in-flight request actions
   const [actionLoading, setActionLoading] = useState(null);
 
@@ -105,6 +111,38 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
     return                                  { status: FRIEND_STATUS.NONE,              requestId: null };
   }
 
+  useEffect(() => {
+    if (!open || !uid) return;
+
+    let cancelled = false;
+    const loadSuggestedPeople = async () => {
+      try {
+        let people = [];
+        if (shouldUseSupabase && supabase) {
+          const { data, error } = await supabase
+            .from('public_profiles')
+            .select('id, display_name, avatar_url, username, city')
+            .neq('id', uid)
+            .order('display_name', { ascending: true })
+            .limit(25);
+          if (error) throw error;
+          people = data || [];
+        } else {
+          const users = await dataService.entities.User.list('-created_date', 50);
+          people = users.filter((user) => user.id !== uid).slice(0, 25);
+        }
+        if (!cancelled) setSuggestedPeople(people);
+      } catch {
+        if (!cancelled) setSuggestedPeople([]);
+      }
+    };
+
+    loadSuggestedPeople();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, uid]);
+
   // ── Mutations ─────────────────────────────────────────────────────────────
   const acceptMutation = useMutation({
     mutationFn: ({ requestId, requesterUser }) =>
@@ -136,10 +174,11 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
     try {
       let results = [];
       if (shouldUseSupabase && supabase) {
+        const pattern = `%${escapeIlike(q)}%`;
         const { data, error } = await supabase
           .from('public_profiles')
           .select('id, display_name, avatar_url, username, city')
-          .ilike('display_name', `%${escapeIlike(q)}%`)
+          .or(`display_name.ilike.${pattern},username.ilike.${pattern},city.ilike.${pattern}`)
           .neq('id', uid)
           .limit(25);
         if (error) throw error;
@@ -177,6 +216,47 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
     latestRef.current = q;
     setSearching(true);
     debounceRef.current = setTimeout(() => runSearch(q), DEBOUNCE_MS);
+  };
+
+  const matchContactValues = async ({ emails = [], phones = [] }) => {
+    const values = new Set([...emails, ...phones].filter(Boolean));
+    if (values.size === 0) {
+      setContactsMessage('No emails or phone numbers were found. Try importing a contacts file or pasting contact details.');
+      return;
+    }
+
+    setContactsLoading(true);
+    try {
+      let matches = [];
+      if (shouldUseSupabase && supabase) {
+        const { data, error } = await supabase.rpc('match_contact_profiles', {
+          p_emails: emails,
+          p_phones: phones,
+        });
+        if (error) throw error;
+        matches = data || [];
+      } else {
+        const users = await dataService.entities.User.list('-created_date', 500);
+        matches = users.filter((candidate) => {
+          if (candidate.id === uid) return false;
+          const candidateValues = [candidate.email, candidate.phone, candidate.phone_number]
+            .map(normalizeContactValue)
+            .filter(Boolean);
+          return candidateValues.some((value) => values.has(value));
+        });
+      }
+
+      setSearchQuery('');
+      setSearchResults(matches);
+      setContactsMessage(matches.length
+        ? `${matches.length} JUnited ${matches.length === 1 ? 'member' : 'members'} matched your contacts.`
+        : 'No current JUnited members matched those contacts yet. You can still search or invite them later.'
+      );
+    } catch {
+      setContactsMessage('Contact matching could not finish. You can still search by name.');
+    } finally {
+      setContactsLoading(false);
+    }
   };
 
   const handleSendFromSearch = async (user) => {
@@ -222,51 +302,44 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
     setContactsLoading(true);
     try {
       if (!navigator.contacts?.select) {
-        setContactsMessage('Contact linking is not supported in this browser yet. You can still search by name.');
+        setShowContactTools(true);
+        setContactsMessage('This browser cannot open your address book directly. Import a contacts file or paste emails/phone numbers below.');
         return;
       }
 
       const contacts = await navigator.contacts.select(['name', 'email', 'tel'], { multiple: true });
       const emails = [...new Set(contacts.flatMap((contact) => contact.email || []).map(normalizeContactValue).filter(Boolean))];
       const phones = [...new Set(contacts.flatMap((contact) => contact.tel || []).map(normalizeContactValue).filter(Boolean))];
-      const values = new Set([...emails, ...phones]);
-
-      if (values.size === 0) {
-        setContactsMessage('No usable email or phone details were found in those contacts.');
-        return;
-      }
-
-      let matches = [];
-
-      if (shouldUseSupabase && supabase) {
-        const { data, error } = await supabase.rpc('match_contact_profiles', {
-          p_emails: emails,
-          p_phones: phones,
-        });
-        if (error) throw error;
-        matches = data || [];
-      } else {
-        const users = await dataService.entities.User.list('-created_date', 500);
-        matches = users.filter((candidate) => {
-          if (candidate.id === uid) return false;
-          const candidateValues = [candidate.email, candidate.phone, candidate.phone_number]
-            .map(normalizeContactValue)
-            .filter(Boolean);
-          return candidateValues.some((value) => values.has(value));
-        });
-      }
-
-      setSearchResults(matches);
-      setSearchQuery('');
-      setContactsMessage(matches.length
-        ? `${matches.length} JUnited ${matches.length === 1 ? 'member' : 'members'} matched your contacts.`
-        : 'No current JUnited members matched those contacts yet.'
-      );
+      await matchContactValues({ emails, phones });
     } catch {
       setContactsMessage('Contacts access was not completed. You can still search by name.');
     } finally {
       setContactsLoading(false);
     }
+  };
+
+  const handleContactFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      await matchContactValues({
+        emails: extractEmails(text),
+        phones: extractPhones(text),
+      });
+    } catch {
+      setContactsMessage('That contacts file could not be read. Try a .vcf, .csv, or pasted emails.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const handlePasteContacts = async () => {
+    await matchContactValues({
+      emails: extractEmails(contactPaste),
+      phones: extractPhones(contactPaste),
+    });
   };
 
   const handleMessageFriend = async (friendProfile) => {
@@ -278,6 +351,25 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
         name: friendProfile.display_name || friendProfile.full_name?.split(' ')[0] || 'Friend',
         avatar_url: friendProfile.avatar_url || '',
         age_range: friendProfile.age_range || '18+',
+      });
+      onOpenChange(false);
+      navigate(createPageUrl('Messages') + `?conversation=${conv.id}`);
+    } catch {
+      toast.error('Could not open messages');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleMessageUser = async (user) => {
+    if (!user?.id || !currentUser?.id) return;
+    setActionLoading(user.id);
+    try {
+      const conv = await findOrCreateDirectConversation(currentUser, {
+        id: user.id,
+        name: user.display_name || user.full_name?.split(' ')[0] || user.username || 'Friend',
+        avatar_url: user.avatar_url || '',
+        age_range: user.age_range || '18+',
       });
       onOpenChange(false);
       navigate(createPageUrl('Messages') + `?conversation=${conv.id}`);
@@ -344,6 +436,43 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
                     {contactsMessage}
                   </p>
                 )}
+                {showContactTools && (
+                  <div className="mb-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".vcf,.vcard,.csv,.txt,text/vcard,text/csv,text/plain"
+                      className="hidden"
+                      onChange={handleContactFile}
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={contactsLoading}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] font-black text-slate-700 transition hover:bg-slate-100 active:scale-[0.98] disabled:opacity-50"
+                      >
+                        <Upload className="h-3.5 w-3.5" />
+                        Import file
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handlePasteContacts}
+                        disabled={contactsLoading || !contactPaste.trim()}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-3 py-2 text-[12px] font-black text-white transition hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
+                      >
+                        {contactsLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ClipboardPaste className="h-3.5 w-3.5" />}
+                        Find matches
+                      </button>
+                    </div>
+                    <textarea
+                      value={contactPaste}
+                      onChange={(event) => setContactPaste(event.target.value)}
+                      placeholder="Paste emails or phone numbers from contacts..."
+                      className="mt-2 min-h-[78px] w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </div>
+                )}
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   <input
@@ -380,13 +509,23 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
                               <p className="text-[12px] text-slate-400 truncate">{user.city}</p>
                             )}
                           </div>
-                        </button>
-
-                        {/* Relationship action */}
-                        <div className="shrink-0">
-                          {rel.status === FRIEND_STATUS.FRIENDS && (
-                            <span className="inline-flex items-center gap-1 rounded-xl bg-emerald-50 px-2.5 py-1.5 text-[12px] font-black text-emerald-700">
-                              <UserRoundCheck className="h-3.5 w-3.5" />
+	                        </button>
+	
+	                        {/* Relationship action */}
+	                        <div className="flex shrink-0 items-center gap-1.5">
+	                          <button
+	                            type="button"
+	                            onClick={() => handleMessageUser(user)}
+	                            disabled={busy}
+	                            className="inline-flex items-center gap-1 rounded-xl bg-blue-50 px-2.5 py-1.5 text-[12px] font-black text-blue-700 transition hover:bg-blue-100 active:scale-95 disabled:opacity-50"
+	                            title="Message"
+	                          >
+	                            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
+	                            <span className="hidden sm:inline">Message</span>
+	                          </button>
+	                          {rel.status === FRIEND_STATUS.FRIENDS && (
+	                            <span className="inline-flex items-center gap-1 rounded-xl bg-emerald-50 px-2.5 py-1.5 text-[12px] font-black text-emerald-700">
+	                              <UserRoundCheck className="h-3.5 w-3.5" />
                               Friends
                             </span>
                           )}
@@ -439,21 +578,74 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
                         </div>
                       </li>
                     );
-                  })}
-                </ul>
-              )}
+	                  })}
+	                </ul>
+	              )}
 
-              {searchQuery.trim() && !searching && searchResults.length === 0 && (
-                <p className="px-5 py-8 text-center text-[13px] text-slate-400">No users found for "{searchQuery}"</p>
-              )}
+	              {!searchQuery.trim() && searchResults.length === 0 && suggestedPeople.length > 0 && (
+	                <div className="px-5 pb-4">
+	                  <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Suggested people</p>
+	                  <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-100 bg-white">
+	                    {suggestedPeople.map((user) => {
+	                      const rel = getRelStatus(user.id);
+	                      const busy = actionLoading === user.id;
+	                      return (
+	                        <li key={user.id} className="flex items-center gap-3 px-3 py-3">
+	                          <button
+	                            onClick={() => openProfile(user.id)}
+	                            className="flex min-w-0 flex-1 items-center gap-3 text-left"
+	                          >
+	                            <Avatar user={user} />
+	                            <div className="min-w-0">
+	                              <p className="truncate text-[14px] font-bold text-slate-900">{user.display_name || user.full_name || user.username || 'User'}</p>
+	                              <p className="truncate text-[12px] text-slate-400">{user.city || 'JUnited member'}</p>
+	                            </div>
+	                          </button>
+	                          <button
+	                            type="button"
+	                            onClick={() => handleMessageUser(user)}
+	                            disabled={busy}
+	                            className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-blue-50 px-2.5 py-1.5 text-[12px] font-black text-blue-700 transition hover:bg-blue-100 active:scale-95 disabled:opacity-50"
+	                            title="Message"
+	                          >
+	                            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
+	                            <span className="hidden sm:inline">Message</span>
+	                          </button>
+	                          {rel.status === FRIEND_STATUS.NONE && (
+	                            <button
+	                              type="button"
+	                              onClick={() => handleSendFromSearch(user)}
+	                              disabled={busy}
+	                              className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-slate-950 px-2.5 py-1.5 text-[12px] font-black text-white transition hover:bg-slate-800 active:scale-95 disabled:opacity-50"
+	                            >
+	                              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserRoundPlus className="h-3.5 w-3.5" />}
+	                              Add
+	                            </button>
+	                          )}
+	                          {rel.status === FRIEND_STATUS.FRIENDS && (
+	                            <span className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-emerald-50 px-2.5 py-1.5 text-[12px] font-black text-emerald-700">
+	                              <UserRoundCheck className="h-3.5 w-3.5" />
+	                              Friends
+	                            </span>
+	                          )}
+	                        </li>
+	                      );
+	                    })}
+	                  </ul>
+	                </div>
+	              )}
 
-              {!searchQuery.trim() && searchResults.length === 0 && (
-                <EmptyState
-                  icon={Search}
-                  title="Search for people"
-                  body="Type a name to find someone and send them a friend request."
-                />
-              )}
+	              {searchQuery.trim() && !searching && searchResults.length === 0 && (
+	                <p className="px-5 py-8 text-center text-[13px] text-slate-400">No users found for "{searchQuery}"</p>
+	              )}
+
+	              {!searchQuery.trim() && searchResults.length === 0 && suggestedPeople.length === 0 && (
+	                <EmptyState
+	                  icon={Search}
+	                  title="Search for people"
+	                  body="Type a name, import contacts, or paste contact details to find friends."
+	                />
+	              )}
             </div>
           )}
 

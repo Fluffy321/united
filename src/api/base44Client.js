@@ -107,15 +107,6 @@ const demoUser = {
 const demoUsers = [
   demoUser,
   {
-    id: 'demo-sarah',
-    full_name: 'Sarah Cohen',
-    display_name: 'Sarah',
-    email: 'sarah@junited.local',
-    avatar_url: '',
-    age_range: '18+',
-    message_settings: { searchable: true, allowMessagesFrom: 'everyone' },
-  },
-  {
     id: 'demo-avi',
     full_name: 'Avi Rosen',
     display_name: 'Avi',
@@ -128,18 +119,6 @@ const demoUsers = [
 
 const now = Date.now();
 const demoConversations = [
-  {
-    id: 'local-conv-sarah',
-    participant_ids: ['local-demo', 'demo-sarah'],
-    participant_names: ['Demo', 'Sarah Cohen'],
-    participant_ages: ['18+', '18+'],
-    participant_avatars: ['', ''],
-    last_message: 'Can you send me the event details?',
-    last_message_at: new Date(now - 18 * 60 * 1000).toISOString(),
-    updated_date: new Date(now - 18 * 60 * 1000).toISOString(),
-    unread_count: { 'local-demo': 1 },
-    request_type: 'general',
-  },
   {
     id: 'local-conv-avi',
     participant_ids: ['local-demo', 'demo-avi'],
@@ -155,33 +134,6 @@ const demoConversations = [
 ];
 
 const demoMessages = [
-  {
-    id: 'local-msg-1',
-    conversation_id: 'local-conv-sarah',
-    sender_id: 'demo-sarah',
-    sender_name: 'Sarah',
-    recipient_id: 'local-demo',
-    content: 'Hi! Are you going to the community dinner tonight?',
-    created_date: new Date(now - 25 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'local-msg-2',
-    conversation_id: 'local-conv-sarah',
-    sender_id: 'local-demo',
-    sender_name: 'Demo',
-    recipient_id: 'demo-sarah',
-    content: 'I think so. What time does it start?',
-    created_date: new Date(now - 22 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'local-msg-3',
-    conversation_id: 'local-conv-sarah',
-    sender_id: 'demo-sarah',
-    sender_name: 'Sarah',
-    recipient_id: 'local-demo',
-    content: 'Can you send me the event details?',
-    created_date: new Date(now - 18 * 60 * 1000).toISOString(),
-  },
   {
     id: 'local-msg-4',
     conversation_id: 'local-conv-avi',
@@ -352,8 +304,8 @@ const seedData = {
       locationLabel: 'Woodmere',
       approxLat: 40.6323,
       approxLng: -73.7129,
-      created_by_user_id: 'demo-sarah',
-      created_by_name: 'Sarah',
+      created_by_user_id: 'local-chesed-desk',
+      created_by_name: 'Five Towns Chesed Desk',
       offers_count: 1,
       comments_count: 2,
       views_count: 24,
@@ -389,8 +341,8 @@ const seedData = {
       locationLabel: 'Lawrence',
       approxLat: 40.6157,
       approxLng: -73.7296,
-      created_by_user_id: 'demo-sarah',
-      created_by_name: 'Sarah',
+      created_by_user_id: 'local-shul-coordinator',
+      created_by_name: 'Shul Coordinator',
       offers_count: 2,
       comments_count: 1,
       views_count: 31,
@@ -425,8 +377,8 @@ const seedData = {
     {
       id: 'local-mitzvah-signup-2',
       request_id: 'local-mitzvah-3',
-      user_id: 'demo-sarah',
-      user_name: 'Sarah',
+      user_id: 'local-shul-volunteer',
+      user_name: 'Shul Volunteer',
       status: 'JOINED',
       created_date: new Date(now - 70 * 60 * 1000).toISOString(),
       updated_date: new Date(now - 70 * 60 * 1000).toISOString(),
@@ -446,8 +398,8 @@ const seedData = {
     {
       id: 'local-help-offer-2',
       request_id: 'local-mitzvah-3',
-      volunteer_id: 'demo-sarah',
-      volunteer_name: 'Sarah',
+      volunteer_id: 'local-shul-volunteer',
+      volunteer_name: 'Shul Volunteer',
       status: 'offered',
       note: 'I can come early and help set up one side of the room.',
       created_date: new Date(now - 70 * 60 * 1000).toISOString(),
@@ -458,8 +410,8 @@ const seedData = {
     {
       id: 'local-mitzvah-comment-1',
       request_id: 'local-mitzvah-1',
-      author_id: 'demo-sarah',
-      author_name: 'Sarah',
+      author_id: 'local-chesed-desk',
+      author_name: 'Five Towns Chesed Desk',
       body: 'Pickup is ready after 3:30. One bag is marked dairy.',
       created_date: new Date(now - 18 * 60 * 1000).toISOString(),
     },
@@ -474,8 +426,8 @@ const seedData = {
     {
       id: 'local-mitzvah-comment-3',
       request_id: 'local-mitzvah-3',
-      author_id: 'demo-sarah',
-      author_name: 'Sarah',
+      author_id: 'local-shul-coordinator',
+      author_name: 'Shul Coordinator',
       body: 'Two people should be enough. Chairs are stacked near the back door.',
       created_date: new Date(now - 55 * 60 * 1000).toISOString(),
     },
@@ -508,11 +460,90 @@ const seedData = {
   ],
 };
 
+const SARAH_DEMO_USER_ID = 'demo-sarah';
+const SARAH_DEMO_CONVERSATION_ID = 'local-conv-sarah';
+const SARAH_DEMO_REPLACEMENT_ID = 'local-community-member';
+const SARAH_DEMO_REPLACEMENT_NAME = 'Community Member';
+const SARAH_NAME_FIELDS = [
+  'created_by_name',
+  'user_name',
+  'volunteer_name',
+  'author_name',
+  'sender_name',
+  'recipient_name',
+  'display_name',
+  'full_name',
+];
+const SARAH_ID_FIELDS = [
+  'created_by_user_id',
+  'user_id',
+  'volunteer_id',
+  'author_id',
+  'sender_id',
+  'recipient_id',
+  'requester_id',
+  'friend_id',
+];
+
+const stripSarahDemoSeed = (name, items = []) => {
+  const filtered = items.filter((item) => {
+    if (!item) return false;
+    if (name === 'User' && item.id === SARAH_DEMO_USER_ID) return false;
+    if (name === 'Conversation') {
+      return item.id !== SARAH_DEMO_CONVERSATION_ID && !item.participant_ids?.includes(SARAH_DEMO_USER_ID);
+    }
+    if (name === 'Message') {
+      return item.conversation_id !== SARAH_DEMO_CONVERSATION_ID &&
+        item.sender_id !== SARAH_DEMO_USER_ID &&
+        item.recipient_id !== SARAH_DEMO_USER_ID;
+    }
+    if (name === 'FriendRequest') {
+      return item.requester_id !== SARAH_DEMO_USER_ID && item.recipient_id !== SARAH_DEMO_USER_ID;
+    }
+    if (name === 'Friendship') {
+      return item.user_id !== SARAH_DEMO_USER_ID && item.friend_id !== SARAH_DEMO_USER_ID;
+    }
+    return true;
+  });
+
+  return filtered.map((item) => {
+    let changed = false;
+    const next = { ...item };
+
+    SARAH_ID_FIELDS.forEach((field) => {
+      if (next[field] === SARAH_DEMO_USER_ID) {
+        next[field] = SARAH_DEMO_REPLACEMENT_ID;
+        changed = true;
+      }
+    });
+
+    SARAH_NAME_FIELDS.forEach((field) => {
+      if (typeof next[field] === 'string' && next[field].toLowerCase().startsWith('sarah')) {
+        next[field] = SARAH_DEMO_REPLACEMENT_NAME;
+        changed = true;
+      }
+    });
+
+    return changed ? next : item;
+  });
+};
+
 const ensureSeeded = (name) => {
   if (typeof localStorage === 'undefined') return;
   const key = `${STORAGE_PREFIX}${name}`;
   if (!localStorage.getItem(key) && seedData[name]) {
     localStorage.setItem(key, JSON.stringify(seedData[name]));
+  }
+  const stored = localStorage.getItem(key);
+  if (!stored) return;
+  try {
+    const current = JSON.parse(stored);
+    const cleaned = stripSarahDemoSeed(name, current);
+    if (cleaned.length !== current.length || JSON.stringify(cleaned) !== stored) {
+      localStorage.setItem(key, JSON.stringify(cleaned));
+    }
+  } catch {
+    // Keep local demo storage resilient even if a user manually edits it.
   }
 };
 
