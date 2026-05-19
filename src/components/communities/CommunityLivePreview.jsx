@@ -109,7 +109,7 @@ const STEP_CAPTIONS = [
   'This is how your community will look on launch day',
 ];
 
-export default function CommunityLivePreview({ form, step, premiumPreview = { enabled: false, layout: {} } }) {
+export default function CommunityLivePreview({ form, step, coverUrl, premiumPreview = { enabled: false, layout: {} } }) {
   const typeConfig = form.archetype ? COMMUNITY_TYPE_CONFIG[form.archetype] : null;
   const sample = PREVIEW_SAMPLES[form.archetype] || null;
   const name = form.name || 'Your Community';
@@ -171,10 +171,14 @@ export default function CommunityLivePreview({ form, step, premiumPreview = { en
 
         {/* Cover */}
         <div className="relative flex-shrink-0" style={{ height: 92 }}>
-          <div
-            className="absolute inset-0"
-            style={{ background: coverBg, transition: 'background 0.35s ease' }}
-          />
+          {coverUrl ? (
+            <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <div
+              className="absolute inset-0"
+              style={{ background: coverBg, transition: 'background 0.35s ease' }}
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute bottom-2.5 left-3 right-3 z-10">
             <p className="font-extrabold leading-tight text-white drop-shadow" style={{ fontSize: 13 }}>

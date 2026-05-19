@@ -4,6 +4,7 @@ import { Loader2, Plus, ImagePlus, X, Lock, Globe, Check, Sparkles, ChevronRight
 import { dataService, incrementCounter } from '@/services';
 import { paymentsService } from '@/services/paymentsService';
 import { storageService } from '@/services/storageService';
+import { processImage } from '@/lib/imageUpload';
 import { toast } from 'sonner';
 import CreateCommunityFlow from './CreateCommunityFlow';
 
@@ -59,10 +60,21 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
     setFirstPostBody('');
   };
 
-  const handleCreateFromFlow = async ({ name, description, category, community_type, privacy, posting_mode, rules, firstPost, settings, premiumLayoutRequest, premiumInterval }) => {
+  const handleCreateFromFlow = async ({ name, description, category, community_type, privacy, posting_mode, rules, firstPost, settings, coverFile, premiumLayoutRequest, premiumInterval }) => {
     if (!currentUser) return toast.error('You must be signed in to create a community.');
     setSubmitting(true);
     try {
+      let coverUrl;
+      if (coverFile) {
+        try {
+          const processed = await processImage(coverFile, 1400);
+          const result = await dataService.integrations.Core.UploadFile({ file: processed, bucket: 'community-images' });
+          coverUrl = result?.file_url || result?.url || result?.publicUrl;
+        } catch {
+          // non-fatal — create community without cover
+        }
+      }
+
       const community = await dataService.entities.Community.create({
         name,
         description: description || undefined,
@@ -81,6 +93,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
         is_verified: false,
         is_seeded: false,
         settings: settings || undefined,
+        cover_url: coverUrl || undefined,
       });
 
       // Auto-join as admin

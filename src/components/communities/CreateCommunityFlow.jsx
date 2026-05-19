@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, Eye, Lock, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, Eye, ImagePlus, Lock, Sparkles, X } from 'lucide-react';
 import { COMMUNITY_TYPE_CONFIG } from '@/lib/communityTypes';
 import CommunityLivePreview from './CommunityLivePreview';
+import CoverCropSheet from './CoverCropSheet';
 
 // ── Premium preview constants ─────────────────────────────────────────────────
 
@@ -124,6 +125,59 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
     rulesText: DEFAULT_RULES,
     firstContent: '',
   });
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState(null);
+  const [showCropSheet, setShowCropSheet] = useState(false);
+  const coverInputRef = useRef(null);
+  const coverUrlCleanupRef = useRef(null); // tracks the cropped preview objectURL
+  const pendingRawUrlRef = useRef(null);   // tracks the raw selection objectURL (before crop)
+
+  useEffect(() => {
+    return () => {
+      if (coverUrlCleanupRef.current) URL.revokeObjectURL(coverUrlCleanupRef.current);
+      if (pendingRawUrlRef.current) URL.revokeObjectURL(pendingRawUrlRef.current);
+    };
+  }, []);
+
+  const handleCoverChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 10 * 1024 * 1024) return;
+    // Revoke any previous raw URL and open the crop sheet
+    if (pendingRawUrlRef.current) URL.revokeObjectURL(pendingRawUrlRef.current);
+    pendingRawUrlRef.current = URL.createObjectURL(file);
+    setShowCropSheet(true);
+  };
+
+  const handleCropSave = (blob) => {
+    if (pendingRawUrlRef.current) URL.revokeObjectURL(pendingRawUrlRef.current);
+    pendingRawUrlRef.current = null;
+    if (coverUrlCleanupRef.current) URL.revokeObjectURL(coverUrlCleanupRef.current);
+    const croppedFile = new File([blob], 'cover.jpg', { type: 'image/jpeg' });
+    const croppedUrl = URL.createObjectURL(croppedFile);
+    coverUrlCleanupRef.current = croppedUrl;
+    setCoverFile(croppedFile);
+    setCoverPreviewUrl(croppedUrl);
+    setShowCropSheet(false);
+    if (coverInputRef.current) coverInputRef.current.value = '';
+  };
+
+  const handleCropCancel = () => {
+    if (pendingRawUrlRef.current) URL.revokeObjectURL(pendingRawUrlRef.current);
+    pendingRawUrlRef.current = null;
+    setShowCropSheet(false);
+    if (coverInputRef.current) coverInputRef.current.value = '';
+    // existing cover (if any) is preserved
+  };
+
+  const handleCoverRemove = () => {
+    if (coverUrlCleanupRef.current) URL.revokeObjectURL(coverUrlCleanupRef.current);
+    coverUrlCleanupRef.current = null;
+    setCoverFile(null);
+    setCoverPreviewUrl(null);
+    if (coverInputRef.current) coverInputRef.current.value = '';
+  };
 
   const setField = (field, value) => {
     setError('');
@@ -185,6 +239,7 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
         home_emphasis: tc.homeEmphasis,
         primary_tabs: tc.primaryTabs,
       },
+      coverFile: coverFile || null,
       premiumLayoutRequest: premiumUpgradeRequested ? premiumPreviewLayout : null,
       premiumInterval: premiumUpgradeRequested ? premiumInterval : null,
     });
@@ -245,7 +300,7 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
             <section className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
               {step === 0 && <StepName form={form} onField={setField} />}
               {step === 1 && <StepArchetype form={form} onField={setField} />}
-              {step === 2 && <StepMakeItYours form={form} typeConfig={typeConfig} onField={setField} />}
+              {step === 2 && <StepMakeItYours form={form} typeConfig={typeConfig} onField={setField} coverPreviewUrl={coverPreviewUrl} coverInputRef={coverInputRef} onCoverChange={handleCoverChange} onCoverRemove={handleCoverRemove} />}
               {step === 3 && (
                 <StepShape
                   form={form}
@@ -293,7 +348,7 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
           {/* Desktop preview panel */}
           <div className="hidden lg:flex flex-1 flex-col items-center justify-center gap-3 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-8 py-8">
             <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/25">Live Preview</p>
-            <CommunityLivePreview form={form} step={step} premiumPreview={{ enabled: premiumPreviewEnabled, layout: premiumPreviewLayout }} />
+            <CommunityLivePreview form={form} step={step} coverUrl={coverPreviewUrl} premiumPreview={{ enabled: premiumPreviewEnabled, layout: premiumPreviewLayout }} />
           </div>
 
         </div>
@@ -316,10 +371,18 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
             </button>
           </div>
           <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 pb-8">
-            <CommunityLivePreview form={form} step={step} premiumPreview={{ enabled: premiumPreviewEnabled, layout: premiumPreviewLayout }} />
+            <CommunityLivePreview form={form} step={step} coverUrl={coverPreviewUrl} premiumPreview={{ enabled: premiumPreviewEnabled, layout: premiumPreviewLayout }} />
           </div>
         </div>
       )}
+
+      {/* ── Cover crop sheet (z-[120], above all) ── */}
+      <CoverCropSheet
+        open={showCropSheet}
+        imageUrl={pendingRawUrlRef.current}
+        onSave={handleCropSave}
+        onCancel={handleCropCancel}
+      />
     </>,
     document.body
   );
@@ -415,7 +478,7 @@ function StepArchetype({ form, onField }) {
   );
 }
 
-function StepMakeItYours({ form, typeConfig, onField }) {
+function StepMakeItYours({ form, typeConfig, onField, coverPreviewUrl, coverInputRef, onCoverChange, onCoverRemove }) {
   return (
     <div className="space-y-4">
       {typeConfig && (
@@ -429,6 +492,42 @@ function StepMakeItYours({ form, typeConfig, onField }) {
           </div>
         </div>
       )}
+
+      {/* Cover image upload */}
+      <div>
+        <label className="mb-2 block text-[12px] font-black text-slate-900">
+          Cover image <span className="font-semibold text-slate-400">(optional)</span>
+        </label>
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onCoverChange}
+        />
+        {coverPreviewUrl ? (
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200" style={{ height: 120 }}>
+            <img src={coverPreviewUrl} alt="Cover preview" className="h-full w-full object-cover" />
+            <button
+              type="button"
+              onClick={onCoverRemove}
+              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => coverInputRef.current?.click()}
+            className="flex h-24 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 text-slate-400 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-500 transition-colors"
+          >
+            <ImagePlus className="h-5 w-5" />
+            <span className="text-[13px] font-bold">Upload cover photo</span>
+          </button>
+        )}
+      </div>
+
       <div>
         <label className="mb-2 block text-[12px] font-black text-slate-900">What is this community for? <span className="font-semibold text-slate-400">(optional but recommended)</span></label>
         <textarea

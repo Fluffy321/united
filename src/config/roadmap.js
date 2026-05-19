@@ -332,9 +332,10 @@ Goals:
   {
     id: 'community-creation-cover-upload',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Cover Photo Upload in Creation Flow',
+    shippedNote: 'Cover upload added to Step 3 (Make it yours) in CreateCommunityFlow. Dashed upload target, live preview in both desktop and mobile CommunityLivePreview, processImage pipeline, upload to community-images bucket at launch time, cover_url persisted on community record.',
     description: 'Let admins upload a custom cover photo during step 2 ("Make it yours") of the new CreateCommunityFlow, replacing the type-gradient placeholder. Preview updates live.',
     why: 'The legacy CreateCommunityForm (still in CreateCommunityModal.jsx) had cover upload, but it was never ported to the new 5-step CreateCommunityFlow. The live preview now shows the gradient — uploading a real cover would make the preview much more personal and the community feel owned immediately.',
     prompt: `You are adding cover photo upload to the JUnited community creation flow.
@@ -350,6 +351,31 @@ Goals:
 2. In StepMakeItYours, add an optional "Add cover photo" tap target (dashed border, image preview if set, click to replace) — same visual style as the legacy form
 3. Pass coverPreviewUrl into CommunityLivePreview and render it as the cover background image when present (fall back to gradient if null)
 4. On submit (onCreate payload), include coverFile so CreateCommunityModal.handleCreateFromFlow can upload it to Supabase storage and set cover_url on the community
+5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-creation-cover-crop',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.LOW,
+    title: 'Cover Photo Crop/Aspect-Ratio Control in Creation Flow',
+    shippedNote: 'CoverCropSheet.jsx: full-screen dark portal (z-[120]), canvas-based drag-to-reposition at 3:1 ratio, 1200×400px JPEG output. Zero new dependencies. Opens on file selection; outputs cropped Blob → File → objectURL. Raw URL revoked after crop. Existing cover preserved on cancel.',
+    description: 'After uploading a cover during community creation, let the user crop or reposition it to a standard 16:9 or 3:1 aspect ratio before it is saved.',
+    why: 'Tall portrait photos and square avatars upload fine but look bad as 128px-tall community covers — the subject gets cropped unpredictably by object-cover. A simple crop step would eliminate the most common visual failure after the cover upload feature ships.',
+    prompt: `You are adding a cover-crop step to the JUnited community creation flow.
+
+Context:
+- src/components/communities/CreateCommunityFlow.jsx — StepMakeItYours renders the cover upload button; after selection the image is previewed via URL.createObjectURL in a 120px-tall div
+- src/components/communities/CommunityLivePreview.jsx — receives coverUrl prop and renders it as object-cover in a 92px-tall div
+- src/components/communities/CreateCommunityModal.jsx — handleCreateFromFlow receives coverFile, processes it via processImage(coverFile, 1400), then uploads to community-images bucket
+- The crop UI should appear in a modal/sheet immediately after the user picks a file (before setting coverFile state), produce a cropped Blob, and replace the raw file before it is stored in state
+
+Goals:
+1. After file selection in handleCoverChange, open a lightweight crop modal (react-image-crop or a canvas-based crop) showing the uploaded photo with a draggable 3:1 crop region
+2. On confirm, use canvas to produce a cropped Blob; set that as coverFile and generate a new objectURL for coverPreviewUrl
+3. On cancel, clear the selection (no change to state)
+4. Skip the crop step on files already within the 3:1 ratio tolerance (±10%)
 5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
