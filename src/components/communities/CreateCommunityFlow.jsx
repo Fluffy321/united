@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, Eye, ImagePlus, Lock, Sparkles, X } from 'lucide-react';
 import { COMMUNITY_TYPE_CONFIG } from '@/lib/communityTypes';
+import { COMMUNITY_PREMIUM_INTERVALS } from '@/lib/communityPlanPricing';
 import CommunityLivePreview from './CommunityLivePreview';
 import CoverCropSheet from './CoverCropSheet';
 
@@ -758,22 +759,17 @@ function StepShape({ form, onField, premiumPreviewEnabled, premiumPreviewLayout,
                   Your layout choices are saved after you upgrade. Launch free, then upgrade — or commit now.
                 </p>
                 <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onUpgradeRequest('monthly')}
-                    className="flex-1 rounded-lg border border-amber-300 bg-white py-2 text-center"
-                  >
-                    <span className="block text-[12px] font-black text-slate-900">Monthly</span>
-                    <span className="block text-[10px] font-semibold text-slate-500">$9.99 / mo</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onUpgradeRequest('annual')}
-                    className="flex-1 rounded-lg border border-amber-300 bg-amber-100 py-2 text-center"
-                  >
-                    <span className="block text-[12px] font-black text-slate-900">Annual</span>
-                    <span className="block text-[10px] font-semibold text-amber-700">$7.99 / mo · save 20%</span>
-                  </button>
+                  {COMMUNITY_PREMIUM_INTERVALS.map((interval, idx) => (
+                    <button
+                      key={interval.key}
+                      type="button"
+                      onClick={() => onUpgradeRequest(interval.key)}
+                      className={`flex-1 rounded-lg border border-amber-300 py-2 text-center ${idx === 1 ? 'bg-amber-100' : 'bg-white'}`}
+                    >
+                      <span className="block text-[12px] font-black text-slate-900">{interval.label}</span>
+                      <span className={`block text-[10px] font-semibold ${idx === 1 ? 'text-amber-700' : 'text-slate-500'}`}>{interval.sublabel}</span>
+                    </button>
+                  ))}
                 </div>
                 <p className="text-[9px] font-semibold text-amber-500 text-center">
                   Billing starts after your community is created

@@ -380,6 +380,34 @@ Goals:
   },
 
   {
+    id: 'community-premium-live-pricing',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Show Live Premium Plan Prices in Create Community Flow',
+    description: 'Fetch the actual monthly and annual pricing for the community Premium plan from a lightweight endpoint so users see real prices before committing to an interval in Step 4.',
+    why: 'Current fix removed wrong hardcoded prices ($9.99/$7.99) and replaced with interval labels only. Actual amounts live in Stripe server-side. Users should see the real prices to make an informed choice — but we cannot safely hardcode them client-side where they will drift.',
+    prompt: `You are adding live pricing display to the JUnited community creation flow.
+
+Context:
+- src/lib/communityPlanPricing.js — shared interval config; no dollar amounts (intentionally, because they were hardcoded incorrectly before)
+- src/components/communities/CreateCommunityFlow.jsx — Step 4 StepShape renders COMMUNITY_PREMIUM_INTERVALS from communityPlanPricing.js; shows "Billed monthly" / "Billed annually · best value" without prices
+- supabase/functions/create-community-plan-checkout/index.ts — uses STRIPE_PRICE_COMMUNITY_PREMIUM_MONTHLY / STRIPE_PRICE_COMMUNITY_PREMIUM_ANNUAL env vars to look up Stripe price IDs
+- src/services/paymentsService.js — paymentsService.createCommunityPlanCheckout({ communityId, interval }) triggers checkout
+
+Goals:
+1. Add a new Supabase Edge Function 'get-community-plan-pricing' that:
+   - Reads STRIPE_PRICE_COMMUNITY_PREMIUM_MONTHLY and STRIPE_PRICE_COMMUNITY_PREMIUM_ANNUAL env vars
+   - Calls stripe.prices.retrieve(priceId) for each
+   - Returns { monthly: { amount: number, currency: string }, annual: { amount: number, currency: string } }
+   - Is publicly accessible (no auth required — price display is not sensitive)
+2. In CreateCommunityFlow.jsx: add a usePlanPricing() hook that calls this function via supabase.functions.invoke, returns { monthly, annual } or null
+3. In StepShape's upgrade CTA: if pricing loaded, display the amount alongside the interval label (e.g., "$12 / mo" or "$99 / yr"); if null/loading, fall back to the current sublabel text
+4. Update src/lib/communityPlanPricing.js with a formatPlanPrice(amountCents, currency) helper
+5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'community-mini-app-post-launch-panel',
     category: 'Community',
     status: STATUS.SHIPPED,
