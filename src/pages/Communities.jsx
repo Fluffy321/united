@@ -22,7 +22,7 @@ import { supabase } from '@/api/supabaseClient';
 import { toast } from 'sonner';
 import { appParams } from '@/lib/app-params';
 import CommunityHubCard from '@/components/communities/CommunityHubCard';
-import CommunityHubDetail from '@/components/communities/CommunityHubDetail';
+import CommunityDetailView from '@/components/communities/CommunityDetailView';
 import CommunityAdminCenter from '@/components/communities/CommunityAdminCenter';
 import CreateCommunityForm from '@/components/communities/CreateCommunityForm';
 import MessagesDrawer from '@/components/communities/MessagesDrawer';
@@ -851,19 +851,14 @@ export default function Communities() {
 
   if (selectedCommunity) {
     return (
-      <CommunityHubDetail
-        community={selectedCommunity}
+      <CommunityDetailView
+        communityId={selectedCommunity.id}
         currentUser={currentUser}
-        initialComposePrompt={initialComposePrompt}
-        onInitialComposeConsumed={() => setInitialComposePrompt('')}
+        fallbackCommunity={selectedCommunity}
         onBack={() => {
           setSelectedCommunityId(null);
           setInitialComposePrompt('');
         }}
-        onToggleJoin={(options) => handleJoin(selectedCommunity.id, options)}
-        initialTab={selectedTab}
-        onTabChange={(tab) => setSelectedCommunityId(selectedCommunity.id, tab)}
-        joiningId={joiningId}
       />
     );
   }
