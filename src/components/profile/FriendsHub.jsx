@@ -296,40 +296,13 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
     }
   };
 
-  const handleOpenContacts = async () => {
-    setContactsMessage('');
-    setContactInvites([]);
-    setContactsLoading(true);
-    try {
-      if (!navigator.contacts?.select) {
-        setShowInviteOptions(true);
-        setContactsMessage('This browser blocked direct contact-sheet access. Use Invite Friends below, or try opening JUnited on a mobile browser that supports contact access.');
-        return;
-      }
-
-      const contacts = await navigator.contacts.select(['name', 'email', 'tel'], { multiple: true });
-      const emails = [...new Set(contacts.flatMap((contact) => contact.email || []).map(normalizeContactValue).filter(Boolean))];
-      const phones = [...new Set(contacts.flatMap((contact) => contact.tel || []).map(normalizeContactValue).filter(Boolean))];
-      const matches = await matchContactValues({ emails, phones });
-      if (!matches.length) {
-        setShowInviteOptions(true);
-        setContactInvites(contacts.slice(0, 25).map((contact, index) => ({
-          id: `contact-${index}`,
-          name: contact.name?.[0] || 'Contact',
-          email: contact.email?.[0] || '',
-          phone: contact.tel?.[0] || '',
-        })));
-      }
-    } catch {
-      setContactsMessage('Contacts access was not completed. You can still search or invite friends.');
-      setShowInviteOptions(true);
-    } finally {
-      setContactsLoading(false);
-    }
-  };
-
   const inviteUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://www.junited.us'}/InviteJoin`;
   const inviteText = `Join me on JUnited, the Jewish community app for local updates, mitzvahs, communities, and friends: ${inviteUrl}`;
+
+  const openSmsInvite = (phone = '') => {
+    const target = phone ? normalizeContactValue(phone) : '';
+    window.location.href = `sms:${target}?&body=${encodeURIComponent(inviteText)}`;
+  };
 
   const handleShareInvite = async () => {
     try {
@@ -346,13 +319,48 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
     }
   };
 
-  const openSmsInvite = (phone = '') => {
-    const target = phone ? normalizeContactValue(phone) : '';
-    window.location.href = `sms:${target}?&body=${encodeURIComponent(inviteText)}`;
-  };
-
   const openEmailInvite = (email = '') => {
     window.location.href = `mailto:${email}?subject=${encodeURIComponent('Join me on JUnited')}&body=${encodeURIComponent(inviteText)}`;
+  };
+
+  const handleOpenContacts = async () => {
+    setContactsMessage('');
+    setContactInvites([]);
+    setContactsLoading(true);
+    try {
+      if (!navigator.contacts?.select) {
+        setShowInviteOptions(true);
+        setContactsMessage('This browser does not allow websites to read your contacts. Opening Messages instead so you can choose contacts there.');
+        openSmsInvite();
+        return;
+      }
+
+      const contacts = await navigator.contacts.select(['name', 'email', 'tel'], { multiple: true });
+      const emails = [...new Set(contacts.flatMap((contact) => contact.email || []).map(normalizeContactValue).filter(Boolean))];
+      const phones = [...new Set(contacts.flatMap((contact) => contact.tel || []).map(normalizeContactValue).filter(Boolean))];
+      const matches = await matchContactValues({ emails, phones });
+      const inviteCandidates = contacts
+        .filter((contact) => contact.email?.length || contact.tel?.length)
+        .slice(0, 25)
+        .map((contact, index) => ({
+          id: `contact-${index}`,
+          name: contact.name?.[0] || 'Contact',
+          email: contact.email?.[0] || '',
+          phone: contact.tel?.[0] || '',
+        }));
+
+      if (inviteCandidates.length) {
+        setContactInvites(inviteCandidates);
+        setShowInviteOptions(true);
+      } else if (!matches.length) {
+        setShowInviteOptions(true);
+      }
+    } catch {
+      setContactsMessage('Contacts access was not completed. Opening invite options instead.');
+      setShowInviteOptions(true);
+    } finally {
+      setContactsLoading(false);
+    }
   };
 
   const handleMessageFriend = async (friendProfile) => {
@@ -439,18 +447,18 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
 	                  type="button"
 	                  onClick={handleOpenContacts}
 	                  disabled={contactsLoading}
-	                  className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-[13px] font-black text-blue-700 transition hover:bg-blue-100 active:scale-[0.99] disabled:opacity-60"
+	                  className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-[13px] font-black text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-60"
 	                >
 	                  {contactsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ContactRound className="h-4 w-4" />}
-	                  {contactsLoading ? 'Opening contacts...' : 'Open contacts to find friends'}
+	                  {contactsLoading ? 'Opening contacts...' : 'Open contacts & invite friends'}
 	                </button>
 	                <button
 	                  type="button"
 	                  onClick={() => setShowInviteOptions((value) => !value)}
-	                  className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-[13px] font-black text-white transition hover:bg-slate-800 active:scale-[0.99]"
+	                  className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-[13px] font-black text-blue-700 transition hover:bg-blue-100 active:scale-[0.99]"
 	                >
 	                  <Share2 className="h-4 w-4" />
-	                  Invite friends to JUnited
+	                  Share invite link
 	                </button>
 	                {contactsMessage && (
 	                  <p className="mb-3 rounded-2xl bg-slate-50 px-3 py-2 text-center text-[12px] font-semibold text-slate-500">
@@ -461,7 +469,7 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
 	                  <div className="mb-3 rounded-2xl border border-blue-100 bg-white p-3 shadow-sm">
 	                    <div className="mb-3">
 	                      <p className="text-[13px] font-black text-slate-900">Invite people who are not on JUnited yet</p>
-	                      <p className="mt-0.5 text-[12px] font-semibold text-slate-500">Send them your invite link, then add them once they join.</p>
+	                      <p className="mt-0.5 text-[12px] font-semibold text-slate-500">Text, email, or share the invite. If your browser supports contacts, selected contacts appear here with Invite buttons.</p>
 	                    </div>
 	                    <div className="grid grid-cols-3 gap-2">
 	                      <button
@@ -513,7 +521,12 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
 	                    )}
 	                  </div>
 	                )}
-                <div className="relative">
+	                <div className="mb-2 flex items-center gap-3">
+	                  <div className="h-px flex-1 bg-slate-100" />
+	                  <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">Or search JUnited</span>
+	                  <div className="h-px flex-1 bg-slate-100" />
+	                </div>
+	                <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   <input
                     autoFocus
