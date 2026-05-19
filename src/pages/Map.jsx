@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   BadgeCheck,
@@ -28,11 +28,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import PageHelp from '@/components/common/PageHelp';
 import DestinationHeader from '@/components/layout/DestinationHeader';
-import BusinessMap from '@/components/business/BusinessMap';
-import MitzvahMap from '@/components/mitzvah/MitzvahMap';
 import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/api/supabaseClient';
+
+const BusinessMap = lazy(() => import('@/components/business/BusinessMap'));
+const MitzvahMap = lazy(() => import('@/components/mitzvah/MitzvahMap'));
 
 const MAP_FILTER_STORAGE = 'junited-map-community-filters';
 const MAP_LOCATION_PROMPT_KEY = 'junited-map-location-prompted';
@@ -94,6 +95,17 @@ const emptyClaimForm = {
   serves_jewish_community_claim: false,
   kosher_claim: '',
 };
+
+function MapModuleFallback({ label = 'Loading map...' }) {
+  return (
+    <div className="flex min-h-[520px] items-center justify-center rounded-2xl border border-slate-200 bg-white">
+      <div className="flex items-center gap-2 rounded-full bg-slate-50 px-4 py-3 text-sm font-black text-slate-500">
+        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+        {label}
+      </div>
+    </div>
+  );
+}
 
 function readMapFilterState() {
   try {
@@ -1037,7 +1049,9 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
             <Loader2 className="h-7 w-7 animate-spin text-blue-600" />
           </div>
         ) : mode === 'map' ? (
-          <BusinessMap businesses={mapBusinesses} userLocation={userLocation} />
+          <Suspense fallback={<MapModuleFallback label="Loading business map..." />}>
+            <BusinessMap businesses={mapBusinesses} userLocation={userLocation} />
+          </Suspense>
         ) : filteredBusinesses.length === 0 ? (
           <div className="rounded-[26px] border border-dashed border-slate-200 bg-white p-6 text-center">
             <Store className="mx-auto h-10 w-10 text-slate-300" />
@@ -1295,16 +1309,18 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
       </section>
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
-        <MitzvahMap
-          requests={requests}
-          userLocation={userLocation}
-          communityPoints={communityPoints}
-          personalized
-          includeStaticPoints
-          initialPrimaryFilter={categoryParam}
-          highlightedPlace={placeParam}
-          mapHeight="clamp(520px, 68dvh, 760px)"
-        />
+        <Suspense fallback={<MapModuleFallback label="Loading community map..." />}>
+          <MitzvahMap
+            requests={requests}
+            userLocation={userLocation}
+            communityPoints={communityPoints}
+            personalized
+            includeStaticPoints
+            initialPrimaryFilter={categoryParam}
+            highlightedPlace={placeParam}
+            mapHeight="clamp(520px, 68dvh, 760px)"
+          />
+        </Suspense>
       </div>
     </>
   );

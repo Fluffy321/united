@@ -241,13 +241,18 @@ export default function AdminAnalyticsDashboard() {
 
   const loadData = async () => {
     try {
-      const [communities, posts, users, reports, events, userCommunities, subsResult, communityPlansResult] = await Promise.all([
+      const [communities, posts, users, reports, events, userCommunities, commentsResult, mitzvahRequestsResult, notificationsResult, businessesResult, retentionResult, subsResult, communityPlansResult] = await Promise.all([
         dataService.entities.Community.list('-follower_count', 200),
         dataService.entities.UnifiedPost.list('-created_date', 500),
         dataService.entities.User.list('-created_date', 500),
         dataService.entities.Report.list('-created_date', 200),
         dataService.entities.CommunityEvent.list('-created_date', 200),
         dataService.entities.UserCommunity.list('-created_date', 500),
+        dataService.entities.Comment.list('-created_date', 500).catch(() => []),
+        dataService.entities.MitzvahRequest.list('-created_date', 300).catch(() => []),
+        dataService.entities.Notification.list('-created_date', 500).catch(() => []),
+        dataService.entities.BusinessListing.list('-updated_date', 300).catch(() => []),
+        dataService.entities.RetentionEvent.list('-created_date', 500).catch(() => []),
         supabase
           .from('subscriptions')
           .select('id, tier, interval, status, created_at')
@@ -261,6 +266,11 @@ export default function AdminAnalyticsDashboard() {
       // subscriptions — gracefully handle if table doesn't exist yet
       const subscriptions = subsResult?.data ?? [];
       const communityPlanSubscriptions = communityPlansResult?.data ?? [];
+      const comments = commentsResult || [];
+      const mitzvahRequests = mitzvahRequestsResult || [];
+      const notifications = notificationsResult || [];
+      const businesses = businessesResult || [];
+      const retentionEvents = retentionResult || [];
 
       const now = Date.now();
       const DAY = 86400000;
@@ -294,6 +304,8 @@ export default function AdminAnalyticsDashboard() {
         { stage: 'Signups', count: users.length },
         { stage: 'First post', count: posts.length },
         { stage: 'Community join', count: userCommunities.length },
+        { stage: 'Comments', count: comments.length },
+        { stage: 'Mitzvah completions', count: mitzvahRequests.filter((r) => ['completed', 'verified'].includes(String(r.status || '').toLowerCase())).length },
         { stage: 'WAU', count: wau },
         { stage: 'MAU', count: mau },
       ];
@@ -364,6 +376,19 @@ export default function AdminAnalyticsDashboard() {
         funnel, engByType, communityHealth,
         totalUsers: users.length, totalPosts: posts.length,
         totalCommunities: communities.length, totalEvents: events.length,
+        totalComments: comments.length,
+        totalMitzvahRequests: mitzvahRequests.length,
+        mitzvahCompletions: mitzvahRequests.filter((r) => ['completed', 'verified'].includes(String(r.status || '').toLowerCase())).length,
+        marketplaceMessages: notifications.filter((n) => n.type === 'marketplace_message').length,
+        notificationOptIns: users.filter((u) => u.notifications_enabled || Object.values(u.notification_preferences || {}).some(Boolean)).length,
+        communityJoins: userCommunities.length,
+        pendingReviews: [
+          ...posts,
+          ...communities,
+          ...businesses,
+          ...mitzvahRequests,
+        ].filter((item) => item.needs_review || item.status === 'pending').length,
+        retentionEvents,
         // subscription metrics
         subscriptions, totalActiveSubs, pastDueCount,
         monthlyCount, annualCount, annualPct,
@@ -394,6 +419,7 @@ export default function AdminAnalyticsDashboard() {
     { key: 'communities', label: 'Communities' },
     { key: 'feed',        label: 'Feed Health' },
     { key: 'moderation',  label: 'Moderation' },
+    { key: 'retention',   label: 'Retention' },
     { key: 'funnel',      label: 'Growth Funnel' },
     { key: 'supporters',  label: 'Supporters' },
     { key: 'premiumCommunities', label: 'Premium Communities' },
@@ -568,6 +594,36 @@ export default function AdminAnalyticsDashboard() {
                   <Bar dataKey="count" fill="#EF4444" radius={[6, 6, 0, 0]} name="Reports" />
                 </BarChart>
               </ResponsiveContainer>
+            </ChartCard>
+          </div>
+        )}
+
+        {tab === 'retention' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard icon={<MessageSquare className="w-5 h-5" />} label="Comments" value={data.totalComments.toLocaleString()} color="blue" />
+              <StatCard icon={<Heart className="w-5 h-5" />} label="Mitzvah Requests" value={data.totalMitzvahRequests.toLocaleString()} color="rose" />
+              <StatCard icon={<Activity className="w-5 h-5" />} label="Mitzvah Completions" value={data.mitzvahCompletions.toLocaleString()} color="green" />
+              <StatCard icon={<Users className="w-5 h-5" />} label="Community Joins" value={data.communityJoins.toLocaleString()} color="purple" />
+              <StatCard icon={<MessageSquare className="w-5 h-5" />} label="Marketplace Messages" value={data.marketplaceMessages.toLocaleString()} color="amber" />
+              <StatCard icon={<Activity className="w-5 h-5" />} label="Notification Opt-ins" value={data.notificationOptIns.toLocaleString()} color="teal" />
+              <StatCard icon={<AlertTriangle className="w-5 h-5" />} label="Needs Review" value={data.pendingReviews.toLocaleString()} color="red" />
+              <StatCard icon={<TrendingUp className="w-5 h-5" />} label="Retention Events" value={data.retentionEvents.length.toLocaleString()} color="blue" />
+            </div>
+            <ChartCard title="Retention Signals to Watch">
+              <div className="grid gap-3 md:grid-cols-2">
+                {[
+                  ['Daily habit', 'Daily brief views, search usage, and community feed replies should grow every week.'],
+                  ['Action loop', 'Urgent mitzvah requests need offers, comments, and completed statuses within hours.'],
+                  ['Trust loop', 'Map/business/shul pins should move from needs review to source-backed or verified.'],
+                  ['Marketplace loop', 'Messages and same-day pickup replies show whether the marketplace is useful.'],
+                ].map(([title, body]) => (
+                  <div key={title} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <p className="text-sm font-black text-slate-950">{title}</p>
+                    <p className="mt-1 text-xs font-medium leading-5 text-slate-500">{body}</p>
+                  </div>
+                ))}
+              </div>
             </ChartCard>
           </div>
         )}
