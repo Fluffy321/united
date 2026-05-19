@@ -84,8 +84,11 @@ function AvatarInitial({ name }) {
 }
 
 export function CommunityPostPreview({ post, typeConfig, compact = false }) {
+  const [expanded, setExpanded] = useState(false);
   const announcement = isAnnouncementPost(post);
   const Icon = announcement ? Megaphone : typeConfig?.icon || Sparkles;
+  const body = post.body || post.content || '';
+  const shouldCollapse = !compact && (announcement || body.length > 220);
 
   return (
     <article
@@ -115,9 +118,18 @@ export function CommunityPostPreview({ post, typeConfig, compact = false }) {
         </span>
       </div>
       {post.title ? <h3 className="text-[15px] font-black leading-snug text-slate-950">{post.title}</h3> : null}
-      <p className={`mt-1 text-sm leading-6 text-slate-600 ${compact ? 'line-clamp-2' : ''}`}>
-        {post.body || post.content}
+      <p className={`mt-1 text-sm leading-6 text-slate-600 ${compact ? 'line-clamp-2' : (!expanded && shouldCollapse ? 'line-clamp-3' : '')}`}>
+        {body}
       </p>
+      {shouldCollapse && !expanded && body.length > 0 && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+          className="mt-1.5 text-[12px] font-bold text-blue-600 hover:text-blue-800"
+        >
+          Read more
+        </button>
+      )}
     </article>
   );
 }
@@ -541,53 +553,38 @@ export function CommunityMemberDirectory({ community, members = [], memberCount 
 
 export function CommunityAdminQuickActions({ onAnnouncement, onEvent, onResource, onAdminCenter }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 bg-slate-50 px-4 py-2">
-        <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Admin — quick actions</p>
-      </div>
-      <div className="grid grid-cols-2 gap-px bg-slate-100">
-        <button
-          type="button"
-          onClick={onAnnouncement}
-          className="flex items-start gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-slate-50 active:scale-[0.99]"
-        >
-          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100">
-            <Megaphone className="h-3.5 w-3.5 text-amber-700" />
-          </span>
-          <span className="text-[12px] font-black text-slate-800">Post Announcement</span>
-        </button>
-        <button
-          type="button"
-          onClick={onEvent}
-          className="flex items-start gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-slate-50 active:scale-[0.99]"
-        >
-          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
-            <CalendarDays className="h-3.5 w-3.5 text-emerald-700" />
-          </span>
-          <span className="text-[12px] font-black text-slate-800">Create Event</span>
-        </button>
-        <button
-          type="button"
-          onClick={onResource}
-          className="flex items-start gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-slate-50 active:scale-[0.99]"
-        >
-          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-100">
-            <FileText className="h-3.5 w-3.5 text-violet-700" />
-          </span>
-          <span className="text-[12px] font-black text-slate-800">Add Resource</span>
-        </button>
-        <button
-          type="button"
-          onClick={onAdminCenter}
-          className="flex items-start gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-slate-50 active:scale-[0.99]"
-        >
-          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-            <Settings className="h-3.5 w-3.5 text-slate-700" />
-          </span>
-          <span className="text-[12px] font-black text-slate-800">Admin Center</span>
-        </button>
-      </div>
-    </section>
+    <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100">
+      <span className="text-[10px] font-black uppercase tracking-wide text-slate-400 flex-shrink-0 mr-0.5">Admin</span>
+      <button
+        type="button"
+        onClick={onAnnouncement}
+        className="flex items-center gap-1 h-7 px-2.5 rounded-lg bg-white border border-slate-200 text-[11px] font-bold text-slate-700 active:scale-95 transition-all flex-shrink-0"
+      >
+        <Megaphone className="h-3 w-3 text-amber-600 flex-shrink-0" /> Announce
+      </button>
+      <button
+        type="button"
+        onClick={onEvent}
+        className="flex items-center gap-1 h-7 px-2.5 rounded-lg bg-white border border-slate-200 text-[11px] font-bold text-slate-700 active:scale-95 transition-all flex-shrink-0"
+      >
+        <CalendarDays className="h-3 w-3 text-emerald-600 flex-shrink-0" /> Event
+      </button>
+      <button
+        type="button"
+        onClick={onResource}
+        className="flex items-center gap-1 h-7 px-2.5 rounded-lg bg-white border border-slate-200 text-[11px] font-bold text-slate-700 active:scale-95 transition-all flex-shrink-0"
+      >
+        <FileText className="h-3 w-3 text-violet-600 flex-shrink-0" /> Resource
+      </button>
+      <button
+        type="button"
+        onClick={onAdminCenter}
+        className="ml-auto h-7 w-7 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-600 active:scale-95 transition-all flex-shrink-0"
+        aria-label="Admin center"
+      >
+        <Settings className="h-3.5 w-3.5" />
+      </button>
+    </div>
   );
 }
 
@@ -616,14 +613,22 @@ export function CommunityImportantStrip({ posts = [], events = [], activeNeeds =
       labelClass: 'text-emerald-700',
     };
   } else if (pinnedOrLatestAnnouncement) {
+    const typeAnnouncementColors = {
+      shul: { colorClass: 'border-indigo-200 bg-indigo-50', labelClass: 'text-indigo-700' },
+      neighborhood: { colorClass: 'border-cyan-200 bg-cyan-50', labelClass: 'text-cyan-700' },
+      learning: { colorClass: 'border-amber-200 bg-amber-50', labelClass: 'text-amber-700' },
+      parents: { colorClass: 'border-orange-200 bg-orange-50', labelClass: 'text-orange-700' },
+      events: { colorClass: 'border-rose-200 bg-rose-50', labelClass: 'text-rose-700' },
+    };
+    const typeAccent = typeAnnouncementColors[typeKey] || { colorClass: 'border-amber-200 bg-amber-50', labelClass: 'text-amber-700' };
     item = {
       kind: 'announcement',
       icon: '📢',
-      label: 'Latest announcement',
+      label: 'Latest update',
       text: postSnippet(pinnedOrLatestAnnouncement, 80),
       action: () => onTabChange?.('announcements'),
-      colorClass: 'border-amber-200 bg-amber-50',
-      labelClass: 'text-amber-700',
+      colorClass: typeAccent.colorClass,
+      labelClass: typeAccent.labelClass,
     };
   } else if ((typeKey === 'events' || typeKey === 'shul' || typeKey === 'neighborhood') && upcomingEvent) {
     item = {

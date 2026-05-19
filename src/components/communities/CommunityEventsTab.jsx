@@ -92,7 +92,16 @@ function EventCard({ event, past, currentUser, isAdmin, highlight }) {
   );
 }
 
-export default function CommunityEventsTab({ events: initialEvents, community, currentUser, communityId, isAdmin, highlightEventId = null }) {
+const EVENT_EMPTY_BY_TYPE = {
+  neighborhood: { emoji: '🏘️', body: 'Add a neighborhood meetup, school event, or community gathering.' },
+  shul: { emoji: '🕍', body: 'Add a Shabbos event, holiday program, or community learning.' },
+  chesed: { emoji: '🤝', body: 'Add a volunteer day, chesed gathering, or community help event.' },
+  learning: { emoji: '📚', body: 'Schedule a shiur, chavrusa session, or learning event.' },
+  parents: { emoji: '👨‍👩‍👧', body: 'Share a school event, camp activity, or family gathering.' },
+  events: { emoji: '🎉', body: 'Create the first event — gatherings, programs, and socials.' },
+};
+
+export default function CommunityEventsTab({ events: initialEvents, community, currentUser, communityId, isAdmin, highlightEventId = null, typeConfig }) {
   const [events, setEvents] = useState(initialEvents || []);
   const [showCreate, setShowCreate] = useState(false);
 
@@ -156,11 +165,11 @@ export default function CommunityEventsTab({ events: initialEvents, community, c
       )}
 
       {events.length === 0 ? (
-        <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center">
-          <div className="text-4xl mb-3">📅</div>
-          <p className="text-[15px] font-bold text-slate-900">No events yet</p>
-          <p className="text-[13px] text-slate-500 mt-1">
-            {isAdmin ? 'Create your first event above.' : 'Upcoming events will appear here.'}
+        <div className="rounded-2xl bg-white border border-slate-100 px-5 py-8 text-center">
+          <div className="text-3xl mb-2">{(EVENT_EMPTY_BY_TYPE[typeConfig?.key] || {}).emoji || '📅'}</div>
+          <p className="text-[14px] font-bold text-slate-900">No events yet</p>
+          <p className="text-[12px] text-slate-500 mt-1 leading-5">
+            {isAdmin ? 'Create your first event above.' : ((EVENT_EMPTY_BY_TYPE[typeConfig?.key] || {}).body || 'Upcoming events will appear here.')}
           </p>
         </div>
       ) : (

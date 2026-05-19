@@ -425,6 +425,16 @@ Goals:
   },
 
   {
+    id: 'community-mini-app-identity-pass',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Mini-App Identity Pass',
+    description: 'Second experiential pass making each community feel owned and app-like, not templated. Community name integrated into cover (no more white block under gradient). Admin tools collapsed to compact toolbar and moved after content. More nav always labeled "More" with dot indicator. Feed posts capped with "Read more" expand for rhythm. Type-specific empty states for events/resources/needs/discussions. ImportantRightNow strip uses community-type accent colors.',
+    shippedNote: 'Shipped 2026-05-19. CommunityHero.jsx: name+type overlaid at cover bottom (128px cover, thin 44px action bar), no floating avatar, no separate identity row. CommunityAdminQuickActions redesigned as compact single-row chip bar, moved after ImportantRightNow strip. More button always shows "More" label + dot when overflow tab active. CommunityPostPreview adds collapsed/expanded state with "Read more" for announcements and long posts. TAB_EMPTY_COPY + getTabEmptyState() adds type+tab-specific empty state copy for events/resources/openNeeds/discussions/questions tabs. CommunityEventsTab and CommunityResourceLibrary accept typeConfig prop and render type-specific empty states. CommunityImportantStrip uses typeConfig-aware accent colors for announcements (shul→indigo, neighborhood→cyan, parents→orange, events→rose, default→amber).',
+  },
+
+  {
     id: 'community-activity-digest-module',
     category: 'Community',
     status: STATUS.SHIPPED,

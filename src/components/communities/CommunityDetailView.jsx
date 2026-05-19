@@ -370,11 +370,8 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
                       : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                   }`}
                 >
-                  {navConfig.more.includes(activeTab)
-                    ? getCommunityTabLabel(activeTab)
-                    : 'More'}
-                  {/* Dot indicator when active tab is in overflow */}
-                  {navConfig.more.includes(activeTab) && !showMore && (
+                  More
+                  {navConfig.more.includes(activeTab) && (
                     <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-[#0F5ED7] align-middle" />
                   )}
                 </button>
@@ -527,6 +524,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             communityId={communityId}
             isAdmin={isAdmin}
             highlightEventId={highlightEventId}
+            typeConfig={typeConfig}
           />
         )}
 
@@ -536,6 +534,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             community={community}
             currentUser={currentUser}
             isAdmin={isAdmin}
+            typeConfig={typeConfig}
           />
         )}
 
@@ -839,15 +838,6 @@ function RoutedCommunityHome({
   // ── Joined member: feed-first layout ────────────────────────────────────────
   return (
     <div className="space-y-3 pt-3">
-      {isAdmin && (
-        <CommunityAdminQuickActions
-          onAnnouncement={() => onTabChange('announcements')}
-          onEvent={() => onTabChange('events')}
-          onResource={() => onTabChange('resources')}
-          onAdminCenter={() => openAdminCenter?.('overview') ?? onManage?.()}
-        />
-      )}
-
       <SinceLastVisitDigest
         posts={posts}
         events={events}
@@ -863,6 +853,15 @@ function RoutedCommunityHome({
         typeConfig={typeConfig}
         onTabChange={onTabChange}
       />
+
+      {isAdmin && (
+        <CommunityAdminQuickActions
+          onAnnouncement={() => onTabChange('announcements')}
+          onEvent={() => onTabChange('events')}
+          onResource={() => onTabChange('resources')}
+          onAdminCenter={() => openAdminCenter?.('overview') ?? onManage?.()}
+        />
+      )}
 
       <CommunityPersonalizationHub
         communityId={community.id}
@@ -898,8 +897,43 @@ function RoutedCommunityHome({
   );
 }
 
-function CompactEmptyState({ typeConfig }) {
+const TAB_EMPTY_COPY = {
+  events: {
+    neighborhood: { title: 'No local events yet', body: 'Add a neighborhood meetup, school event, or community gathering.' },
+    shul: { title: 'No upcoming events', body: 'Add a Shabbos event, holiday program, or community gathering.' },
+    chesed: { title: 'No volunteer events yet', body: 'Add a volunteer day, chesed gathering, or community help event.' },
+    learning: { title: 'No learning events yet', body: 'Schedule a shiur, chavrusa session, or learning event.' },
+    parents: { title: 'No family events yet', body: 'Share a school event, camp activity, or family gathering.' },
+    events: { title: 'No events posted yet', body: 'Create the first event — gatherings, programs, and socials start here.' },
+  },
+  resources: {
+    neighborhood: { title: 'No local resources yet', body: 'Share guides, community contacts, neighborhood alerts, or helpful local links.' },
+    shul: { title: 'No resources shared yet', body: 'Share schedules, forms, weekly guides, or member resources here.' },
+    learning: { title: 'No learning resources yet', body: 'Share shiur recordings, source sheets, or useful learning links.' },
+    chesed: { title: 'No resources yet', body: 'Add contact lists, volunteer guides, or chesed organization links.' },
+    parents: { title: 'No resources yet', body: 'Share school guides, camp info, local recommendations, or family forms.' },
+  },
+  openNeeds: {
+    chesed: { title: 'No open needs right now', body: 'Post a request or invite someone to offer help. Needs coordinated here.' },
+  },
+  discussions: {
+    learning: { title: 'No discussions yet', body: 'Start a Torah question, share a thought, or begin a chavrusa-style thread.' },
+  },
+  questions: {
+    parents: { title: 'No questions yet', body: 'Ask for a school recommendation, babysitter tip, or local parenting help.' },
+  },
+};
+
+function getTabEmptyState(typeKey, tabKey) {
+  const tabMap = TAB_EMPTY_COPY[tabKey] || {};
+  return tabMap[typeKey] || null;
+}
+
+function CompactEmptyState({ typeConfig, tabKey }) {
   const Icon = typeConfig?.icon;
+  const custom = getTabEmptyState(typeConfig?.key, tabKey);
+  const title = custom?.title || typeConfig?.emptyTitle || 'Nothing here yet';
+  const body = custom?.body || typeConfig?.emptyBody || 'Be the first to post.';
   return (
     <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-8 text-center">
       {Icon && (
@@ -907,15 +941,15 @@ function CompactEmptyState({ typeConfig }) {
           <Icon className="h-5 w-5" />
         </div>
       )}
-      <p className="text-[14px] font-black text-slate-900">{typeConfig?.emptyTitle || 'Nothing here yet'}</p>
-      <p className="mt-1 text-[12px] font-semibold text-slate-400 leading-5">{typeConfig?.emptyBody || 'Be the first to post.'}</p>
+      <p className="text-[14px] font-black text-slate-900">{title}</p>
+      <p className="mt-1 text-[12px] font-semibold text-slate-400 leading-5">{body}</p>
     </div>
   );
 }
 
 function HomeFeedSection({ posts, typeConfig, activeNeeds = [], onTabChange }) {
   if (!posts.length && !activeNeeds.length) {
-    return <CompactEmptyState typeConfig={typeConfig} />;
+    return <CompactEmptyState typeConfig={typeConfig} tabKey="home" />;
   }
 
   return (
@@ -957,16 +991,16 @@ function RoutedPostsTab({ posts, isLoading, activeTab, typeConfig, composeText, 
           <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
         </div>
       ) : (
-        <RoutedPostsList posts={filteredPosts} typeConfig={typeConfig} />
+        <RoutedPostsList posts={filteredPosts} typeConfig={typeConfig} tabKey={activeTab} />
       )}
     </div>
   );
 }
 
-function RoutedPostsList({ posts, typeConfig, emptyCompact = false }) {
+function RoutedPostsList({ posts, typeConfig, emptyCompact = false, tabKey }) {
   if (!posts.length) {
     if (emptyCompact) return null;
-    return <CompactEmptyState typeConfig={typeConfig} />;
+    return <CompactEmptyState typeConfig={typeConfig} tabKey={tabKey} />;
   }
 
   return (
@@ -982,7 +1016,7 @@ function RoutedOpenNeedsTab({ activeNeeds, typeConfig }) {
   if (!activeNeeds.length) {
     return (
       <div className="pt-4">
-        <CompactEmptyState typeConfig={typeConfig} />
+        <CompactEmptyState typeConfig={typeConfig} tabKey="openNeeds" />
       </div>
     );
   }
