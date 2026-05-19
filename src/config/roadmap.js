@@ -264,6 +264,111 @@ Goals:
   },
 
   {
+    id: 'community-detail-feed-first-redesign',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Detail Part 2 — Feed-First Home + Smart Strips',
+    description: 'Joined-member home is now feed-first: CommunityImportantStrip surfaces the single most timely item (pinned announcement, urgent chesed need, next event, or resource), SinceLastVisitDigest shows new-since-last-visit counts inline, and TypeAwareComposer adapts to community type (chesed dual-button, message, official, or standard post mode). HomeFeedSection and CompactEmptyState replace the old slice-limited post list.',
+    shippedNote: 'Shipped 2026-05-19. CommunityImportantStrip and SinceLastVisitDigest exported from CommunityOperatingSystem.jsx. TypeAwareComposer, HomeFeedSection, CompactEmptyState added to CommunityDetailView.jsx. RoutedCommunityHome rewritten to feed-first joined layout. RoutedPostsList and RoutedOpenNeedsTab updated to use CompactEmptyState.',
+  },
+
+  {
+    id: 'community-creation-experience-v2',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Creation — Experiential Flow v2',
+    description: '5-step visual launch experience replacing the flat settings wizard. Includes archetype selection, live preview, smart first-post pre-fill, and premium teaser for advanced layout.',
+    shippedNote: 'Shipped 2026-05-19. CreateCommunityFlow.jsx — Step 1: name with identity preview; Step 2: 8 archetype cards with tab previews; Step 3: description + vibe; Step 4: privacy + posting mode + premium teaser; Step 5: review + editable first post + launch. Live mini preview togglable from header. Smart first-post copy per archetype. Settings object stored on community record. Migration 20260519210000_community_settings_jsonb.sql adds settings JSONB, community_type, and posting_mode columns. CreateCommunityModal defaults to new flow via useNewFlow state.',
+  },
+
+  {
+    id: 'community-live-preview-builder',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Community Live Preview Builder',
+    description: 'Full real-time side-by-side preview during community creation showing exactly how the community will look, including nav tabs, home sections, and composer style.',
+    why: 'The creation flow has a toggleable mini preview. A full-screen split-view builder (desktop) or scrollable preview (mobile) would materially increase creator confidence and reduce post-launch edits.',
+    prompt: `You are implementing a full live preview builder for JUnited community creation.
+
+Context:
+- CreateCommunityFlow.jsx: the new 5-step creation flow (src/components/communities/CreateCommunityFlow.jsx)
+- CommunityLivePreview: the mini preview component already in CreateCommunityFlow.jsx
+- communityTypes.js: typeConfig shapes (primaryTabs, composerMode, homeEmphasis, coverPattern)
+
+Goals:
+1. Expand CommunityLivePreview into a richer CommunityCreationPreview component with:
+   - Full 300px+ tall community header (gradient/name/type)
+   - Nav tab pills matching the archetype's primaryTabs
+   - A sample composer in the archetype's composerMode
+   - 2-3 sample placeholder posts styled per type
+   - A sample ImportantRightNow strip
+2. On desktop (sm+): show preview in a right-side panel beside the step form in CreateCommunityFlow
+3. On mobile: keep the toggleable mini preview but make it full-screen when toggled
+4. Ensure all preview updates are instantaneous (reactive to form state)
+5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'advanced-community-layout-premium',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.HIGH,
+    title: 'Advanced Community Layout (Premium)',
+    description: 'Let premium community admins customize: primary tab order, home section visibility/order, feed blend behavior, composer mode. Free communities get curated presets.',
+    why: 'The community settings JSONB column and getCommunityNavConfig architecture are ready to support this. Premium lock is already shown in the creation flow.',
+    prompt: `You are implementing Advanced Community Layout customization for JUnited premium communities.
+
+Context:
+- communityTypes.js: getCommunityNavConfig(), composerMode, primaryTabs, moreTabs fields on each type config
+- CommunityAdminCenter.jsx: 9-tab admin panel — add a new "Layout" tab here
+- communities table: settings JSONB column added in migration 20260519210000
+- communityPlans.js: isCommunityPremium() helper for gate checks
+
+Goals:
+1. Add a "Layout" tab to CommunityAdminCenter.jsx (after Settings) — visible to all admins
+2. Free tier: shows current layout preset with a "Locked — upgrade to customize" overlay on controls
+3. Premium tier: allows:
+   a. Drag-to-reorder primary tabs (use @dnd-kit/core already in the project, or simple up/down buttons)
+   b. Toggle which tabs appear in primary vs More
+   c. Home sections visibility toggles (since-last-visit digest, ImportantRightNow, personalization, stats row)
+   d. Composer mode selector (message / post / chesed / official) with preview
+4. Save changes to communities.settings JSONB column
+5. CommunityDetailView.jsx and getCommunityNavConfig() should read from community.settings if present, falling back to type defaults
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-mini-app-post-launch-panel',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Community Post-Launch Admin Panel',
+    description: 'After creating a community, show a dismissible "Next steps" admin setup panel with guided actions: invite members, add first event, customize layout, share welcome post.',
+    why: 'New community admins often get stuck after creation. A non-intrusive "what to do next" strip makes the community feel less empty and increases first-30-day engagement.',
+    prompt: `You are implementing a post-launch admin panel for newly created JUnited communities.
+
+Context:
+- After community creation, the user is navigated to the community detail page (CommunityDetailView.jsx)
+- communities table: created_date column exists; settings JSONB column has 'archetype' key
+- CommunityAdminQuickActions in CommunityOperatingSystem.jsx: current admin quick-action grid
+- CommunityDetailView.jsx: RoutedCommunityHome renders the joined member home
+
+Goals:
+1. Add a communities column: first_visit_complete boolean default false
+2. In RoutedCommunityHome, if user is admin AND community is new (created_date < 7 days ago) AND first_visit_complete is false: show a CommunityAdminNextSteps strip ABOVE the composer
+3. CommunityAdminNextSteps should show 4 compact action rows:
+   - Invite members (link to Admin Center members tab)
+   - Add first event (opens CreateCommunityEventModal)
+   - Customize layout (opens Admin Center layout tab)
+   - Share community link (copies invite link)
+4. A dismiss button marks first_visit_complete = true via a supabase update
+5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'community-detail-swipeable-tabs',
     category: 'Community',
     status: STATUS.SHIPPED,
@@ -307,6 +412,16 @@ Goals:
 5. Apply stored order in HomeTab / RoutedCommunityHome for joined members.
 6. Run npm run lint && npm run build.
 7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-hero-compact-nav-overflow',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Hero Compaction + Nav Overflow (More button)',
+    description: 'Shrink the community hero from ~430px to ~180px by reducing cover height (200→120px), removing the member avatar strip and stats ribbon, and simplifying the identity row to a 60px compact layout. Add composerMode, primaryTabs, moreTabs, homeEmphasis fields to all 8 community type configs. Add getCommunityNavConfig() to compute primary/overflow tabs. Replace the scrolling flat tab bar with a fixed-slot primary nav + More dropdown that shows overflow tabs.',
+    shippedNote: 'Shipped 2026-05-19. communityTypes.js extended with 4 new fields per type and getCommunityNavConfig(). CommunityHero.jsx rewritten: 120px static cover, compact 48px logo, single-row CTA (Join/Joined+Settings/Admin), no avatar strip, no stats ribbon, sticky threshold lowered to scrollY>100. CommunityDetailView.jsx nav bar now renders navConfig.primary tabs + More button with positioned dropdown; showMore state auto-closes on tab select.',
   },
 
   {

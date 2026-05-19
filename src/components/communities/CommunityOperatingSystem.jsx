@@ -590,3 +590,138 @@ export function CommunityAdminQuickActions({ onAnnouncement, onEvent, onResource
     </section>
   );
 }
+
+/**
+ * Single compact strip showing the most timely community item.
+ * Priority: pinned announcement → latest announcement → urgent need → upcoming event → resource
+ */
+export function CommunityImportantStrip({ posts = [], events = [], activeNeeds = [], resources = [], typeConfig, onTabChange }) {
+  const pinnedOrLatestAnnouncement = posts.find((p) => p.is_pinned && isAnnouncementPost(p)) || posts.find(isAnnouncementPost);
+  const upcomingEvent = getUpcomingEvents(events)[0];
+  const featuredResource = resources.find((r) => r.is_pinned) || resources[0];
+  const urgentNeed = activeNeeds[0];
+
+  // Determine what to surface based on type emphasis + content availability
+  const typeKey = typeConfig?.key || 'general';
+
+  let item = null;
+  if (typeKey === 'chesed' && urgentNeed) {
+    item = {
+      kind: 'need',
+      icon: '🙏',
+      label: 'Open need',
+      text: urgentNeed.title || 'Community chesed request',
+      action: () => onTabChange?.('openNeeds'),
+      colorClass: 'border-emerald-200 bg-emerald-50',
+      labelClass: 'text-emerald-700',
+    };
+  } else if (pinnedOrLatestAnnouncement) {
+    item = {
+      kind: 'announcement',
+      icon: '📢',
+      label: 'Latest announcement',
+      text: postSnippet(pinnedOrLatestAnnouncement, 80),
+      action: () => onTabChange?.('announcements'),
+      colorClass: 'border-amber-200 bg-amber-50',
+      labelClass: 'text-amber-700',
+    };
+  } else if ((typeKey === 'events' || typeKey === 'shul' || typeKey === 'neighborhood') && upcomingEvent) {
+    item = {
+      kind: 'event',
+      icon: '📅',
+      label: 'Coming up',
+      text: upcomingEvent.title || upcomingEvent.name,
+      action: () => onTabChange?.('events'),
+      colorClass: 'border-blue-200 bg-blue-50',
+      labelClass: 'text-blue-700',
+    };
+  } else if (upcomingEvent) {
+    item = {
+      kind: 'event',
+      icon: '📅',
+      label: 'Coming up',
+      text: upcomingEvent.title || upcomingEvent.name,
+      action: () => onTabChange?.('events'),
+      colorClass: 'border-blue-200 bg-blue-50',
+      labelClass: 'text-blue-700',
+    };
+  } else if (featuredResource) {
+    item = {
+      kind: 'resource',
+      icon: '📎',
+      label: 'Resource',
+      text: featuredResource.title,
+      action: () => onTabChange?.('resources'),
+      colorClass: 'border-violet-200 bg-violet-50',
+      labelClass: 'text-violet-700',
+    };
+  }
+
+  if (!item) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={item.action}
+      className={`w-full flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-opacity active:opacity-80 ${item.colorClass}`}
+    >
+      <span className="text-base leading-none flex-shrink-0">{item.icon}</span>
+      <div className="min-w-0 flex-1">
+        <span className={`block text-[10px] font-black uppercase tracking-wide ${item.labelClass}`}>{item.label}</span>
+        <span className="block text-[13px] font-bold text-slate-900 leading-snug mt-0.5 line-clamp-1">{item.text}</span>
+      </div>
+      <ChevronRight className="h-4 w-4 text-slate-400 flex-shrink-0" />
+    </button>
+  );
+}
+
+/**
+ * Compact inline digest of what's new since last visit.
+ * Extracted so joined home can use it without the full WelcomeHub card wrapper.
+ */
+export function SinceLastVisitDigest({ posts = [], events = [], lastVisitedAt, onTabChange }) {
+  const { newAnnouncements, newRegularPosts, newEventCount } = useMemo(() => {
+    if (!lastVisitedAt) return { newAnnouncements: 0, newRegularPosts: 0, newEventCount: 0 };
+    const since = new Date(lastVisitedAt);
+    return {
+      newAnnouncements: posts.filter((p) => isAnnouncementPost(p) && new Date(p.created_at || p.created_date) > since).length,
+      newRegularPosts: posts.filter((p) => !isAnnouncementPost(p) && new Date(p.created_at || p.created_date) > since).length,
+      newEventCount: events.filter((e) => new Date(e.created_at) > since).length,
+    };
+  }, [lastVisitedAt, posts, events]);
+
+  const total = newAnnouncements + newRegularPosts + newEventCount;
+  if (!total) return null;
+
+  return (
+    <div className="rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3">
+      <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-blue-600 mb-2">
+        <Sparkles className="h-3 w-3" />
+        Since your last visit
+      </p>
+      <div className="space-y-0.5">
+        {newAnnouncements > 0 && (
+          <button type="button" onClick={() => onTabChange?.('announcements')} className="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-blue-100/70 active:bg-blue-100">
+            <Megaphone className="h-3.5 w-3.5 flex-shrink-0 text-amber-600" />
+            <span className="flex-1 text-[13px] font-bold text-slate-800">{newAnnouncements === 1 ? '1 new announcement' : `${newAnnouncements} new announcements`}</span>
+            <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+          </button>
+        )}
+        {newRegularPosts > 0 && (
+          <button type="button" onClick={() => onTabChange?.('posts')} className="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-blue-100/70 active:bg-blue-100">
+            <MessageCircle className="h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
+            <span className="flex-1 text-[13px] font-bold text-slate-800">{newRegularPosts === 1 ? '1 new post' : `${newRegularPosts} new posts`}</span>
+            <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+          </button>
+        )}
+        {newEventCount > 0 && (
+          <button type="button" onClick={() => onTabChange?.('events')} className="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-blue-100/70 active:bg-blue-100">
+            <CalendarDays className="h-3.5 w-3.5 flex-shrink-0 text-emerald-600" />
+            <span className="flex-1 text-[13px] font-bold text-slate-800">{newEventCount === 1 ? '1 new event' : `${newEventCount} new events`}</span>
+            <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}

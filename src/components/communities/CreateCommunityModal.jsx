@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, Plus, ImagePlus, X, Lock, Globe, Check, Sparkles, ChevronRight } from 'lucide-react';
 import { dataService, incrementCounter } from '@/services';
 import { toast } from 'sonner';
+import CreateCommunityFlow from './CreateCommunityFlow';
 
 const CATEGORIES = [
   { value: 'School', label: 'School', emoji: '🏫' },
@@ -35,6 +36,7 @@ const FIRST_POST_SUGGESTIONS = {
 };
 
 export default function CreateCommunityModal({ open, onOpenChange, currentUser, onCreated }) {
+  const [useNewFlow, setUseNewFlow] = useState(true);
   const [step, setStep] = useState(1); // 1 = form, 2 = first post prompt
   const [form, setForm] = useState({ name: '', description: '', category: '', location: '', privacy: 'public' });
   const [coverImage, setCoverImage] = useState(null);
@@ -53,6 +55,67 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
     setCoverPreview(null);
     setCreatedCommunity(null);
     setFirstPostBody('');
+  };
+
+  const handleCreateFromFlow = async ({ name, description, category, community_type, privacy, posting_mode, rules, firstPost, settings }) => {
+    if (!currentUser) return toast.error('You must be signed in to create a community.');
+    setSubmitting(true);
+    try {
+      const community = await dataService.entities.Community.create({
+        name,
+        description: description || undefined,
+        description_short: description ? description.slice(0, 120) : undefined,
+        category,
+        type: category,
+        community_type: community_type || undefined,
+        location: 'Five Towns',
+        neighborhood: 'Five Towns',
+        privacy: privacy?.toLowerCase() || 'public',
+        posting_mode: posting_mode || 'open',
+        follower_count: 1,
+        post_count: 0,
+        created_by_user_id: currentUser.id,
+        created_by_name: currentUser.full_name || currentUser.display_name,
+        is_verified: false,
+        is_seeded: false,
+        settings: settings || undefined,
+      });
+
+      // Auto-join as admin
+      await dataService.entities.UserCommunity.create({
+        user_id: currentUser.id,
+        community_id: community.id,
+        role: 'Admin',
+        user_name: currentUser.full_name || currentUser.display_name,
+      }).catch(() => {});
+
+      // Post the first welcome post if provided
+      if (firstPost && firstPost.trim()) {
+        const authorName = currentUser.display_name || currentUser.full_name || 'Admin';
+        await dataService.entities.CommunityPost.create({
+          community_id: community.id,
+          author_name: authorName,
+          author_user_id: currentUser.id,
+          author_avatar_url: currentUser.avatar_url,
+          body: firstPost.trim(),
+          post_type: 'announcement',
+          is_pinned: true,
+          is_official: true,
+          likes_count: 0,
+          comments_count: 0,
+        }).catch(() => {});
+        await incrementCounter('communities', 'post_count', community.id, 1).catch(() => {});
+      }
+
+      toast.success('Community launched! 🎉');
+      onCreated?.(community);
+      reset();
+      onOpenChange(false);
+    } catch {
+      toast.error('Could not create community. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleImageSelect = (e) => {
@@ -153,6 +216,16 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
   };
 
   const suggestions = FIRST_POST_SUGGESTIONS[form.category] || FIRST_POST_SUGGESTIONS.Other;
+
+  // Render the new experiential flow as a portal (bypasses Dialog)
+  if (open && useNewFlow) {
+    return (
+      <CreateCommunityFlow
+        onCreate={handleCreateFromFlow}
+        onClose={() => { reset(); onOpenChange(false); }}
+      />
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>

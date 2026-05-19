@@ -1,5 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle2, Star, Settings, Share2, Plus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, CheckCircle2, Star, Settings, Share2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CommunityLogo from './CommunityLogo';
 import InviteLinkButton from './InviteLinkButton';
@@ -31,44 +31,12 @@ function communityGradient(name = '', accentColor) {
   return gradients[hash % gradients.length];
 }
 
-function MemberAvatarStrip({ members, totalCount, onViewMembers }) {
-  const shown = members.slice(0, 5);
-  return (
-    <button onClick={onViewMembers} className="flex items-center gap-1.5 mt-3 active:opacity-70 transition-opacity">
-      <div className="flex -space-x-2">
-        {shown.map((m, i) => (
-          <div
-            key={m.id || i}
-            className="w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-            style={{
-              background: ['#2563EB','#7C3AED','#16A34A','#D97706','#DC2626'][i % 5],
-              zIndex: 10 - i
-            }}
-          >
-            {(m.user_name || m.user_id || '?')[0]?.toUpperCase()}
-          </div>
-        ))}
-      </div>
-      {totalCount > 5 && (
-        <span className="text-[12px] font-bold text-white/90 bg-white/20 rounded-full px-2 py-0.5">
-          +{totalCount - 5}
-        </span>
-      )}
-      {totalCount > 0 && (
-        <span className="text-[12px] text-white/80 font-medium">
-          {totalCount.toLocaleString()} members
-        </span>
-      )}
-    </button>
-  );
-}
-
 export default function CommunityHero({
   community, isFollowing, isAdmin, isCreator = false, onBack, onFollow, onManage, onClaim,
-  eventCount, mitzvahCount, actualMemberCount, postsThisWeek,
+  // eventCount, mitzvahCount, postsThisWeek removed — stats ribbon was removed
+  actualMemberCount,
   members = [], currentUser, onTabChange, typeConfig: providedTypeConfig
 }) {
-  const scrollRef = useRef(null);
   const [scrollY, setScrollY] = useState(0);
   const [stickyVisible, setStickyVisible] = useState(false);
 
@@ -82,19 +50,16 @@ export default function CommunityHero({
     ? communityGradient(community.name, community.featured_accent_color)
     : typeConfig.coverPattern;
 
-  // Scroll listener for parallax + sticky
+  // Scroll listener for sticky header
   useEffect(() => {
     const handleScroll = () => {
       const y = window.scrollY;
       setScrollY(y);
-      setStickyVisible(y > 140);
+      setStickyVisible(y > 100);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const coverParallax = Math.min(scrollY * 0.4, 60);
-  const coverOpacity = Math.max(0, 1 - scrollY / 200);
 
   const handleShare = async () => {
     const url = `${window.location.origin}/communities/${community.id}`;
@@ -144,17 +109,10 @@ export default function CommunityHero({
         </button>
       </motion.div>
 
-      {/* ── Hero cover ── */}
-      <div className="relative overflow-hidden" style={{ height: 200 }}>
-        {/* Cover image or gradient */}
-        <div
-          className="absolute inset-0 w-full"
-          style={{
-            transform: `translateY(${coverParallax}px)`,
-            opacity: coverOpacity,
-            transition: 'opacity 0.1s',
-          }}
-        >
+      {/* ── Hero cover — compact 120px ── */}
+      <div className="relative overflow-hidden" style={{ height: 120 }}>
+        {/* Cover image or gradient — static (no parallax) */}
+        <div className="absolute inset-0 w-full">
           {(community.cover_url || community.cover_image_url) ? (
             <img
               src={community.cover_url || community.cover_image_url}
@@ -195,107 +153,88 @@ export default function CommunityHero({
         </div>
       </div>
 
-      {/* ── Identity row: logo + name + actions ── */}
-      <div className="bg-white px-4 pt-0 pb-4 border-b border-slate-100">
-        {/* Logo overlapping cover */}
-        <div className="flex items-end gap-3 -mt-8 mb-3">
+      {/* ── Identity row: logo + name + type badge + CTA ── */}
+      <div className="bg-white px-4 pt-0 pb-3 border-b border-slate-100">
+        <div className="flex items-center gap-3 -mt-6">
+          {/* Logo: 48x48, overlapping cover bottom */}
           <div className="relative flex-shrink-0">
-            <div className="rounded-2xl border-4 border-white shadow-lg overflow-hidden" style={{ width: 64, height: 64 }}>
-              <CommunityLogo community={community} size="lg" />
+            <div className="rounded-xl border-4 border-white shadow-md overflow-hidden" style={{ width: 48, height: 48 }}>
+              <CommunityLogo community={community} size="md" />
             </div>
-            {/* Active dot */}
             {isActive && (
-              <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
+              <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white" />
             )}
           </div>
-          <div className="flex-1 min-w-0 pt-8">
+
+          {/* Name + badges */}
+          <div className="flex-1 min-w-0 pt-6">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <h1 className="font-extrabold text-slate-900 text-[18px] leading-tight">{community.name}</h1>
-              {community.is_claimed && <CheckCircle2 className="w-4 h-4 text-[#2563EB] flex-shrink-0" />}
-              {community.is_featured && <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />}
+              <h1 className="font-extrabold text-slate-900 text-[16px] leading-tight truncate">{community.name}</h1>
+              {community.is_claimed && <CheckCircle2 className="w-3.5 h-3.5 text-[#2563EB] flex-shrink-0" />}
+              {community.is_featured && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
             </div>
-            {community.neighborhood && (
-              <p className="text-[12px] text-slate-500">{community.neighborhood}</p>
-            )}
-            <p className="mt-1 inline-flex items-center gap-1.5 text-[12px] font-bold text-slate-500">
-              <TypeIcon className="h-3.5 w-3.5" />
-              {typeConfig.tagline}
+            <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+              <TypeIcon className="h-3 w-3 flex-shrink-0" />
+              {typeConfig.label}
+              {community.neighborhood && <span className="text-slate-400"> · {community.neighborhood}</span>}
             </p>
           </div>
-        </div>
 
-        {/* Member avatars strip */}
-        {members.length > 0 && (
-          <MemberAvatarStrip
-            members={members}
-            totalCount={memberCount}
-            onViewMembers={() => onTabChange?.('members')}
-          />
-        )}
-
-        {/* Stats ribbon */}
-        <div className="flex gap-3 mt-3 overflow-x-auto scrollbar-hide">
-          {[
-            { label: 'Posts this wk', value: postsThisWeek, tab: 'posts', show: true },
-            { label: 'Events', value: eventCount, tab: 'events', show: eventCount > 0 },
-            { label: 'Open needs', value: mitzvahCount, tab: 'openNeeds', show: mitzvahCount > 0 },
-            { label: 'Members', value: memberCount, tab: 'members', show: true },
-          ].filter(s => s.show).map(s => (
-            <button
-              key={s.label}
-              onClick={() => onTabChange?.(s.tab)}
-              className="flex-shrink-0 text-center bg-slate-50 hover:bg-blue-50 border border-slate-100 rounded-xl px-3 py-2 transition-colors active:scale-95"
-            >
-              <div className="text-[15px] font-extrabold text-slate-900">{s.value ?? 0}</div>
-              <div className="text-[10px] text-slate-500 font-medium mt-0.5 whitespace-nowrap">{s.label}</div>
-            </button>
-          ))}
-        </div>
-
-        {/* CTA row */}
-        <div className="flex gap-2 mt-3">
-          {isFollowing ? (
-            <>
+          {/* CTA — right side */}
+          <div className="flex items-center gap-1.5 flex-shrink-0 pt-6">
+            {isCreator ? (
               <button
-                onClick={() => onTabChange?.('posts')}
-                className="flex-1 h-10 text-[14px] font-bold rounded-xl bg-[#2563EB] text-white flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                onClick={onManage}
+                className="h-8 px-3 text-[12px] font-bold rounded-full bg-slate-950 text-white active:scale-95 transition-all"
               >
-                <Plus className="w-4 h-4" /> {typeConfig.primaryCta}
+                Admin
               </button>
-              <button
-                onClick={isCreator ? onManage : onFollow}
-                className="h-10 px-4 text-[13px] font-semibold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
-              >
-                {isCreator ? 'Admin Center' : '✓ Joined'}
-              </button>
-              {isAdmin && (
+            ) : isFollowing ? (
+              <>
                 <button
-                  onClick={onManage}
-                  className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600"
-                  aria-label="Admin center"
+                  onClick={onFollow}
+                  className="h-8 px-3 text-[12px] font-bold rounded-full bg-slate-100 text-slate-600 active:scale-95 transition-all"
                 >
-                  <Settings className="w-4 h-4" />
+                  Joined ✓
                 </button>
-              )}
-            </>
-          ) : (
-            <>
+                {isAdmin && (
+                  <button
+                    onClick={onManage}
+                    className="h-8 w-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 active:scale-95 transition-all"
+                    aria-label="Admin center"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </>
+            ) : (
               <button
                 onClick={onFollow}
-                className="flex-1 h-10 text-[14px] font-bold rounded-xl bg-[#2563EB] text-white active:scale-95 transition-all"
+                className="h-8 px-4 text-[12px] font-bold rounded-full bg-[#2563EB] text-white active:scale-95 transition-all"
               >
-                + Join Community
+                Join
               </button>
-            </>
-          )}
-          {isFollowing && (
+            )}
+          </div>
+        </div>
+
+        {/* Tagline below identity row */}
+        {typeConfig.tagline && (
+          <p className="mt-2 text-[11px] text-slate-500 leading-snug">
+            {typeConfig.tagline}
+          </p>
+        )}
+
+        {/* Invite link — only for members */}
+        {isFollowing && (
+          <div className="mt-2">
             <InviteLinkButton
               communityId={community.id}
               communityName={community.name}
               currentUser={currentUser}
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </>
   );

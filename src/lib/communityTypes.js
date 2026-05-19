@@ -33,6 +33,10 @@ export const COMMUNITY_TYPE_CONFIG = {
     tabs: ['home', 'posts', 'chat', 'members', 'about'],
     homeModules: ['composer', 'posts', 'chat', 'about'],
     descriptors: ['Member-led', 'Discussion'],
+    composerMode: 'message',
+    primaryTabs: ['home', 'posts', 'members', 'about'],
+    moreTabs: ['chat'],
+    homeEmphasis: 'feed',
   },
   neighborhood: {
     key: 'neighborhood',
@@ -54,6 +58,10 @@ export const COMMUNITY_TYPE_CONFIG = {
     tabs: SHARED_TABS,
     homeModules: ['composer', 'posts', 'members', 'about'],
     descriptors: ['Local', 'Updates'],
+    composerMode: 'message',
+    primaryTabs: ['home', 'posts', 'events', 'members'],
+    moreTabs: ['resources', 'about'],
+    homeEmphasis: 'feed',
   },
   chesed: {
     key: 'chesed',
@@ -75,6 +83,10 @@ export const COMMUNITY_TYPE_CONFIG = {
     tabs: ['home', 'openNeeds', 'posts', 'members', 'about'],
     homeModules: ['openNeeds', 'composer', 'posts', 'about'],
     descriptors: ['Action', 'Support'],
+    composerMode: 'chesed',
+    primaryTabs: ['home', 'openNeeds', 'posts', 'members'],
+    moreTabs: ['about'],
+    homeEmphasis: 'chesed',
   },
   shul: {
     key: 'shul',
@@ -96,6 +108,10 @@ export const COMMUNITY_TYPE_CONFIG = {
     tabs: ['home', 'announcements', 'events', 'resources', 'posts', 'members', 'about'],
     homeModules: ['announcements', 'events', 'resources', 'composer', 'posts', 'about'],
     descriptors: ['Announcements', 'Community'],
+    composerMode: 'official',
+    primaryTabs: ['home', 'events', 'resources', 'members'],
+    moreTabs: ['posts', 'announcements', 'about'],
+    homeEmphasis: 'announcements',
   },
   parents: {
     key: 'parents',
@@ -117,6 +133,10 @@ export const COMMUNITY_TYPE_CONFIG = {
     tabs: ['home', 'questions', 'posts', 'members', 'about'],
     homeModules: ['questions', 'composer', 'posts', 'about'],
     descriptors: ['Questions', 'Recommendations'],
+    composerMode: 'message',
+    primaryTabs: ['home', 'questions', 'events', 'members'],
+    moreTabs: ['resources', 'about'],
+    homeEmphasis: 'feed',
   },
   learning: {
     key: 'learning',
@@ -138,6 +158,10 @@ export const COMMUNITY_TYPE_CONFIG = {
     tabs: ['home', 'discussions', 'resources', 'posts', 'members', 'about'],
     homeModules: ['discussions', 'resources', 'composer', 'posts', 'about'],
     descriptors: ['Torah', 'Discussion'],
+    composerMode: 'post',
+    primaryTabs: ['home', 'discussions', 'resources', 'members'],
+    moreTabs: ['posts', 'about'],
+    homeEmphasis: 'resources',
   },
   marketplace: {
     key: 'marketplace',
@@ -159,6 +183,10 @@ export const COMMUNITY_TYPE_CONFIG = {
     tabs: ['home', 'listings', 'posts', 'members', 'about'],
     homeModules: ['listings', 'composer', 'posts', 'about'],
     descriptors: ['Exchange', 'Recommendations'],
+    composerMode: 'post',
+    primaryTabs: ['home', 'listings', 'posts', 'members'],
+    moreTabs: ['about'],
+    homeEmphasis: 'feed',
   },
   events: {
     key: 'events',
@@ -180,6 +208,10 @@ export const COMMUNITY_TYPE_CONFIG = {
     tabs: ['home', 'events', 'posts', 'members', 'about'],
     homeModules: ['events', 'composer', 'posts', 'about'],
     descriptors: ['Events', 'Gatherings'],
+    composerMode: 'message',
+    primaryTabs: ['home', 'events', 'posts', 'members'],
+    moreTabs: ['about'],
+    homeEmphasis: 'events',
   },
 };
 
@@ -320,4 +352,18 @@ export function getCommunityTabLabel(tabKey) {
     groups: 'Groups',
   };
   return labels[tabKey] || tabKey;
+}
+
+/**
+ * Returns { primary: string[], more: string[] } for community navigation.
+ * Primary tabs are limited to ~4 visible items. Overflow goes to More.
+ * Always respects what getSupportedCommunityTabs returns (capability-gated).
+ */
+export function getCommunityNavConfig(community = {}, capabilities = {}) {
+  const config = getCommunityTypeConfig(community);
+  const allSupported = getSupportedCommunityTabs(community, capabilities);
+  const primaryIdeal = config.primaryTabs || ['home', 'posts', 'members'];
+  const primary = primaryIdeal.filter((t) => allSupported.includes(t));
+  const more = allSupported.filter((t) => !primary.includes(t));
+  return { primary, more };
 }

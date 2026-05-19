@@ -5,6 +5,7 @@ import { BookOpen, Globe, Heart, Loader2, Lock, MapPin, MessageCircle, Phone, Se
 import { toast } from 'sonner';
 import { dataService, incrementCounter } from '@/services';
 import {
+  getCommunityNavConfig,
   getCommunityTabLabel,
   getCommunityTypeConfig,
   getSupportedCommunityTabs,
@@ -28,9 +29,11 @@ import { useSwipeableTabs } from '@/hooks/useSwipeableTabs';
 import {
   CommunityAdminQuickActions,
   CommunityFeaturedSection,
+  CommunityImportantStrip,
   CommunityMemberDirectory,
   CommunityPostPreview,
   CommunityWelcomeHub,
+  SinceLastVisitDigest,
 } from './CommunityOperatingSystem';
 import CommunityPersonalizationHub from './CommunityPersonalizationHub';
 
@@ -67,6 +70,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'home');
   const [highlightEventId, setHighlightEventId] = useState(null);
   const [showClaim, setShowClaim] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const [showAdminCenter, setShowAdminCenter] = useState(false);
   const [adminInitialTab, setAdminInitialTab] = useState('overview');
   const [showAppealModal, setShowAppealModal] = useState(false);
@@ -148,9 +152,11 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     groups: true,
   };
   const visibleTabs = getSupportedCommunityTabs(community || fallbackCommunity || {}, featureCapabilities);
+  const navConfig = getCommunityNavConfig(community || fallbackCommunity || {}, featureCapabilities);
   const setTab = (tab) => {
     const nextTab = visibleTabs.includes(tab) ? tab : (visibleTabs[0] || 'home');
     setActiveTab(nextTab);
+    setShowMore(false);
     setSearchParams((current) => {
       const next = new URLSearchParams(current);
       next.set('tab', nextTab);
@@ -318,10 +324,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         onManage={() => openAdminCenter('overview')}
         onClaim={() => setShowClaim(true)}
         onBack={onBack}
-        eventCount={events.length}
-        mitzvahCount={activeNeeds.length}
         actualMemberCount={actualMemberCount}
-        postsThisWeek={community.posts_this_week || posts.length}
         members={members}
         currentUser={currentUser}
         onTabChange={setTab}
@@ -329,27 +332,89 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
       />
 
       <div className="sticky top-0 z-10 border-b border-slate-100 bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto max-w-2xl overflow-x-auto scrollbar-hide">
-          <div className="flex min-w-max gap-1 px-3 py-2">
-            {tabsWithCounts.map((tab) => (
-              <button
-                key={tab.key}
-                ref={(el) => { tabButtonRefs.current[tab.key] = el; }}
-                onClick={() => setTab(tab.key)}
-                className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-bold transition-colors ${
-                  activeTab === tab.key
-                    ? 'bg-blue-50 text-[#0F5ED7] ring-1 ring-blue-200/80'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-                }`}
-              >
-                {tab.label}
-                {tab.count > 0 && (
-                  <span className="ml-1.5 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-black text-blue-700">
-                    {tab.count}
-                  </span>
+        <div className="mx-auto max-w-2xl">
+          <div className="flex gap-1 px-3 py-2">
+            {/* Primary tabs */}
+            {navConfig.primary.map((tabKey) => {
+              const tabInfo = tabsWithCounts.find((t) => t.key === tabKey);
+              if (!tabInfo) return null;
+              return (
+                <button
+                  key={tabKey}
+                  ref={(el) => { tabButtonRefs.current[tabKey] = el; }}
+                  onClick={() => setTab(tabKey)}
+                  className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-bold transition-colors ${
+                    activeTab === tabKey
+                      ? 'bg-blue-50 text-[#0F5ED7] ring-1 ring-blue-200/80'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                  }`}
+                >
+                  {tabInfo.label}
+                  {tabInfo.count > 0 && (
+                    <span className="ml-1.5 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-black text-blue-700">
+                      {tabInfo.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+
+            {/* More button — only if there are overflow tabs */}
+            {navConfig.more.length > 0 && (
+              <div className="relative ml-auto">
+                <button
+                  onClick={() => setShowMore((v) => !v)}
+                  className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-bold transition-colors ${
+                    navConfig.more.includes(activeTab)
+                      ? 'bg-blue-50 text-[#0F5ED7] ring-1 ring-blue-200/80'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                  }`}
+                >
+                  {navConfig.more.includes(activeTab)
+                    ? getCommunityTabLabel(activeTab)
+                    : 'More'}
+                  {/* Dot indicator when active tab is in overflow */}
+                  {navConfig.more.includes(activeTab) && !showMore && (
+                    <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-[#0F5ED7] align-middle" />
+                  )}
+                </button>
+
+                {/* More dropdown */}
+                {showMore && (
+                  <>
+                    {/* Backdrop to close */}
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowMore(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-1 z-50 w-44 rounded-2xl border border-slate-100 bg-white shadow-xl py-1">
+                      {navConfig.more.map((tabKey) => {
+                        const tabInfo = tabsWithCounts.find((t) => t.key === tabKey);
+                        if (!tabInfo) return null;
+                        return (
+                          <button
+                            key={tabKey}
+                            onClick={() => { setTab(tabKey); setShowMore(false); }}
+                            className={`w-full px-4 py-2.5 text-left text-[13px] font-semibold transition-colors flex items-center justify-between ${
+                              activeTab === tabKey
+                                ? 'text-[#0F5ED7] bg-blue-50'
+                                : 'text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span>{tabInfo.label}</span>
+                            {tabInfo.count > 0 && (
+                              <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-black text-blue-700">
+                                {tabInfo.count}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
-              </button>
-            ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -573,6 +638,153 @@ function ComposerBox({ typeConfig, composeText, setComposeText, submitPost, post
   );
 }
 
+function TypeAwareComposer({ typeConfig, composeText, setComposeText, submitPost, posting, mode }) {
+  const [expanded, setExpanded] = useState(false);
+  const composerMode = mode || typeConfig.composerMode || 'post';
+
+  // Chesed mode: two action buttons → expand to form below
+  if (composerMode === 'chesed') {
+    return (
+      <div className="rounded-2xl border border-emerald-100 bg-white shadow-sm overflow-hidden">
+        {!expanded ? (
+          <div className="flex gap-2 p-3">
+            <button
+              type="button"
+              onClick={() => setExpanded('request')}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 py-2.5 text-[13px] font-black text-emerald-700 active:scale-95 transition-all"
+            >
+              🙏 Request Help
+            </button>
+            <button
+              type="button"
+              onClick={() => setExpanded('offer')}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-blue-50 border border-blue-200 py-2.5 text-[13px] font-black text-blue-700 active:scale-95 transition-all"
+            >
+              💚 Offer Help
+            </button>
+          </div>
+        ) : (
+          <div className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className={`text-[11px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full ${expanded === 'request' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                {expanded === 'request' ? '🙏 Requesting help' : '💚 Offering help'}
+              </span>
+              <button type="button" onClick={() => { setExpanded(false); setComposeText(''); }} className="ml-auto text-[12px] font-semibold text-slate-400 hover:text-slate-600">Cancel</button>
+            </div>
+            <textarea
+              value={composeText}
+              onChange={(e) => setComposeText(e.target.value)}
+              rows={3}
+              autoFocus
+              placeholder={expanded === 'request' ? 'Describe what you need — meal, ride, errand, or something else...' : 'Describe what you can offer or how you can help...'}
+              className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-400 focus:bg-white"
+            />
+            <div className="mt-2 flex justify-end">
+              <button
+                onClick={submitPost}
+                disabled={posting || !composeText.trim()}
+                className={`inline-flex h-9 items-center gap-2 rounded-xl px-4 text-xs font-black text-white disabled:opacity-50 ${expanded === 'request' ? 'bg-emerald-600' : 'bg-blue-600'}`}
+              >
+                <Send className="h-3.5 w-3.5" />
+                {posting ? 'Posting...' : 'Post'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Message mode: single-line that expands on focus
+  if (composerMode === 'message') {
+    return (
+      <div className={`rounded-2xl border bg-white shadow-sm transition-all ${expanded ? 'border-blue-300' : 'border-slate-100'}`}>
+        {!expanded ? (
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 text-left"
+          >
+            <div className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white flex-shrink-0`}>
+              <MessageCircle className="h-3.5 w-3.5" />
+            </div>
+            <span className="text-[13px] font-semibold text-slate-400">{typeConfig.prompts[0] || 'Share something with the community...'}</span>
+          </button>
+        ) : (
+          <div className="p-4">
+            <textarea
+              value={composeText}
+              onChange={(e) => setComposeText(e.target.value)}
+              rows={3}
+              autoFocus
+              placeholder={typeConfig.prompts[0] || 'Share something with the community...'}
+              className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:bg-white"
+            />
+            <div className="mt-2 flex items-center justify-between">
+              <button type="button" onClick={() => { setExpanded(false); setComposeText(''); }} className="text-[12px] font-semibold text-slate-400 hover:text-slate-600">Cancel</button>
+              <button onClick={submitPost} disabled={posting || !composeText.trim()} className={`inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-to-br ${typeConfig.accent} px-4 text-xs font-black text-white disabled:opacity-50`}>
+                <Send className="h-3.5 w-3.5" />
+                {posting ? 'Posting...' : 'Post'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Official mode (admin-only composer for shul/org)
+  if (composerMode === 'official') {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-[10px] font-black uppercase tracking-wide text-amber-700 flex items-center gap-1">
+            📢 Post Announcement
+          </span>
+        </div>
+        <textarea
+          value={composeText}
+          onChange={(e) => setComposeText(e.target.value)}
+          rows={3}
+          placeholder="Share an official update with the community..."
+          className="w-full resize-none rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-amber-400"
+        />
+        <div className="mt-2 flex justify-end">
+          <button onClick={submitPost} disabled={posting || !composeText.trim()} className="inline-flex h-9 items-center gap-2 rounded-xl bg-amber-600 px-4 text-xs font-black text-white disabled:opacity-50">
+            <Send className="h-3.5 w-3.5" />
+            {posting ? 'Posting...' : 'Post Update'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Post mode (default): standard textarea
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-center gap-2">
+        <div className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white`}>
+          <MessageCircle className="h-3.5 w-3.5" />
+        </div>
+        <p className="text-sm font-black text-slate-950">{typeConfig.primaryCta}</p>
+      </div>
+      <textarea
+        value={composeText}
+        onChange={(e) => setComposeText(e.target.value)}
+        rows={3}
+        placeholder={typeConfig.prompts[0] || 'Share something with the community...'}
+        className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:bg-white"
+      />
+      <div className="mt-2 flex justify-end">
+        <button onClick={submitPost} disabled={posting || !composeText.trim()} className={`inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-to-br ${typeConfig.accent} px-4 text-xs font-black text-white disabled:opacity-50`}>
+          <Send className="h-3.5 w-3.5" />
+          {posting ? 'Posting...' : 'Post'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function RoutedCommunityHome({
   community,
   typeConfig,
@@ -598,7 +810,7 @@ function RoutedCommunityHome({
   if (!isFollowing) {
     // ── Visitor landing page ───────────────────────────────────────────────────
     return (
-      <div className="space-y-4 pt-4">
+      <div className="space-y-3 pt-3">
         <CommunityWelcomeHub
           community={community}
           typeConfig={typeConfig}
@@ -619,14 +831,14 @@ function RoutedCommunityHome({
           resources={resources}
           onTabChange={onTabChange}
         />
-        <RoutedPostsList posts={posts.slice(0, 3)} typeConfig={typeConfig} emptyCompact />
+        <RoutedPostsList posts={posts.slice(0, 4)} typeConfig={typeConfig} emptyCompact />
       </div>
     );
   }
 
-  // ── Joined member: community dashboard ────────────────────────────────────
+  // ── Joined member: feed-first layout ────────────────────────────────────────
   return (
-    <div className="space-y-4 pt-4">
+    <div className="space-y-3 pt-3">
       {isAdmin && (
         <CommunityAdminQuickActions
           onAnnouncement={() => onTabChange('announcements')}
@@ -636,19 +848,20 @@ function RoutedCommunityHome({
         />
       )}
 
-      <CommunityWelcomeHub
-        community={community}
-        typeConfig={typeConfig}
+      <SinceLastVisitDigest
         posts={posts}
         events={events}
-        resources={resources}
-        members={members}
-        isCommunityManager={isAdmin}
-        isFollowing={true}
         lastVisitedAt={lastVisitedAt}
         onTabChange={onTabChange}
-        onManage={onManage}
-        onCompose={() => {}}
+      />
+
+      <CommunityImportantStrip
+        posts={posts}
+        events={events}
+        activeNeeds={activeNeeds}
+        resources={resources}
+        typeConfig={typeConfig}
+        onTabChange={onTabChange}
       />
 
       <CommunityPersonalizationHub
@@ -660,29 +873,8 @@ function RoutedCommunityHome({
         onOpenEvent={onOpenEvent}
       />
 
-      <CommunityFeaturedSection
-        typeConfig={typeConfig}
-        posts={posts}
-        events={events}
-        resources={resources}
-        onTabChange={onTabChange}
-      />
-
-      {typeConfig.key === 'chesed' && (
-        <button
-          type="button"
-          onClick={() => onTabChange('openNeeds')}
-          className="w-full rounded-2xl border border-emerald-100 bg-white p-4 text-left shadow-sm"
-        >
-          <p className="text-sm font-black text-slate-950">Open chesed needs</p>
-          <p className="mt-1 text-[13px] font-semibold text-slate-500">
-            {activeNeeds.length ? `${activeNeeds.length} request${activeNeeds.length === 1 ? '' : 's'} connected to this community.` : 'No open needs connected here yet.'}
-          </p>
-        </button>
-      )}
-
       {canPost ? (
-        <ComposerBox
+        <TypeAwareComposer
           typeConfig={typeConfig}
           composeText={composeText}
           setComposeText={setComposeText}
@@ -690,13 +882,54 @@ function RoutedCommunityHome({
           posting={posting}
         />
       ) : (
-        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-          <Lock className="h-5 w-5 flex-shrink-0 text-slate-400" />
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <Lock className="h-4 w-4 flex-shrink-0 text-slate-400" />
           <p className="text-[13px] font-semibold text-slate-500">Posting is restricted to community admins.</p>
         </div>
       )}
 
-      <RoutedPostsList posts={posts.slice(0, 3)} typeConfig={typeConfig} emptyCompact />
+      <HomeFeedSection
+        posts={posts}
+        typeConfig={typeConfig}
+        activeNeeds={typeConfig.key === 'chesed' ? activeNeeds : []}
+        onTabChange={onTabChange}
+      />
+    </div>
+  );
+}
+
+function CompactEmptyState({ typeConfig }) {
+  const Icon = typeConfig?.icon;
+  return (
+    <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-8 text-center">
+      {Icon && (
+        <div className={`mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white`}>
+          <Icon className="h-5 w-5" />
+        </div>
+      )}
+      <p className="text-[14px] font-black text-slate-900">{typeConfig?.emptyTitle || 'Nothing here yet'}</p>
+      <p className="mt-1 text-[12px] font-semibold text-slate-400 leading-5">{typeConfig?.emptyBody || 'Be the first to post.'}</p>
+    </div>
+  );
+}
+
+function HomeFeedSection({ posts, typeConfig, activeNeeds = [], onTabChange }) {
+  if (!posts.length && !activeNeeds.length) {
+    return <CompactEmptyState typeConfig={typeConfig} />;
+  }
+
+  return (
+    <div className="space-y-2.5">
+      {posts.map((post) => (
+        <CommunityPostPreview key={post.id} post={post} typeConfig={typeConfig} />
+      ))}
+      {activeNeeds.map((need) => (
+        <article key={need.id} className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
+          <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">{need.status || 'open'}</span>
+          <h3 className="mt-2 text-[14px] font-black text-slate-950">{need.title}</h3>
+          {need.description && <p className="mt-1 text-sm leading-5 text-slate-600 line-clamp-2">{need.description}</p>}
+        </article>
+      ))}
     </div>
   );
 }
@@ -733,16 +966,7 @@ function RoutedPostsTab({ posts, isLoading, activeTab, typeConfig, composeText, 
 function RoutedPostsList({ posts, typeConfig, emptyCompact = false }) {
   if (!posts.length) {
     if (emptyCompact) return null;
-    const Icon = typeConfig.icon;
-    return (
-      <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center">
-        <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${typeConfig.accent} text-white`}>
-          <Icon className="h-6 w-6" />
-        </div>
-        <p className="mt-4 text-[15px] font-black text-slate-900">{typeConfig.emptyTitle}</p>
-        <p className="mt-1 text-[13px] font-semibold leading-6 text-slate-500">{typeConfig.emptyBody}</p>
-      </div>
-    );
+    return <CompactEmptyState typeConfig={typeConfig} />;
   }
 
   return (
@@ -756,16 +980,9 @@ function RoutedPostsList({ posts, typeConfig, emptyCompact = false }) {
 
 function RoutedOpenNeedsTab({ activeNeeds, typeConfig }) {
   if (!activeNeeds.length) {
-    const Icon = typeConfig.icon;
     return (
       <div className="pt-4">
-        <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center">
-          <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${typeConfig.accent} text-white`}>
-            <Icon className="h-6 w-6" />
-          </div>
-          <p className="mt-4 text-[15px] font-black text-slate-900">{typeConfig.emptyTitle}</p>
-          <p className="mt-1 text-[13px] font-semibold leading-6 text-slate-500">{typeConfig.emptyBody}</p>
-        </div>
+        <CompactEmptyState typeConfig={typeConfig} />
       </div>
     );
   }
