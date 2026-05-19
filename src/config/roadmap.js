@@ -687,26 +687,12 @@ Goals:
   {
     id: 'community-custom-branding',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Custom Community Branding',
     description: 'Let Premium communities set a custom accent color, cover pattern, and visual theme for their community pages.',
     why: 'Community identity and distinctiveness increase retention. Branding is a natural Premium upsell without requiring costly design tooling.',
-    prompt: `You are implementing Custom Community Branding for JUnited.
-
-Context:
-- CommunityHubDetail uses typeConfig.accent (Tailwind gradient classes) for the cover/avatar.
-- CommunityHero uses communityGradient() which already supports featured_accent_color.
-- Community settings can be saved via Admin Center (CommunityAdminCenter Settings tab).
-
-Goals:
-1. Add accent_color (hex string) and cover_style (enum) columns to communities via migration.
-2. Update Admin Center Appearance section with a color picker and cover style preview (Premium only).
-3. Update CommunityHubDetail header and CommunityHero to apply accent_color when set, falling back to typeConfig.accent.
-4. Make the joined-member compact header also use the custom accent color.
-5. Preserve all gating: only Premium communities can set custom branding.
-6. Run npm run lint && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+    shippedNote: 'BrandingTab added to Admin Center (Premium-gated, with live preview). Branding persisted to communities.settings.branding JSONB. CommunityHero and DiscoverCommunityCard both read accentColor and coverStyle. Non-premium admins see controls and a live preview but are redirected to Billing to save.',
   },
 
   {

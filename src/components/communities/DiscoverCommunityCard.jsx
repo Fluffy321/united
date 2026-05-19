@@ -40,9 +40,23 @@ export default function DiscoverCommunityCard({ community, onOpen, onToggleJoin,
       ? `${community.post_count}+ posts`
       : null;
 
+  const brandingSettings = (community?.settings && typeof community.settings === 'object')
+    ? (community.settings.branding || {})
+    : {};
+  const COVER_STYLE_GRADIENTS = {
+    midnight: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
+    sunrise:  'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+    forest:   'linear-gradient(135deg, #065f46 0%, #34d399 100%)',
+    twilight: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #db2777 100%)',
+  };
+  const effectiveAccent = brandingSettings.accentColor || community.featured_accent_color;
   const coverStyle = community.cover_url
     ? { backgroundImage: `url(${community.cover_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-    : { background: typeConfig.coverPattern };
+    : effectiveAccent
+      ? { background: `linear-gradient(135deg, ${effectiveAccent}CC 0%, ${effectiveAccent}88 100%)` }
+      : (brandingSettings.coverStyle && brandingSettings.coverStyle !== 'default' && COVER_STYLE_GRADIENTS[brandingSettings.coverStyle])
+        ? { background: COVER_STYLE_GRADIENTS[brandingSettings.coverStyle] }
+        : { background: typeConfig.coverPattern };
 
   const handleJoin = (e) => {
     e.stopPropagation();
@@ -94,8 +108,11 @@ export default function DiscoverCommunityCard({ community, onOpen, onToggleJoin,
             className={`shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-bold transition-all disabled:opacity-60 active:scale-[0.97] ${
               community.joined
                 ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                : `bg-gradient-to-br ${typeConfig.accent} text-white shadow-sm hover:opacity-90`
+                : effectiveAccent
+                  ? 'text-white shadow-sm hover:opacity-90'
+                  : `bg-gradient-to-br ${typeConfig.accent} text-white shadow-sm hover:opacity-90`
             }`}
+            style={!community.joined && effectiveAccent ? { background: effectiveAccent } : undefined}
           >
             {loading ? (
               '…'

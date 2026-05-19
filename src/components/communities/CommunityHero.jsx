@@ -32,9 +32,21 @@ export default function CommunityHero({
   const memberCount = actualMemberCount > 0 ? actualMemberCount : (community.follower_count || 0);
   const typeConfig = providedTypeConfig || getCommunityTypeConfig(community);
   const TypeIcon = typeConfig.icon;
-  const gradient = community.featured_accent_color
-    ? communityGradient(community.name, community.featured_accent_color)
-    : typeConfig.coverPattern;
+  const brandingSettings = (community?.settings && typeof community.settings === 'object')
+    ? (community.settings.branding || {})
+    : {};
+  const COVER_STYLE_GRADIENTS = {
+    midnight: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
+    sunrise:  'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+    forest:   'linear-gradient(135deg, #065f46 0%, #34d399 100%)',
+    twilight: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #db2777 100%)',
+  };
+  const effectiveAccent = brandingSettings.accentColor || community.featured_accent_color;
+  const gradient = effectiveAccent
+    ? communityGradient(community.name, effectiveAccent)
+    : (brandingSettings.coverStyle && brandingSettings.coverStyle !== 'default' && COVER_STYLE_GRADIENTS[brandingSettings.coverStyle])
+      ? COVER_STYLE_GRADIENTS[brandingSettings.coverStyle]
+      : typeConfig.coverPattern;
 
   useEffect(() => {
     const handleScroll = () => setStickyVisible(window.scrollY > 80);
