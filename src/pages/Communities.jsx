@@ -754,11 +754,12 @@ export default function Communities() {
     [communities]
   );
 
-  const forYouCommunities = useMemo(() => {
+  const forYouResult = useMemo(() => {
+    const empty = { communities: [], locationBoostUsed: false };
     // Hide when user is actively searching or filtering — explicit intent takes priority
-    if (query.trim() || typeFilter !== 'all') return [];
+    if (query.trim() || typeFilter !== 'all') return empty;
     // No basis for personalization without joined communities
-    if (allJoinedCommunities.length === 0) return [];
+    if (allJoinedCommunities.length === 0) return empty;
 
     // Build type frequency from the user's joined set
     const typeFreq = {};
@@ -767,18 +768,38 @@ export default function Communities() {
       typeFreq[key] = (typeFreq[key] || 0) + 1;
     }
 
+    // Location terms from the auth context — no extra query needed
+    const locationTerms = [
+      currentUser?.cityPreset,
+      currentUser?.locationLabel,
+    ].filter(Boolean).map((s) => s.toLowerCase());
+
     // Score each unjoinable community — primary filter is typeKey overlap
-    return discoverCommunities
+    const communities = discoverCommunities
       .filter((c) => typeFreq[c.typeKey || 'general'])
       .map((c) => {
-        let score = 3; // base: type match
+        let score = 3; // base: type match (required — minimum to appear)
         if ((c.memberCount || c.follower_count || 0) > 50) score += 2;
         if ((c.postsToday || 0) > 0) score += 1;
+        if (locationTerms.length > 0) {
+          const communityLoc = (c.location || '').toLowerCase();
+          if (locationTerms.some((term) => communityLoc.includes(term))) score += 2;
+        }
         return { ...c, _forYouScore: score };
       })
       .sort((a, b) => b._forYouScore - a._forYouScore)
       .slice(0, 4);
-  }, [allJoinedCommunities, discoverCommunities, query, typeFilter]);
+
+    // Subtitle changes only if location actually lifted at least one result
+    const locationBoostUsed = locationTerms.length > 0 && communities.some((c) => {
+      const loc = (c.location || '').toLowerCase();
+      return locationTerms.some((term) => loc.includes(term));
+    });
+
+    return { communities, locationBoostUsed };
+  }, [allJoinedCommunities, discoverCommunities, query, typeFilter, currentUser]);
+
+  const forYouCommunities = forYouResult.communities;
 
   const handleJoin = async (communityId, options = {}) => {
     const community = communities.find((item) => item.id === communityId);
@@ -994,6 +1015,7 @@ export default function Communities() {
                     onOpen={openCommunity}
                     onJoin={handleJoin}
                     joiningId={joiningId}
+                    locationBoostUsed={forYouResult.locationBoostUsed}
                   />
                 )}
                 {curatedDiscoverSections.length > 0 ? (
@@ -1332,7 +1354,10 @@ function DiscoverSection({ section, onOpen, onJoin, joiningId }) {
   );
 }
 
-function ForYouSection({ communities, onOpen, onJoin, joiningId }) {
+function ForYouSection({ communities, onOpen, onJoin, joiningId, locationBoostUsed }) {
+  const subtitle = locationBoostUsed
+    ? "Based on the communities you've joined and what's near you"
+    : "Based on the kinds of communities you've joined";
   return (
     <section>
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -1341,7 +1366,7 @@ function ForYouSection({ communities, onOpen, onJoin, joiningId }) {
             <Sparkles className="h-3 w-3" />
             For you
           </div>
-          <p className="text-[13px] font-semibold leading-5 text-slate-500">Based on the kinds of communities you've joined</p>
+          <p className="text-[13px] font-semibold leading-5 text-slate-500">{subtitle}</p>
         </div>
         <span className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-black text-slate-400">
           {communities.length}

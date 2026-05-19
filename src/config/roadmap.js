@@ -610,11 +610,12 @@ Goals:
   {
     id: 'community-discover-type-filter',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Discover — Type Filter Chips',
     description: 'A horizontally scrollable row of community-type filter chips above the Discover section list (e.g. "All", "Neighborhood", "Shul", "Learning") so users can narrow to a specific mini-app type without scrolling through all groups.',
     why: 'After the Discover redesign ships type-grouped sections, the natural next friction is "I only want to see X type" — a single-tap filter resolves this without adding a search interaction.',
+    shippedNote: 'Already implemented in SearchBar component. COMMUNITY_FILTERS (All + each COMMUNITY_TYPE_OPTIONS key/label) renders as a horizontal scroll chip row. typeFilter state wires to filteredCommunities useMemo (community.typeKey === typeFilter), which propagates to discoverCommunities, curatedDiscoverSections, and forYouCommunities (returns [] when filter active). Active chip = bg-slate-950 text-white, inactive = border bg-white. No separate discoverTypeFilter state needed — the existing global typeFilter achieves the same result composably with text search.',
     prompt: `You are adding type filter chips to the JUnited Communities Discover tab.
 
 Context:
@@ -660,11 +661,12 @@ Goals:
   {
     id: 'community-discover-location-boost',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Discover "For You" — Location Signal Boost',
     description: 'Upgrade the "For you" scoring with a neighborhood/location signal: if the user\'s profile includes a location, boost discoverable communities in the same area.',
     why: 'The current "For you" uses typeKey overlap only. Users whose profiles include location data (neighborhood, city) can get meaningfully better personalization by surfacing hyperlocal communities — especially neighborhood and shul types.',
+    shippedNote: 'Shipped 2026-05-19. forYouResult useMemo: locationTerms derived from currentUser.cityPreset and currentUser.locationLabel (both normalized by toAppRow() from profiles.city and profiles.location_label — no extra query). For each type-matched community: +2 if community.location includes any locationTerm (case-insensitive substring). locationBoostUsed flag: true when at least one of the top-4 results has a location match. ForYouSection subtitle switches to "Based on the communities you\'ve joined and what\'s near you" only when locationBoostUsed=true; falls back to type-only copy otherwise. Edge cases: no location terms → score unaffected, subtitle unchanged; no location-matching communities → type-only ranking, type-only copy.',
     prompt: `You are adding a location boost to the "For you" personalization scoring in JUnited Communities Discover.
 
 Context:
