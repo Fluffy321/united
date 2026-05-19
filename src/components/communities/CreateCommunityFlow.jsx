@@ -1,6 +1,7 @@
 import React, { createPortal, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, Lock, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Eye, Lock, Sparkles, X } from 'lucide-react';
 import { COMMUNITY_TYPE_CONFIG } from '@/lib/communityTypes';
+import CommunityLivePreview from './CommunityLivePreview';
 
 const DEFAULT_RULES = 'Be respectful.\nKeep posts relevant.\nProtect member privacy.';
 
@@ -30,7 +31,7 @@ const STEPS = ['Name', 'Type', 'Make it yours', 'Shape it', 'Launch'];
 
 export default function CreateCommunityFlow({ onCreate, onClose }) {
   const [step, setStep] = useState(0);
-  const [showPreview, setShowPreview] = useState(false);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     name: '',
@@ -92,88 +93,121 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-950/45 p-0 sm:p-4 backdrop-blur-sm">
-      <form
-        onSubmit={submit}
-        className="flex h-[min(700px,100dvh)] w-full max-w-[520px] flex-col overflow-hidden rounded-t-[28px] sm:rounded-[28px] bg-white shadow-2xl"
-      >
-        {/* Header */}
-        <header className="shrink-0 border-b border-slate-100 bg-white px-5 pb-3 pt-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-blue-700">
-                  <Sparkles className="h-3 w-3" />
-                  Launch a community
-                </span>
-                {form.archetype && (
-                  <button type="button" onClick={() => setShowPreview((v) => !v)} className="text-[11px] font-black text-slate-400 hover:text-blue-600">
-                    {showPreview ? 'Hide preview' : 'Preview ↗'}
+    <>
+      {/* ── Main dialog ── */}
+      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-950/45 p-0 sm:p-4 backdrop-blur-sm">
+        <div className="flex h-[min(700px,100dvh)] w-full overflow-hidden rounded-t-[28px] sm:rounded-[28px] shadow-2xl max-w-[520px] lg:max-w-[860px]">
+
+          {/* Form panel */}
+          <form
+            onSubmit={submit}
+            className="flex h-full w-full flex-col bg-white lg:w-[480px] lg:flex-shrink-0"
+          >
+            {/* Header */}
+            <header className="shrink-0 border-b border-slate-100 bg-white px-5 pb-3 pt-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-blue-700">
+                      <Sparkles className="h-3 w-3" />
+                      Launch a community
+                    </span>
+                    {/* Mobile-only preview toggle */}
+                    <button
+                      type="button"
+                      onClick={() => setShowMobilePreview(true)}
+                      className="lg:hidden inline-flex items-center gap-1 text-[11px] font-black text-slate-400 hover:text-blue-600"
+                    >
+                      <Eye className="h-3 w-3" />
+                      Preview
+                    </button>
+                  </div>
+                  <h2 className="text-[20px] font-black leading-tight text-slate-950">{STEP_TITLES[step]}</h2>
+                  <p className="mt-0.5 text-[13px] font-semibold leading-5 text-slate-500">{STEP_BODIES[step]}</p>
+                </div>
+                <button type="button" onClick={onClose} className="rounded-full border border-slate-200 bg-white p-2 text-slate-400 hover:bg-slate-50">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              {/* Progress */}
+              <div className="mt-3">
+                <div className="mb-1.5 flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-slate-400">
+                  <span>Step {step + 1} of {STEPS.length}</span>
+                  <span>{STEPS[step]}</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full bg-gradient-to-r from-blue-600 to-emerald-500 transition-all duration-300" style={{ width: `${progress}%` }} />
+                </div>
+              </div>
+            </header>
+
+            {/* Step content */}
+            <section className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+              {step === 0 && <StepName form={form} onField={setField} />}
+              {step === 1 && <StepArchetype form={form} onField={setField} />}
+              {step === 2 && <StepMakeItYours form={form} typeConfig={typeConfig} onField={setField} />}
+              {step === 3 && <StepShape form={form} onField={setField} />}
+              {step === 4 && <StepLaunch form={form} typeConfig={typeConfig} onField={setField} />}
+            </section>
+
+            {error && (
+              <div className="mx-5 mb-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-bold text-amber-800">
+                {error}
+              </div>
+            )}
+
+            {/* Footer nav */}
+            <footer className="shrink-0 border-t border-slate-100 bg-slate-50 px-5 py-3">
+              <div className="flex gap-3">
+                <button type="button" onClick={step === 0 ? onClose : goBack} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white text-sm font-black text-slate-800 hover:bg-slate-50">
+                  {step === 0 ? 'Cancel' : <><ArrowLeft className="h-4 w-4" /> Back</>}
+                </button>
+                {step < 4 ? (
+                  <button type="button" onClick={goNext} className="inline-flex h-11 flex-[1.5] items-center justify-center gap-2 rounded-2xl bg-blue-700 text-sm font-black text-white hover:bg-blue-800">
+                    {step === 0 && !form.archetype ? 'Continue' : 'Next'}
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <button type="submit" className="inline-flex h-11 flex-[1.5] items-center justify-center gap-2 rounded-2xl bg-slate-950 text-sm font-black text-white hover:bg-slate-800">
+                    <Check className="h-4 w-4" />
+                    Launch Community
                   </button>
                 )}
               </div>
-              <h2 className="text-[20px] font-black leading-tight text-slate-950">{STEP_TITLES[step]}</h2>
-              <p className="mt-0.5 text-[13px] font-semibold leading-5 text-slate-500">{STEP_BODIES[step]}</p>
-            </div>
-            <button type="button" onClick={onClose} className="rounded-full border border-slate-200 bg-white p-2 text-slate-400 hover:bg-slate-50">
+            </footer>
+          </form>
+
+          {/* Desktop preview panel */}
+          <div className="hidden lg:flex flex-1 flex-col items-center justify-center gap-3 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-8 py-8">
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/25">Live Preview</p>
+            <CommunityLivePreview form={form} step={step} />
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── Mobile preview sheet ── */}
+      {showMobilePreview && (
+        <div className="fixed inset-0 z-[110] flex flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 lg:hidden">
+          <div
+            className="flex flex-shrink-0 items-center justify-between px-4 pb-2"
+            style={{ paddingTop: 'max(16px, env(safe-area-inset-top))' }}
+          >
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/30">Live Preview</p>
+            <button
+              type="button"
+              onClick={() => setShowMobilePreview(false)}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white active:bg-white/20"
+            >
               <X className="h-4 w-4" />
             </button>
           </div>
-          {/* Progress bar */}
-          <div className="mt-3">
-            <div className="mb-1.5 flex items-center justify-between text-[10px] font-black uppercase tracking-wide text-slate-400">
-              <span>Step {step + 1} of {STEPS.length}</span>
-              <span>{STEPS[step]}</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full rounded-full bg-gradient-to-r from-blue-600 to-emerald-500 transition-all duration-300" style={{ width: `${progress}%` }} />
-            </div>
+          <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 pb-8">
+            <CommunityLivePreview form={form} step={step} />
           </div>
-        </header>
-
-        {/* Live preview (toggled) */}
-        {showPreview && form.archetype && (
-          <div className="shrink-0 border-b border-slate-100 bg-slate-50 px-5 py-3">
-            <CommunityLivePreview form={form} typeConfig={typeConfig} />
-          </div>
-        )}
-
-        {/* Step content */}
-        <section className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
-          {step === 0 && <StepName form={form} onField={setField} />}
-          {step === 1 && <StepArchetype form={form} onField={setField} />}
-          {step === 2 && <StepMakeItYours form={form} typeConfig={typeConfig} onField={setField} />}
-          {step === 3 && <StepShape form={form} onField={setField} />}
-          {step === 4 && <StepLaunch form={form} typeConfig={typeConfig} onField={setField} />}
-        </section>
-
-        {error && (
-          <div className="mx-5 mb-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-bold text-amber-800">
-            {error}
-          </div>
-        )}
-
-        {/* Footer nav */}
-        <footer className="shrink-0 border-t border-slate-100 bg-slate-50 px-5 py-3">
-          <div className="flex gap-3">
-            <button type="button" onClick={step === 0 ? onClose : goBack} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white text-sm font-black text-slate-800 hover:bg-slate-50">
-              {step === 0 ? 'Cancel' : <><ArrowLeft className="h-4 w-4" /> Back</>}
-            </button>
-            {step < 4 ? (
-              <button type="button" onClick={goNext} className="inline-flex h-11 flex-[1.5] items-center justify-center gap-2 rounded-2xl bg-blue-700 text-sm font-black text-white hover:bg-blue-800">
-                {step === 0 && !form.archetype ? 'Continue' : 'Next'}
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            ) : (
-              <button type="submit" className="inline-flex h-11 flex-[1.5] items-center justify-center gap-2 rounded-2xl bg-slate-950 text-sm font-black text-white hover:bg-slate-800">
-                <Check className="h-4 w-4" />
-                Launch Community
-              </button>
-            )}
-          </div>
-        </footer>
-      </form>
-    </div>,
+        </div>
+      )}
+    </>,
     document.body
   );
 }
@@ -348,7 +382,6 @@ function StepShape({ form, onField }) {
 function StepLaunch({ form, typeConfig, onField }) {
   const archType = ARCHETYPES.find((a) => a.key === form.archetype);
   const smartPost = SMART_FIRST_POST[form.archetype] || SMART_FIRST_POST.general;
-  // Pre-populate first content if blank
   React.useEffect(() => {
     if (!form.firstContent) onField('firstContent', smartPost);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -384,50 +417,6 @@ function StepLaunch({ form, typeConfig, onField }) {
       <div className="rounded-2xl bg-gradient-to-br from-slate-950 to-blue-900 p-4 text-white">
         <p className="text-[15px] font-black">Ready to launch 🚀</p>
         <p className="mt-1 text-[12px] font-semibold text-white/70">After launch, you'll be taken to your new community with an admin setup panel to invite members, add events, and customize further.</p>
-      </div>
-    </div>
-  );
-}
-
-// ── Live preview component ────────────────────────────────────────────────────
-
-function CommunityLivePreview({ form, typeConfig }) {
-  if (!typeConfig) return null;
-  const primaryTabs = typeConfig.primaryTabs || ['home', 'posts', 'members'];
-  const TAB_LABELS = { home: 'Home', posts: 'Posts', events: 'Events', members: 'Members', openNeeds: 'Needs', questions: 'Questions', discussions: 'Discussions', resources: 'Resources', about: 'About' };
-
-  return (
-    <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-      {/* Mini cover */}
-      <div className="h-12 w-full relative" style={{ background: typeConfig.coverPattern }}>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-      </div>
-      {/* Identity */}
-      <div className="bg-white px-3 pb-2 border-b border-slate-100">
-        <div className="flex items-center gap-2 -mt-4">
-          <div className={`h-8 w-8 rounded-lg border-2 border-white shadow flex items-center justify-center bg-gradient-to-br ${typeConfig.accent} text-white text-[10px] font-black`}>
-            {(form.name || 'C')[0]?.toUpperCase()}
-          </div>
-          <div className="pt-3">
-            <p className="text-[12px] font-black text-slate-900 leading-tight truncate max-w-[160px]">{form.name || 'Your Community'}</p>
-            <p className="text-[10px] text-slate-400">{typeConfig.label}</p>
-          </div>
-        </div>
-      </div>
-      {/* Tab pills */}
-      <div className="bg-white border-b border-slate-100 flex gap-1 px-2 py-1.5 overflow-x-auto">
-        {primaryTabs.slice(0, 4).map((tab, i) => (
-          <span key={tab} className={`shrink-0 rounded-md px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${i === 0 ? 'bg-blue-50 text-blue-700' : 'text-slate-400'}`}>
-            {TAB_LABELS[tab] || tab}
-          </span>
-        ))}
-        <span className="shrink-0 rounded-md px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-slate-400">More</span>
-      </div>
-      {/* Composer preview */}
-      <div className="bg-[#F8FAFB] px-3 py-2">
-        <div className="rounded-lg bg-white border border-slate-100 px-3 py-2">
-          <span className="text-[10px] font-semibold text-slate-400">{typeConfig.prompts[0] || 'Share something...'}</span>
-        </div>
       </div>
     </div>
   );

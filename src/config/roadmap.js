@@ -286,29 +286,11 @@ Goals:
   {
     id: 'community-live-preview-builder',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Community Live Preview Builder',
     description: 'Full real-time side-by-side preview during community creation showing exactly how the community will look, including nav tabs, home sections, and composer style.',
-    why: 'The creation flow has a toggleable mini preview. A full-screen split-view builder (desktop) or scrollable preview (mobile) would materially increase creator confidence and reduce post-launch edits.',
-    prompt: `You are implementing a full live preview builder for JUnited community creation.
-
-Context:
-- CreateCommunityFlow.jsx: the new 5-step creation flow (src/components/communities/CreateCommunityFlow.jsx)
-- CommunityLivePreview: the mini preview component already in CreateCommunityFlow.jsx
-- communityTypes.js: typeConfig shapes (primaryTabs, composerMode, homeEmphasis, coverPattern)
-
-Goals:
-1. Expand CommunityLivePreview into a richer CommunityCreationPreview component with:
-   - Full 300px+ tall community header (gradient/name/type)
-   - Nav tab pills matching the archetype's primaryTabs
-   - A sample composer in the archetype's composerMode
-   - 2-3 sample placeholder posts styled per type
-   - A sample ImportantRightNow strip
-2. On desktop (sm+): show preview in a right-side panel beside the step form in CreateCommunityFlow
-3. On mobile: keep the toggleable mini preview but make it full-screen when toggled
-4. Ensure all preview updates are instantaneous (reactive to form state)
-5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+    shippedNote: 'Shipped 2026-05-19. CommunityLivePreview.jsx: new standalone component (248px phone shell with status bar, 92px branded cover with gradient+name overlay, action bar, nav tabs, step-aware content area). PREVIEW_SAMPLES provides archetype-specific content per type (8 archetypes): type-colored important strip, composer placeholder, 2 sample feed cards with badges/likes/replies. Step awareness: step 0 shows placeholder; step 1+ reveals strip+feed; step 2+ adds description card; step 3+ adds privacy+posting mode badges; step 4+ swaps feed for the typed first post draft. CreateCommunityFlow.jsx: desktop (lg+) renders side-by-side with dark gradient preview panel on right (max-w-[860px]); mobile retains "Preview" button in header that opens a full-screen dark overlay sheet (z-[110]) with the same CommunityLivePreview; inline toggle preview removed. Step caption rendered below phone shell. All preview state derives directly from form state with no data fetches.',
   },
 
   {
@@ -319,6 +301,30 @@ Goals:
     title: 'Advanced Community Layout (Premium)',
     description: 'Let premium community admins customize: primary tab order, home section visibility/order, feed blend behavior, composer mode. Free communities get curated presets.',
     shippedNote: 'Shipped 2026-05-19. CommunityAdminCenter.jsx: new Layout tab (LayoutGrid icon) between Appeals and Settings. Free tier: 4 preset cards (Balanced ⚖️, Social 💬, Announcements 📢, Action 🤝) — all selectable, no lock. Premium tier: nav tab up/down reorder with primary/overflow chip labels, home section visibility toggles + reorder (composer and feed required, others optional), composer mode selector (conversational/standard post/official update/help requests). Right-side live preview shows nav pills + ordered section stack. Sticky save button writes communities.settings.layout JSONB. getCommunityNavConfig() in communityTypes.js reads savedLayout.primaryTabs to override type defaults. RoutedCommunityHome in CommunityDetailView.jsx reads layoutSettings.homeSections (section order), layoutSettings.hiddenSections (visibility), and layoutSettings.composerMode — renders via sectionMap+orderedSections pattern. useSwipeableTabs hook rewritten with setPointerCapture, directional abort in onPointerMove, and touch-action:pan-y for clean mobile swipe.',
+  },
+
+  {
+    id: 'community-creation-cover-upload',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Cover Photo Upload in Creation Flow',
+    description: 'Let admins upload a custom cover photo during step 2 ("Make it yours") of the new CreateCommunityFlow, replacing the type-gradient placeholder. Preview updates live.',
+    why: 'The legacy CreateCommunityForm (still in CreateCommunityModal.jsx) had cover upload, but it was never ported to the new 5-step CreateCommunityFlow. The live preview now shows the gradient — uploading a real cover would make the preview much more personal and the community feel owned immediately.',
+    prompt: `You are adding cover photo upload to the JUnited community creation flow.
+
+Context:
+- src/components/communities/CreateCommunityFlow.jsx: the 5-step creation flow; step 2 is StepMakeItYours
+- src/components/communities/CommunityLivePreview.jsx: the live preview component; renders a cover using typeConfig.coverPattern; if a coverPreviewUrl is passed it should render that instead
+- src/components/communities/CreateCommunityModal.jsx: the legacy CreateCommunityForm path has cover upload logic (fileRef, coverImage, coverPreview via FileReader + Supabase storage upload on submit) — reference this for the upload pattern
+- supabase storage: community cover images are stored in the 'communities' bucket under 'covers/'
+
+Goals:
+1. Add a coverFile and coverPreviewUrl to CreateCommunityFlow form state
+2. In StepMakeItYours, add an optional "Add cover photo" tap target (dashed border, image preview if set, click to replace) — same visual style as the legacy form
+3. Pass coverPreviewUrl into CommunityLivePreview and render it as the cover background image when present (fall back to gradient if null)
+4. On submit (onCreate payload), include coverFile so CreateCommunityModal.handleCreateFromFlow can upload it to Supabase storage and set cover_url on the community
+5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
