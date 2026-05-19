@@ -36,6 +36,7 @@ import {
   SinceLastVisitDigest,
 } from './CommunityOperatingSystem';
 import CommunityPersonalizationHub from './CommunityPersonalizationHub';
+import CommunityPostLaunchPanel from './CommunityPostLaunchPanel';
 
 const CLAIM_COPY = {
   School: { question: 'Is this your school?', cta: 'Claim this school' },
@@ -477,6 +478,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             events={events}
             resources={resources}
             isAdmin={isAdmin}
+            isCreator={isCreator}
             isFollowing={isFollowing}
             lastVisitedAt={lastVisit?.visited_at}
             currentUser={currentUser}
@@ -784,6 +786,8 @@ function TypeAwareComposer({ typeConfig, composeText, setComposeText, submitPost
   );
 }
 
+const POST_LAUNCH_DISMISS_KEY = (id) => `post_launch_dismissed_${id}`;
+
 function RoutedCommunityHome({
   community,
   typeConfig,
@@ -799,6 +803,7 @@ function RoutedCommunityHome({
   events,
   resources,
   isAdmin,
+  isCreator,
   isFollowing,
   lastVisitedAt,
   currentUser,
@@ -806,6 +811,19 @@ function RoutedCommunityHome({
   openAdminCenter,
   onOpenEvent,
 }) {
+  const [panelDismissed, setPanelDismissed] = React.useState(
+    () => Boolean(localStorage.getItem(POST_LAUNCH_DISMISS_KEY(community?.id)))
+  );
+
+  const handleDismissPanel = () => {
+    try { localStorage.setItem(POST_LAUNCH_DISMISS_KEY(community.id), '1'); } catch {}
+    setPanelDismissed(true);
+  };
+
+  const communityCreatedAt = community?.created_at || community?.created_date;
+  const ageMs = communityCreatedAt ? Date.now() - new Date(communityCreatedAt).getTime() : 0;
+  const isRecent = !communityCreatedAt || ageMs < 14 * 24 * 60 * 60 * 1000;
+  const showPanel = isFollowing && isCreator && !panelDismissed && isRecent;
   if (!isFollowing) {
     // ── Visitor landing page ───────────────────────────────────────────────────
     return (
@@ -914,6 +932,19 @@ function RoutedCommunityHome({
 
   return (
     <div className="space-y-3 pt-3">
+      {showPanel && (
+        <CommunityPostLaunchPanel
+          community={community}
+          typeConfig={typeConfig}
+          posts={posts}
+          events={events}
+          resources={resources}
+          activeNeeds={activeNeeds}
+          members={members}
+          onTabChange={onTabChange}
+          onDismiss={handleDismissPanel}
+        />
+      )}
       {orderedSections.map(({ key, component }) => (
         <React.Fragment key={key}>{component}</React.Fragment>
       ))}

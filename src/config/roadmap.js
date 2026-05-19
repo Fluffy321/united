@@ -356,11 +356,12 @@ Goals:
   {
     id: 'community-mini-app-post-launch-panel',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Community Post-Launch Admin Panel',
     description: 'After creating a community, show a dismissible "Next steps" admin setup panel with guided actions: invite members, add first event, customize layout, share welcome post.',
     why: 'New community admins often get stuck after creation. A non-intrusive "what to do next" strip makes the community feel less empty and increases first-30-day engagement.',
+    shippedNote: 'Shipped 2026-05-19. CommunityPostLaunchPanel.jsx: new component; type-aware action list for all 8 archetypes (neighborhood/shul/chesed/parents/learning/events/marketplace/general), 3–4 actions each. Completion detection: invite → members.length > 1, events/resources/openNeeds/posts → length checks on already-fetched data, announcements/discussions/questions → post type filter. Progress bar tracks completed/total count. Dismiss: localStorage key post_launch_dismissed_{communityId}, persists across refreshes. Shown in RoutedCommunityHome when isCreator && !dismissed && community < 14 days old. Placed as first card above all orderedSections. Action buttons: tab-navigation actions call onTabChange(tab); invite copies link via navigator.share → navigator.clipboard fallback + toast. X button and "Skip for now" footer link both dismiss. No DB migration — localStorage is sufficient for MVP.',
     prompt: `You are implementing a post-launch admin panel for newly created JUnited communities.
 
 Context:
