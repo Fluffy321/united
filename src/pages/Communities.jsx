@@ -18,6 +18,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { dataService, incrementCounter } from '@/services';
+import { supabase } from '@/api/supabaseClient';
 import { toast } from 'sonner';
 import { appParams } from '@/lib/app-params';
 import CommunityHubCard from '@/components/communities/CommunityHubCard';
@@ -544,6 +545,17 @@ export default function Communities() {
   );
   const joinedIds = useMemo(() => new Set(memberships.map((m) => m.community_id)), [memberships]);
 
+  const { data: rawNewActivityIds = [] } = useQuery({
+    queryKey: ['communities-new-activity', currentUser?.id],
+    queryFn: async () => {
+      const { data } = await supabase.rpc('get_communities_with_new_activity');
+      return data || [];
+    },
+    enabled: !!currentUser,
+    staleTime: 60000,
+  });
+  const newActivityIds = useMemo(() => new Set(rawNewActivityIds), [rawNewActivityIds]);
+
   const communities = useMemo(() => {
     const effectiveJoined = new Set([...joinedIds, ...optimisticJoins]);
     optimisticLeaves.forEach((id) => effectiveJoined.delete(id));
@@ -964,6 +976,7 @@ export default function Communities() {
                     onJoin={handleJoin}
                     onManage={(community) => setAdminShortcutCommunity(community)}
                     joiningId={joiningId}
+                    newActivityIds={newActivityIds}
                   />
                   <CommunitySection
                     title="Communities You Joined"
@@ -978,6 +991,7 @@ export default function Communities() {
                     onTryPrompt={openCommunityWithPrompt}
                     onJoin={handleJoin}
                     joiningId={joiningId}
+                    newActivityIds={newActivityIds}
                   />
                 </div>
               </CommunitySection>
@@ -1242,6 +1256,7 @@ function CommunitySection({
   onJoin,
   onManage,
   joiningId,
+  newActivityIds,
   children,
 }) {
   if (children) {
@@ -1293,16 +1308,17 @@ function CommunitySection({
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {communities.map((community) => (
-          <CommunityHubCard
-            key={community.id}
-            community={community}
-            loading={joiningId === community.id}
-            onOpen={() => onOpen(community.id)}
-            onTryPrompt={(prompt) => onTryPrompt?.(community, prompt)}
-            onToggleJoin={(options) => onJoin(community.id, options)}
-            managementRole={community.managementRole}
-            onManage={community.managementRole ? () => onManage?.(community) : undefined}
-          />
+            <CommunityHubCard
+              key={community.id}
+              community={community}
+              loading={joiningId === community.id}
+              onOpen={() => onOpen(community.id)}
+              onTryPrompt={(prompt) => onTryPrompt?.(community, prompt)}
+              onToggleJoin={(options) => onJoin(community.id, options)}
+              managementRole={community.managementRole}
+              onManage={community.managementRole ? () => onManage?.(community) : undefined}
+              hasNewActivity={newActivityIds?.has(community.id) ?? false}
+            />
           ))}
         </div>
       )}

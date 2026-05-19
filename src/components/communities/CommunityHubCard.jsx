@@ -33,6 +33,7 @@ export default function CommunityHubCard({
   onManage,
   managementRole,
   loading = false,
+  hasNewActivity = false,
 }) {
   const typeConfig = getCommunityTypeConfig(community);
   const Icon = typeConfig.icon;
@@ -97,13 +98,21 @@ export default function CommunityHubCard({
       <div className="relative -mt-6 px-3.5 pb-3.5">
         {/* Avatar + join button */}
         <div className="flex items-end justify-between gap-2">
-          <div
-            className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${accent} text-[13px] font-black text-white shadow-md ring-[2px] ring-white`}
-          >
-            {community.logo_url ? (
-              <img src={community.logo_url} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <Icon className="h-5 w-5" />
+          <div className="relative shrink-0">
+            <div
+              className={`flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${accent} text-[13px] font-black text-white shadow-md ring-[2px] ring-white`}
+            >
+              {community.logo_url ? (
+                <img src={community.logo_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <Icon className="h-5 w-5" />
+              )}
+            </div>
+            {hasNewActivity && (
+              <span
+                aria-label="New activity"
+                className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-blue-500 ring-2 ring-white"
+              />
             )}
           </div>
 
