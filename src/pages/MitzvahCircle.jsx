@@ -507,26 +507,22 @@ function RequestCard({
 	            {request.description}
 	          </p>
 	
-	          <div className="mt-2 rounded-xl border border-slate-100 bg-white/75 px-2.5 py-1.5">
-	            <div className="flex items-center gap-2">
-	              <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-black ${urgencyInfo.tone}`}>
-	                <Clock className="h-3 w-3" />
-	                {urgencyInfo.detail}
-	              </span>
-	              <div className="min-w-0 flex-1">
-	                <div className="flex items-center justify-between gap-2">
-	                  <p className="truncate text-[11px] font-black text-slate-800">{progress.title}</p>
-	                  <span className="shrink-0 text-[10px] font-black text-slate-500">{progress.percent}%</span>
-	                </div>
-	                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100">
-	                  <div
-	                    className={`h-full rounded-full bg-gradient-to-r ${progressTone} transition-all duration-300`}
-	                    style={{ width: `${progress.percent}%` }}
-	                  />
-	                </div>
-	              </div>
-	            </div>
-	          </div>
+		          <div className="mt-1.5">
+		            <div className="flex items-center gap-2 text-[10px] font-black text-slate-600">
+		              <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 ${urgencyInfo.tone}`}>
+		                <Clock className="h-3 w-3" />
+		                {urgencyInfo.detail}
+		              </span>
+		              <span className="min-w-0 flex-1 truncate">{progress.title}</span>
+		              <span className="shrink-0 text-slate-400">{progress.percent}%</span>
+		            </div>
+		            <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-100">
+		              <div
+		                className={`h-full rounded-full bg-gradient-to-r ${progressTone} transition-all duration-300`}
+		                style={{ width: `${progress.percent}%` }}
+		              />
+		            </div>
+		          </div>
 
           {request.status === STATUSES.VERIFIED && (
 	            <div className="mt-2 flex items-center gap-2 rounded-xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white px-2.5 py-2">
@@ -593,12 +589,12 @@ function RequestCard({
         )}
       </div>
 
-	      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-slate-500">
+	      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-slate-500">
 	        <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-1.5 py-0.5">
 	          <Clock className="h-3 w-3" />
-	          {request.estimatedHours} hrs
+	          {request.estimatedHours}h
 	        </span>
-	        <span className="inline-flex max-w-[140px] items-center gap-1 truncate rounded-full bg-slate-50 px-1.5 py-0.5">
+	        <span className="inline-flex max-w-[120px] items-center gap-1 truncate rounded-full bg-slate-50 px-1.5 py-0.5">
 	          <Users className="h-3 w-3" />
 	          <span className="truncate">{request.poster_name}</span>
 	        </span>
@@ -627,14 +623,14 @@ function RequestCard({
         </div>
       )}
 
-	      <div className="mt-2 flex flex-wrap gap-1.5">
+		      <div className="mt-1.5 flex flex-wrap gap-1.5">
 	        {canOffer && (
 	          <button
 	            onClick={() => onOffer(request)}
-	            className="chesed-cta-pulse app-button-primary h-8 px-2.5 text-[11px]"
+		            className="chesed-cta-pulse app-button-primary h-7 rounded-lg px-2 text-[10px]"
             style={{ background: '#556B2F' }}
           >
-            <HandHeart className="h-4 w-4" />
+	            <HandHeart className="h-3.5 w-3.5" />
             {helpCta}
           </button>
         )}
@@ -642,68 +638,53 @@ function RequestCard({
 	          <button
 	            type="button"
 	            onClick={() => onOpenMap(request)}
-	            className="motion-press inline-flex h-8 items-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-2.5 text-[11px] font-black text-blue-700"
+		            className="motion-press inline-flex h-7 items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2 text-[10px] font-black text-blue-700"
           >
-            <MapPin className="h-4 w-4" />
+	            <MapPin className="h-3.5 w-3.5" />
 	            Map
           </button>
         )}
         {myOffer && myOffer.status === 'offered' && (
-	          <span className="inline-flex h-8 items-center rounded-xl border border-blue-200 bg-blue-50 px-2.5 text-[11px] font-black text-blue-700">
+	          <span className="inline-flex h-7 items-center rounded-lg border border-blue-200 bg-blue-50 px-2 text-[10px] font-black text-blue-700">
             Offer sent ✓
           </span>
         )}
         {canStart && (
 	          <button
 	            onClick={() => onStart(request.id)}
-	            className="app-button-primary h-8 bg-indigo-600 px-2.5 text-[11px] hover:bg-indigo-700"
+	            className="app-button-primary h-7 rounded-lg bg-indigo-600 px-2 text-[10px] hover:bg-indigo-700"
           >
-            <UserCheck className="h-4 w-4" />
+	            <UserCheck className="h-3.5 w-3.5" />
 	            Start
           </button>
         )}
         {canComplete && (
 	          <button
 	            onClick={() => onComplete(request.id)}
-	            className="app-button-primary h-8 bg-purple-600 px-2.5 text-[11px] hover:bg-purple-700"
+	            className="app-button-primary h-7 rounded-lg bg-purple-600 px-2 text-[10px] hover:bg-purple-700"
           >
-            <CheckCircle2 className="h-4 w-4" />
+	            <CheckCircle2 className="h-3.5 w-3.5" />
             Mark Completed
           </button>
         )}
         {canVerify && (
 	          <button
 	            onClick={() => onVerify(request.id)}
-	            className="app-button-primary h-8 bg-emerald-600 px-2.5 text-[11px] hover:bg-emerald-700"
+	            className="app-button-primary h-7 rounded-lg bg-emerald-600 px-2 text-[10px] hover:bg-emerald-700"
           >
-            <ShieldCheck className="h-4 w-4" />
+	            <ShieldCheck className="h-3.5 w-3.5" />
             Verify Completion
           </button>
         )}
         {isPoster && acceptedVolunteerId === currentUser?.id && request.status === STATUSES.PENDING && (
-	          <span className="inline-flex h-8 items-center rounded-xl border border-red-200 bg-red-50 px-2.5 text-[11px] font-black text-red-700">
+	          <span className="inline-flex h-7 items-center rounded-lg border border-red-200 bg-red-50 px-2 text-[10px] font-black text-red-700">
             Cannot verify your own hours
           </span>
         )}
       </div>
 
-	      <div className="mt-2 rounded-xl border border-slate-100 bg-slate-50/70 px-2.5 py-1.5">
-        <button
-          type="button"
-          onClick={() => setDiscussionOpen((value) => !value)}
-          className="flex w-full items-center justify-between gap-2 text-left"
-        >
-	          <span className="inline-flex items-center gap-1.5 text-[12px] font-black text-slate-800">
-	            <MessageCircle className="h-3.5 w-3.5 text-blue-600" />
-	            Discussion
-	          </span>
-	          <span className="text-[11px] font-black text-slate-500">
-            {commentCount > 0 ? `${commentCount} replies` : 'Start one'}
-          </span>
-        </button>
-
-        {discussionOpen && (
-          <div className="mt-3 space-y-2">
+	        {discussionOpen && (
+	          <div className="mt-2 space-y-2 rounded-xl border border-slate-100 bg-slate-50/70 px-2.5 py-2">
             {comments.length > 0 ? (
               comments.slice(-4).map((comment) => (
                 <div key={comment.id} className="flex gap-2 rounded-2xl bg-white p-2">
@@ -742,9 +723,8 @@ function RequestCard({
                 <Send className="h-4 w-4" />
               </button>
             </form>
-          </div>
-        )}
-      </div>
+	          </div>
+	        )}
     </article>
   );
 }
