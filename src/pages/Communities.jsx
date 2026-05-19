@@ -25,13 +25,12 @@ import { appParams } from '@/lib/app-params';
 import CommunityHubCard from '@/components/communities/CommunityHubCard';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
 import CommunityAdminCenter from '@/components/communities/CommunityAdminCenter';
-import CreateCommunityForm from '@/components/communities/CreateCommunityForm';
+import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
 import MessagesDrawer from '@/components/communities/MessagesDrawer';
 import DestinationHeader from '@/components/layout/DestinationHeader';
 import { COMMUNITY_TYPE_OPTIONS, getCommunityTypeConfig, getCommunityTypeKey } from '@/lib/communityTypes';
 
 const COMMUNITY_FILTERS = [{ key: 'all', label: 'All' }, ...COMMUNITY_TYPE_OPTIONS.map(({ key, label }) => ({ key, label }))];
-const CREATE_CATEGORIES = COMMUNITY_TYPE_OPTIONS.map(({ label }) => label);
 const MANAGEMENT_ROLES = new Set(['owner', 'admin', 'moderator']);
 
 const EXPERIENCE_SEEDS = [
@@ -861,51 +860,10 @@ export default function Communities() {
     setJoiningId(null);
   };
 
-  const createCommunity = async (formData) => {
-    if (!currentUser) return;
-    try {
-      const typeKey = formData.typeKey || getCommunityTypeKey({ category: formData.category });
-      const created = await dataService.entities.Community.create({
-        name: formData.name,
-        description: formData.description,
-        type: typeKey,
-        category: formData.category,
-        template_key: typeKey,
-        tagline: formData.tagline,
-        privacy: formData.privacy,
-        location: formData.location || 'Local community',
-        created_by_user_id: currentUser.id,
-        created_by_name: currentUser.display_name || currentUser.full_name || 'Community member',
-        follower_count: 1,
-        settings: {
-          communityType: formData.communityType,
-          supportsIncognito: formData.supportsIncognito,
-          supportsAnonymousPosting: formData.supportsAnonymousPosting,
-          hideMembershipDefault: formData.hideMembershipDefault,
-          identityTags: formData.identityTags,
-          rules: formData.rules,
-          aiSetupPrompt: formData.aiSetupPrompt || '',
-        },
-      });
-      const existingMembership = await dataService.entities.UserCommunity.filter({
-        user_id: currentUser.id,
-        community_id: created.id,
-      });
-      if (!existingMembership.length) {
-        await dataService.entities.UserCommunity.create({
-          user_id: currentUser.id,
-          community_id: created.id,
-          role: 'admin',
-        });
-      }
-      queryClient.invalidateQueries({ queryKey: ['communities-list'] });
-      queryClient.invalidateQueries({ queryKey: ['communities-memberships', currentUser?.id] });
-      setSelectedCommunityId(created.id);
-      setShowCreate(false);
-      toast.success('Community created!');
-    } catch {
-      toast.error('Failed to create community');
-    }
+  const handleCommunityCreated = (community) => {
+    queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+    queryClient.invalidateQueries({ queryKey: ['communities-memberships', currentUser?.id] });
+    setSelectedCommunityId(community.id);
   };
 
   if (selectedCommunity) {
@@ -1086,10 +1044,11 @@ export default function Communities() {
       </div>
 
       {showCreate && (
-        <CreateCommunityForm
-          categories={CREATE_CATEGORIES}
-          onCreate={createCommunity}
-          onClose={() => setShowCreate(false)}
+        <CreateCommunityModal
+          open={showCreate}
+          onOpenChange={(v) => { if (!v) setShowCreate(false); }}
+          currentUser={currentUser}
+          onCreated={handleCommunityCreated}
         />
       )}
 
