@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, Clock, Home, Loader2 } from 'lucide-react';
+import { CheckCircle2, Clock, Home, Loader2, Receipt } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/api/supabaseClient';
@@ -114,6 +114,14 @@ export default function ThankYou() {
           </div>
         )}
 
+        {/* Receipt confirmation — shown once payment is confirmed */}
+        {isConfirmed && user && (
+          <div className="flex items-center justify-center gap-2 text-[13px] text-green-700 font-semibold mb-4">
+            <Receipt className="w-4 h-4 shrink-0" />
+            Receipt saved in your JUnited account.
+          </div>
+        )}
+
         {/* Note about pending state */}
         {isPending && (
           <p className="text-[12px] text-slate-400 mb-4">
@@ -127,6 +135,12 @@ export default function ThankYou() {
             Back to Home
           </button>
         </Link>
+
+        {user && (
+          <Link to={createPageUrl('Settings')} className="block mt-3 text-center text-[12px] text-slate-400 hover:text-blue-600 transition-colors font-medium">
+            View transaction history →
+          </Link>
+        )}
       </div>
     </div>
   );

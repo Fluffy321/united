@@ -1596,32 +1596,12 @@ Goals:
   {
     id: 'in-app-payment-retention-trust-layer',
     category: 'Growth & Monetization',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'In-App Payment Trust & Retention Layer',
     description: 'UX and policy system that makes in-app payments easier and more useful than Zelle/Venmo without pretending off-platform payment can be fully prevented.',
     why: 'JUnited can encourage in-app payment through convenience, records, status, receipts, admin visibility, and safer workflows, but should not overpromise enforcement.',
-    needs: 'connect-platform-payments-application-fees',
-    prompt: `You are implementing the in-app payment trust and retention layer for JUnited.
-
-Context:
-  - platform_payments must already be shipped.
-  - Existing UI includes comments, messages, community events, listings, and Mitzvah flows.
-
-Goals:
-1. Add clear in-app payment benefits in payment-eligible contexts:
-   - receipt stored in JUnited,
-   - payment-linked completion state,
-   - admin/community record,
-   - easier refund/dispute/support path,
-   - no need to exchange payment handles.
-2. Add payment_status displays on eligible event/listing/mitzvah cards where a user is involved.
-3. Add light policy copy discouraging payment handles in transaction contexts when an in-app
-   payment option exists. Do not over-block ordinary conversation.
-4. Add moderation/report signal for suspicious payment-handle pressure.
-5. Add admin/community transaction summaries where relevant.
-6. Run npm run lint && npm run typecheck && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+    shippedNote: 'Phase 1 (active payment surfaces): (1) PaymentTrustBenefits.jsx shared component — compact icon-row block: receipt saved, easier refunds/disputes/support, no payment-handle exchange, optional community-record row for admin contexts. (2) PaymentModal — trust block shown above pay CTA for all active checkout flows (donations, event registration, community membership). (3) EventTicketSection paid path — dev "Demo only" note replaced with PaymentTrustBenefits so trust framing is in place when paid ticket checkout goes live. (4) ThankYou page — receipt-saved confirmation row + transaction history link shown after confirmed payment. (5) ReportModal — "off_platform_payment_pressure" reason added (priority: high) so users can report messages pressuring off-platform payment. Deferred pending connect-platform-payments-application-fees: per-card payment status badges on event/listing/mitzvah items, chat payment guidance with transaction context, admin community transaction revenue summaries.',
   },
 
   {

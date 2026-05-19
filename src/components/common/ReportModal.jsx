@@ -17,6 +17,7 @@ const REASONS = [
   { value: 'self_harm', label: '⚠️ Self-harm or safety concern' },
   { value: 'doxxing', label: '🔍 Sharing private information' },
   { value: 'antisemitism', label: '✡️ Antisemitism or hate speech' },
+  { value: 'off_platform_payment', label: '💳 Pressuring me to pay outside JUnited' },
   { value: 'other', label: '🔖 Other' },
 ];
 
@@ -30,6 +31,7 @@ const PRIORITY_MAP = {
   misinformation: 'medium',
   shidduch_concern: 'high',
   spam: 'low',
+  off_platform_payment: 'high',
   other: 'medium',
 };
 

@@ -3,6 +3,7 @@ import { X, Heart, Ticket, Users, CreditCard, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { paymentsService } from '@/services';
 import { toast } from 'sonner';
+import PaymentTrustBenefits from './PaymentTrustBenefits';
 
 const DONATION_PRESETS = [10, 25, 50, 100];
 
@@ -179,6 +180,11 @@ export default function PaymentModal({
           </div>
           <span className="text-[16px] font-bold text-slate-900">${displayAmount.toFixed(2)}</span>
         </div>
+
+        <PaymentTrustBenefits
+          showAdminRecord={type === 'event_registration' || type === 'service_payment'}
+          className="mb-4"
+        />
 
         <Button
           onClick={handlePay}

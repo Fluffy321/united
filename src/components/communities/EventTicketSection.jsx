@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Ticket, Users, ChevronDown, ChevronUp, Loader2, ShoppingCart, CheckCircle } from 'lucide-react';
 import { dataService } from '@/services';
 import { toast } from 'sonner';
+import PaymentTrustBenefits from '@/components/payments/PaymentTrustBenefits';
 
 const RSVP_OPTIONS = [
   { value: 'going', label: 'Going', activeClass: 'bg-emerald-600 text-white border-emerald-600' },
@@ -177,9 +178,7 @@ export default function EventTicketSection({ event, currentUser, past }) {
                 Paid Tickets Coming Soon
               </button>
             </div>
-            <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-semibold text-amber-800">
-              Demo only: paid ticket checkout is not connected, so no money is processed.
-            </p>
+            <PaymentTrustBenefits showAdminRecord className="mt-2" />
           </>
         )}
 
