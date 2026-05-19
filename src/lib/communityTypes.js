@@ -362,7 +362,12 @@ export function getCommunityTabLabel(tabKey) {
 export function getCommunityNavConfig(community = {}, capabilities = {}) {
   const config = getCommunityTypeConfig(community);
   const allSupported = getSupportedCommunityTabs(community, capabilities);
-  const primaryIdeal = config.primaryTabs || ['home', 'posts', 'members'];
+  const savedLayout = (community?.settings && typeof community.settings === 'object')
+    ? community.settings.layout
+    : null;
+  const primaryIdeal = (savedLayout?.primaryTabs?.length ? savedLayout.primaryTabs : null)
+    || config.primaryTabs
+    || ['home', 'posts', 'members'];
   const primary = primaryIdeal.filter((t) => allSupported.includes(t));
   const more = allSupported.filter((t) => !primary.includes(t));
   return { primary, more };

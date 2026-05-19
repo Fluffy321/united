@@ -314,30 +314,11 @@ Goals:
   {
     id: 'advanced-community-layout-premium',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.HIGH,
     title: 'Advanced Community Layout (Premium)',
     description: 'Let premium community admins customize: primary tab order, home section visibility/order, feed blend behavior, composer mode. Free communities get curated presets.',
-    why: 'The community settings JSONB column and getCommunityNavConfig architecture are ready to support this. Premium lock is already shown in the creation flow.',
-    prompt: `You are implementing Advanced Community Layout customization for JUnited premium communities.
-
-Context:
-- communityTypes.js: getCommunityNavConfig(), composerMode, primaryTabs, moreTabs fields on each type config
-- CommunityAdminCenter.jsx: 9-tab admin panel — add a new "Layout" tab here
-- communities table: settings JSONB column added in migration 20260519210000
-- communityPlans.js: isCommunityPremium() helper for gate checks
-
-Goals:
-1. Add a "Layout" tab to CommunityAdminCenter.jsx (after Settings) — visible to all admins
-2. Free tier: shows current layout preset with a "Locked — upgrade to customize" overlay on controls
-3. Premium tier: allows:
-   a. Drag-to-reorder primary tabs (use @dnd-kit/core already in the project, or simple up/down buttons)
-   b. Toggle which tabs appear in primary vs More
-   c. Home sections visibility toggles (since-last-visit digest, ImportantRightNow, personalization, stats row)
-   d. Composer mode selector (message / post / chesed / official) with preview
-4. Save changes to communities.settings JSONB column
-5. CommunityDetailView.jsx and getCommunityNavConfig() should read from community.settings if present, falling back to type defaults
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+    shippedNote: 'Shipped 2026-05-19. CommunityAdminCenter.jsx: new Layout tab (LayoutGrid icon) between Appeals and Settings. Free tier: 4 preset cards (Balanced ⚖️, Social 💬, Announcements 📢, Action 🤝) — all selectable, no lock. Premium tier: nav tab up/down reorder with primary/overflow chip labels, home section visibility toggles + reorder (composer and feed required, others optional), composer mode selector (conversational/standard post/official update/help requests). Right-side live preview shows nav pills + ordered section stack. Sticky save button writes communities.settings.layout JSONB. getCommunityNavConfig() in communityTypes.js reads savedLayout.primaryTabs to override type defaults. RoutedCommunityHome in CommunityDetailView.jsx reads layoutSettings.homeSections (section order), layoutSettings.hiddenSections (visibility), and layoutSettings.composerMode — renders via sectionMap+orderedSections pattern. useSwipeableTabs hook rewritten with setPointerCapture, directional abort in onPointerMove, and touch-action:pan-y for clean mobile swipe.',
   },
 
   {

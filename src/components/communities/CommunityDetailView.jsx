@@ -835,16 +835,26 @@ function RoutedCommunityHome({
     );
   }
 
-  // ── Joined member: feed-first layout ────────────────────────────────────────
-  return (
-    <div className="space-y-3 pt-3">
+  // ── Joined member: feed-first layout — respects community.settings.layout ──
+  const layoutSettings = (community?.settings && typeof community.settings === 'object')
+    ? (community.settings.layout || {})
+    : {};
+  const hiddenSections = new Set(layoutSettings.hiddenSections || []);
+  const sectionOrder = layoutSettings.homeSections?.length
+    ? layoutSettings.homeSections
+    : ['digest', 'importantNow', 'adminTools', 'personalization', 'composer', 'feed'];
+  const effectiveComposerMode = layoutSettings.composerMode || undefined;
+
+  const sectionMap = {
+    digest: (
       <SinceLastVisitDigest
         posts={posts}
         events={events}
         lastVisitedAt={lastVisitedAt}
         onTabChange={onTabChange}
       />
-
+    ),
+    importantNow: (
       <CommunityImportantStrip
         posts={posts}
         events={events}
@@ -853,16 +863,16 @@ function RoutedCommunityHome({
         typeConfig={typeConfig}
         onTabChange={onTabChange}
       />
-
-      {isAdmin && (
-        <CommunityAdminQuickActions
-          onAnnouncement={() => onTabChange('announcements')}
-          onEvent={() => onTabChange('events')}
-          onResource={() => onTabChange('resources')}
-          onAdminCenter={() => openAdminCenter?.('overview') ?? onManage?.()}
-        />
-      )}
-
+    ),
+    adminTools: isAdmin ? (
+      <CommunityAdminQuickActions
+        onAnnouncement={() => onTabChange('announcements')}
+        onEvent={() => onTabChange('events')}
+        onResource={() => onTabChange('resources')}
+        onAdminCenter={() => openAdminCenter?.('overview') ?? onManage?.()}
+      />
+    ) : null,
+    personalization: (
       <CommunityPersonalizationHub
         communityId={community.id}
         currentUser={currentUser}
@@ -871,28 +881,42 @@ function RoutedCommunityHome({
         onTabChange={onTabChange}
         onOpenEvent={onOpenEvent}
       />
-
-      {canPost ? (
-        <TypeAwareComposer
-          typeConfig={typeConfig}
-          composeText={composeText}
-          setComposeText={setComposeText}
-          submitPost={submitPost}
-          posting={posting}
-        />
-      ) : (
-        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <Lock className="h-4 w-4 flex-shrink-0 text-slate-400" />
-          <p className="text-[13px] font-semibold text-slate-500">Posting is restricted to community admins.</p>
-        </div>
-      )}
-
+    ),
+    composer: canPost ? (
+      <TypeAwareComposer
+        typeConfig={typeConfig}
+        composeText={composeText}
+        setComposeText={setComposeText}
+        submitPost={submitPost}
+        posting={posting}
+        mode={effectiveComposerMode}
+      />
+    ) : (
+      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <Lock className="h-4 w-4 flex-shrink-0 text-slate-400" />
+        <p className="text-[13px] font-semibold text-slate-500">Posting is restricted to community admins.</p>
+      </div>
+    ),
+    feed: (
       <HomeFeedSection
         posts={posts}
         typeConfig={typeConfig}
         activeNeeds={typeConfig.key === 'chesed' ? activeNeeds : []}
         onTabChange={onTabChange}
       />
+    ),
+  };
+
+  const orderedSections = sectionOrder
+    .filter((key) => !hiddenSections.has(key))
+    .map((key) => ({ key, component: sectionMap[key] }))
+    .filter(({ component }) => component != null);
+
+  return (
+    <div className="space-y-3 pt-3">
+      {orderedSections.map(({ key, component }) => (
+        <React.Fragment key={key}>{component}</React.Fragment>
+      ))}
     </div>
   );
 }

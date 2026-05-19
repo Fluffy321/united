@@ -1,17 +1,14 @@
 import { useCallback, useRef } from 'react';
 
-// Minimum horizontal distance (px) to register as a deliberate swipe.
 const HORIZ_THRESHOLD = 48;
-
-// Swipe must be at least this many times wider than it is tall.
-// Prevents diagonal-scroll gestures from accidentally changing tabs.
 const DIRECTION_RATIO = 1.5;
+// Once the gesture has moved this many px vertically and is more vertical than horizontal, abort.
+const ABORT_VERT_THRESHOLD = 10;
 
 /**
  * Walks up the DOM from `target` to (but not including) `container`,
  * returning true if any element is a horizontally-scrollable container
- * with actual overflow content. Used to avoid intercepting swipes on
- * nested horizontal lists (stats ribbons, carousels, etc.).
+ * with actual overflow content.
  */
 function isInsideHorizScroller(target, container) {
   let el = target;
@@ -26,23 +23,27 @@ function isInsideHorizScroller(target, container) {
 }
 
 /**
- * Returns pointer-event handlers that detect left/right swipes
+ * Returns pointer-event handlers + `style` that detect left/right swipes
  * on a content area and advance or retreat through a list of tabs.
  *
  * Usage:
  *   const swipeHandlers = useSwipeableTabs({ tabs, activeTab, onTabChange });
  *   <div {...swipeHandlers}>{tab content}</div>
  *
- * - Only responds to touch/pen input (not mouse) to avoid interfering
- *   with desktop drag interactions.
- * - Ignores gestures that start inside a horizontally-scrollable child.
- * - Ignores gestures that are more vertical than horizontal.
- * - Does not wrap at the edges.
+ * Key behaviours:
+ * - setPointerCapture ensures pointerup/pointermove fire even when the finger
+ *   travels outside the element boundary (the main source of "lost swipes").
+ * - Directional lock: if the gesture moves 10+ px vertically before it qualifies
+ *   as horizontal, it is aborted so vertical scrolling is never hijacked.
+ * - touch-action: pan-y tells the browser to own vertical scrolling natively,
+ *   preventing scroll jank while still delivering horizontal pointer events.
+ * - Only responds to touch/pen (not mouse) to preserve desktop drag interactions.
  */
 export function useSwipeableTabs({ tabs, activeTab, onTabChange, disabled = false }) {
   const touchId = useRef(null);
   const startX = useRef(null);
   const startY = useRef(null);
+  const aborted = useRef(false);
 
   const onPointerDown = useCallback(
     (e) => {
@@ -53,19 +54,43 @@ export function useSwipeableTabs({ tabs, activeTab, onTabChange, disabled = fals
       touchId.current = e.pointerId;
       startX.current = e.clientX;
       startY.current = e.clientY;
+      aborted.current = false;
+      // Capture so pointermove / pointerup / pointercancel are delivered even
+      // if the finger exits the element — this was the primary source of
+      // "swipe gets lost mid-gesture" jank.
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
     },
     [disabled],
+  );
+
+  const onPointerMove = useCallback(
+    (e) => {
+      if (touchId.current !== e.pointerId) return;
+      if (aborted.current || startX.current === null) return;
+      const dx = Math.abs(e.clientX - startX.current);
+      const dy = Math.abs(e.clientY - startY.current);
+      // If the gesture is clearly vertical, abort the swipe so the browser
+      // can handle vertical scrolling without interference.
+      if (dy > ABORT_VERT_THRESHOLD && dy > dx) {
+        aborted.current = true;
+      }
+    },
+    [],
   );
 
   const onPointerUp = useCallback(
     (e) => {
       if (touchId.current !== e.pointerId) return;
       touchId.current = null;
-      if (startX.current === null) return;
-      const dx = e.clientX - startX.current;
-      const dy = e.clientY - startY.current;
+      const sx = startX.current;
+      const sy = startY.current;
+      const wasAborted = aborted.current;
       startX.current = null;
       startY.current = null;
+      aborted.current = false;
+      if (sx === null || wasAborted) return;
+      const dx = e.clientX - sx;
+      const dy = e.clientY - sy;
       const adx = Math.abs(dx);
       const ady = Math.abs(dy);
       if (adx < HORIZ_THRESHOLD || adx < ady * DIRECTION_RATIO) return;
@@ -84,8 +109,15 @@ export function useSwipeableTabs({ tabs, activeTab, onTabChange, disabled = fals
       touchId.current = null;
       startX.current = null;
       startY.current = null;
+      aborted.current = false;
     }
   }, []);
 
-  return { onPointerDown, onPointerUp, onPointerCancel };
+  return {
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onPointerCancel,
+    style: { touchAction: 'pan-y' },
+  };
 }
