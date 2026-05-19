@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import {
   X, LayoutDashboard, BarChart2, Users, Shield, Settings,
   Search, Loader2, Save, CheckCircle2, XCircle, ExternalLink,
-  UserMinus, UserCheck, Crown, ShieldCheck, MoreVertical, Clock, TrendingUp,
+  UserMinus, UserCheck, UserPlus, Crown, ShieldCheck, MoreVertical, Clock, TrendingUp,
   AlertCircle, ShieldAlert, Gavel, Activity, Trash2, AlertTriangle,
   Pin, Image, Lock, Globe, Upload, CreditCard, Megaphone, Send,
   LayoutGrid, ChevronUp, ChevronDown,
@@ -15,6 +15,7 @@ import { dataService } from '@/services';
 import paymentsService from '@/services/paymentsService';
 import { notificationsService } from '@/services/notificationsService';
 import { COMMUNITY_TYPE_OPTIONS, getCommunityTypeConfig, getCommunityTabLabel, getCommunityTypeKey } from '@/lib/communityTypes';
+import CommunityInviteModal from './CommunityInviteModal';
 import { formatPlanDate, getCommunityPlanStatusLabel, isCommunityPremium } from '@/lib/communityPlans';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -989,9 +990,10 @@ function ContentTab({ communityId, currentUser }) {
 
 function MembersTab({ communityId, community, currentUser }) {
   const queryClient = useQueryClient();
-  const [search, setSearch]           = useState('');
-  const [removingMember, setRemoving] = useState(null);
-  const [roleMenuOpen, setRoleMenuOpen] = useState(null);
+  const [search, setSearch]               = useState('');
+  const [removingMember, setRemoving]     = useState(null);
+  const [roleMenuOpen, setRoleMenuOpen]   = useState(null);
+  const [showInviteModal, setShowInvite]  = useState(false);
 
   const { data: members = [], isLoading } = useQuery({
     queryKey: ['admin-members', communityId],
@@ -1048,6 +1050,16 @@ function MembersTab({ communityId, community, currentUser }) {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
+      {/* Invite button */}
+      <button
+        type="button"
+        onClick={() => setShowInvite(true)}
+        className="flex w-full items-center justify-center gap-2 h-10 rounded-2xl bg-slate-950 text-white font-bold text-[13px] active:scale-95 transition-all hover:bg-slate-800"
+      >
+        <UserPlus className="h-4 w-4" />
+        Invite Members
+      </button>
+
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -1152,6 +1164,13 @@ function MembersTab({ communityId, community, currentUser }) {
           }}
         />
       )}
+
+      <CommunityInviteModal
+        open={showInviteModal}
+        onClose={() => setShowInvite(false)}
+        community={community}
+        currentUser={currentUser}
+      />
     </div>
   );
 }

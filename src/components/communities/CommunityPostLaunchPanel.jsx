@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BookOpen, Calendar, CheckCircle2, HelpCircle, MessageCircle, Users, X } from 'lucide-react';
-import { toast } from 'sonner';
+import CommunityInviteModal from './CommunityInviteModal';
 
 // ── Type-aware activation actions ────────────────────────────────────────────
 
@@ -68,9 +68,11 @@ export default function CommunityPostLaunchPanel({
   resources,
   activeNeeds,
   members,
+  currentUser,
   onTabChange,
   onDismiss,
 }) {
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const typeKey = typeConfig?.key || community?.community_type || 'general';
   const actions = LAUNCH_ACTIONS[typeKey] || LAUNCH_ACTIONS.general;
   const data = { posts, events, resources, activeNeeds, members };
@@ -78,23 +80,17 @@ export default function CommunityPostLaunchPanel({
   const allDone = completedCount === actions.length;
 
   const handleAction = (action) => {
-    if (action.tab) {
-      onTabChange(action.tab);
+    if (action.id === 'invite') {
+      setShowInviteModal(true);
       return;
     }
-    if (action.id === 'invite') {
-      const url = `${window.location.origin}/community/${community.id}`;
-      if (navigator.share) {
-        navigator.share({ title: community.name, text: `Join ${community.name} on JUnited`, url }).catch(() => {});
-      } else {
-        navigator.clipboard.writeText(url)
-          .then(() => toast.success('Community link copied!'))
-          .catch(() => toast.info(url));
-      }
+    if (action.tab) {
+      onTabChange(action.tab);
     }
   };
 
   return (
+    <>
     <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white overflow-hidden">
 
       {/* ── Header ── */}
@@ -179,5 +175,16 @@ export default function CommunityPostLaunchPanel({
       </div>
 
     </div>
+
+    {showInviteModal && (
+      <CommunityInviteModal
+        open={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        community={community}
+        currentUser={currentUser}
+        typeConfig={typeConfig}
+      />
+    )}
+    </>
   );
 }

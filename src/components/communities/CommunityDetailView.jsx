@@ -941,6 +941,7 @@ function RoutedCommunityHome({
           resources={resources}
           activeNeeds={activeNeeds}
           members={members}
+          currentUser={currentUser}
           onTabChange={onTabChange}
           onDismiss={handleDismissPanel}
         />

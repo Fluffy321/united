@@ -383,6 +383,67 @@ Goals:
   },
 
   {
+    id: 'community-member-invite-system',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Member Invite System',
+    description: 'First-class tokenized invite links for communities: personal invite URL (/join?code=CODE), usage tracking, revoke/regenerate, and reusable CommunityInviteModal wired into the post-launch panel, community header, and Admin Center members tab.',
+    why: 'Raw URL sharing gives no tracking, no personalization, no revoke. Tokenized links let admins see who used their invite, reset compromised links, and give members a personal stake in growing the community.',
+    shippedNote: 'Shipped 2026-05-19. invite_links table created with RLS (public SELECT for acceptance page, authenticated INSERT for admins/moderators, authenticated UPDATE for uses_count increment + revoke). CommunityInviteModal.jsx: portal-rendered bottom sheet, loads or creates an active link per user+community, copy + native share buttons, usage stats, regenerate flow. Wired into: CommunityHero (replaced InviteLinkButton strip with clickable invite row → modal), CommunityPostLaunchPanel (invite action opens modal instead of raw clipboard copy; currentUser prop added), CommunityAdminCenter MembersTab (Invite Members button above search). JoinByCommunityCode.jsx acceptance page already implemented and required no changes.',
+  },
+
+  {
+    id: 'community-invite-email',
+    category: 'Community',
+    status: STATUS.DEFERRED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Community Email Invitations',
+    description: 'Allow community admins to send email invitations directly from the invite modal, delivering a personalized invite link to the recipient\'s inbox.',
+    why: 'Resend is not yet wired to any Edge Functions for community-specific transactional emails. Deferred until community sizes and engagement metrics justify the investment.',
+    prompt: `You are implementing email invitations for JUnited communities.
+
+Context:
+- invite_links table: community_id, inviter_id, inviter_name, code, is_active, expires_at, max_uses, uses_count (supabase/migrations/20260519220000_invite_links.sql)
+- CommunityInviteModal.jsx: src/components/communities/CommunityInviteModal.jsx — the invite sheet where the email input would live
+- JoinByCommunityCode.jsx: src/pages/JoinByCommunityCode.jsx — the acceptance page at /join?code=CODE
+- Resend is the email provider (configured in Supabase Edge Functions per CLAUDE.md)
+- No Edge Function currently sends community-specific transactional email
+
+Goals:
+1. Create a Supabase Edge Function send-community-invite that accepts { email, inviteCode, communityName, inviterName } and sends a branded invite email via Resend
+2. Add an email input section to CommunityInviteModal below the link copy buttons (collapsed by default, expanded with "Send by email" toggle)
+3. On send: call the Edge Function, show success/error toast, track that the email was sent (optional: store in invite_links a sent_to_emails text[] column)
+4. Apply the schema change as a migration in supabase/migrations/
+5. Run npm run lint && npm run build
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-invite-link-controls',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Invite Link Expiry & Use-Limit Controls',
+    description: 'Let admins set an expiry date or maximum use count when generating an invite link, giving them control over access windows for events, beta cohorts, etc.',
+    why: 'The invite_links table already has expires_at and max_uses columns, but CommunityInviteModal has no UI for them. The acceptance page (JoinByCommunityCode.jsx) already enforces both checks.',
+    prompt: `You are adding expiry and use-limit controls to the JUnited community invite modal.
+
+Context:
+- invite_links table columns: expires_at timestamptz, max_uses integer (both nullable — null means unlimited)
+- CommunityInviteModal.jsx: src/components/communities/CommunityInviteModal.jsx — createNewLink() calls supabase.from('invite_links').insert(...)
+- JoinByCommunityCode.jsx: src/pages/JoinByCommunityCode.jsx — already enforces expires_at and max_uses on the acceptance side
+
+Goals:
+1. Add an optional "Advanced options" disclosure below the stats/regenerate row in CommunityInviteModal
+2. Inside: a date picker for expires_at (clear = no expiry) and a number input for max_uses (empty = unlimited)
+3. Wire these values into createNewLink() as part of the insert payload
+4. When a link has expires_at or max_uses set, show them clearly in the stats line (e.g. "Used 2/10 times · expires Jun 1")
+5. Run npm run lint && npm run build
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'community-detail-swipeable-tabs',
     category: 'Community',
     status: STATUS.SHIPPED,

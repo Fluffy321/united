@@ -1,4 +1,5 @@
-import React, { createPortal, useState } from 'react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, Eye, Lock, Sparkles, X } from 'lucide-react';
 import { COMMUNITY_TYPE_CONFIG } from '@/lib/communityTypes';
 import CommunityLivePreview from './CommunityLivePreview';
