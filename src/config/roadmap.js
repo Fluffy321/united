@@ -281,7 +281,7 @@ Goals:
     title: 'Community Home Personalization — For You Module',
     description: 'Surfaces personally relevant signals on the joined-member community home: upcoming events the user has RSVPed for, and active chesed commitments the user is volunteering for.',
     why: 'Current dashboard shows community-level activity. Member-level signals ("you RSVPed for this event", "you are helping with this chesed need") answer what matters to this specific user right now.',
-    shippedNote: 'CommunityPersonalizationHub component with two targeted queries: community_event_rsvps (cross-referenced with already-fetched events array) and mitzvah_requests claimed_by_user_id (chesed communities only). Dynamic title: "For you" / "Your upcoming events" / "Your commitments". Hidden entirely when no personal activity. Placed after CommunityWelcomeHub in both HubDetail and DetailView.',
+    shippedNote: 'CommunityPersonalizationHub component with two targeted queries: community_event_rsvps (cross-referenced with already-fetched events array) and mitzvah_requests claimed_by_user_id (chesed communities only). Dynamic title: "For you" / "Your upcoming events" / "Your commitments". Hidden entirely when no personal activity. Placed after CommunityWelcomeHub in both HubDetail and DetailView. RSVP event rows open the specific event directly: tapping a row switches to the Events tab and scrolls + highlights the matching EventCard (ring-2 ring-blue-300) via highlightEventId state threaded through HomeTab/RoutedCommunityHome → CommunityPersonalizationHub → onOpenEvent.',
   },
 
   {

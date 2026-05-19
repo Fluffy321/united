@@ -32,6 +32,7 @@ export default function CommunityPersonalizationHub({
   events = [],
   typeConfig,
   onTabChange,
+  onOpenEvent,
 }) {
   const isChesed = typeConfig?.key === 'chesed';
 
@@ -103,7 +104,7 @@ export default function CommunityPersonalizationHub({
           <button
             key={event.id}
             type="button"
-            onClick={() => onTabChange?.('events')}
+            onClick={() => onOpenEvent ? onOpenEvent(event) : onTabChange?.('events')}
             className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">

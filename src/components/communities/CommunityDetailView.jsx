@@ -65,6 +65,7 @@ function matchesTab(post, tab) {
 export default function CommunityDetailView({ communityId, currentUser, onBack, fallbackCommunity }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'home');
+  const [highlightEventId, setHighlightEventId] = useState(null);
   const [showClaim, setShowClaim] = useState(false);
   const [showAdminCenter, setShowAdminCenter] = useState(false);
   const [adminInitialTab, setAdminInitialTab] = useState('overview');
@@ -419,6 +420,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             currentUser={currentUser}
             onManage={() => openAdminCenter('content')}
             openAdminCenter={openAdminCenter}
+            onOpenEvent={(event) => { setHighlightEventId(event.id); setTab('events'); }}
           />
         )}
 
@@ -459,6 +461,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             currentUser={currentUser}
             communityId={communityId}
             isAdmin={isAdmin}
+            highlightEventId={highlightEventId}
           />
         )}
 
@@ -590,6 +593,7 @@ function RoutedCommunityHome({
   currentUser,
   onManage,
   openAdminCenter,
+  onOpenEvent,
 }) {
   if (!isFollowing) {
     // ── Visitor landing page ───────────────────────────────────────────────────
@@ -653,6 +657,7 @@ function RoutedCommunityHome({
         events={events}
         typeConfig={typeConfig}
         onTabChange={onTabChange}
+        onOpenEvent={onOpenEvent}
       />
 
       <CommunityFeaturedSection

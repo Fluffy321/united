@@ -81,6 +81,7 @@ export default function CommunityHubDetail({
     groups: true,
   });
   const [activeTab, setActiveTab] = useState(tabs.includes(initialTab) ? initialTab : (tabs[0] || 'home'));
+  const [highlightEventId, setHighlightEventId] = useState(null);
   const [composeText, setComposeText] = useState('');
   const [composePlaceholder, setComposePlaceholder] = useState('');
   const [showCompose, setShowCompose] = useState(false);
@@ -460,6 +461,7 @@ export default function CommunityHubDetail({
               isJoined={isJoined}
               lastVisitedAt={lastVisit?.visited_at}
               currentUser={currentUser}
+              onOpenEvent={(event) => { setHighlightEventId(event.id); setTab('events'); }}
             />
           )}
           {activeTab === 'openNeeds' && (
@@ -502,6 +504,7 @@ export default function CommunityHubDetail({
               currentUser={currentUser}
               communityId={community.id}
               isAdmin={isCommunityManager}
+              highlightEventId={highlightEventId}
             />
           )}
           {activeTab === 'resources' && (
@@ -642,6 +645,7 @@ function HomeTab({
   isJoined,
   lastVisitedAt,
   currentUser,
+  onOpenEvent,
 }) {
   const featuredPosts = posts.slice(0, 3);
 
@@ -715,6 +719,7 @@ function HomeTab({
         events={events}
         typeConfig={typeConfig}
         onTabChange={onTabChange}
+        onOpenEvent={onOpenEvent}
       />
 
       <CommunityFeaturedSection

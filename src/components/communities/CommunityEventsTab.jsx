@@ -11,13 +11,16 @@ import {
   isCommunityPremium,
 } from '@/lib/communityPlans';
 
-function EventCard({ event, past, currentUser, isAdmin }) {
+function EventCard({ event, past, currentUser, isAdmin, highlight }) {
   const [showAdminAttendees, setShowAdminAttendees] = useState(false);
   const dateStr = event.start_date || event.event_date;
   const gradient = past ? 'from-slate-400 to-slate-500' : 'from-green-500 to-teal-600';
 
   return (
-    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${past ? 'border-slate-100 opacity-75' : 'border-slate-100'}`}>
+    <div
+      id={`event-card-${event.id}`}
+      className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${past ? 'border-slate-100 opacity-75' : 'border-slate-100'} ${highlight ? 'ring-2 ring-blue-300' : ''}`}
+    >
       <div className={`h-1.5 bg-gradient-to-r ${gradient}`} />
       <div className="p-4">
         <div className="flex gap-4">
@@ -89,12 +92,19 @@ function EventCard({ event, past, currentUser, isAdmin }) {
   );
 }
 
-export default function CommunityEventsTab({ events: initialEvents, community, currentUser, communityId, isAdmin }) {
+export default function CommunityEventsTab({ events: initialEvents, community, currentUser, communityId, isAdmin, highlightEventId = null }) {
   const [events, setEvents] = useState(initialEvents || []);
   const [showCreate, setShowCreate] = useState(false);
 
   // Keep in sync if parent re-fetches
   useEffect(() => { setEvents(initialEvents || []); }, [initialEvents]);
+
+  useEffect(() => {
+    if (!highlightEventId) return;
+    requestAnimationFrame(() => {
+      document.getElementById(`event-card-${highlightEventId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }, [highlightEventId]);
 
   const upcoming = events.filter(e => {
     const d = e.start_date || e.event_date;
@@ -159,7 +169,7 @@ export default function CommunityEventsTab({ events: initialEvents, community, c
             <div>
               <p className="text-[13px] font-bold text-slate-700 mb-2">Upcoming</p>
               <div className="space-y-3">
-                {upcoming.map(e => <EventCard key={e.id} event={e} currentUser={currentUser} isAdmin={isAdmin} />)}
+                {upcoming.map(e => <EventCard key={e.id} event={e} currentUser={currentUser} isAdmin={isAdmin} highlight={e.id === highlightEventId} />)}
               </div>
             </div>
           )}
