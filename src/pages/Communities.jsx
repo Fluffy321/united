@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  AlertTriangle,
   CalendarDays,
   HeartHandshake,
   Loader2,
@@ -13,7 +12,6 @@ import {
   ShieldCheck,
   Sparkles,
   Users,
-  Zap,
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
@@ -23,15 +21,29 @@ import { supabase } from '@/api/supabaseClient';
 import { toast } from 'sonner';
 import { appParams } from '@/lib/app-params';
 import CommunityHubCard from '@/components/communities/CommunityHubCard';
+import DiscoverCommunityCard from '@/components/communities/DiscoverCommunityCard';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
 import CommunityAdminCenter from '@/components/communities/CommunityAdminCenter';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
 import MessagesDrawer from '@/components/communities/MessagesDrawer';
 import DestinationHeader from '@/components/layout/DestinationHeader';
-import { COMMUNITY_TYPE_OPTIONS, getCommunityTypeConfig, getCommunityTypeKey } from '@/lib/communityTypes';
+import { COMMUNITY_TYPE_CONFIG, COMMUNITY_TYPE_OPTIONS, getCommunityTypeConfig, getCommunityTypeKey } from '@/lib/communityTypes';
 
 const COMMUNITY_FILTERS = [{ key: 'all', label: 'All' }, ...COMMUNITY_TYPE_OPTIONS.map(({ key, label }) => ({ key, label }))];
 const MANAGEMENT_ROLES = new Set(['owner', 'admin', 'moderator']);
+
+// Ordered by community prevalence in the Five Towns context
+const DISCOVER_SECTION_ORDER = ['neighborhood', 'shul', 'chesed', 'learning', 'events', 'parents', 'marketplace', 'general'];
+const DISCOVER_SECTION_SUBTITLES = {
+  neighborhood: 'Local updates, neighbor questions, and what\'s happening near you.',
+  shul: 'Your shul\'s events, announcements, and community shiurim in one place.',
+  chesed: 'Open needs, volunteer opportunities, and concrete mitzvah acts.',
+  learning: 'Torah discussions, shiurim, chavrusa connections, and study resources.',
+  events: 'Upcoming events, social plans, and community gatherings.',
+  parents: 'School questions, camp talk, recommendations, and parenting support.',
+  marketplace: 'Buy, sell, and share within the community marketplace.',
+  general: 'Community spaces open to everyone.',
+};
 
 const EXPERIENCE_SEEDS = [
   {
@@ -660,79 +672,25 @@ export default function Communities() {
   const discoverCommunities = classifiedCommunities.filter((community) => !community.joined && !community.managementRole);
   const yourCommunities = [...managedCommunities, ...joinedCommunities];
   const curatedDiscoverSections = useMemo(() => {
-    const includesAny = (community, words) => {
-      const text = [
-        community.name,
-        community.category,
-        community.communityType,
-        community.typeKey,
-        community.description,
-        community.valueHook,
-        ...(community.identityTags || []),
-      ].join(' ').toLowerCase();
-      return words.some((word) => text.includes(word));
-    };
+    // Group by typeKey so each section is genuinely type-aware
+    const byType = {};
+    for (const community of discoverCommunities) {
+      const key = community.typeKey || 'general';
+      if (!byType[key]) byType[key] = [];
+      byType[key].push(community);
+    }
 
-    const sections = [
-      {
-        key: 'official',
-        title: 'Official / Daily',
-        subtitle: 'Always-active, high-signal hubs that make the app worth opening every day.',
-        icon: Sparkles,
-        communities: discoverCommunities.filter((community) => community.communityType === 'official' || community.verified),
-      },
-      {
-        key: 'support',
-        title: 'Private / Support Spaces',
-        subtitle: 'Safe places for real-life challenges, anonymous posting, and quiet belonging.',
-        icon: AlertTriangle,
-        communities: discoverCommunities.filter((community) =>
-          community.communityType === 'support'
-          || community.privacy === 'Private / Anonymous'
-          || includesAny(community, ['mental', 'school', 'divorced', 'anxiety', 'family challenge'])
-        ),
-      },
-      {
-        key: 'lifestyle',
-        title: 'Lifestyle & Interests',
-        subtitle: 'Sports, fitness, creative, business, gaming, and the identity spaces people actually return to.',
-        icon: Zap,
-        communities: discoverCommunities.filter((community) =>
-          community.communityType === 'lifestyle'
-          || includesAny(community, ['sports', 'fitness', 'creative', 'business', 'gaming', 'gym', 'music'])
-        ),
-      },
-      {
-        key: 'jewish-life',
-        title: 'Core Jewish Life',
-        subtitle: 'Torah, Shabbos, Gemara, shuls, chesed, and mitzvah energy in one living layer.',
-        icon: Sparkles,
-        communities: discoverCommunities.filter((community) =>
-          includesAny(community, ['torah', 'shabbos', 'chesed', 'mitzvah', 'gemara', 'learning', 'shul'])
-        ),
-      },
-      {
-        key: 'local-power',
-        title: 'Local Power Communities',
-        subtitle: 'Five Towns updates, alerts, events, tonight plans, and practical neighborhood movement.',
-        icon: Users,
-        communities: discoverCommunities.filter((community) =>
-          includesAny(community, ['five towns', 'local', 'events', 'alerts', 'updates', 'neighborhood'])
-        ),
-      },
-    ];
-
-    const seen = new Set();
-    return sections
-      .map((section) => ({
-        ...section,
-        communities: section.communities.filter((community) => {
-          if (seen.has(community.id)) return false;
-          seen.add(community.id);
-          return true;
-        }),
-      }))
-      .filter((section) => section.communities.length > 0);
+    return DISCOVER_SECTION_ORDER
+      .filter((key) => (byType[key] || []).length > 0)
+      .map((key) => {
+        const tc = COMMUNITY_TYPE_CONFIG[key] || COMMUNITY_TYPE_CONFIG.general;
+        return {
+          key,
+          typeConfig: tc,
+          subtitle: DISCOVER_SECTION_SUBTITLES[key] || tc.tagline,
+          communities: byType[key],
+        };
+      });
   }, [discoverCommunities]);
 
   const joinedCount = communities.filter((community) => community.joined).length;
@@ -791,13 +749,57 @@ export default function Communities() {
     ].filter(Boolean);
   }, [communities]);
 
-  const visibleIdentityTags = useMemo(() => {
-    const tagSet = new Set();
-    yourCommunities
-      .filter((c) => !c.hideMembershipDefault && !c.joinedIncognito)
-      .forEach((c) => (c.identityTags || []).forEach((tag) => tagSet.add(tag)));
-    return Array.from(tagSet).slice(0, 12);
-  }, [yourCommunities]);
+  const allJoinedCommunities = useMemo(
+    () => communities.filter((c) => c.joined),
+    [communities]
+  );
+
+  const forYouResult = useMemo(() => {
+    const empty = { communities: [], locationBoostUsed: false };
+    // Hide when user is actively searching or filtering — explicit intent takes priority
+    if (query.trim() || typeFilter !== 'all') return empty;
+    // No basis for personalization without joined communities
+    if (allJoinedCommunities.length === 0) return empty;
+
+    // Build type frequency from the user's joined set
+    const typeFreq = {};
+    for (const c of allJoinedCommunities) {
+      const key = c.typeKey || 'general';
+      typeFreq[key] = (typeFreq[key] || 0) + 1;
+    }
+
+    // Location terms from the auth context — no extra query needed
+    const locationTerms = [
+      currentUser?.cityPreset,
+      currentUser?.locationLabel,
+    ].filter(Boolean).map((s) => s.toLowerCase());
+
+    // Score each unjoinable community — primary filter is typeKey overlap
+    const communities = discoverCommunities
+      .filter((c) => typeFreq[c.typeKey || 'general'])
+      .map((c) => {
+        let score = 3; // base: type match (required — minimum to appear)
+        if ((c.memberCount || c.follower_count || 0) > 50) score += 2;
+        if ((c.postsToday || 0) > 0) score += 1;
+        if (locationTerms.length > 0) {
+          const communityLoc = (c.location || '').toLowerCase();
+          if (locationTerms.some((term) => communityLoc.includes(term))) score += 2;
+        }
+        return { ...c, _forYouScore: score };
+      })
+      .sort((a, b) => b._forYouScore - a._forYouScore)
+      .slice(0, 4);
+
+    // Subtitle changes only if location actually lifted at least one result
+    const locationBoostUsed = locationTerms.length > 0 && communities.some((c) => {
+      const loc = (c.location || '').toLowerCase();
+      return locationTerms.some((term) => loc.includes(term));
+    });
+
+    return { communities, locationBoostUsed };
+  }, [allJoinedCommunities, discoverCommunities, query, typeFilter, currentUser]);
+
+  const forYouCommunities = forYouResult.communities;
 
   const handleJoin = async (communityId, options = {}) => {
     const community = communities.find((item) => item.id === communityId);
@@ -895,6 +897,7 @@ export default function Communities() {
       <DestinationHeader
         icon={Users}
         title="Communities"
+        className="bg-gradient-to-b from-[rgba(239,246,255,0.97)] to-[rgba(248,250,252,0.96)]"
         actions={(
           <>
             <button
@@ -929,20 +932,10 @@ export default function Communities() {
         )}
       />
 
-      <div className="mobile-page-wide px-3 pb-6 pt-3 sm:px-4 sm:pt-4">
+      <div className="mobile-page-wide px-3 pb-6 pt-2 sm:px-4 sm:pt-3">
         <Hero joinedCount={joinedCount} />
 
-        <CommunityPulseDock
-          items={communityPulse}
-          onOpen={openCommunity}
-          onTryPrompt={openCommunityWithPrompt}
-        />
-
-        <IdentityStrip
-          tags={visibleIdentityTags}
-          communities={yourCommunities}
-          onOpen={openCommunity}
-        />
+        <ActiveInStrip communities={allJoinedCommunities} onOpen={openCommunity} />
 
         <ViewSwitch view={view} onChange={setView} joinedCount={joinedCount} />
 
@@ -1008,36 +1001,41 @@ export default function Communities() {
                 </div>
               </CommunitySection>
             ) : (
-              curatedDiscoverSections.length > 0 ? (
-                <>
-                  {curatedDiscoverSections.map((group) => (
-                    <CommunitySection
-                      key={group.key}
-                      title={group.title}
-                      subtitle={group.subtitle}
-                      icon={group.icon}
-                      communities={group.communities}
+              <div className="space-y-8">
+                {communityPulse.length > 0 && (
+                  <CommunityPulseDock
+                    items={communityPulse}
+                    onOpen={openCommunity}
+                    onTryPrompt={openCommunityWithPrompt}
+                  />
+                )}
+                {forYouCommunities.length >= 2 && (
+                  <ForYouSection
+                    communities={forYouCommunities}
+                    onOpen={openCommunity}
+                    onJoin={handleJoin}
+                    joiningId={joiningId}
+                    locationBoostUsed={forYouResult.locationBoostUsed}
+                  />
+                )}
+                {curatedDiscoverSections.length > 0 ? (
+                  curatedDiscoverSections.map((section) => (
+                    <DiscoverSection
+                      key={section.key}
+                      section={section}
                       onOpen={openCommunity}
-                      onTryPrompt={openCommunityWithPrompt}
                       onJoin={handleJoin}
                       joiningId={joiningId}
                     />
-                  ))}
-                </>
-              ) : (
-                <CommunitySection
-                  title="Discover"
-                  subtitle="No new communities match this view right now."
-                  icon={Search}
-                  communities={[]}
-                  emptyTitle="Nothing new to discover here"
-                  emptyBody="Try another type filter, or switch to My Communities to open the spaces you already joined."
-                  onOpen={openCommunity}
-                  onTryPrompt={openCommunityWithPrompt}
-                  onJoin={handleJoin}
-                  joiningId={joiningId}
-                />
-              )
+                  ))
+                ) : (
+                  <DiscoverEmptyState
+                    hasFilters={query.trim().length > 0 || typeFilter !== 'all'}
+                    onClear={() => { setQuery(''); setTypeFilter('all'); }}
+                    onCreateCommunity={() => setShowCreate(true)}
+                  />
+                )}
+              </div>
             )}
           </div>
         )}
@@ -1081,21 +1079,17 @@ export default function Communities() {
 
 function Hero({ joinedCount }) {
   return (
-    <section className="surface-panel mb-4 rounded-[24px] p-4">
-      <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-blue-700">
-        <Sparkles className="h-3.5 w-3.5" />
-        Community hub
-      </div>
-      <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
-        Find your people: private support, local updates, Torah, Shabbos, sports, creative circles, chesed, and the spaces that make JUnited worth checking every day.
+    <div className="mb-3 flex items-center gap-3 pt-0.5">
+      <p className="flex-1 text-[13px] font-semibold leading-5 text-slate-500">
+        Your neighborhood, shul, chesed, and learning — in one place.
       </p>
-      <HeroPill label={`${joinedCount} joined`} />
-    </section>
+      {joinedCount > 0 && (
+        <span className="shrink-0 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
+          {joinedCount} joined
+        </span>
+      )}
+    </div>
   );
-}
-
-function HeroPill({ label }) {
-  return <span className="mt-3 inline-flex rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700">{label}</span>;
 }
 
 function CommunityPulseDock({ items, onOpen, onTryPrompt }) {
@@ -1178,40 +1172,28 @@ function ViewSwitch({ view, onChange, joinedCount }) {
   );
 }
 
-function IdentityStrip({ tags, communities = [], onOpen }) {
+function ActiveInStrip({ communities = [], onOpen }) {
+  if (!communities.length) return null;
   return (
-    <section className="surface-panel-soft mb-4 rounded-[24px] p-4">
-      <h2 className="text-base font-black text-slate-950">Active in...</h2>
-      <p className="mt-1 text-sm font-semibold text-slate-500">Jump back into every community you joined, then keep your visible identity tags underneath.</p>
-      <div className="mobile-scroll-x mt-3 flex gap-2 pb-1">
-        {communities.length > 0 ? communities.map((community) => (
+    <section className="mb-3">
+      <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Your spaces</p>
+      <div className="mobile-scroll-x flex gap-2 pb-1">
+        {communities.map((community) => (
           <button
-            key={`active-community-${community.id}`}
+            key={community.id}
             type="button"
             onClick={() => onOpen?.(community.id)}
-            className="motion-press flex min-w-[180px] shrink-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
+            className="motion-press flex min-w-[148px] shrink-0 items-center gap-2.5 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-[12px] font-black text-white">
-              {(community.name || '?').split(' ').slice(0, 2).map((part) => part[0]).join('').toUpperCase()}
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-[11px] font-black text-white">
+              {(community.name || '?').split(' ').slice(0, 2).map((p) => p[0]).join('').toUpperCase()}
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-[13px] font-black text-slate-950">{community.name}</span>
-              <span className="block truncate text-[11px] font-bold text-slate-500">{community.category || community.communityType || 'Community'}</span>
+              <span className="block truncate text-[12px] font-black text-slate-950">{community.name}</span>
+              <span className="block truncate text-[10px] font-semibold text-slate-400">{community.category || 'Community'}</span>
             </span>
           </button>
-        )) : (
-          <span className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs font-black text-slate-500">
-            Join communities and they will live here for fast access.
-          </span>
-        )}
-      </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {tags.length > 0 ? tags.map((tag, index) => (
-          <span key={`${tag}-${index}`} className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700">{tag}</span>
-        )) : (
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-500">Join visible communities to build your identity stack</span>
-        )}
-        <span className="rounded-full border border-violet-100 bg-violet-50 px-3 py-1.5 text-xs font-black text-violet-700">Private spaces stay hidden</span>
+        ))}
       </div>
     </section>
   );
@@ -1336,5 +1318,103 @@ function CommunitySection({
         </div>
       )}
     </section>
+  );
+}
+
+function DiscoverSection({ section, onOpen, onJoin, joiningId }) {
+  const { typeConfig, subtitle, communities } = section;
+  const Icon = typeConfig.icon;
+
+  return (
+    <section>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <div className={`mb-1.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-black ${typeConfig.badgeClass}`}>
+            <Icon className="h-3 w-3" />
+            {typeConfig.label}
+          </div>
+          <p className="text-[13px] font-semibold leading-5 text-slate-500">{subtitle}</p>
+        </div>
+        <span className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-black text-slate-400">
+          {communities.length}
+        </span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {communities.map((community) => (
+          <DiscoverCommunityCard
+            key={community.id}
+            community={community}
+            onOpen={() => onOpen(community.id)}
+            onToggleJoin={(options) => onJoin(community.id, options)}
+            loading={joiningId === community.id}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ForYouSection({ communities, onOpen, onJoin, joiningId, locationBoostUsed }) {
+  const subtitle = locationBoostUsed
+    ? "Based on the communities you've joined and what's near you"
+    : "Based on the kinds of communities you've joined";
+  return (
+    <section>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-violet-100 to-indigo-100 px-2.5 py-1 text-[11px] font-black text-violet-700">
+            <Sparkles className="h-3 w-3" />
+            For you
+          </div>
+          <p className="text-[13px] font-semibold leading-5 text-slate-500">{subtitle}</p>
+        </div>
+        <span className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-black text-slate-400">
+          {communities.length}
+        </span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {communities.map((community) => (
+          <DiscoverCommunityCard
+            key={community.id}
+            community={community}
+            onOpen={() => onOpen(community.id)}
+            onToggleJoin={(options) => onJoin(community.id, options)}
+            loading={joiningId === community.id}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function DiscoverEmptyState({ hasFilters, onClear, onCreateCommunity }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
+      {hasFilters ? (
+        <>
+          <p className="text-[15px] font-black text-slate-800">No communities match this filter</p>
+          <p className="mt-1 text-[13px] font-semibold text-slate-500">Try clearing the search or choosing a different type.</p>
+          <button
+            type="button"
+            onClick={onClear}
+            className="motion-press mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-black text-white"
+          >
+            Clear filters
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="text-[15px] font-black text-slate-800">No communities to discover yet</p>
+          <p className="mt-1 text-[13px] font-semibold text-slate-500">Be the first — create a community space for your neighborhood, shul, or group.</p>
+          <button
+            type="button"
+            onClick={onCreateCommunity}
+            className="motion-press mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-black text-white"
+          >
+            Create a community
+          </button>
+        </>
+      )}
+    </div>
   );
 }
