@@ -749,13 +749,10 @@ export default function Communities() {
     ].filter(Boolean);
   }, [communities]);
 
-  const visibleIdentityTags = useMemo(() => {
-    const tagSet = new Set();
-    yourCommunities
-      .filter((c) => !c.hideMembershipDefault && !c.joinedIncognito)
-      .forEach((c) => (c.identityTags || []).forEach((tag) => tagSet.add(tag)));
-    return Array.from(tagSet).slice(0, 12);
-  }, [yourCommunities]);
+  const allJoinedCommunities = useMemo(
+    () => communities.filter((c) => c.joined),
+    [communities]
+  );
 
   const handleJoin = async (communityId, options = {}) => {
     const community = communities.find((item) => item.id === communityId);
@@ -853,6 +850,7 @@ export default function Communities() {
       <DestinationHeader
         icon={Users}
         title="Communities"
+        className="bg-gradient-to-b from-[rgba(239,246,255,0.97)] to-[rgba(248,250,252,0.96)]"
         actions={(
           <>
             <button
@@ -887,20 +885,10 @@ export default function Communities() {
         )}
       />
 
-      <div className="mobile-page-wide px-3 pb-6 pt-3 sm:px-4 sm:pt-4">
+      <div className="mobile-page-wide px-3 pb-6 pt-2 sm:px-4 sm:pt-3">
         <Hero joinedCount={joinedCount} />
 
-        <CommunityPulseDock
-          items={communityPulse}
-          onOpen={openCommunity}
-          onTryPrompt={openCommunityWithPrompt}
-        />
-
-        <IdentityStrip
-          tags={visibleIdentityTags}
-          communities={yourCommunities}
-          onOpen={openCommunity}
-        />
+        <ActiveInStrip communities={allJoinedCommunities} onOpen={openCommunity} />
 
         <ViewSwitch view={view} onChange={setView} joinedCount={joinedCount} />
 
@@ -966,9 +954,16 @@ export default function Communities() {
                 </div>
               </CommunitySection>
             ) : (
-              curatedDiscoverSections.length > 0 ? (
-                <div className="space-y-8">
-                  {curatedDiscoverSections.map((section) => (
+              <div className="space-y-8">
+                {communityPulse.length > 0 && (
+                  <CommunityPulseDock
+                    items={communityPulse}
+                    onOpen={openCommunity}
+                    onTryPrompt={openCommunityWithPrompt}
+                  />
+                )}
+                {curatedDiscoverSections.length > 0 ? (
+                  curatedDiscoverSections.map((section) => (
                     <DiscoverSection
                       key={section.key}
                       section={section}
@@ -976,15 +971,15 @@ export default function Communities() {
                       onJoin={handleJoin}
                       joiningId={joiningId}
                     />
-                  ))}
-                </div>
-              ) : (
-                <DiscoverEmptyState
-                  hasFilters={query.trim().length > 0 || typeFilter !== 'all'}
-                  onClear={() => { setQuery(''); setTypeFilter('all'); }}
-                  onCreateCommunity={() => setShowCreate(true)}
-                />
-              )
+                  ))
+                ) : (
+                  <DiscoverEmptyState
+                    hasFilters={query.trim().length > 0 || typeFilter !== 'all'}
+                    onClear={() => { setQuery(''); setTypeFilter('all'); }}
+                    onCreateCommunity={() => setShowCreate(true)}
+                  />
+                )}
+              </div>
             )}
           </div>
         )}
@@ -1028,21 +1023,17 @@ export default function Communities() {
 
 function Hero({ joinedCount }) {
   return (
-    <section className="surface-panel mb-4 rounded-[24px] p-4">
-      <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-blue-700">
-        <Sparkles className="h-3.5 w-3.5" />
-        Community hub
-      </div>
-      <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
-        Find your people: private support, local updates, Torah, Shabbos, sports, creative circles, chesed, and the spaces that make JUnited worth checking every day.
+    <div className="mb-3 flex items-center gap-3 pt-0.5">
+      <p className="flex-1 text-[13px] font-semibold leading-5 text-slate-500">
+        Your neighborhood, shul, chesed, and learning — in one place.
       </p>
-      <HeroPill label={`${joinedCount} joined`} />
-    </section>
+      {joinedCount > 0 && (
+        <span className="shrink-0 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
+          {joinedCount} joined
+        </span>
+      )}
+    </div>
   );
-}
-
-function HeroPill({ label }) {
-  return <span className="mt-3 inline-flex rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700">{label}</span>;
 }
 
 function CommunityPulseDock({ items, onOpen, onTryPrompt }) {
@@ -1125,40 +1116,28 @@ function ViewSwitch({ view, onChange, joinedCount }) {
   );
 }
 
-function IdentityStrip({ tags, communities = [], onOpen }) {
+function ActiveInStrip({ communities = [], onOpen }) {
+  if (!communities.length) return null;
   return (
-    <section className="surface-panel-soft mb-4 rounded-[24px] p-4">
-      <h2 className="text-base font-black text-slate-950">Active in...</h2>
-      <p className="mt-1 text-sm font-semibold text-slate-500">Jump back into every community you joined, then keep your visible identity tags underneath.</p>
-      <div className="mobile-scroll-x mt-3 flex gap-2 pb-1">
-        {communities.length > 0 ? communities.map((community) => (
+    <section className="mb-3">
+      <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Your spaces</p>
+      <div className="mobile-scroll-x flex gap-2 pb-1">
+        {communities.map((community) => (
           <button
-            key={`active-community-${community.id}`}
+            key={community.id}
             type="button"
             onClick={() => onOpen?.(community.id)}
-            className="motion-press flex min-w-[180px] shrink-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
+            className="motion-press flex min-w-[148px] shrink-0 items-center gap-2.5 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-[12px] font-black text-white">
-              {(community.name || '?').split(' ').slice(0, 2).map((part) => part[0]).join('').toUpperCase()}
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-[11px] font-black text-white">
+              {(community.name || '?').split(' ').slice(0, 2).map((p) => p[0]).join('').toUpperCase()}
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-[13px] font-black text-slate-950">{community.name}</span>
-              <span className="block truncate text-[11px] font-bold text-slate-500">{community.category || community.communityType || 'Community'}</span>
+              <span className="block truncate text-[12px] font-black text-slate-950">{community.name}</span>
+              <span className="block truncate text-[10px] font-semibold text-slate-400">{community.category || 'Community'}</span>
             </span>
           </button>
-        )) : (
-          <span className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs font-black text-slate-500">
-            Join communities and they will live here for fast access.
-          </span>
-        )}
-      </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {tags.length > 0 ? tags.map((tag, index) => (
-          <span key={`${tag}-${index}`} className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700">{tag}</span>
-        )) : (
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-500">Join visible communities to build your identity stack</span>
-        )}
-        <span className="rounded-full border border-violet-100 bg-violet-50 px-3 py-1.5 text-xs font-black text-violet-700">Private spaces stay hidden</span>
+        ))}
       </div>
     </section>
   );
