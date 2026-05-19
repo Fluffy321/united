@@ -1,11 +1,12 @@
 import React from 'react';
-import { Edit2, Share2, MessageCircle, Flag, Ban, UserRoundCheck, UserRoundPlus, Clock, UserRoundX } from 'lucide-react';
+import { ContactRound, Edit2, Share2, MessageCircle, Flag, Ban, UserRoundCheck, UserRoundPlus, Clock, UserRoundX } from 'lucide-react';
 import { FRIEND_STATUS } from '@/services/friendsService';
 
 export default function ModernActionButtons({
   isOwnProfile,
   onEditProfile,
   onMessage,
+  onFindFriends,
   onShare,
   onReport,
   onBlock,
@@ -27,6 +28,13 @@ export default function ModernActionButtons({
         >
           <Edit2 className="h-3.5 w-3.5" />
           Edit Profile
+        </button>
+        <button
+          onClick={onFindFriends}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-blue-100 bg-blue-50 py-3 text-[13px] font-black text-blue-700 shadow-sm transition-all hover:bg-blue-100 active:scale-95"
+        >
+          <ContactRound className="h-3.5 w-3.5" />
+          Find friends
         </button>
       </div>
     );

@@ -355,6 +355,7 @@ export default function Profile() {
             <ModernActionButtons
               isOwnProfile={isOwnProfile}
               onEditProfile={handleEditProfile}
+              onFindFriends={() => setShowFriendsHub(true)}
               onMessage={handleMessage}
               onShare={handleShareProfile}
               onReport={() => setShowReport(true)}

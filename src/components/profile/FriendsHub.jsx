@@ -144,6 +144,17 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
           .limit(25);
         if (error) throw error;
         results = data || [];
+      } else {
+        const users = await dataService.entities.User.list('-created_date', 200);
+        const needle = q.toLowerCase();
+        results = users
+          .filter((user) => user.id !== uid)
+          .filter((user) => (
+            user.display_name?.toLowerCase().includes(needle) ||
+            user.full_name?.toLowerCase().includes(needle) ||
+            user.username?.toLowerCase().includes(needle)
+          ))
+          .slice(0, 25);
       }
       if (q !== latestRef.current) return;
       setSearchResults(results);
@@ -216,26 +227,34 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
       }
 
       const contacts = await navigator.contacts.select(['name', 'email', 'tel'], { multiple: true });
-      const values = new Set(
-        contacts
-          .flatMap((contact) => [...(contact.email || []), ...(contact.tel || [])])
-          .map(normalizeContactValue)
-          .filter(Boolean)
-      );
+      const emails = [...new Set(contacts.flatMap((contact) => contact.email || []).map(normalizeContactValue).filter(Boolean))];
+      const phones = [...new Set(contacts.flatMap((contact) => contact.tel || []).map(normalizeContactValue).filter(Boolean))];
+      const values = new Set([...emails, ...phones]);
 
       if (values.size === 0) {
         setContactsMessage('No usable email or phone details were found in those contacts.');
         return;
       }
 
-      const users = await dataService.entities.User.list('-created_date', 500);
-      const matches = users.filter((candidate) => {
-        if (candidate.id === uid) return false;
-        const candidateValues = [candidate.email, candidate.phone, candidate.phone_number]
-          .map(normalizeContactValue)
-          .filter(Boolean);
-        return candidateValues.some((value) => values.has(value));
-      });
+      let matches = [];
+
+      if (shouldUseSupabase && supabase) {
+        const { data, error } = await supabase.rpc('match_contact_profiles', {
+          p_emails: emails,
+          p_phones: phones,
+        });
+        if (error) throw error;
+        matches = data || [];
+      } else {
+        const users = await dataService.entities.User.list('-created_date', 500);
+        matches = users.filter((candidate) => {
+          if (candidate.id === uid) return false;
+          const candidateValues = [candidate.email, candidate.phone, candidate.phone_number]
+            .map(normalizeContactValue)
+            .filter(Boolean);
+          return candidateValues.some((value) => values.has(value));
+        });
+      }
 
       setSearchResults(matches);
       setSearchQuery('');

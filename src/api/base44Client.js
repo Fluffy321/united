@@ -789,6 +789,59 @@ const updateProfileWithSchemaRetry = async (userId, patch) => {
   throw new Error('Could not update profile because Supabase schema cache is missing required columns.');
 };
 
+const createWithSchemaRetry = async (table, entityName, data) => {
+  const dbPatch = toDbPatch(data, entityName);
+  const removedColumns = new Set();
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const { data: created, error } = await supabase
+      .from(table)
+      .insert(dbPatch)
+      .select()
+      .single();
+
+    if (!error) return created;
+
+    const missingColumn = getMissingSchemaColumn(error);
+    if (!missingColumn || removedColumns.has(missingColumn) || !(missingColumn in dbPatch)) {
+      throw error;
+    }
+
+    removedColumns.add(missingColumn);
+    delete dbPatch[missingColumn];
+    console.warn(`Skipping ${entityName} column "${missingColumn}" because it is not in the current Supabase schema cache yet.`);
+  }
+
+  throw new Error(`Could not create ${entityName} because Supabase schema cache is missing required columns.`);
+};
+
+const updateWithSchemaRetry = async (table, entityName, id, patch) => {
+  const dbPatch = { ...toDbPatch(patch, entityName), updated_at: new Date().toISOString() };
+  const removedColumns = new Set();
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const { data, error } = await supabase
+      .from(table)
+      .update(dbPatch)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (!error) return data;
+
+    const missingColumn = getMissingSchemaColumn(error);
+    if (!missingColumn || removedColumns.has(missingColumn) || !(missingColumn in dbPatch)) {
+      throw error;
+    }
+
+    removedColumns.add(missingColumn);
+    delete dbPatch[missingColumn];
+    console.warn(`Skipping ${entityName} column "${missingColumn}" because it is not in the current Supabase schema cache yet.`);
+  }
+
+  throw new Error(`Could not update ${entityName} because Supabase schema cache is missing required columns.`);
+};
+
 const runWithLocalFallback = async (action, fallback, label, isWrite = false) => {
   try {
     return await action();
@@ -982,12 +1035,7 @@ const createSupabaseEntityApi = (entityName) => {
 
     async create(data) {
       return runWithLocalFallback(async () => {
-        const { data: created, error } = await supabase
-          .from(table)
-          .insert(toDbPatch(data, entityName))
-          .select()
-          .single();
-        if (error) throw error;
+        const created = await createWithSchemaRetry(table, entityName, data);
         return toAppRow(created);
       }, () => localApi.create(data), entityName, true);
     },
@@ -1005,13 +1053,7 @@ const createSupabaseEntityApi = (entityName) => {
 
     async update(id, patch) {
       return runWithLocalFallback(async () => {
-        const { data, error } = await supabase
-          .from(table)
-          .update({ ...toDbPatch(patch, entityName), updated_at: new Date().toISOString() })
-          .eq('id', id)
-          .select()
-          .single();
-        if (error) throw error;
+        const data = await updateWithSchemaRetry(table, entityName, id, patch);
         return toAppRow(data);
       }, () => localApi.update(id, patch), entityName, true);
     },
