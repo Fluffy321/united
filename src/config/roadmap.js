@@ -310,6 +310,17 @@ Goals:
   },
 
   {
+    id: 'community-activity-digest-breakdown',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Community Activity Digest — Categorized Breakdown',
+    description: 'Upgrades the single "X new" pill into a compact "Since your last visit" module with separate tappable rows for new announcements, new posts, and new events.',
+    why: 'Knowing that something changed is not enough — members need to know what changed to choose where to go. Separate rows with direct tab navigation reduce friction from "something new" to actual engagement.',
+    shippedNote: 'Replaced single pill with blue-tinted digest block containing up to 3 rows (announcements → amber Megaphone, posts → blue MessageCircle, events → emerald CalendarDays), each with ChevronRight and direct tab navigation. Only rows with count > 0 render. Module is hidden when nothing is new.',
+  },
+
+  {
     id: 'community-list-new-activity-indicator',
     category: 'Community',
     status: STATUS.SHIPPED,

@@ -3,9 +3,11 @@ import {
   ArrowRight,
   BookOpen,
   CalendarDays,
+  ChevronRight,
   Crown,
   FileText,
   Megaphone,
+  MessageCircle,
   Pin,
   Search,
   Settings,
@@ -235,14 +237,15 @@ export function CommunityWelcomeHub({
   const resourcePreview = resources[0];
   const Icon = typeConfig?.icon || Users;
 
-  const { newSinceLast, hasNewAnnouncements } = useMemo(() => {
-    if (!lastVisitedAt) return { newSinceLast: 0, hasNewAnnouncements: false };
+  const { newAnnouncements, newRegularPosts, newEvents: newEventCount } = useMemo(() => {
+    if (!lastVisitedAt) return { newAnnouncements: 0, newRegularPosts: 0, newEvents: 0 };
     const since = new Date(lastVisitedAt);
-    const newPosts = posts.filter((p) => new Date(p.created_at || p.created_date) > since);
-    const newEvents = events.filter((e) => new Date(e.created_at) > since);
-    const _hasNewAnnouncements = newPosts.some(isAnnouncementPost);
-    return { newSinceLast: newPosts.length + newEvents.length, hasNewAnnouncements: _hasNewAnnouncements };
+    const newAnn = posts.filter((p) => isAnnouncementPost(p) && new Date(p.created_at || p.created_date) > since).length;
+    const newReg = posts.filter((p) => !isAnnouncementPost(p) && new Date(p.created_at || p.created_date) > since).length;
+    const newEvt = events.filter((e) => new Date(e.created_at) > since).length;
+    return { newAnnouncements: newAnn, newRegularPosts: newReg, newEvents: newEvt };
   }, [lastVisitedAt, posts, events]);
+  const hasAnyNew = newAnnouncements + newRegularPosts + newEventCount > 0;
 
   if (isFollowing) {
     // ── Joined member: compact dashboard ──────────────────────────────────────
@@ -262,19 +265,55 @@ export function CommunityWelcomeHub({
           </span>
         </div>
 
-        {/* New-since-last-visit digest pill */}
-        {newSinceLast > 0 && (
-          <button
-            type="button"
-            onClick={() => onTabChange?.(hasNewAnnouncements ? 'announcements' : 'posts')}
-            className="flex w-full items-center gap-2 border-b border-slate-50 bg-blue-50/60 px-4 py-2.5 text-left transition-colors hover:bg-blue-50"
-          >
-            <Sparkles className="h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
-            <span className="flex-1 text-[13px] font-bold text-blue-700">
-              {newSinceLast} new since your last visit
-            </span>
-            <ArrowRight className="h-3.5 w-3.5 text-blue-400" />
-          </button>
+        {/* Since-your-last-visit activity digest */}
+        {hasAnyNew && (
+          <div className="border-b border-slate-50 bg-blue-50/50 px-4 py-3">
+            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-blue-600">
+              <Sparkles className="h-3 w-3" />
+              Since your last visit
+            </p>
+            <div className="space-y-0.5">
+              {newAnnouncements > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onTabChange?.('announcements')}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-blue-100/70 active:bg-blue-100"
+                >
+                  <Megaphone className="h-3.5 w-3.5 flex-shrink-0 text-amber-600" />
+                  <span className="flex-1 text-[13px] font-bold text-slate-800">
+                    {newAnnouncements === 1 ? '1 new announcement' : `${newAnnouncements} new announcements`}
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                </button>
+              )}
+              {newRegularPosts > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onTabChange?.('posts')}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-blue-100/70 active:bg-blue-100"
+                >
+                  <MessageCircle className="h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
+                  <span className="flex-1 text-[13px] font-bold text-slate-800">
+                    {newRegularPosts === 1 ? '1 new post' : `${newRegularPosts} new posts`}
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                </button>
+              )}
+              {newEventCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onTabChange?.('events')}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-blue-100/70 active:bg-blue-100"
+                >
+                  <CalendarDays className="h-3.5 w-3.5 flex-shrink-0 text-emerald-600" />
+                  <span className="flex-1 text-[13px] font-bold text-slate-800">
+                    {newEventCount === 1 ? '1 new event' : `${newEventCount} new events`}
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                </button>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Latest announcement — prominent if available */}
