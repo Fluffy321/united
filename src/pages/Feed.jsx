@@ -381,7 +381,7 @@ const DEMO_POSTS = [
     post_subtype: 'tehillim',
     title: 'Tehillim group tonight 9:15',
     body: 'Short call for a local refuah request. Please comment if you want the name privately.',
-    author_name: 'Sarah C.',
+    author_name: 'Chesed Circle',
     user_id: 'local-demo-21',
     community_id: 'chesed-response-circle',
     community_name: 'Chesed Response Circle',
