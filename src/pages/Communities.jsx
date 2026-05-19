@@ -754,6 +754,32 @@ export default function Communities() {
     [communities]
   );
 
+  const forYouCommunities = useMemo(() => {
+    // Hide when user is actively searching or filtering — explicit intent takes priority
+    if (query.trim() || typeFilter !== 'all') return [];
+    // No basis for personalization without joined communities
+    if (allJoinedCommunities.length === 0) return [];
+
+    // Build type frequency from the user's joined set
+    const typeFreq = {};
+    for (const c of allJoinedCommunities) {
+      const key = c.typeKey || 'general';
+      typeFreq[key] = (typeFreq[key] || 0) + 1;
+    }
+
+    // Score each unjoinable community — primary filter is typeKey overlap
+    return discoverCommunities
+      .filter((c) => typeFreq[c.typeKey || 'general'])
+      .map((c) => {
+        let score = 3; // base: type match
+        if ((c.memberCount || c.follower_count || 0) > 50) score += 2;
+        if ((c.postsToday || 0) > 0) score += 1;
+        return { ...c, _forYouScore: score };
+      })
+      .sort((a, b) => b._forYouScore - a._forYouScore)
+      .slice(0, 4);
+  }, [allJoinedCommunities, discoverCommunities, query, typeFilter]);
+
   const handleJoin = async (communityId, options = {}) => {
     const community = communities.find((item) => item.id === communityId);
     if (!community) return;
@@ -960,6 +986,14 @@ export default function Communities() {
                     items={communityPulse}
                     onOpen={openCommunity}
                     onTryPrompt={openCommunityWithPrompt}
+                  />
+                )}
+                {forYouCommunities.length >= 2 && (
+                  <ForYouSection
+                    communities={forYouCommunities}
+                    onOpen={openCommunity}
+                    onJoin={handleJoin}
+                    joiningId={joiningId}
                   />
                 )}
                 {curatedDiscoverSections.length > 0 ? (
@@ -1278,6 +1312,36 @@ function DiscoverSection({ section, onOpen, onJoin, joiningId }) {
             {typeConfig.label}
           </div>
           <p className="text-[13px] font-semibold leading-5 text-slate-500">{subtitle}</p>
+        </div>
+        <span className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-black text-slate-400">
+          {communities.length}
+        </span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {communities.map((community) => (
+          <DiscoverCommunityCard
+            key={community.id}
+            community={community}
+            onOpen={() => onOpen(community.id)}
+            onToggleJoin={(options) => onJoin(community.id, options)}
+            loading={joiningId === community.id}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ForYouSection({ communities, onOpen, onJoin, joiningId }) {
+  return (
+    <section>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-violet-100 to-indigo-100 px-2.5 py-1 text-[11px] font-black text-violet-700">
+            <Sparkles className="h-3 w-3" />
+            For you
+          </div>
+          <p className="text-[13px] font-semibold leading-5 text-slate-500">Based on the kinds of communities you've joined</p>
         </div>
         <span className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-black text-slate-400">
           {communities.length}

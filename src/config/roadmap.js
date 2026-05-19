@@ -635,11 +635,12 @@ Goals:
   {
     id: 'community-discover-personalized-section',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Discover — Personalized "For You" Section',
     description: 'Surface a "Recommended for you" section at the top of Discover showing communities that match the user\'s existing memberships (same type) or neighborhood, prioritized by activity and member count.',
     why: 'The current Discover shows every type section with equal priority. Users with existing memberships have revealed preferences — a personalized top strip would dramatically improve join rates for relevant communities.',
+    shippedNote: 'Shipped 2026-05-19. forYouCommunities useMemo: pure client-side scoring from data already in scope (no new queries). Filter: discoverCommunities (unjoinable) where typeKey appears in allJoinedCommunities frequency map. Score: +3 typeKey match (base, required to appear), +2 memberCount>50, +1 postsToday>0. Sort descending, take top 4. ForYouSection renders with violet/indigo gradient pill header + Sparkles icon, "Based on the kinds of communities you\'ve joined" subtitle, count badge, existing DiscoverCommunityCard grid. Section hidden when: query/typeFilter active (explicit search intent), allJoinedCommunities=0, or fewer than 2 results. Communities also appear in type-grouped sections below (no deduplication — reinforces). Positioned after CommunityPulseDock, before type sections.',
     prompt: `You are adding a personalized "For You" section to the JUnited Communities Discover tab.
 
 Context:
@@ -652,6 +653,31 @@ Goals:
 2. If recommendedCommunities.length >= 2, render a "For you" section ABOVE all type sections, using the same DiscoverSection layout but with a star icon and no type chip — just a purple/indigo gradient header and subtitle "Based on your communities".
 3. Communities that already appear in "For you" still appear in their type section (they are not deduplicated — both placements reinforce discovery).
 4. Hide the For You section entirely if the user has no joined communities or no unjoinable matches with score > 0.
+5. Run npm run lint && npm run build.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-discover-location-boost',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Discover "For You" — Location Signal Boost',
+    description: 'Upgrade the "For you" scoring with a neighborhood/location signal: if the user\'s profile includes a location, boost discoverable communities in the same area.',
+    why: 'The current "For you" uses typeKey overlap only. Users whose profiles include location data (neighborhood, city) can get meaningfully better personalization by surfacing hyperlocal communities — especially neighborhood and shul types.',
+    prompt: `You are adding a location boost to the "For you" personalization scoring in JUnited Communities Discover.
+
+Context:
+- src/pages/Communities.jsx: forYouCommunities useMemo uses typeFreq scoring (+3 type, +2 memberCount>50, +1 postsToday>0). allJoinedCommunities and discoverCommunities are already in scope.
+- User profile: currentUser comes from useAuth(). Profile location may be in currentUser.location or currentUser.city or a separate profiles query.
+- Community location: communities have a 'location' string field from the DB.
+- src/lib/communityTypes.js: getCommunityTypeKey(community) derives typeKey.
+
+Goals:
+1. Determine the canonical field(s) for user location — check profiles table and currentUser shape (run Supabase MCP list_tables or inspect existing profile queries).
+2. If location data is available without a new query: add +2 to the forYouCommunities score when a community's location string includes the user's city/neighborhood (case-insensitive substring match).
+3. If location requires a new query: add a lightweight useQuery for the user's profile location only when allJoinedCommunities.length > 0 (avoids wasted fetch for new users).
+4. Update the ForYouSection subtitle to "Based on your communities and neighborhood" when a location boost is in effect; keep the current copy when it is not.
 5. Run npm run lint && npm run build.
 6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
