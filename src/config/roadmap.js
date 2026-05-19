@@ -597,6 +597,66 @@ Goals:
   },
 
   {
+    id: 'community-discover-mini-app-redesign',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Communities Discover — Mini-App Entry Points',
+    description: 'Redesign the Discover tab from a generic flat directory into type-aware mini-app entry points: grouped by community type, cards showing cover/banner, type chip, activity signals, feature pills, and a join button.',
+    why: 'The old Discover experience was a keyword-bucketed flat list with no type identity, no activity context, and no sense of what each community offered. Communities are distinct mini-apps — the directory should sell them that way.',
+    shippedNote: 'Shipped 2026-05-19. DiscoverCommunityCard.jsx: 72px type-aware banner (cover_url or coverPattern gradient), dark gradient overlay, type chip (bottom-left, badgeClass), privacy badge (bottom-right), member count, join button (type accent gradient → "Joined" with check), 2-line description, feature pills from primaryTabs (up to 3, mapped to human labels), activity signal ("X posts today" / "X+ posts" green dot). Communities.jsx: curatedDiscoverSections useMemo replaced with typeKey grouping using DISCOVER_SECTION_ORDER and DISCOVER_SECTION_SUBTITLES; DiscoverSection component renders section header (type chip + subtitle + count badge) + responsive 2-col grid; DiscoverEmptyState handles filter-mismatch and zero-data cases with contextual CTAs.',
+  },
+
+  {
+    id: 'community-discover-type-filter',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Discover — Type Filter Chips',
+    description: 'A horizontally scrollable row of community-type filter chips above the Discover section list (e.g. "All", "Neighborhood", "Shul", "Learning") so users can narrow to a specific mini-app type without scrolling through all groups.',
+    why: 'After the Discover redesign ships type-grouped sections, the natural next friction is "I only want to see X type" — a single-tap filter resolves this without adding a search interaction.',
+    prompt: `You are adding type filter chips to the JUnited Communities Discover tab.
+
+Context:
+- src/pages/Communities.jsx: the Discover tab renders curatedDiscoverSections (typeKey-grouped useMemo) and DiscoverSection components. The search input is already wired via discoverSearch state.
+- src/lib/communityTypes.js: COMMUNITY_TYPE_CONFIG has key/label/icon/badgeClass for all 8 types + general.
+- DISCOVER_SECTION_ORDER constant in Communities.jsx defines the display order of types.
+
+Goals:
+1. Add a horizontally scrollable chip row below the search input and above the sections list. Chips: "All" (default) plus one chip per type key in DISCOVER_SECTION_ORDER that has at least one community.
+2. Add discoverTypeFilter state (null = all). Selecting a chip sets the filter; selecting again or "All" clears it.
+3. Filter curatedDiscoverSections to only include the matching type when a filter is active.
+4. Chip styling: inactive = typeConfig.softClass; active = typeConfig.badgeClass + ring-2 + text-white.
+5. Do not remove the text search — type filter and text search should compose (both active at once narrows further).
+6. Run npm run lint && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-discover-personalized-section',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Discover — Personalized "For You" Section',
+    description: 'Surface a "Recommended for you" section at the top of Discover showing communities that match the user\'s existing memberships (same type) or neighborhood, prioritized by activity and member count.',
+    why: 'The current Discover shows every type section with equal priority. Users with existing memberships have revealed preferences — a personalized top strip would dramatically improve join rates for relevant communities.',
+    prompt: `You are adding a personalized "For You" section to the JUnited Communities Discover tab.
+
+Context:
+- src/pages/Communities.jsx: Discover tab, curatedDiscoverSections groups by typeKey. joinedCommunities list is already available in the component.
+- src/lib/communityTypes.js: getCommunityTypeKey(community) normalizes type from any community shape.
+- discoverCommunities (React Query) is the full list of unjoinable/joinable communities.
+
+Goals:
+1. Compute a recommendedCommunities list: for each community in discoverCommunities that the user has NOT joined, score it by: +3 if its typeKey matches any joined community typeKey, +2 if membership > 50, +1 if postsToday > 0. Take the top 4 by score (minimum score > 0 to show the section at all).
+2. If recommendedCommunities.length >= 2, render a "For you" section ABOVE all type sections, using the same DiscoverSection layout but with a star icon and no type chip — just a purple/indigo gradient header and subtitle "Based on your communities".
+3. Communities that already appear in "For you" still appear in their type section (they are not deduplicated — both placements reinforce discovery).
+4. Hide the For You section entirely if the user has no joined communities or no unjoinable matches with score > 0.
+5. Run npm run lint && npm run build.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'community-custom-branding',
     category: 'Community',
     status: STATUS.PLANNED,
