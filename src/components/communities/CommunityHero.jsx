@@ -6,16 +6,6 @@ import InviteLinkButton from './InviteLinkButton';
 import { toast } from 'sonner';
 import { getCommunityTypeConfig } from '@/lib/communityTypes';
 
-const TYPE_LABEL_PLURAL = {
-  Shul: 'Shuls', School: 'Schools', Yeshiva: 'Yeshivas',
-  Seminary: 'Seminaries', Camp: 'Camps', Organization: 'Organizations', Other: 'Communities',
-};
-
-const TYPE_EMOJI = {
-  Shul: '🕍', School: '🏫', Yeshiva: '📚',
-  Seminary: '🎓', Camp: '⛺', Organization: '🏢', Other: '🏘️',
-};
-
 // Deterministic gradient from community name
 function communityGradient(name = '', accentColor) {
   if (accentColor) return `linear-gradient(135deg, ${accentColor}CC 0%, ${accentColor}88 100%)`;
@@ -32,31 +22,21 @@ function communityGradient(name = '', accentColor) {
 }
 
 export default function CommunityHero({
-  community, isFollowing, isAdmin, isCreator = false, onBack, onFollow, onManage, onClaim,
-  // eventCount, mitzvahCount, postsThisWeek removed — stats ribbon was removed
+  community, isFollowing, isAdmin, isCreator = false, onBack, onFollow, onManage,
   actualMemberCount,
   members = [], currentUser, onTabChange, typeConfig: providedTypeConfig
 }) {
-  const [scrollY, setScrollY] = useState(0);
   const [stickyVisible, setStickyVisible] = useState(false);
 
   const memberCount = actualMemberCount > 0 ? actualMemberCount : (community.follower_count || 0);
   const typeConfig = providedTypeConfig || getCommunityTypeConfig(community);
   const TypeIcon = typeConfig.icon;
-  const type = community.type || community.verified_type || typeConfig.label;
-  const typeLabel = typeConfig.pluralLabel || TYPE_LABEL_PLURAL[type] || 'Communities';
-  const typeEmoji = TYPE_EMOJI[type] || typeConfig.emoji || 'JU';
   const gradient = community.featured_accent_color
     ? communityGradient(community.name, community.featured_accent_color)
     : typeConfig.coverPattern;
 
-  // Scroll listener for sticky header
   useEffect(() => {
-    const handleScroll = () => {
-      const y = window.scrollY;
-      setScrollY(y);
-      setStickyVisible(y > 100);
-    };
+    const handleScroll = () => setStickyVisible(window.scrollY > 80);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -72,13 +52,6 @@ export default function CommunityHero({
       }
     } catch {}
   };
-
-  const isActive = (community.joins_this_week || 0) + (community.posts_this_week || 0) > 3;
-  const statusPill = isActive
-    ? <span className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/25 text-white border border-white/30">🔥 Busy today</span>
-    : memberCount > 0
-    ? <span className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/25">🟢 {memberCount} members</span>
-    : null;
 
   return (
     <>
@@ -109,9 +82,9 @@ export default function CommunityHero({
         </button>
       </motion.div>
 
-      {/* ── Hero cover — compact 120px ── */}
-      <div className="relative overflow-hidden" style={{ height: 120 }}>
-        {/* Cover image or gradient — static (no parallax) */}
+      {/* ── Branded cover — community name integrated at bottom ── */}
+      <div className="relative overflow-hidden" style={{ height: 128 }}>
+        {/* Cover: image or type-specific gradient */}
         <div className="absolute inset-0 w-full">
           {(community.cover_url || community.cover_image_url) ? (
             <img
@@ -122,11 +95,11 @@ export default function CommunityHero({
           ) : (
             <div className="w-full h-full" style={{ background: gradient }} />
           )}
-          {/* Darkening overlay for text legibility */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          {/* Strong bottom overlay for name legibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
         </div>
 
-        {/* Back + share buttons over cover */}
+        {/* Back + share — top row */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
           <button
             onClick={onBack}
@@ -134,108 +107,92 @@ export default function CommunityHero({
           >
             <ArrowLeft className="w-4 h-4 text-white" />
           </button>
-          <div className="flex items-center gap-2">
-            <span className="text-[12px] font-semibold text-white/80 bg-black/25 backdrop-blur-sm px-2.5 py-1 rounded-full">
-              {typeEmoji} {typeLabel}
-            </span>
-            <button
-              onClick={handleShare}
-              className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
-            >
-              <Share2 className="w-4 h-4 text-white" />
-            </button>
-          </div>
+          <button
+            onClick={handleShare}
+            className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+          >
+            <Share2 className="w-4 h-4 text-white" />
+          </button>
         </div>
 
-        {/* Status pill bottom-left of cover */}
-        <div className="absolute bottom-3 left-4 flex items-center gap-2">
-          {statusPill}
+        {/* Community identity — overlaid at cover bottom */}
+        <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
+          <div className="flex items-end gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <h1 className="font-extrabold text-white text-[19px] leading-tight drop-shadow-sm truncate">
+                  {community.name}
+                </h1>
+                {community.is_claimed && <CheckCircle2 className="w-4 h-4 text-blue-300 flex-shrink-0" />}
+                {community.is_featured && <Star className="w-4 h-4 text-amber-300 fill-amber-300 flex-shrink-0" />}
+              </div>
+              <p className="text-[11px] text-white/75 flex items-center gap-1 mt-0.5 leading-none">
+                <TypeIcon className="h-3 w-3 flex-shrink-0" />
+                {typeConfig.label}
+                {community.neighborhood && <span className="opacity-80"> · {community.neighborhood}</span>}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── Identity row: logo + name + type badge + CTA ── */}
-      <div className="bg-white px-4 pt-0 pb-3 border-b border-slate-100">
-        <div className="flex items-center gap-3 -mt-6">
-          {/* Logo: 48x48, overlapping cover bottom */}
-          <div className="relative flex-shrink-0">
-            <div className="rounded-xl border-4 border-white shadow-md overflow-hidden" style={{ width: 48, height: 48 }}>
-              <CommunityLogo community={community} size="md" />
-            </div>
-            {isActive && (
-              <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white" />
-            )}
-          </div>
+      {/* ── Thin action bar: logo + member count + CTA ── */}
+      <div className="bg-white border-b border-slate-100 px-4 py-2.5 flex items-center gap-2.5">
+        <div className="rounded-lg overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm" style={{ width: 30, height: 30 }}>
+          <CommunityLogo community={community} size="sm" />
+        </div>
 
-          {/* Name + badges */}
-          <div className="flex-1 min-w-0 pt-6">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h1 className="font-extrabold text-slate-900 text-[16px] leading-tight truncate">{community.name}</h1>
-              {community.is_claimed && <CheckCircle2 className="w-3.5 h-3.5 text-[#2563EB] flex-shrink-0" />}
-              {community.is_featured && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />}
-            </div>
-            <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
-              <TypeIcon className="h-3 w-3 flex-shrink-0" />
-              {typeConfig.label}
-              {community.neighborhood && <span className="text-slate-400"> · {community.neighborhood}</span>}
-            </p>
-          </div>
+        <p className="text-[12px] font-semibold text-slate-500 flex-1 truncate min-w-0">
+          {memberCount > 0 ? `${memberCount.toLocaleString()} members` : typeConfig.tagline}
+        </p>
 
-          {/* CTA — right side */}
-          <div className="flex items-center gap-1.5 flex-shrink-0 pt-6">
-            {isCreator ? (
-              <button
-                onClick={onManage}
-                className="h-8 px-3 text-[12px] font-bold rounded-full bg-slate-950 text-white active:scale-95 transition-all"
-              >
-                Admin
-              </button>
-            ) : isFollowing ? (
-              <>
-                <button
-                  onClick={onFollow}
-                  className="h-8 px-3 text-[12px] font-bold rounded-full bg-slate-100 text-slate-600 active:scale-95 transition-all"
-                >
-                  Joined ✓
-                </button>
-                {isAdmin && (
-                  <button
-                    onClick={onManage}
-                    className="h-8 w-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 active:scale-95 transition-all"
-                    aria-label="Admin center"
-                  >
-                    <Settings className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </>
-            ) : (
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {isCreator ? (
+            <button
+              onClick={onManage}
+              className="h-8 px-3 text-[12px] font-bold rounded-full bg-slate-950 text-white active:scale-95 transition-all"
+            >
+              Admin
+            </button>
+          ) : isFollowing ? (
+            <>
               <button
                 onClick={onFollow}
-                className="h-8 px-4 text-[12px] font-bold rounded-full bg-[#2563EB] text-white active:scale-95 transition-all"
+                className="h-8 px-3 text-[12px] font-bold rounded-full bg-slate-100 text-slate-600 active:scale-95 transition-all"
               >
-                Join
+                Joined ✓
               </button>
-            )}
-          </div>
+              {isAdmin && (
+                <button
+                  onClick={onManage}
+                  className="h-8 w-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 active:scale-95 transition-all"
+                  aria-label="Admin center"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </>
+          ) : (
+            <button
+              onClick={onFollow}
+              className="h-8 px-4 text-[12px] font-bold rounded-full bg-[#2563EB] text-white active:scale-95 transition-all"
+            >
+              Join
+            </button>
+          )}
         </div>
-
-        {/* Tagline below identity row */}
-        {typeConfig.tagline && (
-          <p className="mt-2 text-[11px] text-slate-500 leading-snug">
-            {typeConfig.tagline}
-          </p>
-        )}
-
-        {/* Invite link — only for members */}
-        {isFollowing && (
-          <div className="mt-2">
-            <InviteLinkButton
-              communityId={community.id}
-              communityName={community.name}
-              currentUser={currentUser}
-            />
-          </div>
-        )}
       </div>
+
+      {/* Invite link — only for members */}
+      {isFollowing && (
+        <div className="bg-white px-4 pb-2.5 pt-1 border-b border-slate-100">
+          <InviteLinkButton
+            communityId={community.id}
+            communityName={community.name}
+            currentUser={currentUser}
+          />
+        </div>
+      )}
     </>
   );
 }

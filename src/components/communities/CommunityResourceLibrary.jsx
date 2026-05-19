@@ -336,7 +336,16 @@ function ResourceCard({ resource, canDelete, onDelete }) {
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export default function CommunityResourceLibrary({ communityId, community, currentUser, isAdmin }) {
+const RESOURCE_EMPTY_BY_TYPE = {
+  neighborhood: 'Share guides, community contacts, neighborhood alerts, or helpful local links.',
+  shul: 'Share schedules, forms, weekly guides, or member resources here.',
+  learning: 'Share shiur recordings, source sheets, or useful learning links.',
+  chesed: 'Add contact lists, volunteer guides, or chesed organization links.',
+  parents: 'Share school guides, camp info, local recommendations, or family forms.',
+  marketplace: 'Add local business info, gemach listings, or community resource links.',
+};
+
+export default function CommunityResourceLibrary({ communityId, community, currentUser, isAdmin, typeConfig }) {
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
@@ -480,10 +489,12 @@ export default function CommunityResourceLibrary({ communityId, community, curre
           ))}
         </div>
       ) : resources.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
-          <div className="text-4xl mb-3">📂</div>
-          <p className="font-bold text-slate-700 text-[15px]">No resources yet</p>
-          <p className="text-[13px] text-slate-400 mt-1 mb-4">Share documents, links, and files with your community</p>
+        <div className="text-center py-10 bg-white rounded-2xl border border-slate-100 px-5">
+          <div className="text-3xl mb-2">📂</div>
+          <p className="font-bold text-slate-700 text-[14px]">No resources yet</p>
+          <p className="text-[12px] text-slate-400 mt-1 mb-4 leading-5">
+            {RESOURCE_EMPTY_BY_TYPE[typeConfig?.key] || 'Share documents, links, and files with your community.'}
+          </p>
           {canAddByRole && (
             <button
               onClick={openAddSheet}
