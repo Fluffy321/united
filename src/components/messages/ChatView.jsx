@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import FileAttachmentButton from '@/components/common/FileAttachmentButton';
 import { AttachmentPreview, PendingAttachmentChip } from '@/components/common/FileAttachmentPreview';
 import { AI_AGENT, isAIConversation, loadAIMessages, saveAIMessages, getAIReply } from '@/lib/aiAgent';
+import UserAvatar from '@/components/common/UserAvatar';
 
 export default function ChatView({ conversation, currentUser, onBack, onReport, onBlock }) {
   const [messages, setMessages] = useState([]);
@@ -229,6 +230,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         conversation_id: conversation.id,
         sender_id: currentUser.id,
         sender_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],
+        sender_avatar_url: currentUser.avatar_url || null,
         sender_age_range: currentUser.age_range || '18+',
         recipient_id: other.id,
         content: text || (attachment ? `📎 ${attachment.name}` : ''),
@@ -407,12 +409,17 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
             messages.map(msg => {
               const isOwn = msg.sender_id === currentUser.id;
               const isAIMsg = msg.sender_id === AI_AGENT.id;
+              const senderAvatar = isOwn
+                ? { ...currentUser, display_name: msg.sender_name || currentUser.display_name }
+                : { avatar_url: msg.sender_avatar_url || msg.sender_avatar || other.avatar, display_name: msg.sender_name || other.name };
               return (
                 <div key={msg.id} className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                  {isAIMsg && (
+                  {isAIMsg ? (
                     <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-600 to-slate-900 flex items-center justify-center flex-shrink-0 shadow-sm">
                       <Bot className="w-3.5 h-3.5 text-white" />
                     </div>
+                  ) : !isOwn && (
+                    <UserAvatar user={senderAvatar} name={senderAvatar.display_name} size="sm" className="mb-5" />
                   )}
                   <div className={`max-w-[76%] ${isOwn ? 'order-2' : ''}`}>
                     <div className={`px-4 py-2.5 text-[14px] leading-relaxed ${
@@ -434,6 +441,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
                       {formatDistanceToNow(new Date(msg.created_date), { addSuffix: true })}
                     </p>
                   </div>
+                  {isOwn && (
+                    <UserAvatar user={senderAvatar} name={senderAvatar.display_name} size="sm" className="order-3 mb-5" />
+                  )}
                 </div>
               );
             })

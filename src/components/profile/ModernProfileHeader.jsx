@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, BadgeCheck, CalendarDays, Clock3, Flame, Home, MapPin, Settings, ShieldCheck } from 'lucide-react';
+import { Award, BadgeCheck, CalendarDays, Clock3, Flame, Home, MapPin, ShieldCheck } from 'lucide-react';
 import { differenceInDays, differenceInHours, format, parseISO } from 'date-fns';
 import UserAvatar from '@/components/common/UserAvatar';
 
@@ -28,7 +28,7 @@ function getActivityLabel(user) {
   return { label: `Last seen ${days}d ago`, color: 'bg-slate-100 text-slate-400' };
 }
 
-export default function ModernProfileHeader({ user, isOwnProfile, onSettings, onLocationClick }) {
+export default function ModernProfileHeader({ user, isOwnProfile, onLocationClick }) {
   const since = memberSince(user.created_date);
   const neighborhood = user.cityPreset || user.location_text;
   const bio = user.bio;
@@ -47,16 +47,6 @@ export default function ModernProfileHeader({ user, isOwnProfile, onSettings, on
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
         <div className="absolute -left-10 -top-14 h-36 w-36 rounded-full bg-white/15 blur-2xl" />
         <div className="absolute -right-8 bottom-2 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
-
-        {isOwnProfile && onSettings && (
-          <button
-            onClick={onSettings}
-            className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-2xl border border-white/35 bg-white/20 px-3 py-2 text-[12px] font-black text-white shadow-sm backdrop-blur-md transition hover:bg-white/25 active:scale-95"
-          >
-            <Settings className="h-3.5 w-3.5" />
-            Settings
-          </button>
-        )}
       </div>
 
       <div className="px-4 pb-3">

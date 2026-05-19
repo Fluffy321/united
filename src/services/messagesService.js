@@ -21,7 +21,10 @@ export const messagesService = {
     return dataService.entities.Message.filter({ conversation_id: conversationId }, sort);
   },
   async createMessage(payload) {
-    const message = await dataService.entities.Message.create(payload);
+    const message = await dataService.entities.Message.create({
+      ...payload,
+      sender_avatar_url: payload.sender_avatar_url || payload.sender_avatar || null,
+    });
     notificationsService.notifyMessageReceived({
       recipientId: payload.recipient_id,
       senderId: payload.sender_id,
@@ -57,6 +60,10 @@ export async function createDirectConversation(currentUser, recipient, options =
     participant_names: [
       currentUser.display_name || currentUser.full_name?.split(' ')[0] || 'User',
       recipient.name,
+    ],
+    participant_avatars: [
+      currentUser.avatar_url || '',
+      recipient.avatar_url || recipient.avatar || '',
     ],
     participant_ages: [currentUser.age_range || '18+', recipient.age_range || '18+'],
     unread_count: { [recipient.id]: 0 },

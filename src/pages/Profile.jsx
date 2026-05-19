@@ -227,6 +227,7 @@ export default function Profile() {
     const conv = await findOrCreateDirectConversation(currentUser, {
       id: profileUser.id,
       name: profileUser.display_name || profileUser.full_name?.split(' ')[0] || 'User',
+      avatar_url: profileUser.avatar_url || '',
       age_range: profileUser.age_range,
     });
     navigate(createPageUrl('Messages') + `?conversation=${conv.id}`);

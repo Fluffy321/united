@@ -28,13 +28,6 @@ export default function ModernActionButtons({
           <Edit2 className="h-3.5 w-3.5" />
           Edit Profile
         </button>
-        <button
-          onClick={onShare}
-          className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-600 shadow-sm transition-all hover:border-blue-100 hover:bg-blue-50 hover:text-blue-700 active:scale-95"
-          title="Share profile"
-        >
-          <Share2 className="h-3.5 w-3.5" />
-        </button>
       </div>
     );
   }
