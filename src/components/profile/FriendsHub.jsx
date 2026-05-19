@@ -5,7 +5,7 @@ import { friendsService, FRIEND_STATUS } from '@/services/friendsService';
 import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ClipboardPaste, Loader2, UserRound, UserRoundX, UserRoundPlus, UserRoundCheck, X, Check, Clock, Search, ContactRound, MessageCircle, Upload } from 'lucide-react';
+import { Loader2, UserRound, UserRoundX, UserRoundPlus, UserRoundCheck, X, Check, Clock, Search, ContactRound, MessageCircle, Mail, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { dataService, findOrCreateDirectConversation } from '@/services';
 
@@ -19,8 +19,6 @@ const TABS = [
 const DEBOUNCE_MS = 280;
 const escapeIlike = (s) => s.replace(/[\\%_]/g, '\\$&').replace(/,/g, ' ');
 const normalizeContactValue = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9@.+]/g, '');
-const extractEmails = (text = '') => [...new Set((text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || []).map(normalizeContactValue).filter(Boolean))];
-const extractPhones = (text = '') => [...new Set((text.match(/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g) || []).map(normalizeContactValue).filter(Boolean))];
 
 function Avatar({ user, size = 'w-10 h-10' }) {
   const initials = (user?.display_name || '?').slice(0, 2).toUpperCase();
@@ -61,12 +59,11 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
   const [searching, setSearching] = useState(false);
   const [contactsLoading, setContactsLoading] = useState(false);
   const [contactsMessage, setContactsMessage] = useState('');
-  const [showContactTools, setShowContactTools] = useState(false);
-  const [contactPaste, setContactPaste] = useState('');
+  const [showInviteOptions, setShowInviteOptions] = useState(false);
+  const [contactInvites, setContactInvites] = useState([]);
   const [suggestedPeople, setSuggestedPeople] = useState([]);
   const debounceRef = useRef(null);
   const latestRef = useRef('');
-  const fileInputRef = useRef(null);
   // Track which user IDs have in-flight request actions
   const [actionLoading, setActionLoading] = useState(null);
 
@@ -221,8 +218,8 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
   const matchContactValues = async ({ emails = [], phones = [] }) => {
     const values = new Set([...emails, ...phones].filter(Boolean));
     if (values.size === 0) {
-      setContactsMessage('No emails or phone numbers were found. Try importing a contacts file or pasting contact details.');
-      return;
+      setContactsMessage('No usable phone numbers or emails were found in those contacts.');
+      return [];
     }
 
     setContactsLoading(true);
@@ -252,8 +249,10 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
         ? `${matches.length} JUnited ${matches.length === 1 ? 'member' : 'members'} matched your contacts.`
         : 'No current JUnited members matched those contacts yet. You can still search or invite them later.'
       );
+      return matches;
     } catch {
       setContactsMessage('Contact matching could not finish. You can still search by name.');
+      return [];
     } finally {
       setContactsLoading(false);
     }
@@ -297,49 +296,63 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
     }
   };
 
-  const handleImportContacts = async () => {
+  const handleOpenContacts = async () => {
     setContactsMessage('');
+    setContactInvites([]);
     setContactsLoading(true);
     try {
       if (!navigator.contacts?.select) {
-        setShowContactTools(true);
-        setContactsMessage('This browser cannot open your address book directly. Import a contacts file or paste emails/phone numbers below.');
+        setShowInviteOptions(true);
+        setContactsMessage('This browser blocked direct contact-sheet access. Use Invite Friends below, or try opening JUnited on a mobile browser that supports contact access.');
         return;
       }
 
       const contacts = await navigator.contacts.select(['name', 'email', 'tel'], { multiple: true });
       const emails = [...new Set(contacts.flatMap((contact) => contact.email || []).map(normalizeContactValue).filter(Boolean))];
       const phones = [...new Set(contacts.flatMap((contact) => contact.tel || []).map(normalizeContactValue).filter(Boolean))];
-      await matchContactValues({ emails, phones });
+      const matches = await matchContactValues({ emails, phones });
+      if (!matches.length) {
+        setShowInviteOptions(true);
+        setContactInvites(contacts.slice(0, 25).map((contact, index) => ({
+          id: `contact-${index}`,
+          name: contact.name?.[0] || 'Contact',
+          email: contact.email?.[0] || '',
+          phone: contact.tel?.[0] || '',
+        })));
+      }
     } catch {
-      setContactsMessage('Contacts access was not completed. You can still search by name.');
+      setContactsMessage('Contacts access was not completed. You can still search or invite friends.');
+      setShowInviteOptions(true);
     } finally {
       setContactsLoading(false);
     }
   };
 
-  const handleContactFile = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const inviteUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://www.junited.us'}/InviteJoin`;
+  const inviteText = `Join me on JUnited, the Jewish community app for local updates, mitzvahs, communities, and friends: ${inviteUrl}`;
 
+  const handleShareInvite = async () => {
     try {
-      const text = await file.text();
-      await matchContactValues({
-        emails: extractEmails(text),
-        phones: extractPhones(text),
-      });
+      if (navigator.share) {
+        await navigator.share({ title: 'Join me on JUnited', text: inviteText, url: inviteUrl });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(inviteText);
+        toast.success('Invite link copied');
+      } else {
+        window.prompt('Copy this invite link', inviteUrl);
+      }
     } catch {
-      setContactsMessage('That contacts file could not be read. Try a .vcf, .csv, or pasted emails.');
-    } finally {
-      event.target.value = '';
+      toast.error('Could not open share sheet');
     }
   };
 
-  const handlePasteContacts = async () => {
-    await matchContactValues({
-      emails: extractEmails(contactPaste),
-      phones: extractPhones(contactPaste),
-    });
+  const openSmsInvite = (phone = '') => {
+    const target = phone ? normalizeContactValue(phone) : '';
+    window.location.href = `sms:${target}?&body=${encodeURIComponent(inviteText)}`;
+  };
+
+  const openEmailInvite = (email = '') => {
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent('Join me on JUnited')}&body=${encodeURIComponent(inviteText)}`;
   };
 
   const handleMessageFriend = async (friendProfile) => {
@@ -422,57 +435,84 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
             <div className="flex flex-col h-full">
               {/* Search input */}
               <div className="px-5 pb-3">
-                <button
-                  type="button"
-                  onClick={handleImportContacts}
-                  disabled={contactsLoading}
-                  className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-[13px] font-black text-blue-700 transition hover:bg-blue-100 active:scale-[0.99] disabled:opacity-60"
-                >
-                  {contactsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ContactRound className="h-4 w-4" />}
-                  {contactsLoading ? 'Checking contacts...' : 'Link contacts to find friends'}
-                </button>
-                {contactsMessage && (
-                  <p className="mb-3 rounded-2xl bg-slate-50 px-3 py-2 text-center text-[12px] font-semibold text-slate-500">
-                    {contactsMessage}
-                  </p>
-                )}
-                {showContactTools && (
-                  <div className="mb-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".vcf,.vcard,.csv,.txt,text/vcard,text/csv,text/plain"
-                      className="hidden"
-                      onChange={handleContactFile}
-                    />
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={contactsLoading}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] font-black text-slate-700 transition hover:bg-slate-100 active:scale-[0.98] disabled:opacity-50"
-                      >
-                        <Upload className="h-3.5 w-3.5" />
-                        Import file
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handlePasteContacts}
-                        disabled={contactsLoading || !contactPaste.trim()}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-3 py-2 text-[12px] font-black text-white transition hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
-                      >
-                        {contactsLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ClipboardPaste className="h-3.5 w-3.5" />}
-                        Find matches
-                      </button>
-                    </div>
-                    <textarea
-                      value={contactPaste}
-                      onChange={(event) => setContactPaste(event.target.value)}
-                      placeholder="Paste emails or phone numbers from contacts..."
-                      className="mt-2 min-h-[78px] w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-                    />
-                  </div>
-                )}
+	                <button
+	                  type="button"
+	                  onClick={handleOpenContacts}
+	                  disabled={contactsLoading}
+	                  className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-[13px] font-black text-blue-700 transition hover:bg-blue-100 active:scale-[0.99] disabled:opacity-60"
+	                >
+	                  {contactsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ContactRound className="h-4 w-4" />}
+	                  {contactsLoading ? 'Opening contacts...' : 'Open contacts to find friends'}
+	                </button>
+	                <button
+	                  type="button"
+	                  onClick={() => setShowInviteOptions((value) => !value)}
+	                  className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-[13px] font-black text-white transition hover:bg-slate-800 active:scale-[0.99]"
+	                >
+	                  <Share2 className="h-4 w-4" />
+	                  Invite friends to JUnited
+	                </button>
+	                {contactsMessage && (
+	                  <p className="mb-3 rounded-2xl bg-slate-50 px-3 py-2 text-center text-[12px] font-semibold text-slate-500">
+	                    {contactsMessage}
+	                  </p>
+	                )}
+	                {showInviteOptions && (
+	                  <div className="mb-3 rounded-2xl border border-blue-100 bg-white p-3 shadow-sm">
+	                    <div className="mb-3">
+	                      <p className="text-[13px] font-black text-slate-900">Invite people who are not on JUnited yet</p>
+	                      <p className="mt-0.5 text-[12px] font-semibold text-slate-500">Send them your invite link, then add them once they join.</p>
+	                    </div>
+	                    <div className="grid grid-cols-3 gap-2">
+	                      <button
+	                        type="button"
+	                        onClick={handleShareInvite}
+	                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-50 px-3 py-2 text-[12px] font-black text-blue-700 transition hover:bg-blue-100 active:scale-[0.98]"
+	                      >
+	                        <Share2 className="h-3.5 w-3.5" />
+	                        Share
+	                      </button>
+	                      <button
+	                        type="button"
+	                        onClick={() => openSmsInvite()}
+	                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-3 py-2 text-[12px] font-black text-white transition hover:bg-slate-800 active:scale-[0.98]"
+	                      >
+	                        <MessageCircle className="h-3.5 w-3.5" />
+	                        Text
+	                      </button>
+	                      <button
+	                        type="button"
+	                        onClick={() => openEmailInvite()}
+	                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] font-black text-slate-700 transition hover:bg-slate-100 active:scale-[0.98]"
+	                      >
+	                        <Mail className="h-3.5 w-3.5" />
+	                        Email
+	                      </button>
+	                    </div>
+	                    {contactInvites.length > 0 && (
+	                      <ul className="mt-3 divide-y divide-slate-100 rounded-2xl border border-slate-100">
+	                        {contactInvites.map((contact) => (
+	                          <li key={contact.id} className="flex items-center gap-3 px-3 py-2">
+	                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[12px] font-black text-slate-500">
+	                              {contact.name.slice(0, 2).toUpperCase()}
+	                            </div>
+	                            <div className="min-w-0 flex-1">
+	                              <p className="truncate text-[13px] font-black text-slate-900">{contact.name}</p>
+	                              <p className="truncate text-[11px] font-semibold text-slate-400">{contact.phone || contact.email || 'Contact'}</p>
+	                            </div>
+	                            <button
+	                              type="button"
+	                              onClick={() => contact.phone ? openSmsInvite(contact.phone) : openEmailInvite(contact.email)}
+	                              className="shrink-0 rounded-xl bg-blue-50 px-3 py-1.5 text-[12px] font-black text-blue-700 transition hover:bg-blue-100 active:scale-95"
+	                            >
+	                              Invite
+	                            </button>
+	                          </li>
+	                        ))}
+	                      </ul>
+	                    )}
+	                  </div>
+	                )}
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   <input
@@ -643,7 +683,7 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
 	                <EmptyState
 	                  icon={Search}
 	                  title="Search for people"
-	                  body="Type a name, import contacts, or paste contact details to find friends."
+	                  body="Open contacts, invite friends, or search by name to connect."
 	                />
 	              )}
             </div>
