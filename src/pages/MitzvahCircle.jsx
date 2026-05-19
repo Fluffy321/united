@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  AlertCircle,
   Award,
   Car,
   CheckCircle2,
@@ -462,7 +461,7 @@ function RequestCard({
 
   return (
 	    <article
-	      className={`relative cursor-pointer overflow-hidden rounded-[20px] border p-3 shadow-sm transition hover:shadow-md ${urgencyCardTone}`}
+	      className={`relative cursor-pointer overflow-hidden rounded-2xl border px-3 py-2.5 shadow-sm transition hover:shadow-md ${urgencyCardTone}`}
       onClick={handleCardClick}
       role={onOpenMap ? 'button' : undefined}
       tabIndex={onOpenMap ? 0 : undefined}
@@ -470,7 +469,7 @@ function RequestCard({
 	      <div className={`absolute inset-y-0 left-0 w-1 ${urgencyRail}`} />
 	      <div className="flex items-start justify-between gap-2">
 	        <div className="min-w-0 flex-1">
-	          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+	          <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
 	            <span className="rounded-full border border-slate-200 bg-white/80 px-2 py-0.5 text-[10px] font-black text-slate-700 shadow-sm">
 	              {request.category}
 	            </span>
@@ -503,38 +502,31 @@ function RequestCard({
               })}
             </div>
           )}
-	          <h2 className="line-clamp-1 text-[16px] font-black leading-tight text-slate-950">{request.title}</h2>
-	          <p className="mt-1 line-clamp-2 text-[12px] font-medium leading-4 text-slate-600">
+	          <h2 className="line-clamp-1 text-[15px] font-black leading-tight text-slate-950">{request.title}</h2>
+	          <p className="mt-0.5 line-clamp-1 text-[12px] font-medium leading-4 text-slate-600">
 	            {request.description}
 	          </p>
 	
-	          <div className="mt-2 grid gap-2 sm:grid-cols-[0.85fr_1.15fr]">
-	            <div className={`rounded-xl border px-2.5 py-1.5 ${urgencyInfo.tone}`}>
-	              <p className="flex items-center gap-1.5 text-[11px] font-black">
-	                <Clock className="h-3.5 w-3.5" />
+	          <div className="mt-2 rounded-xl border border-slate-100 bg-white/75 px-2.5 py-1.5">
+	            <div className="flex items-center gap-2">
+	              <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-black ${urgencyInfo.tone}`}>
+	                <Clock className="h-3 w-3" />
 	                {urgencyInfo.detail}
-	              </p>
-	              <p className="mt-0.5 truncate text-[10px] font-black opacity-80">{urgencyInfo.remaining}</p>
-	            </div>
-	
-	            <div className="rounded-xl border border-slate-100 bg-white/85 px-2.5 py-1.5 shadow-sm">
-	              <div className="flex items-center justify-between gap-2">
-	                <div className="min-w-0">
-	                  <p className="truncate text-[12px] font-black text-slate-950">{progress.title}</p>
-	                  <p className="truncate text-[10px] font-semibold text-slate-500">{progress.detail}</p>
+	              </span>
+	              <div className="min-w-0 flex-1">
+	                <div className="flex items-center justify-between gap-2">
+	                  <p className="truncate text-[11px] font-black text-slate-800">{progress.title}</p>
+	                  <span className="shrink-0 text-[10px] font-black text-slate-500">{progress.percent}%</span>
 	                </div>
-	                <span className="shrink-0 rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-black text-slate-600">
-	                  {progress.percent}%
-	                </span>
+	                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100">
+	                  <div
+	                    className={`h-full rounded-full bg-gradient-to-r ${progressTone} transition-all duration-300`}
+	                    style={{ width: `${progress.percent}%` }}
+	                  />
+	                </div>
 	              </div>
-	              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className={`h-full rounded-full bg-gradient-to-r ${progressTone} transition-all duration-300`}
-                  style={{ width: `${progress.percent}%` }}
-                />
-              </div>
-            </div>
-          </div>
+	            </div>
+	          </div>
 
           {request.status === STATUSES.VERIFIED && (
 	            <div className="mt-2 flex items-center gap-2 rounded-xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white px-2.5 py-2">
@@ -551,7 +543,7 @@ function RequestCard({
           )}
 
 	          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-	            <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2 py-1">
+	            <div className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-1.5 py-0.5">
 	              <div className="flex -space-x-2">
 	                {helperPreviewNames.length > 0 ? helperPreviewNames.slice(0, 4).map((name) => (
 	                  <span
@@ -567,22 +559,22 @@ function RequestCard({
                   </span>
                 )}
               </div>
-	              <span className="text-[11px] font-black text-slate-700">
-	                {visibleHelperCount} {visibleHelperCount === 1 ? 'person offered help' : 'people offered help'}
+	              <span className="text-[10px] font-black text-slate-700">
+	                {visibleHelperCount} offered
 	              </span>
 	            </div>
             <button
               type="button"
               onClick={() => setDiscussionOpen((value) => !value)}
-	              className="motion-press inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] font-black text-slate-600"
+	              className="motion-press inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-600"
 	            >
               <MessageCircle className="h-3.5 w-3.5" />
-              {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
+	              {commentCount} replies
             </button>
             <button
               type="button"
               onClick={() => onOpenMap?.(request)}
-	              className="motion-press inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-1 text-[11px] font-black text-blue-700"
+	              className="motion-press inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[10px] font-black text-blue-700"
             >
               <MapPin className="h-3.5 w-3.5" />
               {distanceLabel}
@@ -601,19 +593,16 @@ function RequestCard({
         )}
       </div>
 
-	      <div className="mt-2 grid grid-cols-3 gap-1.5 text-[11px] font-semibold text-slate-600">
-	        <div className="flex min-w-0 items-center gap-1 rounded-lg bg-slate-50 px-2 py-1.5">
-	          <Clock className="h-3.5 w-3.5" />
+	      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-slate-500">
+	        <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-1.5 py-0.5">
+	          <Clock className="h-3 w-3" />
 	          {request.estimatedHours} hrs
-	        </div>
-	        <div className="flex min-w-0 items-center gap-1 rounded-lg bg-slate-50 px-2 py-1.5">
-	          <AlertCircle className="h-3.5 w-3.5" />
-	          <span className="truncate">{urgencyInfo.detail}</span>
-	        </div>
-	        <div className="flex min-w-0 items-center gap-1 rounded-lg bg-slate-50 px-2 py-1.5">
-	          <Users className="h-3.5 w-3.5" />
+	        </span>
+	        <span className="inline-flex max-w-[140px] items-center gap-1 truncate rounded-full bg-slate-50 px-1.5 py-0.5">
+	          <Users className="h-3 w-3" />
 	          <span className="truncate">{request.poster_name}</span>
-	        </div>
+	        </span>
+	        <span className="truncate text-slate-400">{urgencyInfo.remaining}</span>
 	      </div>
 
       {isPoster && pendingOffers.length > 0 && (
@@ -642,7 +631,7 @@ function RequestCard({
 	        {canOffer && (
 	          <button
 	            onClick={() => onOffer(request)}
-	            className="chesed-cta-pulse app-button-primary h-9 px-3 text-[12px]"
+	            className="chesed-cta-pulse app-button-primary h-8 px-2.5 text-[11px]"
             style={{ background: '#556B2F' }}
           >
             <HandHeart className="h-4 w-4" />
@@ -653,30 +642,30 @@ function RequestCard({
 	          <button
 	            type="button"
 	            onClick={() => onOpenMap(request)}
-	            className="motion-press inline-flex h-9 items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 text-[12px] font-black text-blue-700"
+	            className="motion-press inline-flex h-8 items-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-2.5 text-[11px] font-black text-blue-700"
           >
             <MapPin className="h-4 w-4" />
-            Open on map
+	            Map
           </button>
         )}
         {myOffer && myOffer.status === 'offered' && (
-	          <span className="inline-flex h-9 items-center rounded-xl border border-blue-200 bg-blue-50 px-3 text-[12px] font-black text-blue-700">
+	          <span className="inline-flex h-8 items-center rounded-xl border border-blue-200 bg-blue-50 px-2.5 text-[11px] font-black text-blue-700">
             Offer sent ✓
           </span>
         )}
         {canStart && (
 	          <button
 	            onClick={() => onStart(request.id)}
-	            className="app-button-primary h-9 bg-indigo-600 px-3 text-[12px] hover:bg-indigo-700"
+	            className="app-button-primary h-8 bg-indigo-600 px-2.5 text-[11px] hover:bg-indigo-700"
           >
             <UserCheck className="h-4 w-4" />
-            Start Task
+	            Start
           </button>
         )}
         {canComplete && (
 	          <button
 	            onClick={() => onComplete(request.id)}
-	            className="app-button-primary h-9 bg-purple-600 px-3 text-[12px] hover:bg-purple-700"
+	            className="app-button-primary h-8 bg-purple-600 px-2.5 text-[11px] hover:bg-purple-700"
           >
             <CheckCircle2 className="h-4 w-4" />
             Mark Completed
@@ -685,20 +674,20 @@ function RequestCard({
         {canVerify && (
 	          <button
 	            onClick={() => onVerify(request.id)}
-	            className="app-button-primary h-9 bg-emerald-600 px-3 text-[12px] hover:bg-emerald-700"
+	            className="app-button-primary h-8 bg-emerald-600 px-2.5 text-[11px] hover:bg-emerald-700"
           >
             <ShieldCheck className="h-4 w-4" />
             Verify Completion
           </button>
         )}
         {isPoster && acceptedVolunteerId === currentUser?.id && request.status === STATUSES.PENDING && (
-	          <span className="inline-flex h-9 items-center rounded-xl border border-red-200 bg-red-50 px-3 text-[12px] font-black text-red-700">
+	          <span className="inline-flex h-8 items-center rounded-xl border border-red-200 bg-red-50 px-2.5 text-[11px] font-black text-red-700">
             Cannot verify your own hours
           </span>
         )}
       </div>
 
-	      <div className="mt-2 rounded-xl border border-slate-100 bg-slate-50/70 px-2.5 py-2">
+	      <div className="mt-2 rounded-xl border border-slate-100 bg-slate-50/70 px-2.5 py-1.5">
         <button
           type="button"
           onClick={() => setDiscussionOpen((value) => !value)}
