@@ -181,6 +181,9 @@ const UI_TO_DB_STATUS = {
   [STATUSES.CANCELLED]: 'cancelled',
 };
 
+const REQUEST_EXPIRY_DAYS = 7;
+const REQUEST_EXPIRY_MS = REQUEST_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+
 const normalizeUrgency = (value) => {
   const raw = String(value || '').toLowerCase();
   if (raw.includes('urgent') || raw === 'high') return 'Urgent';
@@ -198,6 +201,15 @@ const resolveMapLocation = (neighborhood = '') => {
 const getCreatedTime = (request) => {
   const time = new Date(request.created_at || request.created_date || request.updated_at || Date.now()).getTime();
   return Number.isFinite(time) ? time : Date.now();
+};
+
+const isRequestExpired = (request) => {
+  const explicitExpiry = request.expires_at || request.expiresAt;
+  if (explicitExpiry) {
+    const expiryTime = new Date(explicitExpiry).getTime();
+    if (Number.isFinite(expiryTime)) return expiryTime <= Date.now();
+  }
+  return Date.now() - getCreatedTime(request) >= REQUEST_EXPIRY_MS;
 };
 
 const getUrgencyInfo = (request) => {
@@ -900,23 +912,25 @@ function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
 }
 
 function CreateCarpoolModal({ mode, onClose, onCreate, isLoading }) {
-  const [form, setForm] = React.useState({
-    from: 'Cedarhurst',
-    to: 'Woodmere',
-    pickup: '8:00 AM',
-    seats: mode === 'offer' ? 2 : 1,
-    notes: '',
-  });
+	  const [form, setForm] = React.useState({
+	    from: 'Cedarhurst',
+	    to: 'Woodmere',
+	    pickup: '8:00 AM',
+	    seats: mode === 'offer' ? 2 : 1,
+	    notes: '',
+	    postToMap: true,
+	  });
 
   React.useEffect(() => {
     setForm({
       from: 'Cedarhurst',
       to: 'Woodmere',
-      pickup: '8:00 AM',
-      seats: mode === 'offer' ? 2 : 1,
-      notes: '',
-    });
-  }, [mode]);
+	      pickup: '8:00 AM',
+	      seats: mode === 'offer' ? 2 : 1,
+	      notes: '',
+	      postToMap: true,
+	    });
+	  }, [mode]);
 
   if (!mode || typeof document === 'undefined') return null;
 
@@ -972,16 +986,30 @@ function CreateCarpoolModal({ mode, onClose, onCreate, isLoading }) {
             </label>
           ))}
 
-          <label className="block sm:col-span-2">
+	          <label className="block sm:col-span-2">
             <span className="mb-1 block text-[13px] font-bold text-slate-700">Notes</span>
             <textarea
               value={form.notes}
               onChange={(event) => update('notes', event.target.value)}
               className="min-h-24 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
               placeholder="Car seats, luggage, flexibility, exact timing, or anything the rider should know"
-            />
-          </label>
-        </div>
+	            />
+	          </label>
+	          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-sky-100 bg-sky-50 px-3 py-3 sm:col-span-2">
+	            <input
+	              type="checkbox"
+	              checked={form.postToMap}
+	              onChange={(event) => update('postToMap', event.target.checked)}
+	              className="mt-0.5 h-4 w-4 rounded border-sky-300 text-sky-600 focus:ring-sky-500"
+	            />
+	            <span className="min-w-0">
+	              <span className="block text-[13px] font-black text-sky-900">Add this ride to the map</span>
+	              <span className="mt-0.5 block text-[12px] font-semibold leading-5 text-sky-700">
+	                People nearby can discover the pickup area on the map and offer a ride faster.
+	              </span>
+	            </span>
+	          </label>
+	        </div>
 
         <div className="flex gap-2 border-t border-slate-100 p-4">
           <button type="button" onClick={onClose} className="h-11 flex-1 rounded-xl border border-slate-200 text-[13px] font-black text-slate-700 hover:bg-slate-50">
@@ -1195,12 +1223,22 @@ export default function MitzvahCircle() {
 
   // ── Data loading ───────────────────────────────────────────────────────────
 
-  const { data: rawRequests = [], isLoading: loadingRequests } = useQuery({
-    queryKey: ['mitzvah-requests'],
-    queryFn: () => mitzvahService.listRequests({}, '-created_date', 200),
-    staleTime: 30000,
-    enabled: !!currentUser,
-  });
+	  const { data: rawRequests = [], isLoading: loadingRequests } = useQuery({
+	    queryKey: ['mitzvah-requests'],
+	    queryFn: async () => {
+	      const rows = await mitzvahService.listRequests({}, '-created_date', 200);
+	      const list = Array.isArray(rows) ? rows : [];
+	      const expired = list.filter(isRequestExpired);
+	      if (expired.length > 0) {
+	        Promise.allSettled(expired.map((request) => mitzvahService.deleteRequest(request.id)))
+	          .then(() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] }))
+	          .catch(() => {});
+	      }
+	      return list.filter((request) => !isRequestExpired(request));
+	    },
+	    staleTime: 30000,
+	    enabled: !!currentUser,
+	  });
 
   const { data: rawOffers = [] } = useQuery({
     queryKey: ['mitzvah-offers'],
@@ -1284,12 +1322,13 @@ export default function MitzvahCircle() {
           map_visible: false,
         }),
         estimated_hours: formData.estimatedHours,
-        urgency: formData.urgency.toLowerCase(),
-        status: 'open',
-        request_kind: 'volunteer',
-        created_by_user_id: currentUser.id,
-        created_by_name: currentUser.display_name || currentUser.full_name,
-      });
+	        urgency: formData.urgency.toLowerCase(),
+	        status: 'open',
+	        request_kind: 'volunteer',
+	        expires_at: new Date(Date.now() + REQUEST_EXPIRY_MS).toISOString(),
+	        created_by_user_id: currentUser.id,
+	        created_by_name: currentUser.display_name || currentUser.full_name,
+	      });
       setShowCreate(false);
       changeView('posted');
       toast.success('Request posted.');
@@ -1298,32 +1337,45 @@ export default function MitzvahCircle() {
     }
   };
 
-  const handleCreateCarpoolRide = async (formData, mode) => {
-    const route = `${formData.from} to ${formData.to}`;
-    const typeLabel = mode === 'offer' ? 'offering' : 'needed';
-    const title = mode === 'offer' ? `Seats available: ${route}` : `Ride needed: ${route}`;
-    const note = formData.notes?.trim();
-    const description = [
-      `Type: ${typeLabel}`,
-      `Pickup: ${formData.pickup}`,
-      `Seats: ${formData.seats}`,
-      note ? `Notes: ${note}` : null,
+	  const handleCreateCarpoolRide = async (formData, mode) => {
+	    const route = `${formData.from} to ${formData.to}`;
+	    const typeLabel = mode === 'offer' ? 'offering' : 'needed';
+	    const title = mode === 'offer' ? `Seats available: ${route}` : `Ride needed: ${route}`;
+	    const note = formData.notes?.trim();
+	    const mapLocation = resolveMapLocation(formData.from || formData.to || route);
+	    const description = [
+	      `Type: ${typeLabel}`,
+	      `Pickup: ${formData.pickup}`,
+	      `Seats: ${formData.seats}`,
+	      note ? `Notes: ${note}` : null,
     ].filter(Boolean).join(' | ');
 
     try {
       await createRequestMutation({
         title,
-        description,
-        category: 'Transportation',
-        neighborhood: route,
-        locationLabel: route,
-        estimated_hours: 1,
-        urgency: 'medium',
-        status: 'open',
-        request_kind: 'carpool',
-        created_by_user_id: currentUser.id,
-        created_by_name: currentUser.display_name || currentUser.full_name,
-      });
+	        description,
+	        category: 'Transportation',
+	        neighborhood: route,
+	        locationLabel: route,
+	        location_text: route,
+	        ...(formData.postToMap ? {
+	          location_lat: currentUser?.location_lat || mapLocation.lat,
+	          location_lng: currentUser?.location_lng || mapLocation.lng,
+	          approxLat: currentUser?.location_lat || mapLocation.lat,
+	          approxLng: currentUser?.location_lng || mapLocation.lng,
+	          map_visible: true,
+	          is_hidden: false,
+	        } : {
+	          map_visible: false,
+	        }),
+	        estimated_hours: 1,
+	        urgency: 'medium',
+	        status: 'open',
+	        request_kind: 'carpool',
+	        expires_at: new Date(Date.now() + REQUEST_EXPIRY_MS).toISOString(),
+	        created_by_user_id: currentUser.id,
+	        created_by_name: currentUser.display_name || currentUser.full_name,
+	      });
       setCarpoolCreateMode(null);
       changeBrowseCategory('rides');
       toast.success(mode === 'offer' ? 'Carpool offer posted.' : 'Ride request posted.');
