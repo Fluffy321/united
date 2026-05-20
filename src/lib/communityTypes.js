@@ -337,6 +337,7 @@ export function getSupportedCommunityTabs(community = {}, productionCapabilities
   if (productionCapabilities.listings && !baseSet.has('listings')) extras.push('listings');
   if (productionCapabilities.chat && !baseSet.has('chat')) extras.push('chat');
   if (productionCapabilities.groups && !baseSet.has('groups')) extras.push('groups');
+  if (productionCapabilities.forms && !baseSet.has('forms')) extras.push('forms');
   if (extras.length) filtered.splice(insertIdx, 0, ...extras);
 
   return filtered.length ? filtered : COMMUNITY_TYPE_CONFIG.general.tabs;
@@ -358,6 +359,7 @@ export function getCommunityTabLabel(tabKey) {
     chat: 'Chat',
     listings: 'Listings',
     groups: 'Groups',
+    forms: 'Forms',
   };
   return labels[tabKey] || tabKey;
 }

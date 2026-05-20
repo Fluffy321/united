@@ -729,11 +729,12 @@ Goals:
   {
     id: 'community-custom-key-contacts',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Custom Community Titles & Key Contacts',
     description: 'Allow communities to label leadership contacts with titles like Rabbi, President, Organizer, or Volunteer Coordinator.',
     why: 'Phase 1 derives leadership from owner/admin/moderator roles. Custom titles need a dedicated data model and privacy review.',
+    shippedNote: 'Shipped 2026-05-20. Added contact_title + contact_order columns to community_memberships via security-definer RPC set_member_contact_title (managers only). Admin Center Members tab: inline title editor + removal. CommunityMemberDirectory and CommunityWelcomeHub prefer key contacts over role-based leadership when titles are set. Incognito/hidden members excluded.',
     prompt: `You are implementing Custom Community Titles & Key Contacts for JUnited.
 
 Context:
@@ -749,6 +750,30 @@ Goals:
 5. Update CommunityMemberDirectory and CommunityWelcomeHub to show custom key contacts without exposing private data.
 6. Run npm run lint && npm run typecheck && npm run build.
 7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-key-contacts-reorder',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Key Contacts Display Order',
+    description: 'Let community managers drag-to-reorder key contacts and set their contact_order so they appear in a deliberate sequence.',
+    why: 'contact_order column already exists in community_memberships but is always set to 0 — ordering is not yet editable. Natural follow-up to custom titles.',
+    prompt: `You are implementing Key Contacts Display Order for JUnited.
+
+Context:
+- community_memberships.contact_order (SMALLINT) was added in migration 20260520024702_community_key_contacts.sql.
+- set_member_contact_title RPC accepts p_order parameter but the Admin Center UI always passes 0.
+- Admin Center Members tab is in src/components/communities/CommunityAdminCenter.jsx (MembersTab).
+- Key contacts are rendered in CommunityMemberDirectory and CommunityWelcomeHub in src/components/communities/CommunityOperatingSystem.jsx.
+
+Goals:
+1. Add a "Key Contacts" sub-section to the Admin Center Members tab listing only members with a contact_title.
+2. Show drag handles (or up/down buttons for mobile) to reorder; persist order by calling set_member_contact_title RPC with the new p_order value.
+3. Reflect updated order in CommunityMemberDirectory and CommunityWelcomeHub immediately via query invalidation.
+4. Run npm run lint && npm run build.
+5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -853,8 +878,9 @@ Goals:
   {
     id: 'community-forms-signups-volunteer-coordination',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
+    shippedNote: 'Shipped 2026-05-20. Tables: community_forms, community_form_fields, community_form_submissions + allow_forms on communities. Security-definer submit_community_form RPC with membership + deadline + duplicate guards. Admin Center: Forms tab with form builder (8 field types, due date, max cap, re-submit toggle), submissions viewer, CSV export, open/close toggle. Member-facing CommunityFormsTab with inline submission UI and duplicate-submit detection. Gated by allow_forms via Settings → Modules.',
     title: 'Community Forms, Signups & Volunteer Coordination',
     description: 'Lightweight forms, signup sheets, volunteer slots, and admin export for community operations.',
     why: 'High-value for shuls, schools, nonprofits, and chesed groups, but should be built as a real operating tool instead of ad hoc post comments.',
@@ -873,6 +899,31 @@ Goals:
 6. Add CSV export if privacy-safe.
 7. Run npm run lint && npm run typecheck && npm run build.
 8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-volunteer-slots',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Community Volunteer Slots',
+    description: 'Named time-slots with capacity limits that managers attach to forms or events so volunteers can claim specific shifts.',
+    why: 'The forms system ships without slot coordination. Volunteer slot management (e.g. pick a shift, track who signed up for each slot) is a natural extension but was deferred to keep the initial forms feature shippable.',
+    prompt: `You are implementing Community Volunteer Slots for JUnited.
+
+Context:
+- community_forms and community_form_submissions are live (migration 20260520025433_community_forms.sql).
+- CommunityFormsTab.jsx is the member-facing forms UI.
+- AdminFormsTab in CommunityAdminCenter.jsx manages forms.
+
+Goals:
+1. Add a community_volunteer_slots table (form_id, label, start_time, end_time, capacity, created_at).
+2. Add a community_volunteer_claims table (slot_id, submitter_id, community_id, claimed_at) with RLS.
+3. Update CreateFormPanel in CommunityAdminCenter to allow attaching named slots to volunteer-type forms.
+4. Update CommunityFormsTab to display slots with remaining capacity and a claim button.
+5. Add slot summary to SubmissionsPanel CSV export.
+6. Run npm run lint && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {

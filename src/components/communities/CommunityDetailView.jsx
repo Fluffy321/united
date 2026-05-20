@@ -27,6 +27,7 @@ import CommunityHero from './CommunityHero';
 import ClaimModal from './ClaimModal';
 import CommunityEventsTab from './CommunityEventsTab';
 import CommunityGroupsTab from './CommunityGroupsTab';
+import CommunityFormsTab from './CommunityFormsTab';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import CommunityStoreTab from './CommunityStoreTab';
 import GroupChatSection from './GroupChatSection';
@@ -172,6 +173,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     chat: Boolean(canUseCommunityChat(community) && community?.allow_group_chat),
     listings: Boolean(canUseCommunityMarketplace(community) && (community?.allow_member_listings || typeConfig.key === 'marketplace')),
     groups: true,
+    forms: Boolean(community?.allow_forms),
   };
   const visibleTabs = getSupportedCommunityTabs(community || fallbackCommunity || {}, featureCapabilities);
   const navConfig = getCommunityNavConfig(community || fallbackCommunity || {}, featureCapabilities);
@@ -523,6 +525,13 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             communityId={communityId}
             currentUser={currentUser}
             isAdmin={isAdmin}
+          />
+        )}
+
+        {activeTab === 'forms' && featureCapabilities.forms && (
+          <CommunityFormsTab
+            communityId={communityId}
+            currentUser={currentUser}
           />
         )}
 
