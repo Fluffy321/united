@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -636,7 +637,7 @@ function CommunityAppBar({ community, typeConfig, isAdmin, accentHex, onBack, on
 
 function CommunityBottomNav({ navConfig, activeTab, tabsWithCounts, onTabChange, onMoreClick, accentHex }) {
   const moreIsActive = navConfig.more.includes(activeTab);
-  return (
+  return createPortal(
     <nav className="app-bottom-nav pointer-events-none fixed inset-x-0 bottom-0 z-50 px-4">
       <div className="glass-toolbar mobile-page pointer-events-auto relative overflow-hidden rounded-[28px] px-2 py-1.5">
         <div className="flex items-center justify-around px-1 py-1.5">
@@ -705,12 +706,13 @@ function CommunityBottomNav({ navConfig, activeTab, tabsWithCounts, onTabChange,
           )}
         </div>
       </div>
-    </nav>
+    </nav>,
+    document.body
   );
 }
 
 function CommunityMoreSheet({ navConfig, activeTab, tabsWithCounts, onTabChange, onClose, accentHex }) {
-  return (
+  return createPortal(
     <>
       <div className="fixed inset-0 z-50 bg-black/40" onClick={onClose} />
       <div
@@ -765,7 +767,8 @@ function CommunityMoreSheet({ navConfig, activeTab, tabsWithCounts, onTabChange,
           })}
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 
