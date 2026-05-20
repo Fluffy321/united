@@ -2277,6 +2277,33 @@ Goals:
   },
 
   {
+    id: 'ux-communities-discover-polish',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Communities Discover — Reference-Based UI Polish',
+    shippedNote: 'Shipped 2026-05-20. Four targeted changes to Communities Discover: (1) DiscoverSection headers upgraded from tiny 11px badge-pill-only to icon square badge + text-[15px] font-black h2 title + lighter 12px subtitle — eliminates the most generic-looking pattern on the page. (2) ForYouSection matching header upgrade + surface-panel-soft wrapper to visually distinguish personalized recommendations from generic type sections. (3) DiscoverCommunityCard banner height 72px → 92px — cover gradients now have enough real estate to read as visual identity rather than a decorative sliver. (4) ActiveInStrip community initials badges: bg-slate-950 (black) → bg-blue-600 — removes the single most jarring color inconsistency on the mobile Discover view. Verified with Playwright before/after screenshots on 390px mobile viewport. Lint + build clean.',
+    description: 'Targeted visual polish of the Communities Discover page: section header hierarchy, card cover presence, For You premium treatment, and color consistency in the active spaces strip.',
+    why: 'Discover is the highest-traffic landing surface for new communities. The old design had section headings rendered entirely as 11px pill badges, flat uniform section rhythm, shallow 72px card covers, and a black initial badge that clashed with the blue design system.',
+    prompt: `You are polishing the Communities Discover screen for JUnited.
+
+Context:
+  src/pages/Communities.jsx — DiscoverSection, ForYouSection, ActiveInStrip, Hero, SearchBar, ViewSwitch
+  src/components/communities/DiscoverCommunityCard.jsx — card component used in all Discover sections
+  src/lib/communityTypes.js — typeConfig: badgeClass (bg-X-50 text-X-700), icon, label, accent, coverPattern
+
+Goals:
+1. Use Playwright MCP to capture before screenshots at 390px mobile viewport.
+2. Upgrade DiscoverSection header from inline pill to: icon square (h-9 w-9 rounded-xl badgeClass) + h2 (text-[15px] font-black) + subtitle (text-[12px] font-medium text-slate-400).
+3. Upgrade ForYouSection with matching header + surface-panel-soft rounded-[20px] p-4 wrapper.
+4. Increase DiscoverCommunityCard banner from h-[72px] to h-[92px].
+5. Fix ActiveInStrip initials badge: bg-slate-950 → bg-blue-600.
+6. Use Playwright MCP to verify after screenshots — confirm section headers, card height, and color.
+7. Run npm run lint && npm run build.
+8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'ux-design-token-system',
     category: 'Admin & Platform',
     status: STATUS.DEFERRED,
