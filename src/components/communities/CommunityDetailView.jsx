@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { BookOpen, Globe, Heart, Loader2, Lock, MapPin, MessageCircle, Phone, Send, Shield } from 'lucide-react';
+import {
+  BookOpen, CalendarDays, ChevronLeft, ChevronRight, Globe, Hash, Heart,
+  HeartHandshake, HelpCircle, Home, Info, Loader2, Lock, MapPin,
+  Megaphone, MessageCircle, MoreHorizontal, Phone, Send, Settings, Share2,
+  Shield, ShoppingBag, Sparkles, Users,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { dataService, incrementCounter } from '@/services';
 import {
@@ -32,7 +37,6 @@ import {
   CommunityImportantStrip,
   CommunityMemberDirectory,
   CommunityPostPreview,
-  CommunityWelcomeHub,
   SinceLastVisitDigest,
 } from './CommunityOperatingSystem';
 import CommunityPersonalizationHub from './CommunityPersonalizationHub';
@@ -48,6 +52,22 @@ const CLAIM_COPY = {
 };
 
 const OPEN_NEED_STATUSES = new Set(['open', 'offered', 'accepted', 'in_progress', 'volunteer_offered']);
+
+const TAB_ICON_MAP = {
+  home:          Home,
+  about:         Info,
+  members:       Users,
+  posts:         Hash,
+  questions:     HelpCircle,
+  discussions:   MessageCircle,
+  announcements: Megaphone,
+  openNeeds:     HeartHandshake,
+  events:        CalendarDays,
+  resources:     BookOpen,
+  listings:      ShoppingBag,
+  groups:        Globe,
+  chat:          MessageCircle,
+};
 
 function getPostTypeForTab(tab, typeKey) {
   if (tab === 'announcements') return 'announcement';
@@ -221,6 +241,28 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     return () => clearTimeout(visitTimerRef.current);
   }, [communityId, currentUser?.id, isFollowing]);
 
+  const accentHex = community?.settings?.branding?.accentColor
+    || (community || fallbackCommunity)?.featured_accent_color
+    || typeConfig.accentHex
+    || '#2563EB';
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--community-accent', accentHex);
+    return () => document.documentElement.style.removeProperty('--community-accent');
+  }, [accentHex]);
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/communities/${communityId}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: community?.name, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success('Link copied!');
+      }
+    } catch {}
+  };
+
   const handleFollow = async () => {
     if (!currentUser) {
       dataService.auth.redirectToLogin();
@@ -316,6 +358,15 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
   return (
     <div className="min-h-screen bg-[#F8FAFB] flex flex-col">
+      <CommunityAppBar
+        community={community}
+        typeConfig={typeConfig}
+        isAdmin={isAdmin}
+        accentHex={accentHex}
+        onBack={onBack}
+        onManage={() => openAdminCenter('overview')}
+        onShare={handleShare}
+      />
       <CommunityHero
         community={community}
         isFollowing={isFollowing}
@@ -330,92 +381,8 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         currentUser={currentUser}
         onTabChange={setTab}
         typeConfig={typeConfig}
+        inAppShell
       />
-
-      <div className="sticky top-0 z-10 border-b border-slate-100 bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto max-w-2xl">
-          <div className="flex gap-1 px-3 py-2">
-            {/* Primary tabs */}
-            {navConfig.primary.map((tabKey) => {
-              const tabInfo = tabsWithCounts.find((t) => t.key === tabKey);
-              if (!tabInfo) return null;
-              return (
-                <button
-                  key={tabKey}
-                  ref={(el) => { tabButtonRefs.current[tabKey] = el; }}
-                  onClick={() => setTab(tabKey)}
-                  className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-bold transition-colors ${
-                    activeTab === tabKey
-                      ? 'bg-blue-50 text-[#0F5ED7] ring-1 ring-blue-200/80'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-                  }`}
-                >
-                  {tabInfo.label}
-                  {tabInfo.count > 0 && (
-                    <span className="ml-1.5 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-black text-blue-700">
-                      {tabInfo.count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-
-            {/* More button — only if there are overflow tabs */}
-            {navConfig.more.length > 0 && (
-              <div className="relative ml-auto">
-                <button
-                  onClick={() => setShowMore((v) => !v)}
-                  className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-bold transition-colors ${
-                    navConfig.more.includes(activeTab)
-                      ? 'bg-blue-50 text-[#0F5ED7] ring-1 ring-blue-200/80'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-                  }`}
-                >
-                  More
-                  {navConfig.more.includes(activeTab) && (
-                    <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-[#0F5ED7] align-middle" />
-                  )}
-                </button>
-
-                {/* More dropdown */}
-                {showMore && (
-                  <>
-                    {/* Backdrop to close */}
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setShowMore(false)}
-                    />
-                    <div className="absolute right-0 top-full mt-1 z-50 w-44 rounded-2xl border border-slate-100 bg-white shadow-xl py-1">
-                      {navConfig.more.map((tabKey) => {
-                        const tabInfo = tabsWithCounts.find((t) => t.key === tabKey);
-                        if (!tabInfo) return null;
-                        return (
-                          <button
-                            key={tabKey}
-                            onClick={() => { setTab(tabKey); setShowMore(false); }}
-                            className={`w-full px-4 py-2.5 text-left text-[13px] font-semibold transition-colors flex items-center justify-between ${
-                              activeTab === tabKey
-                                ? 'text-[#0F5ED7] bg-blue-50'
-                                : 'text-slate-700 hover:bg-slate-50'
-                            }`}
-                          >
-                            <span>{tabInfo.label}</span>
-                            {tabInfo.count > 0 && (
-                              <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-black text-blue-700">
-                                {tabInfo.count}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Appeal banner — shown when user was removed and hasn't yet appealed */}
       {myRemoval && !isFollowing && (() => {
@@ -461,7 +428,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         );
       })()}
 
-      <div className="max-w-2xl mx-auto w-full px-4 pb-28" {...swipeHandlers}>
+      <div className="max-w-2xl mx-auto w-full px-4 pb-24" {...swipeHandlers}>
         {activeTab === 'home' && (
           <RoutedCommunityHome
             posts={posts}
@@ -482,6 +449,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             isFollowing={isFollowing}
             lastVisitedAt={lastVisit?.visited_at}
             currentUser={currentUser}
+            onFollow={handleFollow}
             onManage={() => openAdminCenter('content')}
             openAdminCenter={openAdminCenter}
             onOpenEvent={(event) => { setHighlightEventId(event.id); setTab('events'); }}
@@ -564,6 +532,25 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         )}
       </div>
 
+      <CommunityBottomNav
+        navConfig={navConfig}
+        activeTab={activeTab}
+        tabsWithCounts={tabsWithCounts}
+        onTabChange={setTab}
+        onMoreClick={() => setShowMore((v) => !v)}
+        accentHex={accentHex}
+      />
+      {showMore && (
+        <CommunityMoreSheet
+          navConfig={navConfig}
+          activeTab={activeTab}
+          tabsWithCounts={tabsWithCounts}
+          onTabChange={setTab}
+          onClose={() => setShowMore(false)}
+          accentHex={accentHex}
+        />
+      )}
+
       <ClaimModal
         open={showClaim}
         onOpenChange={setShowClaim}
@@ -603,6 +590,169 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         />
       )}
     </div>
+  );
+}
+
+function CommunityAppBar({ community, typeConfig, isAdmin, accentHex, onBack, onManage, onShare }) {
+  const TypeIcon = typeConfig.icon;
+  return (
+    <div className="sticky top-0 z-40 h-12 bg-white/95 backdrop-blur-sm border-b border-slate-100 flex items-center gap-2 px-3 shadow-sm">
+      <button
+        onClick={onBack}
+        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all flex-shrink-0"
+      >
+        <ChevronLeft className="w-5 h-5 text-slate-700" />
+      </button>
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        <div
+          className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ background: accentHex }}
+        >
+          <TypeIcon className="w-3.5 h-3.5 text-white" />
+        </div>
+        <p className="font-bold text-slate-900 text-[14px] truncate">{community.name}</p>
+      </div>
+      <div className="flex items-center gap-0.5 flex-shrink-0">
+        {isAdmin && (
+          <button
+            onClick={onManage}
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all"
+            aria-label="Admin center"
+          >
+            <Settings className="w-4 h-4 text-slate-500" />
+          </button>
+        )}
+        <button
+          onClick={onShare}
+          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all"
+          aria-label="Share"
+        >
+          <Share2 className="w-4 h-4 text-slate-500" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CommunityBottomNav({ navConfig, activeTab, tabsWithCounts, onTabChange, onMoreClick, accentHex }) {
+  const moreIsActive = navConfig.more.includes(activeTab);
+  return (
+    <div
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-t border-slate-100"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      <div className="flex items-center justify-around h-16 px-1 max-w-2xl mx-auto">
+        {navConfig.primary.map((tabKey) => {
+          const TabIcon = TAB_ICON_MAP[tabKey] || Home;
+          const isActive = activeTab === tabKey;
+          const tabInfo = tabsWithCounts.find((t) => t.key === tabKey);
+          return (
+            <button
+              key={tabKey}
+              onClick={() => onTabChange(tabKey)}
+              className="flex flex-col items-center gap-0.5 flex-1 py-2 relative"
+            >
+              <div className="relative">
+                <TabIcon
+                  className="w-5 h-5 transition-colors"
+                  style={{ color: isActive ? accentHex : '#94a3b8' }}
+                  strokeWidth={isActive ? 2.5 : 1.75}
+                />
+                {tabInfo?.count > 0 && !isActive && (
+                  <span className="absolute -top-1 -right-1.5 min-w-[14px] h-3.5 rounded-full bg-rose-500 text-[9px] font-black text-white flex items-center justify-center px-0.5">
+                    {tabInfo.count > 99 ? '99+' : tabInfo.count}
+                  </span>
+                )}
+              </div>
+              <span
+                className="text-[10px] font-semibold transition-colors leading-none"
+                style={{ color: isActive ? accentHex : '#94a3b8' }}
+              >
+                {getCommunityTabLabel(tabKey)}
+              </span>
+            </button>
+          );
+        })}
+        {navConfig.more.length > 0 && (
+          <button
+            onClick={onMoreClick}
+            className="flex flex-col items-center gap-0.5 flex-1 py-2"
+          >
+            <MoreHorizontal
+              className="w-5 h-5 transition-colors"
+              style={{ color: moreIsActive ? accentHex : '#94a3b8' }}
+              strokeWidth={moreIsActive ? 2.5 : 1.75}
+            />
+            <span
+              className="text-[10px] font-semibold transition-colors leading-none"
+              style={{ color: moreIsActive ? accentHex : '#94a3b8' }}
+            >
+              More
+            </span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CommunityMoreSheet({ navConfig, activeTab, tabsWithCounts, onTabChange, onClose, accentHex }) {
+  return (
+    <>
+      <div className="fixed inset-0 z-50 bg-black/40" onClick={onClose} />
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+      >
+        <div className="flex items-center justify-between px-5 pt-5 pb-3">
+          <p className="text-[15px] font-black text-slate-900">More</p>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center active:scale-95 transition-all"
+          >
+            <ChevronLeft className="w-4 h-4 text-slate-600 rotate-[-90deg]" />
+          </button>
+        </div>
+        <div className="px-4 pb-4 grid grid-cols-3 gap-3">
+          {navConfig.more.map((tabKey) => {
+            const TabIcon = TAB_ICON_MAP[tabKey] || Home;
+            const isActive = activeTab === tabKey;
+            const tabInfo = tabsWithCounts.find((t) => t.key === tabKey);
+            return (
+              <button
+                key={tabKey}
+                onClick={() => onTabChange(tabKey)}
+                className="flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all active:scale-95"
+                style={
+                  isActive
+                    ? { background: `${accentHex}15`, borderColor: `${accentHex}40` }
+                    : { background: '#f8fafc', borderColor: '#e2e8f0' }
+                }
+              >
+                <div className="relative">
+                  <TabIcon
+                    className="w-6 h-6"
+                    style={{ color: isActive ? accentHex : '#64748b' }}
+                    strokeWidth={isActive ? 2.5 : 1.75}
+                  />
+                  {tabInfo?.count > 0 && (
+                    <span className="absolute -top-1 -right-1.5 min-w-[14px] h-3.5 rounded-full bg-rose-500 text-[9px] font-black text-white flex items-center justify-center px-0.5">
+                      {tabInfo.count > 99 ? '99+' : tabInfo.count}
+                    </span>
+                  )}
+                </div>
+                <span
+                  className="text-[11px] font-bold leading-none text-center"
+                  style={{ color: isActive ? accentHex : '#64748b' }}
+                >
+                  {tabInfo?.label || getCommunityTabLabel(tabKey)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -760,33 +910,231 @@ function TypeAwareComposer({ typeConfig, composeText, setComposeText, submitPost
     );
   }
 
-  // Post mode (default): standard textarea
+  // Post mode (default): collapsed pill → expands on tap
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-center gap-2">
-        <div className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white`}>
-          <MessageCircle className="h-3.5 w-3.5" />
-        </div>
-        <p className="text-sm font-black text-slate-950">{typeConfig.primaryCta}</p>
-      </div>
-      <textarea
-        value={composeText}
-        onChange={(e) => setComposeText(e.target.value)}
-        rows={3}
-        placeholder={typeConfig.prompts[0] || 'Share something with the community...'}
-        className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:bg-white"
-      />
-      <div className="mt-2 flex justify-end">
-        <button onClick={submitPost} disabled={posting || !composeText.trim()} className={`inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-to-br ${typeConfig.accent} px-4 text-xs font-black text-white disabled:opacity-50`}>
-          <Send className="h-3.5 w-3.5" />
-          {posting ? 'Posting...' : 'Post'}
+    <div className={`rounded-2xl border bg-white shadow-sm transition-all ${expanded ? 'border-blue-200' : 'border-slate-100'}`}>
+      {!expanded ? (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="w-full flex items-center gap-3 px-4 py-3 text-left"
+        >
+          <div className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white flex-shrink-0`}>
+            <MessageCircle className="h-3.5 w-3.5" />
+          </div>
+          <span className="text-[13px] font-semibold text-slate-400">{typeConfig.prompts[0] || 'Share something with the community...'}</span>
         </button>
-      </div>
+      ) : (
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white flex-shrink-0`}>
+              <MessageCircle className="h-3.5 w-3.5" />
+            </div>
+            <p className="text-sm font-black text-slate-950">{typeConfig.primaryCta}</p>
+            <button type="button" onClick={() => { setExpanded(false); setComposeText(''); }} className="ml-auto text-[12px] font-semibold text-slate-400 hover:text-slate-600">Cancel</button>
+          </div>
+          <textarea
+            value={composeText}
+            onChange={(e) => setComposeText(e.target.value)}
+            rows={3}
+            autoFocus
+            placeholder={typeConfig.prompts[0] || 'Share something with the community...'}
+            className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:bg-white"
+          />
+          <div className="mt-2 flex justify-end">
+            <button onClick={submitPost} disabled={posting || !composeText.trim()} className={`inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-to-br ${typeConfig.accent} px-4 text-xs font-black text-white disabled:opacity-50`}>
+              <Send className="h-3.5 w-3.5" />
+              {posting ? 'Posting...' : 'Post'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 const POST_LAUNCH_DISMISS_KEY = (id) => `post_launch_dismissed_${id}`;
+
+function isAnn(post) {
+  return String(post.type || post.post_type || post.category || '').toLowerCase() === 'announcement';
+}
+
+function RightNowBanner({ posts, events, activeNeeds, resources, typeConfig, lastVisitedAt, onTabChange }) {
+  const since = lastVisitedAt ? new Date(lastVisitedAt) : null;
+  const newAnn = since ? posts.filter((p) => isAnn(p) && new Date(p.created_at || p.created_date) > since).length : 0;
+  const newPosts = since ? posts.filter((p) => !isAnn(p) && new Date(p.created_at || p.created_date) > since).length : 0;
+  const newEvents = since ? events.filter((e) => new Date(e.created_at) > since).length : 0;
+  const totalNew = newAnn + newPosts + newEvents;
+
+  if (totalNew > 0) {
+    const primaryCount = newAnn > 0 ? newAnn : newPosts > 0 ? newPosts : newEvents;
+    const primaryLabel = newAnn > 0
+      ? `${newAnn} new ${newAnn === 1 ? 'announcement' : 'announcements'}`
+      : newPosts > 0
+        ? `${newPosts} new ${newPosts === 1 ? 'post' : 'posts'}`
+        : `${newEvents} new ${newEvents === 1 ? 'event' : 'events'}`;
+    const action = () => onTabChange(newAnn > 0 ? 'announcements' : newPosts > 0 ? 'posts' : 'events');
+    const extra = totalNew - primaryCount;
+    return (
+      <button
+        type="button"
+        onClick={action}
+        className="w-full flex items-center gap-2.5 rounded-2xl border border-blue-100 bg-blue-50/80 px-3.5 py-2.5 text-left active:opacity-80 transition-opacity"
+      >
+        <Sparkles className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+        <span className="flex-1 text-[13px] font-bold text-slate-800">{primaryLabel}</span>
+        {extra > 0 && (
+          <span className="text-[11px] font-black text-blue-600 flex-shrink-0">+{extra} more</span>
+        )}
+        <ChevronRight className="h-4 w-4 text-slate-400 flex-shrink-0" />
+      </button>
+    );
+  }
+
+  // Fall back to the single most important community item
+  const typeKey = typeConfig?.key || 'general';
+  const pinnedAnn = posts.find((p) => p.is_pinned && isAnn(p)) || posts.find(isAnn);
+  const upcomingEvent = events
+    .filter((e) => new Date(e.start_date || e.event_date) >= new Date())
+    .sort((a, b) => new Date(a.start_date || a.event_date) - new Date(b.start_date || b.event_date))[0];
+  const urgentNeed = typeKey === 'chesed' ? activeNeeds[0] : null;
+  const featuredResource = resources.find((r) => r.is_pinned) || resources[0];
+
+  let item = null;
+  if (urgentNeed) {
+    item = { icon: '🙏', label: 'Open need', text: urgentNeed.title || 'Community chesed request', action: () => onTabChange('openNeeds'), colorClass: 'border-emerald-100 bg-emerald-50/80', labelClass: 'text-emerald-700' };
+  } else if (pinnedAnn) {
+    const raw = pinnedAnn.content || pinnedAnn.body || pinnedAnn.title || '';
+    item = { icon: '📢', label: 'Latest update', text: raw.length > 80 ? `${raw.slice(0, 80)}…` : raw, action: () => onTabChange('announcements'), colorClass: 'border-amber-100 bg-amber-50/80', labelClass: 'text-amber-700' };
+  } else if (upcomingEvent) {
+    item = { icon: '📅', label: 'Coming up', text: upcomingEvent.title || upcomingEvent.name || '', action: () => onTabChange('events'), colorClass: 'border-blue-100 bg-blue-50/80', labelClass: 'text-blue-700' };
+  } else if (featuredResource) {
+    item = { icon: '📎', label: 'Resource', text: featuredResource.title || '', action: () => onTabChange('resources'), colorClass: 'border-violet-100 bg-violet-50/80', labelClass: 'text-violet-700' };
+  }
+
+  if (!item) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={item.action}
+      className={`w-full flex items-center gap-2.5 rounded-2xl border px-3.5 py-2.5 text-left active:opacity-80 transition-opacity ${item.colorClass}`}
+    >
+      <span className="text-sm leading-none flex-shrink-0">{item.icon}</span>
+      <div className="min-w-0 flex-1">
+        <span className={`block text-[10px] font-black uppercase tracking-wide ${item.labelClass}`}>{item.label}</span>
+        <span className="block text-[13px] font-bold text-slate-900 leading-snug mt-0.5 line-clamp-1">{item.text}</span>
+      </div>
+      <ChevronRight className="h-4 w-4 text-slate-400 flex-shrink-0" />
+    </button>
+  );
+}
+
+function VisitorLanding({ community, typeConfig, posts, events, resources, members, onFollow, onTabChange }) {
+  const description = community?.settings?.welcome_message
+    || community?.welcome_message
+    || community?.description_long
+    || community?.description
+    || typeConfig.cardFallback;
+  const memberCount = Math.max(members.length, community?.follower_count || 0);
+  const pinnedPost = posts.find((p) => p.is_pinned) || posts.find(isAnn);
+  const upcomingEvent = events
+    .filter((e) => new Date(e.start_date || e.event_date) >= new Date())
+    .sort((a, b) => new Date(a.start_date || a.event_date) - new Date(b.start_date || b.event_date))[0];
+  const featuredResource = resources.find((r) => r.is_pinned) || resources[0];
+  const hasFeatured = pinnedPost || upcomingEvent || featuredResource;
+  const previewPosts = posts.slice(0, 2);
+  const lockedCount = Math.max(0, posts.length - previewPosts.length);
+  const Icon = typeConfig.icon;
+
+  return (
+    <div className="space-y-3 pt-3">
+      {/* Value proposition + join CTA */}
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm">
+        <div className="px-5 pt-5 pb-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className={`flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br ${typeConfig.accent} text-white flex-shrink-0`}>
+              <Icon className="h-3.5 w-3.5" />
+            </div>
+            <span className="text-[11px] font-black uppercase tracking-wide text-slate-500">{typeConfig.label}</span>
+            {memberCount > 0 && (
+              <span className="ml-auto flex items-center gap-1 text-[12px] font-bold text-slate-500">
+                <Users className="h-3.5 w-3.5 text-slate-400" />
+                {memberCount.toLocaleString()}
+              </span>
+            )}
+          </div>
+          {description && (
+            <p className="text-[14px] font-semibold text-slate-700 leading-relaxed mb-5">{description}</p>
+          )}
+          <button
+            type="button"
+            onClick={onFollow}
+            className={`w-full h-11 rounded-2xl bg-gradient-to-r ${typeConfig.accent} text-white font-black text-[15px] active:scale-[0.98] transition-all shadow-sm`}
+          >
+            Join {community.name}
+          </button>
+        </div>
+      </div>
+
+      {/* Featured pinned post / next event / top resource */}
+      {hasFeatured && (
+        <CommunityFeaturedSection
+          typeConfig={typeConfig}
+          posts={posts}
+          events={events}
+          resources={resources}
+          onTabChange={onTabChange}
+        />
+      )}
+
+      {/* Preview posts with join gate */}
+      {previewPosts.length > 0 && (
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-wide text-slate-400 px-1 mb-2">
+            Community posts
+          </p>
+          <div className="space-y-2.5">
+            {previewPosts.map((post) => (
+              <CommunityPostPreview key={post.id} post={post} typeConfig={typeConfig} />
+            ))}
+          </div>
+          {lockedCount > 0 && (
+            <div className="mt-2 rounded-2xl border border-slate-100 bg-gradient-to-b from-white to-slate-50 px-5 py-6 text-center">
+              <div className={`mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br ${typeConfig.accent} text-white`}>
+                <Lock className="h-5 w-5" />
+              </div>
+              <p className="text-[15px] font-black text-slate-900 mb-1">
+                {lockedCount} more {lockedCount === 1 ? 'post' : 'posts'} in this community
+              </p>
+              <p className="text-[12px] font-semibold text-slate-500 mb-4">
+                Join to read, reply, and participate
+              </p>
+              <button
+                type="button"
+                onClick={onFollow}
+                className={`h-10 px-6 rounded-full bg-gradient-to-r ${typeConfig.accent} text-white font-black text-[13px] active:scale-95 transition-all`}
+              >
+                Join for free
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Brand-new community — no posts yet */}
+      {posts.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-8 text-center">
+          <div className={`mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br ${typeConfig.accent} text-white`}>
+            <Icon className="h-5 w-5" />
+          </div>
+          <p className="text-[14px] font-black text-slate-900 mb-1">{typeConfig.emptyTitle || 'Be the first to join'}</p>
+          <p className="text-[12px] font-semibold text-slate-400 leading-5">{typeConfig.tagline}</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function RoutedCommunityHome({
   community,
@@ -807,6 +1155,7 @@ function RoutedCommunityHome({
   isFollowing,
   lastVisitedAt,
   currentUser,
+  onFollow,
   onManage,
   openAdminCenter,
   onOpenEvent,
@@ -825,31 +1174,17 @@ function RoutedCommunityHome({
   const isRecent = !communityCreatedAt || ageMs < 14 * 24 * 60 * 60 * 1000;
   const showPanel = isFollowing && isCreator && !panelDismissed && isRecent;
   if (!isFollowing) {
-    // ── Visitor landing page ───────────────────────────────────────────────────
     return (
-      <div className="space-y-3 pt-3">
-        <CommunityWelcomeHub
-          community={community}
-          typeConfig={typeConfig}
-          posts={posts}
-          events={events}
-          resources={resources}
-          members={members}
-          isCommunityManager={false}
-          isFollowing={false}
-          onTabChange={onTabChange}
-          onManage={onManage}
-          onCompose={() => {}}
-        />
-        <CommunityFeaturedSection
-          typeConfig={typeConfig}
-          posts={posts}
-          events={events}
-          resources={resources}
-          onTabChange={onTabChange}
-        />
-        <RoutedPostsList posts={posts.slice(0, 4)} typeConfig={typeConfig} emptyCompact />
-      </div>
+      <VisitorLanding
+        community={community}
+        typeConfig={typeConfig}
+        posts={posts}
+        events={events}
+        resources={resources}
+        members={members}
+        onFollow={onFollow}
+        onTabChange={onTabChange}
+      />
     );
   }
 
@@ -860,10 +1195,22 @@ function RoutedCommunityHome({
   const hiddenSections = new Set(layoutSettings.hiddenSections || []);
   const sectionOrder = layoutSettings.homeSections?.length
     ? layoutSettings.homeSections
-    : ['digest', 'importantNow', 'adminTools', 'personalization', 'composer', 'feed'];
+    : ['rightNow', 'composer', 'feed', 'adminTools', 'personalization'];
   const effectiveComposerMode = layoutSettings.composerMode || undefined;
 
   const sectionMap = {
+    rightNow: (
+      <RightNowBanner
+        posts={posts}
+        events={events}
+        activeNeeds={activeNeeds}
+        resources={resources}
+        typeConfig={typeConfig}
+        lastVisitedAt={lastVisitedAt}
+        onTabChange={onTabChange}
+      />
+    ),
+    // Legacy section keys — kept so existing customized layouts still render correctly
     digest: (
       <SinceLastVisitDigest
         posts={posts}

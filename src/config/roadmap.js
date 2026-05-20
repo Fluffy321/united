@@ -274,6 +274,36 @@ Goals:
   },
 
   {
+    id: 'community-app-shell-bottom-nav',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community App Shell — Bottom Tab Navigation + Branded AppBar',
+    description: 'Each community now feels like its own dedicated app: a slim branded AppBar (community type icon, name, admin gear, share) replaces the in-cover back button, and a fixed bottom tab bar with accent-colored active states replaces the scrollable top pill tabs. Overflow tabs surface in a full-height bottom sheet. Community accent color is injected as a CSS variable on mount for consistent theming across all tab icons and active states.',
+    shippedNote: 'Shipped 2026-05-19. CommunityAppBar, CommunityBottomNav, and CommunityMoreSheet added as inline components in CommunityDetailView.jsx. TAB_ICON_MAP maps all tab keys to lucide icons. accentHex resolved from community branding settings → featured_accent_color → typeConfig.accentHex. CSS variable --community-accent injected via useEffect with cleanup on unmount. inAppShell prop added to CommunityHero to suppress duplicate sticky header and in-cover nav buttons. accentHex added to all 8 community type configs in communityTypes.js.',
+  },
+
+  {
+    id: 'community-member-home-feed-first',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Member Home — Feed-First Layout + Compact Right Now Banner',
+    description: 'Joined-member home now surfaces posts immediately without scrolling. A single compact RightNowBanner row (≈44px) replaces the two-card digest + important strip stack — it shows new-content count when there is activity since last visit, otherwise surfaces the single most important item (announcement → event → chesed need → resource). The composer collapses to a one-line pill by default in all modes, expanding on tap. Section order changed to: rightNow → composer → feed → adminTools → personalization.',
+    shippedNote: 'Shipped 2026-05-19. RightNowBanner component added inline in CommunityDetailView.jsx. Default homeSections order changed from [digest, importantNow, adminTools, personalization, composer, feed] to [rightNow, composer, feed, adminTools, personalization]. digest and importantNow kept in sectionMap for backwards compatibility with customized layouts. TypeAwareComposer default post mode now has collapsed pill state matching existing message-mode pattern. Fixed latent bug: Heart was used in AboutTab but not imported.',
+  },
+
+  {
+    id: 'community-visitor-landing',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Visitor Landing — Full-Screen Join Page',
+    description: 'Non-members now see a dedicated landing page instead of a raw feed. Shows community description and member count, a full-width Join CTA, the featured section (pinned post / next event / top resource), and up to 2 preview posts followed by a locked-gate card ("X more posts — join to read") with a second Join CTA. Removed CommunityWelcomeHub from the visitor path.',
+    shippedNote: 'Shipped 2026-05-19. VisitorLanding component added inline in CommunityDetailView.jsx. RoutedCommunityHome !isFollowing branch now renders VisitorLanding. onFollow prop added to RoutedCommunityHome and wired to handleFollow from parent. CommunityWelcomeHub no longer imported by CommunityDetailView (still exported from CommunityOperatingSystem for any future use).',
+  },
+
+  {
     id: 'community-creation-experience-v2',
     category: 'Community',
     status: STATUS.SHIPPED,

@@ -24,7 +24,8 @@ function communityGradient(name = '', accentColor) {
 export default function CommunityHero({
   community, isFollowing, isAdmin, isCreator = false, onBack, onFollow, onManage,
   actualMemberCount,
-  members = [], currentUser, onTabChange, typeConfig: providedTypeConfig
+  members = [], currentUser, onTabChange, typeConfig: providedTypeConfig,
+  inAppShell = false,
 }) {
   const [stickyVisible, setStickyVisible]   = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -49,10 +50,11 @@ export default function CommunityHero({
       : typeConfig.coverPattern;
 
   useEffect(() => {
+    if (inAppShell) return;
     const handleScroll = () => setStickyVisible(window.scrollY > 80);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [inAppShell]);
 
   const handleShare = async () => {
     const url = `${window.location.origin}/communities/${community.id}`;
@@ -68,35 +70,37 @@ export default function CommunityHero({
 
   return (
     <>
-      {/* ── Sticky mini-header ── */}
-      <motion.div
-        initial={false}
-        animate={{ y: stickyVisible ? 0 : -64, opacity: stickyVisible ? 1 : 0 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-100 flex items-center gap-3 px-4 h-14 shadow-sm"
-      >
-        <button
-          onClick={onBack}
-          className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0"
+      {/* ── Sticky mini-header — only when NOT inside app shell ── */}
+      {!inAppShell && (
+        <motion.div
+          initial={false}
+          animate={{ y: stickyVisible ? 0 : -64, opacity: stickyVisible ? 1 : 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-100 flex items-center gap-3 px-4 h-14 shadow-sm"
         >
-          <ArrowLeft className="w-4 h-4 text-slate-700" />
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-slate-900 text-[14px] truncate">{community.name}</p>
-          <p className="text-[11px] text-slate-400">{memberCount.toLocaleString()} members</p>
-        </div>
-        <button
-          onClick={isCreator ? onManage : onFollow}
-          className={`h-8 px-4 rounded-full text-[13px] font-bold transition-colors ${
-            isCreator ? 'bg-slate-950 text-white' : isFollowing ? 'bg-slate-100 text-slate-600' : 'bg-[#2563EB] text-white'
-          }`}
-        >
-          {isCreator ? 'Admin Center' : isFollowing ? 'Joined' : '+ Join'}
-        </button>
-      </motion.div>
+          <button
+            onClick={onBack}
+            className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4 text-slate-700" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-slate-900 text-[14px] truncate">{community.name}</p>
+            <p className="text-[11px] text-slate-400">{memberCount.toLocaleString()} members</p>
+          </div>
+          <button
+            onClick={isCreator ? onManage : onFollow}
+            className={`h-8 px-4 rounded-full text-[13px] font-bold transition-colors ${
+              isCreator ? 'bg-slate-950 text-white' : isFollowing ? 'bg-slate-100 text-slate-600' : 'bg-[#2563EB] text-white'
+            }`}
+          >
+            {isCreator ? 'Admin Center' : isFollowing ? 'Joined' : '+ Join'}
+          </button>
+        </motion.div>
+      )}
 
-      {/* ── Branded cover — community name integrated at bottom ── */}
-      <div className="relative overflow-hidden" style={{ height: 128 }}>
+      {/* ── Branded cover ── */}
+      <div className="relative overflow-hidden" style={{ height: inAppShell ? 96 : 128 }}>
         {/* Cover: image or type-specific gradient */}
         <div className="absolute inset-0 w-full">
           {(community.cover_url || community.cover_image_url) ? (
@@ -108,45 +112,49 @@ export default function CommunityHero({
           ) : (
             <div className="w-full h-full" style={{ background: gradient }} />
           )}
-          {/* Strong bottom overlay for name legibility */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+          {/* Gradient overlay — lighter in app shell since name is in AppBar */}
+          <div className={`absolute inset-0 bg-gradient-to-t ${inAppShell ? 'from-black/40 via-black/10 to-transparent' : 'from-black/80 via-black/25 to-transparent'}`} />
         </div>
 
-        {/* Back + share — top row */}
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-          <button
-            onClick={onBack}
-            className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
-          >
-            <ArrowLeft className="w-4 h-4 text-white" />
-          </button>
-          <button
-            onClick={handleShare}
-            className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
-          >
-            <Share2 className="w-4 h-4 text-white" />
-          </button>
-        </div>
+        {/* Back + share — only when NOT in app shell */}
+        {!inAppShell && (
+          <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+            <button
+              onClick={onBack}
+              className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+            >
+              <ArrowLeft className="w-4 h-4 text-white" />
+            </button>
+            <button
+              onClick={handleShare}
+              className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+            >
+              <Share2 className="w-4 h-4 text-white" />
+            </button>
+          </div>
+        )}
 
-        {/* Community identity — overlaid at cover bottom */}
-        <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
-          <div className="flex items-end gap-2">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <h1 className="font-extrabold text-white text-[19px] leading-tight drop-shadow-sm truncate">
-                  {community.name}
-                </h1>
-                {community.is_claimed && <CheckCircle2 className="w-4 h-4 text-blue-300 flex-shrink-0" />}
-                {community.is_featured && <Star className="w-4 h-4 text-amber-300 fill-amber-300 flex-shrink-0" />}
+        {/* Community identity — overlaid at cover bottom — only when NOT in app shell */}
+        {!inAppShell && (
+          <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
+            <div className="flex items-end gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <h1 className="font-extrabold text-white text-[19px] leading-tight drop-shadow-sm truncate">
+                    {community.name}
+                  </h1>
+                  {community.is_claimed && <CheckCircle2 className="w-4 h-4 text-blue-300 flex-shrink-0" />}
+                  {community.is_featured && <Star className="w-4 h-4 text-amber-300 fill-amber-300 flex-shrink-0" />}
+                </div>
+                <p className="text-[11px] text-white/75 flex items-center gap-1 mt-0.5 leading-none">
+                  <TypeIcon className="h-3 w-3 flex-shrink-0" />
+                  {typeConfig.label}
+                  {community.neighborhood && <span className="opacity-80"> · {community.neighborhood}</span>}
+                </p>
               </div>
-              <p className="text-[11px] text-white/75 flex items-center gap-1 mt-0.5 leading-none">
-                <TypeIcon className="h-3 w-3 flex-shrink-0" />
-                {typeConfig.label}
-                {community.neighborhood && <span className="opacity-80"> · {community.neighborhood}</span>}
-              </p>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* ── Thin action bar: logo + member count + CTA ── */}
