@@ -94,7 +94,7 @@ function ListingModal({ communityId, currentUser, listing, onClose, onSaved }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h2 className="text-[16px] font-bold text-slate-900">{isEdit ? 'Edit Listing' : 'New Listing'}</h2>

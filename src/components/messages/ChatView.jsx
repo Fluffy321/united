@@ -82,9 +82,14 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
 
   const loadMessages = async (silent = false) => {
     if (!silent) setIsLoading(true);
-    const data = await messagesService.listMessages(conversation.id, 'created_date');
-    setMessages(data);
-    if (!silent) setIsLoading(false);
+    try {
+      const data = await messagesService.listMessages(conversation.id, 'created_date');
+      setMessages(data);
+    } catch (err) {
+      console.error('Failed to load messages:', err);
+    } finally {
+      if (!silent) setIsLoading(false);
+    }
   };
 
   const markAsRead = async () => {

@@ -324,7 +324,7 @@ function PhotosStrip({ posts }) {
         })}
       </div>
       {lightbox && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
+        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
           <img src={lightbox} alt="" className="max-w-full max-h-full rounded-xl object-contain" />
         </div>
       )}

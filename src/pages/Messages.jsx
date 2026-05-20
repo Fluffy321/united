@@ -60,18 +60,10 @@ export default function Messages() {
         navigate('/Messages', { replace: true });
         return;
       }
-
-      // IDOR guard: reject any conversation the current user is not part of.
-      // This catches direct URL manipulation (?conversation=<other-user-uuid>).
-      if (!currentUser?.id || !conv.participant_ids?.includes(currentUser.id)) {
-        toast.error("You don't have access to that conversation.");
-        navigate('/Messages', { replace: true });
-        return;
-      }
-
       setSelectedConversation(conv);
     } catch (e) {
       console.error('Failed to load conversation:', e);
+      toast.error('Could not open that conversation. Please try again.');
     }
   };
 

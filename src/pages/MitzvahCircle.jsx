@@ -765,7 +765,7 @@ function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-3 motion-soft-in"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/45 p-3 motion-soft-in"
       onClick={onClose}
     >
       <form
@@ -940,7 +940,7 @@ function CreateCarpoolModal({ mode, onClose, onCreate, isLoading }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/45 p-3 motion-soft-in sm:items-center"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-950/45 p-3 motion-soft-in sm:items-center"
       onClick={onClose}
     >
       <form
@@ -1055,7 +1055,7 @@ function QuickViewSheet({ request, offers, comments = [], currentUser, onClose, 
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/45 p-3 motion-soft-in sm:items-center"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-950/45 p-3 motion-soft-in sm:items-center"
       onClick={onClose}
     >
       <div
