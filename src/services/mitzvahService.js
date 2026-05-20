@@ -7,9 +7,12 @@ export const mitzvahService = {
   createRequest(payload) {
     return dataService.entities.MitzvahRequest.create(payload);
   },
-  updateRequest(id, patch) {
-    return dataService.entities.MitzvahRequest.update(id, patch);
-  },
+	  updateRequest(id, patch) {
+	    return dataService.entities.MitzvahRequest.update(id, patch);
+	  },
+	  deleteRequest(id) {
+	    return dataService.entities.MitzvahRequest.delete(id);
+	  },
   listOffers(filter = {}, sort = '-created_date', limit = 100) {
     return dataService.entities.HelpOffer.filter(filter, sort, limit);
   },
