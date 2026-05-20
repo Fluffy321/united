@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  AlertCircle,
   Award,
   Car,
   CheckCircle2,
@@ -461,28 +460,28 @@ function RequestCard({
   const canAdjustUrgency = Boolean(isPoster && onUrgencyChange && ![STATUSES.VERIFIED, STATUSES.CANCELLED].includes(request.status));
 
   return (
-    <article
-      className={`relative cursor-pointer overflow-hidden rounded-[26px] border p-4 shadow-sm transition hover:shadow-md ${urgencyCardTone}`}
+	    <article
+	      className={`relative cursor-pointer overflow-hidden rounded-2xl border px-3 py-2.5 shadow-sm transition hover:shadow-md ${urgencyCardTone}`}
       onClick={handleCardClick}
       role={onOpenMap ? 'button' : undefined}
       tabIndex={onOpenMap ? 0 : undefined}
     >
-      <div className={`absolute inset-y-0 left-0 w-1.5 ${urgencyRail}`} />
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-[11px] font-black text-slate-700 shadow-sm">
-              {request.category}
-            </span>
-            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-black ${urgencyInfo.tone}`}>
-              <span className={`h-2 w-2 rounded-full ${urgencyInfo.dot}`} />
-              {urgencyInfo.label}
-            </span>
-            <StatusPill status={request.status} />
-          </div>
-          {canAdjustUrgency && (
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              {['Urgent', 'Today', 'Flexible'].map((level) => {
+	      <div className={`absolute inset-y-0 left-0 w-1 ${urgencyRail}`} />
+	      <div className="flex items-start justify-between gap-2">
+	        <div className="min-w-0 flex-1">
+	          <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+	            <span className="rounded-full border border-slate-200 bg-white/80 px-2 py-0.5 text-[10px] font-black text-slate-700 shadow-sm">
+	              {request.category}
+	            </span>
+	            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black ${urgencyInfo.tone}`}>
+	              <span className={`h-1.5 w-1.5 rounded-full ${urgencyInfo.dot}`} />
+	              {urgencyInfo.label}
+	            </span>
+	            <StatusPill status={request.status} />
+	          </div>
+	          {canAdjustUrgency && (
+	            <div className="mb-2 flex flex-wrap items-center gap-1.5">
+	              {['Urgent', 'Today', 'Flexible'].map((level) => {
                 const selected = urgencyInfo.label === level;
                 const levelClass = {
                   Urgent: selected ? 'border-red-500 bg-red-600 text-white' : 'border-red-200 bg-red-50 text-red-700',
@@ -490,11 +489,11 @@ function RequestCard({
                   Flexible: selected ? 'border-slate-500 bg-slate-700 text-white' : 'border-slate-200 bg-slate-50 text-slate-600',
                 }[level];
                 return (
-                  <button
+	                  <button
                     key={level}
                     type="button"
                     onClick={() => onUrgencyChange(request.id, level)}
-                    className={`motion-press rounded-full border px-3 py-1.5 text-[12px] font-black transition ${levelClass}`}
+	                    className={`motion-press rounded-full border px-2.5 py-1 text-[11px] font-black transition ${levelClass}`}
                     aria-pressed={selected}
                   >
                     {level}
@@ -503,41 +502,30 @@ function RequestCard({
               })}
             </div>
           )}
-          <h2 className="text-[18px] font-black leading-snug text-slate-950">{request.title}</h2>
-          <p className="mt-2 line-clamp-3 text-[13px] font-medium leading-5 text-slate-600">
-            {request.description}
-          </p>
-
-          <div className="mt-3 grid gap-2 sm:grid-cols-[0.9fr_1.1fr]">
-            <div className={`rounded-2xl border px-3 py-2 ${urgencyInfo.tone}`}>
-              <p className="flex items-center gap-2 text-[12px] font-black">
-                <Clock className="h-4 w-4" />
-                {urgencyInfo.label}: {urgencyInfo.detail}
-              </p>
-              <p className="mt-0.5 text-[11px] font-black opacity-80">{urgencyInfo.remaining}</p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-100 bg-white/85 p-3 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-[13px] font-black text-slate-950">{progress.title}</p>
-                  <p className="mt-0.5 text-[12px] font-semibold text-slate-500">{progress.detail}</p>
-                </div>
-                <span className="shrink-0 rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-black text-slate-600">
-                  {progress.percent}%
-                </span>
-              </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className={`h-full rounded-full bg-gradient-to-r ${progressTone} transition-all duration-300`}
-                  style={{ width: `${progress.percent}%` }}
-                />
-              </div>
-            </div>
-          </div>
+	          <h2 className="line-clamp-1 text-[15px] font-black leading-tight text-slate-950">{request.title}</h2>
+	          <p className="mt-0.5 line-clamp-1 text-[12px] font-medium leading-4 text-slate-600">
+	            {request.description}
+	          </p>
+	
+		          <div className="mt-1.5">
+		            <div className="flex items-center gap-2 text-[10px] font-black text-slate-600">
+		              <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 ${urgencyInfo.tone}`}>
+		                <Clock className="h-3 w-3" />
+		                {urgencyInfo.detail}
+		              </span>
+		              <span className="min-w-0 flex-1 truncate">{progress.title}</span>
+		              <span className="shrink-0 text-slate-400">{progress.percent}%</span>
+		            </div>
+		            <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-100">
+		              <div
+		                className={`h-full rounded-full bg-gradient-to-r ${progressTone} transition-all duration-300`}
+		                style={{ width: `${progress.percent}%` }}
+		              />
+		            </div>
+		          </div>
 
           {request.status === STATUSES.VERIFIED && (
-            <div className="mt-3 flex items-center gap-2 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white px-3 py-2.5">
+	            <div className="mt-2 flex items-center gap-2 rounded-xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white px-2.5 py-2">
               <span className="text-base">⛓️</span>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wide text-emerald-700">
@@ -550,39 +538,39 @@ function RequestCard({
             </div>
           )}
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <div className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-2.5 py-1.5">
-              <div className="flex -space-x-2">
-                {helperPreviewNames.length > 0 ? helperPreviewNames.slice(0, 4).map((name) => (
-                  <span
-                    key={name}
-                    className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-[10px] font-black text-white"
+	          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+	            <div className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-1.5 py-0.5">
+	              <div className="flex -space-x-2">
+	                {helperPreviewNames.length > 0 ? helperPreviewNames.slice(0, 4).map((name) => (
+	                  <span
+	                    key={name}
+	                    className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-[9px] font-black text-white"
                     title={name}
                   >
                     {name.charAt(0).toUpperCase()}
                   </span>
                 )) : (
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-slate-200 text-[10px] font-black text-slate-500">
+	                  <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-slate-200 text-[9px] font-black text-slate-500">
                     +
                   </span>
                 )}
               </div>
-              <span className="text-[12px] font-black text-slate-700">
-                {visibleHelperCount} {visibleHelperCount === 1 ? 'person offered help' : 'people offered help'}
-              </span>
-            </div>
+	              <span className="text-[10px] font-black text-slate-700">
+	                {visibleHelperCount} offered
+	              </span>
+	            </div>
             <button
               type="button"
               onClick={() => setDiscussionOpen((value) => !value)}
-              className="motion-press inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] font-black text-slate-600"
-            >
+	              className="motion-press inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-600"
+	            >
               <MessageCircle className="h-3.5 w-3.5" />
-              {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
+	              {commentCount} replies
             </button>
             <button
               type="button"
               onClick={() => onOpenMap?.(request)}
-              className="motion-press inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-[12px] font-black text-blue-700"
+	              className="motion-press inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[10px] font-black text-blue-700"
             >
               <MapPin className="h-3.5 w-3.5" />
               {distanceLabel}
@@ -593,7 +581,7 @@ function RequestCard({
         {onQuickView && (
           <button
             onClick={() => onQuickView(request)}
-            className="shrink-0 rounded-xl border border-slate-100 bg-slate-50 p-2 text-slate-400 transition-all hover:bg-slate-100 active:scale-95"
+	            className="shrink-0 rounded-xl border border-slate-100 bg-slate-50 p-1.5 text-slate-400 transition-all hover:bg-slate-100 active:scale-95"
             title="Quick view"
           >
             <Eye className="h-4 w-4" />
@@ -601,24 +589,17 @@ function RequestCard({
         )}
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 text-[12px] font-semibold text-slate-600 sm:grid-cols-4">
-        <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2">
-          <MapPin className="h-3.5 w-3.5" />
-          {distanceLabel}
-        </div>
-        <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2">
-          <Clock className="h-3.5 w-3.5" />
-          {request.estimatedHours} hrs
-        </div>
-        <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2">
-          <AlertCircle className="h-3.5 w-3.5" />
-          {urgencyInfo.detail}
-        </div>
-        <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2">
-          <Users className="h-3.5 w-3.5" />
-          {request.poster_name}
-        </div>
-      </div>
+	      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-slate-500">
+	        <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-1.5 py-0.5">
+	          <Clock className="h-3 w-3" />
+	          {request.estimatedHours}h
+	        </span>
+	        <span className="inline-flex max-w-[120px] items-center gap-1 truncate rounded-full bg-slate-50 px-1.5 py-0.5">
+	          <Users className="h-3 w-3" />
+	          <span className="truncate">{request.poster_name}</span>
+	        </span>
+	        <span className="truncate text-slate-400">{urgencyInfo.remaining}</span>
+	      </div>
 
       {isPoster && pendingOffers.length > 0 && (
         <div className="mt-3 space-y-2 rounded-xl border border-blue-100 bg-blue-50 p-3">
@@ -642,83 +623,68 @@ function RequestCard({
         </div>
       )}
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {canOffer && (
-          <button
-            onClick={() => onOffer(request)}
-            className="chesed-cta-pulse app-button-primary h-10 px-4 text-[13px]"
+		      <div className="mt-1.5 flex flex-wrap gap-1.5">
+	        {canOffer && (
+	          <button
+	            onClick={() => onOffer(request)}
+		            className="chesed-cta-pulse app-button-primary h-7 rounded-lg px-2 text-[10px]"
             style={{ background: '#556B2F' }}
           >
-            <HandHeart className="h-4 w-4" />
+	            <HandHeart className="h-3.5 w-3.5" />
             {helpCta}
           </button>
         )}
         {onOpenMap && (
-          <button
-            type="button"
-            onClick={() => onOpenMap(request)}
-            className="motion-press inline-flex h-10 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 text-[13px] font-black text-blue-700"
+	          <button
+	            type="button"
+	            onClick={() => onOpenMap(request)}
+		            className="motion-press inline-flex h-7 items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2 text-[10px] font-black text-blue-700"
           >
-            <MapPin className="h-4 w-4" />
-            Open on map
+	            <MapPin className="h-3.5 w-3.5" />
+	            Map
           </button>
         )}
         {myOffer && myOffer.status === 'offered' && (
-          <span className="inline-flex h-10 items-center rounded-xl border border-blue-200 bg-blue-50 px-4 text-[13px] font-black text-blue-700">
+	          <span className="inline-flex h-7 items-center rounded-lg border border-blue-200 bg-blue-50 px-2 text-[10px] font-black text-blue-700">
             Offer sent ✓
           </span>
         )}
         {canStart && (
-          <button
-            onClick={() => onStart(request.id)}
-            className="app-button-primary h-10 bg-indigo-600 px-4 text-[13px] hover:bg-indigo-700"
+	          <button
+	            onClick={() => onStart(request.id)}
+	            className="app-button-primary h-7 rounded-lg bg-indigo-600 px-2 text-[10px] hover:bg-indigo-700"
           >
-            <UserCheck className="h-4 w-4" />
-            Start Task
+	            <UserCheck className="h-3.5 w-3.5" />
+	            Start
           </button>
         )}
         {canComplete && (
-          <button
-            onClick={() => onComplete(request.id)}
-            className="app-button-primary h-10 bg-purple-600 px-4 text-[13px] hover:bg-purple-700"
+	          <button
+	            onClick={() => onComplete(request.id)}
+	            className="app-button-primary h-7 rounded-lg bg-purple-600 px-2 text-[10px] hover:bg-purple-700"
           >
-            <CheckCircle2 className="h-4 w-4" />
+	            <CheckCircle2 className="h-3.5 w-3.5" />
             Mark Completed
           </button>
         )}
         {canVerify && (
-          <button
-            onClick={() => onVerify(request.id)}
-            className="app-button-primary h-10 bg-emerald-600 px-4 text-[13px] hover:bg-emerald-700"
+	          <button
+	            onClick={() => onVerify(request.id)}
+	            className="app-button-primary h-7 rounded-lg bg-emerald-600 px-2 text-[10px] hover:bg-emerald-700"
           >
-            <ShieldCheck className="h-4 w-4" />
+	            <ShieldCheck className="h-3.5 w-3.5" />
             Verify Completion
           </button>
         )}
         {isPoster && acceptedVolunteerId === currentUser?.id && request.status === STATUSES.PENDING && (
-          <span className="inline-flex h-10 items-center rounded-xl border border-red-200 bg-red-50 px-4 text-[13px] font-black text-red-700">
+	          <span className="inline-flex h-7 items-center rounded-lg border border-red-200 bg-red-50 px-2 text-[10px] font-black text-red-700">
             Cannot verify your own hours
           </span>
         )}
       </div>
 
-      <div className="mt-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-3">
-        <button
-          type="button"
-          onClick={() => setDiscussionOpen((value) => !value)}
-          className="flex w-full items-center justify-between gap-2 text-left"
-        >
-          <span className="inline-flex items-center gap-2 text-[13px] font-black text-slate-800">
-            <MessageCircle className="h-4 w-4 text-blue-600" />
-            Discussion
-          </span>
-          <span className="text-[12px] font-black text-slate-500">
-            {commentCount > 0 ? `${commentCount} replies` : 'Start one'}
-          </span>
-        </button>
-
-        {discussionOpen && (
-          <div className="mt-3 space-y-2">
+	        {discussionOpen && (
+	          <div className="mt-2 space-y-2 rounded-xl border border-slate-100 bg-slate-50/70 px-2.5 py-2">
             {comments.length > 0 ? (
               comments.slice(-4).map((comment) => (
                 <div key={comment.id} className="flex gap-2 rounded-2xl bg-white p-2">
@@ -757,9 +723,8 @@ function RequestCard({
                 <Send className="h-4 w-4" />
               </button>
             </form>
-          </div>
-        )}
-      </div>
+	          </div>
+	        )}
     </article>
   );
 }

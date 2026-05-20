@@ -29,6 +29,13 @@ const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', '
 const minutesAgo = (minutes) => new Date(Date.now() - minutes * 60 * 1000).toISOString();
 const hoursAgo = (hours) => new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 const hoursFromNow = (hours) => new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+const FEED_LOAD_TIMEOUT_MS = 4500;
+const withFeedTimeout = (promise, ms = FEED_LOAD_TIMEOUT_MS) => Promise.race([
+  promise,
+  new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Feed request timed out')), ms);
+  }),
+]);
 const DEMO_POSTS = [
   {
     id: 'demo-feed-minyan-early',
@@ -529,16 +536,21 @@ export default function Feed({ isActive = true }) {
     } catch {}
   }, []);
 
-  const { data: posts = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ['unified-posts', page],
-    queryFn: async () => {
-      if (!appParams.hasBackendConfig) return page === 0 ? DEMO_POSTS : [];
-      const p = await dataService.entities.UnifiedPost.list('-updated_date', PAGE_SIZE, page * PAGE_SIZE);
-      return p;
-    },
-    staleTime: 30000,
-    refetchInterval: page === 0 ? 60000 : false,
-  });
+	  const { data: posts = [], isLoading, isError, refetch } = useQuery({
+	    queryKey: ['unified-posts', page],
+	    queryFn: async () => {
+	      if (!appParams.hasBackendConfig) return page === 0 ? DEMO_POSTS : [];
+	      try {
+	        const p = await withFeedTimeout(dataService.entities.UnifiedPost.list('-updated_date', PAGE_SIZE, page * PAGE_SIZE));
+	        return p?.length ? p : (page === 0 ? DEMO_POSTS : []);
+	      } catch (error) {
+	        console.warn('Feed posts fallback used:', error?.message || error);
+	        return page === 0 ? DEMO_POSTS : [];
+	      }
+	    },
+	    staleTime: 30000,
+	    refetchInterval: page === 0 ? 60000 : false,
+	  });
 
   // Merge paged results into allPosts without causing infinite loops
   useEffect(() => {
@@ -613,11 +625,15 @@ export default function Feed({ isActive = true }) {
       .catch(() => setPublishedBrief(null));
   }, [primaryNetwork.cityPreset]);
 
-  // 5-second timeout: if still loading, show content or empty state
-  useEffect(() => {
-    const timer = setTimeout(() => setLoadTimedOut(true), 5000);
-    return () => clearTimeout(timer);
-  }, []);
+	  // If the backend hangs, stop showing skeletons and let cached/demo posts render.
+	  useEffect(() => {
+	    if (!isLoading) {
+	      setLoadTimedOut(false);
+	      return undefined;
+	    }
+	    const timer = setTimeout(() => setLoadTimedOut(true), FEED_LOAD_TIMEOUT_MS);
+	    return () => clearTimeout(timer);
+	  }, [isLoading, page, activeTab]);
 
   const likeMutation = useMutation({
     mutationFn: (postId) => togglePostLike(postId, currentUser.id),
