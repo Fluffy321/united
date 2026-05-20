@@ -953,9 +953,9 @@ export default function Communities() {
             <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
           </div>
         ) : filteredCommunities.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center">
-            <p className="text-sm font-semibold text-slate-600">No communities found</p>
-            <p className="mt-1 text-[13px] text-slate-400">Try a different search or category.</p>
+          <div className="app-empty-state">
+            <p className="app-empty-state-title">No communities found</p>
+            <p className="app-empty-state-body">Try a different search or category.</p>
           </div>
         ) : (
           <div className="space-y-7">
@@ -1130,7 +1130,7 @@ function CommunityPulseDock({ items, onOpen, onTryPrompt }) {
                 </div>
                 <h3 className="mt-3 text-[15px] font-black leading-5 text-slate-950">{item.title}</h3>
                 <p className="mt-1.5 line-clamp-3 text-[12px] font-semibold leading-5 text-slate-500">{item.copy}</p>
-                <p className="mt-3 text-[11px] font-black uppercase tracking-wide text-slate-400">{item.stat}</p>
+                <p className="app-section-label mt-3">{item.stat}</p>
               </button>
               <button
                 type="button"
@@ -1176,7 +1176,7 @@ function ActiveInStrip({ communities = [], onOpen }) {
   if (!communities.length) return null;
   return (
     <section className="mb-3">
-      <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">Your spaces</p>
+      <p className="app-section-label mb-2">Your spaces</p>
       <div className="mobile-scroll-x flex gap-2 pb-1">
         {communities.map((community) => (
           <button
@@ -1287,14 +1287,14 @@ function CommunitySection({
         </span>
       </div>
       {communities.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
-          <p className="text-sm font-black text-slate-800">{emptyTitle}</p>
-          <p className="mt-1 text-[13px] font-semibold text-slate-500">{emptyBody}</p>
+        <div className="app-empty-state">
+          <p className="app-empty-state-title">{emptyTitle}</p>
+          <p className="app-empty-state-body">{emptyBody}</p>
           {emptyActionLabel && onEmptyAction && (
             <button
               type="button"
               onClick={onEmptyAction}
-              className="motion-press mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-black text-white"
+              className="motion-press mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-black text-white"
             >
               {emptyActionLabel}
             </button>

@@ -1116,7 +1116,7 @@ function VisitorLanding({ community, typeConfig, posts, events, resources, membe
       {/* Preview posts with join gate */}
       {previewPosts.length > 0 && (
         <div>
-          <p className="text-[11px] font-black uppercase tracking-wide text-slate-400 px-1 mb-2">
+          <p className="app-section-label px-1 mb-2">
             Community posts
           </p>
           <div className="space-y-2.5">
@@ -1149,12 +1149,12 @@ function VisitorLanding({ community, typeConfig, posts, events, resources, membe
 
       {/* Brand-new community — no posts yet */}
       {posts.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-8 text-center">
+        <div className="app-empty-state">
           <div className={`mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br ${typeConfig.accent} text-white`}>
             <Icon className="h-5 w-5" />
           </div>
-          <p className="text-[14px] font-black text-slate-900 mb-1">{typeConfig.emptyTitle || 'Be the first to join'}</p>
-          <p className="text-[12px] font-semibold text-slate-400 leading-5">{typeConfig.tagline}</p>
+          <p className="app-empty-state-title mb-1">{typeConfig.emptyTitle || 'Be the first to join'}</p>
+          <p className="app-empty-state-body">{typeConfig.tagline}</p>
         </div>
       )}
     </div>
@@ -1363,14 +1363,14 @@ function CompactEmptyState({ typeConfig, tabKey }) {
   const title = custom?.title || typeConfig?.emptyTitle || 'Nothing here yet';
   const body = custom?.body || typeConfig?.emptyBody || 'Be the first to post.';
   return (
-    <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-8 text-center">
+    <div className="app-empty-state">
       {Icon && (
         <div className={`mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white`}>
           <Icon className="h-5 w-5" />
         </div>
       )}
-      <p className="text-[14px] font-black text-slate-900">{title}</p>
-      <p className="mt-1 text-[12px] font-semibold text-slate-400 leading-5">{body}</p>
+      <p className="app-empty-state-title">{title}</p>
+      <p className="app-empty-state-body mt-1">{body}</p>
     </div>
   );
 }

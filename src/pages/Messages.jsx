@@ -265,21 +265,13 @@ export default function Messages() {
             <div className="flex gap-1.5 pb-3">
               <button
                 onClick={() => setActiveTab('inbox')}
-                className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
-                  activeTab === 'inbox'
-                    ? 'border-blue-600 bg-blue-600 text-white'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
-                }`}
+                className={`app-tab-pill ${activeTab === 'inbox' ? 'app-tab-pill-active' : ''}`}
               >
                 Inbox
               </button>
               <button
                 onClick={() => setActiveTab('requests')}
-                className={`relative flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
-                  activeTab === 'requests'
-                    ? 'border-blue-600 bg-blue-600 text-white'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
-                }`}
+                className={`relative app-tab-pill ${activeTab === 'requests' ? 'app-tab-pill-active' : ''}`}
               >
                 Requests
                 {pendingRequests.length > 0 && (
@@ -301,11 +293,7 @@ export default function Messages() {
                   <button
                     key={f.key}
                     onClick={() => setActiveFilter(f.key)}
-                    className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
-                      activeFilter === f.key
-                        ? 'border-blue-600 bg-blue-600 text-white'
-                        : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
-                    }`}
+                    className={`app-tab-pill ${activeFilter === f.key ? 'app-tab-pill-active' : ''}`}
                   >
                     {f.label}
                   </button>

@@ -2250,13 +2250,40 @@ Goals:
   },
 
   {
+    id: 'ux-design-primitive-adoption',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Design Primitive Adoption — Top Screens',
+    shippedNote: 'Shipped 2026-05-20. Replaced one-off inline styling with CSS primitives across 4 screens: (1) Messages.jsx: all 3 pill tab/filter instances (Inbox/Requests tabs + All/Unread/Communities/Requests filter row) converted from 40-char inline Tailwind strings to .app-tab-pill + .app-tab-pill-active. (2) Communities.jsx: 3 empty states → .app-empty-state family; 2 section labels → .app-section-label; CommunitySection empty state CTA fixed from bg-slate-950 → bg-blue-600. (3) CommunityDetailView.jsx: 2 empty states (HomeFeed empty + CompactEmptyState component) → .app-empty-state family; 1 section label (Community posts header) → .app-section-label. (4) Notifications.jsx: date group labels (Today, Yesterday, May 17…) → .app-section-label. Verified with Playwright screenshots — no regressions. Lint + build clean.',
+    description: 'Apply new CSS design primitives to the highest-traffic screens: replace repeated one-off tab-pill, empty-state, section-label patterns with the shared classes defined in index.css.',
+    why: 'STYLE_GUIDE.md and the CSS primitives existed but 0% of component code used them. This sprint drove adoption on the top 4 screens.',
+    prompt: `You are applying JUnited CSS design primitives to real component code.
+
+Context: src/index.css defines these primitives (added 2026-05-20):
+  .app-tab-pill / .app-tab-pill-active / .app-tab-pill-dark
+  .app-section-label
+  .app-empty-state / .app-empty-state-icon / .app-empty-state-title / .app-empty-state-body
+  .app-ghost-button / .app-ghost-button-muted
+STYLE_GUIDE.md at the repo root documents when and how to use each.
+
+Goals:
+1. Search all .jsx files for one-off pill-tab class strings (rounded-xl border px-3 with active/inactive ternary) → replace with app-tab-pill + app-tab-pill-active.
+2. Search for empty state divs (rounded-2xl border border-dashed) → replace with app-empty-state family.
+3. Search for section labels (text-[11px] font-black uppercase tracking-wide text-slate-400) → replace with app-section-label.
+4. Use Playwright MCP to verify no visual regression.
+5. Run npm run lint && npm run build.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'ux-design-token-system',
     category: 'Admin & Platform',
     status: STATUS.DEFERRED,
     priority: PRIORITY.LOW,
     title: 'Full Design Token System',
-    description: 'Replace all hardcoded color/size values with CSS variables. Standardize card radius, spacing scale, and typography to eliminate the ~50+ hardcoded values scattered across component files.',
-    why: 'Low priority until the design language is fully stable. Currently the app has a working token system (j-navy, j-gold, j-olive, semantic chips) but many components still use hardcoded Tailwind values like text-[#94a3b8] and rounded-2xl. Tackle post-v1 launch when the design is locked.',
+    description: 'Replace all hardcoded color/size values with CSS variables. Standardize card radius, spacing scale, and typography to eliminate the ~50+ hardcoded values scattered across component files. Note: the design primitive adoption sprint (2026-05-20) already replaced pill tabs, section labels, and empty states in Messages, Communities, CommunityDetailView, and Notifications with the new CSS class primitives. Remaining work is deeper token replacement (hex values → CSS vars).',
+    why: 'Low priority until the design language is fully stable. Foundations built: STYLE_GUIDE.md defines the full visual language; .app-tab-pill, .app-section-label, .app-empty-state family, and .app-ghost-button primitives are defined in index.css and adopted across the top 4 screens. Remaining gap is replacing hardcoded hex values like text-[#94a3b8] with tokens. Tackle post-v1 launch when the design is locked.',
     prompt: `You are implementing a full design token system for JUnited.
 
 Context: src/index.css has a solid token foundation (--j-navy, --j-gold, --j-olive, j-chip classes, j-card,

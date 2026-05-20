@@ -1,4 +1,12 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__plugin_playwright_playwright__browser_click",
+      "Bash(cat)",
+      "Bash(chmod +x /tmp/find_patterns.sh)",
+      "Bash(/tmp/find_patterns.sh)"
+    ]
+  },
   "enabledPlugins": {
     "playwright@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true,
@@ -8,10 +16,5 @@
     "code-review@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
     "figma@claude-plugins-official": true
-  },
-  "permissions": {
-    "allow": [
-      "mcp__plugin_playwright_playwright__browser_click"
-    ]
   }
 }
