@@ -70,7 +70,8 @@ function LayoutContent({ children, currentPageName }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isChatOpen = currentPageName === 'Messages' && new URLSearchParams(location.search).get('chat') === '1';
-  const hideNav = ['Settings', 'ShulPage'].includes(currentPageName) || isChatOpen;
+  const isCommunityOpen = currentPageName === 'Communities' && Boolean(new URLSearchParams(location.search).get('community'));
+  const hideNav = ['Settings', 'ShulPage'].includes(currentPageName) || isChatOpen || isCommunityOpen;
   const { user: currentUser } = useAuth();
   const { actions: floatingActions } = useFloatingActions();
 
