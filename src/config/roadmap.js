@@ -904,9 +904,10 @@ Goals:
   {
     id: 'community-volunteer-slots',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Community Volunteer Slots',
+    shippedNote: 'Shipped 2026-05-20. Migration 20260520200328_community_volunteer_slots.sql adds community_volunteer_slots (form_id, label, start/end_time, capacity, claimed_count) and community_volunteer_claims (slot_id, submitter_id, community_id) with RLS. claimed_count maintained by trigger. claim_volunteer_slot() RPC with FOR UPDATE lock prevents double-claiming. CreateFormPanel shows slot builder for volunteer-type forms. SubmissionsPanel shows Slot Signups summary, per-submission claimed slot labels, and CSV column. CommunityFormsTab FormCard shows slots with claim buttons, remaining capacity, and allows re-expansion for volunteer forms.',
     description: 'Named time-slots with capacity limits that managers attach to forms or events so volunteers can claim specific shifts.',
     why: 'The forms system ships without slot coordination. Volunteer slot management (e.g. pick a shift, track who signed up for each slot) is a natural extension but was deferred to keep the initial forms feature shippable.',
     prompt: `You are implementing Community Volunteer Slots for JUnited.

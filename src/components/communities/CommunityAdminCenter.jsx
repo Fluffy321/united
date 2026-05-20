@@ -3760,10 +3760,14 @@ function CreateFormPanel({ communityId, currentUser, onCreated, onCancel }) {
   const [allowMulti, setMulti]  = useState(false);
   const [fields, setFields]     = useState([newFieldDraft(0)]);
   const [saving, setSaving]     = useState(false);
+  const [slots, setSlots]       = useState([]);
 
   const addField    = () => setFields((f) => [...f, newFieldDraft(f.length)]);
   const removeField = (idx) => setFields((f) => f.filter((_, i) => i !== idx));
   const updateField = (idx, patch) => setFields((f) => f.map((x, i) => i === idx ? { ...x, ...patch } : x));
+  const addSlot    = () => setSlots((s) => [...s, { _id: crypto.randomUUID(), label: '', start_time: '', end_time: '', capacity: '1' }]);
+  const removeSlot = (idx) => setSlots((s) => s.filter((_, i) => i !== idx));
+  const updateSlot = (idx, patch) => setSlots((s) => s.map((x, i) => i === idx ? { ...x, ...patch } : x));
 
   const handleCreate = async () => {
     if (!title.trim()) { toast.error('Form title is required'); return; }
@@ -3800,6 +3804,21 @@ function CreateFormPanel({ communityId, currentUser, onCreated, onCancel }) {
         }));
         const { error: fieldErr } = await supabase.from('community_form_fields').insert(fieldRows);
         if (fieldErr) throw fieldErr;
+      }
+      if (formType === 'volunteer' && slots.length > 0) {
+        const slotRows = slots
+          .filter((s) => s.label.trim())
+          .map((s) => ({
+            form_id:    form.id,
+            label:      s.label.trim(),
+            start_time: s.start_time || null,
+            end_time:   s.end_time || null,
+            capacity:   Math.max(1, parseInt(s.capacity, 10) || 1),
+          }));
+        if (slotRows.length > 0) {
+          const { error: slotErr } = await supabase.from('community_volunteer_slots').insert(slotRows);
+          if (slotErr) throw slotErr;
+        }
       }
       toast.success('Form created');
       onCreated?.();
@@ -3898,6 +3917,70 @@ function CreateFormPanel({ communityId, currentUser, onCreated, onCancel }) {
           ))}
         </div>
       </div>
+      {formType === 'volunteer' && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[13px] font-black text-slate-700">Volunteer Slots</p>
+            <button type="button" onClick={addSlot} className="flex items-center gap-1 text-[12px] font-bold text-violet-600 hover:text-violet-700">
+              <FilePlus className="h-3.5 w-3.5" /> Add slot
+            </button>
+          </div>
+          {slots.length === 0 ? (
+            <p className="text-[12px] font-semibold text-slate-400 rounded-xl border border-dashed border-slate-200 px-4 py-3 text-center">
+              No slots yet — add named shifts volunteers can claim.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {slots.map((slot, idx) => (
+                <div key={slot._id} className="rounded-2xl bg-white border border-slate-100 shadow-sm px-4 py-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={slot.label}
+                      onChange={(e) => updateSlot(idx, { label: e.target.value })}
+                      placeholder={`Slot ${idx + 1} label (e.g. "Setup Crew 9am")`}
+                      maxLength={80}
+                      className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold outline-none focus:border-violet-400 focus:bg-white"
+                    />
+                    <button type="button" onClick={() => removeSlot(idx)} className="shrink-0 text-slate-400 hover:text-red-500">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-wide text-slate-400 mb-1">Start</label>
+                      <input
+                        type="datetime-local"
+                        value={slot.start_time}
+                        onChange={(e) => updateSlot(idx, { start_time: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[12px] font-semibold outline-none focus:border-violet-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-wide text-slate-400 mb-1">End</label>
+                      <input
+                        type="datetime-local"
+                        value={slot.end_time}
+                        onChange={(e) => updateSlot(idx, { end_time: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[12px] font-semibold outline-none focus:border-violet-400"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-wide text-slate-400 mb-1">Capacity</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={slot.capacity}
+                      onChange={(e) => updateSlot(idx, { capacity: e.target.value })}
+                      className="w-24 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[12px] font-semibold outline-none focus:border-violet-400"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <button type="button" onClick={handleCreate} disabled={saving}
         className="flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 text-white font-bold text-[14px] disabled:opacity-60 active:scale-[0.98] transition-all">
         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardList className="h-4 w-4" />}
@@ -3915,6 +3998,33 @@ function SubmissionsPanel({ form, fields, onBack, onFormUpdated }) {
       return data ?? [];
     },
   });
+
+  const { data: slotSummary = { slots: [], claimsBySubmitter: {} } } = useQuery({
+    queryKey: ['admin-form-slot-summary', form.id],
+    queryFn: async () => {
+      if (form.form_type !== 'volunteer') return { slots: [], claimsBySubmitter: {} };
+      const { data: slotsData } = await supabase
+        .from('community_volunteer_slots')
+        .select('id, label, capacity, claimed_count')
+        .eq('form_id', form.id)
+        .order('created_at');
+      const sl = slotsData ?? [];
+      if (!sl.length) return { slots: sl, claimsBySubmitter: {} };
+      const { data: claimsData } = await supabase
+        .from('community_volunteer_claims')
+        .select('slot_id, submitter_id')
+        .in('slot_id', sl.map((s) => s.id));
+      const slotLabelById = Object.fromEntries(sl.map((s) => [s.id, s.label]));
+      const claimsBySubmitter = {};
+      for (const c of (claimsData ?? [])) {
+        if (!claimsBySubmitter[c.submitter_id]) claimsBySubmitter[c.submitter_id] = [];
+        claimsBySubmitter[c.submitter_id].push(slotLabelById[c.slot_id] || c.slot_id);
+      }
+      return { slots: sl, claimsBySubmitter };
+    },
+    enabled: form.form_type === 'volunteer',
+  });
+  const { slots: formSlots, claimsBySubmitter } = slotSummary;
 
   const sortedFields = [...fields].sort((a, b) => (a.field_order ?? 0) - (b.field_order ?? 0));
 
@@ -3935,7 +4045,8 @@ function SubmissionsPanel({ form, fields, onBack, onFormUpdated }) {
   };
 
   const exportCSV = () => {
-    const headers = ['Submitter', 'Date', ...sortedFields.map((f) => f.label)];
+    const hasSlots = form.form_type === 'volunteer' && formSlots.length > 0;
+    const headers = ['Submitter', 'Date', ...sortedFields.map((f) => f.label), ...(hasSlots ? ['Claimed Slot(s)'] : [])];
     const rows = submissions.map((s) => [
       s.submitter_name || s.submitter_id,
       new Date(s.submitted_at).toLocaleDateString('en-US'),
@@ -3944,6 +4055,7 @@ function SubmissionsPanel({ form, fields, onBack, onFormUpdated }) {
         if (val === null || val === undefined) return '';
         return typeof val === 'boolean' ? (val ? 'Yes' : 'No') : String(val).replace(/,/g, ';');
       }),
+      ...(hasSlots ? [(claimsBySubmitter[s.submitter_id] || []).join('; ') || 'None'] : []),
     ]);
     const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -3985,6 +4097,19 @@ function SubmissionsPanel({ form, fields, onBack, onFormUpdated }) {
             }`}>{form.status === 'open' ? 'Close' : 'Reopen'}</button>
         </div>
       </div>
+      {form.form_type === 'volunteer' && formSlots.length > 0 && (
+        <div className="rounded-2xl bg-violet-50 border border-violet-100 px-4 py-3 space-y-2">
+          <p className="text-[11px] font-black uppercase tracking-wide text-violet-700">Slot Signups</p>
+          {formSlots.map((slot) => (
+            <div key={slot.id} className="flex items-center justify-between">
+              <span className="text-[13px] font-bold text-slate-800">{slot.label}</span>
+              <span className={`text-[12px] font-semibold ${slot.claimed_count >= slot.capacity ? 'text-red-500' : 'text-emerald-600'}`}>
+                {slot.claimed_count} / {slot.capacity}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
       {isLoading ? (
         <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-blue-600" /></div>
       ) : submissions.length === 0 ? (
@@ -3995,26 +4120,35 @@ function SubmissionsPanel({ form, fields, onBack, onFormUpdated }) {
         </div>
       ) : (
         <div className="space-y-2">
-          {submissions.map((s) => (
-            <div key={s.id} className="rounded-2xl bg-white border border-slate-100 shadow-sm px-4 py-3">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[13px] font-black text-slate-900">{s.submitter_name || 'Member'}</p>
-                <p className="text-[11px] text-slate-400">{new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-              </div>
-              <div className="space-y-1">
-                {sortedFields.map((field) => {
-                  const val = s.answers?.[field.id];
-                  if (val === null || val === undefined || val === '') return null;
-                  return (
-                    <div key={field.id} className="flex gap-2 text-[12px]">
-                      <span className="font-black text-slate-500 shrink-0">{field.label}:</span>
-                      <span className="font-semibold text-slate-800">{typeof val === 'boolean' ? (val ? 'Yes' : 'No') : String(val)}</span>
+          {submissions.map((s) => {
+            const submitterSlots = claimsBySubmitter[s.submitter_id] ?? [];
+            return (
+              <div key={s.id} className="rounded-2xl bg-white border border-slate-100 shadow-sm px-4 py-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[13px] font-black text-slate-900">{s.submitter_name || 'Member'}</p>
+                  <p className="text-[11px] text-slate-400">{new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                </div>
+                <div className="space-y-1">
+                  {submitterSlots.length > 0 && (
+                    <div className="flex gap-2 text-[12px]">
+                      <span className="font-black text-violet-500 shrink-0">Slot:</span>
+                      <span className="font-semibold text-slate-800">{submitterSlots.join(', ')}</span>
                     </div>
-                  );
-                })}
+                  )}
+                  {sortedFields.map((field) => {
+                    const val = s.answers?.[field.id];
+                    if (val === null || val === undefined || val === '') return null;
+                    return (
+                      <div key={field.id} className="flex gap-2 text-[12px]">
+                        <span className="font-black text-slate-500 shrink-0">{field.label}:</span>
+                        <span className="font-semibold text-slate-800">{typeof val === 'boolean' ? (val ? 'Yes' : 'No') : String(val)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
       <button type="button" onClick={deleteForm}
