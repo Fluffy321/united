@@ -8,7 +8,9 @@ import {
   UserMinus, UserCheck, UserPlus, Crown, ShieldCheck, MoreVertical, Clock, TrendingUp,
   AlertCircle, ShieldAlert, Gavel, Activity, Trash2, AlertTriangle,
   Pin, Image, Lock, Globe, Upload, CreditCard, Megaphone, Send,
-  LayoutGrid, ChevronUp, ChevronDown,
+  LayoutGrid, ChevronUp, ChevronDown, Palette, Tag,
+  ClipboardList, FilePlus, Download, ToggleLeft, ToggleRight, Eye, ChevronRight,
+  ShoppingBag, Package,
 } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
 import { dataService } from '@/services';
@@ -26,16 +28,20 @@ const TABS = [
   { key: 'analytics',   label: 'Analytics',   Icon: BarChart2 },
   { key: 'content',     label: 'Content',     Icon: Pin },
   { key: 'members',     label: 'Members',     Icon: Users },
+  { key: 'forms',       label: 'Forms',       Icon: ClipboardList },
+  { key: 'store',       label: 'Store',       Icon: ShoppingBag },
   { key: 'localUpdates', label: 'Updates',    Icon: Activity },
   { key: 'moderation',  label: 'Moderation',  Icon: ShieldAlert },
   { key: 'appeals',     label: 'Appeals',     Icon: Gavel },
   { key: 'layout',      label: 'Layout',      Icon: LayoutGrid },
+  { key: 'branding',    label: 'Branding',    Icon: Palette },
   { key: 'settings',    label: 'Settings',    Icon: Settings },
 ];
 
 const MODULE_CONFIG = [
   { key: 'allow_member_events',   label: 'Events',      description: 'Free includes up to 3 upcoming published events; Premium is unlimited' },
   { key: 'allow_resources',       label: 'Resources',   description: 'Free includes up to 10 resources; Premium is unlimited' },
+  { key: 'allow_forms',           label: 'Forms & Signups', description: 'Create signup sheets, volunteer forms, and surveys for members' },
   { key: 'allow_member_listings', label: 'Marketplace', description: 'Members can post buy/sell listings', premium: true },
   { key: 'allow_group_chat',      label: 'Group Chat',  description: 'Real-time group chat tab', premium: true },
 ];
@@ -304,10 +310,13 @@ export default function CommunityAdminCenter({
         {activeTab === 'analytics'  && <AnalyticsTab  {...tabProps} />}
         {activeTab === 'content'    && <ContentTab    {...tabProps} />}
         {activeTab === 'members'    && <MembersTab    {...tabProps} />}
+        {activeTab === 'forms'      && <AdminFormsTab {...tabProps} />}
+        {activeTab === 'store'      && <StoreAdminTab {...tabProps} />}
         {activeTab === 'localUpdates' && <LocalUpdatesTab {...tabProps} />}
         {activeTab === 'moderation' && <ModerationTab {...tabProps} />}
         {activeTab === 'appeals'    && <AppealsTab    {...tabProps} />}
         {activeTab === 'layout'     && <LayoutTab     {...tabProps} onCommunityUpdated={onCommunityUpdated} />}
+        {activeTab === 'branding'   && <BrandingTab   {...tabProps} onCommunityUpdated={onCommunityUpdated} />}
         {activeTab === 'settings'   && (
           <SettingsTab {...tabProps} onCommunityUpdated={onCommunityUpdated} onClose={onClose} onDeleted={onDeleted} />
         )}
@@ -994,12 +1003,15 @@ function MembersTab({ communityId, community, currentUser }) {
   const [removingMember, setRemoving]     = useState(null);
   const [roleMenuOpen, setRoleMenuOpen]   = useState(null);
   const [showInviteModal, setShowInvite]  = useState(false);
+  // contact title inline edit: memberId → draft title string (null = not editing)
+  const [editingTitle, setEditingTitle]   = useState(null);
+  const [titleDraft, setTitleDraft]       = useState('');
 
   const { data: members = [], isLoading } = useQuery({
     queryKey: ['admin-members', communityId],
     queryFn: async () => {
       const { data } = await supabase.from('community_memberships')
-        .select('id, user_id, role, status, user_name, joined_at, created_at, profile:user_id(id, display_name, avatar_url)')
+        .select('id, user_id, role, status, user_name, joined_at, created_at, contact_title, contact_order, profile:user_id(id, display_name, avatar_url)')
         .eq('community_id', communityId).eq('status', 'active')
         .order('joined_at', { ascending: true });
       return data ?? [];
@@ -1023,6 +1035,25 @@ function MembersTab({ communityId, community, currentUser }) {
       setRoleMenuOpen(null);
     },
     onError: (err) => toast.error(err.message || 'Could not update role'),
+  });
+
+  const contactTitleMutation = useMutation({
+    mutationFn: async ({ userId, title }) => {
+      const { error } = await supabase.rpc('set_member_contact_title', {
+        p_community_id: communityId,
+        p_user_id: userId,
+        p_title: title || null,
+        p_order: 0,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_, { title }) => {
+      toast.success(title ? `Contact title set to "${title}"` : 'Contact title removed');
+      queryClient.invalidateQueries({ queryKey: ['admin-members', communityId] });
+      queryClient.invalidateQueries({ queryKey: ['community-members', communityId] });
+      setEditingTitle(null);
+    },
+    onError: (err) => toast.error(err.message || 'Could not save contact title'),
   });
 
   const filtered = useMemo(() => {
@@ -1084,62 +1115,132 @@ function MembersTab({ communityId, community, currentUser }) {
             const self  = isSelf(m);
             const canAct = !owner && !self;
 
+            const isEditingTitle = editingTitle === m.id;
+
             return (
-              <div key={m.id} className="rounded-2xl bg-white border border-slate-100 px-4 py-3 shadow-sm flex items-center gap-3">
-                <Avatar name={name} size={38} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-[14px] font-bold text-slate-900 truncate">{name}</p>
-                    {owner && <Crown className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />}
-                    {self && <span className="text-[11px] text-slate-400">(you)</span>}
+              <div key={m.id} className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 flex items-center gap-3">
+                  <Avatar name={name} size={38} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-[14px] font-bold text-slate-900 truncate">{name}</p>
+                      {owner && <Crown className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />}
+                      {self && <span className="text-[11px] text-slate-400">(you)</span>}
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <RoleBadge role={role} />
+                      {m.contact_title && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-violet-800">
+                          <Tag className="h-2.5 w-2.5" />
+                          {m.contact_title}
+                        </span>
+                      )}
+                      <span className="text-[11px] text-slate-400">
+                        Joined {fmtDate(m.joined_at || m.created_at)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <RoleBadge role={role} />
-                    <span className="text-[11px] text-slate-400">
-                      Joined {fmtDate(m.joined_at || m.created_at)}
-                    </span>
-                  </div>
+
+                  {canAct && (
+                    <div className="relative flex-shrink-0" data-role-menu>
+                      <button
+                        type="button"
+                        onClick={() => setRoleMenuOpen(roleMenuOpen === m.id ? null : m.id)}
+                        className="h-8 w-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100"
+                        aria-label="Member actions"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+
+                      {roleMenuOpen === m.id && (
+                        <div className="absolute right-0 top-9 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl w-52 py-1.5 overflow-hidden">
+                          {[
+                            { label: 'Promote to Admin',     role: 'admin',     disabled: role === 'admin', Icon: ShieldCheck },
+                            { label: 'Promote to Moderator', role: 'moderator', disabled: role === 'moderator', Icon: Shield },
+                            { label: 'Demote to Member',     role: 'member',    disabled: role === 'member', Icon: UserCheck },
+                          ].map(action => (
+                            <button
+                              key={action.role}
+                              type="button"
+                              disabled={action.disabled || roleChangeMutation.isPending}
+                              onClick={() => roleChangeMutation.mutate({ userId: m.user_id, newRole: action.role })}
+                              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              <action.Icon className="h-4 w-4 text-slate-400" />
+                              {action.label}
+                            </button>
+                          ))}
+                          <div className="mx-3 my-1 h-px bg-slate-100" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRoleMenuOpen(null);
+                              setEditingTitle(m.id);
+                              setTitleDraft(m.contact_title ?? '');
+                            }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-50"
+                          >
+                            <Tag className="h-4 w-4 text-slate-400" />
+                            {m.contact_title ? 'Edit contact title' : 'Set contact title'}
+                          </button>
+                          <div className="mx-3 my-1 h-px bg-slate-100" />
+                          <button
+                            type="button"
+                            onClick={() => { setRoleMenuOpen(null); setRemoving(m); }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-red-600 hover:bg-red-50"
+                          >
+                            <UserMinus className="h-4 w-4" />
+                            Remove from community
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {canAct && (
-                  <div className="relative flex-shrink-0" data-role-menu>
-                    <button
-                      type="button"
-                      onClick={() => setRoleMenuOpen(roleMenuOpen === m.id ? null : m.id)}
-                      className="h-8 w-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100"
-                      aria-label="Member actions"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </button>
-
-                    {roleMenuOpen === m.id && (
-                      <div className="absolute right-0 top-9 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl w-52 py-1.5 overflow-hidden">
-                        {[
-                          { label: 'Promote to Admin',     role: 'admin',     disabled: role === 'admin', Icon: ShieldCheck },
-                          { label: 'Promote to Moderator', role: 'moderator', disabled: role === 'moderator', Icon: Shield },
-                          { label: 'Demote to Member',     role: 'member',    disabled: role === 'member', Icon: UserCheck },
-                        ].map(action => (
-                          <button
-                            key={action.role}
-                            type="button"
-                            disabled={action.disabled || roleChangeMutation.isPending}
-                            onClick={() => roleChangeMutation.mutate({ userId: m.user_id, newRole: action.role })}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                          >
-                            <action.Icon className="h-4 w-4 text-slate-400" />
-                            {action.label}
-                          </button>
-                        ))}
-                        <div className="mx-3 my-1 h-px bg-slate-100" />
-                        <button
-                          type="button"
-                          onClick={() => { setRoleMenuOpen(null); setRemoving(m); }}
-                          className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-red-600 hover:bg-red-50"
-                        >
-                          <UserMinus className="h-4 w-4" />
-                          Remove from community
-                        </button>
-                      </div>
+                {/* Inline contact title editor */}
+                {isEditingTitle && (
+                  <div className="border-t border-slate-100 bg-slate-50 px-4 py-3">
+                    <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-500">
+                      Contact title (e.g. Rabbi, President, Volunteer Coordinator)
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        autoFocus
+                        value={titleDraft}
+                        onChange={(e) => setTitleDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') contactTitleMutation.mutate({ userId: m.user_id, title: titleDraft.trim() });
+                          if (e.key === 'Escape') setEditingTitle(null);
+                        }}
+                        placeholder="Enter title or leave blank to clear"
+                        maxLength={60}
+                        className="flex-1 h-9 rounded-xl border border-slate-200 bg-white px-3 text-[13px] outline-none focus:border-blue-400"
+                      />
+                      <button
+                        type="button"
+                        disabled={contactTitleMutation.isPending}
+                        onClick={() => contactTitleMutation.mutate({ userId: m.user_id, title: titleDraft.trim() })}
+                        className="h-9 px-3 rounded-xl bg-slate-950 text-white text-[12px] font-bold disabled:opacity-50"
+                      >
+                        {contactTitleMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingTitle(null)}
+                        className="h-9 w-9 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-100"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    {m.contact_title && (
+                      <button
+                        type="button"
+                        onClick={() => contactTitleMutation.mutate({ userId: m.user_id, title: '' })}
+                        className="mt-2 text-[11px] font-semibold text-red-600 hover:underline"
+                      >
+                        Remove title
+                      </button>
                     )}
                   </div>
                 )}
@@ -2202,6 +2303,207 @@ function LayoutTab({ community, communityId, onCommunityUpdated }) {
   );
 }
 
+// ─── Branding constants ───────────────────────────────────────────────────────
+
+const ACCENT_COLORS = [
+  { key: 'blue',    value: '#2563EB', label: 'Blue' },
+  { key: 'violet',  value: '#7C3AED', label: 'Violet' },
+  { key: 'emerald', value: '#059669', label: 'Emerald' },
+  { key: 'rose',    value: '#E11D48', label: 'Rose' },
+  { key: 'amber',   value: '#D97706', label: 'Amber' },
+  { key: 'teal',    value: '#0D9488', label: 'Teal' },
+  { key: 'indigo',  value: '#4F46E5', label: 'Indigo' },
+  { key: 'slate',   value: '#475569', label: 'Slate' },
+];
+
+const COVER_STYLES = [
+  { key: 'default',  label: 'Default',  gradient: null },
+  { key: 'midnight', label: 'Midnight', gradient: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)' },
+  { key: 'sunrise',  label: 'Sunrise',  gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)' },
+  { key: 'forest',   label: 'Forest',   gradient: 'linear-gradient(135deg, #065f46 0%, #34d399 100%)' },
+  { key: 'twilight', label: 'Twilight', gradient: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #db2777 100%)' },
+];
+
+// ─── Branding tab ─────────────────────────────────────────────────────────────
+
+function BrandingTab({ community, communityId, onCommunityUpdated, onNavigateTo }) {
+  const isPremium = isCommunityPremium(community);
+  const typeConfig = getCommunityTypeConfig(community || {});
+  const TypeIcon = typeConfig.icon;
+
+  const existingBranding = (community?.settings && typeof community.settings === 'object')
+    ? (community.settings.branding || {})
+    : {};
+
+  const [localBranding, setLocalBranding] = useState(() => ({
+    accentColor: existingBranding.accentColor || '',
+    coverStyle: existingBranding.coverStyle || 'default',
+  }));
+  const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+  const update = (patch) => {
+    setLocalBranding((prev) => ({ ...prev, ...patch }));
+    setDirty(true);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const newSettings = { ...(community?.settings || {}), branding: localBranding };
+      const { data, error } = await supabase
+        .from('communities')
+        .update({ settings: newSettings })
+        .eq('id', communityId)
+        .select()
+        .single();
+      if (error) throw error;
+      onCommunityUpdated?.(data);
+      setDirty(false);
+      toast.success('Branding saved');
+    } catch {
+      toast.error('Could not save branding');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const previewCoverStyleObj = COVER_STYLES.find((s) => s.key === localBranding.coverStyle) || COVER_STYLES[0];
+  const previewGradient = localBranding.accentColor
+    ? `linear-gradient(135deg, ${localBranding.accentColor}CC 0%, ${localBranding.accentColor}88 100%)`
+    : (previewCoverStyleObj.gradient || typeConfig.coverPattern);
+
+  return (
+    <div className="pb-28">
+      <div className="px-4 pt-5 pb-3">
+        <h2 className="text-[17px] font-black text-slate-950">Community Branding</h2>
+        <p className="text-[13px] font-semibold text-slate-500 mt-0.5 leading-5">
+          Customise how your community looks across JUnited.
+        </p>
+        {!isPremium && (
+          <div className="mt-3 flex items-start gap-2 rounded-2xl bg-amber-50 border border-amber-200 px-3 py-2.5">
+            <Crown className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="text-[12px] font-bold text-amber-800 leading-5">
+              Branding customisation requires Community Premium. Preview changes below, then upgrade to save.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Live preview */}
+      <section className="px-4 pb-5">
+        <p className="text-[11px] font-black uppercase tracking-wide text-slate-500 mb-3">Preview</p>
+        <div className="overflow-hidden rounded-[16px] border border-slate-200 bg-white shadow-sm">
+          <div className="relative h-[56px]" style={{ background: previewGradient }}>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+            <div className="absolute bottom-2 left-2.5">
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black backdrop-blur-sm ${typeConfig.badgeClass} bg-white/80`}>
+                <TypeIcon className="h-2.5 w-2.5" />
+                {typeConfig.label}
+              </span>
+            </div>
+          </div>
+          <div className="px-3 py-2.5 flex items-center justify-between gap-2">
+            <div>
+              <p className="text-[13px] font-black text-slate-950 truncate">{community?.name || 'Your Community'}</p>
+              <p className="text-[11px] font-semibold text-slate-400">Preview of Discover card</p>
+            </div>
+            <button
+              type="button"
+              className="shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold text-white"
+              style={{ background: localBranding.accentColor || '#2563EB' }}
+            >
+              Join
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Accent colour palette */}
+      <section className="px-4 pb-5">
+        <p className="text-[11px] font-black uppercase tracking-wide text-slate-500 mb-3">Accent colour</p>
+        <div className="flex flex-wrap gap-2.5 mb-2">
+          <button
+            type="button"
+            onClick={() => update({ accentColor: '' })}
+            title="Default (type colour)"
+            className={`h-9 w-9 rounded-full border-2 transition-all flex items-center justify-center ${
+              !localBranding.accentColor ? 'border-slate-950 scale-110' : 'border-slate-200 hover:border-slate-400'
+            }`}
+            style={{ background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)' }}
+          >
+            {!localBranding.accentColor && <span className="h-1.5 w-1.5 rounded-full bg-slate-600" />}
+          </button>
+          {ACCENT_COLORS.map(({ key, value, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => update({ accentColor: value })}
+              title={label}
+              className={`h-9 w-9 rounded-full border-2 transition-all ${
+                localBranding.accentColor === value ? 'border-slate-950 scale-110' : 'border-transparent hover:scale-105'
+              }`}
+              style={{ background: value }}
+            />
+          ))}
+        </div>
+        <p className="text-[11px] font-semibold text-slate-400">
+          Drives the cover gradient and join button colour. Select default to use your community type's colour.
+        </p>
+      </section>
+
+      {/* Cover style */}
+      <section className="px-4 pb-5">
+        <p className="text-[11px] font-black uppercase tracking-wide text-slate-500 mb-1">Cover style</p>
+        <p className="text-[11px] font-semibold text-slate-400 mb-3">
+          Applied when no cover photo is set. Overridden by an accent colour above.
+        </p>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+          {COVER_STYLES.map((style) => (
+            <button
+              key={style.key}
+              type="button"
+              onClick={() => update({ coverStyle: style.key })}
+              className={`overflow-hidden rounded-xl border-2 transition-all active:scale-[0.97] ${
+                localBranding.coverStyle === style.key
+                  ? 'border-slate-950 shadow-md'
+                  : 'border-slate-200 hover:border-slate-400'
+              }`}
+            >
+              <div className="h-10 w-full" style={{ background: style.gradient || typeConfig.coverPattern }} />
+              <p className="py-1 bg-white text-center text-[10px] font-black text-slate-600">{style.label}</p>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Save / upgrade footer */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-100 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+        {isPremium ? (
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || !dirty}
+            className="w-full h-12 rounded-2xl bg-[#2563EB] text-white font-black text-[15px] flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-all"
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {saving ? 'Saving…' : dirty ? 'Save Branding' : 'Branding Saved'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onNavigateTo?.('billing')}
+            className="w-full h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white font-black text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+          >
+            <Crown className="h-4 w-4" />
+            Upgrade to Community Premium
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Settings tab (sub-nav: Profile | Appearance | Modules | Permissions) ─────
 
 function SettingsTab({ communityId, community, currentUser, onCommunityUpdated, onClose, onDeleted }) {
@@ -2524,6 +2826,7 @@ function ModulesSection({ communityId, community, onCommunityUpdated }) {
   const [flags, setFlags] = useState({
     allow_member_events:   Boolean(community?.allow_member_events),
     allow_resources:       Boolean(community?.allow_resources),
+    allow_forms:           Boolean(community?.allow_forms),
     allow_member_listings: Boolean(community?.allow_member_listings),
     allow_group_chat:      Boolean(community?.allow_group_chat),
   });
@@ -3422,5 +3725,772 @@ export function AppealSubmitModal({ removal, communityName, onClose, onSubmitted
       </div>
     </div>,
     document.body
+  );
+}
+
+// ─── Admin Forms tab ──────────────────────────────────────────────────────────
+
+const FIELD_TYPES = [
+  { value: 'short_text', label: 'Short text' },
+  { value: 'long_text',  label: 'Paragraph' },
+  { value: 'select',     label: 'Dropdown' },
+  { value: 'checkbox',   label: 'Checkbox (Yes/No)' },
+  { value: 'date',       label: 'Date' },
+  { value: 'phone',      label: 'Phone' },
+  { value: 'email',      label: 'Email' },
+  { value: 'number',     label: 'Number' },
+];
+
+const FORM_TYPES = [
+  { value: 'general',   label: 'General form' },
+  { value: 'signup',    label: 'Signup sheet' },
+  { value: 'volunteer', label: 'Volunteer coordination' },
+];
+
+function newFieldDraft(order) {
+  return { _id: crypto.randomUUID(), label: '', field_type: 'short_text', required: false, options: '', placeholder: '', field_order: order };
+}
+
+function CreateFormPanel({ communityId, currentUser, onCreated, onCancel }) {
+  const [title, setTitle]       = useState('');
+  const [description, setDesc]  = useState('');
+  const [formType, setFormType] = useState('general');
+  const [dueDate, setDueDate]   = useState('');
+  const [maxSubs, setMaxSubs]   = useState('');
+  const [allowMulti, setMulti]  = useState(false);
+  const [fields, setFields]     = useState([newFieldDraft(0)]);
+  const [saving, setSaving]     = useState(false);
+
+  const addField    = () => setFields((f) => [...f, newFieldDraft(f.length)]);
+  const removeField = (idx) => setFields((f) => f.filter((_, i) => i !== idx));
+  const updateField = (idx, patch) => setFields((f) => f.map((x, i) => i === idx ? { ...x, ...patch } : x));
+
+  const handleCreate = async () => {
+    if (!title.trim()) { toast.error('Form title is required'); return; }
+    if (fields.some((f) => !f.label.trim())) { toast.error('All field labels are required'); return; }
+    setSaving(true);
+    try {
+      const { data: form, error: formErr } = await supabase
+        .from('community_forms')
+        .insert({
+          community_id:    communityId,
+          created_by:      currentUser.id,
+          title:           title.trim(),
+          description:     description.trim() || null,
+          form_type:       formType,
+          status:          'open',
+          allow_multiple:  allowMulti,
+          max_submissions: maxSubs ? parseInt(maxSubs, 10) : null,
+          due_date:        dueDate || null,
+        })
+        .select('id')
+        .single();
+      if (formErr) throw formErr;
+      if (fields.length) {
+        const fieldRows = fields.map((f, i) => ({
+          form_id:     form.id,
+          label:       f.label.trim(),
+          field_type:  f.field_type,
+          required:    f.required,
+          placeholder: f.placeholder.trim() || null,
+          field_order: i,
+          options: f.field_type === 'select'
+            ? f.options.split(',').map((o) => o.trim()).filter(Boolean)
+            : null,
+        }));
+        const { error: fieldErr } = await supabase.from('community_form_fields').insert(fieldRows);
+        if (fieldErr) throw fieldErr;
+      }
+      toast.success('Form created');
+      onCreated?.();
+    } catch (err) {
+      toast.error(err.message || 'Could not create form');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-5 space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-[16px] font-black text-slate-900">New form</h2>
+        <button type="button" onClick={onCancel} className="text-[13px] font-semibold text-slate-500 hover:text-slate-700">Cancel</button>
+      </div>
+      <div className="rounded-2xl bg-white border border-slate-100 shadow-sm divide-y divide-slate-50">
+        <div className="px-4 py-3">
+          <label className="block text-[11px] font-black uppercase tracking-wide text-slate-500 mb-1.5">Title *</label>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Shabbaton Signup" maxLength={100}
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-400 focus:bg-white" />
+        </div>
+        <div className="px-4 py-3">
+          <label className="block text-[11px] font-black uppercase tracking-wide text-slate-500 mb-1.5">Description</label>
+          <textarea value={description} onChange={(e) => setDesc(e.target.value)} rows={2} placeholder="What is this form for?"
+            className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-400 focus:bg-white" />
+        </div>
+        <div className="grid grid-cols-2 divide-x divide-slate-50">
+          <div className="px-4 py-3">
+            <label className="block text-[11px] font-black uppercase tracking-wide text-slate-500 mb-1.5">Type</label>
+            <select value={formType} onChange={(e) => setFormType(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-400">
+              {FORM_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+          <div className="px-4 py-3">
+            <label className="block text-[11px] font-black uppercase tracking-wide text-slate-500 mb-1.5">Due date</label>
+            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-400" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 divide-x divide-slate-50">
+          <div className="px-4 py-3">
+            <label className="block text-[11px] font-black uppercase tracking-wide text-slate-500 mb-1.5">Max submissions</label>
+            <input type="number" min="1" value={maxSubs} onChange={(e) => setMaxSubs(e.target.value)} placeholder="Unlimited"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-400" />
+          </div>
+          <div className="px-4 py-3 flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Allow re-submit</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">Multiple per member</p>
+            </div>
+            <button type="button" onClick={() => setMulti((v) => !v)}>
+              {allowMulti ? <ToggleRight className="h-6 w-6 text-blue-600" /> : <ToggleLeft className="h-6 w-6 text-slate-300" />}
+            </button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[13px] font-black text-slate-700">Fields</p>
+          <button type="button" onClick={addField} className="flex items-center gap-1 text-[12px] font-bold text-blue-600 hover:text-blue-700">
+            <FilePlus className="h-3.5 w-3.5" /> Add field
+          </button>
+        </div>
+        <div className="space-y-3">
+          {fields.map((field, idx) => (
+            <div key={field._id} className="rounded-2xl bg-white border border-slate-100 shadow-sm px-4 py-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <input value={field.label} onChange={(e) => updateField(idx, { label: e.target.value })}
+                  placeholder={`Field ${idx + 1} label`} maxLength={80}
+                  className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-400 focus:bg-white" />
+                {fields.length > 1 && (
+                  <button type="button" onClick={() => removeField(idx)} className="shrink-0 text-slate-400 hover:text-red-500">
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <select value={field.field_type} onChange={(e) => updateField(idx, { field_type: e.target.value })}
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[12px] font-semibold outline-none focus:border-blue-400">
+                  {FIELD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+                <label className="flex items-center gap-1 cursor-pointer select-none text-[12px] font-semibold text-slate-600">
+                  <input type="checkbox" checked={field.required} onChange={(e) => updateField(idx, { required: e.target.checked })}
+                    className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600" />
+                  Required
+                </label>
+              </div>
+              {field.field_type === 'select' && (
+                <input value={field.options} onChange={(e) => updateField(idx, { options: e.target.value })}
+                  placeholder="Option 1, Option 2, Option 3 (comma-separated)"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] font-semibold outline-none focus:border-blue-400 focus:bg-white" />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+      <button type="button" onClick={handleCreate} disabled={saving}
+        className="flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 text-white font-bold text-[14px] disabled:opacity-60 active:scale-[0.98] transition-all">
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardList className="h-4 w-4" />}
+        {saving ? 'Creating…' : 'Create form'}
+      </button>
+    </div>
+  );
+}
+
+function SubmissionsPanel({ form, fields, onBack, onFormUpdated }) {
+  const { data: submissions = [], isLoading } = useQuery({
+    queryKey: ['admin-form-submissions', form.id],
+    queryFn: async () => {
+      const { data } = await supabase.from('community_form_submissions').select('*').eq('form_id', form.id).order('submitted_at', { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const sortedFields = [...fields].sort((a, b) => (a.field_order ?? 0) - (b.field_order ?? 0));
+
+  const toggleStatus = async () => {
+    const next = form.status === 'open' ? 'closed' : 'open';
+    const { error } = await supabase.from('community_forms').update({ status: next, updated_at: new Date().toISOString() }).eq('id', form.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(next === 'open' ? 'Form reopened' : 'Form closed');
+    onFormUpdated?.();
+  };
+
+  const deleteForm = async () => {
+    if (!window.confirm('Delete this form and all its submissions? This cannot be undone.')) return;
+    const { error } = await supabase.from('community_forms').delete().eq('id', form.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Form deleted');
+    onBack?.();
+  };
+
+  const exportCSV = () => {
+    const headers = ['Submitter', 'Date', ...sortedFields.map((f) => f.label)];
+    const rows = submissions.map((s) => [
+      s.submitter_name || s.submitter_id,
+      new Date(s.submitted_at).toLocaleDateString('en-US'),
+      ...sortedFields.map((f) => {
+        const val = s.answers?.[f.id];
+        if (val === null || val === undefined) return '';
+        return typeof val === 'boolean' ? (val ? 'Yes' : 'No') : String(val).replace(/,/g, ';');
+      }),
+    ]);
+    const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${form.title.replace(/[^a-z0-9]/gi, '-')}-submissions.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={onBack} className="text-[13px] font-semibold text-blue-600 hover:text-blue-700">← Back</button>
+        <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+        <p className="text-[13px] font-black text-slate-900 truncate">{form.title}</p>
+      </div>
+      <div className="rounded-2xl bg-white border border-slate-100 shadow-sm px-4 py-3 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[14px] font-black text-slate-900 truncate">{form.title}</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${
+              form.status === 'open' ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-100 text-slate-500'
+            }`}>{form.status}</span>
+            <span className="text-[11px] text-slate-400">{submissions.length} submission{submissions.length !== 1 ? 's' : ''}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {submissions.length > 0 && (
+            <button type="button" onClick={exportCSV}
+              className="flex items-center gap-1 rounded-xl bg-blue-50 border border-blue-100 px-3 py-1.5 text-[12px] font-bold text-blue-700 hover:bg-blue-100">
+              <Download className="h-3.5 w-3.5" /> CSV
+            </button>
+          )}
+          <button type="button" onClick={toggleStatus}
+            className={`rounded-xl border px-3 py-1.5 text-[12px] font-bold ${
+              form.status === 'open' ? 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' : 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-100'
+            }`}>{form.status === 'open' ? 'Close' : 'Reopen'}</button>
+        </div>
+      </div>
+      {isLoading ? (
+        <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-blue-600" /></div>
+      ) : submissions.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-8 text-center">
+          <Eye className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+          <p className="text-[13px] font-black text-slate-700">No submissions yet</p>
+          <p className="text-[12px] font-semibold text-slate-400 mt-0.5">Responses will appear here as members submit.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {submissions.map((s) => (
+            <div key={s.id} className="rounded-2xl bg-white border border-slate-100 shadow-sm px-4 py-3">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[13px] font-black text-slate-900">{s.submitter_name || 'Member'}</p>
+                <p className="text-[11px] text-slate-400">{new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+              </div>
+              <div className="space-y-1">
+                {sortedFields.map((field) => {
+                  const val = s.answers?.[field.id];
+                  if (val === null || val === undefined || val === '') return null;
+                  return (
+                    <div key={field.id} className="flex gap-2 text-[12px]">
+                      <span className="font-black text-slate-500 shrink-0">{field.label}:</span>
+                      <span className="font-semibold text-slate-800">{typeof val === 'boolean' ? (val ? 'Yes' : 'No') : String(val)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <button type="button" onClick={deleteForm}
+        className="flex items-center gap-1.5 text-[12px] font-semibold text-red-500 hover:text-red-600 hover:underline">
+        <Trash2 className="h-3.5 w-3.5" /> Delete this form
+      </button>
+    </div>
+  );
+}
+
+function AdminFormsTab({ communityId, community, currentUser }) {
+  const [view, setView] = useState(null);
+
+  const { data: forms = [], isLoading, refetch } = useQuery({
+    queryKey: ['admin-forms', communityId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('community_forms')
+        .select('*, community_form_fields(*)')
+        .eq('community_id', communityId)
+        .order('created_at', { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  if (!community?.allow_forms) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-10 text-center">
+        <ClipboardList className="mx-auto h-10 w-10 text-slate-300 mb-3" />
+        <p className="text-[15px] font-black text-slate-700">Forms & Signups is not enabled</p>
+        <p className="mt-1 text-[13px] font-semibold text-slate-400 leading-5 max-w-xs mx-auto">
+          Enable the Forms module in Settings → Modules to start creating forms.
+        </p>
+      </div>
+    );
+  }
+
+  if (view === 'new') {
+    return (
+      <CreateFormPanel
+        communityId={communityId}
+        currentUser={currentUser}
+        onCreated={() => { refetch(); setView(null); }}
+        onCancel={() => setView(null)}
+      />
+    );
+  }
+
+  if (view && view !== 'new') {
+    return (
+      <SubmissionsPanel
+        form={view.form}
+        fields={view.fields}
+        onBack={() => setView(null)}
+        onFormUpdated={() => { refetch(); setView(null); }}
+      />
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
+      <button type="button" onClick={() => setView('new')}
+        className="flex w-full items-center justify-center gap-2 h-10 rounded-2xl bg-slate-950 text-white font-bold text-[13px] active:scale-95 transition-all hover:bg-slate-800">
+        <FilePlus className="h-4 w-4" /> New form
+      </button>
+      {isLoading ? (
+        <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-blue-600" /></div>
+      ) : forms.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-10 text-center">
+          <ClipboardList className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+          <p className="text-[13px] font-black text-slate-700">No forms yet</p>
+          <p className="text-[12px] font-semibold text-slate-400 mt-0.5">Create your first signup sheet, survey, or volunteer form.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {forms.map((form) => {
+            const fields = form.community_form_fields ?? [];
+            return (
+              <button key={form.id} type="button" onClick={() => setView({ form, fields })}
+                className="w-full text-left rounded-2xl bg-white border border-slate-100 shadow-sm px-4 py-3 hover:bg-slate-50 active:scale-[0.99] transition-all">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-black text-slate-900 truncate">{form.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${
+                        form.status === 'open' ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-100 text-slate-500'
+                      }`}>{form.status}</span>
+                      <span className="text-[11px] text-slate-400">{fields.length} field{fields.length !== 1 ? 's' : ''}</span>
+                      {form.due_date && (
+                        <span className="text-[11px] text-slate-400">
+                          Due {new Date(form.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-slate-300 shrink-0 mt-1" />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Store Admin Tab ───────────────────────────────────────────────────────────
+
+async function uploadListingImageAdmin(file) {
+  const ext = file.name.split('.').pop();
+  const path = `listing-images/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await supabase.storage.from('community-images').upload(path, file, { upsert: false });
+  if (error) throw error;
+  const { data } = supabase.storage.from('community-images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+const STORE_TYPE_CONFIG = {
+  subscription: { label: 'Subscription', color: 'bg-violet-100 text-violet-700' },
+  product:      { label: 'Product',      color: 'bg-blue-100 text-blue-700'   },
+  service:      { label: 'Service',      color: 'bg-teal-100 text-teal-700'   },
+};
+
+function StoreListingForm({ communityId, currentUser, listing, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    type:           listing?.type           || 'product',
+    title:          listing?.title          || '',
+    description:    listing?.description    || '',
+    price:          listing?.price != null  ? String(listing.price) : '',
+    billing_period: listing?.billing_period || 'one_time',
+    perks:          listing?.perks?.join('\n') || '',
+    image_url:      listing?.image_url      || '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const isEdit = !!listing?.id;
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadListingImageAdmin(file);
+      setForm(f => ({ ...f, image_url: url }));
+    } catch { toast.error('Upload failed'); }
+    setUploading(false);
+  };
+
+  const handleSave = async () => {
+    if (!form.title.trim()) { toast.error('Title is required'); return; }
+    setSaving(true);
+    const payload = {
+      community_id:   communityId,
+      type:           form.type,
+      title:          form.title.trim(),
+      description:    form.description.trim(),
+      price:          form.price ? parseFloat(form.price) : null,
+      billing_period: form.billing_period,
+      perks:          form.perks ? form.perks.split('\n').map(p => p.trim()).filter(Boolean) : [],
+      image_url:      form.image_url || null,
+      is_active:      true,
+      seller_id:      currentUser?.id,
+      seller_name:    currentUser?.full_name,
+    };
+    try {
+      let saved;
+      if (isEdit) {
+        const { data, error } = await supabase
+          .from('community_listings')
+          .update(payload)
+          .eq('id', listing.id)
+          .select()
+          .single();
+        if (error) throw error;
+        saved = data;
+      } else {
+        const { data, error } = await supabase
+          .from('community_listings')
+          .insert(payload)
+          .select()
+          .single();
+        if (error) throw error;
+        saved = data;
+      }
+      toast.success(isEdit ? 'Listing updated!' : 'Listing created!');
+      onSaved(saved);
+    } catch (err) { toast.error(err.message || 'Failed to save listing'); }
+    setSaving(false);
+  };
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[13px] font-black text-slate-800">{isEdit ? 'Edit Listing' : 'New Listing'}</p>
+        <button onClick={onClose}><X className="w-4 h-4 text-slate-400" /></button>
+      </div>
+
+      {/* Type */}
+      <div className="flex gap-2">
+        {Object.entries(STORE_TYPE_CONFIG).map(([key, cfg]) => (
+          <button
+            key={key}
+            onClick={() => setForm(f => ({ ...f, type: key }))}
+            className={`flex-1 py-2 rounded-xl border text-[11px] font-bold transition-all ${
+              form.type === key ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-500'
+            }`}
+          >
+            {cfg.label}
+          </button>
+        ))}
+      </div>
+
+      <input
+        value={form.title}
+        onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+        placeholder="Title *"
+        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-[13px] outline-none focus:border-blue-400 bg-white"
+      />
+
+      <textarea
+        value={form.description}
+        onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+        rows={2}
+        placeholder="Description (optional)"
+        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-[12px] outline-none focus:border-blue-400 resize-none bg-white"
+      />
+
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+          <input
+            type="number" min="0" step="0.01"
+            value={form.price}
+            onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
+            placeholder="Price"
+            className="w-full pl-7 pr-2 py-2 border border-slate-200 rounded-xl text-[13px] outline-none focus:border-blue-400 bg-white"
+          />
+        </div>
+        <select
+          value={form.billing_period}
+          onChange={e => setForm(f => ({ ...f, billing_period: e.target.value }))}
+          className="flex-1 border border-slate-200 rounded-xl px-2 py-2 text-[12px] outline-none focus:border-blue-400 bg-white"
+        >
+          <option value="one_time">One-time</option>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </div>
+
+      {(form.type === 'subscription' || form.type === 'service') && (
+        <textarea
+          value={form.perks}
+          onChange={e => setForm(f => ({ ...f, perks: e.target.value }))}
+          rows={2}
+          placeholder="Perks (one per line)"
+          className="w-full border border-slate-200 rounded-xl px-3 py-2 text-[12px] outline-none focus:border-blue-400 resize-none bg-white"
+        />
+      )}
+
+      <div>
+        {form.image_url ? (
+          <div className="relative">
+            <img src={form.image_url} alt="" className="w-full h-20 object-cover rounded-xl" />
+            <button
+              onClick={() => setForm(f => ({ ...f, image_url: '' }))}
+              className="absolute top-1 right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow"
+            >
+              <X className="w-3 h-3 text-slate-500" />
+            </button>
+          </div>
+        ) : (
+          <label className="flex items-center justify-center gap-2 border-2 border-dashed border-slate-200 rounded-xl h-12 cursor-pointer hover:border-blue-300 transition-colors bg-white">
+            {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" /> : <Image className="w-3.5 h-3.5 text-slate-400" />}
+            <span className="text-[11px] text-slate-400">{uploading ? 'Uploading…' : 'Add image'}</span>
+            <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+          </label>
+        )}
+      </div>
+
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="w-full py-2.5 rounded-xl font-bold text-white text-[13px] bg-slate-950 disabled:opacity-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+      >
+        {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+        {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Listing'}
+      </button>
+    </div>
+  );
+}
+
+function StoreAdminTab({ community, communityId, currentUser }) {
+  const qc = useQueryClient();
+  const [showCreate, setShowCreate] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+
+  const { data: listings = [], isLoading } = useQuery({
+    queryKey: ['admin-community-listings', communityId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('community_listings')
+        .select('*')
+        .eq('community_id', communityId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!communityId,
+  });
+
+  const toggleActive = async (listing) => {
+    const { error } = await supabase
+      .from('community_listings')
+      .update({ is_active: !listing.is_active, status: listing.is_active ? 'removed' : 'available' })
+      .eq('id', listing.id);
+    if (error) { toast.error('Could not update listing'); return; }
+    qc.setQueryData(['admin-community-listings', communityId], prev =>
+      (prev || []).map(l => l.id === listing.id ? { ...l, is_active: !l.is_active } : l)
+    );
+    qc.invalidateQueries({ queryKey: ['community-listings', communityId] });
+    toast.success(listing.is_active ? 'Listing hidden' : 'Listing made active');
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Permanently delete this listing?')) return;
+    const { error } = await supabase.from('community_listings').delete().eq('id', id);
+    if (error) { toast.error('Could not delete listing'); return; }
+    qc.setQueryData(['admin-community-listings', communityId], prev => (prev || []).filter(l => l.id !== id));
+    qc.invalidateQueries({ queryKey: ['community-listings', communityId] });
+    toast.success('Listing deleted');
+  };
+
+  const handleSaved = (saved) => {
+    qc.setQueryData(['admin-community-listings', communityId], prev =>
+      prev?.find(l => l.id === saved.id)
+        ? prev.map(l => l.id === saved.id ? saved : l)
+        : [saved, ...(prev || [])]
+    );
+    qc.invalidateQueries({ queryKey: ['community-listings', communityId] });
+    setShowCreate(false);
+    setEditingId(null);
+  };
+
+  const enabled = Boolean(community?.allow_member_listings);
+
+  return (
+    <div className="space-y-4 pb-8">
+      {/* Module status notice */}
+      {!enabled && (
+        <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-[12px] font-semibold text-amber-800">
+          The <strong>Marketplace</strong> module is currently off. Enable it in Settings → Modules for members to see the Store tab.
+        </div>
+      )}
+
+      {/* Checkout coming soon notice */}
+      <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-[12px] font-semibold text-slate-600">
+        <strong>Checkout coming soon.</strong> Listing management is live. Payment processing via Stripe Connect will be enabled once the platform payment foundation ships.
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[14px] font-black text-slate-900 flex items-center gap-2">
+            <Package className="h-4 w-4 text-blue-500" /> Listings
+          </p>
+          <p className="text-[12px] font-semibold text-slate-400">{listings.length} total</p>
+        </div>
+        {!showCreate && (
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-1.5 bg-slate-950 text-white rounded-full px-3 py-1.5 text-[12px] font-bold active:scale-95 transition-all"
+          >
+            <FilePlus className="h-3.5 w-3.5" /> New Listing
+          </button>
+        )}
+      </div>
+
+      {showCreate && (
+        <StoreListingForm
+          communityId={communityId}
+          currentUser={currentUser}
+          onClose={() => setShowCreate(false)}
+          onSaved={handleSaved}
+        />
+      )}
+
+      {isLoading ? (
+        <div className="flex justify-center py-10">
+          <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+        </div>
+      ) : listings.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-10 text-center">
+          <ShoppingBag className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+          <p className="text-[13px] font-black text-slate-700">No listings yet</p>
+          <p className="text-[12px] font-semibold text-slate-400 mt-0.5">Create your first product, service, or subscription.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {listings.map((listing) => {
+            const typeCfg = STORE_TYPE_CONFIG[listing.type] || STORE_TYPE_CONFIG.product;
+            const isEditing = editingId === listing.id;
+            return (
+              <div key={listing.id} className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+                {isEditing ? (
+                  <div className="p-4">
+                    <StoreListingForm
+                      communityId={communityId}
+                      currentUser={currentUser}
+                      listing={listing}
+                      onClose={() => setEditingId(null)}
+                      onSaved={handleSaved}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-3 px-4 py-3">
+                    {listing.image_url ? (
+                      <img src={listing.image_url} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+                        <ShoppingBag className="h-4 w-4 text-slate-400" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-[13px] font-black text-slate-900 truncate">{listing.title}</p>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${typeCfg.color}`}>
+                          {typeCfg.label}
+                        </span>
+                        {!listing.is_active && (
+                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide bg-slate-100 text-slate-500">
+                            Hidden
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                        <span className="text-[12px] font-bold text-slate-700">
+                          {listing.price == null || listing.price === 0
+                            ? 'Free'
+                            : `$${listing.price}${listing.billing_period === 'monthly' ? '/mo' : listing.billing_period === 'yearly' ? '/yr' : ''}`}
+                        </span>
+                        {listing.orders_count > 0 && (
+                          <span className="text-[11px] text-slate-400">{listing.orders_count} orders</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => toggleActive(listing)}
+                        className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${
+                          listing.is_active
+                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                        }`}
+                      >
+                        {listing.is_active ? 'Active' : 'Hidden'}
+                      </button>
+                      <button
+                        onClick={() => setEditingId(listing.id)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(listing.id)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

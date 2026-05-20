@@ -2,9 +2,26 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, Eye, ImagePlus, Lock, Sparkles, X } from 'lucide-react';
 import { COMMUNITY_TYPE_CONFIG } from '@/lib/communityTypes';
-import { COMMUNITY_PREMIUM_INTERVALS } from '@/lib/communityPlanPricing';
+import { COMMUNITY_PREMIUM_INTERVALS, formatPlanPrice } from '@/lib/communityPlanPricing';
+import { supabase } from '@/api/supabaseClient';
 import CommunityLivePreview from './CommunityLivePreview';
 import CoverCropSheet from './CoverCropSheet';
+
+// ── Live pricing ──────────────────────────────────────────────────────────────
+
+function usePlanPricing() {
+  const [pricing, setPricing] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    supabase.functions.invoke('get-community-plan-pricing', { method: 'GET' })
+      .then(({ data }) => {
+        if (!cancelled && data?.monthly && data?.annual) setPricing(data);
+      })
+      .catch(() => {}); // graceful degradation — fall back to sublabel text
+    return () => { cancelled = true; };
+  }, []);
+  return pricing;
+}
 
 // ── Premium preview constants ─────────────────────────────────────────────────
 
@@ -132,6 +149,7 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
   const coverInputRef = useRef(null);
   const coverUrlCleanupRef = useRef(null); // tracks the cropped preview objectURL
   const pendingRawUrlRef = useRef(null);   // tracks the raw selection objectURL (before crop)
+  const planPricing = usePlanPricing();
 
   useEffect(() => {
     return () => {
@@ -314,6 +332,7 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
                   premiumInterval={premiumInterval}
                   onUpgradeRequest={handleUpgradeRequest}
                   onUpgradeClear={handleUpgradeClear}
+                  planPricing={planPricing}
                 />
               )}
               {step === 4 && <StepLaunch form={form} typeConfig={typeConfig} onField={setField} premiumUpgradeRequested={premiumUpgradeRequested} premiumInterval={premiumInterval} />}
@@ -543,7 +562,7 @@ function StepMakeItYours({ form, typeConfig, onField, coverPreviewUrl, coverInpu
   );
 }
 
-function StepShape({ form, onField, premiumPreviewEnabled, premiumPreviewLayout, onPremiumField, onPremiumToggle, premiumUpgradeRequested, premiumInterval, onUpgradeRequest, onUpgradeClear }) {
+function StepShape({ form, onField, premiumPreviewEnabled, premiumPreviewLayout, onPremiumField, onPremiumToggle, premiumUpgradeRequested, premiumInterval, onUpgradeRequest, onUpgradeClear, planPricing }) {
   const PRIVACY_OPTIONS = [
     { value: 'Public', label: 'Public', emoji: '🌍', body: 'Anyone can discover and join this community.' },
     { value: 'Community-only', label: 'Community-only', emoji: '🏘️', body: 'Discoverable but feels more local and member-focused.' },
@@ -759,17 +778,24 @@ function StepShape({ form, onField, premiumPreviewEnabled, premiumPreviewLayout,
                   Your layout choices are saved after you upgrade. Launch free, then upgrade — or commit now.
                 </p>
                 <div className="flex gap-2">
-                  {COMMUNITY_PREMIUM_INTERVALS.map((interval, idx) => (
-                    <button
-                      key={interval.key}
-                      type="button"
-                      onClick={() => onUpgradeRequest(interval.key)}
-                      className={`flex-1 rounded-lg border border-amber-300 py-2 text-center ${idx === 1 ? 'bg-amber-100' : 'bg-white'}`}
-                    >
-                      <span className="block text-[12px] font-black text-slate-900">{interval.label}</span>
-                      <span className={`block text-[10px] font-semibold ${idx === 1 ? 'text-amber-700' : 'text-slate-500'}`}>{interval.sublabel}</span>
-                    </button>
-                  ))}
+                  {COMMUNITY_PREMIUM_INTERVALS.map((interval, idx) => {
+                    const priceData = planPricing?.[interval.key];
+                    const priceStr = priceData ? formatPlanPrice(priceData.amount, priceData.currency) : null;
+                    const priceLabel = priceStr
+                      ? `${priceStr} / ${interval.key === 'annual' ? 'yr' : 'mo'}`
+                      : interval.sublabel;
+                    return (
+                      <button
+                        key={interval.key}
+                        type="button"
+                        onClick={() => onUpgradeRequest(interval.key)}
+                        className={`flex-1 rounded-lg border border-amber-300 py-2 text-center ${idx === 1 ? 'bg-amber-100' : 'bg-white'}`}
+                      >
+                        <span className="block text-[12px] font-black text-slate-900">{interval.label}</span>
+                        <span className={`block text-[10px] font-semibold ${idx === 1 ? 'text-amber-700' : 'text-slate-500'}`}>{priceLabel}</span>
+                      </button>
+                    );
+                  })}
                 </div>
                 <p className="text-[9px] font-semibold text-amber-500 text-center">
                   Billing starts after your community is created

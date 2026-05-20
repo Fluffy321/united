@@ -27,3 +27,23 @@ export const COMMUNITY_PREMIUM_INTERVALS = [
 export function getCommunityPremiumInterval(key) {
   return COMMUNITY_PREMIUM_INTERVALS.find((i) => i.key === key) ?? null;
 }
+
+/**
+ * Format a Stripe unit_amount (cents) + currency into a compact display string.
+ * Examples: (1200, 'usd') → '$12', (9900, 'usd') → '$99'
+ */
+export function formatPlanPrice(amountCents, currency = 'usd') {
+  if (amountCents == null) return null;
+  try {
+    const formatted = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency.toUpperCase(),
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amountCents / 100);
+    // Strip unnecessary ".00" that some locales produce for round amounts
+    return formatted.replace(/\.00$/, '');
+  } catch {
+    return `$${(amountCents / 100).toFixed(0)}`;
+  }
+}

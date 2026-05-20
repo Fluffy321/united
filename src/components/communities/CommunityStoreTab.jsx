@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { dataService } from '@/services';
+import { supabase } from '@/api/supabaseClient';
 import {
   Plus, ShoppingBag, Repeat, Wrench, X, DollarSign,
   Loader2, ImageIcon, CheckCircle, Trash2, Package
@@ -8,23 +8,32 @@ import {
 import { toast } from 'sonner';
 
 const TYPE_CONFIG = {
-  subscription: { label: 'Subscription', icon: Repeat,     color: 'from-violet-500 to-purple-600', badge: 'bg-violet-100 text-violet-700' },
-  product:      { label: 'Product',      icon: ShoppingBag, color: 'from-blue-500 to-indigo-600',   badge: 'bg-blue-100 text-blue-700'   },
-  service:      { label: 'Service',      icon: Wrench,      color: 'from-teal-500 to-emerald-600',  badge: 'bg-teal-100 text-teal-700'   },
+  subscription: { label: 'Subscription', icon: Repeat,      color: 'from-violet-500 to-purple-600', badge: 'bg-violet-100 text-violet-700' },
+  product:      { label: 'Product',      icon: ShoppingBag,  color: 'from-blue-500 to-indigo-600',   badge: 'bg-blue-100 text-blue-700'   },
+  service:      { label: 'Service',      icon: Wrench,       color: 'from-teal-500 to-emerald-600',  badge: 'bg-teal-100 text-teal-700'   },
 };
 
 const PERIOD_LABELS = { one_time: '', monthly: '/mo', yearly: '/yr' };
 
+async function uploadListingImage(file) {
+  const ext = file.name.split('.').pop();
+  const path = `listing-images/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await supabase.storage.from('community-images').upload(path, file, { upsert: false });
+  if (error) throw error;
+  const { data } = supabase.storage.from('community-images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
 // ── Create / Edit listing modal ──────────────────────────────────────────────
 function ListingModal({ communityId, currentUser, listing, onClose, onSaved }) {
   const [form, setForm] = useState({
-    type: listing?.type || 'product',
-    title: listing?.title || '',
-    description: listing?.description || '',
-    price: listing?.price != null ? String(listing.price) : '',
+    type:           listing?.type           || 'product',
+    title:          listing?.title          || '',
+    description:    listing?.description    || '',
+    price:          listing?.price != null  ? String(listing.price) : '',
     billing_period: listing?.billing_period || 'one_time',
-    perks: listing?.perks?.join('\n') || '',
-    image_url: listing?.image_url || '',
+    perks:          listing?.perks?.join('\n') || '',
+    image_url:      listing?.image_url      || '',
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -36,8 +45,8 @@ function ListingModal({ communityId, currentUser, listing, onClose, onSaved }) {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await dataService.integrations.Core.UploadFile({ file, bucket: 'community-images' });
-      setForm(f => ({ ...f, image_url: file_url }));
+      const url = await uploadListingImage(file);
+      setForm(f => ({ ...f, image_url: url }));
     } catch { toast.error('Upload failed'); }
     setUploading(false);
   };
@@ -46,25 +55,41 @@ function ListingModal({ communityId, currentUser, listing, onClose, onSaved }) {
     if (!form.title.trim()) { toast.error('Title is required'); return; }
     setSaving(true);
     const payload = {
-      community_id: communityId,
-      type: form.type,
-      title: form.title.trim(),
-      description: form.description.trim(),
-      price: form.price ? parseFloat(form.price) : null,
+      community_id:   communityId,
+      type:           form.type,
+      title:          form.title.trim(),
+      description:    form.description.trim(),
+      price:          form.price ? parseFloat(form.price) : null,
       billing_period: form.billing_period,
-      perks: form.perks ? form.perks.split('\n').map(p => p.trim()).filter(Boolean) : [],
-      image_url: form.image_url,
-      is_active: true,
-      seller_id: currentUser?.id,
-      seller_name: currentUser?.full_name,
+      perks:          form.perks ? form.perks.split('\n').map(p => p.trim()).filter(Boolean) : [],
+      image_url:      form.image_url || null,
+      is_active:      true,
+      seller_id:      currentUser?.id,
+      seller_name:    currentUser?.full_name,
     };
     try {
-      const saved = isEdit
-        ? await dataService.entities.CommunityListing.update(listing.id, payload)
-        : await dataService.entities.CommunityListing.create(payload);
+      let saved;
+      if (isEdit) {
+        const { data, error } = await supabase
+          .from('community_listings')
+          .update(payload)
+          .eq('id', listing.id)
+          .select()
+          .single();
+        if (error) throw error;
+        saved = data;
+      } else {
+        const { data, error } = await supabase
+          .from('community_listings')
+          .insert(payload)
+          .select()
+          .single();
+        if (error) throw error;
+        saved = data;
+      }
       toast.success(isEdit ? 'Listing updated!' : 'Listing created!');
       onSaved(saved);
-    } catch { toast.error('Failed to save listing'); }
+    } catch (err) { toast.error(err.message || 'Failed to save listing'); }
     setSaving(false);
   };
 
@@ -124,7 +149,7 @@ function ListingModal({ communityId, currentUser, listing, onClose, onSaved }) {
         {/* Price + billing */}
         <div className="flex gap-3">
           <div className="flex-1">
-          <p className="text-[12px] font-semibold text-slate-500 mb-1">Price (USD)</p>
+            <p className="text-[12px] font-semibold text-slate-500 mb-1">Price (USD)</p>
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -205,23 +230,26 @@ function ListingCard({ listing, isAdmin, onDelete }) {
   const Icon = cfg.icon;
   const suffix = PERIOD_LABELS[listing.billing_period] || '';
 
-  const handleBuy = async () => {
+  const handleBuy = () => {
     toast.info('Store checkout is coming soon. No money was processed.');
   };
 
   const handleDelete = async () => {
     if (!confirm('Delete this listing?')) return;
-    await dataService.entities.CommunityListing.delete(listing.id);
+    const { error } = await supabase
+      .from('community_listings')
+      .update({ is_active: false, status: 'removed' })
+      .eq('id', listing.id);
+    if (error) { toast.error('Could not remove listing'); return; }
     onDelete(listing.id);
-    toast.success('Listing deleted');
+    toast.success('Listing removed');
   };
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-      {listing.image_url && (
+      {listing.image_url ? (
         <img src={listing.image_url} alt={listing.title} className="w-full h-32 object-cover" />
-      )}
-      {!listing.image_url && (
+      ) : (
         <div className={`h-2 bg-gradient-to-r ${cfg.color}`} />
       )}
       <div className="p-4">
@@ -257,7 +285,7 @@ function ListingCard({ listing, isAdmin, onDelete }) {
         <div className="flex items-center justify-between gap-3 mt-2">
           <div>
             <span className="text-[18px] font-black text-slate-900">
-            {listing.price == null || listing.price === 0 ? 'Free' : `$${listing.price}${suffix}`}
+              {listing.price == null || listing.price === 0 ? 'Free' : `$${listing.price}${suffix}`}
             </span>
             {listing.orders_count > 0 && (
               <span className="ml-2 text-[10px] text-slate-400">{listing.orders_count} orders</span>
@@ -287,7 +315,16 @@ export default function CommunityStoreTab({ communityId, currentUser, isAdmin })
 
   const { data: listings = [], isLoading } = useQuery({
     queryKey: ['community-listings', communityId],
-    queryFn: () => dataService.entities.CommunityListing.filter({ community_id: communityId, is_active: true }, 'created_date', 100),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('community_listings')
+        .select('*')
+        .eq('community_id', communityId)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
     enabled: !!communityId,
   });
 
@@ -330,10 +367,10 @@ export default function CommunityStoreTab({ communityId, currentUser, isAdmin })
       {listings.length > 0 && (
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           {[
-            { key: 'all', label: 'All' },
-            { key: 'subscription', label: '🔁 Subscriptions' },
-            { key: 'product', label: '📦 Products' },
-            { key: 'service', label: '🛠️ Services' },
+            { key: 'all',          label: 'All' },
+            { key: 'subscription', label: 'Subscriptions' },
+            { key: 'product',      label: 'Products' },
+            { key: 'service',      label: 'Services' },
           ].map(f => (
             <button
               key={f.key}
@@ -358,9 +395,7 @@ export default function CommunityStoreTab({ communityId, currentUser, isAdmin })
             {listings.length === 0 ? 'No listings yet' : 'No listings in this category'}
           </p>
           <p className="text-[12px] text-slate-400 mt-1">
-            {isAdmin && listings.length === 0
-              ? 'Add the first listing for your community.'
-              : 'Check back soon!'}
+            {isAdmin && listings.length === 0 ? 'Add the first listing for your community.' : 'Check back soon!'}
           </p>
         </div>
       ) : (
@@ -380,7 +415,7 @@ export default function CommunityStoreTab({ communityId, currentUser, isAdmin })
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-5">
           <p className="text-[13px] font-bold text-blue-800 mb-1">Start the listings board</p>
           <p className="text-[12px] text-blue-700 mb-3">
-            Add a real community-backed listing. Checkout and payments are intentionally not part of this MVP.
+            Add subscriptions, products, and services. Checkout payments will go live with Stripe Connect.
           </p>
           <button
             onClick={() => setShowCreate(true)}

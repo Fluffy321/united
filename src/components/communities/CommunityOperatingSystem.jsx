@@ -13,6 +13,7 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
+  Star,
   Users,
 } from 'lucide-react';
 
@@ -52,6 +53,16 @@ export function RoleLabel({ role }) {
       {normalized === 'owner' ? <Crown className="h-2.5 w-2.5" /> : null}
       {normalized === 'admin' || normalized === 'moderator' ? <ShieldCheck className="h-2.5 w-2.5" /> : null}
       {normalized}
+    </span>
+  );
+}
+
+export function ContactTitleBadge({ title }) {
+  if (!title) return null;
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-violet-800">
+      <Star className="h-2.5 w-2.5" />
+      {title}
     </span>
   );
 }
@@ -242,9 +253,12 @@ export function CommunityWelcomeHub({
     || typeConfig?.cardFallback;
   const announcementCount = posts.filter(isAnnouncementPost).length;
   const latestAnnouncement = posts.find(isAnnouncementPost);
-  const leadership = members
-    .filter((member) => MANAGER_ROLES.has(getMemberRole(member, community)))
-    .slice(0, 3);
+  const keyContacts = members
+    .filter((m) => m.contact_title && !m.incognito && !m.hide_membership)
+    .sort((a, b) => (a.contact_order ?? 0) - (b.contact_order ?? 0));
+  const leadership = keyContacts.length
+    ? keyContacts.slice(0, 3)
+    : members.filter((member) => MANAGER_ROLES.has(getMemberRole(member, community))).slice(0, 3);
   const upcomingEvent = getUpcomingEvents(events)[0];
   const resourcePreview = resources[0];
   const Icon = typeConfig?.icon || Users;
@@ -357,7 +371,9 @@ export function CommunityWelcomeHub({
             onClick={() => onTabChange?.('members')}
             className="px-3 py-3 text-left transition-colors hover:bg-slate-50"
           >
-            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Leadership</p>
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">
+              {keyContacts.length ? 'Key contacts' : 'Leadership'}
+            </p>
             <p className="mt-0.5 truncate text-[13px] font-black text-slate-900">
               {leadership.length ? getMemberName(leadership[0]) : 'View all'}
             </p>
@@ -416,7 +432,9 @@ export function CommunityWelcomeHub({
           onClick={() => onTabChange?.('members')}
           className="rounded-2xl bg-slate-50 px-3 py-3 text-left"
         >
-          <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">Leadership</p>
+          <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">
+            {keyContacts.length ? 'Key contacts' : 'Leadership'}
+          </p>
           <p className="mt-1 text-sm font-black text-slate-900">
             {leadership.length ? leadership.map(getMemberName).slice(0, 2).join(', ') : 'View members'}
           </p>
@@ -449,6 +467,24 @@ export function CommunityWelcomeHub({
 export function CommunityMemberDirectory({ community, members = [], memberCount }) {
   const [query, setQuery] = useState('');
   const normalizedQuery = query.trim().toLowerCase();
+
+  // Key contacts: non-incognito members with a custom contact_title, sorted by contact_order
+  const keyContacts = useMemo(() => (
+    [...members]
+      .filter((m) => m.contact_title && !m.incognito && !m.hide_membership)
+      .sort((a, b) => (a.contact_order ?? 0) - (b.contact_order ?? 0))
+  ), [members]);
+
+  // Leadership fallback (used when no key contacts are set)
+  const leadership = useMemo(() => (
+    [...members]
+      .filter((m) => MANAGER_ROLES.has(getMemberRole(m, community)) && !m.incognito && !m.hide_membership)
+      .slice(0, 6)
+  ), [members, community]);
+
+  const showKeyContacts = keyContacts.length > 0;
+  const leadershipSection = showKeyContacts ? keyContacts : leadership;
+
   const sortedMembers = useMemo(() => {
     const order = { owner: 0, admin: 1, moderator: 2, member: 3 };
     return [...members].sort((a, b) => {
@@ -457,7 +493,7 @@ export function CommunityMemberDirectory({ community, members = [], memberCount 
       return (order[aRole] ?? 4) - (order[bRole] ?? 4) || getMemberName(a).localeCompare(getMemberName(b));
     });
   }, [community, members]);
-  const leadership = sortedMembers.filter((member) => MANAGER_ROLES.has(getMemberRole(member, community)));
+
   const filteredMembers = sortedMembers.filter((member) => {
     if (!normalizedQuery) return true;
     return getMemberName(member).toLowerCase().includes(normalizedQuery);
@@ -477,23 +513,34 @@ export function CommunityMemberDirectory({ community, members = [], memberCount 
         </div>
       </section>
 
-      <section className="rounded-3xl border border-blue-100 bg-blue-50 p-4">
+      <section className={`rounded-3xl p-4 ${showKeyContacts ? 'border border-violet-100 bg-violet-50' : 'border border-blue-100 bg-blue-50'}`}>
         <div className="mb-3 flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-blue-700" />
-          <p className="text-sm font-black text-blue-950">Community leadership</p>
+          {showKeyContacts
+            ? <Star className="h-4 w-4 text-violet-700" />
+            : <ShieldCheck className="h-4 w-4 text-blue-700" />}
+          <p className={`text-sm font-black ${showKeyContacts ? 'text-violet-950' : 'text-blue-950'}`}>
+            {showKeyContacts ? 'Key contacts' : 'Community leadership'}
+          </p>
         </div>
-        {leadership.length ? (
+        {leadershipSection.length ? (
           <div className="grid gap-2 sm:grid-cols-2">
-            {leadership.slice(0, 6).map((member) => {
+            {leadershipSection.slice(0, 6).map((member) => {
               const name = getMemberName(member);
               const role = getMemberRole(member, community);
               return (
-                <div key={member.id || member.user_id} className="rounded-2xl border border-blue-100 bg-white px-3 py-3">
+                <div
+                  key={member.id || member.user_id}
+                  className={`rounded-2xl border px-3 py-3 bg-white ${showKeyContacts ? 'border-violet-100' : 'border-blue-100'}`}
+                >
                   <div className="flex items-center gap-2">
                     <AvatarInitial name={name} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-black text-slate-900">{name}</p>
-                      <RoleLabel role={role} />
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                        {member.contact_title
+                          ? <ContactTitleBadge title={member.contact_title} />
+                          : <RoleLabel role={role} />}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -529,7 +576,9 @@ export function CommunityMemberDirectory({ community, members = [], memberCount 
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-black text-slate-900">{name}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <RoleLabel role={role} />
+                      {member.contact_title
+                        ? <ContactTitleBadge title={member.contact_title} />
+                        : <RoleLabel role={role} />}
                       <span className="text-[11px] font-semibold text-slate-400">
                         {formatDate(member.joined_at || member.created_at) ? `Joined ${formatDate(member.joined_at || member.created_at)}` : 'Community member'}
                       </span>

@@ -274,6 +274,36 @@ Goals:
   },
 
   {
+    id: 'community-app-shell-bottom-nav',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community App Shell — Bottom Tab Navigation + Branded AppBar',
+    description: 'Each community now feels like its own dedicated app: a slim branded AppBar (community type icon, name, admin gear, share) replaces the in-cover back button, and a fixed bottom tab bar with accent-colored active states replaces the scrollable top pill tabs. Overflow tabs surface in a full-height bottom sheet. Community accent color is injected as a CSS variable on mount for consistent theming across all tab icons and active states.',
+    shippedNote: 'Shipped 2026-05-19. CommunityAppBar, CommunityBottomNav, and CommunityMoreSheet added as inline components in CommunityDetailView.jsx. TAB_ICON_MAP maps all tab keys to lucide icons. accentHex resolved from community branding settings → featured_accent_color → typeConfig.accentHex. CSS variable --community-accent injected via useEffect with cleanup on unmount. inAppShell prop added to CommunityHero to suppress duplicate sticky header and in-cover nav buttons. accentHex added to all 8 community type configs in communityTypes.js.',
+  },
+
+  {
+    id: 'community-member-home-feed-first',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Member Home — Feed-First Layout + Compact Right Now Banner',
+    description: 'Joined-member home now surfaces posts immediately without scrolling. A single compact RightNowBanner row (≈44px) replaces the two-card digest + important strip stack — it shows new-content count when there is activity since last visit, otherwise surfaces the single most important item (announcement → event → chesed need → resource). The composer collapses to a one-line pill by default in all modes, expanding on tap. Section order changed to: rightNow → composer → feed → adminTools → personalization.',
+    shippedNote: 'Shipped 2026-05-19. RightNowBanner component added inline in CommunityDetailView.jsx. Default homeSections order changed from [digest, importantNow, adminTools, personalization, composer, feed] to [rightNow, composer, feed, adminTools, personalization]. digest and importantNow kept in sectionMap for backwards compatibility with customized layouts. TypeAwareComposer default post mode now has collapsed pill state matching existing message-mode pattern. Fixed latent bug: Heart was used in AboutTab but not imported.',
+  },
+
+  {
+    id: 'community-visitor-landing',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Visitor Landing — Full-Screen Join Page',
+    description: 'Non-members now see a dedicated landing page instead of a raw feed. Shows community description and member count, a full-width Join CTA, the featured section (pinned post / next event / top resource), and up to 2 preview posts followed by a locked-gate card ("X more posts — join to read") with a second Join CTA. Removed CommunityWelcomeHub from the visitor path.',
+    shippedNote: 'Shipped 2026-05-19. VisitorLanding component added inline in CommunityDetailView.jsx. RoutedCommunityHome !isFollowing branch now renders VisitorLanding. onFollow prop added to RoutedCommunityHome and wired to handleFollow from parent. CommunityWelcomeHub no longer imported by CommunityDetailView (still exported from CommunityOperatingSystem for any future use).',
+  },
+
+  {
     id: 'community-creation-experience-v2',
     category: 'Community',
     status: STATUS.SHIPPED,
@@ -382,7 +412,7 @@ Goals:
   {
     id: 'community-premium-live-pricing',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Show Live Premium Plan Prices in Create Community Flow',
     description: 'Fetch the actual monthly and annual pricing for the community Premium plan from a lightweight endpoint so users see real prices before committing to an interval in Step 4.',
@@ -405,6 +435,7 @@ Goals:
 3. In StepShape's upgrade CTA: if pricing loaded, display the amount alongside the interval label (e.g., "$12 / mo" or "$99 / yr"); if null/loading, fall back to the current sublabel text
 4. Update src/lib/communityPlanPricing.js with a formatPlanPrice(amountCents, currency) helper
 5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+    shippedNote: 'Shipped 2026-05-19. New Edge Function get-community-plan-pricing reads STRIPE_PRICE_COMMUNITY_PREMIUM_MONTHLY/ANNUAL env vars, calls stripe.prices.retrieve() for each, returns { monthly, annual: { amount, currency } } with 1-hour Cache-Control. formatPlanPrice(amountCents, currency) helper added to communityPlanPricing.js. usePlanPricing() hook in CreateCommunityFlow.jsx calls the function on mount and returns pricing or null. StepShape receives planPricing prop; interval buttons show "$12 / mo" / "$99 / yr" when loaded, fall back to sublabel text when null/loading.',
   },
 
   {
@@ -687,36 +718,23 @@ Goals:
   {
     id: 'community-custom-branding',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Custom Community Branding',
     description: 'Let Premium communities set a custom accent color, cover pattern, and visual theme for their community pages.',
     why: 'Community identity and distinctiveness increase retention. Branding is a natural Premium upsell without requiring costly design tooling.',
-    prompt: `You are implementing Custom Community Branding for JUnited.
-
-Context:
-- CommunityHubDetail uses typeConfig.accent (Tailwind gradient classes) for the cover/avatar.
-- CommunityHero uses communityGradient() which already supports featured_accent_color.
-- Community settings can be saved via Admin Center (CommunityAdminCenter Settings tab).
-
-Goals:
-1. Add accent_color (hex string) and cover_style (enum) columns to communities via migration.
-2. Update Admin Center Appearance section with a color picker and cover style preview (Premium only).
-3. Update CommunityHubDetail header and CommunityHero to apply accent_color when set, falling back to typeConfig.accent.
-4. Make the joined-member compact header also use the custom accent color.
-5. Preserve all gating: only Premium communities can set custom branding.
-6. Run npm run lint && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+    shippedNote: 'BrandingTab added to Admin Center (Premium-gated, with live preview). Branding persisted to communities.settings.branding JSONB. CommunityHero and DiscoverCommunityCard both read accentColor and coverStyle. Non-premium admins see controls and a live preview but are redirected to Billing to save.',
   },
 
   {
     id: 'community-custom-key-contacts',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Custom Community Titles & Key Contacts',
     description: 'Allow communities to label leadership contacts with titles like Rabbi, President, Organizer, or Volunteer Coordinator.',
     why: 'Phase 1 derives leadership from owner/admin/moderator roles. Custom titles need a dedicated data model and privacy review.',
+    shippedNote: 'Shipped 2026-05-20. Added contact_title + contact_order columns to community_memberships via security-definer RPC set_member_contact_title (managers only). Admin Center Members tab: inline title editor + removal. CommunityMemberDirectory and CommunityWelcomeHub prefer key contacts over role-based leadership when titles are set. Incognito/hidden members excluded.',
     prompt: `You are implementing Custom Community Titles & Key Contacts for JUnited.
 
 Context:
@@ -732,6 +750,30 @@ Goals:
 5. Update CommunityMemberDirectory and CommunityWelcomeHub to show custom key contacts without exposing private data.
 6. Run npm run lint && npm run typecheck && npm run build.
 7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-key-contacts-reorder',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Key Contacts Display Order',
+    description: 'Let community managers drag-to-reorder key contacts and set their contact_order so they appear in a deliberate sequence.',
+    why: 'contact_order column already exists in community_memberships but is always set to 0 — ordering is not yet editable. Natural follow-up to custom titles.',
+    prompt: `You are implementing Key Contacts Display Order for JUnited.
+
+Context:
+- community_memberships.contact_order (SMALLINT) was added in migration 20260520024702_community_key_contacts.sql.
+- set_member_contact_title RPC accepts p_order parameter but the Admin Center UI always passes 0.
+- Admin Center Members tab is in src/components/communities/CommunityAdminCenter.jsx (MembersTab).
+- Key contacts are rendered in CommunityMemberDirectory and CommunityWelcomeHub in src/components/communities/CommunityOperatingSystem.jsx.
+
+Goals:
+1. Add a "Key Contacts" sub-section to the Admin Center Members tab listing only members with a contact_title.
+2. Show drag handles (or up/down buttons for mobile) to reorder; persist order by calling set_member_contact_title RPC with the new p_order value.
+3. Reflect updated order in CommunityMemberDirectory and CommunityWelcomeHub immediately via query invalidation.
+4. Run npm run lint && npm run build.
+5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -836,8 +878,9 @@ Goals:
   {
     id: 'community-forms-signups-volunteer-coordination',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
+    shippedNote: 'Shipped 2026-05-20. Tables: community_forms, community_form_fields, community_form_submissions + allow_forms on communities. Security-definer submit_community_form RPC with membership + deadline + duplicate guards. Admin Center: Forms tab with form builder (8 field types, due date, max cap, re-submit toggle), submissions viewer, CSV export, open/close toggle. Member-facing CommunityFormsTab with inline submission UI and duplicate-submit detection. Gated by allow_forms via Settings → Modules.',
     title: 'Community Forms, Signups & Volunteer Coordination',
     description: 'Lightweight forms, signup sheets, volunteer slots, and admin export for community operations.',
     why: 'High-value for shuls, schools, nonprofits, and chesed groups, but should be built as a real operating tool instead of ad hoc post comments.',
@@ -856,6 +899,31 @@ Goals:
 6. Add CSV export if privacy-safe.
 7. Run npm run lint && npm run typecheck && npm run build.
 8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-volunteer-slots',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Community Volunteer Slots',
+    description: 'Named time-slots with capacity limits that managers attach to forms or events so volunteers can claim specific shifts.',
+    why: 'The forms system ships without slot coordination. Volunteer slot management (e.g. pick a shift, track who signed up for each slot) is a natural extension but was deferred to keep the initial forms feature shippable.',
+    prompt: `You are implementing Community Volunteer Slots for JUnited.
+
+Context:
+- community_forms and community_form_submissions are live (migration 20260520025433_community_forms.sql).
+- CommunityFormsTab.jsx is the member-facing forms UI.
+- AdminFormsTab in CommunityAdminCenter.jsx manages forms.
+
+Goals:
+1. Add a community_volunteer_slots table (form_id, label, start_time, end_time, capacity, created_at).
+2. Add a community_volunteer_claims table (slot_id, submitter_id, community_id, claimed_at) with RLS.
+3. Update CreateFormPanel in CommunityAdminCenter to allow attaching named slots to volunteer-type forms.
+4. Update CommunityFormsTab to display slots with remaining capacity and a claim button.
+5. Add slot summary to SubmissionsPanel CSV export.
+6. Run npm run lint && npm run build.
+7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1595,29 +1663,30 @@ Goals:
   {
     id: 'community-store',
     category: 'Growth & Monetization',
-    status: STATUS.DEFERRED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Community Store / Paid Community Transactions',
     description: 'Digital storefront for communities to sell merchandise, tickets, and fundraise using Stripe Connect, not direct JUnited donation checkout.',
-    why: 'Deferred until the Stripe Connect payout foundation is built. The old PaymentModal can collect money for JUnited only; it must not be used for marketplace/community recipient payments because funds need to route to connected recipients with an application fee.',
-    prompt: `You are implementing the Community Store for JUnited.
+    shippedNote: `Partially shipped 2026-05-20. Data infrastructure: community_listings table (existing, migration 020_community_feature_backbone.sql) + community_orders table (migration 20260520030000_community_orders.sql) with buyer_id, listing_id, amount_cents, currency, status, stripe_checkout_session_id, stripe_payment_intent_id, destination_connected_account_id, application_fee_amount; RLS: managers read all orders, buyers read own orders. CommunityStoreTab.jsx migrated from dataService bridge to direct Supabase queries + Supabase Storage image uploads. Admin Store tab added to CommunityAdminCenter: full listing CRUD (create/edit/toggle active/delete), "Checkout coming soon" notice. Member-facing buy button remains disabled ("Coming Soon") — payment processing requires stripe-connect-payout-foundation (STATUS.PLANNED). Checkout flow must use destination charges (transfer_data.destination + application_fee_amount) once that foundation ships.`,
+    why: 'Payment processing remains deferred until the Stripe Connect payout foundation is built. The old PaymentModal must not be used for marketplace payments because funds need to route to connected recipients with an application fee.',
+    prompt: `You are wiring Stripe Connect checkout into the Community Store for JUnited.
 
-Context: CommunityStoreTab.jsx exists. CommunityDetailView already has a 'listings' tab that
-        renders it when allow_member_listings is enabled. Do not use the old PaymentModal for this.
-        This must use the Stripe Connect platform payment foundation once it is shipped.
+Context:
+  - community_listings and community_orders tables are live (migration 20260520030000_community_orders.sql).
+  - CommunityStoreTab.jsx uses direct Supabase queries. The buy button is disabled showing "Coming Soon".
+  - The stripe-connect-payout-foundation feature must be shipped first (it creates connected accounts + the checkout Edge Function).
+  - Do NOT use the old PaymentModal or create-checkout-session Edge Function for this flow.
+  - Payments must use destination charges: transfer_data.destination = connected_account_id, application_fee_amount = platform fee.
 
 Goals:
-1. Verify community_listings table migration exists; create if not.
-2. Wire CommunityListing entity in base44Client.js.
-3. Add a community_orders table with buyer_id, community_id, listing_id, amount_cents,
-   currency, status, stripe_checkout_session_id, stripe_payment_intent_id,
-   destination_connected_account_id, application_fee_amount, created_at, updated_at.
-4. Connect CommunityStoreTab.jsx to real data (list, create, purchase).
-5. Integrate purchases through the Stripe Connect payment function, using destination charges
-   with transfer_data.destination and application_fee_amount.
-6. Add admin UI in CommunityAdminCenter for managing store items and viewing orders.
-7. Run npm run lint && npm run typecheck && npm run build.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+1. Implement the Stripe Connect checkout Edge Function (or extend the platform one) for community listings.
+2. On buy click in CommunityStoreTab.jsx, call the Edge Function with listing_id; receive checkoutUrl, redirect to Stripe.
+3. On webhook checkout.session.completed (listing branch), insert a row into community_orders with status = 'paid'.
+4. Increment community_listings.orders_count via a trigger or RPC.
+5. Show buyers their order history (basic) in CommunityStoreTab.
+6. Show order counts and recent orders in the Admin Store tab.
+7. Run npm run lint && npm run build.
+8. Update src/config/roadmap.js: change community-store shippedNote to reflect full checkout live.`,
   },
 
   {

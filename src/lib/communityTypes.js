@@ -19,6 +19,7 @@ export const COMMUNITY_TYPE_CONFIG = {
     pluralLabel: 'Communities',
     icon: Users,
     emoji: 'JU',
+    accentHex: '#2563EB',
     accent: 'from-blue-600 to-slate-800',
     badgeClass: 'bg-blue-50 text-blue-700',
     softClass: 'bg-blue-50 text-blue-700 border-blue-100',
@@ -44,6 +45,7 @@ export const COMMUNITY_TYPE_CONFIG = {
     pluralLabel: 'Neighborhoods',
     icon: Home,
     emoji: 'NB',
+    accentHex: '#06B6D4',
     accent: 'from-cyan-500 to-blue-700',
     badgeClass: 'bg-cyan-50 text-cyan-700',
     softClass: 'bg-cyan-50 text-cyan-700 border-cyan-100',
@@ -69,6 +71,7 @@ export const COMMUNITY_TYPE_CONFIG = {
     pluralLabel: 'Chesed',
     icon: HeartHandshake,
     emoji: 'CH',
+    accentHex: '#10B981',
     accent: 'from-emerald-500 to-teal-700',
     badgeClass: 'bg-emerald-50 text-emerald-700',
     softClass: 'bg-emerald-50 text-emerald-700 border-emerald-100',
@@ -94,6 +97,7 @@ export const COMMUNITY_TYPE_CONFIG = {
     pluralLabel: 'Shuls',
     icon: Landmark,
     emoji: 'SH',
+    accentHex: '#4F46E5',
     accent: 'from-indigo-600 to-violet-700',
     badgeClass: 'bg-indigo-50 text-indigo-700',
     softClass: 'bg-indigo-50 text-indigo-700 border-indigo-100',
@@ -119,6 +123,7 @@ export const COMMUNITY_TYPE_CONFIG = {
     pluralLabel: 'Parents',
     icon: MessageCircleQuestion,
     emoji: 'PA',
+    accentHex: '#F97316',
     accent: 'from-orange-400 to-amber-600',
     badgeClass: 'bg-orange-50 text-orange-700',
     softClass: 'bg-orange-50 text-orange-700 border-orange-100',
@@ -144,6 +149,7 @@ export const COMMUNITY_TYPE_CONFIG = {
     pluralLabel: 'Learning',
     icon: BookOpen,
     emoji: 'LR',
+    accentHex: '#F59E0B',
     accent: 'from-amber-500 to-rose-600',
     badgeClass: 'bg-amber-50 text-amber-700',
     softClass: 'bg-amber-50 text-amber-700 border-amber-100',
@@ -169,6 +175,7 @@ export const COMMUNITY_TYPE_CONFIG = {
     pluralLabel: 'Marketplace',
     icon: ShoppingBag,
     emoji: 'MK',
+    accentHex: '#57534E',
     accent: 'from-stone-600 to-slate-800',
     badgeClass: 'bg-stone-50 text-stone-700',
     softClass: 'bg-stone-50 text-stone-700 border-stone-100',
@@ -194,6 +201,7 @@ export const COMMUNITY_TYPE_CONFIG = {
     pluralLabel: 'Events',
     icon: CalendarDays,
     emoji: 'EV',
+    accentHex: '#F43F5E',
     accent: 'from-rose-500 to-pink-700',
     badgeClass: 'bg-rose-50 text-rose-700',
     softClass: 'bg-rose-50 text-rose-700 border-rose-100',
@@ -329,6 +337,7 @@ export function getSupportedCommunityTabs(community = {}, productionCapabilities
   if (productionCapabilities.listings && !baseSet.has('listings')) extras.push('listings');
   if (productionCapabilities.chat && !baseSet.has('chat')) extras.push('chat');
   if (productionCapabilities.groups && !baseSet.has('groups')) extras.push('groups');
+  if (productionCapabilities.forms && !baseSet.has('forms')) extras.push('forms');
   if (extras.length) filtered.splice(insertIdx, 0, ...extras);
 
   return filtered.length ? filtered : COMMUNITY_TYPE_CONFIG.general.tabs;
@@ -350,6 +359,7 @@ export function getCommunityTabLabel(tabKey) {
     chat: 'Chat',
     listings: 'Listings',
     groups: 'Groups',
+    forms: 'Forms',
   };
   return labels[tabKey] || tabKey;
 }

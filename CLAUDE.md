@@ -23,6 +23,30 @@ Read it fully before starting any task.
 
 ---
 
+### ⛔ Real UI Path Verification — REQUIRED before marking any visible feature SHIPPED
+
+**Before changing status to `'shipped'` for any feature that adds, moves, or modifies visible UI:**
+
+You MUST verify the feature is reachable through the real user-facing path, not just that the code compiles. Failure to do this has caused repeated false "shipped" entries.
+
+Checklist (run mentally before writing `status: STATUS.SHIPPED`):
+
+1. **Which route renders this feature?** Trace from `App.jsx` → page component → the component you edited.
+2. **Is that the component that's actually mounted?** Confirm the import chain. Look for legacy duplicate components (e.g., `CommunityHubDetail` vs `CommunityDetailView`) that might shadow your changes.
+3. **What conditions must be true for it to appear?** (auth, plan, data, state flags, tab selection)
+4. **If it's inside a tab or modal, can you reach it?** Name the exact button/action the user must click.
+
+**Do not mark shipped based on:**
+- The feature compiling and building cleanly
+- The component existing in code
+- A grep or bundle check
+- The fact that you wrote it
+
+**Mark shipped only if you can complete this sentence:**  
+*"A logged-in user can see [feature] by going to [exact path] and [clicking/tapping X]."*
+
+---
+
 ### Part A — Status updates for work you completed
 
 You MUST update `src/config/roadmap.js` in the same task whenever you:
