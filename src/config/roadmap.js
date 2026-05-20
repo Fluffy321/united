@@ -2194,9 +2194,10 @@ Goals:
   {
     id: 'ux-accessibility-audit',
     category: 'Admin & Platform',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Accessibility Audit & Remediation',
+    shippedNote: 'Shipped 2026-05-20. Added :focus-visible outline (2px blue #2563EB) to src/index.css. Fixed j-text-meta contrast from #64748B (~4.25:1) to #475569 (~5.74:1). Enhanced prefers-reduced-motion block to explicitly disable named animation classes (.chesed-cta-pulse, .reaction-pop, .nav-active-pill, .nav-icon-active, .motion-page-enter, .motion-soft-in, .tab-fade-in, .skeleton, .splash-progress-bar) with animation: none and will-change: auto. Leaflet zoom controls bumped from 38px to 44px. Added aria-label to icon-only buttons in ChatView (back, more-options), NewMessageComposer (cancel, clear-search), MessageRequestsTab (accept, decline). Added aria-hidden + sr-only unread text to ConversationList blue dot. Sonner Toaster already ships with built-in aria-live regions.',
     description: 'WCAG 2.1 AA review across all pages: color contrast, focus states, touch targets, screen reader labels, motion preferences, and keyboard navigation.',
     why: 'Discovered during 2026-05-17 UX pass — JUnited has strong visual design but focus states, aria labels on icon buttons, and color-only signals need review before App Store launch.',
     prompt: `You are performing an accessibility audit and remediation for JUnited.

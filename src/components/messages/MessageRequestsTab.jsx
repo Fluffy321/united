@@ -77,12 +77,14 @@ export default function MessageRequestsTab({ currentUser, onAccepted }) {
           <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={() => handleAccept(req)}
+              aria-label="Accept message request"
               className="w-9 h-9 rounded-full bg-green-500 flex items-center justify-center text-white active:scale-95 transition-all"
             >
               <Check className="w-4 h-4" />
             </button>
             <button
               onClick={() => handleDecline(req)}
+              aria-label="Decline message request"
               className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 active:scale-95 transition-all"
             >
               <X className="w-4 h-4" />
