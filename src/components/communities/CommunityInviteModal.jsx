@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Copy, Share2, RefreshCw, Check, Link2, Loader2 } from 'lucide-react';
+import { X, Copy, Share2, RefreshCw, Check, Link2, Loader2, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/api/supabaseClient';
 
@@ -16,10 +16,13 @@ const INVITE_NOUN = {
 };
 
 export default function CommunityInviteModal({ open, onClose, community, currentUser, typeConfig }) {
-  const [link, setLink]       = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [copied, setCopied]   = useState(false);
-  const [working, setWorking] = useState(false);
+  const [link, setLink]             = useState(null);
+  const [loading, setLoading]       = useState(false);
+  const [copied, setCopied]         = useState(false);
+  const [working, setWorking]       = useState(false);
+  const [showAdvanced, setAdvanced] = useState(false);
+  const [expiresAt, setExpiresAt]   = useState('');
+  const [maxUses, setMaxUses]       = useState('');
 
   const typeKey   = typeConfig?.key || community?.community_type || 'general';
   const noun      = INVITE_NOUN[typeKey] || 'members';
@@ -27,6 +30,9 @@ export default function CommunityInviteModal({ open, onClose, community, current
 
   useEffect(() => {
     if (!open || !community?.id || !currentUser?.id) return;
+    setAdvanced(false);
+    setExpiresAt('');
+    setMaxUses('');
     let cancelled = false;
 
     async function load() {
@@ -63,11 +69,10 @@ export default function CommunityInviteModal({ open, onClose, community, current
 
   async function createNewLink() {
     const name = currentUser?.full_name || currentUser?.display_name || currentUser?.email || 'Community Admin';
-    const { data, error } = await supabase
-      .from('invite_links')
-      .insert({ community_id: community.id, inviter_id: currentUser.id, inviter_name: name })
-      .select()
-      .single();
+    const payload = { community_id: community.id, inviter_id: currentUser.id, inviter_name: name };
+    if (expiresAt) payload.expires_at = new Date(expiresAt).toISOString();
+    if (maxUses)   payload.max_uses   = Math.max(1, parseInt(maxUses, 10));
+    const { data, error } = await supabase.from('invite_links').insert(payload).select().single();
     if (error) throw error;
     return data;
   }
@@ -168,10 +173,12 @@ export default function CommunityInviteModal({ open, onClose, community, current
             {/* Stats + regenerate */}
             <div className="flex items-center justify-between border-t border-slate-100 pt-3">
               <p className="text-[11px] font-semibold text-slate-400">
-                {link.uses_count === 0
+                {link.max_uses
+                  ? `Used ${link.uses_count ?? 0}/${link.max_uses} times`
+                  : link.uses_count === 0
                   ? 'Not used yet'
                   : `Used ${link.uses_count} time${link.uses_count !== 1 ? 's' : ''}`}
-                {link.expires_at && ` · expires ${new Date(link.expires_at).toLocaleDateString()}`}
+                {link.expires_at && ` · expires ${new Date(link.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
               </p>
               <button
                 onClick={handleRegenerate}
@@ -181,6 +188,53 @@ export default function CommunityInviteModal({ open, onClose, community, current
                 <RefreshCw className={`h-3 w-3 ${working ? 'animate-spin' : ''}`} />
                 New link
               </button>
+            </div>
+
+            {/* Advanced options disclosure */}
+            <div className="border-t border-slate-100 pt-3 mt-1">
+              <button
+                type="button"
+                onClick={() => setAdvanced((v) => !v)}
+                className="flex items-center gap-1 text-[11px] font-black text-slate-400 hover:text-slate-600 transition"
+              >
+                <ChevronDown className={`h-3 w-3 transition-transform duration-150 ${showAdvanced ? 'rotate-180' : ''}`} />
+                Advanced options
+              </button>
+              {showAdvanced && (
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-wide text-slate-500 mb-1.5">Expiry date</label>
+                    <input
+                      type="date"
+                      value={expiresAt}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setExpiresAt(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] font-semibold outline-none focus:border-blue-400"
+                    />
+                    {expiresAt && (
+                      <button type="button" onClick={() => setExpiresAt('')} className="mt-1 text-[10px] font-semibold text-slate-400 hover:text-red-500 transition">
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-wide text-slate-500 mb-1.5">Max uses</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={maxUses}
+                      onChange={(e) => setMaxUses(e.target.value)}
+                      placeholder="Unlimited"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] font-semibold outline-none focus:border-blue-400"
+                    />
+                  </div>
+                  {(expiresAt || maxUses) && (
+                    <p className="col-span-2 text-[11px] font-semibold text-blue-500 -mt-1">
+                      These limits apply to your <span className="font-black">next</span> generated link — click New link above to apply.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </>
         ) : (

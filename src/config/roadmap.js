@@ -507,9 +507,10 @@ Goals:
   {
     id: 'community-invite-link-controls',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Invite Link Expiry & Use-Limit Controls',
+    shippedNote: 'Shipped 2026-05-20. CommunityInviteModal gains "Advanced options" disclosure (ChevronDown toggle) below the stats row with a date picker for expires_at and number input for max_uses (both nullable). createNewLink() inserts these values when set. Stats line shows "Used X/Y times" when max_uses is set and "expires Jun 1" with short-date format. Advanced options reset when modal opens. Hint copy tells user limits apply to the next generated link.',
     description: 'Let admins set an expiry date or maximum use count when generating an invite link, giving them control over access windows for events, beta cohorts, etc.',
     why: 'The invite_links table already has expires_at and max_uses columns, but CommunityInviteModal has no UI for them. The acceptance page (JoinByCommunityCode.jsx) already enforces both checks.',
     prompt: `You are adding expiry and use-limit controls to the JUnited community invite modal.
