@@ -412,7 +412,7 @@ Goals:
   {
     id: 'community-premium-live-pricing',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Show Live Premium Plan Prices in Create Community Flow',
     description: 'Fetch the actual monthly and annual pricing for the community Premium plan from a lightweight endpoint so users see real prices before committing to an interval in Step 4.',
@@ -435,6 +435,7 @@ Goals:
 3. In StepShape's upgrade CTA: if pricing loaded, display the amount alongside the interval label (e.g., "$12 / mo" or "$99 / yr"); if null/loading, fall back to the current sublabel text
 4. Update src/lib/communityPlanPricing.js with a formatPlanPrice(amountCents, currency) helper
 5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+    shippedNote: 'Shipped 2026-05-19. New Edge Function get-community-plan-pricing reads STRIPE_PRICE_COMMUNITY_PREMIUM_MONTHLY/ANNUAL env vars, calls stripe.prices.retrieve() for each, returns { monthly, annual: { amount, currency } } with 1-hour Cache-Control. formatPlanPrice(amountCents, currency) helper added to communityPlanPricing.js. usePlanPricing() hook in CreateCommunityFlow.jsx calls the function on mount and returns pricing or null. StepShape receives planPricing prop; interval buttons show "$12 / mo" / "$99 / yr" when loaded, fall back to sublabel text when null/loading.',
   },
 
   {
