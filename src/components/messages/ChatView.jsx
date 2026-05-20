@@ -68,7 +68,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       if (event.type === 'create' && event.data.conversation_id === conversation.id) {
         setMessages(prev => {
           if (prev.find(m => m.id === event.data.id)) return prev;
-          return [...prev, event.data];
+          // Realtime rows use created_at (Postgres column name), not created_date
+          const msg = { ...event.data, created_date: event.data.created_date || event.data.created_at };
+          return [...prev, msg];
         });
       }
     });
@@ -443,7 +445,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
                       )}
                     </div>
                     <p className={`text-[11px] text-slate-400 mt-1 ${isOwn ? 'text-right' : ''}`}>
-                      {formatDistanceToNow(new Date(msg.created_date), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(msg.created_date || msg.created_at || Date.now()), { addSuffix: true })}
                     </p>
                   </div>
                   {isOwn && (
