@@ -729,9 +729,6 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
       {isOfficialAnnouncement && (
         <div className="h-1 bg-gradient-to-r from-amber-400 via-orange-400 to-blue-500" />
       )}
-      {isFromJoinedCommunity && !isQuestion && post.post_subtype !== 'alert' && (
-        <div className="h-0.5 bg-gradient-to-r from-indigo-400 to-violet-400" />
-      )}
       {/* Question highlight bar */}
       {isQuestion && <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-600" />}
       {/* Header */}

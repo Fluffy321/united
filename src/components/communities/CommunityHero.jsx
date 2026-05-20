@@ -113,8 +113,17 @@ export default function CommunityHero({
             <div className="w-full h-full" style={{ background: gradient }} />
           )}
           {/* Gradient overlay — lighter in app shell since name is in AppBar */}
-          <div className={`absolute inset-0 bg-gradient-to-t ${inAppShell ? 'from-black/40 via-black/10 to-transparent' : 'from-black/80 via-black/25 to-transparent'}`} />
+          <div className={`absolute inset-0 bg-gradient-to-t ${inAppShell ? 'from-black/55 via-black/20 to-transparent' : 'from-black/80 via-black/25 to-transparent'}`} />
         </div>
+
+        {/* Description overlay — only in app shell, since name is already in AppBar */}
+        {inAppShell && (community.description || community.tagline) && (
+          <div className="absolute bottom-0 left-0 right-0 px-4 pb-2.5 z-10">
+            <p className="text-[11px] text-white/85 line-clamp-2 leading-relaxed drop-shadow-sm">
+              {community.description || community.tagline}
+            </p>
+          </div>
+        )}
 
         {/* Back + share — only when NOT in app shell */}
         {!inAppShell && (

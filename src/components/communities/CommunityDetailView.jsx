@@ -623,15 +623,6 @@ function CommunityAppBar({ community, typeConfig, isAdmin, accentHex, onBack, on
         <p className="font-bold text-slate-900 text-[14px] truncate">{community.name}</p>
       </div>
       <div className="flex items-center gap-0.5 flex-shrink-0">
-        {isAdmin && (
-          <button
-            onClick={onManage}
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all"
-            aria-label="Admin center"
-          >
-            <Settings className="w-4 h-4 text-slate-500" />
-          </button>
-        )}
         <button
           onClick={onShare}
           className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all"

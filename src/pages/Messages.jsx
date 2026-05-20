@@ -111,7 +111,10 @@ export default function Messages() {
       const userConvs = allConvs.filter((c) => c.participant_ids?.includes(currentUser.id));
 
       const requestIds = [...new Set(userConvs.map((c) => c.request_id).filter(Boolean))];
-      const requests = await batchFetchByIds('MitzvahRequest', requestIds);
+      let requests = [];
+      try {
+        if (requestIds.length > 0) requests = await batchFetchByIds('MitzvahRequest', requestIds);
+      } catch {}
       const requestTitleMap = Object.fromEntries(requests.map(r => [r.id, r.title]));
 
       return userConvs.map((conv) => ({

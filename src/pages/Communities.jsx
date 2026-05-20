@@ -1009,7 +1009,7 @@ export default function Communities() {
                     onTryPrompt={openCommunityWithPrompt}
                   />
                 )}
-                {forYouCommunities.length >= 2 && (
+                {forYouCommunities.length >= 1 && (
                   <ForYouSection
                     communities={forYouCommunities}
                     onOpen={openCommunity}
