@@ -267,7 +267,7 @@ export default function Messages() {
                 onClick={() => setActiveTab('inbox')}
                 className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
                   activeTab === 'inbox'
-                    ? 'border-slate-950 bg-slate-950 text-white'
+                    ? 'border-blue-600 bg-blue-600 text-white'
                     : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
                 }`}
               >
@@ -277,7 +277,7 @@ export default function Messages() {
                 onClick={() => setActiveTab('requests')}
                 className={`relative flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
                   activeTab === 'requests'
-                    ? 'border-slate-950 bg-slate-950 text-white'
+                    ? 'border-blue-600 bg-blue-600 text-white'
                     : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
                 }`}
               >
@@ -303,7 +303,7 @@ export default function Messages() {
                     onClick={() => setActiveFilter(f.key)}
                     className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
                       activeFilter === f.key
-                        ? 'border-slate-800 bg-slate-800 text-white'
+                        ? 'border-blue-600 bg-blue-600 text-white'
                         : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
                     }`}
                   >

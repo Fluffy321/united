@@ -1397,7 +1397,7 @@ function DiscoverEmptyState({ hasFilters, onClear, onCreateCommunity }) {
           <button
             type="button"
             onClick={onClear}
-            className="motion-press mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-black text-white"
+            className="motion-press mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-black text-white"
           >
             Clear filters
           </button>

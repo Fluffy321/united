@@ -2223,6 +2223,33 @@ Goals:
   },
 
   {
+    id: 'ux-design-audit-primitives',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Frontend Design Audit & CSS Primitives',
+    shippedNote: 'Shipped 2026-05-20. Audited all major pages with Playwright screenshots (feed, communities, messages, profile). Top inconsistency: active tab pills / filter chips were using bg-slate-950/bg-slate-800 (black) instead of bg-blue-600 (primary blue). Fixed in Messages.jsx (Inbox/Requests tabs + All/Unread/Communities/Requests filter chips) and Communities.jsx (DiscoverEmptyState "Clear filters" CTA). Added new CSS primitives to src/index.css: .app-tab-pill/.app-tab-pill-active (blue), .app-tab-pill-dark (intentional dark/segment-control), .app-section-label, .app-empty-state family (.app-empty-state-icon, .app-empty-state-title, .app-empty-state-body), .app-ghost-button/.app-ghost-button-muted. Created STYLE_GUIDE.md documenting the full design language: colors, typography, buttons, cards, spacing, motion, and "what NOT to do" rules.',
+    description: 'Audit entire frontend for visual inconsistency. Define and extend shared CSS primitives. Create STYLE_GUIDE.md. Fix the most visible color-consistency issues.',
+    why: 'Discovered during May 2026 feature sprint — multiple pages used black (slate-950) for active/primary UI elements while the design system primary is blue. Style guide prevents the same drift from re-occurring.',
+    prompt: `You are performing a frontend design audit and creating a unified design system for JUnited.
+
+Context: src/index.css has a working set of primitives (.app-button-primary, .app-card, .app-chip, etc.).
+        Many pages bypass these in favor of one-off Tailwind. The biggest inconsistencies are in
+        active tab/chip colors (some pages use slate-950/black, the design system uses blue-600),
+        empty state layouts (each page invents its own), and section label typography.
+
+Goals:
+1. Capture before screenshots with Playwright MCP of: Feed, Communities, Messages, Profile.
+2. Audit buttons, cards, headers, modals, tabs, empty states, form inputs across all major pages.
+3. Add missing CSS primitives to src/index.css: .app-tab-pill/.app-tab-pill-active, .app-section-label, .app-empty-state family, .app-ghost-button.
+4. Fix Messages.jsx: active tab pills and filter chips should use border-blue-600 bg-blue-600, not bg-slate-950/bg-slate-800.
+5. Fix Communities.jsx DiscoverEmptyState: "Clear filters" button should use bg-blue-600, not bg-slate-950.
+6. Create STYLE_GUIDE.md at the repo root documenting colors, typography, buttons, cards, spacing, motion.
+7. Run npm run lint && npm run build.
+8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'ux-design-token-system',
     category: 'Admin & Platform',
     status: STATUS.DEFERRED,
