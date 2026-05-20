@@ -1,0 +1,81 @@
+- generic [ref=e2]:
+  - main [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - img "JUnited" [ref=e11]
+          - generic [ref=e12]:
+            - paragraph [ref=e13]: JUnited
+            - paragraph [ref=e14]: Community, chesed, connection.
+        - generic [ref=e15]:
+          - img [ref=e16]
+          - text: Built for Jewish community life
+        - heading "Your Jewish community, connected." [level=1] [ref=e18]
+        - paragraph [ref=e19]: Reconnect with your communities, messages, local updates, chesed requests, and nearby discovery.
+        - generic [ref=e20]:
+          - generic [ref=e22]:
+            - img [ref=e24]
+            - generic [ref=e29]:
+              - paragraph [ref=e30]: Communities & groups
+              - paragraph [ref=e31]: Find the circles that fit your life.
+          - generic [ref=e33]:
+            - img [ref=e35]
+            - generic [ref=e40]:
+              - paragraph [ref=e41]: Chesed requests
+              - paragraph [ref=e42]: Ask for help or show up for someone nearby.
+          - generic [ref=e44]:
+            - img [ref=e46]
+            - generic [ref=e49]:
+              - paragraph [ref=e50]: Trusted sharing
+              - paragraph [ref=e51]: Post and message with more confidence.
+          - generic [ref=e53]:
+            - img [ref=e55]
+            - generic [ref=e58]:
+              - paragraph [ref=e59]: Local discovery
+              - paragraph [ref=e60]: See what is happening around your community.
+        - generic [ref=e62]:
+          - img [ref=e64]
+          - generic [ref=e67]:
+            - paragraph [ref=e68]: Start close to home
+            - paragraph [ref=e69]: Communities, chesed, map discovery, and messages all come together in one calm place.
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - generic [ref=e72]:
+            - paragraph [ref=e73]: Secure access
+            - heading "Sign in" [level=2] [ref=e74]
+            - paragraph [ref=e75]: Sign in to reconnect with your communities, messages, and requests.
+          - generic [ref=e77]:
+            - img "JUnited" [ref=e79]
+            - generic [ref=e80]:
+              - paragraph [ref=e81]: JUnited
+              - paragraph [ref=e82]: Community, chesed, connection.
+        - button "Continue with Google" [ref=e83] [cursor=pointer]:
+          - img [ref=e84]
+          - text: Continue with Google
+        - generic [ref=e91]: or
+        - generic [ref=e93]:
+          - generic [ref=e94]:
+            - generic [ref=e95]: Email
+            - generic [ref=e96]:
+              - img [ref=e97]
+              - textbox "Email" [ref=e100]:
+                - /placeholder: you@example.com
+          - generic [ref=e101]:
+            - generic [ref=e102]: Password
+            - generic [ref=e103]:
+              - img [ref=e104]
+              - textbox "Password" [ref=e107]:
+                - /placeholder: At least 6 characters
+          - button "Sign in" [ref=e108] [cursor=pointer]:
+            - text: Sign in
+            - img [ref=e109]
+        - button "Need an account? Create one" [ref=e111] [cursor=pointer]
+        - paragraph [ref=e112]: By continuing, you agree to use JUnited with care for your local community.
+        - generic [ref=e113]:
+          - img [ref=e114]
+          - text: Messages, communities, and chesed in one account.
+  - status "Loading JUnited" [ref=e116]:
+    - generic [ref=e120]:
+      - paragraph [ref=e126]: JUnited
+      - paragraph [ref=e127]: Community, chesed, connection.
+      - paragraph [ref=e128]: Preparing your community...
