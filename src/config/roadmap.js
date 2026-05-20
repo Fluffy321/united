@@ -1663,29 +1663,30 @@ Goals:
   {
     id: 'community-store',
     category: 'Growth & Monetization',
-    status: STATUS.DEFERRED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Community Store / Paid Community Transactions',
     description: 'Digital storefront for communities to sell merchandise, tickets, and fundraise using Stripe Connect, not direct JUnited donation checkout.',
-    why: 'Deferred until the Stripe Connect payout foundation is built. The old PaymentModal can collect money for JUnited only; it must not be used for marketplace/community recipient payments because funds need to route to connected recipients with an application fee.',
-    prompt: `You are implementing the Community Store for JUnited.
+    shippedNote: `Partially shipped 2026-05-20. Data infrastructure: community_listings table (existing, migration 020_community_feature_backbone.sql) + community_orders table (migration 20260520030000_community_orders.sql) with buyer_id, listing_id, amount_cents, currency, status, stripe_checkout_session_id, stripe_payment_intent_id, destination_connected_account_id, application_fee_amount; RLS: managers read all orders, buyers read own orders. CommunityStoreTab.jsx migrated from dataService bridge to direct Supabase queries + Supabase Storage image uploads. Admin Store tab added to CommunityAdminCenter: full listing CRUD (create/edit/toggle active/delete), "Checkout coming soon" notice. Member-facing buy button remains disabled ("Coming Soon") — payment processing requires stripe-connect-payout-foundation (STATUS.PLANNED). Checkout flow must use destination charges (transfer_data.destination + application_fee_amount) once that foundation ships.`,
+    why: 'Payment processing remains deferred until the Stripe Connect payout foundation is built. The old PaymentModal must not be used for marketplace payments because funds need to route to connected recipients with an application fee.',
+    prompt: `You are wiring Stripe Connect checkout into the Community Store for JUnited.
 
-Context: CommunityStoreTab.jsx exists. CommunityDetailView already has a 'listings' tab that
-        renders it when allow_member_listings is enabled. Do not use the old PaymentModal for this.
-        This must use the Stripe Connect platform payment foundation once it is shipped.
+Context:
+  - community_listings and community_orders tables are live (migration 20260520030000_community_orders.sql).
+  - CommunityStoreTab.jsx uses direct Supabase queries. The buy button is disabled showing "Coming Soon".
+  - The stripe-connect-payout-foundation feature must be shipped first (it creates connected accounts + the checkout Edge Function).
+  - Do NOT use the old PaymentModal or create-checkout-session Edge Function for this flow.
+  - Payments must use destination charges: transfer_data.destination = connected_account_id, application_fee_amount = platform fee.
 
 Goals:
-1. Verify community_listings table migration exists; create if not.
-2. Wire CommunityListing entity in base44Client.js.
-3. Add a community_orders table with buyer_id, community_id, listing_id, amount_cents,
-   currency, status, stripe_checkout_session_id, stripe_payment_intent_id,
-   destination_connected_account_id, application_fee_amount, created_at, updated_at.
-4. Connect CommunityStoreTab.jsx to real data (list, create, purchase).
-5. Integrate purchases through the Stripe Connect payment function, using destination charges
-   with transfer_data.destination and application_fee_amount.
-6. Add admin UI in CommunityAdminCenter for managing store items and viewing orders.
-7. Run npm run lint && npm run typecheck && npm run build.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+1. Implement the Stripe Connect checkout Edge Function (or extend the platform one) for community listings.
+2. On buy click in CommunityStoreTab.jsx, call the Edge Function with listing_id; receive checkoutUrl, redirect to Stripe.
+3. On webhook checkout.session.completed (listing branch), insert a row into community_orders with status = 'paid'.
+4. Increment community_listings.orders_count via a trigger or RPC.
+5. Show buyers their order history (basic) in CommunityStoreTab.
+6. Show order counts and recent orders in the Admin Store tab.
+7. Run npm run lint && npm run build.
+8. Update src/config/roadmap.js: change community-store shippedNote to reflect full checkout live.`,
   },
 
   {
