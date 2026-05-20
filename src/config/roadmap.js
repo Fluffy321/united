@@ -1044,7 +1044,8 @@ Goals:
   {
     id: 'group-join-request-admin-ui',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'Shipped 2026-05-20. Dedicated Requests tab added to CommunityGroupPage.jsx, visible only to owners/admins (role derived from group_members). Approve inserts into group_members + increments member_count; Deny updates status to denied. Badge count on tab. Error handling on all actions.',
     priority: PRIORITY.MEDIUM,
     title: 'Group Join Request Approval UI',
     description: 'Admin UI for private group owners/admins to approve or deny pending join requests.',
