@@ -1,0 +1,45 @@
+- generic [ref=e2]:
+  - main [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - img "JUnited" [ref=e8]
+        - generic [ref=e9]:
+          - paragraph [ref=e10]: JUnited
+          - paragraph [ref=e11]: Community, chesed, connection.
+      - generic [ref=e12]:
+        - img [ref=e13]
+        - text: Built for Jewish community life
+      - heading "Your Jewish community, connected." [level=1] [ref=e15]
+      - paragraph [ref=e16]: Reconnect with your communities, messages, local updates, chesed requests, and nearby discovery.
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - img [ref=e20]
+          - paragraph [ref=e25]: Communities & groups
+          - paragraph [ref=e26]: Find the circles that fit your life.
+        - generic [ref=e27]:
+          - img [ref=e29]
+          - paragraph [ref=e34]: Chesed requests
+          - paragraph [ref=e35]: Ask for help or show up for someone nearby.
+        - generic [ref=e36]:
+          - img [ref=e38]
+          - paragraph [ref=e41]: Trusted sharing
+          - paragraph [ref=e42]: Post and message with more confidence.
+        - generic [ref=e43]:
+          - img [ref=e45]
+          - paragraph [ref=e48]: Local discovery
+          - paragraph [ref=e49]: See what is happening around your community.
+      - generic [ref=e51]:
+        - img [ref=e53]
+        - generic [ref=e56]:
+          - paragraph [ref=e57]: Start close to home
+          - paragraph [ref=e58]: Communities, chesed, map discovery, and messages all come together in one calm place.
+      - generic [ref=e59]:
+        - button "Get Started" [ref=e60] [cursor=pointer]:
+          - text: Get Started
+          - img [ref=e61]
+        - button "Already have an account? Sign in" [ref=e63] [cursor=pointer]
+  - status "Loading JUnited" [ref=e64]:
+    - generic [ref=e68]:
+      - paragraph [ref=e74]: JUnited
+      - paragraph [ref=e75]: Community, chesed, connection.
+      - paragraph [ref=e76]: Preparing your community...

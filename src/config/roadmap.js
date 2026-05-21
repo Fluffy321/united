@@ -90,9 +90,10 @@ export const ROADMAP = [
   {
     id: 'auth-welcome-cta-intent',
     category: 'Auth & Identity',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Login Welcome — "Get Started" Should Default to Sign Up',
+    shippedNote: 'Shipped 2026-05-20. Single-line fix in Login.jsx: "Get Started" onClick changed from setMode(\'signin\') to setMode(\'signup\'). "Already have an account? Sign in" remains setMode(\'signin\'). Verified with Playwright in unauthenticated context: Get Started → Create account screen (Display name field visible, h2 "Create account"); Sign in CTA → Sign in screen (no Display name field, h2 "Sign in"); Back → Welcome; ?from_url → Sign in directly (welcome skipped). Lint + build clean.',
     description: 'The "Get Started" CTA on the welcome screen currently opens the sign-in form (mode="signin"). New users must then find the "Need an account?" toggle at the bottom. "Get Started" should open the create-account form directly (mode="signup") while "Already have an account? Sign in" opens the sign-in form.',
     why: 'Friction point for new user acquisition: when a new user clicks "Get Started" they land on the sign-in form, not a create-account form. The intent signals are clear — "Get Started" = new user, "Sign in" = returning user.',
     prompt: `You are improving the JUnited login welcome screen CTAs.

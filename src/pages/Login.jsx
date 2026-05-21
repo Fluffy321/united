@@ -265,7 +265,7 @@ export default function Login() {
           <div className="mt-8 space-y-3">
             <button
               type="button"
-              onClick={() => setMode('signin')}
+              onClick={() => setMode('signup')}
               className="motion-press flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 text-[15px] font-black text-white shadow-lg shadow-slate-950/15 transition hover:bg-slate-800 active:scale-[0.98]"
             >
               Get Started
