@@ -1382,6 +1382,7 @@ function HomeFeedSection({ posts, typeConfig, activeNeeds = [], onTabChange }) {
 
   return (
     <div className="space-y-2.5">
+      <p className="app-section-label px-0.5">Latest</p>
       {posts.map((post) => (
         <CommunityPostPreview key={post.id} post={post} typeConfig={typeConfig} />
       ))}

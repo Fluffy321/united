@@ -77,6 +77,42 @@ export const ROADMAP = [
   },
 
   {
+    id: 'auth-onboarding-mobile-redesign',
+    category: 'Auth & Identity',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Auth/Onboarding Screen — Mobile-First Two-Screen Redesign',
+    shippedNote: 'Shipped 2026-05-20. Login.jsx fully rewritten from a side-by-side desktop split panel to a two-screen mobile-first flow. Screen 1 (Welcome): JUnited logo, "Built for Jewish community life" badge, h1 headline, 4-feature 2×2 grid (communities, chesed, trusted sharing, local discovery), dark trust card, "Get Started" + "Already have an account?" CTAs — no sign-in form visible. Screen 2 (Sign In/Sign Up): back button, compact logo, "Secure access" label, Google OAuth button, email/password form, create-account toggle. If ?from_url is present (ProtectedRoute redirect), welcome screen is skipped and mode initialises to signin directly. All existing auth logic preserved (Google OAuth, email/password, signup, timeout wrapper, open-redirect protection, PKCE callback loading screen). No side-by-side panels at any screen size. Build + lint clean.',
+    description: 'Replace the side-by-side desktop split-panel login page with a warm, mobile-first two-screen auth flow tailored to JUnited identity.',
+    why: 'The original login page was a generic SaaS split-panel that felt disconnected from the Jewish community product. The new flow surfaces JUnited value props first and puts sign-in a single tap away.',
+  },
+
+  {
+    id: 'auth-welcome-cta-intent',
+    category: 'Auth & Identity',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Login Welcome — "Get Started" Should Default to Sign Up',
+    description: 'The "Get Started" CTA on the welcome screen currently opens the sign-in form (mode="signin"). New users must then find the "Need an account?" toggle at the bottom. "Get Started" should open the create-account form directly (mode="signup") while "Already have an account? Sign in" opens the sign-in form.',
+    why: 'Friction point for new user acquisition: when a new user clicks "Get Started" they land on the sign-in form, not a create-account form. The intent signals are clear — "Get Started" = new user, "Sign in" = returning user.',
+    prompt: `You are improving the JUnited login welcome screen CTAs.
+
+Context: src/pages/Login.jsx
+  - Line ~268: "Get Started" button calls setMode('signin') — should call setMode('signup')
+  - Line ~276: "Already have an account? Sign in" button calls setMode('signin') — correct
+  - Screen 2 (mode === 'signin' || mode === 'signup') already handles both modes:
+    - mode === 'signup' shows h2 "Create account" with name field shown
+    - mode === 'signin' shows h2 "Sign in" with no name field
+
+Goals:
+1. Change "Get Started" button onClick to setMode('signup') instead of setMode('signin').
+2. Verify Screen 2 h2 heading and form fields change correctly for signup mode.
+3. Verify "Already have an account?" toggle on Screen 2 still switches to signin.
+4. Run npm run lint && npm run build.
+5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'username-uniqueness',
     category: 'Auth & Identity',
     status: STATUS.SHIPPED,
@@ -2301,6 +2337,34 @@ Goals:
 6. Use Playwright MCP to verify after screenshots — confirm section headers, card height, and color.
 7. Run npm run lint && npm run build.
 8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'ux-community-detail-polish',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Community Detail — Reference-Based UI Polish',
+    shippedNote: 'Shipped 2026-05-20. Four targeted changes: (1) CommunityHero.jsx: cover height in app shell 96px→120px — community header now reads as a branded identity space rather than a card thumbnail. (2) CommunityHero.jsx: action bar logo 30px→36px with rounded-xl, member count upgraded to font-bold text-slate-600 — stronger visual anchor. (3) CommunityHero.jsx: removed redundant border-b from invite strip wrapper — eliminated the double horizontal-rule chrome between action bar and page content. (4) CommunityDetailView.jsx HomeFeedSection: added "LATEST" app-section-label above the post feed — creates clear rhythm between composer and posts. (5) CommunityOperatingSystem.jsx CommunityPostPreview: badge padding tightened from px-2.5 py-1 to px-2 py-0.5 — post card metadata row is no longer dominated by heavy pill badges. Verified with Playwright screenshots on two community types (Neighborhood + Events). All tabs, More menu, and swipe navigation confirmed working. Lint + build clean.',
+    description: 'Targeted polish of the Community Detail screen to reduce generic/AI-generated feel: hero cover height, action bar identity, section rhythm, and post card badge weight.',
+    why: 'Community Detail is the highest-engagement surface in the app but felt like a card expanded to full screen rather than a branded mini-app. Priority fixes: cover too thin, no section headers in home feed, heavy post card badges.',
+    prompt: `You are polishing the Community Detail screen for JUnited.
+
+Context:
+  src/components/communities/CommunityDetailView.jsx — main detail container, HomeFeedSection, RoutedCommunityHome
+  src/components/communities/CommunityHero.jsx — cover, action bar, invite strip
+  src/components/communities/CommunityOperatingSystem.jsx — CommunityPostPreview, CommunityAdminQuickActions
+
+Goals:
+1. Use Playwright MCP to capture before screenshots of at least 2 community types at 390px mobile.
+2. Increase CommunityHero inAppShell cover height (96 → 120px).
+3. Upgrade action bar: logo 30px → 36px, rounded-xl, member count font-bold.
+4. Remove redundant border-b from invite strip wrapper.
+5. Add app-section-label "Latest" before HomeFeedSection post list.
+6. Tighten CommunityPostPreview badge padding: px-2.5 py-1 → px-2 py-0.5.
+7. Verify all tabs and More menu still work via Playwright.
+8. Run npm run lint && npm run build.
+9. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {

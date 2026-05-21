@@ -100,7 +100,7 @@ export default function CommunityHero({
       )}
 
       {/* ── Branded cover ── */}
-      <div className="relative overflow-hidden" style={{ height: inAppShell ? 96 : 128 }}>
+      <div className="relative overflow-hidden" style={{ height: inAppShell ? 120 : 128 }}>
         {/* Cover: image or type-specific gradient */}
         <div className="absolute inset-0 w-full">
           {(community.cover_url || community.cover_image_url) ? (
@@ -168,11 +168,11 @@ export default function CommunityHero({
 
       {/* ── Thin action bar: logo + member count + CTA ── */}
       <div className="bg-white border-b border-slate-100 px-4 py-2.5 flex items-center gap-2.5">
-        <div className="rounded-lg overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm" style={{ width: 30, height: 30 }}>
+        <div className="rounded-xl overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm" style={{ width: 36, height: 36 }}>
           <CommunityLogo community={community} size="sm" />
         </div>
 
-        <p className="text-[12px] font-semibold text-slate-500 flex-1 truncate min-w-0">
+        <p className="text-[12px] font-bold text-slate-600 flex-1 truncate min-w-0">
           {memberCount > 0 ? `${memberCount.toLocaleString()} members` : typeConfig.tagline}
         </p>
 
@@ -215,7 +215,7 @@ export default function CommunityHero({
 
       {/* Invite strip — only for members */}
       {isFollowing && (
-        <div className="bg-white px-4 pb-2.5 pt-1 border-b border-slate-100">
+        <div className="bg-white px-4 pb-3 pt-1.5">
           <button
             type="button"
             onClick={() => setShowInviteModal(true)}

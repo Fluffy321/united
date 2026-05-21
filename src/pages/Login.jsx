@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Compass, HeartHandshake, Lock, Mail, MapPin, MessageCircle, ShieldCheck, Sparkles, User, Users, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Compass, HeartHandshake, Lock, Mail, MapPin, MessageCircle, ShieldCheck, Sparkles, User, Users, Loader2 } from 'lucide-react';
 import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { shouldUseSupabase, supabase, getAuthRedirectUrl } from '@/api/supabaseClient';
@@ -48,7 +48,7 @@ const VALUE_CHIPS = [
 
 function BrandMark({ compact = false }) {
   return (
-    <div className={`flex items-center gap-3 ${compact ? '' : 'mb-8'}`}>
+    <div className={`flex items-center gap-3 ${compact ? '' : 'mb-0'}`}>
       <div className={`${compact ? 'h-12 w-12 rounded-[18px]' : 'h-14 w-14 rounded-[20px]'} flex shrink-0 items-center justify-center bg-gradient-to-br from-blue-600 via-[#0F5ED7] to-slate-950 shadow-xl shadow-blue-950/20 ring-1 ring-white/70`}>
         <img src="/brand-mark.svg" alt="JUnited" className={compact ? 'h-8 w-8' : 'h-9 w-9'} />
       </div>
@@ -71,11 +71,50 @@ function GoogleIcon() {
   );
 }
 
+const LOGIN_STYLES = `
+  .login-screen, .login-screen input, .login-screen button {
+    letter-spacing: 0;
+  }
+  .login-screen input:-webkit-autofill,
+  .login-screen input:-webkit-autofill:hover,
+  .login-screen input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #0f172a;
+    -webkit-box-shadow: 0 0 0 1000px #f8fafc inset;
+    box-shadow: 0 0 0 1000px #f8fafc inset;
+    caret-color: #0f172a;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+  .login-page-root * {
+    box-sizing: border-box;
+    letter-spacing: 0 !important;
+  }
+  .login-field {
+    background: #F8FAFC;
+    border: 1px solid #D8E2EF;
+    border-radius: 16px;
+  }
+  .login-field:focus-within {
+    background: #FFFFFF;
+    border-color: #2563EB;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  }
+  .login-page-root input {
+    color: #0F172A !important;
+  }
+`;
+
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { checkAppState, isAuthenticated, isLoadingAuth } = useAuth();
-  const [mode, setMode] = useState('signin');
+
+  // When a protected route redirects here with ?from_url, skip the welcome screen — the
+  // user was already in the app and just needs to re-authenticate, not see the intro.
+  const hasFromUrl = Boolean(searchParams.get('from_url'));
+
+  // mode: 'welcome' | 'signin' | 'signup'
+  const [mode, setMode] = useState(hasFromUrl ? 'signin' : 'welcome');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -87,10 +126,8 @@ export default function Login() {
   const target = useMemo(() => {
     const fromUrl = searchParams.get('from_url');
     if (!fromUrl) return DEFAULT_AUTH_DESTINATION;
-
     try {
       const parsed = new URL(fromUrl, window.location.origin);
-      // Reject cross-origin values to prevent open redirect attacks.
       if (parsed.origin !== window.location.origin) return DEFAULT_AUTH_DESTINATION;
       return `${parsed.pathname}${parsed.search || ''}`;
     } catch {
@@ -98,10 +135,7 @@ export default function Login() {
     }
   }, [searchParams]);
 
-  // Detect any Supabase auth callback so we can show a loading screen instead
-  // of flashing the login form. Covers:
-  //   - email verification: ?type=email&code=... (PKCE) or ?type=email&token_hash=...
-  //   - OAuth PKCE return:  ?code=... (no type param, or type=oauth)
+  // Detect Supabase auth callback (email verification or OAuth PKCE return)
   const isAuthCallback = searchParams.get('type') === 'email' || Boolean(searchParams.get('code'));
 
   const signInWithGoogle = async () => {
@@ -114,7 +148,6 @@ export default function Login() {
         options: { redirectTo: getAuthRedirectUrl() },
       });
       if (oauthError) throw oauthError;
-      // Browser navigates away — keep loading=true while redirect happens.
     } catch (err) {
       setError(err?.message || 'Could not connect to Google. Please try again.');
       setIsGoogleLoading(false);
@@ -132,7 +165,6 @@ export default function Login() {
     setError('');
     setMessage('');
     setIsSubmitting(true);
-
     try {
       if (mode === 'signup') {
         await dataService.auth.signUp({ email, password, displayName });
@@ -163,8 +195,7 @@ export default function Login() {
     }
   };
 
-  // While Supabase processes an auth callback (email verification or OAuth),
-  // show a clean loading screen instead of flashing the login form.
+  // Loading screen while Supabase processes an auth callback
   if (isAuthCallback && (isLoadingAuth || isAuthenticated)) {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-[#F6F8FB]">
@@ -174,233 +205,231 @@ export default function Login() {
     );
   }
 
-  return (
-    <main
-      className="login-page-root min-h-[100dvh] px-4 py-4 text-slate-950 sm:px-6 sm:py-6"
-      style={{ backgroundColor: '#F6F8FB', colorScheme: 'light' }}
-    >
-      <style>{`
-        .login-screen, .login-screen input, .login-screen button {
-          letter-spacing: 0;
-        }
-        .login-screen input:-webkit-autofill,
-        .login-screen input:-webkit-autofill:hover,
-        .login-screen input:-webkit-autofill:focus {
-          -webkit-text-fill-color: #0f172a;
-          -webkit-box-shadow: 0 0 0 1000px #f8fafc inset;
-          box-shadow: 0 0 0 1000px #f8fafc inset;
-          caret-color: #0f172a;
-          transition: background-color 9999s ease-in-out 0s;
-        }
-        .login-page-root * {
-          box-sizing: border-box;
-          letter-spacing: 0 !important;
-        }
-        .login-field {
-          background: #F8FAFC;
-          border: 1px solid #D8E2EF;
-          border-radius: 16px;
-        }
-        .login-field:focus-within {
-          background: #FFFFFF;
-          border-color: #2563EB;
-          box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
-        }
-        .login-page-root input {
-          color: #0F172A !important;
-        }
-      `}</style>
-      <section className="mx-auto grid min-h-[calc(100dvh-32px)] w-full max-w-6xl items-center gap-4 lg:grid-cols-[1.05fr_0.95fr] lg:gap-6">
-        <div className="login-screen relative overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(37,99,235,0.14),transparent_32%),radial-gradient(circle_at_86%_26%,rgba(212,175,55,0.16),transparent_28%),linear-gradient(180deg,#FFFFFF_0%,#F7FAFF_56%,#EEF5FF_100%)]" />
-          <div className="relative p-5 sm:p-7 lg:p-8">
-            <BrandMark />
+  // ─── Screen 1: Welcome ────────────────────────────────────────────────────
+  if (mode === 'welcome') {
+    return (
+      <main
+        className="login-page-root min-h-[100dvh] bg-[#F6F8FB] px-5 py-8 text-slate-950 sm:py-12"
+        style={{ colorScheme: 'light' }}
+      >
+        <style>{LOGIN_STYLES}</style>
+        <div className="mx-auto w-full max-w-sm">
 
-            <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[11px] font-black text-blue-700">
-              <Sparkles className="h-3.5 w-3.5" />
-              Built for Jewish community life
-            </div>
+          <BrandMark />
 
-            <h1 className="font-display mt-5 max-w-xl text-[34px] font-black leading-[1.02] text-slate-950 sm:text-[46px]">
-              {mode === 'signin' ? 'Your Jewish community, connected.' : 'Join the Jewish community app made for real life.'}
-            </h1>
-            <p className="mt-4 max-w-lg text-[15px] font-semibold leading-7 text-slate-600">
-              {mode === 'signin'
-                ? 'Reconnect with your communities, messages, local updates, chesed requests, and nearby discovery.'
-                : 'Create your account to find groups, share with trusted friends, discover what is nearby, and help when help is needed.'}
-            </p>
-
-            <div className="mt-7 grid gap-2.5 sm:grid-cols-2">
-              {VALUE_CHIPS.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.label}
-                    className="rounded-[20px] border border-slate-200 bg-white/85 p-3.5 shadow-sm backdrop-blur"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border ${item.className}`}>
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="text-[13px] font-black leading-5 text-slate-950">{item.label}</p>
-                        <p className="mt-0.5 text-[12px] font-semibold leading-5 text-slate-500">{item.text}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="mt-7 rounded-[24px] border border-slate-200 bg-slate-950 p-4 text-white shadow-xl shadow-slate-950/15">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15">
-                  <Compass className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-[13px] font-black">Start close to home</p>
-                  <p className="mt-0.5 text-[12px] font-semibold leading-5 text-slate-300">
-                    Communities, chesed, map discovery, and messages all come together in one calm place.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="login-screen rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-7">
-          <div className="mb-6 flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[12px] font-black uppercase text-[#0F5ED7]">Secure access</p>
-              <h2 className="mt-1 text-[30px] font-black leading-tight text-slate-950">
-              {mode === 'signin' ? 'Sign in' : 'Create account'}
-              </h2>
-              <p className="mt-2 text-[14px] font-semibold leading-6 text-slate-500">
-                {mode === 'signin'
-                  ? 'Sign in to reconnect with your communities, messages, and requests.'
-                  : shouldUseSupabase
-                    ? 'Create your account, confirm your email, and come back to start connecting.'
-                    : 'Local preview mode creates a demo account immediately without sending email.'}
-              </p>
-            </div>
-            <div className="hidden sm:block">
-              <BrandMark compact />
-            </div>
+          <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[11px] font-black text-blue-700">
+            <Sparkles className="h-3.5 w-3.5" />
+            Built for Jewish community life
           </div>
 
-          {shouldUseSupabase && (
-            <>
-              <button
-                type="button"
-                onClick={signInWithGoogle}
-                disabled={isGoogleLoading || isSubmitting}
-                className="motion-press flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white text-[14px] font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"
-              >
-                {isGoogleLoading
-                  ? <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
-                  : <GoogleIcon />
-                }
-                Continue with Google
-              </button>
+          <h1 className="mt-5 text-[32px] font-black leading-[1.05] text-slate-950 sm:text-[38px]">
+            Your Jewish community, connected.
+          </h1>
 
-              <div className="my-5 flex items-center gap-3">
-                <div className="h-px flex-1 bg-slate-200" />
-                <span className="text-[12px] font-semibold text-slate-400">or</span>
-                <div className="h-px flex-1 bg-slate-200" />
-              </div>
-            </>
-          )}
-
-          <form onSubmit={submit} className="space-y-4">
-            {mode === 'signup' && (
-              <label className="block">
-                <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">Display name</span>
-                <span className="login-field flex h-12 items-center gap-2 px-3 transition">
-                  <User className="h-4 w-4 text-[#0F5ED7]" />
-                  <input
-                    value={displayName}
-                    onChange={(event) => setDisplayName(event.target.value)}
-                    className="w-full bg-transparent text-[15px] font-medium text-slate-900 outline-none placeholder:text-slate-400"
-                    placeholder="Your name"
-                  />
-                </span>
-              </label>
-            )}
-
-            <label className="block">
-              <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">Email</span>
-              <span className="login-field flex h-12 items-center gap-2 px-3 transition">
-                <Mail className="h-4 w-4 text-[#0F5ED7]" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="w-full bg-transparent text-[15px] font-medium text-slate-900 outline-none placeholder:text-slate-400"
-                  placeholder="you@example.com"
-                  required
-                />
-              </span>
-            </label>
-
-            <label className="block">
-              <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">Password</span>
-              <span className="login-field flex h-12 items-center gap-2 px-3 transition">
-                <Lock className="h-4 w-4 text-[#0F5ED7]" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  className="w-full bg-transparent text-[15px] font-medium text-slate-900 outline-none placeholder:text-slate-400"
-                  placeholder="At least 6 characters"
-                  required
-                  minLength={6}
-                />
-              </span>
-            </label>
-
-            {error && (
-              <p className="rounded-[8px] border border-red-100 bg-red-50 px-3 py-2.5 text-[13px] font-semibold text-red-700">{error}</p>
-            )}
-            {message && (
-              <p className="rounded-[8px] border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-[13px] font-semibold text-emerald-700">{message}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="motion-press flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 text-[15px] font-black text-white shadow-lg shadow-slate-950/15 transition hover:bg-slate-800 disabled:opacity-60"
-            >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : (
-                <>
-                  {mode === 'signin' ? 'Sign in' : 'Create account'}
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </button>
-          </form>
-
-          <button
-            type="button"
-            onClick={() => {
-              setMode(mode === 'signin' ? 'signup' : 'signin');
-              setError('');
-              setMessage('');
-            }}
-            className="motion-press mt-5 h-11 w-full rounded-2xl border border-blue-100 bg-blue-50 text-center text-[14px] font-black text-[#0F5ED7] transition hover:bg-blue-100"
-          >
-            {mode === 'signin' ? 'Need an account? Create one' : 'Already have an account? Sign in'}
-          </button>
-
-          <p className="mt-5 text-center text-[12px] font-semibold leading-5 text-slate-400">
-            By continuing, you agree to use JUnited with care for your local community.
+          <p className="mt-3 text-[15px] font-semibold leading-7 text-slate-600">
+            Reconnect with your communities, messages, local updates, chesed requests, and nearby discovery.
           </p>
 
-          <div className="mt-5 flex items-center justify-center gap-2 text-[11px] font-bold text-slate-400">
-            <MessageCircle className="h-3.5 w-3.5" />
-            Messages, communities, and chesed in one account.
+          <div className="mt-6 grid grid-cols-2 gap-2.5">
+            {VALUE_CHIPS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.label}
+                  className="rounded-[20px] border border-slate-200 bg-white p-3.5 shadow-sm"
+                >
+                  <div className={`mb-2.5 flex h-9 w-9 items-center justify-center rounded-2xl border ${item.className}`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <p className="text-[13px] font-black leading-5 text-slate-950">{item.label}</p>
+                  <p className="mt-0.5 text-[12px] font-semibold leading-4 text-slate-500">{item.text}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-950 p-4 text-white shadow-xl shadow-slate-950/15">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15">
+                <Compass className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-[13px] font-black">Start close to home</p>
+                <p className="mt-0.5 text-[12px] font-semibold leading-5 text-slate-300">
+                  Communities, chesed, map discovery, and messages all come together in one calm place.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 space-y-3">
+            <button
+              type="button"
+              onClick={() => setMode('signin')}
+              className="motion-press flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 text-[15px] font-black text-white shadow-lg shadow-slate-950/15 transition hover:bg-slate-800 active:scale-[0.98]"
+            >
+              Get Started
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('signin')}
+              className="motion-press h-11 w-full rounded-2xl border border-blue-100 bg-blue-50 text-center text-[14px] font-black text-[#0F5ED7] transition hover:bg-blue-100 active:scale-[0.98]"
+            >
+              Already have an account? Sign in
+            </button>
           </div>
         </div>
-      </section>
+      </main>
+    );
+  }
+
+  // ─── Screen 2: Sign In / Sign Up ──────────────────────────────────────────
+  return (
+    <main
+      className="login-page-root min-h-[100dvh] bg-[#F6F8FB] px-5 py-6 text-slate-950 sm:py-8"
+      style={{ colorScheme: 'light' }}
+    >
+      <style>{LOGIN_STYLES}</style>
+      <div className="login-screen mx-auto w-full max-w-sm">
+
+        <button
+          type="button"
+          onClick={() => { setMode('welcome'); setError(''); setMessage(''); }}
+          className="-ml-1 mb-6 flex items-center gap-1.5 text-[13px] font-bold text-slate-500 transition hover:text-slate-800"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+
+        <BrandMark compact />
+
+        <div className="mt-6">
+          <p className="text-[12px] font-black uppercase tracking-wide text-[#0F5ED7]">Secure access</p>
+          <h2 className="mt-1 text-[30px] font-black leading-tight text-slate-950">
+            {mode === 'signin' ? 'Sign in' : 'Create account'}
+          </h2>
+          <p className="mt-2 text-[14px] font-semibold leading-6 text-slate-500">
+            {mode === 'signin'
+              ? 'Sign in to reconnect with your communities, messages, and requests.'
+              : shouldUseSupabase
+                ? 'Create your account, confirm your email, and come back to start connecting.'
+                : 'Local preview mode creates a demo account immediately without sending email.'}
+          </p>
+        </div>
+
+        {shouldUseSupabase && (
+          <>
+            <button
+              type="button"
+              onClick={signInWithGoogle}
+              disabled={isGoogleLoading || isSubmitting}
+              className="motion-press mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white text-[14px] font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"
+            >
+              {isGoogleLoading
+                ? <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                : <GoogleIcon />
+              }
+              Continue with Google
+            </button>
+
+            <div className="my-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-slate-200" />
+              <span className="text-[12px] font-semibold text-slate-400">or</span>
+              <div className="h-px flex-1 bg-slate-200" />
+            </div>
+          </>
+        )}
+
+        <form onSubmit={submit} className="space-y-4">
+          {mode === 'signup' && (
+            <label className="block">
+              <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">Display name</span>
+              <span className="login-field flex h-12 items-center gap-2 px-3 transition">
+                <User className="h-4 w-4 text-[#0F5ED7]" />
+                <input
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="w-full bg-transparent text-[15px] font-medium text-slate-900 outline-none placeholder:text-slate-400"
+                  placeholder="Your name"
+                />
+              </span>
+            </label>
+          )}
+
+          <label className="block">
+            <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">Email</span>
+            <span className="login-field flex h-12 items-center gap-2 px-3 transition">
+              <Mail className="h-4 w-4 text-[#0F5ED7]" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-transparent text-[15px] font-medium text-slate-900 outline-none placeholder:text-slate-400"
+                placeholder="you@example.com"
+                required
+              />
+            </span>
+          </label>
+
+          <label className="block">
+            <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">Password</span>
+            <span className="login-field flex h-12 items-center gap-2 px-3 transition">
+              <Lock className="h-4 w-4 text-[#0F5ED7]" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-transparent text-[15px] font-medium text-slate-900 outline-none placeholder:text-slate-400"
+                placeholder="At least 6 characters"
+                required
+                minLength={6}
+              />
+            </span>
+          </label>
+
+          {error && (
+            <p className="rounded-[8px] border border-red-100 bg-red-50 px-3 py-2.5 text-[13px] font-semibold text-red-700">{error}</p>
+          )}
+          {message && (
+            <p className="rounded-[8px] border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-[13px] font-semibold text-emerald-700">{message}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="motion-press flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 text-[15px] font-black text-white shadow-lg shadow-slate-950/15 transition hover:bg-slate-800 disabled:opacity-60"
+          >
+            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+              <>
+                {mode === 'signin' ? 'Sign in' : 'Create account'}
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
+        </form>
+
+        <button
+          type="button"
+          onClick={() => {
+            setMode(mode === 'signin' ? 'signup' : 'signin');
+            setError('');
+            setMessage('');
+          }}
+          className="motion-press mt-5 h-11 w-full rounded-2xl border border-blue-100 bg-blue-50 text-center text-[14px] font-black text-[#0F5ED7] transition hover:bg-blue-100"
+        >
+          {mode === 'signin' ? 'Need an account? Create one' : 'Already have an account? Sign in'}
+        </button>
+
+        <p className="mt-5 text-center text-[12px] font-semibold leading-5 text-slate-400">
+          By continuing, you agree to use JUnited with care for your local community.
+        </p>
+
+        <div className="mt-4 mb-2 flex items-center justify-center gap-2 text-[11px] font-bold text-slate-400">
+          <MessageCircle className="h-3.5 w-3.5" />
+          Messages, communities, and chesed in one account.
+        </div>
+      </div>
     </main>
   );
 }
