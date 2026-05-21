@@ -747,7 +747,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
               />
               <div className="min-w-0">
                 <div className="flex items-center gap-1 flex-wrap">
-                  <span className="font-semibold text-slate-900 text-[13px] truncate">
+                  <span className="font-bold text-slate-900 text-[13px] truncate">
                     {post.user_name || communityName || 'Community'}
                   </span>
                   <span className="text-slate-300 text-[10px]">·</span>
@@ -763,7 +763,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-sm flex-shrink-0 font-semibold">?</div>
               <div>
-                <span className="font-semibold text-slate-900 text-[13px]">Anonymous</span>
+                <span className="font-bold text-slate-900 text-[13px]">Anonymous</span>
                 <p className="text-[10px] text-slate-400">{timeAgo}</p>
               </div>
             </div>
@@ -772,7 +772,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
               <UserAvatar user={post} name={post.user_name} size="xs" className="w-7 h-7" />
               <div className="min-w-0">
                 <div className="flex items-center gap-1 flex-wrap">
-                  <span className="font-semibold text-slate-900 text-[13px] truncate">{post.user_name}</span>
+                  <span className="font-bold text-slate-900 text-[13px] truncate">{post.user_name}</span>
                   {post.helper_badge && post.helper_badge !== 'none' && <HelperBadge badge={post.helper_badge} size="sm" />}
                   <span className="text-slate-300 text-[10px]">·</span>
                   <span className={`text-[10px] font-medium ${isVeryRecent ? 'text-green-600' : 'text-slate-400'}`}>{timeAgo}</span>
@@ -860,14 +860,14 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
       )}
 
       {/* Content */}
-      <div className="px-3 pt-1 pb-0.5">
+      <div className="px-3 pt-1 pb-2">
         {post.prompt_text && (
           <div className="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-lg px-2.5 py-1.5 mb-1.5 border border-violet-100">
             <p className="text-[11px] text-violet-700 font-semibold">💭 {post.prompt_text}</p>
           </div>
         )}
         {post.title && <h3 className="font-bold text-[14px] text-slate-900 mb-0.5 leading-snug line-clamp-2">{post.title}</h3>}
-        <p className={`text-[13px] text-slate-700 leading-snug ${!expanded ? 'line-clamp-3' : ''}`}>
+        <p className={`text-[13px] text-slate-700 leading-relaxed ${!expanded ? 'line-clamp-3' : ''}`}>
           {post.body}
           {bodyLong && (
             <button onClick={() => setExpanded(e => !e)} className="ml-1 text-blue-600 font-semibold text-[12px]">{expanded ? 'less' : 'see more'}</button>
@@ -903,7 +903,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
       {recentComments.length > 0 && (
         <div className="px-3 pt-1">
           <button onClick={() => setCommentsOpen(true)} className="w-full text-left">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-1.5">
               <UserAvatar name={recentComments[0].author_name} size="xs" className="flex-shrink-0" />
               <span className="text-[11px] text-slate-500 line-clamp-1">
                 <span className="font-semibold text-slate-700">{recentComments[0].author_name?.split(' ')[0]}</span>
@@ -918,7 +918,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
       )}
 
       {/* Footer: compact action row — no duplicate comment icon */}
-      <div className="px-3 py-1.5 mt-1 border-t border-slate-100 flex items-center gap-2">
+      <div className="px-3 py-2 border-t border-slate-100 flex items-center gap-2">
         <ReactionBar postId={post.id} currentUser={currentUser} postAuthorId={post.user_id} />
         <button
           onClick={() => setCommentsOpen(true)}

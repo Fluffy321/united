@@ -209,7 +209,7 @@ export default function Login() {
   if (mode === 'welcome') {
     return (
       <main
-        className="login-page-root min-h-[100dvh] bg-[#F6F8FB] px-5 py-8 text-slate-950 sm:py-12"
+        className="login-page-root min-h-[100dvh] bg-[#F6F8FB] px-5 py-5 text-slate-950 sm:py-10"
         style={{ colorScheme: 'light' }}
       >
         <style>{LOGIN_STYLES}</style>
@@ -217,52 +217,46 @@ export default function Login() {
 
           <BrandMark />
 
-          <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[11px] font-black text-blue-700">
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[11px] font-black text-blue-700">
             <Sparkles className="h-3.5 w-3.5" />
             Built for Jewish community life
           </div>
 
-          <h1 className="mt-5 text-[32px] font-black leading-[1.05] text-slate-950 sm:text-[38px]">
+          <h1 className="mt-3 text-[28px] font-black leading-[1.08] text-slate-950 sm:text-[34px]">
             Your Jewish community, connected.
           </h1>
 
-          <p className="mt-3 text-[15px] font-semibold leading-7 text-slate-600">
-            Reconnect with your communities, messages, local updates, chesed requests, and nearby discovery.
+          <p className="mt-2 text-[14px] font-semibold leading-6 text-slate-600">
+            Communities, chesed, local updates, and nearby discovery — all in one place.
           </p>
 
-          <div className="mt-6 grid grid-cols-2 gap-2.5">
+          <div className="mt-4 grid grid-cols-2 gap-2">
             {VALUE_CHIPS.map((item) => {
               const Icon = item.icon;
               return (
                 <div
                   key={item.label}
-                  className="rounded-[20px] border border-slate-200 bg-white p-3.5 shadow-sm"
+                  className="rounded-[16px] border border-slate-200 bg-white p-3 shadow-sm"
                 >
-                  <div className={`mb-2.5 flex h-9 w-9 items-center justify-center rounded-2xl border ${item.className}`}>
-                    <Icon className="h-4 w-4" />
+                  <div className={`mb-2 flex h-8 w-8 items-center justify-center rounded-xl border ${item.className}`}>
+                    <Icon className="h-3.5 w-3.5" />
                   </div>
-                  <p className="text-[13px] font-black leading-5 text-slate-950">{item.label}</p>
-                  <p className="mt-0.5 text-[12px] font-semibold leading-4 text-slate-500">{item.text}</p>
+                  <p className="text-[12px] font-black leading-4 text-slate-950">{item.label}</p>
                 </div>
               );
             })}
           </div>
 
-          <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-950 p-4 text-white shadow-xl shadow-slate-950/15">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15">
-                <Compass className="h-5 w-5" />
+          <div className="mt-3 rounded-[20px] border border-slate-200 bg-slate-950 px-4 py-3 text-white shadow-xl shadow-slate-950/15">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
+                <Compass className="h-4 w-4" />
               </div>
-              <div>
-                <p className="text-[13px] font-black">Start close to home</p>
-                <p className="mt-0.5 text-[12px] font-semibold leading-5 text-slate-300">
-                  Communities, chesed, map discovery, and messages all come together in one calm place.
-                </p>
-              </div>
+              <p className="text-[13px] font-black">Your community, all in one calm place.</p>
             </div>
           </div>
 
-          <div className="mt-8 space-y-3">
+          <div className="mt-5 space-y-3">
             <button
               type="button"
               onClick={() => setMode('signup')}

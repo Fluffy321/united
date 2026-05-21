@@ -1,0 +1,39 @@
+- generic [ref=e2]:
+  - main [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - img "JUnited" [ref=e8]
+        - generic [ref=e9]:
+          - paragraph [ref=e10]: JUnited
+          - paragraph [ref=e11]: Community, chesed, connection.
+      - generic [ref=e12]:
+        - img [ref=e13]
+        - text: Built for Jewish community life
+      - heading "Your Jewish community, connected." [level=1] [ref=e15]
+      - paragraph [ref=e16]: Communities, chesed, local updates, and nearby discovery — all in one place.
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - img [ref=e20]
+          - paragraph [ref=e25]: Communities & groups
+        - generic [ref=e26]:
+          - img [ref=e28]
+          - paragraph [ref=e33]: Chesed requests
+        - generic [ref=e34]:
+          - img [ref=e36]
+          - paragraph [ref=e39]: Trusted sharing
+        - generic [ref=e40]:
+          - img [ref=e42]
+          - paragraph [ref=e45]: Local discovery
+      - generic [ref=e47]:
+        - img [ref=e49]
+        - paragraph [ref=e52]: Your community, all in one calm place.
+      - generic [ref=e53]:
+        - button "Get Started" [ref=e54] [cursor=pointer]:
+          - text: Get Started
+          - img [ref=e55]
+        - button "Already have an account? Sign in" [ref=e57] [cursor=pointer]
+  - status "Loading JUnited" [ref=e58]:
+    - generic [ref=e62]:
+      - paragraph [ref=e68]: JUnited
+      - paragraph [ref=e69]: Community, chesed, connection.
+      - paragraph [ref=e70]: Preparing your community...

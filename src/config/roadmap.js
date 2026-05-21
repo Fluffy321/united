@@ -2369,6 +2369,30 @@ Goals:
   },
 
   {
+    id: 'ux-feed-post-card-polish',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Feed Post Card — Reference-Based UI Polish',
+    shippedNote: 'Shipped 2026-05-20. Five targeted changes to UnifiedPostCard.jsx default feed post branch: (1) Body leading-snug → leading-relaxed — multi-line post bodies now breathe and scan faster. (2) Content pb-0.5 → pb-2 — added breathing room between content and footer divider. (3) Username font-semibold → font-bold in all three header branches (community, anonymous, user) — poster identity reads with more confidence. (4) Footer mt-1 py-1.5 → py-2 (no margin-top) — action row no longer feels tacked on. (5) Inline recent-comment strip: added bg-slate-50 rounded-xl px-2.5 py-1.5 to inner div — preview now reads as a comment bubble rather than raw text. Lint + build clean.',
+    description: 'Targeted polish of UnifiedPostCard (default feed post branch) and the community-feed post preview.',
+    why: 'The post card is the single highest-density surface in the app. Small improvements to leading, spacing, and font weight compound across every feed scroll.',
+    prompt: `You are polishing the feed post card for JUnited.
+
+Context:
+  src/components/feed/UnifiedPostCard.jsx — default post branch starting ~line 709
+  src/components/communities/CommunityOperatingSystem.jsx — CommunityPostPreview
+
+Goals:
+1. Capture Playwright before screenshots of Feed, community home feed, community Posts tab.
+2. Audit body leading, content padding, header font weight, footer spacing, comment preview strip.
+3. Implement the top 3-5 targeted fixes — no redesign, no new features.
+4. Capture after screenshots and confirm visual improvement.
+5. Run npm run lint && npm run build.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'ux-design-token-system',
     category: 'Admin & Platform',
     status: STATUS.DEFERRED,
