@@ -109,9 +109,9 @@ export function CommunityPostPreview({ post, typeConfig, compact = false }) {
           : 'border-slate-100 bg-white'
       }`}
     >
-      <div className="mb-2 flex flex-wrap items-center gap-2">
+      <div className="mb-2 flex flex-wrap items-center gap-1.5">
         <span
-          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${
             announcement ? 'bg-amber-100 text-amber-800' : (typeConfig?.badgeClass || 'bg-blue-50 text-blue-700')
           }`}
         >
@@ -119,7 +119,7 @@ export function CommunityPostPreview({ post, typeConfig, compact = false }) {
           {announcement ? 'Official update' : (post.type || post.post_type || typeConfig?.label || 'Post')}
         </span>
         {post.is_pinned ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-blue-700">
+          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-blue-700">
             <Pin className="h-3 w-3" />
             Featured
           </span>

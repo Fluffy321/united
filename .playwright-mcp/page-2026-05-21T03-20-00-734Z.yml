@@ -1,0 +1,47 @@
+- main [ref=e4]:
+  - generic [ref=e5]:
+    - button "Back" [ref=e80] [cursor=pointer]:
+      - img [ref=e81]
+      - text: Back
+    - generic [ref=e83]:
+      - img "JUnited" [ref=e85]
+      - generic [ref=e86]:
+        - paragraph [ref=e87]: JUnited
+        - paragraph [ref=e88]: Community, chesed, connection.
+    - generic [ref=e89]:
+      - paragraph [ref=e90]: Secure access
+      - heading "Create account" [level=2] [ref=e91]
+      - paragraph [ref=e92]: Create your account, confirm your email, and come back to start connecting.
+    - button "Continue with Google" [ref=e93] [cursor=pointer]:
+      - img [ref=e94]
+      - text: Continue with Google
+    - generic [ref=e101]: or
+    - generic [ref=e103]:
+      - generic [ref=e104]:
+        - generic [ref=e105]: Display name
+        - generic [ref=e106]:
+          - img [ref=e107]
+          - textbox "Display name" [ref=e110]:
+            - /placeholder: Your name
+      - generic [ref=e111]:
+        - generic [ref=e112]: Email
+        - generic [ref=e113]:
+          - img [ref=e114]
+          - textbox "Email" [ref=e117]:
+            - /placeholder: you@example.com
+            - text: jonathantroppe@gmail.com
+      - generic [ref=e118]:
+        - generic [ref=e119]: Password
+        - generic [ref=e120]:
+          - img [ref=e121]
+          - textbox "Password" [ref=e124]:
+            - /placeholder: At least 6 characters
+            - text: Bunny123!?
+      - button "Create account" [ref=e125] [cursor=pointer]:
+        - text: Create account
+        - img [ref=e126]
+    - button "Already have an account? Sign in" [ref=e128] [cursor=pointer]
+    - paragraph [ref=e129]: By continuing, you agree to use JUnited with care for your local community.
+    - generic [ref=e130]:
+      - img [ref=e131]
+      - text: Messages, communities, and chesed in one account.

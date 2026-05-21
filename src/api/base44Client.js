@@ -1101,8 +1101,9 @@ const createSupabaseEntityApi = (entityName) => {
     },
 
     subscribe(callback) {
+      const channelName = `${table}-changes-${Math.random().toString(36).slice(2, 8)}`;
       const channel = supabase
-        .channel(`${table}-changes`)
+        .channel(channelName)
         .on('postgres_changes', { event: '*', schema: 'public', table }, (event) => {
           callback(normalizeRealtimeEvent(event));
         })

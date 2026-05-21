@@ -142,7 +142,7 @@ export default function NewsletterComposer({ group, memberEmails, onClose, onSen
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100">

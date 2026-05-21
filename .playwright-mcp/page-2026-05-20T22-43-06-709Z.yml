@@ -1,0 +1,179 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - region "Notifications alt+T"
+    - main [ref=e4]:
+      - main [ref=e7]:
+        - generic [ref=e9]:
+          - generic [ref=e10]:
+            - img [ref=e11]
+            - heading "Communities" [level=1] [ref=e16]
+          - generic [ref=e17]:
+            - button "Open marketplace" [ref=e18] [cursor=pointer]:
+              - img [ref=e19]
+            - button "Search communities" [ref=e22] [cursor=pointer]:
+              - img [ref=e23]
+            - button "Community messages" [ref=e26] [cursor=pointer]:
+              - img [ref=e27]
+            - button "Create community" [ref=e29] [cursor=pointer]:
+              - img [ref=e30]
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - paragraph [ref=e33]: Your neighborhood, shul, chesed, and learning — in one place.
+            - generic [ref=e34]: 2 joined
+          - generic [ref=e35]:
+            - paragraph [ref=e36]: Your spaces
+            - generic [ref=e37]:
+              - button "FT Five Towns News & Updates Neighborhood" [ref=e38] [cursor=pointer]:
+                - generic [ref=e39]: FT
+                - generic [ref=e40]:
+                  - generic [ref=e41]: Five Towns News & Updates
+                  - generic [ref=e42]: Neighborhood
+              - button "5T 5 Towns Chess Tournaments Events" [ref=e43] [cursor=pointer]:
+                - generic [ref=e44]: 5T
+                - generic [ref=e45]:
+                  - generic [ref=e46]: 5 Towns Chess Tournaments
+                  - generic [ref=e47]: Events
+          - generic [ref=e49]:
+            - button "Discover" [ref=e50] [cursor=pointer]
+            - button "My Communities (2)" [ref=e51] [cursor=pointer]
+          - generic [ref=e53]:
+            - generic [ref=e54]:
+              - img
+              - textbox [ref=e55]:
+                - /placeholder: Search communities, topics, or neighborhoods
+            - generic [ref=e56]:
+              - button "All" [ref=e57] [cursor=pointer]
+              - button "Community" [ref=e58] [cursor=pointer]
+              - button "Neighborhood" [ref=e59] [cursor=pointer]
+              - button "Chesed" [ref=e60] [cursor=pointer]
+              - button "Shul" [ref=e61] [cursor=pointer]
+              - button "Parents" [ref=e62] [cursor=pointer]
+              - button "Learning" [ref=e63] [cursor=pointer]
+              - button "Marketplace" [ref=e64] [cursor=pointer]
+              - button "Events" [ref=e65] [cursor=pointer]
+          - generic [ref=e67]:
+            - generic [ref=e68]:
+              - generic [ref=e69]:
+                - generic [ref=e70]:
+                  - generic [ref=e71]:
+                    - img [ref=e72]
+                    - text: For you
+                  - paragraph [ref=e74]: Based on the kinds of communities you've joined
+                - generic [ref=e75]: "1"
+              - generic [ref=e77] [cursor=pointer]:
+                - generic [ref=e81]:
+                  - img [ref=e82]
+                  - text: Neighborhood
+                - generic [ref=e85]:
+                  - generic [ref=e86]:
+                    - generic [ref=e87]:
+                      - heading "Cucumber apples🥒🍎" [level=3] [ref=e88]
+                      - paragraph [ref=e89]:
+                        - img [ref=e90]
+                        - text: 3 members
+                    - button "Join" [ref=e95]
+                  - paragraph [ref=e96]: Daily pickle ball
+                  - generic [ref=e97]:
+                    - generic [ref=e98]: Posts
+                    - generic [ref=e99]: Events
+            - generic [ref=e100]:
+              - generic [ref=e101]:
+                - generic [ref=e102]:
+                  - generic [ref=e103]:
+                    - img [ref=e104]
+                    - text: Neighborhood
+                  - paragraph [ref=e107]: Local updates, neighbor questions, and what's happening near you.
+                - generic [ref=e108]: "1"
+              - generic [ref=e110] [cursor=pointer]:
+                - generic [ref=e114]:
+                  - img [ref=e115]
+                  - text: Neighborhood
+                - generic [ref=e118]:
+                  - generic [ref=e119]:
+                    - generic [ref=e120]:
+                      - heading "Cucumber apples🥒🍎" [level=3] [ref=e121]
+                      - paragraph [ref=e122]:
+                        - img [ref=e123]
+                        - text: 3 members
+                    - button "Join" [ref=e128]
+                  - paragraph [ref=e129]: Daily pickle ball
+                  - generic [ref=e130]:
+                    - generic [ref=e131]: Posts
+                    - generic [ref=e132]: Events
+            - generic [ref=e133]:
+              - generic [ref=e134]:
+                - generic [ref=e135]:
+                  - generic [ref=e136]:
+                    - img [ref=e137]
+                    - text: Community
+                  - paragraph [ref=e142]: Community spaces open to everyone.
+                - generic [ref=e143]: "1"
+              - generic [ref=e145] [cursor=pointer]:
+                - generic [ref=e149]:
+                  - img [ref=e150]
+                  - text: Community
+                - generic [ref=e155]:
+                  - generic [ref=e156]:
+                    - generic [ref=e157]:
+                      - heading "Hollywood FL" [level=3] [ref=e158]
+                      - paragraph [ref=e159]:
+                        - img [ref=e160]
+                        - text: 3 members
+                    - button "Join" [ref=e165]
+                  - paragraph [ref=e166]: Anything Hollywood
+                  - generic [ref=e167]:
+                    - generic [ref=e168]: Posts
+                    - generic [ref=e169]: About
+    - button "Send feedback" [ref=e170] [cursor=pointer]:
+      - img [ref=e171]
+      - generic [ref=e173]: Feedback
+    - navigation:
+      - generic [ref=e175]:
+        - button "Feed" [ref=e176] [cursor=pointer]:
+          - generic [ref=e177]:
+            - img [ref=e178]
+            - generic [ref=e181]: Feed
+        - button "Mitzvah" [ref=e182] [cursor=pointer]:
+          - generic [ref=e183]:
+            - img [ref=e184]
+            - generic [ref=e190]: Mitzvah
+        - button "Communities" [ref=e191] [cursor=pointer]:
+          - generic [ref=e193]:
+            - img [ref=e194]
+            - generic [ref=e199]: Communities
+        - button "Map" [ref=e200] [cursor=pointer]:
+          - generic [ref=e201]:
+            - img [ref=e202]
+            - generic [ref=e206]: Map
+        - button "Profile" [ref=e207] [cursor=pointer]:
+          - generic [ref=e209]: Profile
+  - generic [ref=e210]:
+    - generic [ref=e211]:
+      - generic [ref=e212]:
+        - img [ref=e214]
+        - heading "Messages" [level=2] [ref=e216]
+      - generic [ref=e217]:
+        - button "Open full view" [ref=e218] [cursor=pointer]:
+          - text: Open full view
+          - img [ref=e219]
+        - button "Close" [ref=e221] [cursor=pointer]:
+          - img [ref=e222]
+    - generic [ref=e227]:
+      - img [ref=e229]
+      - img [ref=e233]
+      - button "United AI Assistant AI Always available now Ask me anything about the community!" [ref=e237] [cursor=pointer]:
+        - generic [ref=e238]:
+          - img [ref=e239]
+          - img [ref=e243]
+        - generic [ref=e246]:
+          - generic [ref=e247]:
+            - generic [ref=e248]:
+              - generic [ref=e249]:
+                - generic [ref=e250]: United AI Assistant
+                - generic [ref=e251]: AI
+              - generic [ref=e252]: Always available
+            - generic [ref=e254]: now
+          - paragraph [ref=e255]: Ask me anything about the community!
+    - button "New Message" [ref=e257] [cursor=pointer]:
+      - img [ref=e258]
+      - text: New Message

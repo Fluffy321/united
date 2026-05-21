@@ -65,7 +65,7 @@ export default function PromptResponsesSheet({ post, currentUser, open, onOpenCh
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => onOpenChange(false)}>
+    <div className="fixed inset-0 z-[60] flex flex-col" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => onOpenChange(false)}>
       <div className="mt-auto bg-white rounded-t-3xl flex flex-col" style={{ maxHeight: '85vh' }} onClick={e => e.stopPropagation()}>
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">

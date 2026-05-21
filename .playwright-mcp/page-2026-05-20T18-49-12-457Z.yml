@@ -1,0 +1,110 @@
+- generic [ref=e21]:
+  - region "Notifications alt+T"
+  - main [ref=e22]:
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - generic [ref=e28]:
+              - heading "Messages" [level=1] [ref=e29]
+              - button "About this page" [ref=e30] [cursor=pointer]:
+                - img [ref=e31]
+            - button "New" [ref=e34] [cursor=pointer]:
+              - img [ref=e35]
+              - text: New
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - img [ref=e38]
+              - generic [ref=e40]: "5"
+              - text: chats
+            - generic [ref=e41]:
+              - img [ref=e42]
+              - generic [ref=e47]: "2"
+              - text: groups
+          - generic [ref=e48]:
+            - button "Inbox" [ref=e49] [cursor=pointer]
+            - button "Requests" [ref=e50] [cursor=pointer]
+          - generic [ref=e51]:
+            - button "All" [ref=e52] [cursor=pointer]
+            - button "Unread" [ref=e53] [cursor=pointer]
+            - button "Communities" [ref=e54] [cursor=pointer]
+            - button "Requests" [ref=e55] [cursor=pointer]
+        - generic [ref=e57]:
+          - img [ref=e58]
+          - textbox "Search people…" [ref=e61]
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - img [ref=e66]
+            - img [ref=e70]
+            - button "United AI Assistant AI Always available now Ask me anything about the community!" [ref=e74] [cursor=pointer]:
+              - generic [ref=e75]:
+                - img [ref=e76]
+                - img [ref=e80]
+              - generic [ref=e83]:
+                - generic [ref=e84]:
+                  - generic [ref=e85]:
+                    - generic [ref=e86]:
+                      - generic [ref=e87]: United AI Assistant
+                      - generic [ref=e88]: AI
+                    - generic [ref=e89]: Always available
+                  - generic [ref=e91]: now
+                - paragraph [ref=e92]: Ask me anything about the community!
+          - generic [ref=e94]: Recent
+          - generic [ref=e96]:
+            - img [ref=e98]
+            - img [ref=e102]
+            - button "5 Towns Chess Tournaments 3 members yesterday Hope you're doing well!" [ref=e106] [cursor=pointer]:
+              - img [ref=e108]
+              - generic [ref=e113]:
+                - generic [ref=e114]:
+                  - generic [ref=e115]:
+                    - generic [ref=e117]: 5 Towns Chess Tournaments
+                    - generic [ref=e118]: 3 members
+                  - generic [ref=e120]: yesterday
+                - paragraph [ref=e121]: Hope you're doing well!
+          - generic [ref=e122]:
+            - img [ref=e124]
+            - img [ref=e128]
+            - button "shaya yesterday Let me know what you think" [active] [ref=e132] [cursor=pointer]:
+              - generic [ref=e134]:
+                - generic [ref=e135]:
+                  - generic [ref=e138]: shaya
+                  - generic [ref=e140]: yesterday
+                - paragraph [ref=e141]: Let me know what you think
+          - generic [ref=e142]:
+            - img [ref=e144]
+            - img [ref=e148]
+            - button "A aryeh18kohn Mon typing…" [ref=e152] [cursor=pointer]:
+              - generic [ref=e154]: A
+              - generic [ref=e155]:
+                - generic [ref=e156]:
+                  - generic [ref=e159]: aryeh18kohn
+                  - generic [ref=e161]: Mon
+                - paragraph [ref=e162]: typing…
+          - generic [ref=e167]:
+            - img [ref=e169]
+            - img [ref=e173]
+            - button "Five Towns News & Updates 4 members Sat Hope you're doing well!" [ref=e177] [cursor=pointer]:
+              - img [ref=e179]
+              - generic [ref=e184]:
+                - generic [ref=e185]:
+                  - generic [ref=e186]:
+                    - generic [ref=e188]: Five Towns News & Updates
+                    - generic [ref=e189]: 4 members
+                  - generic [ref=e191]: Sat
+                - paragraph [ref=e192]: Hope you're doing well!
+      - generic [ref=e233]:
+        - generic [ref=e234]:
+          - paragraph [ref=e237]: shaya
+          - button [ref=e238] [cursor=pointer]:
+            - img [ref=e239]
+        - generic [ref=e245]:
+          - generic [ref=e247]: S
+          - paragraph [ref=e248]: shaya
+          - paragraph [ref=e249]: Start the conversation
+        - generic [ref=e251]:
+          - button [ref=e252] [cursor=pointer]:
+            - img [ref=e253]
+          - textbox "Type a message…" [ref=e256]
+          - button [disabled] [ref=e257]:
+            - img [ref=e258]

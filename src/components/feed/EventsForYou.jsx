@@ -144,7 +144,7 @@ function EventSheet({ event, currentUser, onClose }) {
   const fullDate = event.event_date ? format(parseISO(event.event_date), 'EEEE, MMMM d, yyyy') : null;
 
   return (
-    <div className="fixed inset-0 z-50" style={{ background: 'rgba(0,0,0,0.45)' }} onClick={onClose}>
+    <div className="fixed inset-0 z-[60]" style={{ background: 'rgba(0,0,0,0.45)' }} onClick={onClose}>
       <div
         className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl overflow-y-auto"
         style={{ maxHeight: '82vh' }}

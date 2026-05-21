@@ -148,7 +148,7 @@ function EventDetailSheet({ event, currentUser, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50"
+      className="fixed inset-0 z-[60]"
       style={{ background: 'rgba(0,0,0,0.45)' }}
       onClick={onClose}
     >

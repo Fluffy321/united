@@ -1,0 +1,8 @@
+- main [ref=e232]:
+  - generic [ref=e233]:
+    - img [ref=e235]
+    - heading "Something did not load right." [level=1] [ref=e237]
+    - paragraph [ref=e238]: Refresh the page. If it happens again, the app now shows this screen instead of going blank.
+    - button "Refresh app" [ref=e239] [cursor=pointer]:
+      - img [ref=e240]
+      - text: Refresh app

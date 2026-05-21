@@ -61,7 +61,7 @@ export default function NewMessageComposer({ currentUser, onConversationSelect, 
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b border-slate-100 flex-shrink-0">
-        <button onClick={onCancel} className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
+        <button onClick={onCancel} aria-label="Cancel" className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
           <ArrowLeft className="w-5 h-5 text-slate-600" />
         </button>
         <h2 className="text-[18px] font-bold text-slate-900">New Message</h2>
@@ -82,6 +82,7 @@ export default function NewMessageComposer({ currentUser, onConversationSelect, 
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded-full transition-colors"
             >
               <X className="w-4 h-4 text-slate-400" />

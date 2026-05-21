@@ -126,7 +126,7 @@ function AddResourceSheet({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center" onClick={handleClose}>
+    <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center" onClick={handleClose}>
       <div
         className="w-full max-w-lg bg-white rounded-t-2xl shadow-xl"
         onClick={e => e.stopPropagation()}

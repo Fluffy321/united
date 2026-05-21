@@ -1,0 +1,131 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e21]:
+    - region "Notifications alt+T"
+    - main [ref=e22]:
+      - generic [ref=e283]:
+        - generic [ref=e284]:
+          - button [ref=e285] [cursor=pointer]:
+            - img [ref=e286]
+          - generic [ref=e288]:
+            - img [ref=e290]
+            - paragraph [ref=e293]: Five Towns News & Updates
+          - generic [ref=e294]:
+            - button "Admin center" [ref=e295] [cursor=pointer]:
+              - img [ref=e296]
+            - button "Share" [ref=e299] [cursor=pointer]:
+              - img [ref=e300]
+        - paragraph [ref=e311]: Your hub for important Five Towns updates, local news, community alerts, events, and things worth knowing. Follow what’s happening around Lawrence, Cedarhurst, Woodmere, Hewlett, Inwood, and nearby Jewish communities.
+        - generic [ref=e312]:
+          - generic [ref=e315]: F
+          - paragraph [ref=e316]: 5 members
+          - button "Admin" [ref=e318] [cursor=pointer]
+        - button "Invite people to Five Towns News & Updates Share" [ref=e320] [cursor=pointer]:
+          - img [ref=e321]
+          - generic [ref=e324]: Invite people to Five Towns News & Updates
+          - generic [ref=e325]: Share
+        - generic [ref=e327]:
+          - generic [ref=e328]:
+            - generic [ref=e329]:
+              - generic [ref=e330]: 🚀
+              - generic [ref=e331]:
+                - paragraph [ref=e332]: Five Towns News & Updates is live!
+                - paragraph [ref=e333]: 2 of 3 steps complete · activate your community
+              - button "Dismiss" [ref=e334] [cursor=pointer]:
+                - img [ref=e335]
+            - generic [ref=e341]:
+              - button "Invite neighbors" [disabled] [ref=e342]:
+                - img [ref=e344]
+                - paragraph [ref=e348]: Invite neighbors
+              - button "Share a local update" [disabled] [ref=e349]:
+                - img [ref=e351]
+                - paragraph [ref=e355]: Share a local update
+              - button "Add a community event Block parties, meetups, or local happenings Go →" [ref=e356] [cursor=pointer]:
+                - img [ref=e358]
+                - generic [ref=e360]:
+                  - paragraph [ref=e361]: Add a community event
+                  - paragraph [ref=e362]: Block parties, meetups, or local happenings
+                - generic [ref=e363]: Go →
+            - generic [ref=e364]:
+              - paragraph [ref=e365]: Find these actions in Admin Center anytime
+              - button "Skip for now" [ref=e366] [cursor=pointer]
+          - button "📢 Latest update The New York State Department of Environmental Conservation has issued an Air Qu…" [ref=e367] [cursor=pointer]:
+            - generic [ref=e368]: 📢
+            - generic [ref=e369]:
+              - generic [ref=e370]: Latest update
+              - generic [ref=e371]: The New York State Department of Environmental Conservation has issued an Air Qu…
+            - img [ref=e372]
+          - button "What should neighbors know today?" [ref=e375] [cursor=pointer]:
+            - img [ref=e377]
+            - generic [ref=e379]: What should neighbors know today?
+          - generic [ref=e380]:
+            - article [ref=e381]:
+              - generic [ref=e382]:
+                - generic [ref=e383]:
+                  - img [ref=e384]
+                  - text: Official update
+                - generic [ref=e387]: May 19
+              - heading "Air Quality Alert issued May 18 at 11:35PM EDT by NWS Upton NY" [level=3] [ref=e388]
+              - paragraph [ref=e389]: "The New York State Department of Environmental Conservation has issued an Air Quality Health Advisory for the following counties: New York, Bronx, Kings, Queens, Richmond, Nassau, Suffolk, Westchester, Rockland. from 11 AM to 11 PM EDT Tuesday. Air quality levels in outdoor air are predicted to be greater than an Air Quality Index value of 100 for the pollutant of Ground Level Ozone. The Air Quality Index, or AQI, was created as an easy way to correlate levels of different pollutants to one scale. The higher the AQI value, the greater the health concern. When pollution levels are elevated, the New York State Department of Health recommends that individuals consider limiting strenuous outdoor physical activity to reduce the risk of adverse health effects. People who may be especially sensitive to the effects of elevated levels of pollutants include the very young, and those with preexisting respiratory problems such as asthma or heart disease. Those with symptoms should consider consulting their personal physician. For additional information, please visit the New York State Department of Environmental Conservation website at, https://on.ny.gov/nyaqi, or call the Air Quality Hotline Source: National Weather Service - Nassau County Alerts Read source: https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.159954f98545eee0f508164dbfb25310aa9476ef.003.1"
+              - button "Read more" [ref=e390] [cursor=pointer]
+            - article [ref=e391]:
+              - generic [ref=e392]:
+                - generic [ref=e393]:
+                  - img [ref=e394]
+                  - text: Official update
+                - generic [ref=e397]: May 18
+              - heading "Air Quality Alert issued May 18 at 3:27PM EDT by NWS Upton NY" [level=3] [ref=e398]
+              - paragraph [ref=e399]: "The New York State Department of Environmental Conservation has issued an Air Quality Health Advisory for the following counties: Nassau and Suffolk, from 11 AM to 11 PM EDT Tuesday. Air quality levels in outdoor air are predicted to be greater than an Air Quality Index value of 100 for the pollutant of Ground Level Ozone. The Air Quality Index, or AQI, was created as an easy way to correlate levels of different pollutants to one scale. The higher the AQI value, the greater the health concern. When pollution levels are elevated, the New York State Department of Health recommends that individuals consider limiting strenuous outdoor physical activity to reduce the risk of adverse health effects. People who may be especially sensitive to the effects of elevated levels of pollutants include the very young, and those with preexisting respiratory problems such as asthma or heart disease. Those with symptoms should consider consulting their personal physician. For additional information, please visit the New York State Department of Environmental Conservation website at, https://on.ny.gov/nyaqi, or call the Air Quality Hotline at 1 800 5 3 5, 1 3 4 5. Source: National Weather Service - Nassau County Alerts Read source: https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.d46904f26ca757456d99afb5b78b883ee5b3ddd8.007.1"
+              - button "Read more" [ref=e400] [cursor=pointer]
+            - article [ref=e401]:
+              - generic [ref=e402]:
+                - generic [ref=e403]:
+                  - img [ref=e404]
+                  - text: Official update
+                - generic [ref=e407]: May 17
+              - heading "Air Quality Alert issued May 17 at 11:51AM EDT by NWS Upton NY" [level=3] [ref=e408]
+              - paragraph [ref=e409]: "The New York State Department of Environmental Conservation has issued an Air Quality Health Advisory for the following counties: New York, Bronx, Kings, Queens, Richmond, Nassau, Suffolk, Westchester, and Rockland, until 11 PM EDT this evening. Air quality levels in outdoor air are predicted to be greater than an Air Quality Index value of 100 for the pollutant of Ground Level Ozone. The Air Quality Index, or AQI, was created as an easy way to correlate levels of different pollutants to one scale. The higher the AQI value, the greater the health concern. When pollution levels are elevated, the New York State Department of Health recommends that individuals consider limiting strenuous outdoor physical activity to reduce the risk of adverse health effects. People who may be especially sensitive to the effects of elevated levels of pollutants include the very young, and those with preexisting respiratory problems such as asthma or heart disease. Those with symptoms should consider consulting their personal physician. For additional information, please visit the New York State Department of Environmental Conservation website at, https://on.ny.gov/nyaqi, or call the Air Quality Hotline Source: National Weather Service - Nassau County Alerts Read source: https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.f4e94e3ed357464629cf82092f63a98f77e4fb08.001.1"
+              - button "Read more" [ref=e410] [cursor=pointer]
+            - article [ref=e411]:
+              - generic [ref=e412]:
+                - generic [ref=e413]:
+                  - img [ref=e414]
+                  - text: Official update
+                - generic [ref=e417]: May 17
+              - heading "Air Quality Alert issued May 17 at 2:47PM EDT by NWS Upton NY" [level=3] [ref=e418]
+              - paragraph [ref=e419]: "The New York State Department of Environmental Conservation's Air Quality Health Advisory for the following counties: Nassau and Suffolk, remains in effect until 11 PM EDT this evening. Air quality levels in outdoor air are predicted to be greater than an Air Quality Index value of 100 for the pollutant of Ground Level Ozone. The Air Quality Index, or AQI, was created as an easy way to correlate levels of different pollutants to one scale. The higher the AQI value, the greater the health concern. When pollution levels are elevated, the New York State Department of Health recommends that individuals consider limiting strenuous outdoor physical activity to reduce the risk of adverse health effects. People who may be especially sensitive to the effects of elevated levels of pollutants include the very young, and those with preexisting respiratory problems such as asthma or heart disease. Those with symptoms should consider consulting their personal physician. For additional information, please visit the New York State Department of Environmental Conservation website at, https://on.ny.gov/nyaqi, or call the Air Quality Hotline at 1 800 5 3 5, 1 3 4 5. Source: National Weather Service - Nassau County Alerts Read source: https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.dba96687aeb732c23022e6fa987a04c33d0f7d33.002.1"
+              - button "Read more" [ref=e420] [cursor=pointer]
+          - generic [ref=e421]:
+            - generic [ref=e422]: Admin
+            - button "Announce" [ref=e423] [cursor=pointer]:
+              - img [ref=e424]
+              - text: Announce
+            - button "Event" [ref=e427] [cursor=pointer]:
+              - img [ref=e428]
+              - text: Event
+            - button "Resource" [ref=e430] [cursor=pointer]:
+              - img [ref=e431]
+              - text: Resource
+            - button "Admin center" [ref=e434] [cursor=pointer]:
+              - img [ref=e435]
+  - navigation:
+    - generic [ref=e439]:
+      - button "Home" [ref=e440] [cursor=pointer]:
+        - generic [ref=e442]:
+          - img [ref=e444]
+          - generic [ref=e447]: Home
+      - button "Posts" [ref=e448] [cursor=pointer]:
+        - generic [ref=e449]:
+          - img [ref=e451]
+          - generic [ref=e454]: Posts
+      - button "Events" [ref=e455] [cursor=pointer]:
+        - generic [ref=e456]:
+          - img [ref=e458]
+          - generic [ref=e460]: Events
+      - button "Members" [ref=e461] [cursor=pointer]:
+        - generic [ref=e462]:
+          - img [ref=e464]
+          - generic [ref=e469]: Members
+      - button "More" [ref=e470] [cursor=pointer]:
+        - generic [ref=e471]:
+          - img [ref=e472]
+          - generic [ref=e476]: More

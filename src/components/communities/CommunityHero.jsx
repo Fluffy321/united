@@ -100,7 +100,7 @@ export default function CommunityHero({
       )}
 
       {/* ── Branded cover ── */}
-      <div className="relative overflow-hidden" style={{ height: inAppShell ? 96 : 128 }}>
+      <div className="relative overflow-hidden" style={{ height: inAppShell ? 120 : 128 }}>
         {/* Cover: image or type-specific gradient */}
         <div className="absolute inset-0 w-full">
           {(community.cover_url || community.cover_image_url) ? (
@@ -113,8 +113,17 @@ export default function CommunityHero({
             <div className="w-full h-full" style={{ background: gradient }} />
           )}
           {/* Gradient overlay — lighter in app shell since name is in AppBar */}
-          <div className={`absolute inset-0 bg-gradient-to-t ${inAppShell ? 'from-black/40 via-black/10 to-transparent' : 'from-black/80 via-black/25 to-transparent'}`} />
+          <div className={`absolute inset-0 bg-gradient-to-t ${inAppShell ? 'from-black/55 via-black/20 to-transparent' : 'from-black/80 via-black/25 to-transparent'}`} />
         </div>
+
+        {/* Description overlay — only in app shell, since name is already in AppBar */}
+        {inAppShell && (community.description || community.tagline) && (
+          <div className="absolute bottom-0 left-0 right-0 px-4 pb-2.5 z-10">
+            <p className="text-[11px] text-white/85 line-clamp-2 leading-relaxed drop-shadow-sm">
+              {community.description || community.tagline}
+            </p>
+          </div>
+        )}
 
         {/* Back + share — only when NOT in app shell */}
         {!inAppShell && (
@@ -159,11 +168,11 @@ export default function CommunityHero({
 
       {/* ── Thin action bar: logo + member count + CTA ── */}
       <div className="bg-white border-b border-slate-100 px-4 py-2.5 flex items-center gap-2.5">
-        <div className="rounded-lg overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm" style={{ width: 30, height: 30 }}>
+        <div className="rounded-xl overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm" style={{ width: 36, height: 36 }}>
           <CommunityLogo community={community} size="sm" />
         </div>
 
-        <p className="text-[12px] font-semibold text-slate-500 flex-1 truncate min-w-0">
+        <p className="text-[12px] font-bold text-slate-600 flex-1 truncate min-w-0">
           {memberCount > 0 ? `${memberCount.toLocaleString()} members` : typeConfig.tagline}
         </p>
 
@@ -206,7 +215,7 @@ export default function CommunityHero({
 
       {/* Invite strip — only for members */}
       {isFollowing && (
-        <div className="bg-white px-4 pb-2.5 pt-1 border-b border-slate-100">
+        <div className="bg-white px-4 pb-3 pt-1.5">
           <button
             type="button"
             onClick={() => setShowInviteModal(true)}

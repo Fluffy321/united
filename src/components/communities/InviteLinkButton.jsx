@@ -29,7 +29,7 @@ export default function InviteLinkButton({ communityId, communityName }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center" onClick={() => setOpen(false)}>
+    <div className="fixed inset-0 z-[60] bg-black/50 flex items-end justify-center" onClick={() => setOpen(false)}>
       <div
         className="w-full max-w-md bg-white rounded-t-3xl p-6 pb-10"
         onClick={e => e.stopPropagation()}

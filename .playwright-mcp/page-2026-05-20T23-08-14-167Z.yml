@@ -1,0 +1,110 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e21]:
+    - region "Notifications alt+T"
+    - main [ref=e22]:
+      - generic [ref=e283]:
+        - generic [ref=e284]:
+          - button [ref=e285] [cursor=pointer]:
+            - img [ref=e286]
+          - generic [ref=e288]:
+            - img [ref=e290]
+            - paragraph [ref=e292]: 5 Towns Chess Tournaments
+          - generic [ref=e293]:
+            - button "Admin center" [ref=e294] [cursor=pointer]:
+              - img [ref=e295]
+            - button "Share" [ref=e298] [cursor=pointer]:
+              - img [ref=e299]
+        - paragraph [ref=e310]: A local hub for Five Towns chess players to find tournaments, casual meetups, rated events, youth competitions, and community chess updates.
+        - generic [ref=e311]:
+          - generic [ref=e314]: "5"
+          - paragraph [ref=e315]: 3 members
+          - button "Admin" [ref=e317] [cursor=pointer]
+        - button "Invite people to 5 Towns Chess Tournaments Share" [ref=e319] [cursor=pointer]:
+          - img [ref=e320]
+          - generic [ref=e323]: Invite people to 5 Towns Chess Tournaments
+          - generic [ref=e324]: Share
+        - generic [ref=e326]:
+          - generic [ref=e327]:
+            - generic [ref=e328]:
+              - generic [ref=e329]: 🚀
+              - generic [ref=e330]:
+                - paragraph [ref=e331]: 5 Towns Chess Tournaments is live!
+                - paragraph [ref=e332]: 1 of 3 steps complete · activate your community
+              - button "Dismiss" [ref=e333] [cursor=pointer]:
+                - img [ref=e334]
+            - generic [ref=e340]:
+              - button "Invite people" [disabled] [ref=e341]:
+                - img [ref=e343]
+                - paragraph [ref=e347]: Invite people
+              - button "Add the first event A gathering, party, or happening Go →" [ref=e348] [cursor=pointer]:
+                - img [ref=e350]
+                - generic [ref=e352]:
+                  - paragraph [ref=e353]: Add the first event
+                  - paragraph [ref=e354]: A gathering, party, or happening
+                - generic [ref=e355]: Go →
+              - button "Share a preview Get people excited about what's coming Go →" [ref=e356] [cursor=pointer]:
+                - img [ref=e358]
+                - generic [ref=e360]:
+                  - paragraph [ref=e361]: Share a preview
+                  - paragraph [ref=e362]: Get people excited about what's coming
+                - generic [ref=e363]: Go →
+            - generic [ref=e364]:
+              - paragraph [ref=e365]: Find these actions in Admin Center anytime
+              - button "Skip for now" [ref=e366] [cursor=pointer]
+          - button "📢 Latest update Welcome! This is where we'll share upcoming events, gatherings, and social plans…" [ref=e367] [cursor=pointer]:
+            - generic [ref=e368]: 📢
+            - generic [ref=e369]:
+              - generic [ref=e370]: Latest update
+              - generic [ref=e371]: Welcome! This is where we'll share upcoming events, gatherings, and social plans…
+            - img [ref=e372]
+          - button "Share an upcoming event" [ref=e375] [cursor=pointer]:
+            - img [ref=e377]
+            - generic [ref=e379]: Share an upcoming event
+          - generic [ref=e380]:
+            - paragraph [ref=e381]: Latest
+            - article [ref=e382]:
+              - generic [ref=e383]:
+                - generic [ref=e384]:
+                  - img [ref=e385]
+                  - text: Official update
+                - generic [ref=e388]:
+                  - img [ref=e389]
+                  - text: Featured
+                - generic [ref=e391]: May 19
+              - paragraph [ref=e392]: Welcome! This is where we'll share upcoming events, gatherings, and social plans. What are you looking forward to?
+              - button "Read more" [ref=e393] [cursor=pointer]
+          - generic [ref=e394]:
+            - generic [ref=e395]: Admin
+            - button "Announce" [ref=e396] [cursor=pointer]:
+              - img [ref=e397]
+              - text: Announce
+            - button "Event" [ref=e400] [cursor=pointer]:
+              - img [ref=e401]
+              - text: Event
+            - button "Resource" [ref=e403] [cursor=pointer]:
+              - img [ref=e404]
+              - text: Resource
+            - button "Admin center" [ref=e407] [cursor=pointer]:
+              - img [ref=e408]
+  - navigation:
+    - generic [ref=e412]:
+      - button "Home" [ref=e413] [cursor=pointer]:
+        - generic [ref=e415]:
+          - img [ref=e417]
+          - generic [ref=e420]: Home
+      - button "Events" [ref=e421] [cursor=pointer]:
+        - generic [ref=e422]:
+          - img [ref=e424]
+          - generic [ref=e426]: Events
+      - button "Posts" [ref=e427] [cursor=pointer]:
+        - generic [ref=e428]:
+          - img [ref=e430]
+          - generic [ref=e433]: Posts
+      - button "Members" [ref=e434] [cursor=pointer]:
+        - generic [ref=e435]:
+          - img [ref=e437]
+          - generic [ref=e442]: Members
+      - button "More" [ref=e443] [cursor=pointer]:
+        - generic [ref=e444]:
+          - img [ref=e445]
+          - generic [ref=e449]: More

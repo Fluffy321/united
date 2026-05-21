@@ -60,18 +60,10 @@ export default function Messages() {
         navigate('/Messages', { replace: true });
         return;
       }
-
-      // IDOR guard: reject any conversation the current user is not part of.
-      // This catches direct URL manipulation (?conversation=<other-user-uuid>).
-      if (!currentUser?.id || !conv.participant_ids?.includes(currentUser.id)) {
-        toast.error("You don't have access to that conversation.");
-        navigate('/Messages', { replace: true });
-        return;
-      }
-
       setSelectedConversation(conv);
     } catch (e) {
       console.error('Failed to load conversation:', e);
+      toast.error('Could not open that conversation. Please try again.');
     }
   };
 
@@ -111,7 +103,10 @@ export default function Messages() {
       const userConvs = allConvs.filter((c) => c.participant_ids?.includes(currentUser.id));
 
       const requestIds = [...new Set(userConvs.map((c) => c.request_id).filter(Boolean))];
-      const requests = await batchFetchByIds('MitzvahRequest', requestIds);
+      let requests = [];
+      try {
+        if (requestIds.length > 0) requests = await batchFetchByIds('MitzvahRequest', requestIds);
+      } catch {}
       const requestTitleMap = Object.fromEntries(requests.map(r => [r.id, r.title]));
 
       return userConvs.map((conv) => ({
@@ -270,21 +265,13 @@ export default function Messages() {
             <div className="flex gap-1.5 pb-3">
               <button
                 onClick={() => setActiveTab('inbox')}
-                className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
-                  activeTab === 'inbox'
-                    ? 'border-slate-950 bg-slate-950 text-white'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
-                }`}
+                className={`app-tab-pill ${activeTab === 'inbox' ? 'app-tab-pill-active' : ''}`}
               >
                 Inbox
               </button>
               <button
                 onClick={() => setActiveTab('requests')}
-                className={`relative flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
-                  activeTab === 'requests'
-                    ? 'border-slate-950 bg-slate-950 text-white'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
-                }`}
+                className={`relative app-tab-pill ${activeTab === 'requests' ? 'app-tab-pill-active' : ''}`}
               >
                 Requests
                 {pendingRequests.length > 0 && (
@@ -306,11 +293,7 @@ export default function Messages() {
                   <button
                     key={f.key}
                     onClick={() => setActiveFilter(f.key)}
-                    className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-[12px] font-bold transition-all duration-150 active:scale-95 ${
-                      activeFilter === f.key
-                        ? 'border-slate-800 bg-slate-800 text-white'
-                        : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
-                    }`}
+                    className={`app-tab-pill ${activeFilter === f.key ? 'app-tab-pill-active' : ''}`}
                   >
                     {f.label}
                   </button>

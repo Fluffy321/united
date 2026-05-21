@@ -69,7 +69,7 @@ export default function DiscoverCommunityCard({ community, onOpen, onToggleJoin,
       className="group cursor-pointer overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md active:scale-[0.99]"
     >
       {/* Banner */}
-      <div className="relative h-[72px]" style={coverStyle}>
+      <div className="relative h-[92px]" style={coverStyle}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
 
         {/* Type chip — bottom-left */}

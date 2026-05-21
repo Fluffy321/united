@@ -1,4 +1,16 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__plugin_playwright_playwright__browser_click",
+      "Bash(cat)",
+      "Bash(chmod +x /tmp/find_patterns.sh)",
+      "Bash(/tmp/find_patterns.sh)",
+      "mcp__plugin_figma_figma__generate_figma_design",
+      "Bash(open \"http://localhost:5173/Communities#figmacapture=ce926f8f-a549-4dce-8614-e412db0b82f4&figmaendpoint=https%3A%2F%2Fmcp.figma.com%2Fmcp%2Fcapture%2Fce926f8f-a549-4dce-8614-e412db0b82f4%2Fsubmit&figmadelay=2000\")",
+      "mcp__plugin_playwright_playwright__browser_wait_for",
+      "mcp__plugin_figma_figma__get_screenshot"
+    ]
+  },
   "enabledPlugins": {
     "playwright@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true,

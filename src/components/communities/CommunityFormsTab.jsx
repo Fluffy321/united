@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ClipboardList, CheckCircle2, ChevronDown, ChevronUp, Calendar, Loader2, Lock } from 'lucide-react';
+import { ClipboardList, CheckCircle2, ChevronDown, ChevronUp, Calendar, Loader2, Lock, Clock } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
 
 const FIELD_TYPE_LABEL = {
@@ -92,6 +92,7 @@ function FormCard({ form, fields, currentUser }) {
   );
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [claimingSlotId, setClaimingSlotId] = useState(null);
 
   // Check if user already submitted
   const { data: mySubmissions = [] } = useQuery({
@@ -107,6 +108,42 @@ function FormCard({ form, fields, currentUser }) {
     },
     enabled: !!currentUser?.id,
   });
+
+  // Volunteer slots + my claims (combined to avoid dependent query chaining)
+  const { data: slotData = { slots: [], myClaims: [] } } = useQuery({
+    queryKey: ['volunteer-slots', form.id, currentUser?.id],
+    queryFn: async () => {
+      const { data: slotsData } = await supabase
+        .from('community_volunteer_slots')
+        .select('id, label, start_time, end_time, capacity, claimed_count')
+        .eq('form_id', form.id)
+        .order('created_at');
+      const sl = slotsData ?? [];
+      if (!sl.length || !currentUser?.id) return { slots: sl, myClaims: [] };
+      const { data: claimsData } = await supabase
+        .from('community_volunteer_claims')
+        .select('slot_id')
+        .eq('submitter_id', currentUser.id)
+        .in('slot_id', sl.map((s) => s.id));
+      return { slots: sl, myClaims: (claimsData ?? []).map((c) => c.slot_id) };
+    },
+    enabled: form.form_type === 'volunteer' && !!currentUser?.id,
+  });
+  const { slots: volunteerSlots, myClaims: myClaimedSlotIds } = slotData;
+
+  const handleClaimSlot = async (slotId) => {
+    setClaimingSlotId(slotId);
+    try {
+      const { error } = await supabase.rpc('claim_volunteer_slot', { p_slot_id: slotId });
+      if (error) throw error;
+      toast.success('Slot claimed!');
+      qc.invalidateQueries({ queryKey: ['volunteer-slots', form.id] });
+    } catch (err) {
+      toast.error(err.message || 'Could not claim slot');
+    } finally {
+      setClaimingSlotId(null);
+    }
+  };
 
   const alreadySubmitted = mySubmissions.length > 0 && !form.allow_multiple;
   const meta = FORM_TYPE_META[form.form_type] || FORM_TYPE_META.general;
@@ -147,7 +184,11 @@ function FormCard({ form, fields, currentUser }) {
     <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
       <button
         type="button"
-        onClick={() => !alreadySubmitted && !isPastDue && !submitted && setExpanded((v) => !v)}
+        onClick={() => {
+          if (isPastDue) return;
+          if ((alreadySubmitted || submitted) && form.form_type !== 'volunteer') return;
+          setExpanded((v) => !v);
+        }}
         className="flex w-full items-start gap-3 px-4 py-3.5 text-left"
       >
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
@@ -164,7 +205,10 @@ function FormCard({ form, fields, currentUser }) {
             <p className="mt-0.5 text-[12px] font-semibold leading-4 text-slate-500 line-clamp-2">{form.description}</p>
           )}
           <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] font-semibold text-slate-400">
-            <span>{sortedFields.length} {sortedFields.length === 1 ? 'field' : 'fields'}</span>
+            {sortedFields.length > 0 && <span>{sortedFields.length} {sortedFields.length === 1 ? 'field' : 'fields'}</span>}
+            {form.form_type === 'volunteer' && volunteerSlots.length > 0 && (
+              <span>{volunteerSlots.length} {volunteerSlots.length === 1 ? 'slot' : 'slots'}</span>
+            )}
             {form.due_date && (
               <span className={`flex items-center gap-1 ${isPastDue ? 'text-red-500' : ''}`}>
                 <Calendar className="h-3 w-3" />
@@ -174,10 +218,10 @@ function FormCard({ form, fields, currentUser }) {
           </div>
         </div>
         <div className="shrink-0 text-slate-400">
-          {(alreadySubmitted || submitted) ? (
-            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-          ) : isPastDue ? (
+          {isPastDue ? (
             <Lock className="h-4 w-4" />
+          ) : (alreadySubmitted || submitted) && form.form_type !== 'volunteer' ? (
+            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
           ) : expanded ? (
             <ChevronUp className="h-4 w-4" />
           ) : (
@@ -194,7 +238,56 @@ function FormCard({ form, fields, currentUser }) {
         </div>
       )}
 
-      {expanded && !alreadySubmitted && !isPastDue && !submitted && (
+      {expanded && form.form_type === 'volunteer' && volunteerSlots.length > 0 && (
+        <div className="border-t border-slate-100 px-4 py-4 space-y-2">
+          <p className="text-[11px] font-black uppercase tracking-wide text-slate-500 mb-3">Volunteer Slots</p>
+          {volunteerSlots.map((slot) => {
+            const remaining = slot.capacity - slot.claimed_count;
+            const isClaimed = myClaimedSlotIds.includes(slot.id);
+            const isFull = remaining <= 0 && !isClaimed;
+            return (
+              <div key={slot.id} className="flex items-center gap-3 rounded-xl bg-violet-50 border border-violet-100 p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-bold text-slate-900">{slot.label}</p>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    {slot.start_time && (
+                      <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(slot.start_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                        {slot.end_time && `–${new Date(slot.end_time).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' })}`}
+                      </span>
+                    )}
+                    <span className={`text-[11px] font-semibold ${isClaimed ? 'text-emerald-600' : isFull ? 'text-red-500' : 'text-emerald-600'}`}>
+                      {isClaimed ? 'You claimed this' : isFull ? 'Full' : `${remaining} of ${slot.capacity} spot${slot.capacity !== 1 ? 's' : ''} left`}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleClaimSlot(slot.id)}
+                  disabled={isFull || isClaimed || claimingSlotId === slot.id}
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all ${
+                    isClaimed
+                      ? 'bg-emerald-100 text-emerald-700 cursor-default'
+                      : isFull
+                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                      : 'bg-violet-600 text-white hover:bg-violet-700 active:scale-95'
+                  }`}
+                >
+                  {claimingSlotId === slot.id ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : isClaimed ? (
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  ) : null}
+                  {isClaimed ? 'Claimed' : isFull ? 'Full' : 'Claim'}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {expanded && !alreadySubmitted && !isPastDue && !submitted && sortedFields.length > 0 && (
         <form onSubmit={handleSubmit} className="border-t border-slate-100 px-4 py-4 space-y-4">
           {sortedFields.map((field) => (
             <div key={field.id}>

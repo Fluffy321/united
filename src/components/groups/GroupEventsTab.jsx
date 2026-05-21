@@ -50,7 +50,7 @@ function EventDetailModal({ event, currentUser, onClose, onRSVPChange }) {
   const eventPast = isPast(new Date(event.start_date + 'T23:59:59'));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40" onClick={onClose}>
       <div
         className="w-full max-w-lg bg-white rounded-t-3xl max-h-[85vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
@@ -167,7 +167,7 @@ function CreateEventModal({ groupId, currentUser, onClose, onCreated }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40" onClick={onClose}>
       <div className="w-full max-w-lg bg-white rounded-t-3xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="p-5">
           <div className="flex items-center justify-between mb-5">

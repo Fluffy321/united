@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, MapPin, Send, Loader2, Check, X, Clock, Megaphone, UserPlus } from 'lucide-react';
+import { ArrowLeft, Users, MapPin, Send, Loader2, Check, X, Clock, Megaphone, UserPlus, UserCheck } from 'lucide-react';
 import { dataService, incrementCounter } from '@/services';
 import InviteLinkButton from './InviteLinkButton';
 import { formatDistanceToNow, parseISO } from 'date-fns';
@@ -20,6 +20,7 @@ const TABS = [
   { id: 'posts', label: 'Posts', icon: Send },
   { id: 'members', label: 'Members', icon: UserPlus },
   { id: 'announcements', label: 'Announce', icon: Megaphone },
+  { id: 'requests', label: 'Requests', icon: UserCheck, adminOnly: true },
 ];
 
 export default function CommunityGroupPage({ group, currentUser, isMember, isPendingRequest, onJoin, onLeave, onBack, onMemberApproved }) {
@@ -39,20 +40,19 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
   useEffect(() => {
     if (!group) return;
     setLoading(true);
-    const isAdmin = group.created_by_user_id === currentUser?.id;
     Promise.all([
       dataService.entities.GroupPost.filter({ group_id: group.id, post_type: 'post' }, '-created_date', 30),
       dataService.entities.GroupPost.filter({ group_id: group.id, post_type: 'announcement' }, '-created_date', 30),
       dataService.entities.GroupMember.filter({ group_id: group.id }, '-created_date', 100),
-      isAdmin ? dataService.entities.GroupJoinRequest.filter({ group_id: group.id, status: 'pending' }) : Promise.resolve([]),
+      dataService.entities.GroupJoinRequest.filter({ group_id: group.id, status: 'pending' }, '-created_date', 50),
     ]).then(([p, a, m, r]) => {
       setPosts(p);
       setAnnouncements(a);
       setMembers(m);
       setJoinRequests(r);
       setLoading(false);
-    });
-  }, [group]);
+    }).catch(() => setLoading(false));
+  }, [group?.id]);
 
   const handlePost = async () => {
     if (!newPost.trim() && !postAttachment) return;
@@ -91,28 +91,44 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
 
   const handleApprove = async (req) => {
     setProcessingRequest(req.id);
-    await dataService.entities.GroupMember.create({ group_id: group.id, user_id: req.user_id, user_name: req.user_name, role: 'member' });
-    await dataService.entities.GroupJoinRequest.update(req.id, { status: 'approved' });
-    await incrementCounter('community_groups', 'member_count', group.id, 1);
-    setJoinRequests(prev => prev.filter(r => r.id !== req.id));
-    setMembers(prev => [...prev, { id: req.id, user_id: req.user_id, user_name: req.user_name, role: 'member' }]);
-    onMemberApproved?.(group.id);
-    setProcessingRequest(null);
-    toast.success(`${req.user_name} approved!`);
+    try {
+      await dataService.entities.GroupMember.create({ group_id: group.id, user_id: req.user_id, user_name: req.user_name, role: 'member' });
+      await dataService.entities.GroupJoinRequest.update(req.id, { status: 'approved' });
+      await incrementCounter('community_groups', 'member_count', group.id, 1);
+      setJoinRequests(prev => prev.filter(r => r.id !== req.id));
+      setMembers(prev => [...prev, { id: req.id, user_id: req.user_id, user_name: req.user_name, role: 'member' }]);
+      onMemberApproved?.(group.id);
+      toast.success(`${req.user_name} approved!`);
+    } catch {
+      toast.error('Could not approve request. Please try again.');
+    } finally {
+      setProcessingRequest(null);
+    }
   };
 
   const handleDeny = async (req) => {
     setProcessingRequest(req.id);
-    await dataService.entities.GroupJoinRequest.update(req.id, { status: 'denied' });
-    setJoinRequests(prev => prev.filter(r => r.id !== req.id));
-    setProcessingRequest(null);
-    toast.success('Request denied');
+    try {
+      await dataService.entities.GroupJoinRequest.update(req.id, { status: 'denied' });
+      setJoinRequests(prev => prev.filter(r => r.id !== req.id));
+      toast.success('Request denied');
+    } catch {
+      toast.error('Could not deny request. Please try again.');
+    } finally {
+      setProcessingRequest(null);
+    }
   };
 
   if (!group) return null;
 
   const emoji = CATEGORY_EMOJIS[group.category] || '🌍';
-  const isAdmin = group.created_by_user_id === currentUser?.id;
+  // Role-based admin check: use loaded membership role, fall back to creator check
+  // before members finish loading so the Requests tab appears immediately for the owner.
+  const currentMember = members.find(m => m.user_id === currentUser?.id);
+  const isAdminOrOwner =
+    currentMember?.role === 'owner' ||
+    currentMember?.role === 'admin' ||
+    group.created_by_user_id === currentUser?.id;
 
   return (
     <div className="flex flex-col h-full bg-[#F5F7FB]">
@@ -181,15 +197,20 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
       {/* Tabs */}
       <div className="flex-shrink-0 bg-white border-b border-slate-100">
         <div className="flex">
-          {TABS.filter(t => !t.adminOnly || isAdmin).map(t => (
+          {TABS.filter(t => !t.adminOnly || isAdminOrOwner).map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`flex-1 py-3 text-[12px] font-semibold transition-all border-b-2 ${
+              className={`relative flex-1 py-3 text-[12px] font-semibold transition-all border-b-2 ${
                 tab === t.id ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-400 border-transparent'
               }`}
             >
               {t.label}
+              {t.id === 'requests' && joinRequests.length > 0 && (
+                <span className="absolute top-1.5 right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1">
+                  {joinRequests.length}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -273,37 +294,6 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
             {/* Members Tab */}
             {tab === 'members' && (
               <div className="p-4 space-y-2">
-                {isAdmin && joinRequests.length > 0 && (
-                  <div className="mb-4">
-                    <p className="text-[12px] font-bold text-amber-600 uppercase tracking-wide mb-2">
-                      Pending Join Requests ({joinRequests.length})
-                    </p>
-                    {joinRequests.map(req => (
-                      <div key={req.id} className="bg-amber-50 border border-amber-100 rounded-2xl p-3.5 flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-[14px] font-bold text-amber-700 flex-shrink-0">
-                          {req.user_name?.[0] || '?'}
-                        </div>
-                        <p className="flex-1 text-[14px] font-semibold text-slate-900">{req.user_name}</p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleApprove(req)}
-                            disabled={processingRequest === req.id}
-                            className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white active:scale-95 transition-all"
-                          >
-                            {processingRequest === req.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                          </button>
-                          <button
-                            onClick={() => handleDeny(req)}
-                            disabled={processingRequest === req.id}
-                            className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500 active:scale-95 transition-all"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
                 <p className="text-[12px] font-semibold text-slate-400 mb-3">{members.length} member{members.length !== 1 ? 's' : ''}</p>
                 {members.map(m => (
                   <div key={m.id} className="bg-white rounded-2xl border border-slate-100 p-3.5 flex items-center gap-3" style={{ boxShadow: '0 2px 4px rgba(0,0,0,0.03)' }}>
@@ -319,10 +309,56 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
               </div>
             )}
 
+            {/* Requests Tab — admins/owners only */}
+            {tab === 'requests' && isAdminOrOwner && (
+              <div className="p-4 space-y-3">
+                {joinRequests.length === 0 ? (
+                  <EmptyState emoji="✅" text="No pending requests" sub="New join requests will appear here" />
+                ) : (
+                  <>
+                    <p className="text-[12px] font-semibold text-slate-400">{joinRequests.length} pending request{joinRequests.length !== 1 ? 's' : ''}</p>
+                    {joinRequests.map(req => (
+                      <div key={req.id} className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                        <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center text-[15px] font-bold text-blue-600 flex-shrink-0">
+                          {req.user_name?.[0]?.toUpperCase() || '?'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-[14px] text-slate-900 truncate">{req.user_name}</p>
+                          <p className="text-[12px] text-slate-400 mt-0.5">
+                            Requested {req.created_date ? formatDistanceToNow(parseISO(req.created_date), { addSuffix: true }) : 'recently'}
+                          </p>
+                        </div>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <button
+                            onClick={() => handleApprove(req)}
+                            disabled={processingRequest === req.id}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-green-500 text-white text-[12px] font-bold active:scale-95 transition-all disabled:opacity-50"
+                          >
+                            {processingRequest === req.id
+                              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              : <Check className="w-3.5 h-3.5" />}
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleDeny(req)}
+                            disabled={processingRequest === req.id}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 text-slate-600 text-[12px] font-bold active:scale-95 transition-all disabled:opacity-50"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            Deny
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Announcements Tab */}
             {tab === 'announcements' && (
               <div className="p-4 space-y-3">
-                {isAdmin && (
+                {isAdminOrOwner && (
                   <div className="bg-white rounded-2xl border border-slate-100 p-3.5 flex gap-3" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                     <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
                       <Megaphone className="w-4 h-4 text-amber-600" />

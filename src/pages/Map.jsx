@@ -1373,7 +1373,7 @@ export default function MapPage() {
       <DestinationHeader
         sticky={false}
         className="relative before:pointer-events-none before:absolute before:inset-x-3 before:top-2 before:bottom-1 before:rounded-[30px] before:bg-gradient-to-r before:from-blue-200/45 before:via-white/35 before:to-emerald-100/45 before:blur-xl before:content-[''] sm:before:inset-x-4"
-        toolbarClassName="relative border-white/70 bg-white/58 shadow-[0_20px_46px_rgba(15,23,42,0.13),0_1px_0_rgba(255,255,255,0.92)_inset]"
+        toolbarClassName="relative"
         icon={MapPin}
         title="Map"
         help={<PageHelp text="Discover Jewish businesses, services, mitzvah needs, and community posts around you." />}

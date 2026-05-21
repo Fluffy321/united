@@ -68,7 +68,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       if (event.type === 'create' && event.data.conversation_id === conversation.id) {
         setMessages(prev => {
           if (prev.find(m => m.id === event.data.id)) return prev;
-          return [...prev, event.data];
+          // Realtime rows use created_at (Postgres column name), not created_date
+          const msg = { ...event.data, created_date: event.data.created_date || event.data.created_at };
+          return [...prev, msg];
         });
       }
     });
@@ -82,9 +84,14 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
 
   const loadMessages = async (silent = false) => {
     if (!silent) setIsLoading(true);
-    const data = await messagesService.listMessages(conversation.id, 'created_date');
-    setMessages(data);
-    if (!silent) setIsLoading(false);
+    try {
+      const data = await messagesService.listMessages(conversation.id, 'created_date');
+      setMessages(data);
+    } catch (err) {
+      console.error('Failed to load messages:', err);
+    } finally {
+      if (!silent) setIsLoading(false);
+    }
   };
 
   const markAsRead = async () => {
@@ -269,6 +276,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-white flex-shrink-0">
         <button
           onClick={onBack}
+          aria-label="Go back"
           className="lg:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-all hover:bg-slate-100 active:scale-95"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -318,7 +326,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         {!isAI && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-all hover:bg-slate-100 active:scale-95">
+              <button aria-label="More options" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-all hover:bg-slate-100 active:scale-95">
                 <MoreVertical className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
@@ -438,7 +446,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
                       )}
                     </div>
                     <p className={`text-[11px] text-slate-400 mt-1 ${isOwn ? 'text-right' : ''}`}>
-                      {formatDistanceToNow(new Date(msg.created_date), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(msg.created_date || msg.created_at || Date.now()), { addSuffix: true })}
                     </p>
                   </div>
                   {isOwn && (

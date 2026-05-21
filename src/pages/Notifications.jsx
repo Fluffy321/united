@@ -394,7 +394,7 @@ export default function Notifications() {
           <div className="space-y-5">
             {Object.entries(grouped).map(([dateLabel, items]) => (
               <div key={dateLabel}>
-                <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                <p className="app-section-label mb-2 px-1">
                   {dateLabel}
                 </p>
                 <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

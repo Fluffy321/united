@@ -223,7 +223,10 @@ export default function ConversationList({ conversations, currentUser, selectedI
                 </span>
               )}
               {unread === 1 && (
-                <span className="w-2.5 h-2.5 bg-blue-500 rounded-full shadow-sm" />
+                <>
+                  <span className="w-2.5 h-2.5 bg-blue-500 rounded-full shadow-sm" aria-hidden="true" />
+                  <span className="sr-only">1 unread message</span>
+                </>
               )}
               {unread > 1 && (
                 <span className="min-w-[20px] h-5 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1.5 shadow-sm">

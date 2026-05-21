@@ -123,7 +123,7 @@ export default function GroupResourcesTab({ group, currentUser, isMember, isAdmi
       )}
 
       {showUpload && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setShowUpload(false)}>
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40" onClick={() => setShowUpload(false)}>
           <div className="w-full max-w-lg bg-white rounded-t-3xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="p-5">
               <div className="flex items-center justify-between mb-5">

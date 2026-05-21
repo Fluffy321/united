@@ -77,6 +77,43 @@ export const ROADMAP = [
   },
 
   {
+    id: 'auth-onboarding-mobile-redesign',
+    category: 'Auth & Identity',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Auth/Onboarding Screen — Mobile-First Two-Screen Redesign',
+    shippedNote: 'Shipped 2026-05-20. Login.jsx fully rewritten from a side-by-side desktop split panel to a two-screen mobile-first flow. Screen 1 (Welcome): JUnited logo, "Built for Jewish community life" badge, h1 headline, 4-feature 2×2 grid (communities, chesed, trusted sharing, local discovery), dark trust card, "Get Started" + "Already have an account?" CTAs — no sign-in form visible. Screen 2 (Sign In/Sign Up): back button, compact logo, "Secure access" label, Google OAuth button, email/password form, create-account toggle. If ?from_url is present (ProtectedRoute redirect), welcome screen is skipped and mode initialises to signin directly. All existing auth logic preserved (Google OAuth, email/password, signup, timeout wrapper, open-redirect protection, PKCE callback loading screen). No side-by-side panels at any screen size. Build + lint clean.',
+    description: 'Replace the side-by-side desktop split-panel login page with a warm, mobile-first two-screen auth flow tailored to JUnited identity.',
+    why: 'The original login page was a generic SaaS split-panel that felt disconnected from the Jewish community product. The new flow surfaces JUnited value props first and puts sign-in a single tap away.',
+  },
+
+  {
+    id: 'auth-welcome-cta-intent',
+    category: 'Auth & Identity',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Login Welcome — "Get Started" Should Default to Sign Up',
+    shippedNote: 'Shipped 2026-05-20. Single-line fix in Login.jsx: "Get Started" onClick changed from setMode(\'signin\') to setMode(\'signup\'). "Already have an account? Sign in" remains setMode(\'signin\'). Verified with Playwright in unauthenticated context: Get Started → Create account screen (Display name field visible, h2 "Create account"); Sign in CTA → Sign in screen (no Display name field, h2 "Sign in"); Back → Welcome; ?from_url → Sign in directly (welcome skipped). Lint + build clean.',
+    description: 'The "Get Started" CTA on the welcome screen currently opens the sign-in form (mode="signin"). New users must then find the "Need an account?" toggle at the bottom. "Get Started" should open the create-account form directly (mode="signup") while "Already have an account? Sign in" opens the sign-in form.',
+    why: 'Friction point for new user acquisition: when a new user clicks "Get Started" they land on the sign-in form, not a create-account form. The intent signals are clear — "Get Started" = new user, "Sign in" = returning user.',
+    prompt: `You are improving the JUnited login welcome screen CTAs.
+
+Context: src/pages/Login.jsx
+  - Line ~268: "Get Started" button calls setMode('signin') — should call setMode('signup')
+  - Line ~276: "Already have an account? Sign in" button calls setMode('signin') — correct
+  - Screen 2 (mode === 'signin' || mode === 'signup') already handles both modes:
+    - mode === 'signup' shows h2 "Create account" with name field shown
+    - mode === 'signin' shows h2 "Sign in" with no name field
+
+Goals:
+1. Change "Get Started" button onClick to setMode('signup') instead of setMode('signin').
+2. Verify Screen 2 h2 heading and form fields change correctly for signup mode.
+3. Verify "Already have an account?" toggle on Screen 2 still switches to signin.
+4. Run npm run lint && npm run build.
+5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'username-uniqueness',
     category: 'Auth & Identity',
     status: STATUS.SHIPPED,
@@ -507,9 +544,10 @@ Goals:
   {
     id: 'community-invite-link-controls',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Invite Link Expiry & Use-Limit Controls',
+    shippedNote: 'Shipped 2026-05-20. CommunityInviteModal gains "Advanced options" disclosure (ChevronDown toggle) below the stats row with a date picker for expires_at and number input for max_uses (both nullable). createNewLink() inserts these values when set. Stats line shows "Used X/Y times" when max_uses is set and "expires Jun 1" with short-date format. Advanced options reset when modal opens. Hint copy tells user limits apply to the next generated link.',
     description: 'Let admins set an expiry date or maximum use count when generating an invite link, giving them control over access windows for events, beta cohorts, etc.',
     why: 'The invite_links table already has expires_at and max_uses columns, but CommunityInviteModal has no UI for them. The acceptance page (JoinByCommunityCode.jsx) already enforces both checks.',
     prompt: `You are adding expiry and use-limit controls to the JUnited community invite modal.
@@ -904,9 +942,10 @@ Goals:
   {
     id: 'community-volunteer-slots',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'Community Volunteer Slots',
+    shippedNote: 'Shipped 2026-05-20. Migration 20260520200328_community_volunteer_slots.sql adds community_volunteer_slots (form_id, label, start/end_time, capacity, claimed_count) and community_volunteer_claims (slot_id, submitter_id, community_id) with RLS. claimed_count maintained by trigger. claim_volunteer_slot() RPC with FOR UPDATE lock prevents double-claiming. CreateFormPanel shows slot builder for volunteer-type forms. SubmissionsPanel shows Slot Signups summary, per-submission claimed slot labels, and CSV column. CommunityFormsTab FormCard shows slots with claim buttons, remaining capacity, and allows re-expansion for volunteer forms.',
     description: 'Named time-slots with capacity limits that managers attach to forms or events so volunteers can claim specific shifts.',
     why: 'The forms system ships without slot coordination. Volunteer slot management (e.g. pick a shift, track who signed up for each slot) is a natural extension but was deferred to keep the initial forms feature shippable.',
     prompt: `You are implementing Community Volunteer Slots for JUnited.
@@ -1044,7 +1083,8 @@ Goals:
   {
     id: 'group-join-request-admin-ui',
     category: 'Community',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'Shipped 2026-05-20. Dedicated Requests tab added to CommunityGroupPage.jsx, visible only to owners/admins (role derived from group_members). Approve inserts into group_members + increments member_count; Deny updates status to denied. Badge count on tab. Error handling on all actions.',
     priority: PRIORITY.MEDIUM,
     title: 'Group Join Request Approval UI',
     description: 'Admin UI for private group owners/admins to approve or deny pending join requests.',
@@ -2193,9 +2233,10 @@ Goals:
   {
     id: 'ux-accessibility-audit',
     category: 'Admin & Platform',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Accessibility Audit & Remediation',
+    shippedNote: 'Shipped 2026-05-20. Added :focus-visible outline (2px blue #2563EB) to src/index.css. Fixed j-text-meta contrast from #64748B (~4.25:1) to #475569 (~5.74:1). Enhanced prefers-reduced-motion block to explicitly disable named animation classes (.chesed-cta-pulse, .reaction-pop, .nav-active-pill, .nav-icon-active, .motion-page-enter, .motion-soft-in, .tab-fade-in, .skeleton, .splash-progress-bar) with animation: none and will-change: auto. Leaflet zoom controls bumped from 38px to 44px. Added aria-label to icon-only buttons in ChatView (back, more-options), NewMessageComposer (cancel, clear-search), MessageRequestsTab (accept, decline). Added aria-hidden + sr-only unread text to ConversationList blue dot. Sonner Toaster already ships with built-in aria-live regions.',
     description: 'WCAG 2.1 AA review across all pages: color contrast, focus states, touch targets, screen reader labels, motion preferences, and keyboard navigation.',
     why: 'Discovered during 2026-05-17 UX pass — JUnited has strong visual design but focus states, aria labels on icon buttons, and color-only signals need review before App Store launch.',
     prompt: `You are performing an accessibility audit and remediation for JUnited.
@@ -2219,13 +2260,146 @@ Goals:
   },
 
   {
+    id: 'ux-design-audit-primitives',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Frontend Design Audit & CSS Primitives',
+    shippedNote: 'Shipped 2026-05-20. Audited all major pages with Playwright screenshots (feed, communities, messages, profile). Top inconsistency: active tab pills / filter chips were using bg-slate-950/bg-slate-800 (black) instead of bg-blue-600 (primary blue). Fixed in Messages.jsx (Inbox/Requests tabs + All/Unread/Communities/Requests filter chips) and Communities.jsx (DiscoverEmptyState "Clear filters" CTA). Added new CSS primitives to src/index.css: .app-tab-pill/.app-tab-pill-active (blue), .app-tab-pill-dark (intentional dark/segment-control), .app-section-label, .app-empty-state family (.app-empty-state-icon, .app-empty-state-title, .app-empty-state-body), .app-ghost-button/.app-ghost-button-muted. Created STYLE_GUIDE.md documenting the full design language: colors, typography, buttons, cards, spacing, motion, and "what NOT to do" rules.',
+    description: 'Audit entire frontend for visual inconsistency. Define and extend shared CSS primitives. Create STYLE_GUIDE.md. Fix the most visible color-consistency issues.',
+    why: 'Discovered during May 2026 feature sprint — multiple pages used black (slate-950) for active/primary UI elements while the design system primary is blue. Style guide prevents the same drift from re-occurring.',
+    prompt: `You are performing a frontend design audit and creating a unified design system for JUnited.
+
+Context: src/index.css has a working set of primitives (.app-button-primary, .app-card, .app-chip, etc.).
+        Many pages bypass these in favor of one-off Tailwind. The biggest inconsistencies are in
+        active tab/chip colors (some pages use slate-950/black, the design system uses blue-600),
+        empty state layouts (each page invents its own), and section label typography.
+
+Goals:
+1. Capture before screenshots with Playwright MCP of: Feed, Communities, Messages, Profile.
+2. Audit buttons, cards, headers, modals, tabs, empty states, form inputs across all major pages.
+3. Add missing CSS primitives to src/index.css: .app-tab-pill/.app-tab-pill-active, .app-section-label, .app-empty-state family, .app-ghost-button.
+4. Fix Messages.jsx: active tab pills and filter chips should use border-blue-600 bg-blue-600, not bg-slate-950/bg-slate-800.
+5. Fix Communities.jsx DiscoverEmptyState: "Clear filters" button should use bg-blue-600, not bg-slate-950.
+6. Create STYLE_GUIDE.md at the repo root documenting colors, typography, buttons, cards, spacing, motion.
+7. Run npm run lint && npm run build.
+8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'ux-design-primitive-adoption',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Design Primitive Adoption — Top Screens',
+    shippedNote: 'Shipped 2026-05-20. Replaced one-off inline styling with CSS primitives across 4 screens: (1) Messages.jsx: all 3 pill tab/filter instances (Inbox/Requests tabs + All/Unread/Communities/Requests filter row) converted from 40-char inline Tailwind strings to .app-tab-pill + .app-tab-pill-active. (2) Communities.jsx: 3 empty states → .app-empty-state family; 2 section labels → .app-section-label; CommunitySection empty state CTA fixed from bg-slate-950 → bg-blue-600. (3) CommunityDetailView.jsx: 2 empty states (HomeFeed empty + CompactEmptyState component) → .app-empty-state family; 1 section label (Community posts header) → .app-section-label. (4) Notifications.jsx: date group labels (Today, Yesterday, May 17…) → .app-section-label. Verified with Playwright screenshots — no regressions. Lint + build clean.',
+    description: 'Apply new CSS design primitives to the highest-traffic screens: replace repeated one-off tab-pill, empty-state, section-label patterns with the shared classes defined in index.css.',
+    why: 'STYLE_GUIDE.md and the CSS primitives existed but 0% of component code used them. This sprint drove adoption on the top 4 screens.',
+    prompt: `You are applying JUnited CSS design primitives to real component code.
+
+Context: src/index.css defines these primitives (added 2026-05-20):
+  .app-tab-pill / .app-tab-pill-active / .app-tab-pill-dark
+  .app-section-label
+  .app-empty-state / .app-empty-state-icon / .app-empty-state-title / .app-empty-state-body
+  .app-ghost-button / .app-ghost-button-muted
+STYLE_GUIDE.md at the repo root documents when and how to use each.
+
+Goals:
+1. Search all .jsx files for one-off pill-tab class strings (rounded-xl border px-3 with active/inactive ternary) → replace with app-tab-pill + app-tab-pill-active.
+2. Search for empty state divs (rounded-2xl border border-dashed) → replace with app-empty-state family.
+3. Search for section labels (text-[11px] font-black uppercase tracking-wide text-slate-400) → replace with app-section-label.
+4. Use Playwright MCP to verify no visual regression.
+5. Run npm run lint && npm run build.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'ux-communities-discover-polish',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Communities Discover — Reference-Based UI Polish',
+    shippedNote: 'Shipped 2026-05-20. Four targeted changes to Communities Discover: (1) DiscoverSection headers upgraded from tiny 11px badge-pill-only to icon square badge + text-[15px] font-black h2 title + lighter 12px subtitle — eliminates the most generic-looking pattern on the page. (2) ForYouSection matching header upgrade + surface-panel-soft wrapper to visually distinguish personalized recommendations from generic type sections. (3) DiscoverCommunityCard banner height 72px → 92px — cover gradients now have enough real estate to read as visual identity rather than a decorative sliver. (4) ActiveInStrip community initials badges: bg-slate-950 (black) → bg-blue-600 — removes the single most jarring color inconsistency on the mobile Discover view. Verified with Playwright before/after screenshots on 390px mobile viewport. Lint + build clean.',
+    description: 'Targeted visual polish of the Communities Discover page: section header hierarchy, card cover presence, For You premium treatment, and color consistency in the active spaces strip.',
+    why: 'Discover is the highest-traffic landing surface for new communities. The old design had section headings rendered entirely as 11px pill badges, flat uniform section rhythm, shallow 72px card covers, and a black initial badge that clashed with the blue design system.',
+    prompt: `You are polishing the Communities Discover screen for JUnited.
+
+Context:
+  src/pages/Communities.jsx — DiscoverSection, ForYouSection, ActiveInStrip, Hero, SearchBar, ViewSwitch
+  src/components/communities/DiscoverCommunityCard.jsx — card component used in all Discover sections
+  src/lib/communityTypes.js — typeConfig: badgeClass (bg-X-50 text-X-700), icon, label, accent, coverPattern
+
+Goals:
+1. Use Playwright MCP to capture before screenshots at 390px mobile viewport.
+2. Upgrade DiscoverSection header from inline pill to: icon square (h-9 w-9 rounded-xl badgeClass) + h2 (text-[15px] font-black) + subtitle (text-[12px] font-medium text-slate-400).
+3. Upgrade ForYouSection with matching header + surface-panel-soft rounded-[20px] p-4 wrapper.
+4. Increase DiscoverCommunityCard banner from h-[72px] to h-[92px].
+5. Fix ActiveInStrip initials badge: bg-slate-950 → bg-blue-600.
+6. Use Playwright MCP to verify after screenshots — confirm section headers, card height, and color.
+7. Run npm run lint && npm run build.
+8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'ux-community-detail-polish',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Community Detail — Reference-Based UI Polish',
+    shippedNote: 'Shipped 2026-05-20. Four targeted changes: (1) CommunityHero.jsx: cover height in app shell 96px→120px — community header now reads as a branded identity space rather than a card thumbnail. (2) CommunityHero.jsx: action bar logo 30px→36px with rounded-xl, member count upgraded to font-bold text-slate-600 — stronger visual anchor. (3) CommunityHero.jsx: removed redundant border-b from invite strip wrapper — eliminated the double horizontal-rule chrome between action bar and page content. (4) CommunityDetailView.jsx HomeFeedSection: added "LATEST" app-section-label above the post feed — creates clear rhythm between composer and posts. (5) CommunityOperatingSystem.jsx CommunityPostPreview: badge padding tightened from px-2.5 py-1 to px-2 py-0.5 — post card metadata row is no longer dominated by heavy pill badges. Verified with Playwright screenshots on two community types (Neighborhood + Events). All tabs, More menu, and swipe navigation confirmed working. Lint + build clean.',
+    description: 'Targeted polish of the Community Detail screen to reduce generic/AI-generated feel: hero cover height, action bar identity, section rhythm, and post card badge weight.',
+    why: 'Community Detail is the highest-engagement surface in the app but felt like a card expanded to full screen rather than a branded mini-app. Priority fixes: cover too thin, no section headers in home feed, heavy post card badges.',
+    prompt: `You are polishing the Community Detail screen for JUnited.
+
+Context:
+  src/components/communities/CommunityDetailView.jsx — main detail container, HomeFeedSection, RoutedCommunityHome
+  src/components/communities/CommunityHero.jsx — cover, action bar, invite strip
+  src/components/communities/CommunityOperatingSystem.jsx — CommunityPostPreview, CommunityAdminQuickActions
+
+Goals:
+1. Use Playwright MCP to capture before screenshots of at least 2 community types at 390px mobile.
+2. Increase CommunityHero inAppShell cover height (96 → 120px).
+3. Upgrade action bar: logo 30px → 36px, rounded-xl, member count font-bold.
+4. Remove redundant border-b from invite strip wrapper.
+5. Add app-section-label "Latest" before HomeFeedSection post list.
+6. Tighten CommunityPostPreview badge padding: px-2.5 py-1 → px-2 py-0.5.
+7. Verify all tabs and More menu still work via Playwright.
+8. Run npm run lint && npm run build.
+9. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'ux-feed-post-card-polish',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Feed Post Card — Reference-Based UI Polish',
+    shippedNote: 'Shipped 2026-05-20. Five targeted changes to UnifiedPostCard.jsx default feed post branch: (1) Body leading-snug → leading-relaxed — multi-line post bodies now breathe and scan faster. (2) Content pb-0.5 → pb-2 — added breathing room between content and footer divider. (3) Username font-semibold → font-bold in all three header branches (community, anonymous, user) — poster identity reads with more confidence. (4) Footer mt-1 py-1.5 → py-2 (no margin-top) — action row no longer feels tacked on. (5) Inline recent-comment strip: added bg-slate-50 rounded-xl px-2.5 py-1.5 to inner div — preview now reads as a comment bubble rather than raw text. Lint + build clean.',
+    description: 'Targeted polish of UnifiedPostCard (default feed post branch) and the community-feed post preview.',
+    why: 'The post card is the single highest-density surface in the app. Small improvements to leading, spacing, and font weight compound across every feed scroll.',
+    prompt: `You are polishing the feed post card for JUnited.
+
+Context:
+  src/components/feed/UnifiedPostCard.jsx — default post branch starting ~line 709
+  src/components/communities/CommunityOperatingSystem.jsx — CommunityPostPreview
+
+Goals:
+1. Capture Playwright before screenshots of Feed, community home feed, community Posts tab.
+2. Audit body leading, content padding, header font weight, footer spacing, comment preview strip.
+3. Implement the top 3-5 targeted fixes — no redesign, no new features.
+4. Capture after screenshots and confirm visual improvement.
+5. Run npm run lint && npm run build.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'ux-design-token-system',
     category: 'Admin & Platform',
     status: STATUS.DEFERRED,
     priority: PRIORITY.LOW,
     title: 'Full Design Token System',
-    description: 'Replace all hardcoded color/size values with CSS variables. Standardize card radius, spacing scale, and typography to eliminate the ~50+ hardcoded values scattered across component files.',
-    why: 'Low priority until the design language is fully stable. Currently the app has a working token system (j-navy, j-gold, j-olive, semantic chips) but many components still use hardcoded Tailwind values like text-[#94a3b8] and rounded-2xl. Tackle post-v1 launch when the design is locked.',
+    description: 'Replace all hardcoded color/size values with CSS variables. Standardize card radius, spacing scale, and typography to eliminate the ~50+ hardcoded values scattered across component files. Note: the design primitive adoption sprint (2026-05-20) already replaced pill tabs, section labels, and empty states in Messages, Communities, CommunityDetailView, and Notifications with the new CSS class primitives. Remaining work is deeper token replacement (hex values → CSS vars).',
+    why: 'Low priority until the design language is fully stable. Foundations built: STYLE_GUIDE.md defines the full visual language; .app-tab-pill, .app-section-label, .app-empty-state family, and .app-ghost-button primitives are defined in index.css and adopted across the top 4 screens. Remaining gap is replacing hardcoded hex values like text-[#94a3b8] with tokens. Tackle post-v1 launch when the design is locked.',
     prompt: `You are implementing a full design token system for JUnited.
 
 Context: src/index.css has a solid token foundation (--j-navy, --j-gold, --j-olive, j-chip classes, j-card,
