@@ -4,6 +4,14 @@ import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 
 const AuthContext = createContext(null);
 const AUTH_CHECK_TIMEOUT_MS = 12000;
+const FALLBACK_AUTH_CONTEXT = {
+  user: null,
+  isAuthenticated: false,
+  isLoadingAuth: false,
+  authError: null,
+  logout: async () => {},
+  checkAppState: async () => {},
+};
 
 const withTimeout = (promise, timeoutMs, message) => new Promise((resolve, reject) => {
   const timeoutId = window.setTimeout(() => {
@@ -108,6 +116,11 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
-  return context;
+  if (context) return context;
+
+  if (import.meta.env.DEV) {
+    console.warn('useAuth was called outside AuthProvider; falling back to guest auth state.');
+  }
+
+  return FALLBACK_AUTH_CONTEXT;
 }

@@ -111,17 +111,17 @@ function LayoutContent({ children, currentPageName }) {
             activeIndex={currentIndex}
             onIndexChange={handleTabChange}
           >
-            <AppErrorBoundary inline fallbackMessage="Feed could not load.">
+            <AppErrorBoundary inline resetKey={`${location.key}:feed:${currentIndex}`} fallbackMessage="Feed could not load.">
               <Suspense fallback={<InlinePageSkeleton />}>
                 <Feed isActive={currentIndex === 0} />
               </Suspense>
             </AppErrorBoundary>
-            <AppErrorBoundary inline fallbackMessage="Mitzvah Circle could not load.">
+            <AppErrorBoundary inline resetKey={`${location.key}:mitzvah:${currentIndex}`} fallbackMessage="Mitzvah Circle could not load.">
               <Suspense fallback={<InlinePageSkeleton />}>
                 <MitzvahCircle isActive={currentIndex === 1} />
               </Suspense>
             </AppErrorBoundary>
-            <AppErrorBoundary inline fallbackMessage="Communities could not load.">
+            <AppErrorBoundary inline resetKey={`${location.key}:communities:${currentIndex}`} fallbackMessage="Communities could not load.">
               <Suspense fallback={<InlinePageSkeleton />}>
                 <Communities />
               </Suspense>

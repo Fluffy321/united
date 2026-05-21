@@ -47,6 +47,7 @@ const TIER_LABELS = {
 };
 
 const MIN_CUSTOM_AMOUNT = 5;
+const SUBSCRIPTION_CHECK_TIMEOUT_MS = 3500;
 
 const BILLING_MODES = [
   { key: 'once',    label: 'One-time' },
@@ -66,6 +67,17 @@ function formatPeriodEnd(isoString) {
     .format(new Date(isoString));
 }
 
+function withTimeout(promise, fallback, timeoutMs = SUBSCRIPTION_CHECK_TIMEOUT_MS) {
+  let timeoutId;
+  const timeout = new Promise((resolve) => {
+    timeoutId = window.setTimeout(() => resolve(fallback), timeoutMs);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => {
+    window.clearTimeout(timeoutId);
+  });
+}
+
 export default function SupportJUnited() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
@@ -82,11 +94,22 @@ export default function SupportJUnited() {
   // Fetch active subscription for logged-in users
   useEffect(() => {
     if (!currentUser) return;
+    let cancelled = false;
     setSubLoading(true);
-    paymentsService.getActiveSubscription()
-      .then(setActiveSub)
-      .catch(() => setActiveSub(null))
-      .finally(() => setSubLoading(false));
+    withTimeout(paymentsService.getActiveSubscription(), null)
+      .then((subscription) => {
+        if (!cancelled) setActiveSub(subscription);
+      })
+      .catch(() => {
+        if (!cancelled) setActiveSub(null);
+      })
+      .finally(() => {
+        if (!cancelled) setSubLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [currentUser?.id]);
 
   const isCustom    = billingMode === 'once' && selectedTier === 'custom';

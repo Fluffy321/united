@@ -11,6 +11,12 @@ export default class AppErrorBoundary extends React.Component {
     return { hasError: true };
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.state.hasError && this.props.resetKey && this.props.resetKey !== prevProps.resetKey) {
+      this.setState({ hasError: false });
+    }
+  }
+
   componentDidCatch(error, info) {
     console.error('JUnited app error:', error, info);
   }
