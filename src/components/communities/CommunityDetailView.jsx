@@ -107,7 +107,6 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'home');
   const [highlightEventId, setHighlightEventId] = useState(null);
   const [showClaim, setShowClaim] = useState(false);
-  const [showMore, setShowMore] = useState(false);
   const [showAdminCenter, setShowAdminCenter] = useState(false);
   const [adminInitialTab, setAdminInitialTab] = useState('overview');
   const [showAppealModal, setShowAppealModal] = useState(false);
@@ -194,7 +193,6 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   const setTab = (tab) => {
     const nextTab = visibleTabs.includes(tab) ? tab : (visibleTabs[0] || 'home');
     setActiveTab(nextTab);
-    setShowMore(false);
     setSearchParams((current) => {
       const next = new URLSearchParams(current);
       next.set('tab', nextTab);
@@ -445,7 +443,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         );
       })()}
 
-      <div className="max-w-2xl mx-auto w-full px-4 pb-24" {...swipeHandlers}>
+      <div className="max-w-2xl mx-auto w-full px-4 pb-8" {...swipeHandlers}>
         {activeTab === 'home' && (
           <RoutedCommunityHome
             posts={posts}
@@ -556,25 +554,6 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
           </div>
         )}
       </div>
-
-      <CommunityBottomNav
-        navConfig={navConfig}
-        activeTab={activeTab}
-        tabsWithCounts={tabsWithCounts}
-        onTabChange={setTab}
-        onMoreClick={() => setShowMore((v) => !v)}
-        accentHex={accentHex}
-      />
-      {showMore && (
-        <CommunityMoreSheet
-          navConfig={navConfig}
-          activeTab={activeTab}
-          tabsWithCounts={tabsWithCounts}
-          onTabChange={setTab}
-          onClose={() => setShowMore(false)}
-          accentHex={accentHex}
-        />
-      )}
 
       <ClaimModal
         open={showClaim}
