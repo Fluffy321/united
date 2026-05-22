@@ -64,6 +64,18 @@ export const CATEGORY_ORDER = [
 
 export const ROADMAP = [
 
+  // ── Growth & Activation ─────────────────────────────────────────────────
+
+  {
+    id: 'first-run-discovery-activation',
+    category: 'Growth & Monetization',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'First-Run Discovery & Activation Sprint',
+    description: 'Make the first 3 minutes of JUnited feel personal and community-centered. New users with 0 joined communities are redirected to Communities Discover after onboarding. Feed shows a "Join your first community" banner for users with no communities. Communities Discover and empty search state include a "Don\'t see your shul?" card with a native share/copy invite for admins. Messages icon added persistently to the Feed header.',
+    shippedNote: 'Shipped 2026-05-22. OnboardingFlow.jsx: passes _joinedCount in onComplete callback. App.jsx: after onboarding, navigates to /Communities if _joinedCount === 0. Feed.jsx: communitiesFetched flag tracks query resolution; zero-state banner (Users icon + "Join your first community" CTA → /Communities) shown when communityGroups.length === 0 and backend is live; MessageCircle icon added to Feed DestinationHeader actions. Communities.jsx: MissingCommunityCard component ("Don\'t see your shul?") renders in search empty-state and at the bottom of every Discover results list; uses navigator.share with clipboard fallback; pre-fills share message with search query if present.',
+  },
+
   // ── Auth & Identity ──────────────────────────────────────────────────────
 
   {
