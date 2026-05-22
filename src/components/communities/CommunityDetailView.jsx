@@ -36,10 +36,8 @@ import { useSwipeableTabs } from '@/hooks/useSwipeableTabs';
 import {
   CommunityAdminQuickActions,
   CommunityFeaturedSection,
-  CommunityImportantStrip,
   CommunityMemberDirectory,
   CommunityPostPreview,
-  SinceLastVisitDigest,
 } from './CommunityOperatingSystem';
 import CommunityPersonalizationHub from './CommunityPersonalizationHub';
 import CommunityPostLaunchPanel from './CommunityPostLaunchPanel';
@@ -69,6 +67,22 @@ const TAB_ICON_MAP = {
   listings:      ShoppingBag,
   groups:        Globe,
   chat:          MessageCircle,
+};
+
+const LAUNCHPAD_TAB_DESC = {
+  posts:         'Updates and conversations',
+  questions:     'Ask and get answers',
+  discussions:   'Torah and learning threads',
+  announcements: 'Official updates',
+  openNeeds:     'Help requests and offers',
+  events:        'Programs and gatherings',
+  resources:     'Files, links, and guides',
+  members:       'Directory and leadership',
+  chat:          'Group chat',
+  listings:      'Items and exchange',
+  groups:        'Subgroups and circles',
+  about:         'Community info and contact',
+  forms:         'Forms and surveys',
 };
 
 function getPostTypeForTab(tab, typeKey) {
@@ -456,6 +470,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
             onManage={() => openAdminCenter('content')}
             openAdminCenter={openAdminCenter}
             onOpenEvent={(event) => { setHighlightEventId(event.id); setTab('events'); }}
+            visibleTabs={visibleTabs}
           />
         )}
 
@@ -1161,6 +1176,130 @@ function VisitorLanding({ community, typeConfig, posts, events, resources, membe
   );
 }
 
+function LaunchpadNavCard({ tabKey, typeConfig, onTabChange, count, countLabel }) {
+  const Icon = TAB_ICON_MAP[tabKey] || Hash;
+  const label = getCommunityTabLabel(tabKey);
+  const desc = LAUNCHPAD_TAB_DESC[tabKey] || '';
+  return (
+    <button
+      type="button"
+      onClick={() => onTabChange(tabKey)}
+      className="flex flex-col items-start gap-2.5 rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm active:scale-[0.97] active:bg-slate-50 transition-all"
+    >
+      <div className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white flex-shrink-0`}>
+        <Icon className="h-[18px] w-[18px]" />
+      </div>
+      <div className="min-w-0 w-full">
+        <p className="text-[14px] font-black text-slate-900 leading-tight">{label}</p>
+        <p className="mt-0.5 text-[12px] text-slate-500 leading-snug">{desc}</p>
+      </div>
+      {count > 0 && (
+        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600">
+          {count} {countLabel}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function CommunityHomeLaunchpad({
+  community, typeConfig, posts, activeNeeds, events, resources, members,
+  isAdmin, lastVisitedAt, currentUser, onTabChange, openAdminCenter, onManage,
+  onOpenEvent, visibleTabs,
+}) {
+  const layoutSettings = (community?.settings && typeof community.settings === 'object')
+    ? (community.settings.layout || {}) : {};
+  const hiddenSections = new Set(layoutSettings.hiddenSections || []);
+
+  const cardTabs = visibleTabs.filter((t) => t !== 'home');
+  const upcomingEvents = events.filter((e) => new Date(e.start_date || e.event_date) >= new Date());
+  const memberCount = Math.max(members.length, community?.follower_count || 0);
+  const recentPosts = posts.slice(0, 2);
+
+  const getCardCount = (tab) => {
+    if (tab === 'events') return upcomingEvents.length > 0 ? { count: upcomingEvents.length, label: upcomingEvents.length === 1 ? 'upcoming' : 'upcoming' } : null;
+    if (tab === 'members') return memberCount > 0 ? { count: memberCount, label: memberCount === 1 ? 'member' : 'members' } : null;
+    if (tab === 'resources') return resources.length > 0 ? { count: resources.length, label: resources.length === 1 ? 'resource' : 'resources' } : null;
+    if (tab === 'openNeeds') return activeNeeds.length > 0 ? { count: activeNeeds.length, label: activeNeeds.length === 1 ? 'open need' : 'open needs' } : null;
+    return null;
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Right Now compact banner — most important item since last visit */}
+      {!hiddenSections.has('rightNow') && (
+        <RightNowBanner
+          posts={posts}
+          events={events}
+          activeNeeds={activeNeeds}
+          resources={resources}
+          typeConfig={typeConfig}
+          lastVisitedAt={lastVisitedAt}
+          onTabChange={onTabChange}
+        />
+      )}
+
+      {/* Navigation grid — launchpad cards for every tab */}
+      <div className="grid grid-cols-2 gap-2.5">
+        {cardTabs.map((tab) => {
+          const countData = getCardCount(tab);
+          return (
+            <LaunchpadNavCard
+              key={tab}
+              tabKey={tab}
+              typeConfig={typeConfig}
+              onTabChange={onTabChange}
+              count={countData?.count}
+              countLabel={countData?.label}
+            />
+          );
+        })}
+      </div>
+
+      {/* Admin tools — compact row after the grid */}
+      {isAdmin && !hiddenSections.has('adminTools') && (
+        <CommunityAdminQuickActions
+          onAnnouncement={() => onTabChange('announcements')}
+          onEvent={() => onTabChange('events')}
+          onResource={() => onTabChange('resources')}
+          onAdminCenter={() => openAdminCenter?.('overview') ?? onManage?.()}
+        />
+      )}
+
+      {/* Recent activity preview — 1–2 latest posts, not the full feed */}
+      {!hiddenSections.has('recentActivity') && recentPosts.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="app-section-label px-0.5">Recent</p>
+            <button
+              type="button"
+              onClick={() => onTabChange('posts')}
+              className="text-[12px] font-bold text-blue-600 active:opacity-70 transition-opacity"
+            >
+              View all →
+            </button>
+          </div>
+          {recentPosts.map((post) => (
+            <CommunityPostPreview key={post.id} post={post} typeConfig={typeConfig} />
+          ))}
+        </div>
+      )}
+
+      {/* Personalization hub — user's RSVPs and chesed items */}
+      {!hiddenSections.has('personalization') && (
+        <CommunityPersonalizationHub
+          communityId={community.id}
+          currentUser={currentUser}
+          events={events}
+          typeConfig={typeConfig}
+          onTabChange={onTabChange}
+          onOpenEvent={onOpenEvent}
+        />
+      )}
+    </div>
+  );
+}
+
 function RoutedCommunityHome({
   community,
   typeConfig,
@@ -1184,6 +1323,7 @@ function RoutedCommunityHome({
   onManage,
   openAdminCenter,
   onOpenEvent,
+  visibleTabs,
 }) {
   const [panelDismissed, setPanelDismissed] = React.useState(
     () => Boolean(localStorage.getItem(POST_LAUNCH_DISMISS_KEY(community?.id)))
@@ -1213,95 +1353,6 @@ function RoutedCommunityHome({
     );
   }
 
-  // ── Joined member: feed-first layout — respects community.settings.layout ──
-  const layoutSettings = (community?.settings && typeof community.settings === 'object')
-    ? (community.settings.layout || {})
-    : {};
-  const hiddenSections = new Set(layoutSettings.hiddenSections || []);
-  const sectionOrder = layoutSettings.homeSections?.length
-    ? layoutSettings.homeSections
-    : ['rightNow', 'composer', 'feed', 'adminTools', 'personalization'];
-  const effectiveComposerMode = layoutSettings.composerMode || undefined;
-
-  const sectionMap = {
-    rightNow: (
-      <RightNowBanner
-        posts={posts}
-        events={events}
-        activeNeeds={activeNeeds}
-        resources={resources}
-        typeConfig={typeConfig}
-        lastVisitedAt={lastVisitedAt}
-        onTabChange={onTabChange}
-      />
-    ),
-    // Legacy section keys — kept so existing customized layouts still render correctly
-    digest: (
-      <SinceLastVisitDigest
-        posts={posts}
-        events={events}
-        lastVisitedAt={lastVisitedAt}
-        onTabChange={onTabChange}
-      />
-    ),
-    importantNow: (
-      <CommunityImportantStrip
-        posts={posts}
-        events={events}
-        activeNeeds={activeNeeds}
-        resources={resources}
-        typeConfig={typeConfig}
-        onTabChange={onTabChange}
-      />
-    ),
-    adminTools: isAdmin ? (
-      <CommunityAdminQuickActions
-        onAnnouncement={() => onTabChange('announcements')}
-        onEvent={() => onTabChange('events')}
-        onResource={() => onTabChange('resources')}
-        onAdminCenter={() => openAdminCenter?.('overview') ?? onManage?.()}
-      />
-    ) : null,
-    personalization: (
-      <CommunityPersonalizationHub
-        communityId={community.id}
-        currentUser={currentUser}
-        events={events}
-        typeConfig={typeConfig}
-        onTabChange={onTabChange}
-        onOpenEvent={onOpenEvent}
-      />
-    ),
-    composer: canPost ? (
-      <TypeAwareComposer
-        typeConfig={typeConfig}
-        composeText={composeText}
-        setComposeText={setComposeText}
-        submitPost={submitPost}
-        posting={posting}
-        mode={effectiveComposerMode}
-      />
-    ) : (
-      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-        <Lock className="h-4 w-4 flex-shrink-0 text-slate-400" />
-        <p className="text-[13px] font-semibold text-slate-500">Posting is restricted to community admins.</p>
-      </div>
-    ),
-    feed: (
-      <HomeFeedSection
-        posts={posts}
-        typeConfig={typeConfig}
-        activeNeeds={typeConfig.key === 'chesed' ? activeNeeds : []}
-        onTabChange={onTabChange}
-      />
-    ),
-  };
-
-  const orderedSections = sectionOrder
-    .filter((key) => !hiddenSections.has(key))
-    .map((key) => ({ key, component: sectionMap[key] }))
-    .filter(({ component }) => component != null);
-
   return (
     <div className="space-y-3 pt-3">
       {showPanel && (
@@ -1318,9 +1369,23 @@ function RoutedCommunityHome({
           onDismiss={handleDismissPanel}
         />
       )}
-      {orderedSections.map(({ key, component }) => (
-        <React.Fragment key={key}>{component}</React.Fragment>
-      ))}
+      <CommunityHomeLaunchpad
+        community={community}
+        typeConfig={typeConfig}
+        posts={posts}
+        activeNeeds={activeNeeds}
+        events={events}
+        resources={resources}
+        members={members}
+        isAdmin={isAdmin}
+        lastVisitedAt={lastVisitedAt}
+        currentUser={currentUser}
+        onTabChange={onTabChange}
+        openAdminCenter={openAdminCenter}
+        onManage={onManage}
+        onOpenEvent={onOpenEvent}
+        visibleTabs={visibleTabs}
+      />
     </div>
   );
 }

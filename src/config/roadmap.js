@@ -327,7 +327,17 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'Community Member Home — Feed-First Layout + Compact Right Now Banner',
     description: 'Joined-member home now surfaces posts immediately without scrolling. A single compact RightNowBanner row (≈44px) replaces the two-card digest + important strip stack — it shows new-content count when there is activity since last visit, otherwise surfaces the single most important item (announcement → event → chesed need → resource). The composer collapses to a one-line pill by default in all modes, expanding on tap. Section order changed to: rightNow → composer → feed → adminTools → personalization.',
-    shippedNote: 'Shipped 2026-05-19. RightNowBanner component added inline in CommunityDetailView.jsx. Default homeSections order changed from [digest, importantNow, adminTools, personalization, composer, feed] to [rightNow, composer, feed, adminTools, personalization]. digest and importantNow kept in sectionMap for backwards compatibility with customized layouts. TypeAwareComposer default post mode now has collapsed pill state matching existing message-mode pattern. Fixed latent bug: Heart was used in AboutTab but not imported.',
+    shippedNote: 'Shipped 2026-05-19. RightNowBanner component added inline in CommunityDetailView.jsx. Default homeSections order changed from [digest, importantNow, adminTools, personalization, composer, feed] to [rightNow, composer, feed, adminTools, personalization]. digest and importantNow kept in sectionMap for backwards compatibility with customized layouts. TypeAwareComposer default post mode now has collapsed pill state matching existing message-mode pattern. Fixed latent bug: Heart was used in AboutTab but not imported. Superseded by community-home-launchpad (2026-05-22).',
+  },
+
+  {
+    id: 'community-home-launchpad',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Community Home — App-Style Launchpad / Mini-App Front Door',
+    description: 'Opening a community now feels like entering that community\'s own mini-app inside JUnited. The default Home tab is an app-style launchpad with a 2-column navigation grid, a compact Right Now banner, an admin tools row (for admins), and a 2-post recent activity preview with a "View all" link. The feed-first layout is removed from Home; the full feed is accessed via the Posts tab. Navigation cards are type-aware and capability-gated: each shows an icon, title, short description, and live count where applicable (upcoming events, members, resources, open needs). Layout setting hiddenSections still respected. Composer moved exclusively to Posts tab.',
+    shippedNote: 'Shipped 2026-05-22. CommunityDetailView.jsx: added LAUNCHPAD_TAB_DESC constant, LaunchpadNavCard component (2-col grid card with icon + title + desc + count chip), CommunityHomeLaunchpad component (RightNow banner → nav grid → admin row → recent preview → personalization hub). RoutedCommunityHome now accepts visibleTabs prop and renders CommunityHomeLaunchpad instead of the sectionMap/orderedSections feed-first stack. visibleTabs passed from parent at the JSX call site. Posts tab retains full feed + composer via RoutedPostsTab unchanged.',
   },
 
   {
