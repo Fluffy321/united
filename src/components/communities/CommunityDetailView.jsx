@@ -102,6 +102,68 @@ function matchesTab(post, tab) {
   return true;
 }
 
+function getFeaturedTab(typeConfig, cardTabs) {
+  const emphasisMap = {
+    announcements: 'announcements',
+    events: 'events',
+    chesed: 'openNeeds',
+    resources: 'resources',
+    feed: 'posts',
+  };
+  const preferred = emphasisMap[typeConfig.homeEmphasis];
+  if (preferred && cardTabs.includes(preferred)) return preferred;
+  const first = typeConfig.primaryTabs?.find((t) => t !== 'home' && cardTabs.includes(t));
+  return first || cardTabs[0] || 'posts';
+}
+
+function getCardData(tab, { posts, events, activeNeeds, resources, memberCount }) {
+  const upcomingEvents = events
+    .filter((e) => new Date(e.start_date || e.event_date) >= new Date())
+    .sort((a, b) => new Date(a.start_date || a.event_date) - new Date(b.start_date || b.event_date));
+
+  if (tab === 'events') {
+    if (upcomingEvents.length === 0) return { empty: true, emptyCta: 'No upcoming events' };
+    const next = upcomingEvents[0];
+    const eventDate = new Date(next.start_date || next.event_date);
+    const days = Math.ceil((eventDate - new Date()) / (1000 * 60 * 60 * 24));
+    const dateLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : eventDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    return { stat: `${upcomingEvents.length} upcoming`, preview: `${next.title || next.name || 'Event'} · ${dateLabel}` };
+  }
+
+  if (tab === 'announcements') {
+    const latest = posts.find((p) => String(p.type || p.post_type || '').toLowerCase() === 'announcement');
+    if (!latest) return { empty: true, emptyCta: 'No announcements yet' };
+    const raw = latest.content || latest.body || latest.title || '';
+    return { stat: 'Latest update', preview: raw.length > 70 ? `${raw.slice(0, 70)}…` : raw };
+  }
+
+  if (tab === 'posts') {
+    const nonAnn = posts.filter((p) => String(p.type || p.post_type || '').toLowerCase() !== 'announcement');
+    const latest = nonAnn[0];
+    if (!latest) return { empty: true, emptyCta: 'No posts yet' };
+    const raw = latest.content || latest.body || latest.title || '';
+    return { stat: `${nonAnn.length} post${nonAnn.length !== 1 ? 's' : ''}`, preview: raw.length > 70 ? `${raw.slice(0, 70)}…` : raw };
+  }
+
+  if (tab === 'openNeeds') {
+    if (activeNeeds.length === 0) return { empty: true, emptyCta: 'No open needs' };
+    const first = activeNeeds[0];
+    return { stat: `${activeNeeds.length} open need${activeNeeds.length !== 1 ? 's' : ''}`, preview: first.title || first.description?.slice(0, 70) || 'Community request' };
+  }
+
+  if (tab === 'resources') {
+    if (resources.length === 0) return { empty: true, emptyCta: 'No resources yet' };
+    const first = resources.find((r) => r.is_pinned) || resources[0];
+    return { stat: `${resources.length} resource${resources.length !== 1 ? 's' : ''}`, preview: first.title || 'Community resource' };
+  }
+
+  if (tab === 'members') {
+    return memberCount > 0 ? { stat: `${memberCount.toLocaleString()} member${memberCount !== 1 ? 's' : ''}` } : { empty: true, emptyCta: 'No members yet' };
+  }
+
+  return {};
+}
+
 export default function CommunityDetailView({ communityId, currentUser, onBack, fallbackCommunity }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'home');
@@ -211,7 +273,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     tabButtonRefs.current[activeTab]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
   }, [activeTab]);
 
-  const swipeHandlers = useSwipeableTabs({ tabs: visibleTabs, activeTab, onTabChange: setTab });
+  const swipeHandlers = useSwipeableTabs({ tabs: visibleTabs, activeTab, onTabChange: setTab, disabled: activeTab === 'home' });
 
   const { data: events = [] } = useQuery({
     queryKey: ['community-events', communityId],
@@ -1165,28 +1227,59 @@ function VisitorLanding({ community, typeConfig, posts, events, resources, membe
   );
 }
 
-function LaunchpadNavCard({ tabKey, typeConfig, onTabChange, count, countLabel }) {
+function FeaturedLaunchpadCard({ tabKey, typeConfig, onTabChange, cardData }) {
   const Icon = TAB_ICON_MAP[tabKey] || Hash;
   const label = getCommunityTabLabel(tabKey);
-  const desc = LAUNCHPAD_TAB_DESC[tabKey] || '';
   return (
     <button
       type="button"
       onClick={() => onTabChange(tabKey)}
-      className="flex flex-col items-start gap-2.5 rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm active:scale-[0.97] active:bg-slate-50 transition-all"
+      className="w-full flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm active:scale-[0.98] active:bg-slate-50 transition-all"
     >
-      <div className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white flex-shrink-0`}>
-        <Icon className="h-[18px] w-[18px]" />
+      <div className="flex items-center gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white flex-shrink-0`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[15px] font-black text-slate-900 leading-tight">{label}</p>
+          {cardData.stat && (
+            <p className="text-[12px] font-bold text-blue-600 mt-0.5">{cardData.stat}</p>
+          )}
+        </div>
+        <ChevronRight className="h-5 w-5 text-slate-300 flex-shrink-0" />
+      </div>
+      {cardData.preview && (
+        <p className="text-[13px] text-slate-600 leading-snug line-clamp-2 pl-[52px]">{cardData.preview}</p>
+      )}
+      {cardData.empty && !cardData.preview && (
+        <p className="text-[12px] text-slate-400 leading-snug pl-[52px]">{cardData.emptyCta}</p>
+      )}
+    </button>
+  );
+}
+
+function SecondaryLaunchpadCard({ tabKey, typeConfig, onTabChange, cardData }) {
+  const Icon = TAB_ICON_MAP[tabKey] || Hash;
+  const label = getCommunityTabLabel(tabKey);
+  const desc = LAUNCHPAD_TAB_DESC[tabKey] || '';
+  const hasData = cardData.stat || cardData.preview;
+  const subtext = hasData ? (cardData.stat || cardData.preview) : (cardData.empty ? cardData.emptyCta : desc);
+  const subtextClass = cardData.stat && !cardData.empty ? 'text-blue-600 font-bold' : 'text-slate-500';
+  return (
+    <button
+      type="button"
+      onClick={() => onTabChange(tabKey)}
+      className="flex flex-col items-start gap-2 rounded-2xl border border-slate-100 bg-white p-3.5 text-left shadow-sm active:scale-[0.97] active:bg-slate-50 transition-all"
+    >
+      <div className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white flex-shrink-0`}>
+        <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0 w-full">
-        <p className="text-[14px] font-black text-slate-900 leading-tight">{label}</p>
-        <p className="mt-0.5 text-[12px] text-slate-500 leading-snug">{desc}</p>
+        <p className="text-[13px] font-black text-slate-900 leading-tight">{label}</p>
+        {subtext && (
+          <p className={`mt-0.5 text-[11px] leading-snug line-clamp-2 ${subtextClass}`}>{subtext}</p>
+        )}
       </div>
-      {count > 0 && (
-        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600">
-          {count} {countLabel}
-        </span>
-      )}
     </button>
   );
 }
@@ -1201,21 +1294,14 @@ function CommunityHomeLaunchpad({
   const hiddenSections = new Set(layoutSettings.hiddenSections || []);
 
   const cardTabs = visibleTabs.filter((t) => t !== 'home');
-  const upcomingEvents = events.filter((e) => new Date(e.start_date || e.event_date) >= new Date());
   const memberCount = Math.max(members.length, community?.follower_count || 0);
-  const recentPosts = posts.slice(0, 2);
-
-  const getCardCount = (tab) => {
-    if (tab === 'events') return upcomingEvents.length > 0 ? { count: upcomingEvents.length, label: upcomingEvents.length === 1 ? 'upcoming' : 'upcoming' } : null;
-    if (tab === 'members') return memberCount > 0 ? { count: memberCount, label: memberCount === 1 ? 'member' : 'members' } : null;
-    if (tab === 'resources') return resources.length > 0 ? { count: resources.length, label: resources.length === 1 ? 'resource' : 'resources' } : null;
-    if (tab === 'openNeeds') return activeNeeds.length > 0 ? { count: activeNeeds.length, label: activeNeeds.length === 1 ? 'open need' : 'open needs' } : null;
-    return null;
-  };
+  const featuredTab = getFeaturedTab(typeConfig, cardTabs);
+  const secondaryTabs = cardTabs.filter((t) => t !== featuredTab);
+  const featuredCardData = getCardData(featuredTab, { posts, events, activeNeeds, resources, memberCount });
 
   return (
-    <div className="space-y-4">
-      {/* Right Now compact banner — most important item since last visit */}
+    <div className="space-y-3">
+      {/* Right Now compact banner */}
       {!hiddenSections.has('rightNow') && (
         <RightNowBanner
           posts={posts}
@@ -1228,24 +1314,32 @@ function CommunityHomeLaunchpad({
         />
       )}
 
-      {/* Navigation grid — launchpad cards for every tab */}
-      <div className="grid grid-cols-2 gap-2.5">
-        {cardTabs.map((tab) => {
-          const countData = getCardCount(tab);
-          return (
-            <LaunchpadNavCard
+      {/* Featured full-width card — community's primary section */}
+      {featuredTab && (
+        <FeaturedLaunchpadCard
+          tabKey={featuredTab}
+          typeConfig={typeConfig}
+          onTabChange={onTabChange}
+          cardData={featuredCardData}
+        />
+      )}
+
+      {/* Secondary 2-column grid */}
+      {secondaryTabs.length > 0 && (
+        <div className="grid grid-cols-2 gap-2.5">
+          {secondaryTabs.map((tab) => (
+            <SecondaryLaunchpadCard
               key={tab}
               tabKey={tab}
               typeConfig={typeConfig}
               onTabChange={onTabChange}
-              count={countData?.count}
-              countLabel={countData?.label}
+              cardData={getCardData(tab, { posts, events, activeNeeds, resources, memberCount })}
             />
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* Admin tools — compact row after the grid */}
+      {/* Admin tools */}
       {isAdmin && !hiddenSections.has('adminTools') && (
         <CommunityAdminQuickActions
           onAnnouncement={() => onTabChange('announcements')}
@@ -1253,25 +1347,6 @@ function CommunityHomeLaunchpad({
           onResource={() => onTabChange('resources')}
           onAdminCenter={() => openAdminCenter?.('overview') ?? onManage?.()}
         />
-      )}
-
-      {/* Recent activity preview — 1–2 latest posts, not the full feed */}
-      {!hiddenSections.has('recentActivity') && recentPosts.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="app-section-label px-0.5">Recent</p>
-            <button
-              type="button"
-              onClick={() => onTabChange('posts')}
-              className="text-[12px] font-bold text-blue-600 active:opacity-70 transition-opacity"
-            >
-              View all →
-            </button>
-          </div>
-          {recentPosts.map((post) => (
-            <CommunityPostPreview key={post.id} post={post} typeConfig={typeConfig} />
-          ))}
-        </div>
       )}
 
       {/* Personalization hub — user's RSVPs and chesed items */}
