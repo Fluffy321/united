@@ -444,6 +444,16 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
       })()}
 
       <div className="max-w-2xl mx-auto w-full px-4 pb-8" {...swipeHandlers}>
+        {activeTab !== 'home' && (
+          <button
+            type="button"
+            onClick={() => setTab('home')}
+            className="flex items-center gap-1 pt-3 pb-1 text-[13px] font-bold text-slate-400 active:text-slate-700 transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Home
+          </button>
+        )}
         {activeTab === 'home' && (
           <RoutedCommunityHome
             posts={posts}
