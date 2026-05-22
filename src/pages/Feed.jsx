@@ -15,7 +15,7 @@ import PageHelp from '@/components/common/PageHelp';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
-import { Activity, ArrowRight, CalendarDays, ChevronDown, Heart, MessageCircle, Plus, RefreshCw, Search, Sparkles } from 'lucide-react';
+import { Activity, ArrowRight, CalendarDays, ChevronDown, Heart, MessageCircle, Plus, RefreshCw, Search, Sparkles, Users } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
@@ -569,7 +569,7 @@ export default function Feed({ isActive = true }) {
     setHasMore(posts.length === PAGE_SIZE);
   }, [posts, page]);
 
-  const { data: userCommunitiesList } = useQuery({
+  const { data: userCommunitiesList, isFetched: communitiesFetched } = useQuery({
     queryKey: ['user-communities', currentUser?.id],
     queryFn: async () => {
       if (!currentUser?.id) return [];
@@ -838,6 +838,9 @@ export default function Feed({ isActive = true }) {
             <button onClick={() => navigate('/SupportJUnited')} className="app-icon-button surface-tile-hover touch-manipulation" aria-label="Support JUnited">
               <Heart className="h-[18px] w-[18px] text-rose-400" />
             </button>
+            <button onClick={() => navigate('/Messages')} className="app-icon-button surface-tile-hover touch-manipulation" aria-label="Messages">
+              <MessageCircle className="h-[18px] w-[18px] text-slate-500" />
+            </button>
             <button onClick={() => navigate('/search')} className="app-icon-button surface-tile-hover touch-manipulation" aria-label="Search">
               <Search className="h-[18px] w-[18px] text-slate-500" />
             </button>
@@ -934,6 +937,26 @@ export default function Feed({ isActive = true }) {
             <span className="text-lg">{primaryNetwork.emoji}</span>
             <span className="flex-1">You're viewing <strong>{primaryNetwork.shortLabel}</strong> — tap the chip above to switch networks.</span>
             <button onClick={() => { setShowNetworkBanner(false); storageService.setItem('junited_network_banner_v2_dismissed', '1'); }} className="text-white/70 hover:text-white text-lg leading-none font-bold flex-shrink-0">×</button>
+          </div>
+        )}
+
+        {appParams.hasBackendConfig && communitiesFetched && communityGroups.length === 0 && (
+          <div className="mb-3 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
+                <Users className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-black text-slate-900">Join your first community</p>
+                <p className="mt-0.5 text-[13px] leading-snug text-slate-500">Your feed gets better once you follow a shul, neighborhood, chesed group, or local community.</p>
+                <button
+                  onClick={() => navigate('/Communities')}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-[13px] font-bold text-white active:scale-95 transition-transform"
+                >
+                  Find communities <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

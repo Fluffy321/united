@@ -8,6 +8,7 @@ import {
   MessageCircle,
   Plus,
   Search,
+  Share2,
   ShoppingBag,
   ShieldCheck,
   Sparkles,
@@ -953,9 +954,12 @@ export default function Communities() {
             <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
           </div>
         ) : filteredCommunities.length === 0 ? (
-          <div className="app-empty-state">
-            <p className="app-empty-state-title">No communities found</p>
-            <p className="app-empty-state-body">Try a different search or category.</p>
+          <div className="space-y-4">
+            <div className="app-empty-state">
+              <p className="app-empty-state-title">No communities found</p>
+              <p className="app-empty-state-body">Try a different search or category.</p>
+            </div>
+            <MissingCommunityCard query={query} />
           </div>
         ) : (
           <div className="space-y-7">
@@ -1035,6 +1039,7 @@ export default function Communities() {
                     onCreateCommunity={() => setShowCreate(true)}
                   />
                 )}
+                <MissingCommunityCard query={query} />
               </div>
             )}
           </div>
@@ -1388,6 +1393,41 @@ function ForYouSection({ communities, onOpen, onJoin, joiningId, locationBoostUs
         ))}
       </div>
     </section>
+  );
+}
+
+function MissingCommunityCard({ query }) {
+  const handleShare = async () => {
+    const name = query?.trim() ? `"${query.trim()}"` : 'your community';
+    const text = `Hi, I'm using JUnited to find local Jewish communities, events, and chesed updates. It would be great if ${name} had a space here — you can check it out at https://www.junited.us`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Invite to JUnited', text, url: 'https://www.junited.us' });
+      } else {
+        await navigator.clipboard.writeText(text);
+        toast.success('Message copied — send it to your shul admin!');
+      }
+    } catch {}
+  };
+
+  return (
+    <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100">
+        <Share2 className="h-4 w-4 text-slate-500" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[14px] font-black text-slate-900">Don't see your shul or community?</p>
+        <p className="mt-0.5 text-[12px] leading-snug text-slate-500">Invite their admin to bring it to JUnited.</p>
+        <button
+          type="button"
+          onClick={handleShare}
+          className="mt-2.5 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12px] font-bold text-slate-700 active:scale-95 transition-transform"
+        >
+          <Share2 className="h-3.5 w-3.5" />
+          Share invite
+        </button>
+      </div>
+    </div>
   );
 }
 
