@@ -125,7 +125,47 @@ export function buildFeedLiveNowItems({ posts = [], networkLabel = 'Five Towns' 
     return null;
   });
 
-  return sortLiveItems(items);
+  const liveItems = sortLiveItems(items);
+  const fallbackItems = [
+    {
+      id: 'feed-live-mitzvah',
+      type: 'mitzvah',
+      urgency: 'urgent',
+      eyebrow: 'Needs help now',
+      title: `See urgent mitzvah needs near ${networkLabel}`,
+      meta: networkLabel,
+      liveText: 'Help someone today',
+      actionLabel: 'Open mitzvahs',
+      href: '/MitzvahCircle',
+      avatars: ['M'],
+    },
+    {
+      id: 'feed-live-tonight',
+      type: 'event',
+      urgency: 'today',
+      eyebrow: 'Tonight',
+      title: `What is happening tonight in ${networkLabel}?`,
+      meta: 'Events, rides, shiurim, plans',
+      liveText: 'Check local activity',
+      actionLabel: 'Post update',
+      href: '/Feed',
+      avatars: ['FT'],
+    },
+    {
+      id: 'feed-live-community',
+      type: 'community',
+      urgency: 'active',
+      eyebrow: 'People active',
+      title: 'Join a community where people are coordinating now',
+      meta: 'Sports, Torah, Shabbos, chesed',
+      liveText: 'Find your people',
+      actionLabel: 'Discover',
+      href: '/Communities',
+      avatars: ['C'],
+    },
+  ];
+
+  return sortLiveItems([...liveItems, ...fallbackItems]).slice(0, 8);
 }
 
 export function buildCommunityLiveNowItems({ communities = [] } = {}) {
