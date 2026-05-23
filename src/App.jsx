@@ -173,6 +173,8 @@ const AuthenticatedApp = () => {
             <Route path="/PublicProfile" element={<PageTransition><PublicProfile /></PageTransition>} />
             <Route path="/PostDetail" element={<PageTransition><PostDetail /></PageTransition>} />
             <Route path="/UserSettings" element={<PageTransition><UserSettings /></PageTransition>} />
+            <Route path="/Discover" element={<PageTransition><LayoutWrapper currentPageName="Communities"><Pages.Communities /></LayoutWrapper></PageTransition>} />
+            <Route path="/discover" element={<Navigate to="/Discover" replace />} />
             <Route path="/community/:communityId" element={<PageTransition><LayoutWrapper currentPageName="CommunityDetail"><CommunityPage /></LayoutWrapper></PageTransition>} />
             <Route path="/communities/:communityId" element={<PageTransition><LayoutWrapper currentPageName="CommunityDetail"><CommunityPage /></LayoutWrapper></PageTransition>} />
             <Route path="/join" element={<PageTransition><JoinByCommunityCode /></PageTransition>} />
@@ -188,7 +190,9 @@ const AuthenticatedApp = () => {
 
             {/* Legacy redirects — keep old links working */}
             <Route path="/CommunityMap" element={<Navigate to="/Communities" replace />} />
-            <Route path="/DiscoverCommunitiesFeed" element={<Navigate to="/Communities" replace />} />
+            <Route path="/DiscoverCommunitiesFeed" element={<Navigate to="/Discover" replace />} />
+            <Route path="/CommunityDiscover" element={<Navigate to="/Discover" replace />} />
+            <Route path="/CommunitiesDiscover" element={<Navigate to="/Discover" replace />} />
             <Route path="/MitzvahMap" element={<Navigate to="/Map" replace />} />
 
             {/* Standalone events pages */}
