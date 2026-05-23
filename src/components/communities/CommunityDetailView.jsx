@@ -164,6 +164,139 @@ function getCardData(tab, { posts, events, activeNeeds, resources, memberCount }
   return {};
 }
 
+function getCommunityActionCopy(tab, typeConfig) {
+  const typeKey = typeConfig?.key || 'community';
+  const defaults = {
+    posts: {
+      title: 'Start the conversation',
+      body: 'Share an update, question, recommendation, or something happening nearby.',
+      action: 'Post first',
+    },
+    announcements: {
+      title: 'Keep everyone current',
+      body: 'Use announcements for verified updates people should not miss.',
+      action: 'Open updates',
+    },
+    events: {
+      title: 'Put the next thing on the calendar',
+      body: 'Add shiurim, meetups, games, school nights, or community gatherings.',
+      action: 'Plan event',
+    },
+    openNeeds: {
+      title: 'Coordinate help fast',
+      body: 'Post meals, rides, errands, volunteers, or anything people can act on.',
+      action: 'Open needs',
+    },
+    resources: {
+      title: 'Build the useful shelf',
+      body: 'Add links, forms, guides, schedules, and contacts people ask for twice.',
+      action: 'Add resource',
+    },
+    chat: {
+      title: 'Open the room',
+      body: 'Use chat for quick coordination when a post is too slow.',
+      action: 'Open chat',
+    },
+    groups: {
+      title: 'Create smaller circles',
+      body: 'Split into subgroups for age, interest, neighborhood, or role.',
+      action: 'Open groups',
+    },
+    members: {
+      title: 'Know who is here',
+      body: 'See members, admins, and the people helping this space grow.',
+      action: 'View members',
+    },
+    listings: {
+      title: 'Trade within trust',
+      body: 'Buy, sell, give away, or request useful things from the community.',
+      action: 'Open listings',
+    },
+    about: {
+      title: 'Explain the purpose',
+      body: 'Make the mission, rules, and contact info clear for new members.',
+      action: 'View about',
+    },
+  };
+
+  const overrides = {
+    shul: {
+      announcements: { title: 'Post shul updates', body: 'Minyan changes, kiddush notes, shiurim, and important notices.', action: 'Open updates' },
+      events: { title: 'What is happening at shul?', body: 'Add shiurim, speakers, youth programs, and Shabbos events.', action: 'Open events' },
+      openNeeds: { title: 'Help around the shul', body: 'Coordinate minyan needs, rides, hosts, lost items, and volunteers.', action: 'Open requests' },
+    },
+    neighborhood: {
+      posts: { title: 'What should Five Towns know?', body: 'Local alerts, recommendations, openings, closures, and neighbor help.', action: 'Share update' },
+      events: { title: 'What is happening tonight?', body: 'Put local events, shiurim, games, fundraisers, and programs here.', action: 'See events' },
+      resources: { title: 'Make local info easy', body: 'Useful numbers, school links, shul contacts, and community guides.', action: 'Open resources' },
+    },
+    chesed: {
+      posts: { title: 'Show where help is moving', body: 'Updates, offers, follow-ups, and completed mitzvah moments.', action: 'Share update' },
+      openNeeds: { title: 'Turn need into action', body: 'Meals, rides, errands, volunteers, and urgent help belong here.', action: 'Help now' },
+    },
+    learning: {
+      posts: { title: 'Start a learning thread', body: 'Questions, sources, chavrusas, takeaways, and shiur notes.', action: 'Start thread' },
+      resources: { title: 'Share source material', body: 'Sefaria links, sheets, recordings, and useful learning guides.', action: 'Open resources' },
+    },
+    parents: {
+      posts: { title: 'Ask the parent network', body: 'School tips, carpool help, camp info, babysitters, and local advice.', action: 'Ask parents' },
+      events: { title: 'Keep families in sync', body: 'School nights, programs, deadlines, and family-friendly events.', action: 'Open events' },
+    },
+  };
+
+  return overrides[typeKey]?.[tab] || defaults[tab] || {
+    title: getCommunityTabLabel(tab),
+    body: LAUNCHPAD_TAB_DESC[tab] || 'Open this section.',
+    action: 'Open',
+  };
+}
+
+function formatRelativeActivity(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const diff = Date.now() - date.getTime();
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  if (diff < minute) return 'Just now';
+  if (diff < hour) return `${Math.max(1, Math.floor(diff / minute))}m ago`;
+  if (diff < day) return `${Math.floor(diff / hour)}h ago`;
+  return `${Math.floor(diff / day)}d ago`;
+}
+
+function MemberAvatarStack({ members = [], limit = 4, typeConfig }) {
+  const visible = members.slice(0, limit);
+  if (!visible.length) {
+    const Icon = typeConfig?.icon || Users;
+    return (
+      <div className="flex -space-x-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-blue-50 text-blue-600">
+          <Icon className="h-3.5 w-3.5" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex -space-x-2">
+      {visible.map((member, index) => {
+        const name = member.profile?.display_name || member.user_name || member.display_name || member.full_name || 'Member';
+        const initial = name.trim()[0]?.toUpperCase() || 'M';
+        return (
+          <div
+            key={member.id || member.user_id || `${initial}-${index}`}
+            className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-blue-600 to-slate-900 text-[10px] font-black text-white shadow-sm"
+            title={name}
+          >
+            {initial}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function CommunityDetailView({ communityId, currentUser, onBack, fallbackCommunity }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'home');
@@ -1127,7 +1260,7 @@ function VisitorLanding({ community, typeConfig, posts, events, resources, membe
     || community?.description_long
     || community?.description
     || typeConfig.cardFallback;
-  const memberCount = Math.max(members.length, community?.follower_count || 0);
+  const memberCount = members.length > 0 ? members.length : (community?.follower_count || 0);
   const pinnedPost = posts.find((p) => p.is_pinned) || posts.find(isAnn);
   const upcomingEvent = events
     .filter((e) => new Date(e.start_date || e.event_date) >= new Date())
@@ -1229,58 +1362,128 @@ function VisitorLanding({ community, typeConfig, posts, events, resources, membe
 
 function FeaturedLaunchpadCard({ tabKey, typeConfig, onTabChange, cardData }) {
   const Icon = TAB_ICON_MAP[tabKey] || Hash;
-  const label = getCommunityTabLabel(tabKey);
+  const copy = getCommunityActionCopy(tabKey, typeConfig);
+  const hasRealData = Boolean(cardData.stat || cardData.preview);
   return (
     <button
       type="button"
       onClick={() => onTabChange(tabKey)}
-      className="w-full flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm active:scale-[0.98] active:bg-slate-50 transition-all"
+      className="group w-full overflow-hidden rounded-[28px] border border-blue-100 bg-white text-left shadow-sm active:scale-[0.99] transition-all"
     >
-      <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white flex-shrink-0`}>
-          <Icon className="h-5 w-5" />
+      <div className={`bg-gradient-to-br ${typeConfig.accent} px-5 py-4 text-white`}>
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/20 ring-1 ring-white/20">
+            <Icon className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-black uppercase tracking-wide text-white/75">
+              {hasRealData ? getCommunityTabLabel(tabKey) : 'Next best move'}
+            </p>
+            <h3 className="mt-1 text-[18px] font-black leading-tight">{hasRealData ? (cardData.preview || copy.title) : copy.title}</h3>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-black text-slate-900 leading-tight">{label}</p>
-          {cardData.stat && (
-            <p className="text-[12px] font-bold text-blue-600 mt-0.5">{cardData.stat}</p>
-          )}
-        </div>
-        <ChevronRight className="h-5 w-5 text-slate-300 flex-shrink-0" />
       </div>
-      {cardData.preview && (
-        <p className="text-[13px] text-slate-600 leading-snug line-clamp-2 pl-[52px]">{cardData.preview}</p>
-      )}
-      {cardData.empty && !cardData.preview && (
-        <p className="text-[12px] text-slate-400 leading-snug pl-[52px]">{cardData.emptyCta}</p>
-      )}
+      <div className="flex items-center gap-3 px-5 py-3.5">
+        <p className="min-w-0 flex-1 text-[13px] font-semibold leading-5 text-slate-600">
+          {hasRealData ? (cardData.stat || copy.body) : copy.body}
+        </p>
+        <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-blue-50 px-3 py-1.5 text-[12px] font-black text-blue-700 group-active:bg-blue-100">
+          {copy.action}
+          <ChevronRight className="h-3.5 w-3.5" />
+        </span>
+      </div>
     </button>
   );
 }
 
 function SecondaryLaunchpadCard({ tabKey, typeConfig, onTabChange, cardData }) {
   const Icon = TAB_ICON_MAP[tabKey] || Hash;
-  const label = getCommunityTabLabel(tabKey);
-  const desc = LAUNCHPAD_TAB_DESC[tabKey] || '';
+  const copy = getCommunityActionCopy(tabKey, typeConfig);
   const hasData = cardData.stat || cardData.preview;
-  const subtext = hasData ? (cardData.stat || cardData.preview) : (cardData.empty ? cardData.emptyCta : desc);
-  const subtextClass = cardData.stat && !cardData.empty ? 'text-blue-600 font-bold' : 'text-slate-500';
+  const subtext = hasData ? (cardData.stat || cardData.preview) : copy.body;
+  const subtextClass = hasData ? 'text-blue-700 font-black' : 'text-slate-500 font-semibold';
   return (
     <button
       type="button"
       onClick={() => onTabChange(tabKey)}
-      className="flex flex-col items-start gap-2 rounded-2xl border border-slate-100 bg-white p-3.5 text-left shadow-sm active:scale-[0.97] active:bg-slate-50 transition-all"
+      className="group flex min-h-[134px] flex-col items-start justify-between rounded-[22px] border border-slate-100 bg-white p-4 text-left shadow-sm active:scale-[0.98] active:bg-slate-50 transition-all"
     >
-      <div className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white flex-shrink-0`}>
-        <Icon className="h-4 w-4" />
+      <div className="flex w-full items-start gap-3">
+        <div className={`flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br ${typeConfig.accent} text-white flex-shrink-0`}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[14px] font-black leading-tight text-slate-950">{copy.title}</p>
+          {subtext && (
+            <p className={`mt-1 text-[11px] leading-snug line-clamp-2 ${subtextClass}`}>{subtext}</p>
+          )}
+        </div>
       </div>
-      <div className="min-w-0 w-full">
-        <p className="text-[13px] font-black text-slate-900 leading-tight">{label}</p>
-        {subtext && (
-          <p className={`mt-0.5 text-[11px] leading-snug line-clamp-2 ${subtextClass}`}>{subtext}</p>
-        )}
-      </div>
+      <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-black text-blue-600">
+        {copy.action}
+        <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+      </span>
     </button>
+  );
+}
+
+function CommunityActionHeader({ community, typeConfig, posts, activeNeeds, events, resources, members, onTabChange }) {
+  const latestPost = posts[0];
+  const latestPostAge = formatRelativeActivity(latestPost?.created_at || latestPost?.created_date);
+  const upcomingEvents = events.filter((event) => {
+    const value = event.start_date || event.event_date;
+    return !value || new Date(value) >= new Date();
+  });
+  const memberCount = members.length > 0 ? members.length : (community?.follower_count || 0);
+  const hasAnyActivity = posts.length > 0 || activeNeeds.length > 0 || upcomingEvents.length > 0 || resources.length > 0;
+  const Icon = typeConfig.icon;
+
+  const focus = activeNeeds.length
+    ? { label: `${activeNeeds.length} open ${activeNeeds.length === 1 ? 'need' : 'needs'}`, tab: 'openNeeds', tone: 'text-rose-700 bg-rose-50 border-rose-100' }
+    : upcomingEvents.length
+      ? { label: `${upcomingEvents.length} upcoming ${upcomingEvents.length === 1 ? 'event' : 'events'}`, tab: 'events', tone: 'text-emerald-700 bg-emerald-50 border-emerald-100' }
+      : latestPost
+        ? { label: `Updated ${latestPostAge || 'recently'}`, tab: isAnn(latestPost) ? 'announcements' : 'posts', tone: 'text-blue-700 bg-blue-50 border-blue-100' }
+        : { label: 'Ready to launch', tab: 'posts', tone: 'text-slate-700 bg-slate-50 border-slate-100' };
+
+  return (
+    <section className="overflow-hidden rounded-[30px] border border-slate-100 bg-white shadow-sm">
+      <div className={`relative bg-gradient-to-br ${typeConfig.accent} px-5 py-5 text-white`}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.28),transparent_38%)]" />
+        <div className="relative flex items-start gap-4">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/20 ring-1 ring-white/25">
+            <Icon className="h-6 w-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-black uppercase tracking-wide text-white/75">Community home</p>
+            <h2 className="mt-1 text-[22px] font-black leading-tight">
+              {hasAnyActivity ? 'What needs attention now?' : 'Make this space useful from day one'}
+            </h2>
+            <p className="mt-2 text-[13px] font-semibold leading-5 text-white/82">
+              {hasAnyActivity
+                ? 'The home page now points members toward live updates, open needs, events, and the next action.'
+                : 'Invite a few people, post the first update, and give this community a clear reason to come back.'}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100 bg-white">
+        <button type="button" onClick={() => onTabChange(focus.tab)} className="px-3 py-3 text-left active:bg-slate-50">
+          <span className={`inline-flex max-w-full rounded-full border px-2 py-1 text-[10px] font-black ${focus.tone}`}>
+            <span className="truncate">{focus.label}</span>
+          </span>
+          <p className="mt-1.5 text-[10px] font-black uppercase tracking-wide text-slate-400">Right now</p>
+        </button>
+        <button type="button" onClick={() => onTabChange('members')} className="px-3 py-3 text-left active:bg-slate-50">
+          <MemberAvatarStack members={members} typeConfig={typeConfig} />
+          <p className="mt-1.5 text-[10px] font-black uppercase tracking-wide text-slate-400">{memberCount} members</p>
+        </button>
+        <button type="button" onClick={() => onTabChange('posts')} className="px-3 py-3 text-left active:bg-slate-50">
+          <p className="text-[18px] font-black text-slate-950">{posts.length}</p>
+          <p className="mt-1.5 text-[10px] font-black uppercase tracking-wide text-slate-400">Posts</p>
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -1294,13 +1497,26 @@ function CommunityHomeLaunchpad({
   const hiddenSections = new Set(layoutSettings.hiddenSections || []);
 
   const cardTabs = visibleTabs.filter((t) => t !== 'home');
-  const memberCount = Math.max(members.length, community?.follower_count || 0);
+  const memberCount = members.length > 0 ? members.length : (community?.follower_count || 0);
   const featuredTab = getFeaturedTab(typeConfig, cardTabs);
   const secondaryTabs = cardTabs.filter((t) => t !== featuredTab);
   const featuredCardData = getCardData(featuredTab, { posts, events, activeNeeds, resources, memberCount });
+  const actionTabs = secondaryTabs.filter((tab) => !['about', 'members'].includes(tab));
+  const utilityTabs = secondaryTabs.filter((tab) => ['about', 'members'].includes(tab));
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      <CommunityActionHeader
+        community={community}
+        typeConfig={typeConfig}
+        posts={posts}
+        activeNeeds={activeNeeds}
+        events={events}
+        resources={resources}
+        members={members}
+        onTabChange={onTabChange}
+      />
+
       {/* Right Now compact banner */}
       {!hiddenSections.has('rightNow') && (
         <RightNowBanner
@@ -1325,9 +1541,34 @@ function CommunityHomeLaunchpad({
       )}
 
       {/* Secondary 2-column grid */}
-      {secondaryTabs.length > 0 && (
+      {actionTabs.length > 0 && (
+        <section className="rounded-[28px] border border-slate-100 bg-white/70 p-3 shadow-sm">
+          <div className="mb-3 flex items-center justify-between gap-3 px-1">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">Make it active</p>
+              <h3 className="text-[15px] font-black text-slate-950">Useful things members can do</h3>
+            </div>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-500">
+              {actionTabs.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {actionTabs.map((tab) => (
+              <SecondaryLaunchpadCard
+                key={tab}
+                tabKey={tab}
+                typeConfig={typeConfig}
+                onTabChange={onTabChange}
+                cardData={getCardData(tab, { posts, events, activeNeeds, resources, memberCount })}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {utilityTabs.length > 0 && (
         <div className="grid grid-cols-2 gap-2.5">
-          {secondaryTabs.map((tab) => (
+          {utilityTabs.map((tab) => (
             <SecondaryLaunchpadCard
               key={tab}
               tabKey={tab}
