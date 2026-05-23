@@ -634,9 +634,10 @@ export default function Communities() {
     optimisticLeaves.forEach((id) => effectiveJoined.delete(id));
     const backendCommunities = rawCommunities.map((community) => adaptCommunity(community, effectiveJoined, membershipsByCommunity));
     const backendIds = new Set(backendCommunities.map((community) => community.id));
-    const seeds = appParams.hasBackendConfig ? [] : EXPERIENCE_SEEDS
-      .filter((seed) => !backendIds.has(seed.id))
-      .map((seed) => adaptCommunity({ ...seed, isDemo: true }, effectiveJoined, membershipsByCommunity));
+    const backendNames = new Set(backendCommunities.map((community) => (community.name || '').trim().toLowerCase()));
+    const seeds = EXPERIENCE_SEEDS
+      .filter((seed) => !backendIds.has(seed.id) && !backendNames.has((seed.name || '').trim().toLowerCase()))
+      .map((seed) => adaptCommunity({ ...seed, isStarterCommunity: true, isDemo: !appParams.hasBackendConfig }, effectiveJoined, membershipsByCommunity));
     return [...seeds, ...backendCommunities];
   }, [joinedIds, membershipsByCommunity, rawCommunities, optimisticJoins, optimisticLeaves]);
 
@@ -813,6 +814,13 @@ export default function Communities() {
 
     const isSeedCommunity = communityId.startsWith('seed-');
     if (!currentUser || isSeedCommunity) {
+      if (community.joined) {
+        setOptimisticLeaves((prev) => new Set([...prev, communityId]));
+        setOptimisticJoins((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
+      } else {
+        setOptimisticJoins((prev) => new Set([...prev, communityId]));
+        setOptimisticLeaves((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
+      }
       toast.success(options.incognito ? 'Previewed as a private join' : community.joined ? 'Preview left' : 'Preview joined');
       return;
     }
