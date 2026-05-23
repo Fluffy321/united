@@ -1,5 +1,7 @@
 // JUnited Service Worker — static asset caching + offline shell
-const CACHE_NAME = 'junited-v1';
+// Bump this whenever we ship a meaningful app update so Safari/PWA users do
+// not stay pinned to an older route chunk.
+const CACHE_NAME = 'junited-v2-live-now-2026-05-22';
 const OFFLINE_URL = '/';
 
 // Assets to pre-cache on install
@@ -17,9 +19,16 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    caches.keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      )
+      .then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+      .then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'JUNITED_APP_UPDATED' });
+        });
+      })
   );
   self.clients.claim();
 });

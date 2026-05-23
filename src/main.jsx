@@ -26,7 +26,16 @@ if ('serviceWorker' in navigator) {
       return;
     }
 
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => registration.update().catch(() => {}))
+      .catch(() => {});
+  });
+
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data?.type !== 'JUNITED_APP_UPDATED') return;
+    if (sessionStorage.getItem('junited-sw-refreshed') === '1') return;
+    sessionStorage.setItem('junited-sw-refreshed', '1');
+    window.location.reload();
   });
 }
 
