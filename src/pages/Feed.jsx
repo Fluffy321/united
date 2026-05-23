@@ -12,6 +12,7 @@ import InlineFeedPrompt from '@/components/feed/InlineFeedPrompt';
 import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
 import ReportModal from '@/components/common/ReportModal';
 import PageHelp from '@/components/common/PageHelp';
+import LiveNowRail from '@/components/common/LiveNowRail';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import DailyHooks from '@/components/feed/DailyHooks';
@@ -24,8 +25,9 @@ import { getShabbatTimes } from '@/lib/hebrewDate';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
 import { useFloatingActions } from '@/components/layout/FloatingActionsContext';
 import DestinationHeader from '@/components/layout/DestinationHeader';
+import { buildFeedLiveNowItems } from '@/lib/liveNow';
 
-const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood', 'Far Rockaway'];
+const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood'];
 const minutesAgo = (minutes) => new Date(Date.now() - minutes * 60 * 1000).toISOString();
 const hoursAgo = (hours) => new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 const hoursFromNow = (hours) => new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
@@ -36,6 +38,26 @@ const withFeedTimeout = (promise, ms = FEED_LOAD_TIMEOUT_MS) => Promise.race([
     setTimeout(() => reject(new Error('Feed request timed out')), ms);
   }),
 ]);
+const getPostLivePriority = (post) => {
+  const text = `${post.title || ''} ${post.body || ''} ${post.post_subtype || ''}`.toLowerCase();
+  const created = new Date(post.created_date || post.created_at || post.updated_date || Date.now()).getTime();
+  const ageHours = Math.max(0, (Date.now() - created) / 3600000);
+  let score = 0;
+
+  if (post.type === 'help' || post.board === 'help' || /urgent|need|ride|meal|help|tonight|today/.test(text)) score += 80;
+  if (post.type === 'event' || post.event_date) {
+    const eventTime = new Date(post.event_date || post.created_date || Date.now()).getTime();
+    const hoursUntil = (eventTime - Date.now()) / 3600000;
+    if (hoursUntil >= 0 && hoursUntil <= 12) score += 70;
+    else score += 35;
+  }
+  if (/tonight|today|now|soon|before shabbos|ending/.test(text)) score += 45;
+  if (ageHours < 2) score += 25;
+  else if (ageHours < 8) score += 12;
+  score += Math.min(35, Number(post.comments_count || 0) * 2 + Number(post.likes_count || 0));
+
+  return score;
+};
 const DEMO_POSTS = [
   {
     id: 'demo-feed-minyan-early',
@@ -812,6 +834,11 @@ export default function Feed({ isActive = true }) {
     localEvents: feedPosts.filter((post) => post.type === 'event').length,
   }), [feedPosts, joinedCommunityIds]);
 
+  const liveNowItems = useMemo(() => buildFeedLiveNowItems({
+    posts: feedPosts,
+    networkLabel: primaryNetwork.shortLabel || 'Five Towns',
+  }), [feedPosts, primaryNetwork.shortLabel]);
+
   return (
     <div className="app-page relative">
       {pullDistance > 0 && (
@@ -900,6 +927,14 @@ export default function Feed({ isActive = true }) {
             setPostModalInitialBody(prompt?.initial_body || '');
             setShowPostModal(true);
           }}
+        />
+
+        <LiveNowRail
+          className="mb-3"
+          title="Live in the Five Towns"
+          subtitle="Urgent needs, tonight plans, and active local threads"
+          items={liveNowItems}
+          onItemClick={(item) => navigate(item.href || '/Feed')}
         />
 
         <FiveTownsBrief
@@ -994,7 +1029,7 @@ export default function Feed({ isActive = true }) {
               const ageHours = (Date.now() - new Date(p.created_date).getTime()) / 3600000;
               return ageHours < 48 && (p.likes_count || 0) + (p.comments_count || 0) * 2 >= 20;
             });
-            let orderedPosts = [...feedPosts];
+            let orderedPosts = [...feedPosts].sort((a, b) => getPostLivePriority(b) - getPostLivePriority(a));
             if (hotIndex > 2) {
               const [hot] = orderedPosts.splice(hotIndex, 1);
               orderedPosts.splice(2, 0, hot);

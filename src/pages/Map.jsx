@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   BadgeCheck,
   BarChart3,
@@ -28,6 +28,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import PageHelp from '@/components/common/PageHelp';
 import DestinationHeader from '@/components/layout/DestinationHeader';
+import LiveNowRail from '@/components/common/LiveNowRail';
+import { buildMapLiveNowItems } from '@/lib/liveNow';
 import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/api/supabaseClient';
@@ -1327,6 +1329,7 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
 }
 
 export default function MapPage() {
+  const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [searchParams] = useSearchParams();
   const [activeView, setActiveView] = useState(() => (
@@ -1407,6 +1410,14 @@ export default function MapPage() {
             Community Map
           </button>
         </div>
+
+        <LiveNowRail
+          className="mb-3"
+          title="Activity map"
+          subtitle="Live needs, minyanim, and trusted places around the Five Towns"
+          items={buildMapLiveNowItems()}
+          onItemClick={(item) => navigate(item.href || '/Map')}
+        />
 
         {activeView === 'businesses' ? (
           <BusinessDirectoryExperience

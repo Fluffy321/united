@@ -28,6 +28,8 @@ import CreateCommunityModal from '@/components/communities/CreateCommunityModal'
 import MessagesDrawer from '@/components/communities/MessagesDrawer';
 import DestinationHeader from '@/components/layout/DestinationHeader';
 import { COMMUNITY_TYPE_CONFIG, COMMUNITY_TYPE_OPTIONS, getCommunityTypeConfig, getCommunityTypeKey } from '@/lib/communityTypes';
+import LiveNowRail from '@/components/common/LiveNowRail';
+import { buildCommunityLiveNowItems } from '@/lib/liveNow';
 
 const COMMUNITY_FILTERS = [{ key: 'all', label: 'All' }, ...COMMUNITY_TYPE_OPTIONS.map(({ key, label }) => ({ key, label }))];
 const MANAGEMENT_ROLES = new Set(['owner', 'admin', 'moderator']);
@@ -800,6 +802,9 @@ export default function Communities() {
   }, [allJoinedCommunities, discoverCommunities, query, typeFilter, currentUser]);
 
   const forYouCommunities = forYouResult.communities;
+  const liveNowItems = useMemo(() => buildCommunityLiveNowItems({
+    communities: classifiedCommunities,
+  }), [classifiedCommunities]);
 
   const handleJoin = async (communityId, options = {}) => {
     const community = communities.find((item) => item.id === communityId);
@@ -936,6 +941,14 @@ export default function Communities() {
         <Hero joinedCount={joinedCount} />
 
         <ActiveInStrip communities={allJoinedCommunities} onOpen={openCommunity} />
+
+        <LiveNowRail
+          className="mb-3"
+          title="Community action now"
+          subtitle="Active spaces, prompts, and places where people are coordinating"
+          items={liveNowItems}
+          onItemClick={(item) => navigate(item.href || '/Communities')}
+        />
 
         <ViewSwitch view={view} onChange={setView} joinedCount={joinedCount} />
 

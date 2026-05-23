@@ -13,7 +13,7 @@ export default function LocationNetworkPicker({ currentNetwork, onSelect, onClos
     <div className="bg-white border-b border-slate-100 shadow-lg">
       <div className="max-w-2xl mx-auto px-4 py-3">
         <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1">
-          <MapPin className="w-3 h-3" /> Switch Location
+          <MapPin className="w-3 h-3" /> Choose Five Towns Area
         </p>
         {Object.entries(byRegion).map(([region, networks]) => (
           <div key={region} className="mb-2">

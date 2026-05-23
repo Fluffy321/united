@@ -18,6 +18,7 @@ import {
   Plus,
   Search,
   Send,
+  Share2,
   ShoppingBag,
   ShieldCheck,
   Sparkles,
@@ -29,9 +30,11 @@ import {
 import { mitzvahService, notificationsService } from '@/services';
 import { toast } from 'sonner';
 import PageHelp from '@/components/common/PageHelp';
+import LiveNowRail from '@/components/common/LiveNowRail';
 import DestinationHeader from '@/components/layout/DestinationHeader';
 import CarpoolBoard from '@/components/mitzvah/CarpoolBoard';
 import ShulMinyanBoard from '@/components/mitzvah/ShulMinyanBoard';
+import { buildMitzvahLiveNowItems } from '@/lib/liveNow';
 
 const CATEGORIES = [
   'Transportation',
@@ -366,6 +369,48 @@ const getApproxDistance = (request) => {
   return 'Nearby';
 };
 
+const getUpdatedLabel = (request) => {
+  const updatedAt = request.updated_at || request.updated_date || request.created_at || request.created_date;
+  if (!updatedAt) return 'Updated just now';
+  const minutes = Math.max(1, Math.round((Date.now() - new Date(updatedAt).getTime()) / 60000));
+  if (!Number.isFinite(minutes) || minutes < 2) return 'Updated just now';
+  if (minutes < 60) return `Updated ${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `Updated ${hours} hr${hours === 1 ? '' : 's'} ago`;
+  const days = Math.round(hours / 24);
+  return `Updated ${days} day${days === 1 ? '' : 's'} ago`;
+};
+
+const getUrgencyHeadline = (request, urgencyInfo) => {
+  const text = `${request.title || ''} ${request.description || ''} ${request.category || ''}`.toLowerCase();
+  if (/meal|food|dinner|supper|lunch|shabbos|challah/.test(text)) {
+    if (urgencyInfo.label === 'Urgent') return 'Need food in next 30 min';
+    if (urgencyInfo.label === 'Today') return 'Dinner needed tonight';
+    return 'Meal help needed';
+  }
+  if (/ride|carpool|seat|drive|pickup|airport/.test(text)) {
+    if (urgencyInfo.label === 'Urgent') return 'Ride needed soon';
+    if (urgencyInfo.label === 'Today') return 'Ride needed today';
+    return 'Ride help requested';
+  }
+  if (/errand|pickup|store|pharmacy|delivery/.test(text)) {
+    if (urgencyInfo.label === 'Urgent') return 'Errand needed right away';
+    if (urgencyInfo.label === 'Today') return 'Errand needed today';
+    return 'Errand help requested';
+  }
+  if (urgencyInfo.label === 'Urgent') return 'Community need right now';
+  if (urgencyInfo.label === 'Today') return 'Help needed today';
+  return 'Flexible mitzvah opportunity';
+};
+
+const getPrimaryActionLabel = (request, fallback) => {
+  const text = `${request.title || ''} ${request.description || ''} ${request.category || ''}`.toLowerCase();
+  if (/meal|food|dinner|supper|lunch|shabbos|challah/.test(text)) return 'Bring food';
+  if (/ride|carpool|seat|drive|pickup|airport/.test(text)) return "I'll drive";
+  if (/errand|pickup|store|pharmacy|delivery/.test(text)) return 'Run errand';
+  return fallback || 'Take this mitzvah';
+};
+
 const STATUS_CONFIGS = {
   [STATUSES.OPEN]:      { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', Icon: HandHeart,    label: 'Open' },
   [STATUSES.OFFERED]:   { cls: 'bg-blue-50 text-blue-700 border-blue-200',          Icon: Eye,          label: 'Offered' },
@@ -443,17 +488,30 @@ function RequestCard({
     violet: 'from-violet-500 to-blue-500',
   }[progress.tone] || 'from-blue-500 to-sky-500';
   const helpCta = getHelpCta(request);
+  const primaryActionLabel = getPrimaryActionLabel(request, helpCta);
   const distanceLabel = getApproxDistance(request);
-  const urgencyCardTone = {
-    Urgent: 'border-red-200 bg-gradient-to-br from-red-50/80 via-white to-white',
-    Today: 'border-orange-200 bg-gradient-to-br from-orange-50/80 via-white to-white',
-    Flexible: 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-white',
-  }[urgencyInfo.label] || 'border-slate-200 bg-white';
+  const urgencyHeadline = getUrgencyHeadline(request, urgencyInfo);
+  const updatedLabel = getUpdatedLabel(request);
+  const cardStateTone = request.status === STATUSES.VERIFIED
+    ? 'border-emerald-200 bg-gradient-to-br from-emerald-50/90 via-white to-white'
+    : request.status === STATUSES.OFFERED || request.status === STATUSES.ACCEPTED || request.status === STATUSES.IN_PROG
+      ? 'border-amber-200 bg-gradient-to-br from-amber-50/90 via-white to-white'
+      : {
+        Urgent: 'border-red-200 bg-gradient-to-br from-red-50/90 via-white to-white',
+        Today: 'border-orange-200 bg-gradient-to-br from-orange-50/80 via-white to-white',
+        Flexible: 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-white',
+      }[urgencyInfo.label] || 'border-slate-200 bg-white';
   const urgencyRail = {
-    Urgent: 'bg-red-500',
-    Today: 'bg-orange-500',
+    Urgent: request.status === STATUSES.VERIFIED ? 'bg-emerald-500' : 'bg-red-500',
+    Today: request.status === STATUSES.VERIFIED ? 'bg-emerald-500' : request.status === STATUSES.IN_PROG ? 'bg-amber-500' : 'bg-orange-500',
     Flexible: 'bg-slate-400',
   }[urgencyInfo.label] || 'bg-slate-300';
+  const firstHelperName = helperNames[0] || request.claimed_by_name || null;
+  const liveActivityText = firstHelperName
+    ? `${firstHelperName} offered help`
+    : visibleHelperCount > 0
+      ? `${visibleHelperCount} people responding now`
+      : 'Be the first to help';
 
   const submitComment = async (event) => {
     event.preventDefault();
@@ -469,11 +527,24 @@ function RequestCard({
     onOpenMap(request);
   };
 
+  const handleShare = async (event) => {
+    event.stopPropagation();
+    const shareText = `${urgencyHeadline}: ${request.title}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Mitzvah request', text: shareText, url: window.location.href });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(`${shareText} ${window.location.href}`);
+        toast.success('Request link copied.');
+      }
+    } catch {}
+  };
+
   const canAdjustUrgency = Boolean(isPoster && onUrgencyChange && ![STATUSES.VERIFIED, STATUSES.CANCELLED].includes(request.status));
 
   return (
 	    <article
-	      className={`relative cursor-pointer overflow-hidden rounded-2xl border px-3 py-2.5 shadow-sm transition hover:shadow-md ${urgencyCardTone}`}
+	      className={`relative cursor-pointer overflow-hidden rounded-2xl border px-3.5 py-3 shadow-sm transition hover:shadow-md ${cardStateTone}`}
       onClick={handleCardClick}
       role={onOpenMap ? 'button' : undefined}
       tabIndex={onOpenMap ? 0 : undefined}
@@ -514,25 +585,32 @@ function RequestCard({
               })}
             </div>
           )}
-	          <h2 className="line-clamp-1 text-[15px] font-black leading-tight text-slate-950">{request.title}</h2>
-	          <p className="mt-0.5 line-clamp-1 text-[12px] font-medium leading-4 text-slate-600">
+	          <p className="mb-0.5 text-[11px] font-black uppercase tracking-wide text-red-600">
+	            {urgencyHeadline}
+	          </p>
+	          <h2 className="line-clamp-2 text-[19px] font-black leading-[1.12] text-slate-950">{request.title}</h2>
+	          <p className="mt-1 line-clamp-2 text-[13px] font-semibold leading-5 text-slate-600">
 	            {request.description}
 	          </p>
 	
-		          <div className="mt-1.5">
-		            <div className="flex items-center gap-2 text-[10px] font-black text-slate-600">
-		              <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 ${urgencyInfo.tone}`}>
+		          <div className="mt-3 rounded-2xl border border-white/80 bg-white/75 p-2.5 shadow-sm">
+		            <div className="flex items-center gap-2 text-[11px] font-black text-slate-700">
+		              <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 ${urgencyInfo.tone}`}>
 		                <Clock className="h-3 w-3" />
 		                {urgencyInfo.detail}
 		              </span>
 		              <span className="min-w-0 flex-1 truncate">{progress.title}</span>
 		              <span className="shrink-0 text-slate-400">{progress.percent}%</span>
 		            </div>
-		            <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-100">
+		            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
 		              <div
 		                className={`h-full rounded-full bg-gradient-to-r ${progressTone} transition-all duration-300`}
 		                style={{ width: `${progress.percent}%` }}
 		              />
+		            </div>
+		            <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px] font-bold text-slate-500">
+		              <span className="truncate">{progress.detail}</span>
+		              <span className="shrink-0">{updatedLabel}</span>
 		            </div>
 		          </div>
 
@@ -550,13 +628,13 @@ function RequestCard({
             </div>
           )}
 
-	          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-	            <div className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-1.5 py-0.5">
+	          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+	            <div className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-slate-100 bg-white px-2 py-1 shadow-sm">
 	              <div className="flex -space-x-2">
 	                {helperPreviewNames.length > 0 ? helperPreviewNames.slice(0, 4).map((name) => (
 	                  <span
 	                    key={name}
-	                    className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-[9px] font-black text-white"
+	                    className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-[10px] font-black text-white"
                     title={name}
                   >
                     {name.charAt(0).toUpperCase()}
@@ -567,14 +645,14 @@ function RequestCard({
                   </span>
                 )}
               </div>
-	              <span className="text-[10px] font-black text-slate-700">
-	                {visibleHelperCount} offered
+	              <span className="text-[11px] font-black text-slate-700">
+	                {liveActivityText}
 	              </span>
 	            </div>
             <button
               type="button"
               onClick={() => setDiscussionOpen((value) => !value)}
-	              className="motion-press inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-600"
+	              className="motion-press inline-flex min-h-8 items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] font-black text-slate-600"
 	            >
               <MessageCircle className="h-3.5 w-3.5" />
 	              {commentCount} replies
@@ -635,24 +713,40 @@ function RequestCard({
         </div>
       )}
 
-		      <div className="mt-1.5 flex flex-wrap gap-1.5">
+		      <div className="mt-3 flex flex-wrap gap-2">
 	        {canOffer && (
 	          <button
 	            onClick={() => onOffer(request)}
-		            className="chesed-cta-pulse app-button-primary h-7 rounded-lg px-2 text-[10px]"
+		            className="chesed-cta-pulse app-button-primary h-10 rounded-xl px-4 text-[13px] shadow-md"
             style={{ background: '#556B2F' }}
           >
 	            <HandHeart className="h-3.5 w-3.5" />
-            {helpCta}
+            {primaryActionLabel}
           </button>
         )}
+        <button
+          type="button"
+          onClick={() => setDiscussionOpen((value) => !value)}
+          className="motion-press inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-black text-slate-700"
+        >
+          <MessageCircle className="h-4 w-4" />
+          Comment
+        </button>
+        <button
+          type="button"
+          onClick={handleShare}
+          className="motion-press inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-black text-slate-700"
+        >
+          <Share2 className="h-4 w-4" />
+          Share
+        </button>
         {onOpenMap && (
 	          <button
 	            type="button"
 	            onClick={() => onOpenMap(request)}
-		            className="motion-press inline-flex h-7 items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2 text-[10px] font-black text-blue-700"
+		            className="motion-press inline-flex h-10 items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 text-[12px] font-black text-blue-700"
           >
-	            <MapPin className="h-3.5 w-3.5" />
+	            <MapPin className="h-4 w-4" />
 	            Map
           </button>
         )}
@@ -1556,6 +1650,10 @@ export default function MitzvahCircle() {
     ).length,
     completedCount: requests.filter((r) => r.status === STATUSES.VERIFIED).length,
   }), [requests]);
+  const liveNowItems = React.useMemo(() => buildMitzvahLiveNowItems({
+    requests: browseRequests.length ? browseRequests : requests.filter((r) => ![STATUSES.VERIFIED, STATUSES.CANCELLED].includes(r.status)),
+    offers,
+  }), [browseRequests, requests, offers]);
 
   const workflowTabs = [
     { id: 'browse', label: 'Browse Needs' },
@@ -1648,6 +1746,16 @@ export default function MitzvahCircle() {
             </div>
           </div>
         </div>
+
+        {activeView !== 'shuls' && (
+          <LiveNowRail
+            className="mb-3"
+            title="Needs help now"
+            subtitle="Live mitzvah requests with progress and people responding"
+            items={liveNowItems}
+            onItemClick={(item) => navigate(item.href || '/MitzvahCircle')}
+          />
+        )}
 
         {/* Search/filter bar */}
         {activeView !== 'offers' && activeView !== 'shuls' && (

@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/AuthContext';
+import LiveNowRail from '@/components/common/LiveNowRail';
+import { buildMarketplaceLiveNowItems } from '@/lib/liveNow';
 
 const sections = [
   { id: 'all', label: 'All' },
@@ -701,6 +703,9 @@ export default function Marketplace() {
       return true;
     });
   }, [activeFilters, activeSection, category, listings, query]);
+  const liveNowItems = useMemo(() => buildMarketplaceLiveNowItems({
+    listings: filteredListings,
+  }), [filteredListings]);
 
   const toggleFilter = (id) => {
     setActiveFilters((current) => {
@@ -776,6 +781,14 @@ export default function Marketplace() {
             ))}
           </div>
         </div>
+
+        <LiveNowRail
+          className="mt-3"
+          title="Marketplace live"
+          subtitle="Need-gone-soon, free, and pickup-today listings"
+          items={liveNowItems}
+          onItemClick={(item) => navigate(item.href || '/Marketplace')}
+        />
 
         <div className="sticky top-0 z-20 -mx-3 mt-3 border-y border-slate-200 bg-[#F6F8FB]/95 px-3 py-3 backdrop-blur">
           <label className="flex h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 shadow-sm">

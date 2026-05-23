@@ -17,11 +17,6 @@ const NEIGHBORHOODS = [
   'Woodmere',
   'Hewlett',
   'Inwood',
-  'Far Rockaway',
-  'Brooklyn',
-  'Lakewood',
-  'Teaneck',
-  'Other',
 ];
 
 const DEFAULT_COMMUNITIES = [
