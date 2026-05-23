@@ -7,7 +7,7 @@ import PageTransition from '@/components/common/PageTransition'
 import AppErrorBoundary from '@/components/common/AppErrorBoundary'
 import AppSplashScreen from '@/components/common/AppSplashScreen'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import AdminRoute from '@/components/AdminRoute';
@@ -125,6 +125,7 @@ const PageFallback = () => (
 
 const AuthenticatedApp = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, checkAppState } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -218,9 +219,12 @@ const AuthenticatedApp = () => {
       {showOnboarding && (
         <OnboardingFlow
           user={user}
-          onComplete={async () => {
+          onComplete={async (result) => {
             setShowOnboarding(false);
             await checkAppState();
+            if (!(result?._joinedCount > 0)) {
+              navigate('/Communities');
+            }
           }}
         />
       )}

@@ -64,6 +64,18 @@ export const CATEGORY_ORDER = [
 
 export const ROADMAP = [
 
+  // ── Growth & Activation ─────────────────────────────────────────────────
+
+  {
+    id: 'first-run-discovery-activation',
+    category: 'Growth & Monetization',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'First-Run Discovery & Activation Sprint',
+    description: 'Make the first 3 minutes of JUnited feel personal and community-centered. New users with 0 joined communities are redirected to Communities Discover after onboarding. Feed shows a "Join your first community" banner for users with no communities. Communities Discover and empty search state include a "Don\'t see your shul?" card with a native share/copy invite for admins. Messages icon added persistently to the Feed header.',
+    shippedNote: 'Shipped 2026-05-22. OnboardingFlow.jsx: passes _joinedCount in onComplete callback. App.jsx: after onboarding, navigates to /Communities if _joinedCount === 0. Feed.jsx: communitiesFetched flag tracks query resolution; zero-state banner (Users icon + "Join your first community" CTA → /Communities) shown when communityGroups.length === 0 and backend is live; MessageCircle icon added to Feed DestinationHeader actions. Communities.jsx: MissingCommunityCard component ("Don\'t see your shul?") renders in search empty-state and at the bottom of every Discover results list; uses navigator.share with clipboard fallback; pre-fills share message with search query if present.',
+  },
+
   // ── Auth & Identity ──────────────────────────────────────────────────────
 
   {
@@ -337,7 +349,7 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'Community Home — App-Style Launchpad / Mini-App Front Door',
     description: 'Opening a community now feels like entering that community\'s own mini-app inside JUnited. The default Home tab is an app-style launchpad with a 2-column navigation grid, a compact Right Now banner, an admin tools row (for admins), and a 2-post recent activity preview with a "View all" link. The feed-first layout is removed from Home; the full feed is accessed via the Posts tab. Navigation cards are type-aware and capability-gated: each shows an icon, title, short description, and live count where applicable (upcoming events, members, resources, open needs). Layout setting hiddenSections still respected. Composer moved exclusively to Posts tab.',
-    shippedNote: 'Shipped 2026-05-22. CommunityDetailView.jsx: added LAUNCHPAD_TAB_DESC constant, LaunchpadNavCard component (2-col grid card with icon + title + desc + count chip), CommunityHomeLaunchpad component (RightNow banner → nav grid → admin row → recent preview → personalization hub). RoutedCommunityHome now accepts visibleTabs prop and renders CommunityHomeLaunchpad instead of the sectionMap/orderedSections feed-first stack. visibleTabs passed from parent at the JSX call site. Posts tab retains full feed + composer via RoutedPostsTab unchanged.',
+    shippedNote: 'Shipped 2026-05-22. CommunityDetailView.jsx: added LAUNCHPAD_TAB_DESC constant, LaunchpadNavCard component (2-col grid card with icon + title + desc + count chip), CommunityHomeLaunchpad component (RightNow banner → nav grid → admin row → recent preview → personalization hub). RoutedCommunityHome now accepts visibleTabs prop and renders CommunityHomeLaunchpad instead of the sectionMap/orderedSections feed-first stack. visibleTabs passed from parent at the JSX call site. Posts tab retains full feed + composer via RoutedPostsTab unchanged. Refined 2026-05-22: getFeaturedTab/getCardData helpers pick community\'s primary section as a full-width FeaturedLaunchpadCard with real data previews (next event title+date, latest post snippet, open need count, resource count). Remaining tabs rendered as SecondaryLaunchpadCard 2-col grid with live stat/preview. CommunityHero: cover height 120→72px in appShell, removed duplicate Admin/Settings buttons, shortened invite copy. Swipe disabled on Home tab.',
   },
 
   {
