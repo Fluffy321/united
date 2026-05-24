@@ -251,6 +251,107 @@ function getCommunityActionCopy(tab, typeConfig) {
   };
 }
 
+function getCommunityRoomModel(community, typeConfig) {
+  const name = `${community?.name || ''} ${community?.slug || ''} ${community?.description || ''}`.toLowerCase();
+  const typeKey = typeConfig?.key || 'general';
+
+  if (name.includes('sport') || name.includes('basketball') || name.includes('football') || name.includes('soccer') || name.includes('gym')) {
+    return {
+      label: 'Game room',
+      headline: 'Who is playing tonight?',
+      body: 'Make this the fastest place to find a game, fill a team, or get someone to train with.',
+      prompts: ['Who wants to play tonight?', 'Need two more for a game', 'Looking for a gym partner this week'],
+      primaryCta: 'Post a game',
+      actions: [
+        { label: 'Find a game', helper: 'See who is playing', tab: 'posts', prompt: 'Who is playing tonight?' },
+        { label: 'Fill a team', helper: 'Need people fast', tab: 'posts', prompt: 'Need a few more people for...' },
+        { label: 'Training partner', helper: 'Gym, run, drills', tab: 'posts', prompt: 'Looking for a training partner for...' },
+      ],
+      emptyWin: 'First game posted',
+    };
+  }
+
+  if (typeKey === 'shul') {
+    return {
+      label: 'Shul room',
+      headline: 'What is happening at shul?',
+      body: 'Minyanim, shiurim, kiddush, rides, lost items, and the updates people actually need.',
+      prompts: ['Any minyan updates today?', 'Who needs a ride to shul?', 'What shiur or event is coming up?'],
+      primaryCta: 'Share shul update',
+      actions: [
+        { label: 'Minyan help', helper: 'Need people now', tab: 'openNeeds', prompt: 'Need people for minyan at...' },
+        { label: 'Post event', helper: 'Shiur or kiddush', tab: 'events', prompt: 'Upcoming at shul...' },
+        { label: 'Ask members', helper: 'Fast answer', tab: 'posts', prompt: 'Does anyone know...' },
+      ],
+      emptyWin: 'First shul update',
+    };
+  }
+
+  if (typeKey === 'chesed') {
+    return {
+      label: 'Chesed room',
+      headline: 'Who needs help right now?',
+      body: 'Turn a need into a completed mitzvah with fast offers, updates, and clear next steps.',
+      prompts: ['I can help with...', 'We need help with...', 'Who can take this mitzvah?'],
+      primaryCta: 'Coordinate help',
+      actions: [
+        { label: 'Open needs', helper: 'Help someone now', tab: 'openNeeds', prompt: 'We need help with...' },
+        { label: 'Offer help', helper: 'Post what you can do', tab: 'posts', prompt: 'I can help with...' },
+        { label: 'Share win', helper: 'Show progress', tab: 'posts', prompt: 'Baruch Hashem, this got handled...' },
+      ],
+      emptyWin: 'First mitzvah completed',
+    };
+  }
+
+  if (typeKey === 'learning') {
+    return {
+      label: 'Learning room',
+      headline: 'What are we learning today?',
+      body: 'Questions, chavrusas, shiur notes, source sheets, and Torah that gets people talking.',
+      prompts: ['Looking for a chavrusa for...', "Question on this week's parsha", 'Share a shiur or thought'],
+      primaryCta: 'Start learning',
+      actions: [
+        { label: 'Find chavrusa', helper: 'Match quickly', tab: 'posts', prompt: 'Looking for a chavrusa for...' },
+        { label: 'Ask Torah', helper: 'Start a thread', tab: 'discussions', prompt: 'Question on...' },
+        { label: 'Share source', helper: 'Build library', tab: 'resources', prompt: null },
+      ],
+      emptyWin: 'First learning thread',
+    };
+  }
+
+  if (typeKey === 'parents') {
+    return {
+      label: 'Parent room',
+      headline: 'What do families need this week?',
+      body: 'School tips, carpools, babysitters, camp help, local recs, and fast parent answers.',
+      prompts: ['Anyone know a good...', 'Need carpool help for...', 'What are families doing for...'],
+      primaryCta: 'Ask parents',
+      actions: [
+        { label: 'Ask for help', helper: 'Parent network', tab: 'questions', prompt: 'Anyone know a good...' },
+        { label: 'Coordinate', helper: 'Carpool or plan', tab: 'posts', prompt: 'Need help coordinating...' },
+        { label: 'Share event', helper: 'Families nearby', tab: 'events', prompt: 'Family event coming up...' },
+      ],
+      emptyWin: 'First helpful answer',
+    };
+  }
+
+  return {
+    label: typeKey === 'neighborhood' ? 'Local room' : 'Community room',
+    headline: typeKey === 'neighborhood' ? 'What is happening nearby?' : `What is happening in ${community?.name || 'this space'}?`,
+    body: typeKey === 'neighborhood'
+      ? 'Local alerts, recs, plans, openings, questions, and neighbor help in one fast place.'
+      : 'A living room for updates, questions, plans, and people who want to connect.',
+    prompts: typeConfig?.prompts?.length ? typeConfig.prompts.slice(0, 3) : ['What should people know today?', 'Can anyone help with...', 'Who wants to join...'],
+    primaryCta: typeConfig?.primaryCta || 'Post',
+    actions: [
+      { label: 'Ask the room', helper: 'Get a fast answer', tab: 'posts', prompt: 'Can anyone help with...' },
+      { label: 'Make a plan', helper: 'Tonight or this week', tab: 'events', prompt: 'Who wants to join...' },
+      { label: 'Invite people', helper: 'Grow the circle', tab: 'members', prompt: null },
+    ],
+    emptyWin: 'First useful post',
+  };
+}
+
 function formatRelativeActivity(value) {
   if (!value) return null;
   const date = new Date(value);
@@ -1487,10 +1588,160 @@ function CommunityActionHeader({ community, typeConfig, posts, activeNeeds, even
   );
 }
 
+function CommunitySocialStarter({
+  community,
+  typeConfig,
+  posts,
+  activeNeeds,
+  events,
+  members,
+  composeText,
+  setComposeText,
+  submitPost,
+  posting,
+  onTabChange,
+  visibleTabs = [],
+}) {
+  const roomModel = getCommunityRoomModel(community, typeConfig);
+  const prompts = roomModel.prompts.slice(0, 3);
+  const memberCount = members.length > 0 ? members.length : (community?.follower_count || 0);
+  const latestPost = posts[0];
+  const latestAge = formatRelativeActivity(latestPost?.created_at || latestPost?.created_date);
+  const upcomingCount = events.filter((event) => {
+    const value = event.start_date || event.event_date;
+    return !value || new Date(value) >= new Date();
+  }).length;
+  const roomState = activeNeeds.length
+    ? `${activeNeeds.length} open need${activeNeeds.length === 1 ? '' : 's'} need attention`
+    : latestPost
+      ? `Last update ${latestAge || 'recently'}`
+      : roomModel.body;
+
+  const actionColors = [
+    'from-blue-50 to-cyan-50 text-blue-700 border-blue-100',
+    'from-amber-50 to-orange-50 text-amber-800 border-amber-100',
+    'from-emerald-50 to-teal-50 text-emerald-800 border-emerald-100',
+  ];
+  const starterActions = roomModel.actions.map((action, index) => ({
+    ...action,
+    className: actionColors[index % actionColors.length],
+    helper: action.label === 'Make a plan' && upcomingCount
+      ? `${upcomingCount} event${upcomingCount === 1 ? '' : 's'} listed`
+      : action.helper,
+  }));
+  const progressItems = [
+    {
+      label: 'Right now',
+      value: activeNeeds.length ? `${activeNeeds.length} needs` : latestAge || 'Open',
+    },
+    {
+      label: 'Next win',
+      value: posts.length ? `${posts.length} posts` : roomModel.emptyWin,
+    },
+    {
+      label: 'People',
+      value: `${memberCount || 0} here`,
+    },
+  ];
+
+  const applyPrompt = (prompt) => {
+    if (!prompt) return;
+    setComposeText((current) => current?.trim() ? current : prompt);
+  };
+
+  const openAction = (action) => {
+    applyPrompt(action.prompt);
+    const targetTab = visibleTabs.includes(action.tab) ? action.tab : 'posts';
+    onTabChange(targetTab);
+  };
+
+  return (
+    <section className="overflow-hidden rounded-[30px] border border-slate-100 bg-white shadow-sm">
+      <div className={`relative bg-gradient-to-br ${typeConfig.accent} px-5 py-5 text-white`}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.28),transparent_28%),radial-gradient(circle_at_90%_20%,rgba(255,255,255,0.18),transparent_26%)]" />
+        <div className="relative flex items-start gap-4">
+          <MemberAvatarStack members={members} typeConfig={typeConfig} />
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-black uppercase tracking-wide text-white/75">{roomModel.label}</p>
+            <h2 className="mt-1 text-[23px] font-black leading-tight">{roomModel.headline}</h2>
+            <p className="mt-2 text-[13px] font-semibold leading-5 text-white/82">{roomState}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3 p-4">
+        <div className="grid grid-cols-3 gap-2">
+          {progressItems.map((item) => (
+            <div key={item.label} className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2">
+              <p className="text-[9px] font-black uppercase tracking-wide text-slate-400">{item.label}</p>
+              <p className="mt-1 truncate text-[12px] font-black text-slate-900">{item.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {prompts.map((prompt) => (
+            <button
+              key={prompt}
+              type="button"
+              onClick={() => applyPrompt(prompt)}
+              className="flex-shrink-0 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[12px] font-black text-blue-700 active:scale-95 transition-all"
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-slate-50 p-3">
+          <textarea
+            value={composeText}
+            onChange={(event) => setComposeText(event.target.value)}
+            rows={2}
+            placeholder={prompts[0] || 'Share something useful...'}
+            className="w-full resize-none bg-transparent px-1 text-[15px] font-semibold leading-6 text-slate-900 outline-none placeholder:text-slate-400"
+          />
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => onTabChange('posts')}
+              className="text-[12px] font-black text-slate-500 active:text-slate-800"
+            >
+              View posts
+            </button>
+            <button
+              type="button"
+              onClick={submitPost}
+              disabled={posting || !composeText.trim()}
+              className={`motion-press inline-flex h-10 items-center gap-2 rounded-2xl bg-gradient-to-r ${typeConfig.accent} px-4 text-[13px] font-black text-white shadow-sm disabled:opacity-45`}
+            >
+              <Send className="h-3.5 w-3.5" />
+              {posting ? 'Posting...' : roomModel.primaryCta}
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {starterActions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              onClick={() => openAction(action)}
+              className={`rounded-2xl border bg-gradient-to-br p-3 text-left active:scale-[0.98] transition-all ${action.className}`}
+            >
+              <p className="text-[12px] font-black leading-tight">{action.label}</p>
+              <p className="mt-1 text-[10px] font-bold leading-snug opacity-75">{action.helper}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CommunityHomeLaunchpad({
   community, typeConfig, posts, activeNeeds, events, resources, members,
   isAdmin, lastVisitedAt, currentUser, onTabChange, openAdminCenter, onManage,
-  onOpenEvent, visibleTabs,
+  onOpenEvent, visibleTabs, composeText, setComposeText, submitPost, posting,
 }) {
   const layoutSettings = (community?.settings && typeof community.settings === 'object')
     ? (community.settings.layout || {}) : {};
@@ -1498,23 +1749,23 @@ function CommunityHomeLaunchpad({
 
   const cardTabs = visibleTabs.filter((t) => t !== 'home');
   const memberCount = members.length > 0 ? members.length : (community?.follower_count || 0);
-  const featuredTab = getFeaturedTab(typeConfig, cardTabs);
-  const secondaryTabs = cardTabs.filter((t) => t !== featuredTab);
-  const featuredCardData = getCardData(featuredTab, { posts, events, activeNeeds, resources, memberCount });
-  const actionTabs = secondaryTabs.filter((tab) => !['about', 'members'].includes(tab));
-  const utilityTabs = secondaryTabs.filter((tab) => ['about', 'members'].includes(tab));
+  const toolTabs = cardTabs.filter((tab) => !['posts'].includes(tab));
 
   return (
     <div className="space-y-4">
-      <CommunityActionHeader
+      <CommunitySocialStarter
         community={community}
         typeConfig={typeConfig}
         posts={posts}
         activeNeeds={activeNeeds}
         events={events}
-        resources={resources}
         members={members}
+        composeText={composeText}
+        setComposeText={setComposeText}
+        submitPost={submitPost}
+        posting={posting}
         onTabChange={onTabChange}
+        visibleTabs={visibleTabs}
       />
 
       {/* Right Now compact banner */}
@@ -1530,54 +1781,53 @@ function CommunityHomeLaunchpad({
         />
       )}
 
-      {/* Featured full-width card — community's primary section */}
-      {featuredTab && (
-        <FeaturedLaunchpadCard
-          tabKey={featuredTab}
-          typeConfig={typeConfig}
-          onTabChange={onTabChange}
-          cardData={featuredCardData}
-        />
-      )}
-
-      {/* Secondary 2-column grid */}
-      {actionTabs.length > 0 && (
-        <section className="rounded-[28px] border border-slate-100 bg-white/70 p-3 shadow-sm">
-          <div className="mb-3 flex items-center justify-between gap-3 px-1">
+      {posts.length > 0 && (
+        <section className="rounded-[28px] border border-slate-100 bg-white p-3 shadow-sm">
+          <div className="mb-3 flex items-center justify-between px-1">
             <div>
-              <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">Make it active</p>
-              <h3 className="text-[15px] font-black text-slate-950">Useful things members can do</h3>
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">Conversation</p>
+              <h3 className="text-[15px] font-black text-slate-950">Latest from the room</h3>
             </div>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-500">
-              {actionTabs.length}
-            </span>
+            <button type="button" onClick={() => onTabChange('posts')} className="text-[12px] font-black text-blue-600">
+              See all
+            </button>
           </div>
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            {actionTabs.map((tab) => (
-              <SecondaryLaunchpadCard
-                key={tab}
-                tabKey={tab}
-                typeConfig={typeConfig}
-                onTabChange={onTabChange}
-                cardData={getCardData(tab, { posts, events, activeNeeds, resources, memberCount })}
-              />
-            ))}
-          </div>
+          <HomeFeedSection posts={posts.slice(0, 2)} typeConfig={typeConfig} activeNeeds={[]} />
         </section>
       )}
 
-      {utilityTabs.length > 0 && (
-        <div className="grid grid-cols-2 gap-2.5">
-          {utilityTabs.map((tab) => (
-            <SecondaryLaunchpadCard
-              key={tab}
-              tabKey={tab}
-              typeConfig={typeConfig}
-              onTabChange={onTabChange}
-              cardData={getCardData(tab, { posts, events, activeNeeds, resources, memberCount })}
-            />
-          ))}
-        </div>
+      {toolTabs.length > 0 && (
+        <section className="rounded-[26px] border border-slate-100 bg-white/80 p-3 shadow-sm">
+          <div className="mb-2 flex items-center justify-between px-1">
+            <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">Community tools</p>
+            <span className="text-[11px] font-black text-slate-400">Secondary</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {toolTabs.map((tab) => {
+              const Icon = TAB_ICON_MAP[tab] || Hash;
+              const data = getCardData(tab, { posts, events, activeNeeds, resources, memberCount });
+              const hasData = data.stat || data.preview;
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => onTabChange(tab)}
+                  className="flex min-w-[150px] flex-shrink-0 items-center gap-2 rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2.5 text-left active:scale-[0.98] transition-all"
+                >
+                  <span className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${typeConfig.accent} text-white`}>
+                    <Icon className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[12px] font-black text-slate-900">{getCommunityTabLabel(tab)}</span>
+                    <span className={`block truncate text-[10px] font-bold ${hasData ? 'text-blue-600' : 'text-slate-400'}`}>
+                      {hasData ? (data.stat || data.preview) : getCommunityActionCopy(tab, typeConfig).action}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       {/* Admin tools */}
@@ -1690,6 +1940,10 @@ function RoutedCommunityHome({
         onManage={onManage}
         onOpenEvent={onOpenEvent}
         visibleTabs={visibleTabs}
+        composeText={composeText}
+        setComposeText={setComposeText}
+        submitPost={submitPost}
+        posting={posting}
       />
     </div>
   );
