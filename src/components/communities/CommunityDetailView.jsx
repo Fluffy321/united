@@ -6,7 +6,7 @@ import {
   Activity, BookOpen, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Globe, Hash, Heart,
   HeartHandshake, HelpCircle, Home, Info, Loader2, Lock, MapPin,
   Megaphone, MessageCircle, MoreHorizontal, Phone, Send, Settings, Share2,
-  Shield, ShoppingBag, Sparkles, Trophy, Users, Vote, Zap,
+  Shield, ShoppingBag, Sparkles, Users, Vote, Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { dataService, incrementCounter } from '@/services';
@@ -255,6 +255,38 @@ function getCommunityRoomModel(community, typeConfig) {
   const name = `${community?.name || ''} ${community?.slug || ''} ${community?.description || ''}`.toLowerCase();
   const typeKey = typeConfig?.key || 'general';
 
+  if (name.includes('kosher') || name.includes('food') || name.includes('restaurant') || name.includes('bakery') || name.includes('takeout') || name.includes('shabbos extras') || name.includes('dinner')) {
+    return {
+      label: 'Kosher pulse',
+      headline: 'What is worth eating or ordering today?',
+      body: 'Fast recs, hechsher checks, bakery drops, Shabbos extras, and which spots are actually open or busy.',
+      prompts: ['Best quick dinner near Central tonight?', 'Any bakery or takeout still good before Shabbos?', 'Which kosher spot needs to be added to the map?'],
+      primaryCta: 'Share food tip',
+      actions: [
+        { label: 'Dinner rec', helper: 'Fast local answer', tab: 'posts', prompt: 'Best quick dinner near __ tonight? Need...' },
+        { label: 'Before Shabbos', helper: 'Timing and extras', tab: 'posts', prompt: 'Before Shabbos food update: __ still has __, line is __.' },
+        { label: 'Map check', helper: 'Verify a spot', tab: 'posts', prompt: 'Map update: __ in __ should be added or checked. Hechsher/source: __.' },
+      ],
+      emptyWin: 'First real food tip',
+    };
+  }
+
+  if (name.includes('teen') || name.includes('high school') || name.includes('yeshiva league') || name.includes('motzei') || name.includes('hangout')) {
+    return {
+      label: 'Teen room',
+      headline: 'What is the plan tonight?',
+      body: 'Plans, rides, pickup games, school questions, support, and safe ways to connect without ten group chats.',
+      prompts: ['What is everyone doing Motzei Shabbos?', 'Need a ride or plan near...', 'Quiet question for people who get it'],
+      primaryCta: 'Post a plan',
+      actions: [
+        { label: 'Find plans', helper: 'Tonight or Motzei', tab: 'posts', prompt: 'What is everyone doing tonight near __?' },
+        { label: 'Ride check', helper: 'Keep details safe', tab: 'posts', prompt: 'Need a ride from __ to __ around __. Message me for details.' },
+        { label: 'Ask quietly', helper: 'Support thread', tab: 'posts', prompt: 'Quiet question: has anyone dealt with...' },
+      ],
+      emptyWin: 'First real plan',
+    };
+  }
+
   if (name.includes('sport') || name.includes('basketball') || name.includes('football') || name.includes('soccer') || name.includes('gym')) {
     return {
       label: 'Game room',
@@ -355,6 +387,46 @@ function getCommunityRoomModel(community, typeConfig) {
 function getCommunityEngagementKit(community, typeConfig, roomModel) {
   const name = `${community?.name || ''} ${community?.slug || ''} ${community?.description || ''}`.toLowerCase();
   const typeKey = typeConfig?.key || 'general';
+
+  if (name.includes('kosher') || name.includes('food') || name.includes('restaurant') || name.includes('bakery') || name.includes('takeout') || name.includes('shabbos extras') || name.includes('dinner')) {
+    return {
+      boardTitle: 'Food pulse',
+      boardBody: 'Restaurants, takeout timing, bakery drops, hechsher checks, and Shabbos extras people need before they leave the house.',
+      missionTitle: 'Post one useful food tip',
+      missionBody: 'Name the place, town, what to order, timing, and whether it is verified.',
+      feedTitle: 'Kosher food feed',
+      feedEmptyTitle: 'Start with something people can use today',
+      feedEmptyBody: 'A great first post saves someone a bad order, long line, or last-minute Shabbos scramble.',
+      starterThreads: [
+        { title: 'Dinner decision', body: 'Where to go tonight, what to order, and parking or line reality.', prompt: 'Dinner decision: best spot in __ tonight for __. Parking/line is __.' },
+        { title: 'Before Shabbos timing', body: 'Who still has challah, kugel, takeout, or extras?', prompt: 'Before Shabbos food update: __ has __ available until __.' },
+        { title: 'Verify a kosher spot', body: 'Help keep the map trustworthy.', prompt: 'Kosher map check: __ in __. Hechsher/source is __.' },
+      ],
+      pollQuestion: 'What food help do people need most?',
+      pollOptions: ['Dinner recs', 'Bakery timing', 'Shabbos extras', 'Hechsher checks'],
+      rhythm: ['Thursday order thread', 'Friday bakery timing', 'Sunday restaurant reviews'],
+    };
+  }
+
+  if (name.includes('teen') || name.includes('high school') || name.includes('yeshiva league') || name.includes('motzei') || name.includes('hangout')) {
+    return {
+      boardTitle: 'Tonight board',
+      boardBody: 'Plans, rides, safe hangouts, games, school questions, and support should be easy to find without ten group chats.',
+      missionTitle: 'Make one safe plan happen',
+      missionBody: 'Post general town, vibe, time window, and move exact details into messages.',
+      feedTitle: 'Teen feed',
+      feedEmptyTitle: 'Start with a plan people can join',
+      feedEmptyBody: 'Keep it useful and safe: general plans in the room, exact details in messages.',
+      starterThreads: [
+        { title: 'Motzei Shabbos plans', body: 'Find out what is happening and who wants to join.', prompt: 'Motzei Shabbos plan: thinking __ near __. Who is interested?' },
+        { title: 'Need a ride', body: 'Ask safely without posting private details.', prompt: 'Need a ride around __ from __. Message me for exact details.' },
+        { title: 'Quiet advice thread', body: 'A real question for people who understand.', prompt: 'Quiet question: has anyone dealt with __?' },
+      ],
+      pollQuestion: 'What should teens use this space for first?',
+      pollOptions: ['Plans', 'Sports', 'Rides', 'Advice'],
+      rhythm: ['Motzei Shabbos plans', 'Thursday ride check', 'Sunday school reset'],
+    };
+  }
 
   if (name.includes('sport') || name.includes('basketball') || name.includes('football') || name.includes('soccer') || name.includes('gym')) {
     return {
@@ -1722,6 +1794,7 @@ function CommunityMomentumPanel({
   memberCount,
   onPrompt,
   onTabChange,
+  visibleTabs = [],
 }) {
   const upcomingEvents = events.filter((event) => {
     const value = event.start_date || event.event_date;
@@ -1753,6 +1826,7 @@ function CommunityMomentumPanel({
       tab: 'members',
     },
   ];
+  const openTab = (tab) => onTabChange(visibleTabs.includes(tab) ? tab : 'posts');
 
   return (
     <section className="rounded-3xl border border-slate-100 bg-white p-3 shadow-sm">
@@ -1774,7 +1848,7 @@ function CommunityMomentumPanel({
             <button
               key={card.label}
               type="button"
-              onClick={() => onTabChange(card.tab)}
+              onClick={() => openTab(card.tab)}
               className={`rounded-2xl border p-3 text-left transition-all active:scale-[0.98] ${card.tone}`}
             >
               <div className="mb-2 flex items-center justify-between gap-2">
@@ -2048,6 +2122,7 @@ function CommunitySocialStarter({
         memberCount={memberCount}
         onPrompt={applyPrompt}
         onTabChange={onTabChange}
+        visibleTabs={visibleTabs}
       />
 
       <CommunityStarterFeed
