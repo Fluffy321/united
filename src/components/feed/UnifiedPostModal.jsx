@@ -30,13 +30,14 @@ const PLACEHOLDERS = {
 };
 
 const HELP_CATEGORIES = [
-  { value: 'advice', label: 'Advice', bgColor: '#E8F1FF', textColor: '#1E40AF', selectedBg: '#BFDBFE', emoji: '💡' },
-  { value: 'lonely', label: 'Lonely', bgColor: '#F1E6FF', textColor: '#7C3AED', selectedBg: '#DDD6FE', emoji: '🤝' },
-  { value: 'school', label: 'School', bgColor: '#FFF6D6', textColor: '#B45309', selectedBg: '#FDE68A', emoji: '📚' },
-  { value: 'jobs', label: 'Jobs', bgColor: '#E6F7EC', textColor: '#15803D', selectedBg: '#BBF7D0', emoji: '💼' },
-  { value: 'family', label: 'Family', bgColor: '#FFEBD6', textColor: '#C2410C', selectedBg: '#FED7AA', emoji: '👨‍👩‍👧‍👦' },
-  { value: 'antisemitism', label: 'Antisemitism', bgColor: '#FFE3E3', textColor: '#991B1B', selectedBg: '#FECACA', emoji: '🛡️' },
-  { value: 'other', label: 'Other', bgColor: '#F2F2F2', textColor: '#374151', selectedBg: '#E5E7EB', emoji: '💬' }
+  { value: 'advice', label: 'Advice / Guidance', helper: 'Get a real answer', bgColor: '#E8F1FF', textColor: '#1E40AF', selectedBg: '#BFDBFE', emoji: '💡' },
+  { value: 'lonely', label: 'Support / Check-in', helper: 'Someone to talk to', bgColor: '#F1E6FF', textColor: '#7C3AED', selectedBg: '#DDD6FE', emoji: '🤝' },
+  { value: 'school', label: 'School Help', helper: 'Classes, stress, rides', bgColor: '#FFF6D6', textColor: '#B45309', selectedBg: '#FDE68A', emoji: '📚' },
+  { value: 'jobs', label: 'Jobs / Networking', helper: 'Work, leads, resumes', bgColor: '#E6F7EC', textColor: '#15803D', selectedBg: '#BBF7D0', emoji: '💼' },
+  { value: 'family', label: 'Family / Home', helper: 'Private family needs', bgColor: '#FFEBD6', textColor: '#C2410C', selectedBg: '#FED7AA', emoji: '🏠' },
+  { value: 'recommendation', label: 'Local Recommendation', helper: 'Find the right person', bgColor: '#E6F7FF', textColor: '#0369A1', selectedBg: '#BAE6FD', emoji: '📍' },
+  { value: 'antisemitism', label: 'Safety / Hate Incident', helper: 'Report or ask safely', bgColor: '#FFE3E3', textColor: '#991B1B', selectedBg: '#FECACA', emoji: '🛡️' },
+  { value: 'other', label: 'Other Help', helper: 'Anything else', bgColor: '#F2F2F2', textColor: '#374151', selectedBg: '#E5E7EB', emoji: '💬' }
 ];
 
 const FEED_SUBTYPES = [
@@ -408,18 +409,23 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
           {isHelp && (
             <div className="space-y-2">
               <details className="group">
-                <summary className="cursor-pointer text-sm font-medium text-slate-600 hover:text-slate-900 py-2">Choose a category</summary>
+                <summary className="cursor-pointer py-2 text-sm font-black text-slate-700 hover:text-slate-950">
+                  Choose what kind of help this is
+                </summary>
                 <div className="grid grid-cols-2 gap-2 pt-2">
                   {categories.map(cat => {
                     const isSelected = category === cat.value;
                     return (
                       <button key={cat.value} type="button" onClick={() => setCategory(cat.value)}
-                        className="relative rounded-xl p-3 text-left transition-all duration-200 hover:scale-105 active:scale-95"
+                        className="relative min-h-[74px] rounded-2xl p-3 text-left transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]"
                         style={{ backgroundColor: isSelected ? cat.selectedBg : cat.bgColor, color: cat.textColor, boxShadow: isSelected ? `0 0 0 2px ${cat.textColor}40` : 'none' }}>
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
+                          <div className="flex min-w-0 items-start gap-2">
                             <span className="text-lg">{cat.emoji}</span>
-                            <span className="font-medium text-sm">{cat.label}</span>
+                            <span className="min-w-0">
+                              <span className="block text-sm font-black leading-tight">{cat.label}</span>
+                              <span className="mt-0.5 block text-[11px] font-bold leading-tight opacity-70">{cat.helper}</span>
+                            </span>
                           </div>
                           {isSelected && <Check className="w-4 h-4 animate-in zoom-in duration-150" strokeWidth={3} />}
                         </div>

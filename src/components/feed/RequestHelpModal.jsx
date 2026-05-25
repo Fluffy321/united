@@ -16,6 +16,13 @@ import { dataService } from '@/services';
 import { toast } from 'sonner';
 
 export const HELP_REQUEST_CATEGORIES = [
+  { value: 'advice',         label: 'Advice / Guidance', emoji: '💡', bgColor: '#E8F1FF', textColor: '#1E40AF', selectedBg: '#BFDBFE' },
+  { value: 'lonely',         label: 'Support / Check-in', emoji: '🤝', bgColor: '#F1E6FF', textColor: '#7C3AED', selectedBg: '#DDD6FE' },
+  { value: 'recommendation', label: 'Local Recommendation', emoji: '📍', bgColor: '#E6F7FF', textColor: '#0369A1', selectedBg: '#BAE6FD' },
+  { value: 'antisemitism',   label: 'Safety / Hate Incident', emoji: '🛡️', bgColor: '#FFE3E3', textColor: '#991B1B', selectedBg: '#FECACA' },
+  { value: 'school',         label: 'School Help', emoji: '📚', bgColor: '#FFF6D6', textColor: '#B45309', selectedBg: '#FDE68A' },
+  { value: 'jobs',           label: 'Jobs / Networking', emoji: '💼', bgColor: '#E6F7EC', textColor: '#15803D', selectedBg: '#BBF7D0' },
+  { value: 'family',         label: 'Family / Home', emoji: '🏠', bgColor: '#FFEBD6', textColor: '#C2410C', selectedBg: '#FED7AA' },
   { value: 'shopping',       label: 'Shopping',       emoji: '🛒', bgColor: '#E8F5E9', textColor: '#2E7D32', selectedBg: '#A5D6A7' },
   { value: 'transportation', label: 'Transportation',  emoji: '🚗', bgColor: '#E3F2FD', textColor: '#1565C0', selectedBg: '#90CAF9' },
   { value: 'tech_support',   label: 'Tech Support',    emoji: '💻', bgColor: '#F3E5F5', textColor: '#6A1B9A', selectedBg: '#CE93D8' },
