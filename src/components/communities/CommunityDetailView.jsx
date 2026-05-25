@@ -3,10 +3,10 @@ import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  BookOpen, CalendarDays, ChevronLeft, ChevronRight, Globe, Hash, Heart,
+  Activity, BookOpen, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Globe, Hash, Heart,
   HeartHandshake, HelpCircle, Home, Info, Loader2, Lock, MapPin,
   Megaphone, MessageCircle, MoreHorizontal, Phone, Send, Settings, Share2,
-  Shield, ShoppingBag, Sparkles, Users,
+  Shield, ShoppingBag, Sparkles, Trophy, Users, Vote, Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { dataService, incrementCounter } from '@/services';
@@ -349,6 +349,132 @@ function getCommunityRoomModel(community, typeConfig) {
       { label: 'Invite people', helper: 'Grow the circle', tab: 'members', prompt: null },
     ],
     emptyWin: 'First useful post',
+  };
+}
+
+function getCommunityEngagementKit(community, typeConfig, roomModel) {
+  const name = `${community?.name || ''} ${community?.slug || ''} ${community?.description || ''}`.toLowerCase();
+  const typeKey = typeConfig?.key || 'general';
+
+  if (name.includes('sport') || name.includes('basketball') || name.includes('football') || name.includes('soccer') || name.includes('gym')) {
+    return {
+      boardTitle: 'Tonight board',
+      boardBody: 'Games, courts, rides, teams, and workout partners should be one tap away.',
+      missionTitle: 'Get one game moving',
+      missionBody: 'Post sport, place, time, and how many people you need.',
+      feedTitle: 'Sports feed',
+      feedEmptyTitle: 'Start with a real plan',
+      feedEmptyBody: 'The first post should make it easy for someone to show up.',
+      starterThreads: [
+        { title: 'Pickup game tonight', body: 'Sport, time, location, and how many more you need.', prompt: 'Pickup game tonight: sport, place, time, need __ more.' },
+        { title: 'Need players', body: 'Fill a team fast without texting ten group chats.', prompt: 'Need players for __ at __. Who is in?' },
+        { title: 'Training partner', body: 'Find someone for gym, run, drills, or practice.', prompt: 'Looking for a training partner this week for __.' },
+      ],
+      pollQuestion: 'What should this room organize first?',
+      pollOptions: ['Basketball', 'Football', 'Soccer', 'Gym'],
+      rhythm: ['After-school pickup', 'Motzei Shabbos game', 'Sunday morning run'],
+    };
+  }
+
+  if (typeKey === 'shul') {
+    return {
+      boardTitle: 'Shul board',
+      boardBody: 'Minyanim, rides, shiurim, kiddush, and lost items should be easy to act on.',
+      missionTitle: 'Make the next update useful',
+      missionBody: 'Post the time, place, and what people need to know.',
+      feedTitle: 'Shul feed',
+      feedEmptyTitle: 'Start with something useful',
+      feedEmptyBody: 'A minyan time, shiur reminder, or ride request gives people a reason to return.',
+      starterThreads: [
+        { title: 'Minyan check', body: 'Ask who is coming and whether more people are needed.', prompt: 'Minyan check: __ at __. Who is coming?' },
+        { title: 'Ride to shul', body: 'Coordinate who needs or can offer a ride.', prompt: 'Ride to shul: leaving from __ at __. Seats available/needed.' },
+        { title: 'Shiur or kiddush', body: 'Post what is happening and when.', prompt: 'Upcoming at shul: __ at __.' },
+      ],
+      pollQuestion: 'What does this shul need posted most?',
+      pollOptions: ['Minyan times', 'Shiurim', 'Rides', 'Kiddush'],
+      rhythm: ['Morning minyan check', 'Thursday Shabbos updates', 'Motzei Shabbos announcements'],
+    };
+  }
+
+  if (typeKey === 'chesed') {
+    return {
+      boardTitle: 'Help board',
+      boardBody: 'Open needs should become completed mitzvahs with clear next steps.',
+      missionTitle: 'Complete one need',
+      missionBody: 'Post what is needed, by when, and how many helpers are still missing.',
+      feedTitle: 'Chesed feed',
+      feedEmptyTitle: 'Start with one clear need',
+      feedEmptyBody: 'The best first post is specific: what, when, where, and how many people.',
+      starterThreads: [
+        { title: 'Need help today', body: 'Make the ask concrete and time-sensitive.', prompt: 'Need help today with __ by __. Still need __ people.' },
+        { title: 'I can help', body: 'Offer a ride, meal, errand, or skill.', prompt: 'I can help today with __ near __.' },
+        { title: 'Mitzvah completed', body: 'Close the loop and show impact.', prompt: 'This mitzvah was completed. Thank you to everyone who helped with __.' },
+      ],
+      pollQuestion: 'What help should we focus on first?',
+      pollOptions: ['Meals', 'Rides', 'Errands', 'Calls'],
+      rhythm: ['Daily open needs', 'Before Shabbos help', 'Sunday volunteer check'],
+    };
+  }
+
+  if (typeKey === 'learning') {
+    return {
+      boardTitle: 'Learning board',
+      boardBody: 'Questions, chavrusas, shiur links, and source sheets should turn into active learning.',
+      missionTitle: 'Start one learning thread',
+      missionBody: 'Ask a real question or post what you want to learn this week.',
+      feedTitle: 'Learning feed',
+      feedEmptyTitle: 'Start with a question',
+      feedEmptyBody: 'A good Torah question or chavrusa ask gets people to respond.',
+      starterThreads: [
+        { title: 'Find a chavrusa', body: 'Topic, level, schedule, and location/Zoom.', prompt: 'Looking for a chavrusa for __. Available __.' },
+        { title: 'Ask a Torah question', body: 'Turn a question into a thread.', prompt: 'Question on __: ' },
+        { title: 'Share a shiur', body: 'Post a link or takeaway people can discuss.', prompt: 'Shiur takeaway: __. What do people think?' },
+      ],
+      pollQuestion: 'What should we learn next?',
+      pollOptions: ['Parsha', 'Gemara', 'Halacha', 'Mussar'],
+      rhythm: ['Morning chavrusa match', 'Thursday parsha thread', 'Sunday night review'],
+    };
+  }
+
+  if (typeKey === 'parents') {
+    return {
+      boardTitle: 'Parent board',
+      boardBody: 'School tips, carpools, babysitters, camp help, and fast answers for families.',
+      missionTitle: 'Answer one parent need',
+      missionBody: 'Post a specific question parents nearby can answer quickly.',
+      feedTitle: 'Parent feed',
+      feedEmptyTitle: 'Ask the first practical question',
+      feedEmptyBody: 'Parents return when this saves them a call, text chain, or search.',
+      starterThreads: [
+        { title: 'Need a recommendation', body: 'Babysitter, tutor, camp, doctor, or activity.', prompt: 'Anyone recommend a good __ near __?' },
+        { title: 'Carpool help', body: 'Time, school, route, and seats needed.', prompt: 'Carpool help needed from __ to __ at __.' },
+        { title: 'Family plan', body: 'Find what people are doing this week.', prompt: 'What are families doing for __ this week?' },
+      ],
+      pollQuestion: 'What parent help is most useful?',
+      pollOptions: ['Carpool', 'Babysitter', 'School tips', 'Activities'],
+      rhythm: ['Sunday school-week prep', 'After-school carpool check', 'Before Shabbos family plans'],
+    };
+  }
+
+  const isNeighborhood = typeKey === 'neighborhood';
+  return {
+    boardTitle: isNeighborhood ? 'Neighborhood board' : 'Community board',
+    boardBody: isNeighborhood
+      ? 'Local alerts, plans, recommendations, and neighbor help should move fast.'
+      : 'Turn this from a group into a useful place people check before they text around.',
+    missionTitle: isNeighborhood ? 'Post one useful local update' : 'Start one useful thread',
+    missionBody: roomModel.body,
+    feedTitle: isNeighborhood ? 'Local feed' : 'Room feed',
+    feedEmptyTitle: 'Give people a reason to check back',
+    feedEmptyBody: 'Start with something useful, local, or time-sensitive.',
+    starterThreads: [
+      { title: 'Ask a fast question', body: 'Get an answer from people in this space.', prompt: 'Does anyone know...' },
+      { title: 'Share what is happening', body: 'Post a plan, alert, opening, or update.', prompt: 'What people should know today: ' },
+      { title: 'Coordinate something', body: 'Make a plan people can join.', prompt: 'Who wants to join __ at __?' },
+    ],
+    pollQuestion: 'What should this room be best at?',
+    pollOptions: ['Updates', 'Recommendations', 'Plans', 'Help'],
+    rhythm: ['Daily quick question', 'Before Shabbos updates', 'Sunday week-ahead plans'],
   };
 }
 
@@ -1588,6 +1714,182 @@ function CommunityActionHeader({ community, typeConfig, posts, activeNeeds, even
   );
 }
 
+function CommunityMomentumPanel({
+  kit,
+  posts,
+  activeNeeds,
+  events,
+  memberCount,
+  onPrompt,
+  onTabChange,
+}) {
+  const upcomingEvents = events.filter((event) => {
+    const value = event.start_date || event.event_date;
+    return !value || new Date(value) >= new Date();
+  });
+  const boardCards = [
+    {
+      icon: Activity,
+      label: 'Live now',
+      value: activeNeeds.length ? `${activeNeeds.length} open needs` : upcomingEvents.length ? `${upcomingEvents.length} plans` : 'Ready',
+      helper: activeNeeds.length ? 'People can act now' : upcomingEvents.length ? 'Open the next plan' : kit.missionTitle,
+      tone: 'bg-rose-50 text-rose-700 border-rose-100',
+      tab: activeNeeds.length ? 'openNeeds' : upcomingEvents.length ? 'events' : 'posts',
+    },
+    {
+      icon: MessageCircle,
+      label: 'Room feed',
+      value: `${posts.length} thread${posts.length === 1 ? '' : 's'}`,
+      helper: posts.length ? 'Keep it moving' : kit.feedEmptyTitle,
+      tone: 'bg-blue-50 text-blue-700 border-blue-100',
+      tab: 'posts',
+    },
+    {
+      icon: Users,
+      label: 'People',
+      value: `${memberCount || 0} here`,
+      helper: memberCount > 1 ? 'Invite them into action' : 'Bring in the first few',
+      tone: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+      tab: 'members',
+    },
+  ];
+
+  return (
+    <section className="rounded-3xl border border-slate-100 bg-white p-3 shadow-sm">
+      <div className="mb-3 flex items-start justify-between gap-3 px-1">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-wide text-rose-500">Active today</p>
+          <h3 className="text-[17px] font-black leading-tight text-slate-950">{kit.boardTitle}</h3>
+          <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-500">{kit.boardBody}</p>
+        </div>
+        <span className="rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-black text-slate-500">
+          {posts.length + activeNeeds.length + upcomingEvents.length}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {boardCards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <button
+              key={card.label}
+              type="button"
+              onClick={() => onTabChange(card.tab)}
+              className={`rounded-2xl border p-3 text-left transition-all active:scale-[0.98] ${card.tone}`}
+            >
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/75">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <ChevronRight className="h-4 w-4 opacity-50" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-wide opacity-70">{card.label}</p>
+              <p className="mt-0.5 text-[15px] font-black leading-tight">{card.value}</p>
+              <p className="mt-1 text-[11px] font-bold leading-snug opacity-75">{card.helper}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+        <div className="mb-2 flex items-center gap-2">
+          <Vote className="h-4 w-4 text-blue-600" />
+          <p className="text-[12px] font-black text-slate-900">{kit.pollQuestion}</p>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {kit.pollOptions.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => onPrompt(`Vote: ${option}. I think we should organize this next.`)}
+              className="flex-shrink-0 rounded-full border border-white bg-white px-3 py-1.5 text-[11px] font-black text-slate-700 shadow-sm active:scale-95 transition-all"
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CommunityStarterFeed({ kit, posts, typeConfig, onPrompt, onTabChange }) {
+  const visiblePosts = posts.slice(0, 3);
+
+  return (
+    <section className="rounded-3xl border border-slate-100 bg-white p-3 shadow-sm">
+      <div className="mb-3 flex items-center justify-between gap-3 px-1">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">{kit.feedTitle}</p>
+          <h3 className="text-[17px] font-black text-slate-950">
+            {visiblePosts.length ? 'Latest from the room' : kit.feedEmptyTitle}
+          </h3>
+          {!visiblePosts.length && (
+            <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-500">{kit.feedEmptyBody}</p>
+          )}
+        </div>
+        <button type="button" onClick={() => onTabChange('posts')} className="rounded-full bg-blue-50 px-3 py-1.5 text-[11px] font-black text-blue-700">
+          View all
+        </button>
+      </div>
+
+      {visiblePosts.length ? (
+        <div className="space-y-2.5">
+          {visiblePosts.map((post) => (
+            <CommunityPostPreview key={post.id} post={post} typeConfig={typeConfig} compact />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {kit.starterThreads.map((thread) => (
+            <button
+              key={thread.title}
+              type="button"
+              onClick={() => onPrompt(thread.prompt)}
+              className="rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-3 text-left shadow-sm transition-all active:scale-[0.98]"
+            >
+              <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <Zap className="h-4 w-4" />
+              </div>
+              <p className="text-[13px] font-black leading-tight text-slate-950">{thread.title}</p>
+              <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">{thread.body}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-black text-blue-600">
+                Start this <ChevronRight className="h-3.5 w-3.5" />
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function CommunityRhythmStrip({ kit, onPrompt }) {
+  return (
+    <section className="rounded-3xl border border-slate-100 bg-white p-3 shadow-sm">
+      <div className="mb-2 flex items-center gap-2 px-1">
+        <Clock3 className="h-4 w-4 text-slate-500" />
+        <p className="text-[12px] font-black uppercase tracking-wide text-slate-500">Weekly rhythm</p>
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        {kit.rhythm.map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => onPrompt(`${item}: `)}
+            className="flex min-w-[150px] flex-shrink-0 items-center gap-2 rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2 text-left active:scale-[0.98] transition-all"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-blue-600">
+              <CheckCircle2 className="h-4 w-4" />
+            </span>
+            <span className="text-[12px] font-black leading-tight text-slate-800">{item}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function CommunitySocialStarter({
   community,
   typeConfig,
@@ -1603,6 +1905,7 @@ function CommunitySocialStarter({
   visibleTabs = [],
 }) {
   const roomModel = getCommunityRoomModel(community, typeConfig);
+  const engagementKit = getCommunityEngagementKit(community, typeConfig, roomModel);
   const prompts = roomModel.prompts.slice(0, 3);
   const memberCount = members.length > 0 ? members.length : (community?.follower_count || 0);
   const latestPost = posts[0];
@@ -1656,7 +1959,8 @@ function CommunitySocialStarter({
   };
 
   return (
-    <section className="overflow-hidden rounded-[30px] border border-slate-100 bg-white shadow-sm">
+    <div className="space-y-4">
+      <section className="overflow-hidden rounded-[30px] border border-slate-100 bg-white shadow-sm">
       <div className={`relative bg-gradient-to-br ${typeConfig.accent} px-5 py-5 text-white`}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.28),transparent_28%),radial-gradient(circle_at_90%_20%,rgba(255,255,255,0.18),transparent_26%)]" />
         <div className="relative flex items-start gap-4">
@@ -1734,7 +2038,28 @@ function CommunitySocialStarter({
           ))}
         </div>
       </div>
-    </section>
+      </section>
+
+      <CommunityMomentumPanel
+        kit={engagementKit}
+        posts={posts}
+        activeNeeds={activeNeeds}
+        events={events}
+        memberCount={memberCount}
+        onPrompt={applyPrompt}
+        onTabChange={onTabChange}
+      />
+
+      <CommunityStarterFeed
+        kit={engagementKit}
+        posts={posts}
+        typeConfig={typeConfig}
+        onPrompt={applyPrompt}
+        onTabChange={onTabChange}
+      />
+
+      <CommunityRhythmStrip kit={engagementKit} onPrompt={applyPrompt} />
+    </div>
   );
 }
 
@@ -1767,34 +2092,6 @@ function CommunityHomeLaunchpad({
         onTabChange={onTabChange}
         visibleTabs={visibleTabs}
       />
-
-      {/* Right Now compact banner */}
-      {!hiddenSections.has('rightNow') && (
-        <RightNowBanner
-          posts={posts}
-          events={events}
-          activeNeeds={activeNeeds}
-          resources={resources}
-          typeConfig={typeConfig}
-          lastVisitedAt={lastVisitedAt}
-          onTabChange={onTabChange}
-        />
-      )}
-
-      {posts.length > 0 && (
-        <section className="rounded-[28px] border border-slate-100 bg-white p-3 shadow-sm">
-          <div className="mb-3 flex items-center justify-between px-1">
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">Conversation</p>
-              <h3 className="text-[15px] font-black text-slate-950">Latest from the room</h3>
-            </div>
-            <button type="button" onClick={() => onTabChange('posts')} className="text-[12px] font-black text-blue-600">
-              See all
-            </button>
-          </div>
-          <HomeFeedSection posts={posts.slice(0, 2)} typeConfig={typeConfig} activeNeeds={[]} />
-        </section>
-      )}
 
       {toolTabs.length > 0 && (
         <section className="rounded-[26px] border border-slate-100 bg-white/80 p-3 shadow-sm">
