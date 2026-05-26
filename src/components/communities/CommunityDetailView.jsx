@@ -260,12 +260,12 @@ function getCommunityRoomModel(community, typeConfig) {
       label: 'Kosher pulse',
       headline: 'What is worth eating or ordering today?',
       body: 'Fast recs, hechsher checks, bakery drops, Shabbos extras, and which spots are actually open or busy.',
-      prompts: ['Best quick dinner near Central tonight?', 'Any bakery or takeout still good before Shabbos?', 'Which kosher spot needs to be added to the map?'],
+      prompts: ['Open now: which kosher spot is worth it tonight?', 'Before Shabbos: who still has challah, kugel, or takeout?', 'Verify a place: name, town, hechsher/source'],
       primaryCta: 'Share food tip',
       actions: [
-        { label: 'Dinner rec', helper: 'Fast local answer', tab: 'posts', prompt: 'Best quick dinner near __ tonight? Need...' },
-        { label: 'Before Shabbos', helper: 'Timing and extras', tab: 'posts', prompt: 'Before Shabbos food update: __ still has __, line is __.' },
-        { label: 'Map check', helper: 'Verify a spot', tab: 'posts', prompt: 'Map update: __ in __ should be added or checked. Hechsher/source: __.' },
+        { label: 'Open now', helper: 'What is worth going to', tab: 'posts', prompt: 'Open now: __ in __ is good for __. Line/parking is __.' },
+        { label: 'Before Shabbos', helper: 'Timing and extras', tab: 'posts', prompt: 'Before Shabbos food update: __ still has __ until __.' },
+        { label: 'Map check', helper: 'Keep it verified', tab: 'posts', prompt: 'Verify a place: __ in __. Hechsher/source is __.' },
       ],
       emptyWin: 'First real food tip',
     };
@@ -276,10 +276,10 @@ function getCommunityRoomModel(community, typeConfig) {
       label: 'Teen room',
       headline: 'What is the plan tonight?',
       body: 'Plans, rides, pickup games, school questions, support, and safe ways to connect without ten group chats.',
-      prompts: ['What is everyone doing Motzei Shabbos?', 'Need a ride or plan near...', 'Quiet question for people who get it'],
+      prompts: ['Who has a real plan tonight?', 'Need a ride from __ to __ around __', 'Quiet question for people who get it'],
       primaryCta: 'Post a plan',
       actions: [
-        { label: 'Find plans', helper: 'Tonight or Motzei', tab: 'posts', prompt: 'What is everyone doing tonight near __?' },
+        { label: 'Find plans', helper: 'Tonight or Motzei', tab: 'posts', prompt: 'Who has a real plan tonight near __?' },
         { label: 'Ride check', helper: 'Keep details safe', tab: 'posts', prompt: 'Need a ride from __ to __ around __. Message me for details.' },
         { label: 'Ask quietly', helper: 'Support thread', tab: 'posts', prompt: 'Quiet question: has anyone dealt with...' },
       ],
@@ -292,12 +292,12 @@ function getCommunityRoomModel(community, typeConfig) {
       label: 'Game room',
       headline: 'Who is playing tonight?',
       body: 'Make this the fastest place to find a game, fill a team, or get someone to train with.',
-      prompts: ['Who wants to play tonight?', 'Need two more for a game', 'Looking for a gym partner this week'],
+      prompts: ['Need two more for ball tonight at __', 'Who is playing after Maariv?', 'Looking for a gym or run partner this week'],
       primaryCta: 'Post a game',
       actions: [
-        { label: 'Find a game', helper: 'See who is playing', tab: 'posts', prompt: 'Who is playing tonight?' },
-        { label: 'Fill a team', helper: 'Need people fast', tab: 'posts', prompt: 'Need a few more people for...' },
-        { label: 'Training partner', helper: 'Gym, run, drills', tab: 'posts', prompt: 'Looking for a training partner for...' },
+        { label: 'Find a game', helper: 'Tonight, not someday', tab: 'posts', prompt: 'Who is playing after Maariv near __?' },
+        { label: 'Fill a team', helper: 'Need people fast', tab: 'posts', prompt: 'Need __ more people for __ at __.' },
+        { label: 'Training partner', helper: 'Gym, run, drills', tab: 'posts', prompt: 'Looking for a gym/run partner for __ this week.' },
       ],
       emptyWin: 'First game posted',
     };
@@ -373,11 +373,11 @@ function getCommunityRoomModel(community, typeConfig) {
     body: typeKey === 'neighborhood'
       ? 'Local alerts, recs, plans, openings, questions, and neighbor help in one fast place.'
       : 'A living room for updates, questions, plans, and people who want to connect.',
-    prompts: typeConfig?.prompts?.length ? typeConfig.prompts.slice(0, 3) : ['What should people know today?', 'Can anyone help with...', 'Who wants to join...'],
+    prompts: typeConfig?.prompts?.length ? typeConfig.prompts.slice(0, 3) : ['What should people know before tonight?', 'Ask for a fast local recommendation', 'Coordinate a ride, plan, or help'],
     primaryCta: typeConfig?.primaryCta || 'Post',
     actions: [
-      { label: 'Ask the room', helper: 'Get a fast answer', tab: 'posts', prompt: 'Can anyone help with...' },
-      { label: 'Make a plan', helper: 'Tonight or this week', tab: 'events', prompt: 'Who wants to join...' },
+      { label: 'Ask the room', helper: 'Get a fast answer', tab: 'posts', prompt: 'Ask the room: does anyone know __?' },
+      { label: 'Make a plan', helper: 'Tonight or this week', tab: 'events', prompt: 'Make a plan: who wants to join __ at __?' },
       { label: 'Invite people', helper: 'Grow the circle', tab: 'members', prompt: null },
     ],
     emptyWin: 'First useful post',
@@ -1981,6 +1981,7 @@ function CommunitySocialStarter({
   const roomModel = getCommunityRoomModel(community, typeConfig);
   const engagementKit = getCommunityEngagementKit(community, typeConfig, roomModel);
   const prompts = roomModel.prompts.slice(0, 3);
+  const [activePrompt, setActivePrompt] = useState(prompts[0] || 'Share something useful people can act on today...');
   const memberCount = members.length > 0 ? members.length : (community?.follower_count || 0);
   const latestPost = posts[0];
   const latestAge = formatRelativeActivity(latestPost?.created_at || latestPost?.created_date);
@@ -1998,6 +1999,11 @@ function CommunitySocialStarter({
     'from-blue-50 to-cyan-50 text-blue-700 border-blue-100',
     'from-amber-50 to-orange-50 text-amber-800 border-amber-100',
     'from-emerald-50 to-teal-50 text-emerald-800 border-emerald-100',
+  ];
+  const promptStyles = [
+    { label: 'Need now', className: 'border-red-100 bg-red-50 text-red-700' },
+    { label: 'Ask fast', className: 'border-blue-100 bg-blue-50 text-blue-700' },
+    { label: 'Make happen', className: 'border-emerald-100 bg-emerald-50 text-emerald-700' },
   ];
   const starterActions = roomModel.actions.map((action, index) => ({
     ...action,
@@ -2021,9 +2027,13 @@ function CommunitySocialStarter({
     },
   ];
 
+  useEffect(() => {
+    setActivePrompt(prompts[0] || 'Share something useful people can act on today...');
+  }, [community?.id, prompts[0]]);
+
   const applyPrompt = (prompt) => {
     if (!prompt) return;
-    setComposeText((current) => current?.trim() ? current : prompt);
+    setActivePrompt(prompt);
   };
 
   const openAction = (action) => {
@@ -2058,16 +2068,20 @@ function CommunitySocialStarter({
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {prompts.map((prompt) => (
+          {prompts.map((prompt, index) => {
+            const style = promptStyles[index % promptStyles.length];
+            return (
             <button
               key={prompt}
               type="button"
               onClick={() => applyPrompt(prompt)}
-              className="flex-shrink-0 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[12px] font-black text-blue-700 active:scale-95 transition-all"
+              className={`flex-shrink-0 rounded-2xl border px-3 py-2 text-left active:scale-95 transition-all ${style.className}`}
             >
-              {prompt}
+              <span className="block text-[9px] font-black uppercase tracking-wide opacity-70">{style.label}</span>
+              <span className="block max-w-[210px] truncate text-[12px] font-black">{prompt}</span>
             </button>
-          ))}
+            );
+          })}
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-slate-50 p-3">
@@ -2075,7 +2089,7 @@ function CommunitySocialStarter({
             value={composeText}
             onChange={(event) => setComposeText(event.target.value)}
             rows={2}
-            placeholder={prompts[0] || 'Share something useful...'}
+            placeholder={activePrompt}
             className="w-full resize-none bg-transparent px-1 text-[15px] font-semibold leading-6 text-slate-900 outline-none placeholder:text-slate-400"
           />
           <div className="mt-2 flex items-center justify-between gap-3">

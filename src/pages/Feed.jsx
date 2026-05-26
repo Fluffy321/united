@@ -1287,13 +1287,13 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, onOpe
   const slides = [
     {
       key: 'news',
-      eyebrow: 'Five Towns News',
+      eyebrow: brief.verifiedLocalBrief ? 'Five Towns News' : 'Five Towns Brief',
       title: brief.title,
       subtitle: brief.verifiedLocalBrief
         ? 'Three verified local updates worth knowing today.'
         : brief.rotatingDailyBrief
-          ? 'Three fresh daily local prompts rotate by date until a curated brief is published.'
-          : 'The updates worth noticing before the feed gets noisy.',
+          ? 'Daily local prompts rotate by date until verified updates are published.'
+          : 'Useful local context before the feed gets noisy.',
       items: newsItems,
       tone: 'from-slate-950 via-blue-900 to-cyan-800',
       empty: 'No major local news posts yet today.',

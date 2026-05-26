@@ -22,13 +22,13 @@ const boardConfig = {
 };
 
 const helpCategoryLabels = {
-  advice: '💭 Advice',
-  lonely: '🤝 Want to Talk',
-  school: '📚 School',
-  jobs: '💼 Jobs',
-  family: '👨‍👩‍👧‍👦 Family',
-  antisemitism: '✡️ Antisemitism',
-  other: '📝 Other'
+  advice: '💭 Advice / Guidance',
+  lonely: '🤝 Support / Check-in',
+  school: '📚 School Help',
+  jobs: '💼 Jobs / Networking',
+  family: '🏠 Family / Home',
+  antisemitism: '🛡️ Safety / Hate Incident',
+  other: '💬 Other Help'
 };
 
 export default function ChalkboardCard({ post, currentUser, onComment, onMessage, onDelete, onReport }) {

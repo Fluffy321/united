@@ -16,16 +16,16 @@ import { toast } from 'sonner';
 
 const PLACEHOLDERS = {
   feed: [
-    'Share something happening near you...',
-    'Ask the community a question...',
-    'What\'s going on today?',
-    'Need something or planning something?'
+    'What should people know before tonight?',
+    'Ask for a fast Five Towns recommendation...',
+    'Share an event, alert, ride, opening, or plan...',
+    'Need something or offering something today?'
   ],
   help: [
     'What do you need help with today?',
-    'Ask your community something...',
-    'Need advice or support?',
-    'What\'s going on?'
+    'Ask for advice, support, or a local connection...',
+    'Need someone to check in, ride, or respond?',
+    'What should the community help with right now?'
   ]
 };
 
