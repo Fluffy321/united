@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/AuthContext';
+import BackButton from '@/components/common/BackButton';
 import LiveNowRail from '@/components/common/LiveNowRail';
 import { buildMarketplaceLiveNowItems } from '@/lib/liveNow';
 
@@ -748,6 +749,7 @@ export default function Marketplace() {
     <main className="min-h-screen bg-[#F6F8FB] pb-28">
       <section className="mobile-page px-3 pt-3">
         <div className="rounded-[28px] border border-blue-100 bg-white p-4 shadow-sm">
+          <BackButton fallbackTo="/Feed" className="mb-2 -ml-1" />
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-blue-700">

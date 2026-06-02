@@ -1370,11 +1370,14 @@ export default function MapPage() {
   }, [searchParams]);
 
   const handleUseMyLocation = () => requestUserLocation(true);
+  const isDeepLinkedMap = searchParams.toString().length > 0;
 
   return (
     <main className="app-page flex h-dvh flex-col overflow-hidden mobile-safe-bottom">
       <DestinationHeader
         sticky={false}
+        showBack={isDeepLinkedMap}
+        backTo="/Feed"
         className="relative before:pointer-events-none before:absolute before:inset-x-3 before:top-2 before:bottom-1 before:rounded-[30px] before:bg-gradient-to-r before:from-blue-200/45 before:via-white/35 before:to-emerald-100/45 before:blur-xl before:content-[''] sm:before:inset-x-4"
         toolbarClassName="relative"
         icon={MapPin}

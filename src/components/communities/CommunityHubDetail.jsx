@@ -19,6 +19,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { dataService } from '@/services';
+import postsService from '@/services/postsService';
 import { supabase } from '@/api/supabaseClient';
 import { getCommunityTabLabel, getCommunityTypeConfig, getSupportedCommunityTabs } from '@/lib/communityTypes';
 import {
@@ -268,7 +269,7 @@ export default function CommunityHubDetail({
     }
 
     try {
-      await dataService.entities.UnifiedPost.create({
+      await postsService.createCommunityPost({
         user_id: currentUser.id,
         community_id: community.id,
         type: getPostTypeForTab(activeTab, typeConfig.key),

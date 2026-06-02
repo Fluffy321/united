@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
 import { dataService } from '@/services';
+import postsService from '@/services/postsService';
 import paymentsService from '@/services/paymentsService';
 import { notificationsService } from '@/services/notificationsService';
 import { COMMUNITY_TYPE_OPTIONS, getCommunityTypeConfig, getCommunityTabLabel, getCommunityTypeKey } from '@/lib/communityTypes';
@@ -787,7 +788,7 @@ function ContentTab({ communityId, currentUser }) {
         const { error: unpinError } = await supabase.from('posts').update({ is_pinned: false }).eq('id', pinnedPost.id);
         if (unpinError) throw unpinError;
       }
-      await dataService.entities.UnifiedPost.create({
+      await postsService.createCommunityPost({
         community_id: communityId,
         user_id: currentUser?.id,
         author_user_id: currentUser?.id,

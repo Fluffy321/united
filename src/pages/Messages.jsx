@@ -12,6 +12,7 @@ import UserSearchPanel from '@/components/messages/UserSearchPanel';
 import NewMessageComposer from '@/components/messages/NewMessageComposer';
 import MessageRequestsTab from '@/components/messages/MessageRequestsTab';
 import ReportModal from '@/components/common/ReportModal';
+import BackButton from '@/components/common/BackButton';
 import { buildAIConversation } from '@/lib/aiAgent';
 
 export default function Messages() {
@@ -228,7 +229,8 @@ export default function Messages() {
           <div className="flex-shrink-0 border-b border-slate-100 bg-white px-4 pt-4 pb-3">
             {/* Title row */}
             <div className="flex items-center justify-between gap-2 pb-3">
-              <div className="flex items-center gap-1.5">
+              <div className="flex min-w-0 items-center gap-1.5">
+                <BackButton fallbackTo="/Feed" className="-ml-2 shrink-0" />
                 <h1 className="text-[20px] font-black tracking-normal text-slate-950">Messages</h1>
                 <PageHelp text="Coordinate privately with people or groups connected to your communities." align="end" />
               </div>

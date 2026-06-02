@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { dataService, incrementCounter } from '@/services';
+import postsService from '@/services/postsService';
 import {
   getCommunityNavConfig,
   getCommunityTabLabel,
@@ -815,7 +816,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         toast.error('Only community managers can post official announcements.');
         return;
       }
-      await dataService.entities.UnifiedPost.create({
+      await postsService.createCommunityPost({
         user_id: currentUser.id,
         community_id: communityId,
         type: getPostTypeForTab(activeTab, typeConfig.key),
