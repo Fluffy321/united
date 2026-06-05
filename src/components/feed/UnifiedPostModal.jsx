@@ -4,6 +4,7 @@ import {
   BarChart2,
   Bell,
   Calendar,
+  ChevronDown,
   Globe2,
   HeartHandshake,
   HelpCircle,
@@ -27,13 +28,13 @@ import { ACTIVITY_KIND } from '@/lib/productInfrastructure';
 import { toast } from 'sonner';
 
 const POST_TYPES = [
-  { value: 'post', label: 'Post', icon: MessageCircle, placeholder: 'Share something with the Five Towns...', chip: 'border-blue-200 bg-blue-50 text-blue-700', selected: 'border-blue-600 bg-blue-600 text-white shadow-blue-200', cta: 'from-blue-600 to-sky-500' },
-  { value: 'ask', label: 'Ask', icon: HelpCircle, placeholder: 'Ask the community anything...', chip: 'border-violet-200 bg-violet-50 text-violet-700', selected: 'border-violet-600 bg-violet-600 text-white shadow-violet-200', cta: 'from-violet-600 to-fuchsia-500' },
-  { value: 'event', label: 'Event', icon: Calendar, placeholder: 'Tell people what is happening...', chip: 'border-orange-200 bg-orange-50 text-orange-700', selected: 'border-orange-500 bg-orange-500 text-white shadow-orange-200', cta: 'from-orange-500 to-amber-400' },
-  { value: 'alert', label: 'Alert', icon: Bell, placeholder: 'Share a local heads up...', chip: 'border-red-200 bg-red-50 text-red-700', selected: 'border-red-500 bg-red-500 text-white shadow-red-200', cta: 'from-red-500 to-rose-500' },
-  { value: 'poll', label: 'Poll', icon: BarChart2, placeholder: 'What should people vote on?', chip: 'border-emerald-200 bg-emerald-50 text-emerald-700', selected: 'border-emerald-600 bg-emerald-600 text-white shadow-emerald-200', cta: 'from-emerald-600 to-teal-500' },
-  { value: 'help', label: 'Need Help', icon: HeartHandshake, placeholder: 'What do you need help with?', chip: 'border-pink-200 bg-pink-50 text-pink-700', selected: 'border-pink-600 bg-pink-600 text-white shadow-pink-200', cta: 'from-pink-600 to-rose-500' },
-  { value: 'marketplace', label: 'Sell / Give', icon: ShoppingBag, placeholder: 'What are you selling or giving away?', chip: 'border-teal-200 bg-teal-50 text-teal-700', selected: 'border-teal-600 bg-teal-600 text-white shadow-teal-200', cta: 'from-teal-600 to-cyan-500' },
+  { value: 'post', label: 'Post', icon: MessageCircle, placeholder: 'What should people know right now?' },
+  { value: 'ask', label: 'Ask', icon: HelpCircle, placeholder: 'Ask the community a quick question...' },
+  { value: 'event', label: 'Event', icon: Calendar, placeholder: 'What is happening, and who should come?' },
+  { value: 'alert', label: 'Alert', icon: Bell, placeholder: 'What local heads-up should people see?' },
+  { value: 'poll', label: 'Poll', icon: BarChart2, placeholder: 'What should people vote on?' },
+  { value: 'help', label: 'Need Help', icon: HeartHandshake, placeholder: 'What do you need help with?' },
+  { value: 'marketplace', label: 'Sell / Give', icon: ShoppingBag, placeholder: 'What are you selling or giving away?' },
 ];
 
 const HELP_CATEGORIES = [
@@ -331,15 +332,15 @@ export default function UnifiedPostModal({
   const renderTypeSpecificFields = () => {
     if (postKind === 'event') {
       return (
-        <div className="rounded-2xl border border-orange-100 bg-orange-50/50 p-3">
-          <p className="mb-2 text-xs font-black uppercase tracking-wide text-orange-500">Event details</p>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Event name" className="mb-2 h-10 rounded-xl border-orange-100 bg-white font-semibold" />
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
+          <p className="mb-2 text-xs font-black uppercase tracking-wide text-slate-500">Event details</p>
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Event name" className="mb-2 h-10 rounded-xl border-slate-200 bg-white font-semibold" />
           <div className="grid grid-cols-2 gap-2">
-            <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="h-10 rounded-xl border-orange-100 bg-white font-semibold" />
-            <Input type="time" value={eventTime} onChange={(e) => setEventTime(e.target.value)} className="h-10 rounded-xl border-orange-100 bg-white font-semibold" />
+            <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="h-10 rounded-xl border-slate-200 bg-white font-semibold" />
+            <Input type="time" value={eventTime} onChange={(e) => setEventTime(e.target.value)} className="h-10 rounded-xl border-slate-200 bg-white font-semibold" />
           </div>
-          <div className="mt-2 flex items-center gap-2 rounded-xl border border-orange-100 bg-white px-3">
-            <MapPin className="h-4 w-4 text-orange-500" />
+          <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3">
+            <MapPin className="h-4 w-4 text-slate-500" />
             <input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Location optional" className="h-10 flex-1 bg-transparent text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400" />
           </div>
         </div>
@@ -348,8 +349,8 @@ export default function UnifiedPostModal({
 
     if (postKind === 'poll') {
       return (
-        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-3">
-          <p className="mb-2 text-xs font-black uppercase tracking-wide text-emerald-600">Poll choices</p>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
+          <p className="mb-2 text-xs font-black uppercase tracking-wide text-slate-500">Poll choices</p>
           <div className="space-y-2">
             {pollOptions.map((option, index) => (
               <div key={index} className="flex items-center gap-2">
@@ -358,7 +359,7 @@ export default function UnifiedPostModal({
                   onChange={(event) => setPollOptions((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))}
                   placeholder={`Choice ${index + 1}`}
                   maxLength={80}
-                  className="h-10 rounded-xl border-emerald-100 bg-white font-semibold"
+                  className="h-10 rounded-xl border-slate-200 bg-white font-semibold"
                 />
                 {pollOptions.length > 2 && (
                   <button type="button" onClick={() => setPollOptions((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="rounded-full p-2 text-slate-400 hover:bg-red-50 hover:text-red-500">
@@ -379,8 +380,8 @@ export default function UnifiedPostModal({
 
     if (postKind === 'help') {
       return (
-        <div className="rounded-2xl border border-pink-100 bg-pink-50/50 p-3">
-          <p className="mb-2 text-xs font-black uppercase tracking-wide text-pink-600">Need details</p>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
+          <p className="mb-2 text-xs font-black uppercase tracking-wide text-slate-500">Need details</p>
           <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
             {URGENCY_OPTIONS.map((option) => (
               <button
@@ -400,14 +401,24 @@ export default function UnifiedPostModal({
               {HELP_CATEGORIES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </select>
           </div>
+          <button
+            type="button"
+            onClick={() => setIsAnonymous((value) => !value)}
+            className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition active:scale-[0.99]"
+          >
+            <span>Post anonymously</span>
+            <span className={`rounded-full px-2.5 py-1 text-[11px] font-black ${isAnonymous ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-500'}`}>
+              {isAnonymous ? 'On' : 'Off'}
+            </span>
+          </button>
         </div>
       );
     }
 
     if (postKind === 'marketplace') {
       return (
-        <div className="rounded-2xl border border-teal-100 bg-teal-50/50 p-3">
-          <p className="mb-2 text-xs font-black uppercase tracking-wide text-teal-600">Listing details</p>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
+          <p className="mb-2 text-xs font-black uppercase tracking-wide text-slate-500">Listing details</p>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What is it?" className="mb-2 h-10 rounded-xl border-slate-200 bg-slate-50 font-semibold" />
           <div className="grid grid-cols-2 gap-2">
             <Input value={marketPrice} onChange={(e) => setMarketPrice(e.target.value)} placeholder="Price or Free" className="h-10 rounded-xl border-slate-200 bg-slate-50 font-semibold" />
@@ -434,8 +445,8 @@ export default function UnifiedPostModal({
 
     if (postKind === 'alert') {
       return (
-        <div className="rounded-2xl border border-red-100 bg-red-50/50 p-3">
-          <p className="mb-2 text-xs font-black uppercase tracking-wide text-red-600">Alert level</p>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
+          <p className="mb-2 text-xs font-black uppercase tracking-wide text-slate-500">Alert level</p>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {URGENCY_OPTIONS.map((option) => (
               <button
@@ -455,22 +466,24 @@ export default function UnifiedPostModal({
     return null;
   };
 
+  const SelectedTypeIcon = selectedType.icon;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="left-0 top-0 flex h-[100dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none border-0 bg-[#F7F8FA] p-0 shadow-2xl sm:left-[50%] sm:top-[50%] sm:h-auto sm:max-h-[84dvh] sm:w-[calc(100%-24px)] sm:max-w-[520px] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-[26px]">
+      <DialogContent className="bottom-0 left-0 top-auto flex h-[92dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-t-[28px] border-0 bg-white p-0 shadow-2xl sm:bottom-auto sm:left-[50%] sm:top-[50%] sm:h-auto sm:max-h-[84dvh] sm:w-[calc(100%-24px)] sm:max-w-[460px] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-[28px] [&>button.absolute]:hidden">
         <DialogTitle className="sr-only">Create post</DialogTitle>
 
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-4 py-3.5">
           <div className="flex min-w-0 items-center gap-3">
-            <h2 className="truncate text-lg font-black text-slate-950">New post</h2>
+            <h2 className="truncate text-xl font-black text-slate-950">New post</h2>
           </div>
           <button type="button" onClick={() => onOpenChange(false)} className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-white px-4 py-3">
-          <div className="border-b border-slate-100 pb-2">
+        <div className="flex-1 overflow-y-auto bg-white px-4 py-4">
+          <div className="pb-2">
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-600 to-emerald-500 text-xs font-black text-white">
                 {currentUser?.avatar_url ? <img src={currentUser.avatar_url} alt="" className="h-full w-full object-cover" /> : userInitials}
@@ -479,11 +492,20 @@ export default function UnifiedPostModal({
                 <p className="truncate text-sm font-black text-slate-900">{isAnonymous ? 'Anonymous' : currentUser?.display_name || currentUser?.full_name || 'Local member'}</p>
                 <p className="truncate text-[11px] font-bold text-slate-400">{selectedCommunity?.name || (destinationMode === 'feed' ? 'Feed' : 'Five Towns')}</p>
               </div>
-              {postKind === 'help' && (
-                <button type="button" onClick={() => setIsAnonymous((value) => !value)} className={`rounded-full px-3 py-1.5 text-xs font-black transition active:scale-95 ${isAnonymous ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                  Anonymous
-                </button>
-              )}
+              <div className="relative shrink-0">
+                <SelectedTypeIcon className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                <select
+                  value={postKind}
+                  onChange={(event) => setPostKind(event.target.value)}
+                  aria-label="Post type"
+                  className="h-9 appearance-none rounded-full border border-slate-200 bg-slate-50 py-0 pl-8 pr-8 text-xs font-black text-slate-800 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                >
+                  {POST_TYPES.map((item) => (
+                    <option key={item.value} value={item.value}>{item.label}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+              </div>
             </div>
 
             <Textarea
@@ -492,35 +514,17 @@ export default function UnifiedPostModal({
               onChange={(event) => setBody(event.target.value)}
               placeholder={starterPlaceholder || selectedType.placeholder}
               maxLength={1000}
-              className="min-h-[132px] resize-none border-0 bg-white px-0 py-4 text-[17px] font-medium leading-6 text-slate-950 outline-none transition placeholder:text-slate-400 focus-visible:ring-0"
+              className="mt-3 min-h-[170px] resize-none rounded-2xl border border-slate-100 bg-slate-50/40 px-4 py-4 text-[18px] font-medium leading-7 text-slate-950 outline-none transition placeholder:text-slate-400 focus-visible:border-blue-200 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-blue-100"
             />
             <div className="flex items-center justify-between">
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-full py-1 text-xs font-black text-blue-600 transition hover:text-blue-700 active:scale-95">
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-full py-2 text-xs font-black text-blue-600 transition hover:text-blue-700 active:scale-95">
                 {uploadingImages ? <Loader2 className="h-4 w-4 animate-spin" /> : <Image className="h-4 w-4" />}
                 Photo
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImagePick} />
-              <span className={`text-xs font-black tabular-nums ${body.length > 900 ? 'text-red-500' : 'text-slate-400'}`}>{body.length}/1000</span>
-            </div>
-          </div>
-
-          <div className="mt-3 border-b border-slate-100 pb-3">
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {POST_TYPES.map((item) => {
-                const Icon = item.icon;
-                const selected = postKind === item.value;
-                return (
-                  <button
-                    key={item.value}
-                    type="button"
-                    onClick={() => setPostKind(item.value)}
-                    className={`inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border px-2.5 text-[11px] font-black transition active:scale-95 ${selected ? `${item.selected} shadow-sm` : item.chip}`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    <span className="truncate">{item.label}</span>
-                  </button>
-                );
-              })}
+              {body.length > 0 && (
+                <span className={`text-xs font-black tabular-nums ${body.length > 900 ? 'text-red-500' : 'text-slate-400'}`}>{body.length}/1000</span>
+              )}
             </div>
           </div>
 
@@ -636,7 +640,7 @@ export default function UnifiedPostModal({
         </div>
 
         <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3">
-          <Button onClick={handleSubmit} disabled={submitDisabled} className={`h-12 w-full rounded-2xl bg-gradient-to-r ${selectedType.cta} text-sm font-black text-white shadow-lg transition hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45`}>
+          <Button onClick={handleSubmit} disabled={submitDisabled} className="h-12 w-full rounded-2xl bg-gradient-to-r from-slate-950 via-blue-700 to-teal-600 text-sm font-black text-white shadow-lg shadow-blue-900/15 transition hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:from-slate-300 disabled:via-slate-300 disabled:to-slate-300 disabled:text-white disabled:shadow-none">
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
             {isSubmitting ? 'Posting...' : getSubmitLabel()}
           </Button>

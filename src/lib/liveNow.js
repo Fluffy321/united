@@ -268,6 +268,106 @@ export function buildCommunityLiveNowItems({ communities = [] } = {}) {
   return sortLiveItems([...communityItems, ...fallbackItems]);
 }
 
+export function getCommunityActionCopy(community = {}) {
+  const text = `${community.name || ''} ${community.category || ''} ${community.description || ''} ${community.type || ''}`.toLowerCase();
+
+  if (/sport|basketball|football|fitness|gym|game/.test(text)) {
+    return {
+      room: 'Game room',
+      question: "Who's playing tonight?",
+      promise: 'Find a game, fill a team, or get a training partner.',
+      nextWin: 'First game posted',
+      primary: 'Find a game',
+      prompts: ['Who wants to play tonight?', 'Need two more for a game?', 'Looking for a training partner?'],
+    };
+  }
+
+  if (/food|kosher|restaurant|bakery|shabbos|meal/.test(text)) {
+    return {
+      room: 'Food room',
+      question: 'What is open or needed before Shabbos?',
+      promise: 'Share specials, extras, recommendations, and pickup needs.',
+      nextWin: 'First useful recommendation',
+      primary: 'Ask for food help',
+      prompts: ['What is open right now?', 'Extra Shabbos food to give away?', 'Best quick dinner near me?'],
+    };
+  }
+
+  if (/shul|minyan|torah|learning|chavrusa|gemara/.test(text)) {
+    return {
+      room: 'Jewish life room',
+      question: 'Who needs a minyan, ride, or chavrusa today?',
+      promise: 'Coordinate minyanim, shiurim, learning, and shul updates.',
+      nextWin: 'First minyan update',
+      primary: 'Coordinate',
+      prompts: ['Need one more for minyan?', 'Who wants a chavrusa tonight?', 'Ride to shul available?'],
+    };
+  }
+
+  if (/chesed|mitzvah|help|volunteer/.test(text)) {
+    return {
+      room: 'Chesed room',
+      question: 'Who needs help right now?',
+      promise: 'Turn open needs into completed mitzvos.',
+      nextWin: 'First need covered',
+      primary: 'Help someone',
+      prompts: ['Who needs a pickup today?', 'I can deliver something after work', 'Still need one more volunteer?'],
+    };
+  }
+
+  if (/parent|school|family|camp|carpool|babysitter/.test(text)) {
+    return {
+      room: 'Family room',
+      question: 'What do parents need to coordinate today?',
+      promise: 'Carpools, babysitters, school tips, and family help.',
+      nextWin: 'First parent answer',
+      primary: 'Ask parents',
+      prompts: ['Need a carpool seat?', 'Who has a babysitter lead?', 'School pickup swap?'],
+    };
+  }
+
+  if (/business|job|career|network|hustle/.test(text)) {
+    return {
+      room: 'Business room',
+      question: 'Who can help someone make the next connection?',
+      promise: 'Jobs, referrals, advice, local services, and trusted intros.',
+      nextWin: 'First useful intro',
+      primary: 'Ask the network',
+      prompts: ['Who is hiring locally?', 'Need a trusted service recommendation?', 'Can someone make an intro?'],
+    };
+  }
+
+  return {
+    room: 'Local room',
+    question: 'What is happening nearby?',
+    promise: 'Local alerts, recommendations, plans, openings, and neighbor help in one fast place.',
+    nextWin: 'First useful post',
+    primary: 'Ask the room',
+    prompts: ['What should neighbors know today?', 'Ask for a local recommendation', 'Share something happening nearby'],
+  };
+}
+
+export function buildCommunityActionItems(communities = []) {
+  return communities.slice(0, 8).map((community) => {
+    const copy = getCommunityActionCopy(community);
+    return {
+      id: community.id || community.name,
+      type: 'community',
+      urgency: 'active',
+      eyebrow: copy.room,
+      title: copy.question,
+      meta: community.name || community.category || 'Community',
+      liveText: community.member_count ? `${community.member_count} people here` : copy.nextWin,
+      actionLabel: 'Open',
+      href: community.id ? `/Communities?community=${encodeURIComponent(community.id)}&tab=home` : '/Communities',
+      avatars: [initials(community.name || copy.room)],
+      context: copy.promise,
+      people: community.member_count ? `${community.member_count} people here` : 'People nearby',
+      tone: 'active',
+    };
+  });
+}
+
 export function buildMarketplaceLiveNowItems({ listings = [] } = {}) {
   const listingItems = listings.map((listing) => {
     const urgency = /asap|urgent|today|shabbos/i.test(`${listing.urgency || ''} ${listing.urgencyLabel || ''} ${listing.reason || ''}`)
