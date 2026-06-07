@@ -1177,7 +1177,7 @@ export default function Communities() {
         {/* Header */}
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold uppercase text-blue-600">Find your people</p>
+            <p className="text-[11px] font-bold uppercase text-blue-600">Rooms around the main thread</p>
             <h1 className="text-3xl font-bold text-slate-900">Communities</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -1218,6 +1218,40 @@ export default function Communities() {
             >
               + Create
             </button>
+          </div>
+        </div>
+
+        <div className="mb-5 overflow-hidden rounded-[28px] border border-slate-200 bg-slate-950 p-4 text-white shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-blue-100">
+                <MessageCircleMore className="h-3.5 w-3.5" />
+                Community-first reset
+              </div>
+              <h2 className="text-[20px] font-black leading-tight">Start with one Five Towns conversation.</h2>
+              <p className="mt-2 text-[13px] font-semibold leading-5 text-slate-300">
+                Communities are smaller rooms for sports, shuls, parents, learning, support, and chesed after people meet in the main feed.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/Feed')}
+              className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-2 text-[12px] font-black text-slate-950 shadow-sm"
+            >
+              Open Feed
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              ['Ask', 'Get a neighbor answer'],
+              ['Plan', 'Find people nearby'],
+              ['Help', 'Move needs to action'],
+            ].map(([label, detail]) => (
+              <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
+                <p className="text-[13px] font-black">{label}</p>
+                <p className="mt-1 text-[11px] font-bold leading-4 text-slate-400">{detail}</p>
+              </div>
+            ))}
           </div>
         </div>
 

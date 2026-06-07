@@ -28,13 +28,13 @@ import { ACTIVITY_KIND } from '@/lib/productInfrastructure';
 import { toast } from 'sonner';
 
 const POST_TYPES = [
-  { value: 'post', label: 'Post', icon: MessageCircle, placeholder: 'What should people know right now?' },
-  { value: 'ask', label: 'Ask', icon: HelpCircle, placeholder: 'Ask the community a quick question...' },
-  { value: 'event', label: 'Event', icon: Calendar, placeholder: 'What is happening, and who should come?' },
-  { value: 'alert', label: 'Alert', icon: Bell, placeholder: 'What local heads-up should people see?' },
-  { value: 'poll', label: 'Poll', icon: BarChart2, placeholder: 'What should people vote on?' },
-  { value: 'help', label: 'Need Help', icon: HeartHandshake, placeholder: 'What do you need help with?' },
-  { value: 'marketplace', label: 'Sell / Give', icon: ShoppingBag, placeholder: 'What are you selling or giving away?' },
+  { value: 'post', label: 'Post', icon: MessageCircle, placeholder: 'What should neighbors know right now?' },
+  { value: 'ask', label: 'Ask', icon: HelpCircle, placeholder: 'Ask for a ride, rec, host, game, or local advice...' },
+  { value: 'event', label: 'Event', icon: Calendar, placeholder: 'What is happening, when, and who should come?' },
+  { value: 'alert', label: 'Alert', icon: Bell, placeholder: 'What should people know before they head out?' },
+  { value: 'poll', label: 'Poll', icon: BarChart2, placeholder: 'What should the community decide together?' },
+  { value: 'help', label: 'Need Help', icon: HeartHandshake, placeholder: 'What do you need, and by when?' },
+  { value: 'marketplace', label: 'Sell / Give', icon: ShoppingBag, placeholder: 'What are you selling, giving, or looking for?' },
 ];
 
 const HELP_CATEGORIES = [
@@ -514,7 +514,7 @@ export default function UnifiedPostModal({
               onChange={(event) => setBody(event.target.value)}
               placeholder={starterPlaceholder || selectedType.placeholder}
               maxLength={1000}
-              className="mt-3 min-h-[170px] resize-none rounded-2xl border border-slate-100 bg-slate-50/40 px-4 py-4 text-[18px] font-medium leading-7 text-slate-950 outline-none transition placeholder:text-slate-400 focus-visible:border-blue-200 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-blue-100"
+              className="mt-3 min-h-[130px] resize-none rounded-2xl border border-slate-100 bg-slate-50/40 px-4 py-4 text-[17px] font-medium leading-7 text-slate-950 outline-none transition placeholder:text-slate-400 focus-visible:border-blue-200 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-blue-100 sm:min-h-[150px]"
             />
             <div className="flex items-center justify-between">
               <button type="button" onClick={() => fileInputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-full py-2 text-xs font-black text-blue-600 transition hover:text-blue-700 active:scale-95">

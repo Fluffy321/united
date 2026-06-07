@@ -1,33 +1,22 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { dataService, feedRetentionService, shabbatReminderService, storageService, togglePostLike } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
-import HomeFeedTabs from '@/components/feed/HomeFeedTabs';
-import EventsForYou from '@/components/feed/EventsForYou';
-import EventsFeedSection from '@/components/feed/EventsFeedSection';
-import InlineFeedPrompt from '@/components/feed/InlineFeedPrompt';
 import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
 import ReportModal from '@/components/common/ReportModal';
 import PageHelp from '@/components/common/PageHelp';
-import LiveNowRail from '@/components/common/LiveNowRail';
 import NotificationBell from '@/components/notifications/NotificationBell';
-import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
-import DailyHooks from '@/components/feed/DailyHooks';
-import { Activity, ArrowRight, CalendarDays, ChevronDown, Heart, MessageCircle, Plus, RefreshCw, Search, Sparkles, Users } from 'lucide-react';
+import { Activity, ArrowRight, CalendarDays, Car, ChevronDown, Handshake, Heart, MapPin, MessageCircle, Plus, RefreshCw, Search, Sparkles, Store, Users } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
-import { getShabbatTimes } from '@/lib/hebrewDate';
-import useShabbatLocation from '@/hooks/useShabbatLocation';
 import { useFloatingActions } from '@/components/layout/FloatingActionsContext';
 import DestinationHeader from '@/components/layout/DestinationHeader';
-import { buildFeedLiveNowItems } from '@/lib/liveNow';
 
-const NEIGHBORHOODS = ['All Five Towns', 'Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood'];
 const minutesAgo = (minutes) => new Date(Date.now() - minutes * 60 * 1000).toISOString();
 const hoursAgo = (hours) => new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 const hoursFromNow = (hours) => new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
@@ -457,6 +446,154 @@ const DEMO_POSTS = [
   },
 ];
 
+const postDate = (post) => post?.updated_date || post?.updated_at || post?.created_date || post?.created_at;
+
+const formatPostAge = (value) => {
+  const time = value ? new Date(value).getTime() : NaN;
+  if (!Number.isFinite(time)) return 'Just now';
+  const minutes = Math.max(1, Math.round((Date.now() - time) / 60000));
+  if (minutes < 2) return 'Just now';
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.round(hours / 24)}d`;
+};
+
+const feedText = (post) => post?.title || post?.body || 'Community update';
+
+const feedBody = (post) => {
+  const body = post?.body || post?.description || '';
+  if (post?.title && body.toLowerCase().trim() === post.title.toLowerCase().trim()) return '';
+  return body;
+};
+
+const matchesText = (post, pattern) => pattern.test(`${post?.type || ''} ${post?.post_subtype || ''} ${post?.title || ''} ${post?.body || ''} ${post?.community_name || ''}`);
+
+const getCardIntent = (post) => {
+  const text = `${post?.type || ''} ${post?.post_subtype || ''} ${post?.title || ''} ${post?.body || ''}`.toLowerCase();
+  if (post?.type === 'help' || /need|help|meal|ride|chesed|urgent|favor|tehillim|volunteer/.test(text)) {
+    return { label: 'Help needed', cta: "I'll help", tone: 'red', icon: Handshake };
+  }
+  if (/carpool|ride|drive|seat|pickup|jfk/.test(text)) {
+    return { label: 'Carpool', cta: 'Join', tone: 'blue', icon: Car };
+  }
+  if (post?.type === 'event' || post?.event_date || /event|shiur|tonight|meetup|game|cleanup/.test(text)) {
+    return { label: 'Event', cta: 'RSVP', tone: 'orange', icon: CalendarDays };
+  }
+  if (/business|restaurant|shop|marketplace|menu|sale|free|pickup|borrow/.test(text)) {
+    return { label: 'Local listing', cta: 'Message', tone: 'teal', icon: Store };
+  }
+  if (/question|rec|recommend|looking|where|anyone|best/.test(text)) {
+    return { label: 'Question', cta: 'Reply', tone: 'purple', icon: MessageCircle };
+  }
+  return { label: 'Local post', cta: 'Reply', tone: 'slate', icon: MessageCircle };
+};
+
+const toneClasses = {
+  red: {
+    pill: 'border-red-200 bg-red-50 text-red-700',
+    dot: 'bg-red-500',
+    cta: 'text-red-700',
+    bar: 'from-red-500 to-orange-400',
+  },
+  orange: {
+    pill: 'border-orange-200 bg-orange-50 text-orange-700',
+    dot: 'bg-orange-500',
+    cta: 'text-orange-700',
+    bar: 'from-orange-500 to-amber-400',
+  },
+  teal: {
+    pill: 'border-teal-200 bg-teal-50 text-teal-700',
+    dot: 'bg-teal-500',
+    cta: 'text-teal-700',
+    bar: 'from-teal-500 to-emerald-400',
+  },
+  blue: {
+    pill: 'border-blue-200 bg-blue-50 text-blue-700',
+    dot: 'bg-blue-500',
+    cta: 'text-blue-700',
+    bar: 'from-blue-500 to-indigo-500',
+  },
+  purple: {
+    pill: 'border-violet-200 bg-violet-50 text-violet-700',
+    dot: 'bg-violet-500',
+    cta: 'text-violet-700',
+    bar: 'from-violet-500 to-fuchsia-500',
+  },
+  slate: {
+    pill: 'border-slate-200 bg-slate-50 text-slate-700',
+    dot: 'bg-slate-400',
+    cta: 'text-blue-700',
+    bar: 'from-blue-500 to-indigo-500',
+  },
+};
+
+const uniquePosts = (posts, predicate, limit, used = new Set()) => {
+  const picked = [];
+  for (const post of posts) {
+    if (!post?.id || used.has(post.id) || !predicate(post)) continue;
+    picked.push(post);
+    used.add(post.id);
+    if (picked.length >= limit) break;
+  }
+  return picked;
+};
+
+const buildFeedSections = (posts) => {
+  const ranked = [...posts].sort((a, b) => {
+    const priority = getPostLivePriority(b) - getPostLivePriority(a);
+    if (priority !== 0) return priority;
+    const timeA = new Date(postDate(a) || 0).getTime() || 0;
+    const timeB = new Date(postDate(b) || 0).getTime() || 0;
+    return timeB - timeA;
+  });
+  const byReplies = [...posts].sort((a, b) => (Number(b.comments_count || 0) + Number(b.likes_count || 0)) - (Number(a.comments_count || 0) + Number(a.likes_count || 0)));
+  const used = new Set();
+  const liveNow = uniquePosts(ranked, (post) => getPostLivePriority(post) > 0 || Number(post.comments_count || 0) >= 12, 6, used);
+  const today = uniquePosts(ranked, (post) => !matchesText(post, /marketplace|business|restaurant|shop|free|pickup/) && post.type !== 'help', 6, used);
+  const talking = uniquePosts(byReplies, (post) => Number(post.comments_count || 0) >= 8 || Number(post.likes_count || 0) >= 10, 5, used);
+  const nearYou = uniquePosts(ranked, (post) => Boolean(post.location_text) || matchesText(post, /restaurant|business|shop|map|pickup|woodmere|cedarhurst|lawrence|hewlett|inwood/), 5, used);
+  const mitzvah = uniquePosts(ranked, (post) => post.type === 'help' || matchesText(post, /help|need|chesed|mitzvah|meal|ride|tehillim|volunteer/), 5, used);
+
+  return [
+    {
+      key: 'live-now',
+      title: 'Live Now',
+      subtitle: 'Urgent needs, minyanim, events starting soon, and active discussions.',
+      icon: Activity,
+      items: liveNow.length ? liveNow : ranked.slice(0, 3),
+    },
+    {
+      key: 'today',
+      title: 'Today in the Five Towns',
+      subtitle: 'Local questions, updates, plans, and announcements people can answer.',
+      icon: MessageCircle,
+      items: today.length ? today : ranked.slice(0, 4),
+    },
+    {
+      key: 'talking',
+      title: 'People Are Talking About',
+      subtitle: 'The threads with the most replies and momentum.',
+      icon: Users,
+      items: talking,
+    },
+    {
+      key: 'near-you',
+      title: 'Near You',
+      subtitle: 'Map-linked posts, restaurants, businesses, pickups, and local activity.',
+      icon: MapPin,
+      items: nearYou,
+    },
+    {
+      key: 'mitzvah',
+      title: 'Help / Mitzvah',
+      subtitle: 'Needs, offers, carpools, completed mitzvahs, and people stepping up.',
+      icon: Handshake,
+      items: mitzvah,
+    },
+  ];
+};
+
 
 export default function Feed({ isActive = true }) {
   const queryClient = useQueryClient();
@@ -464,7 +601,6 @@ export default function Feed({ isActive = true }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user: currentUser } = useAuth();
   const { registerFloatingAction } = useFloatingActions();
-  const [activeTab, setActiveTab] = useState('for_you');
   const [primaryNetwork, setPrimaryNetwork] = useState(LOCAL_NETWORKS[0]);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('All');
   const [userLikes, setUserLikes] = useState([]);
@@ -474,15 +610,9 @@ export default function Feed({ isActive = true }) {
   const [postModalType, setPostModalType] = useState('feed');
   const [postModalSubtype, setPostModalSubtype] = useState(null);
   const [postModalInitialBody, setPostModalInitialBody] = useState('');
-  const [showPromptReply, setShowPromptReply] = useState(false);
-  const [pinnedPrompt, setPinnedPrompt] = useState(null);
   // CommentsSheet is now handled inside each UnifiedPostCard via createPortal
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
-  const [showEventsSheet, setShowEventsSheet] = useState(false);
-  const { location: candleLocation, locationLoading: candleLocationLoading } = useShabbatLocation({ autoRequest: true });
-  const shabbat = useShabbosCountdown(candleLocation, candleLocationLoading);
-
   useEffect(() => {
     const enabled = Boolean(currentUser)
       && currentUser?.notification_settings?.shabbatReminders !== false
@@ -493,18 +623,16 @@ export default function Feed({ isActive = true }) {
   const [interestSignals, setInterestSignals] = useState({ types: {}, subtypes: {}, keywords: [] }); // track user interactions
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [userGeo, setUserGeo] = useState(null); // { lat, lng }
-  const [feedPrompts, setFeedPrompts] = useState([]);
   const [communityGroups, setCommunityGroups] = useState([]);
   const [cachedPosts, setCachedPosts] = useState([]);
   const [loadTimedOut, setLoadTimedOut] = useState(false);
   const [page, setPage] = useState(0);
   const [allPosts, setAllPosts] = useState([]);
   const [hasMore, setHasMore] = useState(true);
-  const PAGE_SIZE = 30;
-  const [showNetworkBanner, setShowNetworkBanner] = useState(() => !storageService.getItem('junited_network_banner_v2_dismissed'));
   const [dailyPrompt, setDailyPrompt] = useState(null);
   const [publishedBrief, setPublishedBrief] = useState(null);
+  const PAGE_SIZE = 30;
+  const [showNetworkBanner, setShowNetworkBanner] = useState(() => !storageService.getItem('junited_network_banner_v2_dismissed'));
 
   const openCreatePost = useCallback(() => {
     setPostModalType('feed');
@@ -537,42 +665,38 @@ export default function Feed({ isActive = true }) {
     if (net) setPrimaryNetwork(net);
   }, [currentUser?.cityPreset]);
 
-  // Request geolocation when user switches to nearby tab
   useEffect(() => {
-    if (activeTab === 'nearby' && !userGeo && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => setUserGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => {} // silently fail
-      );
-    }
-  }, [activeTab]);
+    feedRetentionService.getDailyPrompt({
+      network: primaryNetwork.cityPreset || 'Five Towns',
+      userId: currentUser?.id,
+    })
+      .then(setDailyPrompt)
+      .catch(() => setDailyPrompt(null));
+  }, [currentUser?.id, primaryNetwork.cityPreset]);
 
-  const loadPinnedPrompt = useCallback(async () => {
-    if (!appParams.hasBackendConfig) {
-      setFeedPrompts([]);
-      return;
-    }
-    try {
-      const prompts = await dataService.entities.DailyFeedPrompt.list('-created_date', 5);
-      if (prompts?.length > 0) setFeedPrompts(prompts);
-    } catch {}
-  }, []);
+  useEffect(() => {
+    feedRetentionService.getPublishedBrief({
+      network: primaryNetwork.cityPreset || 'Five Towns',
+    })
+      .then(setPublishedBrief)
+      .catch(() => setPublishedBrief(null));
+  }, [primaryNetwork.cityPreset]);
 
-	  const { data: posts = [], isLoading, isError, refetch } = useQuery({
-	    queryKey: ['unified-posts', page],
-	    queryFn: async () => {
-	      if (!appParams.hasBackendConfig) return page === 0 ? DEMO_POSTS : [];
-	      try {
-	        const p = await withFeedTimeout(dataService.entities.UnifiedPost.list('-updated_date', PAGE_SIZE, page * PAGE_SIZE));
-	        return p?.length ? p : (page === 0 ? DEMO_POSTS : []);
-	      } catch (error) {
-	        console.warn('Feed posts fallback used:', error?.message || error);
-	        return page === 0 ? DEMO_POSTS : [];
-	      }
-	    },
-	    staleTime: 30000,
-	    refetchInterval: page === 0 ? 60000 : false,
-	  });
+  const { data: posts = [], isLoading, isError, refetch } = useQuery({
+    queryKey: ['unified-posts', page],
+    queryFn: async () => {
+      if (!appParams.hasBackendConfig) return page === 0 ? DEMO_POSTS : [];
+      try {
+        const p = await withFeedTimeout(dataService.entities.UnifiedPost.list('-updated_date', PAGE_SIZE, page * PAGE_SIZE));
+        return p?.length ? p : (page === 0 ? DEMO_POSTS : []);
+      } catch (error) {
+        console.warn('Feed posts fallback used:', error?.message || error);
+        return page === 0 ? DEMO_POSTS : [];
+      }
+    },
+    staleTime: 30000,
+    refetchInterval: page === 0 ? 60000 : false,
+  });
 
   // Merge paged results into allPosts without causing infinite loops
   useEffect(() => {
@@ -631,31 +755,15 @@ export default function Feed({ isActive = true }) {
     setCommunityGroups(userCommunitiesList.filter(c => c));
   }, [userCommunitiesList]);
 
+  // If the backend hangs, stop showing skeletons and let cached/demo posts render.
   useEffect(() => {
-    loadPinnedPrompt();
-  }, [loadPinnedPrompt]);
-
-  useEffect(() => {
-    feedRetentionService.getDailyPrompt({ network: primaryNetwork.cityPreset || 'Five Towns', userId: currentUser?.id })
-      .then(setDailyPrompt)
-      .catch(() => setDailyPrompt(null));
-  }, [currentUser?.id, primaryNetwork.cityPreset]);
-
-  useEffect(() => {
-    feedRetentionService.getPublishedBrief({ network: primaryNetwork.cityPreset || 'Five Towns' })
-      .then(setPublishedBrief)
-      .catch(() => setPublishedBrief(null));
-  }, [primaryNetwork.cityPreset]);
-
-	  // If the backend hangs, stop showing skeletons and let cached/demo posts render.
-	  useEffect(() => {
-	    if (!isLoading) {
-	      setLoadTimedOut(false);
-	      return undefined;
-	    }
-	    const timer = setTimeout(() => setLoadTimedOut(true), FEED_LOAD_TIMEOUT_MS);
-	    return () => clearTimeout(timer);
-	  }, [isLoading, page, activeTab]);
+    if (!isLoading) {
+      setLoadTimedOut(false);
+      return undefined;
+    }
+    const timer = setTimeout(() => setLoadTimedOut(true), FEED_LOAD_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [isLoading, page]);
 
   const likeMutation = useMutation({
     mutationFn: (postId) => togglePostLike(postId, currentUser.id),
@@ -737,7 +845,7 @@ export default function Feed({ isActive = true }) {
 
   const visiblePosts = allPosts.filter(p => {
     if (p.type === 'dating') return false;
-    if (p.type === 'prompt' && activeTab !== 'trending' && activeTab !== 'for_you' && activeTab !== 'social') return false;
+    if (p.type === 'prompt') return false;
     if (blockedIds.includes(p.user_id)) return false;
     // Sub-neighborhood filter within the selected network
     if (selectedNeighborhood !== 'All') {
@@ -757,68 +865,13 @@ export default function Feed({ isActive = true }) {
   });
 
   const feedPosts = (() => {
-    const sorted = [...visiblePosts].sort((a, b) => engagementScore(b) - engagementScore(a));
+    const sorted = [...visiblePosts].sort((a, b) => {
+      const liveDelta = getPostLivePriority(b) - getPostLivePriority(a);
+      if (liveDelta !== 0) return liveDelta;
+      return engagementScore(b) - engagementScore(a);
+    });
 
-    let filtered;
-    if (activeTab === 'for_you') {
-      const userInterests = currentUser?.interests || [];
-      const userCity = currentUser?.cityPreset || '';
-      // Local posts first, then interest-matched, then rest — always mixed, never empty
-      const localPosts = sorted.filter(p => userCity && p.city === userCity);
-      const interestPosts = sorted.filter(p => {
-        const bodyLower = (p.body || '').toLowerCase();
-        return userInterests.some(i => bodyLower.includes(i.toLowerCase())) && p.city !== userCity;
-      });
-      const seen = new Set();
-      const merged = [...localPosts, ...interestPosts, ...sorted].filter(p => {
-        if (seen.has(p.id)) return false;
-        seen.add(p.id); return true;
-      });
-      filtered = merged.slice(0, 40);
-    } else if (activeTab === 'trending') {
-      filtered = sorted.slice(0, 40);
-    } else if (activeTab === 'chessed') {
-      filtered = sorted.filter(p => p.type === 'help' || p.board === 'help');
-    } else if (activeTab === 'learning') {
-      filtered = sorted.filter(p => p.type === 'news' || /torah|parsha|daf|halacha|shiur/i.test(p.body || ''));
-    } else if (activeTab === 'social') {
-      filtered = sorted.filter(p => p.type === 'feed');
-    } else if (activeTab === 'nearby') {
-      // Build coord map from all LOCAL_NETWORKS centers + neighborhoods
-      const getPostCoords = (p) => {
-        const postCity = p.city || '';
-        const net = LOCAL_NETWORKS.find(n => n.cityPreset === postCity);
-        if (net) return net.center;
-        const locLower = (p.location_text || '').toLowerCase();
-        for (const n of LOCAL_NETWORKS) {
-          if (n.neighborhoods.some(nb => locLower.includes(nb.toLowerCase()))) return n.center;
-        }
-        return null;
-      };
-      const dist = (a, b) => {
-        if (!a || !b) return Infinity;
-        const dx = a.lat - b.lat, dy = a.lng - b.lng;
-        return dx * dx + dy * dy;
-      };
-      // Fallback origin: user's primary network center
-      const origin = userGeo || primaryNetwork.center;
-      // Sort all posts by distance; local network posts get priority
-      filtered = [...sorted].sort((a, b) => {
-        const da = dist(getPostCoords(a), origin);
-        const db = dist(getPostCoords(b), origin);
-        return da - db;
-      });
-    } else if (activeTab === 'communities') {
-      const communityIds = communityGroups.map(c => c.id);
-      filtered = sorted.filter(p => communityIds.includes(p.community_id));
-    } else if (activeTab === 'events') {
-      filtered = sorted.filter(p => p.type === 'event' || p.board === 'events');
-    } else {
-      filtered = sorted.slice(0, 40);
-    }
-
-    // NEVER show empty feed — fall back to full global feed (seeded + real) if filter yields nothing
-    return filtered.length > 0 ? filtered : sorted.slice(0, 40);
+    return sorted.slice(0, 60);
   })();
 
   const dailyBrief = useMemo(() => feedRetentionService.buildBrief({
@@ -829,15 +882,55 @@ export default function Feed({ isActive = true }) {
   }), [communityGroups, feedPosts, primaryNetwork.cityPreset, primaryNetwork.shortLabel, publishedBrief]);
 
   const feedMomentum = useMemo(() => ({
-    activeThreads: feedPosts.filter((post) => (post.comments_count || 0) >= 8).length,
+    activeThreads: feedPosts.filter((post) => Number(post.comments_count || 0) >= 8).length,
     joinedPosts: feedPosts.filter((post) => post.community_id && joinedCommunityIds.has(post.community_id)).length,
     localEvents: feedPosts.filter((post) => post.type === 'event').length,
   }), [feedPosts, joinedCommunityIds]);
 
-  const liveNowItems = useMemo(() => buildFeedLiveNowItems({
-    posts: feedPosts,
-    networkLabel: primaryNetwork.shortLabel || 'Five Towns',
-  }), [feedPosts, primaryNetwork.shortLabel]);
+  const feedSections = useMemo(() => buildFeedSections(feedPosts), [feedPosts]);
+
+  const handleCardReply = useCallback((post) => {
+    recordInterest(post);
+    const intent = getCardIntent(post);
+    if (intent.label === 'Help needed') {
+      navigate('/MitzvahCircle');
+      return;
+    }
+    if (intent.label === 'Event') {
+      setPostModalType('event');
+      setPostModalSubtype('reply');
+      setPostModalInitialBody(`I want to join: ${feedText(post)}`);
+      setShowPostModal(true);
+      return;
+    }
+    if (intent.label === 'Local listing') {
+      navigate('/Marketplace');
+      return;
+    }
+    setPostModalType('feed');
+    setPostModalSubtype('reply');
+    setPostModalInitialBody(`Replying to ${post.author_name || 'a neighbor'} about "${feedText(post)}"...`);
+    setShowPostModal(true);
+  }, [navigate, recordInterest]);
+
+  const handleCardOpen = useCallback((post) => {
+    recordInterest(post);
+    if (post.type === 'help') {
+      navigate('/MitzvahCircle');
+      return;
+    }
+    if (post.type === 'event') {
+      setPostModalType('event');
+      setPostModalSubtype('local_event');
+      setPostModalInitialBody(`Following up on: ${feedText(post)}`);
+      setShowPostModal(true);
+      return;
+    }
+    setPostModalType('feed');
+    setPostModalSubtype('discussion');
+    setPostModalInitialBody('');
+    setShowPostModal(true);
+  }, [navigate, recordInterest]);
 
   return (
     <div className="app-page relative">
@@ -917,53 +1010,28 @@ export default function Feed({ isActive = true }) {
 
       <div className="mobile-page px-3 pt-2 mobile-safe-bottom">
         <div className="flex items-center gap-1.5 mb-3">
-          <h1 className="text-[20px] font-black text-slate-950">Community Feed</h1>
-          <PageHelp text="See what's happening in your community, from updates and announcements to posts from people nearby." />
+          <h1 className="text-[20px] font-black text-slate-950">Five Towns Feed</h1>
+          <PageHelp text="The main local thread for questions, plans, needs, businesses, carpools, events, and neighbor-to-neighbor help." />
         </div>
 
-        <DailyRetentionPrompt
-          prompt={dailyPrompt}
-          shabbat={shabbat}
-          onPost={(prompt) => {
-            setPostModalType(prompt?.suggested_post_type || 'feed');
-            setPostModalSubtype(prompt?.suggested_post_subtype || null);
-            setPostModalInitialBody(prompt?.initial_body || '');
-            setShowPostModal(true);
-          }}
-        />
-
-        <LiveNowRail
-          className="mb-3"
-          title="Live in the Five Towns"
-          subtitle="Urgent needs, tonight plans, and active local threads"
-          items={liveNowItems}
-          onItemClick={(item) => navigate(item.href || '/Feed')}
-        />
-
-        <FiveTownsBrief
-          brief={dailyBrief}
-          momentum={feedMomentum}
+        <FiveTownsConversationHub
           posts={feedPosts}
-          joinedCommunityIds={joinedCommunityIds}
-          onOpenMap={() => navigate('/Map')}
-          onOpenCommunities={() => navigate('/Communities')}
+          networkLabel={primaryNetwork.shortLabel || 'Five Towns'}
           onCreate={(type, subtype, body) => {
             setPostModalType(type);
             setPostModalSubtype(subtype);
             setPostModalInitialBody(body);
             setShowPostModal(true);
           }}
-        />
-
-        <QuickActionDock
-          onCreate={(type, subtype, body) => {
-            setPostModalType(type);
-            setPostModalSubtype(subtype);
-            setPostModalInitialBody(body);
+          onOpenMap={() => navigate('/Map')}
+          onOpenMitzvah={() => navigate('/MitzvahCircle')}
+          onOpenEvents={() => {
+            setPostModalType('event');
+            setPostModalSubtype('local_event');
+            setPostModalInitialBody('');
             setShowPostModal(true);
           }}
-          onOpenEvents={() => setShowEventsSheet(true)}
-          onOpenMap={() => navigate('/Map')}
+          onOpenMarketplace={() => navigate('/Marketplace')}
         />
 
         {/* One-time network banner for new users */}
@@ -995,129 +1063,82 @@ export default function Feed({ isActive = true }) {
           </div>
         )}
 
-        <HomeFeedTabs activeTab={activeTab} onChange={setActiveTab} />
-        {activeTab === 'events' && !isLoading && (
-          <div className="surface-panel mb-3 overflow-hidden rounded-[28px]">
-          <EventsForYou currentUser={currentUser} events={visiblePosts.filter(p => p.type === 'event')} />
-          <EventsFeedSection
-            posts={visiblePosts}
-            currentUser={currentUser}
-            onCreateEvent={() => { setPostModalType('event'); setShowPostModal(true); }}
-          />
-          </div>
-        )}
-
-        {activeTab !== 'events' && isLoading && !loadTimedOut && (
-          <div key={`loading-${activeTab}`} className="motion-stagger space-y-3 tab-fade-in">
+        {isLoading && !loadTimedOut && (
+          <div key="loading-mainstream" className="motion-stagger space-y-3 tab-fade-in">
             {[...Array(4)].map((_, i) => (
               <SkeletonCard key={i} hasImage={i === 1} />
             ))}
           </div>
         )}
-        {activeTab !== 'events' && (isLoading && loadTimedOut && feedPosts.length === 0) && (
+        {(isLoading && loadTimedOut && feedPosts.length === 0) && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-4xl mb-3">🌿</div>
             <p className="text-[15px] font-bold text-slate-700 mb-1">No posts yet — share a recommendation or ask the community for help.</p>
             <p className="text-[13px] text-slate-400">Be the first to post something!</p>
           </div>
         )}
-        {activeTab !== 'events' && (!isLoading || loadTimedOut) && feedPosts.length > 0 && (
-          <div key={`feed-${activeTab}`} className="motion-stagger tab-fade-in space-y-2">
-            <div className="app-card overflow-hidden">
-              {/* Question of the Day — embedded as first "post" in the feed card */}
-              <DailyHooks
-                onPostClick={(type, subtype, prefill) => {
-                  setPostModalType(type);
-                  setPostModalSubtype(subtype || null);
-                  setPostModalInitialBody(prefill || '');
-                  setShowPostModal(true);
-                }}
-              />
-            </div>
+        {(!isLoading || loadTimedOut) && feedPosts.length > 0 && (
+          <div key="feed-mainstream" className="motion-stagger tab-fade-in space-y-3">
             {isError && (
               <p className="text-[12px] text-slate-400 text-center px-4 py-2">Showing cached posts — pull down to refresh.</p>
             )}
 
-            {(() => {
-            // Section labels injected at fixed positions
-            const SECTION_LABELS = {
-              0: activeTab === 'nearby'
-                ? { emoji: '📍', text: `Near You — ${primaryNetwork.shortLabel}` }
-                : { emoji: '🔥', text: `Trending in ${primaryNetwork.shortLabel}` },
-              5:  { emoji: '💬', text: 'Active discussions' },
-              12: { emoji: '👀', text: 'People are talking about this' },
-            };
+            {feedSections.map((section, index) => (
+              <CommunityFeedSection
+                key={section.key}
+                section={section}
+                dense={index !== 1}
+                likedPostIds={userLikes}
+                onLike={handleLike}
+                onReply={handleCardReply}
+                onOpen={handleCardOpen}
+                onMap={() => navigate('/Map')}
+              />
+            ))}
 
-            const hotIndex = feedPosts.findIndex(p => {
-              const ageHours = (Date.now() - new Date(p.created_date).getTime()) / 3600000;
-              return ageHours < 48 && (p.likes_count || 0) + (p.comments_count || 0) * 2 >= 20;
-            });
-            let orderedPosts = [...feedPosts].sort((a, b) => getPostLivePriority(b) - getPostLivePriority(a));
-            if (hotIndex > 2) {
-              const [hot] = orderedPosts.splice(hotIndex, 1);
-              orderedPosts.splice(2, 0, hot);
-            }
-            let shownCommunityDivider = false;
-            return orderedPosts.map((post, index) => {
-              const isFromJoinedCommunity = post.community_id && joinedCommunityIds.has(post.community_id);
-              const showCommunityDivider = isFromJoinedCommunity && !shownCommunityDivider && joinedCommunityIds.size > 0;
-              if (showCommunityDivider) shownCommunityDivider = true;
-              const sectionLabel = SECTION_LABELS[index];
-              const personalizationReasons = feedRetentionService.explainPost(post, {
-                joinedCommunityIds,
-                primaryNetwork,
-                userInterests: currentUser?.interests || [],
-              });
-              return (
-                <React.Fragment key={post.id}>
-                  {sectionLabel && (
-                    <div className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-slate-50 to-blue-50/70 px-3 py-2">
-                      <span className="text-base">{sectionLabel.emoji}</span>
-                      <span className="text-[12px] font-bold uppercase text-slate-700">{sectionLabel.text}</span>
-                    </div>
-                  )}
-                  {showCommunityDivider && (
-                    <div className="flex items-center gap-2 rounded-2xl bg-indigo-50/80 px-3 py-2">
-                      <span className="text-[11px] font-bold uppercase text-indigo-600">👥 From your communities</span>
-                    </div>
-                  )}
-                  <div className="app-card overflow-hidden">
-                    {personalizationReasons.length > 0 && (
-                      <div className="flex flex-wrap gap-2 border-b border-slate-100 bg-blue-50/60 px-3 py-2">
-                        {personalizationReasons.map((reason) => (
-                          <span key={`${post.id}-${reason}`} className="rounded-full border border-blue-100 bg-white px-2.5 py-1 text-[11px] font-black text-blue-700">
-                            {reason}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+            <FiveTownsBrief
+              brief={dailyBrief}
+              momentum={feedMomentum}
+              posts={feedPosts}
+              joinedCommunityIds={joinedCommunityIds}
+              prompt={dailyPrompt}
+              onOpenMap={() => navigate('/Map')}
+              onOpenCommunities={() => navigate('/Communities')}
+              onCreate={(type, subtype, body) => {
+                setPostModalType(type);
+                setPostModalSubtype(subtype);
+                setPostModalInitialBody(body);
+                setShowPostModal(true);
+              }}
+            />
+
+            <details className="rounded-[24px] border border-slate-200 bg-white shadow-sm">
+              <summary className="cursor-pointer list-none px-4 py-3 text-[13px] font-black text-slate-900">
+                Full thread history
+                <span className="ml-2 text-[11px] font-bold text-slate-400">{feedPosts.length} posts</span>
+              </summary>
+              <div className="space-y-2 border-t border-slate-100 p-2">
+                {feedPosts.slice(0, 10).map((post) => (
+                  <div key={`history-${post.id}`} className="overflow-hidden rounded-[18px] border border-slate-100 bg-white">
                     <UnifiedPostCard
-                     post={post}
-                     currentUser={currentUser}
-                     liked={userLikes.includes(post.id)}
-                     onLike={handleLike}
-                     onComment={handleComment}
-                     onDelete={handleDelete}
-                     onBlock={handleBlock}
-                     blockedIds={blockedIds}
-                     onReport={handleReport}
-                     communities={communityGroups}
-                     onCommunityClick={handleCommunityClick}
-                     isFromJoinedCommunity={isFromJoinedCommunity}
+                      post={post}
+                      currentUser={currentUser}
+                      liked={userLikes.includes(post.id)}
+                      onLike={handleLike}
+                      onComment={handleComment}
+                      onDelete={handleDelete}
+                      onBlock={handleBlock}
+                      blockedIds={blockedIds}
+                      onReport={handleReport}
+                      communities={communityGroups}
+                      onCommunityClick={handleCommunityClick}
+                      isFromJoinedCommunity={post.community_id && joinedCommunityIds.has(post.community_id)}
                     />
                   </div>
-                  {(index + 1) % 6 === 0 && feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length] && (
-                    <div className="app-card overflow-hidden">
-                      <InlineFeedPrompt
-                        prompt={feedPrompts[(Math.floor((index + 1) / 6) - 1) % feedPrompts.length]}
-                        onReply={(p) => { setPinnedPrompt(p); setShowPromptReply(true); }}
-                      />
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            });
-          })()}
+                ))}
+              </div>
+            </details>
+
             {/* Load more */}
             {hasMore && (
               <div className="p-4 text-center">
@@ -1147,18 +1168,6 @@ export default function Feed({ isActive = true }) {
         userCommunities={communityGroups}
       />
 
-      <UnifiedPostModal
-        open={showPromptReply}
-        onOpenChange={(open) => {
-          setShowPromptReply(open);
-          if (!open) { queryClient.invalidateQueries({ queryKey: ['unified-posts'] }); loadPinnedPrompt(); }
-        }}
-        currentUser={currentUser}
-        postType="prompt_reply"
-        promptId={pinnedPrompt?.id}
-        promptText={pinnedPrompt?.question}
-      />
-
       <ReportModal
         open={showReport}
         onOpenChange={setShowReport}
@@ -1166,99 +1175,11 @@ export default function Feed({ isActive = true }) {
         contentType={reportTarget.type}
         currentUser={currentUser}
       />
-
-      <UpcomingEventsSheet
-        open={showEventsSheet}
-        onOpenChange={setShowEventsSheet}
-        currentUser={currentUser}
-        joinedCommunityIds={communityGroups.map(c => c.id)}
-      />
-
     </div>
   );
 }
 
-function extractHolidayName(title) {
-  if (!title) return 'Yom Tov';
-  return title
-    .replace(/\s+\d{4}$/, '')
-    .replace(/:\s*.+$/, '')
-    .replace(/\s*\([^)]*\)/g, '')
-    .replace(/\s+(?:I{1,3}|IV|VI{0,3}|VII|VIII)\s*$/i, '')
-    .trim() || 'Yom Tov';
-}
-
-function useShabbosCountdown(location, locationLoading) {
-  const [state, setState] = useState({ label: 'Shabbat', countdown: 'Loading…', time: '', locationLabel: null });
-
-  useEffect(() => {
-    if (locationLoading) return;
-    let cancelled = false;
-    let times = null;
-
-    const load = async () => {
-      times = await getShabbatTimes(location.lat, location.lng, location.tzid);
-      if (!cancelled) update();
-    };
-
-    const update = () => {
-      const displayLabel = location.type !== 'default' ? location.label : null;
-      if (!times) {
-        setState({ label: 'Shabbat', countdown: 'Soon', time: '', locationLabel: displayLabel });
-        return;
-      }
-      const now = new Date();
-      const majorHolidays = times.majorHolidays || [];
-      const allEvents = [
-        ...(times.allCandles  || []).map(c => ({ date: new Date(c.date), type: 'candles'  })),
-        ...(times.allHavdalah || []).map(h => ({ date: new Date(h.date), type: 'havdalah' })),
-      ].sort((a, b) => a.date - b.date);
-      // backwards compat if allCandles/allHavdalah not yet populated
-      if (allEvents.length === 0) {
-        if (times.candleLighting) allEvents.push({ date: new Date(times.candleLighting), type: 'candles' });
-        if (times.havdalah)       allEvents.push({ date: new Date(times.havdalah),       type: 'havdalah' });
-      }
-      const upcoming = allEvents.find(e => e.date > now);
-      if (!upcoming) {
-        setState({ label: 'Shabbat', countdown: 'Shavua tov', time: '', locationLabel: displayLabel });
-        return;
-      }
-      const ms = upcoming.date - now;
-      const totalH = Math.floor(ms / 3600000);
-      const d = Math.floor(totalH / 24);
-      const h = totalH % 24;
-      const time = upcoming.date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-      const countdown = d > 0 ? `${d}d ${h}h away` : `${h}h away`;
-
-      let label;
-      if (upcoming.type === 'candles') {
-        const pad2 = n => String(n).padStart(2, '0');
-        const candleDateStr = [
-          upcoming.date.getFullYear(),
-          pad2(upcoming.date.getMonth() + 1),
-          pad2(upcoming.date.getDate()),
-        ].join('-');
-        const matchedHoliday = majorHolidays.find(hol => hol.date >= candleDateStr);
-        label = matchedHoliday ? extractHolidayName(matchedHoliday.title) : 'Candle lighting';
-      } else {
-        label = 'Havdalah';
-      }
-
-      setState({ label, countdown, time, locationLabel: displayLabel });
-    };
-
-    load();
-    const t = setInterval(update, 60000);
-    return () => {
-      cancelled = true;
-      clearInterval(t);
-    };
-  }, [location.lat, location.lng, location.tzid, locationLoading]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return state;
-}
-
-function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, onOpenMap, onOpenCommunities, onCreate }) {
+function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, prompt, onOpenMap, onOpenCommunities, onCreate }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const briefScrollerRef = useRef(null);
   if (!brief) return null;
@@ -1277,7 +1198,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, onOpe
   const trendingPosts = [...posts]
     .sort((a, b) => ((b.comments_count || 0) * 2 + (b.likes_count || 0)) - ((a.comments_count || 0) * 2 + (a.likes_count || 0)))
     .slice(0, 3);
-  const mitzvahOffers = posts
+  const mitzvahNeeds = posts
     .filter((post) => post.type === 'help' || /help|chesed|meal|ride|offer|volunteer/i.test(`${post.title || ''} ${post.body || ''}`))
     .slice(0, 3);
   const communityEvents = posts
@@ -1287,13 +1208,11 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, onOpe
   const slides = [
     {
       key: 'news',
-      eyebrow: brief.verifiedLocalBrief ? 'Five Towns News' : 'Five Towns Brief',
-      title: brief.title,
+      eyebrow: 'Five Towns News',
+      title: brief.title || 'Today in the Five Towns',
       subtitle: brief.verifiedLocalBrief
-        ? 'Three verified local updates worth knowing today.'
-        : brief.rotatingDailyBrief
-          ? 'Daily local prompts rotate by date until verified updates are published.'
-          : 'Useful local context before the feed gets noisy.',
+        ? 'Curated local updates worth knowing today.'
+        : 'Useful local prompts until verified updates are published.',
       items: newsItems,
       tone: 'from-slate-950 via-blue-900 to-cyan-800',
       empty: 'No major local news posts yet today.',
@@ -1303,42 +1222,43 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, onOpe
     {
       key: 'trending',
       eyebrow: 'Trending Posts',
-      title: 'What people are talking about',
-      subtitle: `${momentum.activeThreads} active conversations are pulling the community together.`,
+      title: 'What neighbors are talking about',
+      subtitle: `${momentum.activeThreads} active conversations are pulling people in.`,
       items: trendingPosts,
       tone: 'from-indigo-950 via-blue-800 to-violet-700',
-      empty: 'No trending posts yet. The next one could start with you.',
-      actionLabel: 'Browse communities',
+      empty: 'No trending posts yet. Start the thread people need.',
+      actionLabel: 'Open communities',
       onAction: onOpenCommunities,
     },
     {
       key: 'mitzvah',
       eyebrow: 'Mitzvahs Near You',
-      title: 'Help moving through the network',
-      subtitle: 'Requests, offers, and local chesed that deserve a faster response.',
-      items: mitzvahOffers,
+      title: 'Help that needs a real person',
+      subtitle: 'Meals, rides, favors, and chesed that should not sit unanswered.',
+      items: mitzvahNeeds,
       tone: 'from-emerald-950 via-emerald-800 to-teal-700',
       empty: 'No open chesed threads surfaced yet.',
       actionLabel: 'Post help',
-      onAction: () => onCreate('help', 'chesed', 'I can help with / I need help with...'),
+      onAction: () => onCreate('help', 'chesed', ''),
     },
     {
       key: 'events',
       eyebrow: 'Events In Your Communities',
       title: 'What is coming up',
-      subtitle: 'Community events that belong on your radar.',
+      subtitle: 'Shiurim, meetups, school moments, and local plans that belong on your radar.',
       items: communityEvents,
       tone: 'from-rose-950 via-fuchsia-800 to-orange-700',
       empty: 'No community events posted yet.',
       actionLabel: 'Share event',
-      onAction: () => onCreate('event', 'local_event', 'Event details: '),
+      onAction: () => onCreate('event', 'local_event', ''),
     },
   ];
-  const slide = slides[activeSlide];
+
+  const promptText = prompt?.prompt || prompt?.title || prompt?.body;
 
   return (
-    <section className="surface-panel mb-3 overflow-hidden rounded-[28px]">
-      <div className={`graphic-stripes bg-gradient-to-br ${slide.tone} p-4 text-white sm:p-5`}>
+    <section className="mb-3 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_14px_32px_rgba(15,23,42,0.07)]">
+      <div className={`graphic-stripes bg-gradient-to-br ${slides[activeSlide].tone} p-4 text-white`}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/80">
             <Sparkles className="h-3.5 w-3.5" />
@@ -1356,13 +1276,10 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, onOpe
               type="button"
               onClick={() => {
                 setActiveSlide(index);
-                const scroller = briefScrollerRef.current;
-                if (scroller) {
-                  scroller.scrollTo({
-                    left: scroller.clientWidth * index,
-                    behavior: 'smooth',
-                  });
-                }
+                briefScrollerRef.current?.scrollTo({
+                  left: briefScrollerRef.current.clientWidth * index,
+                  behavior: 'smooth',
+                });
               }}
               className={`motion-press shrink-0 rounded-full px-3 py-1.5 text-[11px] font-black transition ${
                 index === activeSlide ? 'bg-white text-slate-950' : 'border border-white/15 bg-white/10 text-white/90'
@@ -1373,52 +1290,59 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, onOpe
           ))}
         </div>
 
+        {promptText && (
+          <button
+            type="button"
+            onClick={() => onCreate('feed', 'daily_prompt', '')}
+            className="motion-press mt-3 w-full rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-left backdrop-blur-sm"
+          >
+            <p className="text-[10px] font-black uppercase tracking-wide text-white/65">Today’s prompt</p>
+            <p className="mt-0.5 line-clamp-2 text-[13px] font-black leading-5 text-white">{promptText}</p>
+          </button>
+        )}
+
         <div
           ref={briefScrollerRef}
-          className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1"
+          className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1"
           onScroll={(event) => {
             const node = event.currentTarget;
             const slideWidth = Math.max(node.clientWidth, 1);
             const rawIndex = node.scrollLeft / slideWidth;
             const nextIndex = Math.round(rawIndex);
-            const settledNearSlide = Math.abs(rawIndex - nextIndex) <= 0.18;
-            if (!settledNearSlide) return;
-            if (Number.isFinite(nextIndex) && nextIndex !== activeSlide && nextIndex >= 0 && nextIndex < slides.length) {
+            if (Math.abs(rawIndex - nextIndex) <= 0.18 && nextIndex !== activeSlide && nextIndex >= 0 && nextIndex < slides.length) {
               setActiveSlide(nextIndex);
             }
           }}
         >
-          {slides.map((item, index) => (
+          {slides.map((item) => (
             <div key={`slide-${item.key}`} className="min-w-full snap-start">
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-wide text-white/75">{item.eyebrow}</p>
-                <h2 className="mt-1 text-[21px] font-black leading-tight">{item.title}</h2>
-                <p className="mt-1 max-w-2xl text-sm font-semibold text-white/85">{item.subtitle}</p>
+              <p className="text-[11px] font-black uppercase tracking-wide text-white/75">{item.eyebrow}</p>
+              <h2 className="mt-1 text-[21px] font-black leading-tight">{item.title}</h2>
+              <p className="mt-1 max-w-2xl text-sm font-semibold text-white/85">{item.subtitle}</p>
 
-                <div className="mt-4 grid gap-2 lg:grid-cols-[1fr_auto]">
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    {item.items.length > 0 ? item.items.map((post) => (
-                      <div key={`${item.key}-${post.id}`} className="rounded-2xl border border-white/15 bg-white/12 px-3 py-3 backdrop-blur-sm">
-                        <p className="line-clamp-2 text-[13px] font-black leading-5 text-white">{post.title || post.body || 'Community update'}</p>
-                        <p className="mt-2 text-[11px] font-semibold text-white/75">
-                          {(post.community_name || post.location_text || 'Five Towns')}
-                        </p>
-                      </div>
-                    )) : (
-                      <div className="rounded-2xl border border-white/15 bg-white/12 px-3 py-3 text-[13px] font-bold text-white/90 sm:col-span-3">
-                        {item.empty}
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={item.onAction}
-                    className="motion-press inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-4 text-[12px] font-black text-slate-950 lg:self-end"
-                  >
-                    {item.actionLabel}
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+              <div className="mt-4 grid gap-2 lg:grid-cols-[1fr_auto]">
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {item.items.length > 0 ? item.items.map((post) => (
+                    <div key={`${item.key}-${post.id}`} className="rounded-2xl border border-white/15 bg-white/12 px-3 py-3 backdrop-blur-sm">
+                      <p className="line-clamp-2 text-[13px] font-black leading-5 text-white">{post.title || post.body || 'Community update'}</p>
+                      <p className="mt-2 text-[11px] font-semibold text-white/75">
+                        {post.community_name || post.location_text || 'Five Towns'}
+                      </p>
+                    </div>
+                  )) : (
+                    <div className="rounded-2xl border border-white/15 bg-white/12 px-3 py-3 text-[13px] font-bold text-white/90 sm:col-span-3">
+                      {item.empty}
+                    </div>
+                  )}
                 </div>
+                <button
+                  type="button"
+                  onClick={item.onAction}
+                  className="motion-press inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-4 text-[12px] font-black text-slate-950 lg:self-end"
+                >
+                  {item.actionLabel}
+                  <ArrowRight className="h-4 w-4" />
+                </button>
               </div>
             </div>
           ))}
@@ -1444,91 +1368,259 @@ function MomentumTile({ icon: Icon, label, value, inverse = false }) {
   );
 }
 
-function QuickActionDock({ onCreate, onOpenEvents, onOpenMap }) {
-  const actions = [
-    {
-      label: 'Ask local question',
-      detail: 'Get recommendations or practical answers',
-      onClick: () => onCreate('feed', 'question', 'Question for the community: '),
-    },
-    {
-      label: 'Offer help',
-      detail: 'Meals, rides, errands, or small acts of chesed',
-      onClick: () => onCreate('help', 'chesed', 'I can help with...'),
-    },
-    {
-      label: 'Share event',
-      detail: 'Shiur, meetup, school, simcha, or local gathering',
-      onClick: () => onCreate('event', 'local_event', 'Event details: '),
-    },
-  ];
+function CommunityFeedSection({ section, dense = false, likedPostIds = [], onLike, onReply, onOpen, onMap }) {
+  const Icon = section.icon || MessageCircle;
+  if (!section.items?.length) {
+    return (
+      <section className="rounded-[24px] border border-dashed border-slate-200 bg-white/80 p-4 text-center">
+        <Icon className="mx-auto h-5 w-5 text-slate-300" />
+        <p className="mt-2 text-[14px] font-black text-slate-800">{section.title}</p>
+        <p className="mt-1 text-[12px] font-semibold text-slate-400">Nothing here yet. Start the first useful thread.</p>
+      </section>
+    );
+  }
 
   return (
-    <section className="surface-panel-soft mb-3 rounded-[24px] p-3">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-sm font-black text-slate-950">Start something useful</p>
-          <p className="mt-1 text-[12px] font-semibold text-slate-500">Fast paths for the posts that keep a community alive.</p>
+    <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
+      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              {section.key === 'live-now' && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-60" />}
+              <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${section.key === 'live-now' ? 'bg-red-500' : 'bg-blue-500'}`} />
+            </span>
+            <h2 className="text-[14px] font-black uppercase tracking-wide text-slate-950">{section.title}</h2>
+          </div>
+          <p className="mt-1 text-[12px] font-semibold leading-4 text-slate-400">{section.subtitle}</p>
         </div>
-        <div className="hidden gap-2 sm:flex">
-          <button onClick={onOpenEvents} className="motion-press rounded-full border border-slate-200 bg-white px-3 py-2 text-[11px] font-black text-slate-600">Events</button>
-          <button onClick={onOpenMap} className="motion-press rounded-full border border-slate-200 bg-white px-3 py-2 text-[11px] font-black text-slate-600">Map</button>
-        </div>
+        <span className="rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-black text-slate-500">{section.items.length}</span>
       </div>
-      <div className="mobile-scroll-x mt-3 flex gap-2 pb-1">
-        {actions.map((action) => (
-          <button
-            key={action.label}
-            type="button"
-            onClick={action.onClick}
-            className="motion-press min-w-[220px] shrink-0 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
-          >
-            <p className="text-[13px] font-black text-slate-950">{action.label}</p>
-            <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">{action.detail}</p>
-          </button>
+
+      <div className={dense ? 'mobile-scroll-x flex gap-2 p-3' : 'grid gap-2 p-3'}>
+        {section.items.map((post) => (
+          <HeartbeatPostCard
+            key={`${section.key}-${post.id}`}
+            post={post}
+            horizontal={dense}
+            liked={likedPostIds.includes(post.id)}
+            onLike={() => onLike?.(post.id)}
+            onReply={() => onReply?.(post)}
+            onOpen={() => onOpen?.(post)}
+            onMap={onMap}
+          />
         ))}
       </div>
     </section>
   );
 }
 
-function DailyRetentionPrompt({ prompt, onPost, shabbat }) {
-  if (!prompt) return null;
+function HeartbeatPostCard({ post, horizontal = false, liked = false, onLike, onReply, onOpen, onMap }) {
+  const intent = getCardIntent(post);
+  const tone = toneClasses[intent.tone] || toneClasses.slate;
+  const Icon = intent.icon || MessageCircle;
+  const title = feedText(post);
+  const body = feedBody(post);
+  const age = formatPostAge(postDate(post));
+  const replies = Number(post.comments_count || 0);
+  const reactions = Number(post.likes_count || 0);
+  const activityText = post.type === 'help'
+    ? `${Math.max(1, replies || 1)} people responding`
+    : replies > 0
+      ? `${replies} replies`
+      : reactions > 0
+        ? `${reactions} reactions`
+        : 'Be first to reply';
+  const location = post.location_text || post.city || post.community_name || 'Five Towns';
 
   return (
-    <section className="app-card mb-3 overflow-hidden">
-      <div
-        className="p-4"
-        style={{ background: 'linear-gradient(135deg, #1E40AF 0%, #2563EB 45%, #92400E 100%)' }}
-      >
+    <article
+      className={`group relative shrink-0 rounded-[20px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+        horizontal ? 'w-[270px] sm:w-[300px]' : 'w-full'
+      }`}
+    >
+      <div className={`absolute inset-y-3 left-0 w-1 rounded-r-full bg-gradient-to-b ${tone.bar}`} />
+      <button type="button" onClick={onOpen} className="block w-full text-left">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-wider text-blue-200">Daily Prompt</p>
-            <h2 className="mt-1.5 text-[16px] font-black leading-snug text-white">{prompt.question}</h2>
-          </div>
-          <div className="shrink-0 rounded-2xl bg-white/15 backdrop-blur-sm px-3 py-2 text-center min-w-[80px]">
-            <p className="text-[9px] font-black uppercase tracking-wide text-amber-200">🕯 {shabbat.label}</p>
-            <p className="mt-0.5 text-[12px] font-black text-white leading-tight">{shabbat.countdown}</p>
-            {shabbat.time && <p className="mt-0.5 text-[10px] font-bold text-blue-100">{shabbat.time}</p>}
-            {shabbat.locationLabel && (
-              <p className="mt-0.5 text-[9px] text-white/55 leading-tight truncate max-w-[88px]">
-                📍 {shabbat.locationLabel}
-              </p>
+          <div className="flex min-w-0 items-center gap-2">
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black ${tone.pill}`}>
+              <Icon className="h-3 w-3" />
+              {intent.label}
+            </span>
+            {Number(getPostLivePriority(post)) > 0 && (
+              <span className="rounded-full bg-red-50 px-2 py-1 text-[10px] font-black text-red-600">Active now</span>
             )}
           </div>
+          <span className="shrink-0 text-[11px] font-black text-slate-400">{age}</span>
+        </div>
+
+        <div className="mt-3 flex items-start gap-2">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[11px] font-black text-white shadow-sm">
+            {(post.author_name || 'J').split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-1.5 text-[12px] font-bold text-slate-500">
+              <span className="truncate text-slate-700">{post.author_name || 'Neighbor'}</span>
+              <span>•</span>
+              <span className="truncate">{location}</span>
+            </div>
+            <h3 className="mt-1 line-clamp-2 text-[16px] font-black leading-5 text-slate-950">{title}</h3>
+            {body && <p className="mt-1 line-clamp-2 text-[13px] font-semibold leading-5 text-slate-500">{body}</p>}
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px] font-black text-slate-500">
+          <span className="rounded-full bg-slate-100 px-2.5 py-1">{activityText}</span>
+          {post.community_name && <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">{post.community_name}</span>}
+          {post.location_text && <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">{post.location_text}</span>}
+        </div>
+      </button>
+
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={onLike} className={`motion-press rounded-full px-2.5 py-1.5 text-[12px] font-black ${liked ? 'bg-rose-50 text-rose-600' : 'bg-slate-50 text-slate-500'}`}>
+            <Heart className="inline h-3.5 w-3.5" />
+          </button>
+          <button type="button" onClick={onReply} className="motion-press rounded-full bg-slate-50 px-2.5 py-1.5 text-[12px] font-black text-slate-600">
+            <MessageCircle className="mr-1 inline h-3.5 w-3.5" />
+            Reply
+          </button>
+          {(post.location_text || matchesText(post, /map|restaurant|business|pickup/)) && (
+            <button type="button" onClick={onMap} className="motion-press rounded-full bg-slate-50 px-2.5 py-1.5 text-[12px] font-black text-slate-600">
+              <MapPin className="inline h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        <button type="button" onClick={onReply} className={`motion-press inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-black ${tone.cta}`}>
+          {intent.cta}
+          <ArrowRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function FiveTownsConversationHub({ posts = [], networkLabel = 'Five Towns', onCreate, onOpenMap, onOpenMitzvah, onOpenEvents, onOpenMarketplace }) {
+  const recentPosts = posts
+    .filter((post) => post.type !== 'prompt')
+    .slice(0, 4);
+  const activeThreads = posts.filter((post) => Number(post.comments_count || 0) > 0).length;
+  const needsToday = posts.filter((post) => /need|help|ride|meal|tonight|today|urgent/i.test(`${post.title || ''} ${post.body || ''}`)).length;
+  const latest = recentPosts[0];
+  const latestDate = latest?.updated_date || latest?.created_date || latest?.created_at;
+  const updatedText = latestDate
+    ? (() => {
+      const minutes = Math.max(1, Math.round((Date.now() - new Date(latestDate).getTime()) / 60000));
+      if (minutes < 60) return `Updated ${minutes} min ago`;
+      const hours = Math.round(minutes / 60);
+      return `Updated ${hours} hr${hours === 1 ? '' : 's'} ago`;
+    })()
+    : 'Ready for the first useful post';
+
+  const actions = [
+    {
+      label: 'Ask neighbors',
+      detail: 'Fast local answer',
+      icon: MessageCircle,
+      onClick: () => onCreate('feed', 'question', ''),
+    },
+    {
+      label: 'Need help',
+      detail: 'Meals, rides, favors',
+      icon: Handshake,
+      onClick: () => onCreate('help', 'chesed', ''),
+    },
+    {
+      label: 'Plan something',
+      detail: 'Event or meetup',
+      icon: CalendarDays,
+      onClick: () => onCreate('event', 'local_event', ''),
+    },
+    {
+      label: 'Business update',
+      detail: 'Useful, not spam',
+      icon: Store,
+      onClick: () => onCreate('marketplace', 'business_update', ''),
+    },
+  ];
+
+  const supportingLinks = [
+    { label: 'Mitzvahs', icon: Handshake, onClick: onOpenMitzvah },
+    { label: 'Map', icon: MapPin, onClick: onOpenMap },
+    { label: 'Events', icon: CalendarDays, onClick: onOpenEvents },
+    { label: 'Marketplace', icon: Store, onClick: onOpenMarketplace },
+  ];
+
+  return (
+    <section className="mb-3 overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_14px_32px_rgba(15,23,42,0.07)]">
+      <div className="bg-slate-950 px-4 py-3 text-white">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white/75">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              Main community thread
+            </p>
+            <h2 className="mt-2 text-[20px] font-black leading-tight">Talk to the Five Towns</h2>
+            <p className="mt-1 max-w-xl text-[12px] font-semibold leading-5 text-white/75">
+              The main thread for questions, plans, rides, needs, events, and useful local updates.
+            </p>
+          </div>
+          <div className="shrink-0 rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-right">
+            <p className="text-[16px] font-black leading-none">{activeThreads}</p>
+            <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-white/60">active</p>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-wide text-white/65">
+          <span>{recentPosts.length} recent posts</span>
+          <span>•</span>
+          <span>{needsToday} needs today</span>
+          <span>•</span>
+          <span>{updatedText}</span>
         </div>
       </div>
-      <div className="grid gap-2 p-3 sm:grid-cols-[1fr_auto]">
-        <div className="rounded-2xl bg-slate-50 px-3 py-2">
-          <p className="text-[11px] font-black uppercase text-slate-400">Suggested</p>
-          <p className="mt-1 text-[12px] font-bold text-slate-700">{prompt.initial_body || 'Share what you need, know, or can offer.'}</p>
+
+      <div className="space-y-2 p-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {actions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <button
+                key={action.label}
+                type="button"
+                onClick={action.onClick}
+                className="motion-press rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:border-blue-200 hover:bg-blue-50"
+              >
+                <Icon className="h-4 w-4 text-blue-600" />
+                <p className="mt-1.5 text-[13px] font-black text-slate-950">{action.label}</p>
+                <p className="mt-0.5 text-[11px] font-bold text-slate-500">{action.detail}</p>
+              </button>
+            );
+          })}
         </div>
-        <button
-          onClick={() => onPost(prompt)}
-          className="h-11 rounded-xl bg-blue-600 px-4 text-[13px] font-black text-white active:scale-[0.98]"
-        >
-          {prompt.cta_label || 'Post'}
-        </button>
+
+        <div className="mobile-scroll-x flex gap-2 pb-1">
+          {supportingLinks.map((link) => {
+            const Icon = link.icon;
+            return (
+              <button
+                key={link.label}
+                type="button"
+                onClick={link.onClick}
+                className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-black text-slate-700"
+              >
+                <Icon className="h-3.5 w-3.5 text-blue-600" />
+                {link.label}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => onCreate('feed', 'carpool', '')}
+            className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-black text-slate-700"
+          >
+            <Car className="h-3.5 w-3.5 text-blue-600" />
+            Carpool
+          </button>
+        </div>
       </div>
     </section>
   );

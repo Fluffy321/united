@@ -1676,7 +1676,7 @@ export default function MitzvahCircle() {
       <DestinationHeader
         icon={HandHeart}
         title="Mitzvah Circle"
-        help={<PageHelp text="Give help, ask for help, and follow mitzvah requests from open to completed." />}
+        help={<PageHelp text="Post mitzvah opportunities, take one, share what you did, coordinate carpools, and build daily mitzvah streaks." />}
         actions={(
           <button
             onClick={() => setShowCreate(true)}
@@ -1699,10 +1699,10 @@ export default function MitzvahCircle() {
                   <div className="min-w-0">
                     <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/75 px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-blue-700">
                       <HandHeart className="h-3.5 w-3.5" />
-                      Community help hub
+                      Real mitzvah network
                     </div>
                     <p className="max-w-xl text-[15px] font-black leading-6 text-slate-950">
-                      Give help. Ask for help. Strengthen the community.
+                      Post an opportunity, take a mitzvah, share what you did, and keep the community moving.
                     </p>
                   </div>
                   <button
@@ -1719,6 +1719,60 @@ export default function MitzvahCircle() {
                   <Metric icon={HandHeart} label="Open" value={totals.openCount} tone="blue" />
                   <Metric icon={Clock} label="In Progress" value={totals.offeredCount} tone="amber" />
                   <Metric icon={Award} label="Completed" value={totals.completedCount} tone="emerald" />
+                </div>
+
+	                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+	                  {[
+	                    {
+	                      label: 'Post opportunity',
+	                      detail: 'Ask or offer help',
+                      icon: Plus,
+                      onClick: () => setShowCreate(true),
+	                    },
+	                    {
+	                      label: 'Do one now',
+	                      detail: 'Browse open needs',
+	                      icon: HandHeart,
+	                      onClick: () => changeView('browse'),
+	                    },
+	                    {
+	                      label: 'Share completed',
+	                      detail: 'Build your streak',
+	                      icon: Award,
+	                      onClick: () => changeView('completed'),
+	                    },
+	                    {
+	                      label: 'Carpool safely',
+	                      detail: 'Rides in one place',
+                      icon: Car,
+                      onClick: () => {
+                        changeView('browse');
+                        changeBrowseCategory('rides');
+                      },
+	                    },
+	                    {
+	                      label: 'Jewish business',
+	                      detail: 'Work local',
+	                      icon: ShoppingBag,
+	                      onClick: () => navigate('/Marketplace'),
+	                    },
+                  ].map((action) => {
+                    const Icon = action.icon;
+                    return (
+                      <button
+                        key={action.label}
+                        type="button"
+                        onClick={action.onClick}
+                        className="motion-press rounded-2xl border border-white bg-white/80 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                      >
+                        <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <p className="text-[12px] font-black text-slate-950">{action.label}</p>
+                        <p className="mt-0.5 text-[11px] font-bold text-slate-500">{action.detail}</p>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
