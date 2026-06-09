@@ -1034,6 +1034,21 @@ export default function Feed({ isActive = true }) {
           onOpenMarketplace={() => navigate('/Marketplace')}
         />
 
+        <FiveTownsThreadChain
+          posts={feedPosts}
+          likedPostIds={userLikes}
+          onLike={handleLike}
+          onReply={handleCardReply}
+          onOpen={handleCardOpen}
+          onMap={() => navigate('/Map')}
+          onCreate={() => {
+            setPostModalType('feed');
+            setPostModalSubtype('discussion');
+            setPostModalInitialBody('');
+            setShowPostModal(true);
+          }}
+        />
+
         {/* One-time network banner for new users */}
         {showNetworkBanner && (
           <div className="graphic-stripes mb-3 flex items-center gap-2 rounded-[22px] bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-4 py-3 text-white text-[12px] font-medium shadow-[0_14px_30px_rgba(37,99,235,0.18)]">
@@ -1365,6 +1380,136 @@ function MomentumTile({ icon: Icon, label, value, inverse = false }) {
       <p className={`mt-1 text-[16px] font-black leading-none ${inverse ? 'text-white' : 'text-slate-950'}`}>{value}</p>
       <p className={`mt-1 text-[10px] font-black uppercase tracking-wide ${inverse ? 'text-white/75' : 'text-slate-400'}`}>{label}</p>
     </div>
+  );
+}
+
+function FiveTownsThreadChain({ posts = [], likedPostIds = [], onLike, onReply, onOpen, onMap, onCreate }) {
+  const chainPosts = posts
+    .filter((post) => post.type !== 'prompt')
+    .slice(0, 8);
+
+  if (!chainPosts.length) return null;
+
+  return (
+    <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
+      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_5px_rgba(16,185,129,0.12)]" />
+            <h2 className="text-[14px] font-black uppercase tracking-wide text-slate-950">Main Five Towns chain</h2>
+          </div>
+          <p className="mt-1 text-[12px] font-semibold leading-4 text-slate-400">
+            One running neighborhood thread for questions, needs, plans, rides, and useful updates.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onCreate}
+          className="motion-press shrink-0 rounded-full bg-slate-950 px-3 py-2 text-[12px] font-black text-white"
+        >
+          Start thread
+        </button>
+      </div>
+
+      <div className="relative px-3 py-3">
+        <div className="absolute bottom-7 left-[30px] top-5 w-px bg-slate-200" />
+        <div className="space-y-2">
+          {chainPosts.map((post, index) => (
+            <ThreadChainItem
+              key={`main-chain-${post.id}`}
+              post={post}
+              first={index === 0}
+              liked={likedPostIds.includes(post.id)}
+              onLike={() => onLike?.(post.id)}
+              onReply={() => onReply?.(post)}
+              onOpen={() => onOpen?.(post)}
+              onMap={onMap}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ThreadChainItem({ post, first = false, liked = false, onLike, onReply, onOpen, onMap }) {
+  const intent = getCardIntent(post);
+  const tone = toneClasses[intent.tone] || toneClasses.slate;
+  const Icon = intent.icon || MessageCircle;
+  const title = feedText(post);
+  const body = feedBody(post);
+  const age = formatPostAge(postDate(post));
+  const replies = Number(post.comments_count || 0);
+  const reactions = Number(post.likes_count || 0);
+  const location = post.location_text || post.city || post.community_name || 'Five Towns';
+  const peopleText = post.type === 'help'
+    ? `${Math.max(1, replies || 1)} people helping`
+    : replies > 0
+      ? `${replies} replies`
+      : reactions > 0
+        ? `${reactions} reactions`
+        : 'Open for replies';
+
+  return (
+    <article className="relative pl-12">
+      <div className={`absolute left-0 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border-4 border-white text-[11px] font-black text-white shadow-sm ${first ? 'bg-emerald-600' : 'bg-blue-600'}`}>
+        {(post.author_name || 'J').split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
+      </div>
+
+      <div className="rounded-[20px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-sm">
+        <button type="button" onClick={onOpen} className="block w-full text-left">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black ${tone.pill}`}>
+              <Icon className="h-3 w-3" />
+              {intent.label}
+            </span>
+            {first && (
+              <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-black text-emerald-700">Live thread</span>
+            )}
+            {Number(getPostLivePriority(post)) > 0 && !first && (
+              <span className="rounded-full bg-red-50 px-2 py-1 text-[10px] font-black text-red-600">Needs attention</span>
+            )}
+            <span className="ml-auto text-[11px] font-black text-slate-400">{age}</span>
+          </div>
+
+          <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[12px] font-bold text-slate-500">
+            <span className="truncate text-slate-700">{post.author_name || 'Neighbor'}</span>
+            <span>•</span>
+            <span className="truncate">{location}</span>
+          </div>
+
+          <h3 className="mt-1 line-clamp-2 text-[16px] font-black leading-5 text-slate-950">{title}</h3>
+          {body && <p className="mt-1 line-clamp-2 text-[13px] font-semibold leading-5 text-slate-500">{body}</p>}
+
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] font-black text-slate-500">
+            <span className="rounded-full bg-slate-100 px-2.5 py-1">{peopleText}</span>
+            {post.community_name && <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">{post.community_name}</span>}
+            {post.location_text && <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">{post.location_text}</span>}
+          </div>
+        </button>
+
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
+          <div className="flex min-w-0 items-center gap-1">
+            <button type="button" onClick={onLike} className={`motion-press rounded-full px-2.5 py-1.5 text-[12px] font-black ${liked ? 'bg-rose-50 text-rose-600' : 'bg-slate-50 text-slate-500'}`}>
+              <Heart className="inline h-3.5 w-3.5" />
+            </button>
+            <button type="button" onClick={onReply} className="motion-press rounded-full bg-slate-50 px-2.5 py-1.5 text-[12px] font-black text-slate-600">
+              <MessageCircle className="mr-1 inline h-3.5 w-3.5" />
+              Reply
+            </button>
+            {(post.location_text || matchesText(post, /map|restaurant|business|pickup|ride/)) && (
+              <button type="button" onClick={onMap} className="motion-press rounded-full bg-slate-50 px-2.5 py-1.5 text-[12px] font-black text-slate-600">
+                <MapPin className="inline h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <button type="button" onClick={onReply} className={`motion-press inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-black ${tone.cta}`}>
+            {intent.cta}
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    </article>
   );
 }
 

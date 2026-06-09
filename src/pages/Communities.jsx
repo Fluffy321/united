@@ -531,11 +531,222 @@ function normalizeCommunityName(name = '') {
   return String(name).trim().toLowerCase().replace(/&/g, 'and').replace(/\s+/g, ' ');
 }
 
+const FIVE_TOWNS_ROOM_BLUEPRINTS = [
+  {
+    id: 'seed-five-towns-news',
+    match: ['five towns news', 'five towns local', 'updates', 'talk'],
+    name: 'Five Towns Talk',
+    icon: '💬',
+    label: 'Main room',
+    purpose: 'One shared neighborhood thread for questions, updates, recommendations, alerts, and real neighbor help.',
+    latestDiscussion: 'Best place for a quiet business lunch on Central today?',
+    prompt: 'Ask the neighborhood',
+    activeNow: 23,
+    postsToday: 18,
+    members: 2100,
+    gradient: 'from-slate-950 via-blue-900 to-cyan-600',
+  },
+  {
+    id: 'seed-sports',
+    match: ['sports', 'basketball', 'football', 'gym'],
+    name: "Who's Playing Tonight",
+    icon: '🏀',
+    label: 'Game room',
+    purpose: 'Find pickup games, fill teams, get gym partners, and make tonight’s plans without ten group chats.',
+    latestDiscussion: 'Need two more for basketball after Maariv in Woodmere.',
+    prompt: 'Find a game',
+    activeNow: 9,
+    postsToday: 7,
+    members: 640,
+    gradient: 'from-sky-500 via-blue-600 to-indigo-700',
+  },
+  {
+    id: 'seed-shabbos-hosts',
+    match: ['shabbos hosts', 'shabbos plans', 'zmanim', 'hosts'],
+    name: 'Shabbos Plans',
+    icon: '🕯️',
+    label: 'Before Shabbos',
+    purpose: 'Meals, hosting, guests, zmanim, rides, extras, and everything people need before Shabbos.',
+    latestDiscussion: 'Two guests looking for Friday night in Cedarhurst.',
+    prompt: 'Make a Shabbos plan',
+    activeNow: 15,
+    postsToday: 12,
+    members: 890,
+    gradient: 'from-amber-500 via-orange-500 to-rose-500',
+  },
+  {
+    id: 'seed-shul-minyan',
+    match: ['shul', 'minyan', 'minyanim'],
+    name: 'Minyan & Shul Updates',
+    icon: '🕍',
+    label: 'Live minyanim',
+    purpose: 'Minyan help, shiurim, kiddush updates, lost items, and shul rides in one useful room.',
+    latestDiscussion: 'Mincha needs two more near Lawrence in 20 minutes.',
+    prompt: 'Post a shul update',
+    activeNow: 11,
+    postsToday: 9,
+    members: 1180,
+    gradient: 'from-indigo-600 via-blue-700 to-slate-950',
+  },
+  {
+    id: 'seed-chesed-updates',
+    match: ['chesed', 'mitzvah', 'help'],
+    name: 'Chesed Opportunities',
+    icon: '🤝',
+    label: 'Help now',
+    purpose: 'See open needs, offer help, close the loop, and turn community care into completed mitzvahs.',
+    latestDiscussion: 'Still need one driver for a dinner drop-off tonight.',
+    prompt: 'Help someone now',
+    activeNow: 18,
+    postsToday: 14,
+    members: 1320,
+    gradient: 'from-rose-500 via-pink-600 to-red-600',
+  },
+  {
+    id: 'seed-kosher-food',
+    match: ['kosher food', 'restaurant', 'bakery', 'lunch'],
+    name: 'Kosher Food & Lunch Spots',
+    icon: '🥙',
+    label: 'Food pulse',
+    purpose: 'What is open, what is good, what has a line, what is verified, and what people are ordering now.',
+    latestDiscussion: 'Which place has the fastest lunch pickup in Woodmere?',
+    prompt: 'Share a food tip',
+    activeNow: 16,
+    postsToday: 15,
+    members: 1540,
+    gradient: 'from-emerald-500 via-teal-500 to-cyan-600',
+  },
+  {
+    id: 'seed-carpools-rides',
+    match: ['carpool', 'rides', 'ride'],
+    name: 'Rides & Carpools',
+    icon: '🚗',
+    label: 'Moving now',
+    purpose: 'Safe ride requests, offers, school carpools, airport rides, and last-minute local pickups.',
+    latestDiscussion: 'Anyone driving from Inwood to Cedarhurst around 8?',
+    prompt: 'Coordinate a ride',
+    activeNow: 8,
+    postsToday: 6,
+    members: 720,
+    gradient: 'from-cyan-500 via-blue-600 to-violet-600',
+  },
+  {
+    id: 'seed-events-week',
+    match: ['events', 'this week', 'calendar'],
+    name: 'Events This Week',
+    icon: '📅',
+    label: 'Happening soon',
+    purpose: 'Shiurim, school nights, programs, meetups, and family events people can actually attend.',
+    latestDiscussion: 'Women’s shiur and dessert tonight near Hewlett.',
+    prompt: 'Post an event',
+    activeNow: 7,
+    postsToday: 5,
+    members: 980,
+    gradient: 'from-violet-500 via-purple-600 to-blue-700',
+  },
+  {
+    id: 'seed-business-jobs',
+    match: ['business', 'jobs', 'hustle'],
+    name: 'Jobs & Business',
+    icon: '💼',
+    label: 'Local work',
+    purpose: 'Hire local, find side work, ask business questions, and support Jewish-owned services without spam.',
+    latestDiscussion: 'Looking for a local bookkeeper recommendation this week.',
+    prompt: 'Ask for work help',
+    activeNow: 10,
+    postsToday: 8,
+    members: 830,
+    gradient: 'from-slate-800 via-blue-800 to-emerald-600',
+  },
+  {
+    id: 'seed-five-towns-teens',
+    match: ['teen', 'hangout', 'school stress', 'social'],
+    name: 'Teens Hangout',
+    icon: '✨',
+    label: 'Safe social',
+    purpose: 'Plans, questions, sports, school stuff, rides, and safe ways to meet people with shared interests.',
+    latestDiscussion: 'What is everyone doing Motzei Shabbos?',
+    prompt: 'Start a safe plan',
+    activeNow: 13,
+    postsToday: 10,
+    members: 760,
+    gradient: 'from-fuchsia-500 via-blue-600 to-cyan-500',
+  },
+];
+
+function getRoomBlueprint(community = {}, index = 0) {
+  const text = `${community.id || ''} ${community.name || ''} ${community.slug || ''} ${community.type || ''} ${community.category || ''} ${community.description || ''}`.toLowerCase();
+  return FIVE_TOWNS_ROOM_BLUEPRINTS.find(room => room.id === community.id || room.match.some(token => text.includes(token))) ||
+    FIVE_TOWNS_ROOM_BLUEPRINTS[index % FIVE_TOWNS_ROOM_BLUEPRINTS.length];
+}
+
+function buildRoomViewModel(community = {}, index = 0) {
+  const blueprint = getRoomBlueprint(community, index);
+  const memberCount = community.follower_count || community.member_count || blueprint.members;
+  return {
+    ...community,
+    roomName: blueprint.name,
+    roomIcon: blueprint.icon,
+    roomLabel: blueprint.label,
+    roomPurpose: community.hook || community.description_short || blueprint.purpose,
+    roomLatest: community.latestDiscussion || community.latest_discussion || blueprint.latestDiscussion,
+    roomPrompt: community.roomQuestion || blueprint.prompt,
+    roomActiveNow: community.activeNow || community.active_now || community.active_members || blueprint.activeNow,
+    roomPostsToday: community.postsToday || community.posts_today || community.posts_this_week || blueprint.postsToday,
+    roomMemberCount: memberCount,
+    roomGradient: community.gradient || blueprint.gradient,
+    roomBlueprintId: blueprint.id,
+  };
+}
+
+function getCoreFiveTownsRooms(communities = []) {
+  const used = new Set();
+  return FIVE_TOWNS_ROOM_BLUEPRINTS.map((blueprint, index) => {
+    const found = communities.find(c => {
+      if (!c?.id || used.has(c.id)) return false;
+      const text = `${c.id || ''} ${c.name || ''} ${c.slug || ''} ${c.type || ''} ${c.category || ''} ${c.description || ''}`.toLowerCase();
+      return c.id === blueprint.id || blueprint.match.some(token => text.includes(token));
+    });
+    const community = found || {
+      id: blueprint.id,
+      name: blueprint.name,
+      category: 'Five Towns',
+      type: 'neighborhood',
+      description: blueprint.purpose,
+      follower_count: blueprint.members,
+      tags: ['Five Towns', blueprint.label],
+    };
+    used.add(community.id);
+    return buildRoomViewModel(community, index);
+  });
+}
+
 function mergeCommunityCatalog(communities = []) {
   const valid = (communities || []).filter(c => c?.id && c?.name);
   const seen = new Set(valid.map(c => normalizeCommunityName(c.name)));
   const starters = STARTER_COMMUNITIES.filter(c => !seen.has(normalizeCommunityName(c.name)));
-  return [...valid, ...starters];
+  const merged = [...valid, ...starters];
+  const roomFallbacks = FIVE_TOWNS_ROOM_BLUEPRINTS
+    .filter(room => !merged.some(c => {
+      const text = `${c.id || ''} ${c.name || ''} ${c.slug || ''} ${c.type || ''} ${c.category || ''} ${c.description || ''}`.toLowerCase();
+      return c.id === room.id || normalizeCommunityName(c.name) === normalizeCommunityName(room.name) || room.match.some(token => text.includes(token));
+    }))
+    .map(room => ({
+      id: room.id,
+      name: room.name,
+      category: 'Five Towns',
+      type: 'neighborhood',
+      description: room.purpose,
+      hook: room.purpose,
+      follower_count: room.members,
+      activeNow: room.activeNow,
+      postsToday: room.postsToday,
+      latestDiscussion: room.latestDiscussion,
+      gradient: room.gradient,
+      tags: ['Five Towns', room.label],
+      privacy: 'Public',
+    }));
+  return [...merged, ...roomFallbacks];
 }
 
 function isCatalogCommunity(id = '') {
@@ -690,6 +901,154 @@ function CommunitySectionRail({ title, subtitle, communities, userCommunityIds, 
         ))}
       </div>
     </section>
+  );
+}
+
+function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOpen, onJoin, compact = false }) {
+  if (!community?.id) return null;
+  const room = buildRoomViewModel(community, index);
+
+  return (
+    <article
+      onClick={() => onOpen(room.id)}
+      className={`group relative overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_18px_42px_rgba(37,99,235,0.12)] active:scale-[0.99] ${compact ? '' : 'min-h-[250px]'}`}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onOpen(room.id); }}
+    >
+      <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${room.roomGradient}`} />
+      <div className="flex h-full flex-col gap-3 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${room.roomGradient} text-xl shadow-sm`}>
+              {room.roomIcon}
+            </div>
+            <div className="min-w-0">
+              <h3 className="line-clamp-1 text-[17px] font-black tracking-tight text-slate-950">{room.roomName}</h3>
+              <p className="mt-0.5 line-clamp-1 text-[11px] font-black uppercase tracking-[0.12em] text-slate-400">
+                {room.roomLabel}
+              </p>
+            </div>
+          </div>
+          <span className="shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-black text-red-600 ring-1 ring-red-100">
+            {room.roomActiveNow} active
+          </span>
+        </div>
+
+        <p className="line-clamp-2 text-[13px] font-semibold leading-relaxed text-slate-600">
+          {room.roomPurpose}
+        </p>
+
+        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">Latest thread</p>
+            <ProfileFaces community={room} compact />
+          </div>
+          <p className="line-clamp-2 text-[14px] font-black leading-snug text-slate-950">{room.roomLatest}</p>
+          <div className="mt-2 flex items-center justify-between gap-2 text-[11px] font-bold text-slate-500">
+            <span>{room.roomPostsToday} posts today</span>
+            <span>{Number(room.roomMemberCount || 0).toLocaleString()} members</span>
+          </div>
+        </div>
+
+        <div className="mt-auto grid grid-cols-[1fr_auto] gap-2">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); isJoined ? onOpen(room.id) : onJoin(room); }}
+            disabled={isJoining}
+            className={`rounded-full px-4 py-2.5 text-[13px] font-black transition-all active:scale-95 disabled:opacity-60 ${
+              isJoined ? 'bg-slate-950 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {isJoining ? 'Joining...' : isJoined ? 'Open room' : 'Join room'}
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpen(room.id); }}
+            className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-black text-blue-600 transition-all active:scale-95"
+          >
+            {room.roomPrompt}
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, onJoin }) {
+  const rooms = getCoreFiveTownsRooms(communities);
+  const leadRooms = rooms.slice(0, 3);
+  const remainingRooms = rooms.slice(3);
+
+  return (
+    <div className="space-y-5">
+      <section className="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-sm">
+        <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-blue-700 p-5 text-white">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-white/80">
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            Live Five Towns rooms
+          </div>
+          <h2 className="text-[26px] font-black leading-tight tracking-tight">Jump into the room that matches what you need right now.</h2>
+          <p className="mt-2 text-[13px] font-semibold leading-relaxed text-white/78">
+            Communities are not folders. They are live places to ask, plan, help, find people, and move real life forward.
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-2 p-3">
+          {[
+            ['10', 'core rooms'],
+            ['113', 'posts today'],
+            ['130', 'active now'],
+          ].map(([value, label]) => (
+            <div key={label} className="rounded-2xl bg-slate-50 p-3 text-center">
+              <p className="text-[20px] font-black text-slate-950">{value}</p>
+              <p className="text-[10px] font-black uppercase text-slate-400">{label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-[18px] font-black tracking-tight text-slate-950">Start Here</h2>
+          <p className="text-[12px] font-semibold text-slate-500">The rooms most likely to create a real conversation today.</p>
+        </div>
+        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
+          {leadRooms.map((room, index) => (
+            <div key={room.id} className="w-[310px] shrink-0">
+              <LiveFiveTownsRoomCard
+                community={room}
+                index={index}
+                isJoined={userCommunityIds.has(room.id)}
+                isJoining={joiningId === room.id}
+                onOpen={onOpen}
+                onJoin={onJoin}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-[18px] font-black tracking-tight text-slate-950">All Five Towns Rooms</h2>
+          <p className="text-[12px] font-semibold text-slate-500">Built around local action, not generic categories.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {remainingRooms.map((room, index) => (
+            <LiveFiveTownsRoomCard
+              key={room.id}
+              community={room}
+              index={index + 3}
+              compact
+              isJoined={userCommunityIds.has(room.id)}
+              isJoining={joiningId === room.id}
+              onOpen={onOpen}
+              onJoin={onJoin}
+            />
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -1448,10 +1807,12 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
         <div>
           <div className="text-lg font-bold text-slate-900 mb-3">My Communities</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {myCommunities.map(c => (
-              <CommunityCard
+            {myCommunities.map((c, index) => (
+              <LiveFiveTownsRoomCard
                 key={c.id}
                 community={c}
+                index={index}
+                compact
                 isJoined={userCommunityIds.has(c.id)}
                 isJoining={joiningId === c.id}
                 onOpen={openCommunity}
@@ -1496,7 +1857,7 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
   return (
     <div className="space-y-6">
       {!hasFilter && (
-        <CommunityDiscoveryHub
+        <FiveTownsRoomsHub
           communities={allCommunities}
           userCommunityIds={userCommunityIds}
           joiningId={joiningId}
@@ -1540,10 +1901,12 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
             <div>
               <div className="text-lg font-bold text-slate-900 mb-3">Communities</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {sortedCommunities.map(c => (
-                  <CommunityCard
+                {sortedCommunities.map((c, index) => (
+                  <LiveFiveTownsRoomCard
                     key={c.id}
                     community={c}
+                    index={index}
+                    compact
                     isJoined={userCommunityIds.has(c.id)}
                     isJoining={joiningId === c.id}
                     onOpen={openCommunity}
