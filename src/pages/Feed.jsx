@@ -565,8 +565,8 @@ const buildFeedSections = (posts) => {
     },
     {
       key: 'today',
-      title: 'Today in the Five Towns',
-      subtitle: 'Local questions, updates, plans, and announcements people can answer.',
+      title: 'Today in Five Towns',
+      subtitle: 'One shared stream for neighbor questions, plans, updates, and announcements.',
       icon: MessageCircle,
       items: today.length ? today : ranked.slice(0, 4),
     },
@@ -1686,6 +1686,12 @@ function FiveTownsConversationHub({ posts = [], networkLabel = 'Five Towns', onC
       icon: Store,
       onClick: () => onCreate('marketplace', 'business_update', ''),
     },
+    {
+      label: 'Mitzvah',
+      detail: 'Share or step up',
+      icon: Sparkles,
+      onClick: () => onCreate('help', 'mitzvah', ''),
+    },
   ];
 
   const supportingLinks = [
@@ -1724,7 +1730,7 @@ function FiveTownsConversationHub({ posts = [], networkLabel = 'Five Towns', onC
       </div>
 
       <div className="space-y-2 p-3">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           {actions.map((action) => {
             const Icon = action.icon;
             return (
