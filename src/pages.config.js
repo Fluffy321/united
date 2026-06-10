@@ -6,7 +6,8 @@
  * when first navigated to. This keeps the main bundle lean.
  *
  * THE ONLY EDITABLE VALUE: mainPage
- * This controls which page is the landing page (shown when users visit the app).
+ * This controls the authenticated app fallback/legacy redirect page.
+ * The public marketing homepage lives in src/pages/Landing.jsx and is served at /.
  * The value must match a key in the PAGES object exactly.
  *
  * NON-MVP PAGES: Groups, News, Organization, ShulPage, MyEvents, CommunityUpdates,

@@ -75,6 +75,7 @@ const CommunityGuidelines     = lazy(() => import('@/pages/CommunityGuidelines')
 const DMCAPolicy              = lazy(() => import('@/pages/DMCAPolicy'));
 const PrivacyRights           = lazy(() => import('@/pages/PrivacyRights'));
 const SearchPage              = lazy(() => import('@/pages/Search'));
+const Landing                 = lazy(() => import('@/pages/Landing'));
 const Login                   = lazy(() => import('@/pages/Login'));
 const Events                  = lazy(() => import('@/pages/Events'));
 const MyEvents                = lazy(() => import('@/pages/MyEvents'));
@@ -137,6 +138,8 @@ const AuthenticatedApp = () => {
     <>
       <Suspense fallback={<PageFallback />}>
         <Routes>
+          <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
+          <Route path="/welcome" element={<PageTransition><Landing /></PageTransition>} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route element={<ProtectedRoute />}>
             {/* Admin-only routes */}
@@ -158,7 +161,6 @@ const AuthenticatedApp = () => {
             </Route>
 
             {/* Main app routes */}
-            <Route path="/" element={<Navigate to={mainPagePath} replace />} />
             {Object.entries(Pages)
               .filter(([path]) => !ADMIN_PAGE_KEYS.has(path))
               .map(([path, Page]) => (

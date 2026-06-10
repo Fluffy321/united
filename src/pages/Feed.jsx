@@ -469,8 +469,36 @@ const feedBody = (post) => {
 
 const matchesText = (post, pattern) => pattern.test(`${post?.type || ''} ${post?.post_subtype || ''} ${post?.title || ''} ${post?.body || ''} ${post?.community_name || ''}`);
 
+const postText = (post) => `${post?.type || ''} ${post?.post_subtype || ''} ${post?.title || ''} ${post?.body || ''} ${post?.community_name || ''} ${post?.location_text || ''}`.toLowerCase();
+
+const getEventTimeLabel = (post) => {
+  const rawDate = post?.event_date || post?.starts_at || post?.needed_by || post?.deadline;
+  if (!rawDate) return null;
+  const time = new Date(rawDate).getTime();
+  if (!Number.isFinite(time)) return null;
+  const deltaMinutes = Math.round((time - Date.now()) / 60000);
+  const clock = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(new Date(time));
+  if (deltaMinutes <= 0) return 'Happening now';
+  if (deltaMinutes < 60) return `Starts in ${deltaMinutes} min`;
+  if (deltaMinutes < 180) return `Starts at ${clock}`;
+  if (deltaMinutes < 1440) return `Today at ${clock}`;
+  return `Upcoming ${clock}`;
+};
+
+const getAliveCue = (post) => {
+  const text = postText(post);
+  const timeLabel = getEventTimeLabel(post);
+  if (/minyan|maariv|mincha|shacharis/.test(text)) return timeLabel || 'Minyan needs people';
+  if (/ride|carpool|pickup|jfk|seat|drive/.test(text)) return 'Ride available';
+  if (post?.type === 'event' || /event|shiur|game|meetup|class|tonight/.test(text)) return timeLabel || 'Event coming up';
+  if (post?.type === 'help' || /need|help|volunteer|meal|chesed|favor|urgent/.test(text)) return 'Volunteer request';
+  if (/business|restaurant|shop|menu|opening|sale|marketplace/.test(text)) return 'Local business update';
+  if (/recommend|best|where|anyone|question|looking/.test(text)) return 'Neighbor question';
+  return 'Open discussion';
+};
+
 const getCardIntent = (post) => {
-  const text = `${post?.type || ''} ${post?.post_subtype || ''} ${post?.title || ''} ${post?.body || ''}`.toLowerCase();
+  const text = postText(post);
   if (post?.type === 'help' || /need|help|meal|ride|chesed|urgent|favor|tehillim|volunteer/.test(text)) {
     return { label: 'Help needed', cta: "I'll help", tone: 'red', icon: Handshake };
   }
@@ -547,49 +575,52 @@ const buildFeedSections = (posts) => {
     const timeB = new Date(postDate(b) || 0).getTime() || 0;
     return timeB - timeA;
   });
-  const byReplies = [...posts].sort((a, b) => (Number(b.comments_count || 0) + Number(b.likes_count || 0)) - (Number(a.comments_count || 0) + Number(a.likes_count || 0)));
   const used = new Set();
-  const liveNow = uniquePosts(ranked, (post) => getPostLivePriority(post) > 0 || Number(post.comments_count || 0) >= 12, 6, used);
-  const today = uniquePosts(ranked, (post) => !matchesText(post, /marketplace|business|restaurant|shop|free|pickup/) && post.type !== 'help', 6, used);
-  const talking = uniquePosts(byReplies, (post) => Number(post.comments_count || 0) >= 8 || Number(post.likes_count || 0) >= 10, 5, used);
-  const nearYou = uniquePosts(ranked, (post) => Boolean(post.location_text) || matchesText(post, /restaurant|business|shop|map|pickup|woodmere|cedarhurst|lawrence|hewlett|inwood/), 5, used);
-  const mitzvah = uniquePosts(ranked, (post) => post.type === 'help' || matchesText(post, /help|need|chesed|mitzvah|meal|ride|tehillim|volunteer/), 5, used);
+  const happeningNow = uniquePosts(ranked, (post) => (
+    post.type === 'help'
+    || getPostLivePriority(post) > 0
+    || matchesText(post, /urgent|now|tonight|today|minyan|maariv|mincha|shacharis|ride|carpool|pickup|meal|volunteer|need/)
+    || Number(post.comments_count || 0) >= 12
+  ), 7, used);
+  const today = uniquePosts(ranked, (post) => (
+    post.type === 'news'
+    || post.type === 'feed'
+    || matchesText(post, /recommend|question|discussion|business|restaurant|shop|menu|opening|update|lost|found|looking|best/)
+  ), 7, used);
+  const upcoming = uniquePosts(ranked, (post) => (
+    post.type === 'event'
+    || post.event_date
+    || matchesText(post, /event|shiur|class|game|meetup|shabbos|tomorrow|this week|rsvp|opportunity|community/)
+  ), 6, used);
+
+  const fillSection = (items, limit) => (
+    items.length ? items : uniquePosts(ranked, () => true, limit, used)
+  );
 
   return [
     {
-      key: 'live-now',
-      title: 'Live Now',
-      subtitle: 'Urgent needs, minyanim, events starting soon, and active discussions.',
+      key: 'happening-now',
+      title: 'Happening Now',
+      subtitle: 'Minyan needs, rides, volunteer requests, events starting soon, and active threads.',
       icon: Activity,
-      items: liveNow.length ? liveNow : ranked.slice(0, 3),
+      pills: ['Minyan needed', 'Ride available', 'Volunteer request', 'Event soon'],
+      items: fillSection(happeningNow, 4),
     },
     {
       key: 'today',
-      title: 'Today in Five Towns',
-      subtitle: 'One shared stream for neighbor questions, plans, updates, and announcements.',
+      title: 'Today',
+      subtitle: 'New businesses, neighbor questions, recommendations, announcements, and useful local talk.',
       icon: MessageCircle,
-      items: today.length ? today : ranked.slice(0, 4),
+      pills: ['New businesses', 'Discussions', 'Recommendations', 'Local updates'],
+      items: fillSection(today, 5),
     },
     {
-      key: 'talking',
-      title: 'People Are Talking About',
-      subtitle: 'The threads with the most replies and momentum.',
-      icon: Users,
-      items: talking,
-    },
-    {
-      key: 'near-you',
-      title: 'Near You',
-      subtitle: 'Map-linked posts, restaurants, businesses, pickups, and local activity.',
-      icon: MapPin,
-      items: nearYou,
-    },
-    {
-      key: 'mitzvah',
-      title: 'Help / Mitzvah',
-      subtitle: 'Needs, offers, carpools, completed mitzvahs, and people stepping up.',
-      icon: Handshake,
-      items: mitzvah,
+      key: 'upcoming',
+      title: 'Upcoming',
+      subtitle: 'Events, community opportunities, Shabbos plans, carpools, and things to join next.',
+      icon: CalendarDays,
+      pills: ['Events', 'Community opportunities', 'Shabbos plans', 'RSVP'],
+      items: fillSection(upcoming, 4),
     },
   ];
 };
@@ -1102,7 +1133,7 @@ export default function Feed({ isActive = true }) {
               <CommunityFeedSection
                 key={section.key}
                 section={section}
-                dense={index !== 1}
+                dense={section.key !== 'today'}
                 likedPostIds={userLikes}
                 onLike={handleLike}
                 onReply={handleCardReply}
@@ -1395,11 +1426,14 @@ function FiveTownsThreadChain({ posts = [], likedPostIds = [], onLike, onReply, 
       <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_5px_rgba(16,185,129,0.12)]" />
-            <h2 className="text-[14px] font-black uppercase tracking-wide text-slate-950">Main Five Towns chain</h2>
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-60" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_0_5px_rgba(239,68,68,0.12)]" />
+            </span>
+            <h2 className="text-[14px] font-black uppercase tracking-wide text-slate-950">Happening Now</h2>
           </div>
           <p className="mt-1 text-[12px] font-semibold leading-4 text-slate-400">
-            One running neighborhood thread for questions, needs, plans, rides, and useful updates.
+            Minyan needs, rides, volunteer requests, events starting soon, and active local threads.
           </p>
         </div>
         <button
@@ -1407,7 +1441,7 @@ function FiveTownsThreadChain({ posts = [], likedPostIds = [], onLike, onReply, 
           onClick={onCreate}
           className="motion-press shrink-0 rounded-full bg-slate-950 px-3 py-2 text-[12px] font-black text-white"
         >
-          Start thread
+          Post now
         </button>
       </div>
 
@@ -1441,6 +1475,7 @@ function ThreadChainItem({ post, first = false, liked = false, onLike, onReply, 
   const age = formatPostAge(postDate(post));
   const replies = Number(post.comments_count || 0);
   const reactions = Number(post.likes_count || 0);
+  const aliveCue = getAliveCue(post);
   const location = post.location_text || post.city || post.community_name || 'Five Towns';
   const peopleText = post.type === 'help'
     ? `${Math.max(1, replies || 1)} people helping`
@@ -1482,6 +1517,7 @@ function ThreadChainItem({ post, first = false, liked = false, onLike, onReply, 
           {body && <p className="mt-1 line-clamp-2 text-[13px] font-semibold leading-5 text-slate-500">{body}</p>}
 
           <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] font-black text-slate-500">
+            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-700">{aliveCue}</span>
             <span className="rounded-full bg-slate-100 px-2.5 py-1">{peopleText}</span>
             {post.community_name && <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">{post.community_name}</span>}
             {post.location_text && <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">{post.location_text}</span>}
@@ -1531,12 +1567,24 @@ function CommunityFeedSection({ section, dense = false, likedPostIds = [], onLik
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
-              {section.key === 'live-now' && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-60" />}
-              <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${section.key === 'live-now' ? 'bg-red-500' : 'bg-blue-500'}`} />
+              {section.key === 'happening-now' && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-60" />}
+              <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${section.key === 'happening-now' ? 'bg-red-500' : section.key === 'upcoming' ? 'bg-orange-500' : 'bg-blue-500'}`} />
             </span>
             <h2 className="text-[14px] font-black uppercase tracking-wide text-slate-950">{section.title}</h2>
           </div>
           <p className="mt-1 text-[12px] font-semibold leading-4 text-slate-400">{section.subtitle}</p>
+          {Boolean(section.pills?.length) && (
+            <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5">
+              {section.pills.map((pill) => (
+                <span
+                  key={`${section.key}-${pill}`}
+                  className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-black text-slate-600"
+                >
+                  {pill}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <span className="rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-black text-slate-500">{section.items.length}</span>
       </div>
@@ -1568,6 +1616,7 @@ function HeartbeatPostCard({ post, horizontal = false, liked = false, onLike, on
   const age = formatPostAge(postDate(post));
   const replies = Number(post.comments_count || 0);
   const reactions = Number(post.likes_count || 0);
+  const aliveCue = getAliveCue(post);
   const activityText = post.type === 'help'
     ? `${Math.max(1, replies || 1)} people responding`
     : replies > 0
@@ -1614,6 +1663,7 @@ function HeartbeatPostCard({ post, horizontal = false, liked = false, onLike, on
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px] font-black text-slate-500">
+          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-700">{aliveCue}</span>
           <span className="rounded-full bg-slate-100 px-2.5 py-1">{activityText}</span>
           {post.community_name && <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">{post.community_name}</span>}
           {post.location_text && <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">{post.location_text}</span>}
