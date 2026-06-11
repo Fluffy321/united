@@ -1541,23 +1541,23 @@ export default function Communities() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate('/CommunityMap')}
+              onClick={() => navigate('/Map')}
               className="surface-tile-hover p-2.5 rounded-full bg-white border border-slate-200 shadow-sm active:scale-90 transition-all duration-150"
-              title="Map view"
+              title="Map"
             >
               <Map className="w-4 h-4 text-slate-600" />
             </button>
             <button
-              onClick={() => navigate('/CommunityCalendar')}
+              onClick={() => navigate('/Feed')}
               className="surface-tile-hover p-2.5 rounded-full bg-white border border-slate-200 shadow-sm active:scale-90 transition-all duration-150"
-              title="Community Calendar"
+              title="Main feed"
             >
               <Calendar className="w-4 h-4 text-slate-600" />
             </button>
             <button
-              onClick={() => navigate('/DiscoverCommunitiesFeed')}
+              onClick={() => setActiveTab('discover')}
               className="surface-tile-hover p-2.5 rounded-full bg-white border border-slate-200 shadow-sm active:scale-90 transition-all duration-150"
-              title="Discover Feed"
+              title="Discover communities"
             >
               <Compass className="w-4 h-4 text-slate-600" />
             </button>
