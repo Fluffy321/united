@@ -5,7 +5,6 @@ import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
-import UnifiedPostModal from '@/components/feed/UnifiedPostModal';
 import ReportModal from '@/components/common/ReportModal';
 import PageHelp from '@/components/common/PageHelp';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -17,6 +16,7 @@ import { useFloatingActions } from '@/components/layout/FloatingActionsContext';
 import DestinationHeader from '@/components/layout/DestinationHeader';
 import useFeedData from '@/components/feed/useFeedData';
 import FeedFilters, { FeedFilterTrigger } from '@/components/feed/FeedFilters';
+import FeedComposer from '@/components/feed/FeedComposer';
 
 import { DEMO_POSTS } from '@/lib/feed/demoPosts';
 import { buildFeedSections } from '@/lib/feed/feedSections';
@@ -44,10 +44,7 @@ export default function Feed({ isActive = true }) {
   const [userLikes, setUserLikes] = useState([]);
   const [blockedIds, setBlockedIds] = useState([]);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const [showPostModal, setShowPostModal] = useState(false);
-  const [postModalType, setPostModalType] = useState('feed');
-  const [postModalSubtype, setPostModalSubtype] = useState(null);
-  const [postModalInitialBody, setPostModalInitialBody] = useState('');
+  const composerRef = useRef(null);
   // CommentsSheet is now handled inside each UnifiedPostCard via createPortal
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
@@ -68,12 +65,15 @@ export default function Feed({ isActive = true }) {
   const [showNetworkBanner, setShowNetworkBanner] = useState(() => !storageService.getItem('junited_network_banner_v2_dismissed'));
   const canShowPreviewContent = !import.meta.env.PROD;
 
-  const openCreatePost = useCallback(() => {
-    setPostModalType('feed');
-    setPostModalSubtype(null);
-    setPostModalInitialBody('');
-    setShowPostModal(true);
+  const openComposer = useCallback((options) => {
+    composerRef.current?.open(options);
   }, []);
+
+  const openCreatePost = useCallback(() => openComposer({
+    type: 'feed',
+    subtype: null,
+    initialBody: '',
+  }), [openComposer]);
 
   useEffect(() => {
     if (!isActive || !currentUser) return undefined;
@@ -312,21 +312,23 @@ export default function Feed({ isActive = true }) {
       return;
     }
     if (intent.label === 'Event') {
-      setPostModalType('event');
-      setPostModalSubtype('reply');
-      setPostModalInitialBody(`I want to join: ${feedText(post)}`);
-      setShowPostModal(true);
+      openComposer({
+        type: 'event',
+        subtype: 'reply',
+        initialBody: `I want to join: ${feedText(post)}`,
+      });
       return;
     }
     if (intent.label === 'Local listing') {
       navigate('/Marketplace');
       return;
     }
-    setPostModalType('feed');
-    setPostModalSubtype('reply');
-    setPostModalInitialBody(`Replying to ${post.author_name || 'a neighbor'} about "${feedText(post)}"...`);
-    setShowPostModal(true);
-  }, [navigate, recordInterest]);
+    openComposer({
+      type: 'feed',
+      subtype: 'reply',
+      initialBody: `Replying to ${post.author_name || 'a neighbor'} about "${feedText(post)}"...`,
+    });
+  }, [navigate, openComposer, recordInterest]);
 
   const handleCardOpen = useCallback((post) => {
     recordInterest(post);
@@ -335,17 +337,19 @@ export default function Feed({ isActive = true }) {
       return;
     }
     if (post.type === 'event') {
-      setPostModalType('event');
-      setPostModalSubtype('local_event');
-      setPostModalInitialBody(`Following up on: ${feedText(post)}`);
-      setShowPostModal(true);
+      openComposer({
+        type: 'event',
+        subtype: 'local_event',
+        initialBody: `Following up on: ${feedText(post)}`,
+      });
       return;
     }
-    setPostModalType('feed');
-    setPostModalSubtype('discussion');
-    setPostModalInitialBody('');
-    setShowPostModal(true);
-  }, [navigate, recordInterest]);
+    openComposer({
+      type: 'feed',
+      subtype: 'discussion',
+      initialBody: '',
+    });
+  }, [navigate, openComposer, recordInterest]);
 
   return (
     <div className="app-page relative">
@@ -399,20 +403,10 @@ export default function Feed({ isActive = true }) {
         <FiveTownsConversationHub
           posts={feedPosts}
           networkLabel={primaryNetwork.shortLabel || 'Five Towns'}
-          onCreate={(type, subtype, body) => {
-            setPostModalType(type);
-            setPostModalSubtype(subtype);
-            setPostModalInitialBody(body);
-            setShowPostModal(true);
-          }}
+          onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
           onOpenMap={() => navigate('/Map')}
           onOpenMitzvah={() => navigate('/MitzvahCircle')}
-          onOpenEvents={() => {
-            setPostModalType('event');
-            setPostModalSubtype('local_event');
-            setPostModalInitialBody('');
-            setShowPostModal(true);
-          }}
+          onOpenEvents={() => openComposer({ type: 'event', subtype: 'local_event', initialBody: '' })}
           onOpenMarketplace={() => navigate('/Marketplace')}
         />
 
@@ -423,12 +417,7 @@ export default function Feed({ isActive = true }) {
           onReply={handleCardReply}
           onOpen={handleCardOpen}
           onMap={() => navigate('/Map')}
-          onCreate={() => {
-            setPostModalType('feed');
-            setPostModalSubtype('discussion');
-            setPostModalInitialBody('');
-            setShowPostModal(true);
-          }}
+          onCreate={() => openComposer({ type: 'feed', subtype: 'discussion', initialBody: '' })}
         />
 
         {/* One-time network banner for new users */}
@@ -515,12 +504,7 @@ export default function Feed({ isActive = true }) {
               prompt={dailyPrompt}
               onOpenMap={() => navigate('/Map')}
               onOpenCommunities={() => navigate('/Communities')}
-              onCreate={(type, subtype, body) => {
-                setPostModalType(type);
-                setPostModalSubtype(subtype);
-                setPostModalInitialBody(body);
-                setShowPostModal(true);
-              }}
+              onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
             />
 
             <details className="rounded-[24px] border border-slate-200 bg-white shadow-sm">
@@ -566,17 +550,11 @@ export default function Feed({ isActive = true }) {
         )}
       </div>
 
-      <UnifiedPostModal
-        open={showPostModal}
-        onOpenChange={(open) => {
-          setShowPostModal(open);
-          if (!open) { queryClient.invalidateQueries({ queryKey: ['unified-posts'] }); setPostModalSubtype(null); setPostModalInitialBody(''); }
-        }}
+      <FeedComposer
+        ref={composerRef}
         currentUser={currentUser}
-        postType={postModalType}
-        initialSubtype={postModalSubtype}
-        initialBody={postModalInitialBody}
         userCommunities={communityGroups}
+        onPostCreated={() => queryClient.invalidateQueries({ queryKey: ['unified-posts'] })}
       />
 
       <ReportModal
