@@ -21,6 +21,12 @@ export default class AppErrorBoundary extends React.Component {
     console.error('JUnited app error:', error, info);
   }
 
+  handleGoHome = () => {
+    this.setState({ hasError: false }, () => {
+      window.location.assign(this.props.homePath || '/Feed');
+    });
+  };
+
   render() {
     if (!this.state.hasError) return this.props.children;
 
@@ -55,14 +61,23 @@ export default class AppErrorBoundary extends React.Component {
           <p className="mt-2 text-sm font-medium leading-6 text-slate-500">
             Refresh the page. If it happens again, the app now shows this screen instead of going blank.
           </p>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white transition hover:bg-blue-700 active:scale-[0.98]"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh app
-          </button>
+          <div className="mt-5 grid gap-2">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white transition hover:bg-blue-700 active:scale-[0.98]"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh app
+            </button>
+            <button
+              type="button"
+              onClick={this.handleGoHome}
+              className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 active:scale-[0.98]"
+            >
+              Go to Feed
+            </button>
+          </div>
         </section>
       </main>
     );
