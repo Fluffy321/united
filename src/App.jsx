@@ -85,6 +85,10 @@ const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const mainPagePath = `/${mainPageKey || 'Feed'}`;
 
 const ADMIN_PAGE_KEYS = new Set(['AdminModerationQueue', 'AdminSeedControl']);
+const ROUTER_FUTURE_FLAGS = {
+  v7_startTransition: true,
+  v7_relativeSplatPath: true,
+};
 const SPLASH_MIN_VISIBLE_MS = 720;
 const SPLASH_MAX_WAIT_MS = 4500;
 const LEGACY_FEED_ROUTES = [
@@ -270,7 +274,7 @@ function App() {
         <AuthProvider>
           <QueryClientProvider client={queryClientInstance}>
             <InitialAppGate>
-              <Router>
+              <Router future={ROUTER_FUTURE_FLAGS}>
                 <NavigationTracker />
                 <AuthenticatedApp />
               </Router>
