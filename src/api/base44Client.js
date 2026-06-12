@@ -76,6 +76,8 @@ const SUPABASE_ENTITY_TABLES = {
   GroupMember:       'group_members',
   GroupPost:         'group_posts',
   GroupJoinRequest:  'group_join_requests',
+  // Community invites — migration 20260519220000_invite_links.sql
+  InviteLink: 'invite_links',
   // Activity digest — migration 20260519000000_community_last_visits.sql
   CommunityLastVisit: 'community_last_visits',
   // All other entities (Shul, etc.) are
