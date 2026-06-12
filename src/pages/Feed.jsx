@@ -16,6 +16,7 @@ import LocationNetworkPicker from '@/components/feed/LocationNetworkPicker';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import { useFloatingActions } from '@/components/layout/FloatingActionsContext';
 import DestinationHeader from '@/components/layout/DestinationHeader';
+import useFeedData from '@/components/feed/useFeedData';
 
 import { DEMO_POSTS } from '@/lib/feed/demoPosts';
 import { buildFeedSections } from '@/lib/feed/feedSections';
@@ -30,7 +31,6 @@ import {
   matchesText,
   postDate,
   toneClasses,
-  withFeedTimeout,
 } from '@/lib/feed/feedRanking';
 
 export default function Feed({ isActive = true }) {
@@ -63,12 +63,8 @@ export default function Feed({ isActive = true }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [communityGroups, setCommunityGroups] = useState([]);
   const [loadTimedOut, setLoadTimedOut] = useState(false);
-  const [page, setPage] = useState(0);
-  const [allPosts, setAllPosts] = useState([]);
-  const [hasMore, setHasMore] = useState(true);
   const [dailyPrompt, setDailyPrompt] = useState(null);
   const [publishedBrief, setPublishedBrief] = useState(null);
-  const PAGE_SIZE = 30;
   const [showNetworkBanner, setShowNetworkBanner] = useState(() => !storageService.getItem('junited_network_banner_v2_dismissed'));
   const canShowPreviewContent = !import.meta.env.PROD;
 
@@ -120,37 +116,7 @@ export default function Feed({ isActive = true }) {
       .catch(() => setPublishedBrief(null));
   }, [primaryNetwork.cityPreset]);
 
-  const { data: posts = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ['unified-posts', page],
-    queryFn: async () => {
-      if (!appParams.hasBackendConfig) return [];
-      try {
-        const p = await withFeedTimeout(dataService.entities.UnifiedPost.list('-updated_date', PAGE_SIZE, page * PAGE_SIZE));
-        return Array.isArray(p) ? p : [];
-      } catch (error) {
-        console.warn('Feed posts request failed:', error?.message || error);
-        return [];
-      }
-    },
-    staleTime: 30000,
-    refetchInterval: page === 0 ? 60000 : false,
-  });
-
-  // Merge paged results into allPosts without causing infinite loops
-  useEffect(() => {
-    if (!posts) return;
-    if (page === 0) {
-      setAllPosts(posts);
-    } else if (posts.length > 0) {
-      setAllPosts(prev => {
-        const existingIds = new Set(prev.map(x => x.id));
-        const newOnes = posts.filter(x => !existingIds.has(x.id));
-        if (newOnes.length === 0) return prev; // no change, avoid re-render
-        return [...prev, ...newOnes];
-      });
-    }
-    setHasMore(posts.length === PAGE_SIZE);
-  }, [posts, page]);
+  const { posts, fetchNextPage, hasNextPage, isLoading, isError } = useFeedData();
 
   const { data: userCommunitiesList, isFetched: communitiesFetched } = useQuery({
     queryKey: ['user-communities', currentUser?.id],
@@ -200,7 +166,7 @@ export default function Feed({ isActive = true }) {
     }
     const timer = setTimeout(() => setLoadTimedOut(true), FEED_LOAD_TIMEOUT_MS);
     return () => clearTimeout(timer);
-  }, [isLoading, page]);
+  }, [isLoading]);
 
   const likeMutation = useMutation({
     mutationFn: (postId) => togglePostLike(postId, currentUser.id),
@@ -281,8 +247,8 @@ export default function Feed({ isActive = true }) {
   const handleDelete = useCallback((id) => deleteMutation.mutate(id), [deleteMutation.mutate]);
 
   const feedCanRender = !isLoading || loadTimedOut;
-  const isPreviewContent = canShowPreviewContent && page === 0 && feedCanRender && allPosts.length === 0;
-  const feedSourcePosts = isPreviewContent ? DEMO_POSTS : allPosts;
+  const isPreviewContent = canShowPreviewContent && feedCanRender && posts.length === 0;
+  const feedSourcePosts = isPreviewContent ? DEMO_POSTS : posts;
 
   const visiblePosts = feedSourcePosts.filter(p => {
     if (p.type === 'dating') return false;
@@ -610,10 +576,10 @@ export default function Feed({ isActive = true }) {
             </details>
 
             {/* Load more */}
-            {hasMore && (
+            {hasNextPage && (
               <div className="p-4 text-center">
                 <button
-                  onClick={() => setPage(p => p + 1)}
+                  onClick={() => fetchNextPage()}
                   disabled={isLoading}
                   className="motion-press px-6 py-2 rounded-full bg-slate-100 text-slate-700 text-[13px] font-semibold hover:bg-slate-200 transition-colors disabled:opacity-50"
                 >
