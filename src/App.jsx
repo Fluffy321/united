@@ -65,7 +65,6 @@ const PublicProfile           = lazy(() => import('@/pages/PublicProfile'));
 const AdminAnalyticsDashboard = lazy(() => import('@/pages/AdminAnalyticsDashboard'));
 const AdminModerationQueue    = lazy(() => import('@/pages/AdminModerationQueue'));
 const AdminSeedControl        = lazy(() => import('@/pages/AdminSeedControl'));
-const FutureFeatures          = lazy(() => import('@/pages/FutureFeatures'));
 const PostDetail              = lazy(() => import('@/pages/PostDetail'));
 const CommunityPage           = lazy(() => import('@/pages/CommunityPage'));
 const JoinByCommunityCode     = lazy(() => import('@/pages/JoinByCommunityCode'));
@@ -79,7 +78,6 @@ const SearchPage              = lazy(() => import('@/pages/Search'));
 const Landing                 = lazy(() => import('@/pages/Landing'));
 const Login                   = lazy(() => import('@/pages/Login'));
 const AdminFeedbackInbox      = lazy(() => import('@/pages/AdminFeedbackInbox'));
-const AdminiOSReadiness       = lazy(() => import('@/pages/AdminiOSReadiness'));
 const ThankYou                = lazy(() => import('@/pages/ThankYou'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -169,9 +167,7 @@ const AuthenticatedApp = () => {
               <Route path="/AdminModerationQueue" element={<PageTransition><LayoutWrapper currentPageName="AdminModerationQueue"><AdminModerationQueue /></LayoutWrapper></PageTransition>} />
               <Route path="/AdminSeedControl" element={<PageTransition><LayoutWrapper currentPageName="AdminSeedControl"><AdminSeedControl /></LayoutWrapper></PageTransition>} />
               <Route path="/AdminAnalyticsDashboard" element={<PageTransition><AdminAnalyticsDashboard /></PageTransition>} />
-              <Route path="/FutureFeatures" element={<PageTransition><FutureFeatures /></PageTransition>} />
               <Route path="/AdminFeedbackInbox" element={<PageTransition><AdminFeedbackInbox /></PageTransition>} />
-              <Route path="/AdminiOSReadiness" element={<PageTransition><AdminiOSReadiness /></PageTransition>} />
             </Route>
 
             {/* Main app routes */}

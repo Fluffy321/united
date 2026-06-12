@@ -21,7 +21,6 @@ import {
   Search,
   Shield,
   Smartphone,
-  Sparkles,
   Trash2,
   UserRound,
   Users,
@@ -759,8 +758,6 @@ export default function Settings() {
                       { to: '/AdminModerationQueue',   icon: Flag,        label: 'Moderation Queue',         color: 'text-rose-500' },
                       { to: '/AdminAnalyticsDashboard', icon: Shield,     label: 'Analytics Dashboard',      color: 'text-blue-500' },
                       { to: '/AdminFeedbackInbox',      icon: Inbox,      label: 'Feedback Inbox',           color: 'text-violet-500' },
-                      { to: '/AdminiOSReadiness',       icon: Smartphone, label: 'iOS App Store Readiness',  color: 'text-slate-500' },
-                      { to: '/FutureFeatures',          icon: Sparkles,   label: 'Future Features',          color: 'text-amber-500' },
                     ].map(({ to, icon: Icon, label, color }) => (
                       <Link
                         key={to}

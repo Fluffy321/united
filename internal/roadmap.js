@@ -12,9 +12,9 @@
  *
  * PROMPT FIELD — REQUIRED FOR AI-IMPLEMENTABLE ITEMS
  * ---------------------------------------------------
- * The `prompt` field powers the "Copy Prompt" button in /FutureFeatures.
+ * The `prompt` field keeps implementation-ready tasks easy to hand to an AI agent.
  * Any entry that an AI agent could implement MUST include a `prompt`.
- * A missing prompt means the Copy Prompt button silently disappears.
+ * A missing prompt means the item is not ready to be picked up as an implementation task.
  *
  * Required format:
  *   prompt: `You are implementing X for JUnited.
@@ -23,7 +23,7 @@
  *
  *   Goals:
  *   1. ...
- *   N. Update src/config/roadmap.js: change this item's status to 'shipped'.`
+ *   N. Update internal/roadmap.js: change this item's status to 'shipped'.`
  *
  * Omit ONLY if the item is genuinely manual-only (e.g., "set up billing account").
  * If omitting, add a comment in the entry explaining why.
@@ -122,7 +122,7 @@ Goals:
 2. Verify Screen 2 h2 heading and form fields change correctly for signup mode.
 3. Verify "Already have an account?" toggle on Screen 2 still switches to signin.
 4. Run npm run lint && npm run build.
-5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -154,7 +154,7 @@ Goals:
 4. Ensure new Apple OAuth users go through OnboardingFlow (onboarding_complete: false).
 5. Bootstrap profile from user_metadata (full_name, email) if present.
 6. Test: sign in fresh, verify onboarding fires, verify profile is created in profiles table.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -207,7 +207,7 @@ Goals:
    - "Alice liked your post" (count=1) → "Alice and 4 others liked your post" (count=5)
 4. Update src/components/notifications/NotificationCenter.jsx similarly.
 5. Ensure mark-as-read still works correctly on aggregated rows (marks the single row).
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   // ── Community ─────────────────────────────────────────────────────────────
@@ -405,7 +405,7 @@ Goals:
 2. CreateCommunityModal passes onRequestUpgrade to CreateCommunityFlow; when called, it opens the community plan checkout (using createCommunityPlanCheckout edge function or the Admin Center billing flow, whichever exists).
 3. On successful upgrade (webhook completes or user returns from checkout), the premiumPreviewLayout choices should be committed to community.settings.layout via Supabase update.
 4. If checkout is not yet wired (Stripe prices not set up), show a graceful fallback: "Upgrade available after launch in Admin Center → Billing."
-5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -440,7 +440,7 @@ Goals:
 2. In StepMakeItYours, add an optional "Add cover photo" tap target (dashed border, image preview if set, click to replace) — same visual style as the legacy form
 3. Pass coverPreviewUrl into CommunityLivePreview and render it as the cover background image when present (fall back to gradient if null)
 4. On submit (onCreate payload), include coverFile so CreateCommunityModal.handleCreateFromFlow can upload it to Supabase storage and set cover_url on the community
-5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -465,7 +465,7 @@ Goals:
 2. On confirm, use canvas to produce a cropped Blob; set that as coverFile and generate a new objectURL for coverPreviewUrl
 3. On cancel, clear the selection (no change to state)
 4. Skip the crop step on files already within the 3:1 ratio tolerance (±10%)
-5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -493,7 +493,7 @@ Goals:
 2. In CreateCommunityFlow.jsx: add a usePlanPricing() hook that calls this function via supabase.functions.invoke, returns { monthly, annual } or null
 3. In StepShape's upgrade CTA: if pricing loaded, display the amount alongside the interval label (e.g., "$12 / mo" or "$99 / yr"); if null/loading, fall back to the current sublabel text
 4. Update src/lib/communityPlanPricing.js with a formatPlanPrice(amountCents, currency) helper
-5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
     shippedNote: 'Shipped 2026-05-19. New Edge Function get-community-plan-pricing reads STRIPE_PRICE_COMMUNITY_PREMIUM_MONTHLY/ANNUAL env vars, calls stripe.prices.retrieve() for each, returns { monthly, annual: { amount, currency } } with 1-hour Cache-Control. formatPlanPrice(amountCents, currency) helper added to communityPlanPricing.js. usePlanPricing() hook in CreateCommunityFlow.jsx calls the function on mount and returns pricing or null. StepShape receives planPricing prop; interval buttons show "$12 / mo" / "$99 / yr" when loaded, fall back to sublabel text when null/loading.',
   },
 
@@ -523,7 +523,7 @@ Goals:
    - Customize layout (opens Admin Center layout tab)
    - Share community link (copies invite link)
 4. A dismiss button marks first_visit_complete = true via a supabase update
-5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -560,7 +560,7 @@ Goals:
 3. On send: call the Edge Function, show success/error toast, track that the email was sent (optional: store in invite_links a sent_to_emails text[] column)
 4. Apply the schema change as a migration in supabase/migrations/
 5. Run npm run lint && npm run build
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -585,7 +585,7 @@ Goals:
 3. Wire these values into createNewLink() as part of the insert payload
 4. When a link has expires_at or max_uses set, show them clearly in the stats line (e.g. "Used 2/10 times · expires Jun 1")
 5. Run npm run lint && npm run build
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -631,7 +631,7 @@ Goals:
 4. Persist via upsert to community_member_preferences.
 5. Apply stored order in HomeTab / RoutedCommunityHome for joined members.
 6. Run npm run lint && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -721,7 +721,7 @@ Goals:
 4. Chip styling: inactive = typeConfig.softClass; active = typeConfig.badgeClass + ring-2 + text-white.
 5. Do not remove the text search — type filter and text search should compose (both active at once narrows further).
 6. Run npm run lint && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -746,7 +746,7 @@ Goals:
 3. Communities that already appear in "For you" still appear in their type section (they are not deduplicated — both placements reinforce discovery).
 4. Hide the For You section entirely if the user has no joined communities or no unjoinable matches with score > 0.
 5. Run npm run lint && npm run build.
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -772,7 +772,7 @@ Goals:
 3. If location requires a new query: add a lightweight useQuery for the user's profile location only when allJoinedCommunities.length > 0 (avoids wasted fetch for new users).
 4. Update the ForYouSection subtitle to "Based on your communities and neighborhood" when a location boost is in effect; keep the current copy when it is not.
 5. Run npm run lint && npm run build.
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -809,7 +809,7 @@ Goals:
 4. Add Admin Center UI to assign/edit/remove contact titles.
 5. Update CommunityMemberDirectory and CommunityWelcomeHub to show custom key contacts without exposing private data.
 6. Run npm run lint && npm run typecheck && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -833,7 +833,7 @@ Goals:
 2. Show drag handles (or up/down buttons for mobile) to reorder; persist order by calling set_member_contact_title RPC with the new p_order value.
 3. Reflect updated order in CommunityMemberDirectory and CommunityWelcomeHub immediately via query invalidation.
 4. Run npm run lint && npm run build.
-5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -859,7 +859,7 @@ Goals:
 5. Design a digest generator that summarizes recent announcements/events/resources without sending emails until the email provider is configured.
 6. Add clear failure/retry states.
 7. Run npm run lint && npm run typecheck && npm run build.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -884,7 +884,7 @@ Goals:
 4. Add attendance/check-in fields or a separate community_event_attendance table with RLS.
 5. Add admin check-in UI without exposing private attendee data to normal members.
 6. Run npm run lint && npm run typecheck && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -908,7 +908,7 @@ Goals:
 4. Build a polished analytics tab for community managers with 7d/30d/90d ranges.
 5. Gate advanced metrics by Premium/Pro plan as appropriate.
 6. Run npm run lint && npm run typecheck && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -932,7 +932,7 @@ Goals:
 4. Preserve Free limit of 10 resources and Premium unlimited behavior.
 5. Improve empty states and search/filter behavior.
 6. Run npm run lint && npm run typecheck && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -958,7 +958,7 @@ Goals:
 5. Add member-facing form/signup cards inside community pages.
 6. Add CSV export if privacy-safe.
 7. Run npm run lint && npm run typecheck && npm run build.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -984,7 +984,7 @@ Goals:
 4. Update CommunityFormsTab to display slots with remaining capacity and a claim button.
 5. Add slot summary to SubmissionsPanel CSV export.
 6. Run npm run lint && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1008,7 +1008,7 @@ Goals:
 4. Add a compact preferences surface inside community detail/about or member settings.
 5. Update notificationsService.js to respect per-community settings for announcement/event types.
 6. Run npm run lint && npm run typecheck && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1032,7 +1032,7 @@ Goals:
 4. Show badges tastefully in CommunityMemberDirectory and profile/community sections.
 5. Avoid gamifying sensitive support communities unless explicitly enabled.
 6. Run npm run lint && npm run typecheck && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1076,7 +1076,7 @@ Goals:
 5. Connect MyEvents.jsx to events the user has RSVP'd to.
 6. Add RSVP create/cancel flow in CommunityEventsTab and Events pages.
 7. Add EventSummaryButton AI feature (optional — gate behind AI being live).
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1099,7 +1099,7 @@ Goals:
 4. Connect CommunityGroupPage.jsx to real DB data.
 5. Add join/leave group flows with role management (owner, member).
 6. Groups should be discoverable from the community detail page.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1126,7 +1126,7 @@ Goals:
 4. Approve: insert into group_members (role: 'member'), update group_join_requests status to 'approved', increment member_count via incrementCounter.
 5. Deny: update group_join_requests status to 'denied'.
 6. Invalidate relevant queries after each action.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1152,7 +1152,7 @@ Goals:
 3. Restore the Events, Forum, and Resources tab definitions in CommunityGroupPage TABS array.
 4. Restore the tab content blocks (GroupEventsTab, GroupDiscussionTab, GroupResourcesTab) in CommunityGroupPage JSX.
 5. Verify GroupEventsTab.jsx, GroupDiscussionTab.jsx, GroupResourcesTab.jsx at src/components/groups/ work with real data.
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1173,7 +1173,7 @@ Goals:
 2. Verify the bookmarks table exists in Supabase (check migrations — if not, create it).
 3. Add a "Save" button to post cards (UnifiedPostCard or similar) that inserts/removes a bookmark row.
 4. Ensure RLS: users can only read/write their own bookmarks.
-5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1196,7 +1196,7 @@ Goals:
 4. Wire NewsletterComposer.jsx behind the community admin center.
 5. Create a Supabase Edge Function send-newsletter that calls Resend API.
 6. Add double-opt-in email confirmation.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1230,7 +1230,7 @@ Goals:
 3. When a message is sent to a non-follower, create a MessageRequest row instead of a direct conversation.
 4. Handle accept: convert the request into a real conversation.
 5. Handle decline: mark the request as declined (do not surface again).
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   // ── Chesed & Mitzvah ─────────────────────────────────────────────────────
@@ -1253,7 +1253,7 @@ Goals:
 4. Add claim-slot flow: user picks a date, system marks slot as taken.
 5. Send notification to train creator when a slot is claimed.
 6. Show meal trains on the MitzvahMap with a distinct icon.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1275,7 +1275,7 @@ Goals:
 4. Add a Carpool tab to MitzvahCircle (src/pages/MitzvahCircle.jsx).
 5. Add create-ride-offer and request-ride flows within the carpool board.
 6. Show ride requests on MitzvahMap.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1297,7 +1297,7 @@ Goals:
 3. Re-add a "My Log" tab to MitzvahCircle with a rebuilt ChesedHoursDashboard.
 4. When a mitzvah request is marked verified/complete, auto-create a ChesedLog entry.
 5. Add CSV export of verified hours (for school submissions).
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1319,7 +1319,7 @@ Goals:
 4. Add optional recurrence controls to the create-request flow without making the default form heavier.
 5. Add saved filter alerts only after notification preferences are production-backed.
 6. Verify recurring requests do not create duplicate spam and can be paused by the creator.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   // ── Jewish Life ───────────────────────────────────────────────────────────
@@ -1344,7 +1344,7 @@ Goals:
 5. Connect RefuahList.jsx to real data; add submit refuah request flow.
 6. Re-add /yahrzeits and /tehillim routes to App.jsx.
 7. Add Hebrew calendar date display using a lightweight library or conversion utility.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1367,7 +1367,7 @@ Goals:
 4. Add shul search to the Search page.
 5. Link shul pages to corresponding community pages if they exist.
 6. Re-add /ShulPage route to App.jsx.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1395,7 +1395,7 @@ Goals:
 5. Update useShabbatLocation.js hook to expose setOffset(minutes) and return current offset.
 6. Add an offset picker in the Settings Candle-lighting location card: chips for 15 / 18 / 20 / 30 / 40 min with a label explaining what each represents.
 7. Update the countdown widget (DailyRetentionPrompt chip in Feed.jsx) to show the offset if it differs from the default.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1420,7 +1420,7 @@ Goals:
 2. If Yom Tov items are already in the response, update useShabbosCountdown() to handle multiple candles/havdalah items in the same week (e.g., two-day Yom Tov).
 3. Update the countdown chip label to reflect Yom Tov (e.g., "Rosh Hashana" instead of "Candle lighting") using the candleTitle from the API.
 4. Handle the Yom Kippur case (no actual candles but still a candle-lighting time).
-5. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1445,7 +1445,7 @@ Goals:
 3. On login, hydrate localStorage from the profile's candle_location if localStorage is empty.
 4. On change, write to both localStorage and the profiles table (optimistically, with silent error handling).
 5. Keep localStorage as the authoritative read source for speed; Supabase as the sync layer.
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   // ── Businesses & Map ──────────────────────────────────────────────────────
@@ -1479,7 +1479,7 @@ Goals:
 4. Add review form and review list to business detail panel in Map.jsx.
 5. Add average rating display on business cards.
 6. Add admin moderation for flagged reviews.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1500,7 +1500,7 @@ Goals:
 3. Allow owners to edit: hours, description, photos, contact info.
 4. Show pending/approved claim request status.
 5. Gate behind business_managers.role IN ('owner', 'admin').
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1520,7 +1520,7 @@ Goals:
 4. Show active promotions as highlighted pins on BusinessMap.
 5. Surface active promotions in the community Feed for communities near the business.
 6. Optional: gate paid promotion features behind Stripe integration.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1541,7 +1541,7 @@ Goals:
 3. Connect Organization.jsx to real data.
 4. Link organizations to communities and business listings.
 5. Re-add /Organization route to App.jsx.
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   // ── Automation & AI ───────────────────────────────────────────────────────
@@ -1579,7 +1579,7 @@ Goals:
 3. Update the Feed.jsx query to use PostFeedView instead of UnifiedPost.
 4. Update toAppRow to prefer community_name_fresh and profile_display_name when present.
 5. Ensure writes still go to posts (not the view) — view is read-only.
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1602,7 +1602,7 @@ Goals:
 4. Insert new alerts into local_updates table with source='511ny'.
 5. Schedule the function via pg_cron (every 15 minutes).
 6. Deduplicate by external alert ID to avoid duplicate posts.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1624,7 +1624,7 @@ Goals:
 4. Insert content into local_updates or posts table with source='publisher:<name>' and a canonical URL.
 5. Respect publisher's content license — link back, do not reproduce full articles without permission.
 6. Schedule or webhook-trigger the function.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1648,7 +1648,7 @@ Goals:
 5. Schedule via pg_cron (every 2 hours).
 6. Connect News.jsx (/News) to real data; re-add route to App.jsx.
 7. Add admin interface for managing news sources.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1673,7 +1673,7 @@ Goals:
 5. Wire AIChatBubble.jsx to the real Edge Function.
 6. Add rate limiting: max 20 AI requests per user per day.
 7. Re-add AIChatBubble to the Feed page.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1707,7 +1707,7 @@ Goals:
    via a new timestamped migration — set it to true when the wizard is used.
 6. Keep the standard manual path fully intact; AI wizard is purely opt-in.
 7. Run npm run lint && npm run typecheck && npm run build.
-8. Update src/config/roadmap.js: change this item's status to 'shipped' if the basic version works.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped' if the basic version works.`,
   },
 
   // ── Growth & Monetization ─────────────────────────────────────────────────
@@ -1748,7 +1748,7 @@ Goals:
 5. Show buyers their order history (basic) in CommunityStoreTab.
 6. Show order counts and recent orders in the Admin Store tab.
 7. Run npm run lint && npm run build.
-8. Update src/config/roadmap.js: change community-store shippedNote to reflect full checkout live.`,
+8. Update internal/roadmap.js: change community-store shippedNote to reflect full checkout live.`,
   },
 
   {
@@ -1791,7 +1791,7 @@ Goals:
    Customer Portal (create a \`create-portal-session\` Edge Function that returns { portalUrl }).
 6. Update paymentsService.js to expose createSubscriptionCheckout({ tier, interval }).
 7. Run npm run lint && npm run typecheck && npm run build.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1818,7 +1818,7 @@ Goals:
    - A "Manage or cancel" button that calls paymentsService.createPortalSession() and redirects to the portal URL
    - A "Upgrade tier" link/button that dismisses the card and shows the tier picker so they can switch plans
 3. If no subscription (or user not logged in), show the existing UI unchanged.
-4. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1843,7 +1843,7 @@ Goals:
 3. MRR formula: for each active/trialing row, annualAmount/12 if interval='annual', else monthlyAmount.
 4. Show a simple time series of new subscriptions per week (last 8 weeks) as a bar chart or sparkline.
 5. All data comes from a direct Supabase query (admin role); no new Edge Function needed.
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1890,7 +1890,7 @@ Goals:
 6. Gate Premium-only community features in UI from community plan state, not from currentUser.subscription_status.
 7. Add admin analytics for Premium Communities separately from Supporters.
 8. Run npm run lint && npm run typecheck && npm run build.
-9. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+9. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1931,7 +1931,7 @@ Goals:
 6. Update CommunityAdminCenter billing copy and plan comparison UI.
 7. Add analytics that separately tracks Premium vs Pro communities.
 8. Run npm run lint, npm run typecheck, npm run build, and npm run check-prompts.
-9. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+9. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -1981,7 +1981,7 @@ Goals:
    - future user payout settings for Mitzvah reimbursement flows.
 6. Store and refresh payout status from Stripe account requirements through a webhook or server refresh function.
 7. Run npm run lint && npm run typecheck && npm run build.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -2025,7 +2025,7 @@ Goals:
 5. Replace any old PaymentModal usage for community/business recipient payments with the Connect flow.
 6. Add receipt/record UI so users see payment status inside JUnited.
 7. Run npm run lint && npm run typecheck && npm run build.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -2063,7 +2063,7 @@ Goals:
    - no pressure language,
    - report/moderation path for abuse.
 7. Run npm run lint && npm run typecheck && npm run build.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -2098,7 +2098,7 @@ Goals:
 5. Show verified badge on community cards and detail pages.
 6. Show featured communities prominently in Communities discovery.
 7. Optional: gate premium verification behind Stripe.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -2112,7 +2112,7 @@ Goals:
     prompt: `You are implementing Premium Group Analytics for JUnited.
 
 Context: GroupAnalyticsDashboard.jsx exists in src/components/groups/. Community Groups must
-        be live first (src/config/roadmap.js id: 'community-groups').
+        be live first (internal/roadmap.js id: 'community-groups').
 
 Goals:
 1. Connect GroupAnalyticsDashboard.jsx to real Supabase data.
@@ -2120,7 +2120,7 @@ Goals:
 3. Add time-range filters (7d, 30d, 90d).
 4. Gate analytics behind group admin role (group_members.role = 'admin').
 5. Re-add GroupAnalyticsDashboard to CommunityGroupPage.jsx.
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   // ── Admin & Platform ──────────────────────────────────────────────────────
@@ -2169,7 +2169,7 @@ Goals:
 5. All changes must be purely additive via Tailwind responsive prefixes (lg:, xl:).
    Mobile layout must be completely unaffected.
 6. Run npm run lint && npm run typecheck && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -2239,7 +2239,7 @@ Goals:
    - Only show to admins (the page is already admin-gated)
 5. Add a "Re-triage" button per feedback row to manually re-trigger triage for a submission.
 6. Run npm run lint && npm run typecheck && npm run build.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -2249,7 +2249,7 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'iOS App Store Readiness Admin Tool',
     description: 'Structured admin tool at /AdminiOSReadiness for tracking iOS App Store submission progress. Static catalog of ~55 required and optional tasks across 10 categories (build setup, auth, account management, privacy, metadata, legal, UI, performance, app review). Persistent per-task status/notes via ios_app_store_readiness_progress table. AI copy prompts for AI-executable tasks, numbered manual steps for human tasks. Overall readiness score with progress bar.',
-    shippedNote: 'Shipped. Config: src/config/iosReadiness.js. Page: src/pages/AdminiOSReadiness.jsx. Migration: 20260516175045_ios_app_store_readiness_progress.sql. Route: /AdminiOSReadiness under AdminRoute.',
+    shippedNote: 'Shipped. Config: internal/iosReadiness.js. Page: removed AdminiOSReadiness page. Migration: 20260516175045_ios_app_store_readiness_progress.sql. Admin display route removed.',
   },
 
   {
@@ -2278,7 +2278,7 @@ Goals:
 4. Add aria-live region for toast notifications so screen readers announce them.
 5. Check color-contrast ratios on: j-text-meta (slate-500 on white), notification unread dot, chip labels.
 6. Verify prefers-reduced-motion disables appFadeSlide, navPillIn, reactionPop, chesedPulse animations.
-7. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -2305,7 +2305,7 @@ Goals:
 5. Fix Communities.jsx DiscoverEmptyState: "Clear filters" button should use bg-blue-600, not bg-slate-950.
 6. Create STYLE_GUIDE.md at the repo root documenting colors, typography, buttons, cards, spacing, motion.
 7. Run npm run lint && npm run build.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -2332,7 +2332,7 @@ Goals:
 3. Search for section labels (text-[11px] font-black uppercase tracking-wide text-slate-400) → replace with app-section-label.
 4. Use Playwright MCP to verify no visual regression.
 5. Run npm run lint && npm run build.
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -2359,7 +2359,7 @@ Goals:
 5. Fix ActiveInStrip initials badge: bg-slate-950 → bg-blue-600.
 6. Use Playwright MCP to verify after screenshots — confirm section headers, card height, and color.
 7. Run npm run lint && npm run build.
-8. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+8. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -2387,7 +2387,7 @@ Goals:
 6. Tighten CommunityPostPreview badge padding: px-2.5 py-1 → px-2 py-0.5.
 7. Verify all tabs and More menu still work via Playwright.
 8. Run npm run lint && npm run build.
-9. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+9. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -2411,7 +2411,7 @@ Goals:
 3. Implement the top 3-5 targeted fixes — no redesign, no new features.
 4. Capture after screenshots and confirm visual improvement.
 5. Run npm run lint && npm run build.
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -2438,7 +2438,7 @@ Goals:
 3. Replace hardcoded values in GroupCard, CommunityGroupsTab, CreateGroupModal, Groups page.
 4. Document the complete token reference in a comment block at the top of index.css.
 5. Run npm run build to verify no visual regressions.
-6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {
@@ -2467,7 +2467,7 @@ If removing:
 3. Remove ADMIN_PAGE_KEYS reference in App.jsx.
 
 After completing either path:
-1. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+1. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
 ];
