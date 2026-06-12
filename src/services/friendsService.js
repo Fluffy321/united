@@ -15,6 +15,22 @@ async function callRpc(name, params) {
   return data;
 }
 
+const PUBLIC_PROFILE_SELECT = 'id, display_name, avatar_url, username, city';
+
+async function loadPublicProfileMap(userIds = []) {
+  const ids = [...new Set(userIds.filter(Boolean))];
+  if (ids.length === 0) return new Map();
+
+  const { data, error } = await supabase
+    .from('public_profiles')
+    .select(PUBLIC_PROFILE_SELECT)
+    .in('id', ids);
+
+  if (error) throw error;
+
+  return new Map((data || []).map(profile => [profile.id, profile]));
+}
+
 export const friendsService = {
   // ── Read ──────────────────────────────────────────────────────────────────
 
@@ -56,13 +72,22 @@ export const friendsService = {
   /** All accepted friends of userId with profile data. */
   async listFriends(userId) {
     if (!userId || !shouldUseSupabase) return [];
-    const { data, error } = await supabase
-      .from('friendships')
-      .select('id, friend_id, created_at, friend:profiles!friend_id(id, display_name, avatar_url, username, city)')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    if (error) return [];
-    return data || [];
+    try {
+      const { data, error } = await supabase
+        .from('friendships')
+        .select('id, friend_id, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+
+      const profiles = await loadPublicProfileMap((data || []).map(row => row.friend_id));
+      return (data || []).map(row => ({
+        ...row,
+        friend: profiles.get(row.friend_id) || null,
+      }));
+    } catch {
+      return [];
+    }
   },
 
   /** Count of accepted friends. */
@@ -79,27 +104,45 @@ export const friendsService = {
   /** Incoming pending requests (I am the recipient). Includes requester profile. */
   async getIncomingRequests(userId) {
     if (!userId || !shouldUseSupabase) return [];
-    const { data, error } = await supabase
-      .from('friend_requests')
-      .select('id, requester_id, created_at, requester:profiles!requester_id(id, display_name, avatar_url, username, city)')
-      .eq('recipient_id', userId)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
-    if (error) return [];
-    return data || [];
+    try {
+      const { data, error } = await supabase
+        .from('friend_requests')
+        .select('id, requester_id, created_at')
+        .eq('recipient_id', userId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+
+      const profiles = await loadPublicProfileMap((data || []).map(row => row.requester_id));
+      return (data || []).map(row => ({
+        ...row,
+        requester: profiles.get(row.requester_id) || null,
+      }));
+    } catch {
+      return [];
+    }
   },
 
   /** Outgoing pending requests (I am the requester). Includes recipient profile. */
   async getOutgoingRequests(userId) {
     if (!userId || !shouldUseSupabase) return [];
-    const { data, error } = await supabase
-      .from('friend_requests')
-      .select('id, recipient_id, created_at, recipient:profiles!recipient_id(id, display_name, avatar_url, username, city)')
-      .eq('requester_id', userId)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
-    if (error) return [];
-    return data || [];
+    try {
+      const { data, error } = await supabase
+        .from('friend_requests')
+        .select('id, recipient_id, created_at')
+        .eq('requester_id', userId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+
+      const profiles = await loadPublicProfileMap((data || []).map(row => row.recipient_id));
+      return (data || []).map(row => ({
+        ...row,
+        recipient: profiles.get(row.recipient_id) || null,
+      }));
+    } catch {
+      return [];
+    }
   },
 
   // ── Mutations (all via SECURITY DEFINER RPCs) ─────────────────────────────
