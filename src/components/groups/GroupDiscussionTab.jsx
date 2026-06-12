@@ -1,3 +1,4 @@
+// DEFERRED: no backing table — do not use in beta
 import React, { useState, useEffect } from 'react';
 import { ChevronUp, MessageCircle, Loader2, Send } from 'lucide-react';
 import { dataService, incrementCounter } from '@/services';

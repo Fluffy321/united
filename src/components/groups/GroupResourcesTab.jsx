@@ -1,3 +1,4 @@
+// DEFERRED: no backing table — do not use in beta
 import React, { useState, useEffect } from 'react';
 import { FileText, Link, Upload, ExternalLink, Download, Loader2, X } from 'lucide-react';
 import { dataService } from '@/services';

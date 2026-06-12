@@ -1,3 +1,4 @@
+// DEFERRED: no backing table — do not use in beta
 import React from 'react';
 import { Mail, X, Calendar, Users, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { dataService } from '@/services';

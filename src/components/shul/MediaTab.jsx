@@ -1,3 +1,4 @@
+// DEFERRED: no backing table — do not use in beta
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, FileText, Image, Loader2, ExternalLink, Trash2 } from 'lucide-react';

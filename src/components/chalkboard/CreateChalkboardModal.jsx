@@ -1,3 +1,4 @@
+// DEFERRED: no backing table — do not use in beta
 import React, { useState } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";

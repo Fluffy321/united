@@ -1,3 +1,4 @@
+// DEFERRED: no backing table — do not use in beta
 import React, { useState, useEffect, useMemo } from 'react';
 import { dataService, findOrCreateDirectConversation } from '@/services';
 import { useAuth } from '@/lib/AuthContext';

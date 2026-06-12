@@ -1,3 +1,4 @@
+// DEFERRED: no backing table — do not use in beta
 import React, { useState } from 'react';
 import { Mail, Loader2, CheckCircle2 } from 'lucide-react';
 import { dataService } from '@/services';
