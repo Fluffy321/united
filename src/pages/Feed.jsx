@@ -4,7 +4,6 @@ import { dataService, feedRetentionService, shabbatReminderService, storageServi
 import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
-import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import ReportModal from '@/components/common/ReportModal';
 import PageHelp from '@/components/common/PageHelp';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -17,6 +16,7 @@ import DestinationHeader from '@/components/layout/DestinationHeader';
 import useFeedData from '@/components/feed/useFeedData';
 import FeedFilters, { FeedFilterTrigger } from '@/components/feed/FeedFilters';
 import FeedComposer from '@/components/feed/FeedComposer';
+import FeedPost from '@/components/feed/FeedPost';
 
 import { DEMO_POSTS } from '@/lib/feed/demoPosts';
 import { buildFeedSections } from '@/lib/feed/feedSections';
@@ -514,22 +514,21 @@ export default function Feed({ isActive = true }) {
               </summary>
               <div className="space-y-2 border-t border-slate-100 p-2">
                 {feedPosts.slice(0, 10).map((post) => (
-                  <div key={`history-${post.id}`} className="overflow-hidden rounded-[18px] border border-slate-100 bg-white">
-                    <UnifiedPostCard
-                      post={post}
-                      currentUser={currentUser}
-                      liked={userLikes.includes(post.id)}
-                      onLike={handleLike}
-                      onComment={handleComment}
-                      onDelete={handleDelete}
-                      onBlock={handleBlock}
-                      blockedIds={blockedIds}
-                      onReport={handleReport}
-                      communities={communityGroups}
-                      onCommunityClick={handleCommunityClick}
-                      isFromJoinedCommunity={post.community_id && joinedCommunityIds.has(post.community_id)}
-                    />
-                  </div>
+                  <FeedPost
+                    key={`history-${post.id}`}
+                    post={post}
+                    currentUser={currentUser}
+                    liked={userLikes.includes(post.id)}
+                    onLike={handleLike}
+                    onComment={handleComment}
+                    onDelete={handleDelete}
+                    onBlock={handleBlock}
+                    blockedIds={blockedIds}
+                    onReport={handleReport}
+                    communities={communityGroups}
+                    onCommunityClick={handleCommunityClick}
+                    isFromJoinedCommunity={post.community_id && joinedCommunityIds.has(post.community_id)}
+                  />
                 ))}
               </div>
             </details>
