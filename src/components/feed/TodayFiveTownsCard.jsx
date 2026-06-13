@@ -47,7 +47,7 @@ async function loadDailyContent(dateKey) {
 
   const { data, error } = await supabase
     .from('daily_content')
-    .select('date, mitzvah_text, torah_text')
+    .select('date, mitzvah_text, torah_text, candle_lighting_at, havdalah_at')
     .eq('date', dateKey)
     .maybeSingle();
 
@@ -58,7 +58,6 @@ async function loadDailyContent(dateKey) {
 export default function TodayFiveTownsCard() {
   const today = new Date();
   const dateKey = getFiveTownsDateKey(today);
-  const { candleLighting, havdalah } = getShabbosTimes(today);
 
   const { data, isError } = useQuery({
     queryKey: ['daily-content', dateKey],
@@ -68,6 +67,7 @@ export default function TodayFiveTownsCard() {
   });
 
   const content = data || DEFAULT_CONTENT;
+  const { candleLighting, havdalah } = getShabbosTimes(content);
 
   return (
     <section className="mb-3 overflow-hidden rounded-[24px] border border-blue-100 bg-white shadow-sm">
