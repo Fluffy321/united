@@ -17,6 +17,7 @@ import useFeedData from '@/components/feed/useFeedData';
 import FeedFilters, { FeedFilterTrigger } from '@/components/feed/FeedFilters';
 import FeedComposer from '@/components/feed/FeedComposer';
 import FeedPost from '@/components/feed/FeedPost';
+import TodayFiveTownsCard from '@/components/feed/TodayFiveTownsCard';
 
 import { DEMO_POSTS } from '@/lib/feed/demoPosts';
 import { buildFeedSections } from '@/lib/feed/feedSections';
@@ -399,6 +400,8 @@ export default function Feed({ isActive = true }) {
           <h1 className="text-[20px] font-black text-slate-950">Five Towns Feed</h1>
           <PageHelp text="The main local thread for questions, plans, needs, businesses, carpools, events, and neighbor-to-neighbor help." />
         </div>
+
+        <TodayFiveTownsCard />
 
         <FiveTownsConversationHub
           posts={feedPosts}

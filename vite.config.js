@@ -8,7 +8,13 @@ export default defineConfig({
       '@': '/src',
     },
   },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2022',
+    },
+  },
   build: {
+    target: 'es2022',
     rollupOptions: {
       output: {
         // Split large vendors into named chunks so they can be cached
