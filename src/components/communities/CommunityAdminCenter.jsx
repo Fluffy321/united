@@ -10,7 +10,7 @@ import {
   Pin, Image, Lock, Globe, Upload, CreditCard, Megaphone, Send,
   LayoutGrid, ChevronUp, ChevronDown, Palette, Tag,
   ClipboardList, FilePlus, Download, ToggleLeft, ToggleRight, Eye, ChevronRight,
-  ShoppingBag, Package,
+  ShoppingBag, Package, DollarSign,
 } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
 import { dataService } from '@/services';
