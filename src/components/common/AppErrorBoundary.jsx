@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { captureError } from '@/lib/analytics';
 
 export default class AppErrorBoundary extends React.Component {
   constructor(props) {
@@ -19,6 +20,10 @@ export default class AppErrorBoundary extends React.Component {
 
   componentDidCatch(error, info) {
     console.error('JUnited app error:', error, info);
+    captureError(error, {
+      componentStack: info?.componentStack,
+      boundary: this.props.inline ? 'inline' : 'app',
+    });
   }
 
   handleGoHome = () => {

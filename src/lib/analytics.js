@@ -21,11 +21,70 @@
  */
 
 import { getStoredConsent } from '@/lib/cookieConsent';
+import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 
 // Runtime references set after consent-gated init.
 let sentry = null;
 let posthog = null;
 let analyticsLoaded = false;
+let errorLoggingInstalled = false;
+
+const MAX_MESSAGE_LENGTH = 500;
+const MAX_STACK_LENGTH = 4000;
+const MAX_ROUTE_LENGTH = 300;
+const MAX_USER_AGENT_LENGTH = 500;
+
+function truncate(value, maxLength) {
+  if (!value) return null;
+  const text = String(value);
+  return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
+}
+
+function sanitizeErrorText(value) {
+  if (!value) return null;
+  return String(value)
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[redacted-email]')
+    .replace(/\b(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}\b/g, '[redacted-phone]')
+    .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, '[redacted-token]')
+    .replace(/\bsb_(?:secret|publishable)_[A-Za-z0-9_-]+\b/g, '[redacted-key]')
+    .replace(/([?&](?:token|access_token|refresh_token|password|email|phone|key|secret)=)[^&#\s]+/gi, '$1[redacted]');
+}
+
+function safeRoute() {
+  if (typeof window === 'undefined') return null;
+  return truncate(sanitizeErrorText(window.location?.pathname || '/'), MAX_ROUTE_LENGTH);
+}
+
+function normalizeError(errorLike) {
+  if (errorLike instanceof Error) {
+    return {
+      message: errorLike.message || errorLike.name || 'Unknown error',
+      stack: errorLike.stack || null,
+    };
+  }
+
+  if (typeof errorLike === 'string') {
+    return { message: errorLike, stack: null };
+  }
+
+  if (errorLike && typeof errorLike === 'object') {
+    const message = errorLike.message || errorLike.reason || errorLike.type || 'Unknown error';
+    const stack = errorLike.stack || null;
+    return { message, stack };
+  }
+
+  return { message: 'Unknown error', stack: null };
+}
+
+async function currentUserId() {
+  if (!shouldUseSupabase || !supabase) return null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.id || null;
+  } catch {
+    return null;
+  }
+}
 
 function optionalImport(packageName) {
   // Keep optional analytics packages out of Vite's build-time resolver.
@@ -63,6 +122,7 @@ async function loadSentry() {
 
 export function captureError(error, context = {}) {
   if (import.meta.env.DEV) console.error('[Analytics] error captured:', error, context);
+  logClientError(error, context);
   if (!sentry) return;
   try {
     sentry.withScope((scope) => {
@@ -70,6 +130,42 @@ export function captureError(error, context = {}) {
       sentry.captureException(error);
     });
   } catch {}
+}
+
+export async function logClientError(errorLike, context = {}) {
+  if (!shouldUseSupabase || !supabase) return;
+
+  try {
+    const normalized = normalizeError(errorLike);
+    const stackParts = [normalized.stack, context.componentStack]
+      .filter(Boolean)
+      .join('\n\nComponent stack:\n');
+
+    const row = {
+      user_id: await currentUserId(),
+      route: safeRoute(),
+      message: truncate(sanitizeErrorText(normalized.message) || 'Unknown error', MAX_MESSAGE_LENGTH),
+      stack: truncate(sanitizeErrorText(stackParts), MAX_STACK_LENGTH),
+      user_agent: typeof navigator !== 'undefined'
+        ? truncate(sanitizeErrorText(navigator.userAgent), MAX_USER_AGENT_LENGTH)
+        : null,
+    };
+
+    await supabase.from('error_logs').insert(row);
+  } catch {}
+}
+
+export function installGlobalErrorLogging() {
+  if (typeof window === 'undefined' || errorLoggingInstalled) return;
+  errorLoggingInstalled = true;
+
+  window.addEventListener('error', (event) => {
+    logClientError(event.error || event.message || 'Window error', { source: 'window.error' });
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    logClientError(event.reason || 'Unhandled promise rejection', { source: 'unhandledrejection' });
+  });
 }
 
 export function setSentryUser(userId) {
