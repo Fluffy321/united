@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, MapPinned, MessageSquarePlus, User, Users } from 'lucide-react';
+import { BookOpenText, Home, MapPinned, MessageSquarePlus, User, Users } from 'lucide-react';
 import { MitzvahIcon } from '@/components/common/JIcons';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
@@ -23,6 +23,7 @@ const navItems = [
   { key: 'Feed',        name: 'Feed',        icon: Home,      page: 'Feed' },
   { key: 'Mitzvah',    name: 'Mitzvah',     icon: null,      page: 'MitzvahCircle', to: '/MitzvahCircle', isMitzvah: true },
   { key: 'Communities',name: 'Communities', icon: Users,     page: 'Communities' },
+  { key: 'JewishHub',  name: 'Jewish',      icon: BookOpenText, page: 'JewishHub', to: '/JewishHub' },
   { key: 'Map',        name: 'Map',         icon: MapPinned, page: 'Map',          to: '/Map' },
   { key: 'Profile',    name: 'Profile',     icon: User,      page: 'Profile', isProfile: true },
 ];

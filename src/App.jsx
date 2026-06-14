@@ -77,6 +77,7 @@ const PrivacyRights           = lazy(() => import('@/pages/PrivacyRights'));
 const SearchPage              = lazy(() => import('@/pages/Search'));
 const Landing                 = lazy(() => import('@/pages/Landing'));
 const Login                   = lazy(() => import('@/pages/Login'));
+const JewishHub               = lazy(() => import('@/pages/JewishHub'));
 const AdminFeedbackInbox      = lazy(() => import('@/pages/AdminFeedbackInbox'));
 const ThankYou                = lazy(() => import('@/pages/ThankYou'));
 
@@ -195,6 +196,7 @@ const AuthenticatedApp = () => {
             <Route path="/join" element={<PageTransition><JoinByCommunityCode /></PageTransition>} />
             <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
             <Route path="/Search" element={<Navigate to="/search" replace />} />
+            <Route path="/JewishHub/*" element={<PageTransition><LayoutWrapper currentPageName="JewishHub"><JewishHub /></LayoutWrapper></PageTransition>} />
 
             {/* Legal & policy pages */}
             <Route path="/MinorSafetyPolicy" element={<PageTransition><MinorSafetyPolicy /></PageTransition>} />

@@ -25,6 +25,7 @@ const Map                  = lazy(() => import('./pages/Map'));
 const Marketplace          = lazy(() => import('./pages/Marketplace'));
 const Messages             = lazy(() => import('./pages/Messages'));
 const MitzvahCircle        = lazy(() => import('./pages/MitzvahCircle'));
+const JewishHub            = lazy(() => import('./pages/JewishHub'));
 const Profile              = lazy(() => import('./pages/Profile'));
 const Settings             = lazy(() => import('./pages/Settings'));
 
@@ -35,6 +36,7 @@ export const PAGES = {
   Marketplace,
   Messages,
   MitzvahCircle,
+  JewishHub,
   Profile,
   Settings,
 };
