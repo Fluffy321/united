@@ -238,7 +238,7 @@ export default function Feed({ isActive = true }) {
 
   const handleCommunityClick = useCallback((communityId) => {
     if (!communityId) return;
-    navigate('/Communities?communityId=' + communityId);
+    navigate(`/communities/${communityId}`);
   }, [navigate]);
 
   const handleComment = useCallback((p) => {

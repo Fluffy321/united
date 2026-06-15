@@ -233,7 +233,7 @@ export function buildCommunityLiveNowItems({ communities = [] } = {}) {
       meta: name,
       liveText: postsToday > 0 ? `${postsToday} posts today` : 'Start the next move',
       actionLabel: community.joined ? 'Open' : 'Join',
-      href: `/Communities?community=${encodeURIComponent(community.id)}&tab=home`,
+      href: `/communities/${encodeURIComponent(community.id)}`,
       avatars: Array.from({ length: Math.min(Math.max(activeNow, 1), 4) }, (_, index) => initials(`${name} ${index}`)),
     };
   });
@@ -359,7 +359,7 @@ export function buildCommunityActionItems(communities = []) {
       meta: community.name || community.category || 'Community',
       liveText: community.member_count ? `${community.member_count} people here` : copy.nextWin,
       actionLabel: 'Open',
-      href: community.id ? `/Communities?community=${encodeURIComponent(community.id)}&tab=home` : '/Communities',
+      href: community.id ? `/communities/${encodeURIComponent(community.id)}` : '/Communities',
       avatars: [initials(community.name || copy.room)],
       context: copy.promise,
       people: community.member_count ? `${community.member_count} people here` : 'People nearby',

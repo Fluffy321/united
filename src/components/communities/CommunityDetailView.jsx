@@ -657,7 +657,8 @@ function CommunityPresenceStrip({ community, members, engagementKit, roomModel, 
 
 export default function CommunityDetailView({ communityId, currentUser, onBack, fallbackCommunity }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'home');
+  const requestedTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(requestedTab || 'home');
   const [highlightEventId, setHighlightEventId] = useState(null);
   const [showClaim, setShowClaim] = useState(false);
   const [showAdminCenter, setShowAdminCenter] = useState(false);
@@ -736,13 +737,21 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   const featureCapabilities = {
     events: canUseCommunityEvents(community),
     resources: canUseCommunityResources(community),
-    chat: Boolean(canUseCommunityChat(community) && community?.allow_group_chat),
+    chat: canUseCommunityChat(community),
     listings: Boolean(canUseCommunityMarketplace(community) && (community?.allow_member_listings || typeConfig.key === 'marketplace')),
     groups: true,
     forms: Boolean(community?.allow_forms),
   };
   const visibleTabs = getSupportedCommunityTabs(community || fallbackCommunity || {}, featureCapabilities);
   const navConfig = getCommunityNavConfig(community || fallbackCommunity || {}, featureCapabilities);
+  const defaultTab = !requestedTab && isFollowing && featureCapabilities.chat ? 'chat' : 'home';
+
+  useEffect(() => {
+    if (requestedTab || isLoading) return;
+    const nextTab = visibleTabs.includes(defaultTab) ? defaultTab : (visibleTabs[0] || 'home');
+    setActiveTab((current) => (current === nextTab ? current : nextTab));
+  }, [defaultTab, isLoading, requestedTab, visibleTabs]);
+
   const setTab = (tab) => {
     const nextTab = visibleTabs.includes(tab) ? tab : (visibleTabs[0] || 'home');
     setActiveTab(nextTab);

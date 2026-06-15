@@ -46,7 +46,7 @@ export default function CommunitiesSection({ userCommunities }) {
           {communities.map(community => (
             <button
               key={community.id}
-              onClick={() => navigate(`/Communities?communityId=${community.id}`)}
+              onClick={() => navigate(`/communities/${community.id}`)}
               className="flex-shrink-0 flex flex-col items-center gap-2 group"
             >
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm group-hover:shadow-lg transition-shadow">

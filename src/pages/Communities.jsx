@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, Search, X, AlertCircle, Map, Calendar, Compass, ArrowUpRight, MessageCircleMore, Sparkles, BookOpenText, ChevronRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ProfileSetup from '@/components/profile/ProfileSetup';
@@ -1296,7 +1296,7 @@ function GroupCard({ group, isMember, onClick, onJoin }) {
 
 export default function Communities() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState('discover');
   const [allCommunities, setAllCommunities] = useState(() => getCached());
@@ -1318,6 +1318,14 @@ export default function Communities() {
 
   // Stable ref so openCommunity never needs to be recreated when communities reload
   const allCommunitiesRef = useRef([]);
+
+  useEffect(() => {
+    const legacyCommunityId = searchParams.get('community') || searchParams.get('communityId');
+    if (!legacyCommunityId) return;
+    const tab = searchParams.get('tab');
+    const suffix = tab ? `?tab=${encodeURIComponent(tab)}` : '';
+    navigate(`/communities/${encodeURIComponent(legacyCommunityId)}${suffix}`, { replace: true });
+  }, [navigate, searchParams]);
 
   const loadData = useCallback(async (user) => {
     setLoadingPhase('loading');
@@ -1789,7 +1797,7 @@ export default function Communities() {
           loadData(currentUser);
           if (newCommunity?.id) {
             // Small delay to let loadData start, then open the new community
-            setTimeout(() => setSearchParams({ communityId: newCommunity.id }), 400);
+            setTimeout(() => openCommunity(newCommunity.id), 400);
           }
         }}
       />

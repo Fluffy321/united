@@ -46,7 +46,7 @@ const MODULE_CONFIG = [
   { key: 'allow_resources',       label: 'Resources',   description: 'Free includes up to 10 resources; Premium is unlimited' },
   { key: 'allow_forms',           label: 'Forms & Signups', description: 'Create signup sheets, volunteer forms, and surveys for members' },
   { key: 'allow_member_listings', label: 'Marketplace', description: 'Members can post buy/sell listings', premium: true },
-  { key: 'allow_group_chat',      label: 'Group Chat',  description: 'Real-time group chat tab', premium: true },
+  { key: 'allow_group_chat',      label: 'Group Chat',  description: 'Real-time group chat tab' },
 ];
 
 const SETTINGS_SECTIONS = [
@@ -561,7 +561,7 @@ function BillingTab({ communityId, community, currentUser, onCommunityUpdated })
 
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
           <PlanFeature label="Free" detail="Posts, members, 3 events, 10 resources" active />
-          <PlanFeature label="Premium" detail="Unlimited events/resources, chat, marketplace" active={premiumActive} />
+          <PlanFeature label="Premium" detail="Unlimited events/resources and marketplace" active={premiumActive} />
           <PlanFeature
             label={renewalDate ? (latestPlan?.cancel_at_period_end ? 'Cancels' : 'Renews') : 'Status'}
             detail={renewalDate || statusLabel}
@@ -2867,7 +2867,7 @@ function ModulesSection({ communityId, community, onCommunityUpdated }) {
         <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3">
           <p className="text-[13px] font-black text-blue-900">Free includes limited events and resources</p>
           <p className="mt-0.5 text-[12px] font-semibold leading-5 text-blue-700">
-            Free communities can run up to 3 upcoming events and share up to 10 resources. Marketplace and group chat unlock after upgrading in Billing.
+            Free communities can run up to 3 upcoming events and share up to 10 resources. Marketplace unlocks after upgrading in Billing.
           </p>
         </div>
       )}

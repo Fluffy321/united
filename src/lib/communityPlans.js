@@ -12,7 +12,6 @@ export const FREE_COMMUNITY_LIMITS = {
 
 export const PREMIUM_COMMUNITY_MODULES = new Set([
   'listings',
-  'chat',
 ]);
 
 export function isCommunityPremium(community = {}) {
@@ -33,7 +32,7 @@ export function canUseCommunityMarketplace(community = {}) {
 }
 
 export function canUseCommunityChat(community = {}) {
-  return isCommunityPremium(community);
+  return Boolean(community?.allow_group_chat);
 }
 
 export function getCommunityEventStartTime(event = {}) {

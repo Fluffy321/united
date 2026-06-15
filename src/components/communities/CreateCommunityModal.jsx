@@ -92,6 +92,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
         created_by_name: currentUser.full_name || currentUser.display_name,
         is_verified: false,
         is_seeded: false,
+        allow_group_chat: true,
         settings: settings || undefined,
         cover_url: coverUrl || undefined,
       });
@@ -198,6 +199,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
         created_by_name: currentUser?.full_name || currentUser?.display_name,
         is_verified: false,
         is_seeded: false,
+        allow_group_chat: true,
       });
 
       // Auto-join as admin

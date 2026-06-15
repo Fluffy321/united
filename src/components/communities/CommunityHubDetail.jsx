@@ -77,11 +77,14 @@ export default function CommunityHubDetail({
   const tabs = getSupportedCommunityTabs(community, {
     events: canUseCommunityEvents(community),
     resources: canUseCommunityResources(community),
-    chat: Boolean(canUseCommunityChat(community) && community?.allow_group_chat),
+    chat: canUseCommunityChat(community),
     listings: Boolean(canUseCommunityMarketplace(community) && community?.allow_member_listings),
     groups: true,
   });
-  const [activeTab, setActiveTab] = useState(tabs.includes(initialTab) ? initialTab : (tabs[0] || 'home'));
+  const initialDefaultTab = initialTab !== 'home'
+    ? initialTab
+    : (canUseCommunityChat(community) && (community.isMember || community.isFollowing || community.joined || community.user_is_member) ? 'chat' : 'home');
+  const [activeTab, setActiveTab] = useState(tabs.includes(initialDefaultTab) ? initialDefaultTab : (tabs[0] || 'home'));
   const [highlightEventId, setHighlightEventId] = useState(null);
   const [composeText, setComposeText] = useState('');
   const [composePlaceholder, setComposePlaceholder] = useState('');
@@ -151,10 +154,16 @@ export default function CommunityHubDetail({
   }, [activeTab, tabs]);
 
   useEffect(() => {
-    if (initialTab && tabs.includes(initialTab) && initialTab !== activeTab) {
+    if (initialTab && initialTab !== 'home' && tabs.includes(initialTab) && initialTab !== activeTab) {
       setActiveTab(initialTab);
     }
   }, [activeTab, initialTab, tabs]);
+
+  useEffect(() => {
+    if (initialTab !== 'home') return;
+    if (!isJoined || !tabs.includes('chat') || activeTab !== 'home') return;
+    setTab('chat');
+  }, [activeTab, initialTab, isJoined, tabs]);
 
   const { data: realPosts = [] } = useQuery({
     queryKey: ['community-hub-posts', community.id],
