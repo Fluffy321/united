@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, ChevronLeft, ChevronRight, RefreshCw, WifiOff } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, WifiOff } from 'lucide-react';
 
 const SEFARIA_TEXTS_URL = 'https://www.sefaria.org/api/v3/texts';
 const TOTAL_PERAKIM = 150;
@@ -223,13 +223,17 @@ export default function TehillimReader() {
 
   return (
     <div className="mobile-page min-h-screen px-3 pb-28 pt-4">
+      <Link
+        to="/JewishHub"
+        className="motion-press mb-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-black text-slate-700 shadow-sm"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Jewish Hub
+      </Link>
+
       <section className="rounded-[24px] border border-slate-100 bg-white shadow-sm">
         <div className="border-b border-slate-100 px-4 py-4">
-          <Link to="/JewishHub" className="text-[12px] font-black text-blue-600">
-            Back to Jewish Hub
-          </Link>
-
-          <div className="mt-4">
+          <div>
             <p className="text-[10px] font-black uppercase tracking-wide text-rose-500">Tehillim</p>
             <h1 className="mt-1 text-[24px] font-black leading-tight text-slate-950">Psalms Reader</h1>
             <p className="mt-2 text-[13px] font-semibold leading-snug text-slate-500">

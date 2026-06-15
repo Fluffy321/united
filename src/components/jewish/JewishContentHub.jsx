@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpenText, ChevronRight, Clock, Landmark, ScrollText } from 'lucide-react';
+import { ArrowLeft, BookOpenText, ChevronRight, Clock, Landmark, ScrollText } from 'lucide-react';
 import TehillimReader from './TehillimReader';
 
 const HUB_ITEMS = [
@@ -63,6 +63,14 @@ export default function JewishContentHub() {
 
   return (
     <div className="mobile-page min-h-screen px-3 pb-28 pt-4">
+      <Link
+        to="/Communities"
+        className="motion-press mb-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-black text-slate-700 shadow-sm"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Communities
+      </Link>
+
       <section className="overflow-hidden rounded-[24px] border border-blue-100 bg-white shadow-sm">
         <div className="bg-gradient-to-r from-blue-700 via-indigo-600 to-slate-800 px-4 py-4 text-white">
           <p className="text-[10px] font-black uppercase tracking-wide text-white/70">Jewish content</p>
@@ -105,10 +113,15 @@ function HubTile({ item }) {
 function JewishPlaceholder({ title }) {
   return (
     <div className="mobile-page min-h-screen px-3 pb-28 pt-4">
+      <Link
+        to="/JewishHub"
+        className="motion-press mb-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-black text-slate-700 shadow-sm"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Jewish Hub
+      </Link>
+
       <section className="rounded-[24px] border border-slate-100 bg-white px-4 py-5 shadow-sm">
-        <Link to="/JewishHub" className="text-[12px] font-black text-blue-600">
-          Back to Jewish Hub
-        </Link>
         <div className="mt-5 rounded-[20px] border border-blue-100 bg-blue-50 px-4 py-5">
           <p className="text-[10px] font-black uppercase tracking-wide text-blue-500">Jewish content</p>
           <h1 className="mt-1 text-[22px] font-black leading-tight text-slate-950">{title}</h1>

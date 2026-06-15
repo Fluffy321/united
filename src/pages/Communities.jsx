@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Loader2, Search, X, AlertCircle, Map, Calendar, Compass, ArrowUpRight, MessageCircleMore, Sparkles } from 'lucide-react';
+import { Loader2, Search, X, AlertCircle, Map, Calendar, Compass, ArrowUpRight, MessageCircleMore, Sparkles, BookOpenText, ChevronRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
@@ -1620,6 +1620,24 @@ export default function Communities() {
           items={communityActionItems}
           className="mb-5"
         />
+
+        <button
+          type="button"
+          onClick={() => navigate('/JewishHub')}
+          className="motion-press mb-5 flex w-full items-center gap-3 rounded-[24px] border border-blue-100 bg-white p-3 text-left shadow-sm transition-colors active:bg-blue-50"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border border-blue-100 bg-blue-50 text-blue-700">
+            <BookOpenText className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[10px] font-black uppercase tracking-wide text-blue-500">Jewish content</span>
+            <span className="mt-0.5 block text-[15px] font-black leading-tight text-slate-950">Tehillim, Torah, Zmanim, Siddur</span>
+            <span className="mt-1 block text-[12px] font-semibold leading-snug text-slate-500">
+              Daily Jewish tools inside the community hub.
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
+        </button>
 
         {/* Featured Communities - 1 Hero + up to 4 Secondary */}
         {mainFeatured || secondaryFeatured.length > 0 ? (
