@@ -372,7 +372,7 @@ export default function Feed({ isActive = true }) {
         )}
         actions={(
           <>
-            <button onClick={() => navigate('/MitzvahCircle')} className="app-icon-button surface-tile-hover touch-manipulation" aria-label="Mitzvah Circle">
+            <button onClick={() => navigate('/SupportJUnited')} className="app-icon-button surface-tile-hover touch-manipulation" aria-label="Donate">
               <Heart className="h-[18px] w-[18px] text-rose-400" />
             </button>
             <button onClick={() => navigate('/Messages')} className="app-icon-button surface-tile-hover touch-manipulation" aria-label="Messages">

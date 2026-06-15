@@ -79,6 +79,8 @@ const Landing                 = lazy(() => import('@/pages/Landing'));
 const Login                   = lazy(() => import('@/pages/Login'));
 const JewishHub               = lazy(() => import('@/pages/JewishHub'));
 const AdminFeedbackInbox      = lazy(() => import('@/pages/AdminFeedbackInbox'));
+const Notifications           = lazy(() => import('@/pages/Notifications'));
+const SupportJUnited          = lazy(() => import('@/pages/SupportJUnited'));
 const ThankYou                = lazy(() => import('@/pages/ThankYou'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -108,10 +110,8 @@ const LEGACY_FEED_ROUTES = [
   '/MitzvahMap',
   '/MyEvents',
   '/News',
-  '/Notifications',
   '/Organization',
   '/ShulPage',
-  '/SupportJUnited',
   '/tehillim',
   '/UserSettings',
   '/yahrzeits',
@@ -197,6 +197,8 @@ const AuthenticatedApp = () => {
             <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
             <Route path="/Search" element={<Navigate to="/search" replace />} />
             <Route path="/JewishHub/*" element={<PageTransition><LayoutWrapper currentPageName="JewishHub"><JewishHub /></LayoutWrapper></PageTransition>} />
+            <Route path="/Notifications" element={<PageTransition><LayoutWrapper currentPageName="Notifications"><Notifications /></LayoutWrapper></PageTransition>} />
+            <Route path="/SupportJUnited" element={<PageTransition><LayoutWrapper currentPageName="SupportJUnited"><SupportJUnited /></LayoutWrapper></PageTransition>} />
 
             {/* Legal & policy pages */}
             <Route path="/MinorSafetyPolicy" element={<PageTransition><MinorSafetyPolicy /></PageTransition>} />
