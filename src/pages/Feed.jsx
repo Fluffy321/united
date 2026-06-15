@@ -401,6 +401,8 @@ export default function Feed({ isActive = true }) {
           <PageHelp text="The main local thread for questions, plans, needs, businesses, carpools, events, and neighbor-to-neighbor help." />
         </div>
 
+        <TodayFiveTownsCard />
+
         <FiveTownsBrief
           brief={dailyBrief}
           momentum={feedMomentum}
@@ -411,8 +413,6 @@ export default function Feed({ isActive = true }) {
           onOpenCommunities={() => navigate('/Communities')}
           onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
         />
-
-        <TodayFiveTownsCard />
 
         <FiveTownsConversationHub
           posts={feedPosts}
@@ -573,21 +573,18 @@ export default function Feed({ isActive = true }) {
 function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, prompt, onOpenMap, onOpenCommunities, onCreate }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const briefScrollerRef = useRef(null);
-  if (!brief) return null;
+  const safeBrief = brief || {};
 
-  const curatedNewsItems = (brief.topLocalUpdates || []).map((item, index) => ({
+  const curatedNewsItems = safeBrief.verifiedLocalBrief ? (safeBrief.topLocalUpdates || []).map((item, index) => ({
     id: item.id || `curated-local-${index}`,
     title: item.title || 'Verified local update',
     body: item.summary || item.detail || '',
     community_name: item.source_label || item.source || 'Verified local source',
     location_text: item.location || 'Five Towns',
-  }));
-  const fallbackNewsItems = posts
-    .filter((post) => post.type === 'news' || /update|brief|eruv|traffic|school|notice|local/i.test(`${post.title || ''} ${post.body || ''}`))
-    .slice(0, 3);
-  const newsItems = curatedNewsItems.length ? curatedNewsItems : fallbackNewsItems;
+  })) : [];
   const trendingPosts = [...posts]
     .sort((a, b) => ((b.comments_count || 0) * 2 + (b.likes_count || 0)) - ((a.comments_count || 0) * 2 + (a.likes_count || 0)))
+    .filter((post) => Number(post.comments_count || 0) > 0 || Number(post.likes_count || 0) > 0)
     .slice(0, 3);
   const mitzvahNeeds = posts
     .filter((post) => post.type === 'help' || /help|chesed|meal|ride|offer|volunteer/i.test(`${post.title || ''} ${post.body || ''}`))
@@ -596,17 +593,14 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, promp
     .filter((post) => post.type === 'event' && (!joinedCommunityIds?.size || joinedCommunityIds.has(post.community_id)))
     .slice(0, 3);
 
-  const slides = [
+  const slideCandidates = [
     {
       key: 'news',
       eyebrow: 'Five Towns News',
-      title: brief.title || 'Today in the Five Towns',
-      subtitle: brief.verifiedLocalBrief
-        ? 'Curated local updates worth knowing today.'
-        : 'Useful local prompts until verified updates are published.',
-      items: newsItems,
+      title: safeBrief.title || 'Today in the Five Towns',
+      subtitle: 'Curated local updates worth knowing today.',
+      items: curatedNewsItems,
       tone: 'from-slate-950 via-blue-900 to-cyan-800',
-      empty: 'No major local news posts yet today.',
       actionLabel: 'Open map',
       onAction: onOpenMap,
     },
@@ -617,7 +611,6 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, promp
       subtitle: `${momentum.activeThreads} active conversations are pulling people in.`,
       items: trendingPosts,
       tone: 'from-indigo-950 via-blue-800 to-violet-700',
-      empty: 'No trending posts yet. Start the thread people need.',
       actionLabel: 'Open communities',
       onAction: onOpenCommunities,
     },
@@ -628,7 +621,6 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, promp
       subtitle: 'Meals, rides, favors, and chesed that should not sit unanswered.',
       items: mitzvahNeeds,
       tone: 'from-emerald-950 via-emerald-800 to-teal-700',
-      empty: 'No open chesed threads surfaced yet.',
       actionLabel: 'Post help',
       onAction: () => onCreate('help', 'chesed', ''),
     },
@@ -639,24 +631,37 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, promp
       subtitle: 'Shiurim, meetups, school moments, and local plans that belong on your radar.',
       items: communityEvents,
       tone: 'from-rose-950 via-fuchsia-800 to-orange-700',
-      empty: 'No community events posted yet.',
       actionLabel: 'Share event',
       onAction: () => onCreate('event', 'local_event', ''),
     },
   ];
 
+  const slides = slideCandidates.filter((slide) => slide.items.length > 0);
+  const statTiles = [
+    { icon: MessageCircle, label: 'Hot threads', value: momentum.activeThreads },
+    { icon: Activity, label: 'For you', value: momentum.joinedPosts },
+    { icon: CalendarDays, label: 'Events', value: momentum.localEvents },
+  ].filter((tile) => Number(tile.value || 0) > 0);
+
   const promptText = prompt?.prompt || prompt?.title || prompt?.body;
+
+  useEffect(() => {
+    if (activeSlide >= slides.length) setActiveSlide(0);
+  }, [activeSlide, slides.length]);
+
+  if (!brief || !slides.length) return null;
+  const visibleActiveSlide = Math.min(activeSlide, slides.length - 1);
 
   return (
     <section className="mb-3 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_14px_32px_rgba(15,23,42,0.07)]">
-      <div className={`graphic-stripes bg-gradient-to-br ${slides[activeSlide].tone} p-4 text-white`}>
+      <div className={`graphic-stripes bg-gradient-to-br ${slides[visibleActiveSlide].tone} p-4 text-white`}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/80">
             <Sparkles className="h-3.5 w-3.5" />
             Five Towns Daily Brief
           </div>
           <div className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[11px] font-black text-white/90">
-            {activeSlide + 1}/{slides.length}
+            {visibleActiveSlide + 1}/{slides.length}
           </div>
         </div>
 
@@ -673,7 +678,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, promp
                 });
               }}
               className={`motion-press shrink-0 rounded-full px-3 py-1.5 text-[11px] font-black transition ${
-                index === activeSlide ? 'bg-white text-slate-950' : 'border border-white/15 bg-white/10 text-white/90'
+                index === visibleActiveSlide ? 'bg-white text-slate-950' : 'border border-white/15 bg-white/10 text-white/90'
               }`}
             >
               {item.eyebrow}
@@ -713,18 +718,14 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, promp
 
               <div className="mt-4 grid gap-2 lg:grid-cols-[1fr_auto]">
                 <div className="grid gap-2 sm:grid-cols-3">
-                  {item.items.length > 0 ? item.items.map((post) => (
+                  {item.items.map((post) => (
                     <div key={`${item.key}-${post.id}`} className="rounded-2xl border border-white/15 bg-white/12 px-3 py-3 backdrop-blur-sm">
                       <p className="line-clamp-2 text-[13px] font-black leading-5 text-white">{post.title || post.body || 'Community update'}</p>
                       <p className="mt-2 text-[11px] font-semibold text-white/75">
                         {post.community_name || post.location_text || 'Five Towns'}
                       </p>
                     </div>
-                  )) : (
-                    <div className="rounded-2xl border border-white/15 bg-white/12 px-3 py-3 text-[13px] font-bold text-white/90 sm:col-span-3">
-                      {item.empty}
-                    </div>
-                  )}
+                  ))}
                 </div>
                 <button
                   type="button"
@@ -739,11 +740,13 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, promp
           ))}
         </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <MomentumTile inverse icon={MessageCircle} label="Hot threads" value={momentum.activeThreads} />
-          <MomentumTile inverse icon={Activity} label="For you" value={momentum.joinedPosts} />
-          <MomentumTile inverse icon={CalendarDays} label="Events" value={momentum.localEvents} />
-        </div>
+        {statTiles.length > 0 && (
+          <div className={`mt-4 grid gap-2 ${statTiles.length === 1 ? 'grid-cols-1' : statTiles.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+            {statTiles.map((tile) => (
+              <MomentumTile key={tile.label} inverse icon={tile.icon} label={tile.label} value={tile.value} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
