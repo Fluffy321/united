@@ -401,6 +401,17 @@ export default function Feed({ isActive = true }) {
           <PageHelp text="The main local thread for questions, plans, needs, businesses, carpools, events, and neighbor-to-neighbor help." />
         </div>
 
+        <FiveTownsBrief
+          brief={dailyBrief}
+          momentum={feedMomentum}
+          posts={feedPosts}
+          joinedCommunityIds={joinedCommunityIds}
+          prompt={dailyPrompt}
+          onOpenMap={() => navigate('/Map')}
+          onOpenCommunities={() => navigate('/Communities')}
+          onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
+        />
+
         <TodayFiveTownsCard />
 
         <FiveTownsConversationHub
@@ -498,17 +509,6 @@ export default function Feed({ isActive = true }) {
                 onMap={() => navigate('/Map')}
               />
             ))}
-
-            <FiveTownsBrief
-              brief={dailyBrief}
-              momentum={feedMomentum}
-              posts={feedPosts}
-              joinedCommunityIds={joinedCommunityIds}
-              prompt={dailyPrompt}
-              onOpenMap={() => navigate('/Map')}
-              onOpenCommunities={() => navigate('/Communities')}
-              onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
-            />
 
             <details className="rounded-[24px] border border-slate-200 bg-white shadow-sm">
               <summary className="cursor-pointer list-none px-4 py-3 text-[13px] font-black text-slate-900">
