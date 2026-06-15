@@ -135,20 +135,20 @@ function LayoutContent({ children, currentPageName }) {
       {!hideNav && currentUser && (
         <div className="app-fixed-layer">
           <div className="app-fixed-frame">
+            <button
+              onClick={() => setShowFeedback(true)}
+              aria-label="Send feedback"
+              className="app-feedback-action app-floating-action flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md transition-all duration-200 hover:bg-slate-50 active:scale-95"
+              title="Send feedback"
+            >
+              <MessageSquarePlus className="h-4 w-4 text-slate-600" />
+            </button>
             <div className="app-floating-stack">
               {floatingActions.map((action) => (
                 <React.Fragment key={action.id}>
                   {action.render?.()}
                 </React.Fragment>
               ))}
-              <button
-                onClick={() => setShowFeedback(true)}
-                aria-label="Send feedback"
-                className="app-floating-action flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-md transition-all duration-200 hover:bg-slate-50 active:scale-95"
-              >
-                <MessageSquarePlus className="h-3.5 w-3.5 text-slate-500" />
-                <span className="text-[11px] font-semibold text-slate-600">Feedback</span>
-              </button>
             </div>
           </div>
         </div>

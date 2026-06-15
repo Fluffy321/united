@@ -1534,29 +1534,29 @@ export default function Communities() {
       <div className="max-w-2xl mx-auto px-4 pt-6">
 
         {/* Header */}
-        <div className="mb-5 flex items-center justify-between gap-3">
-          <div>
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
             <p className="text-[11px] font-bold uppercase text-blue-600">Rooms around the main thread</p>
             <h1 className="text-3xl font-bold text-slate-900">Communities</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
             <button
               onClick={() => navigate('/Map')}
-              className="surface-tile-hover p-2.5 rounded-full bg-white border border-slate-200 shadow-sm active:scale-90 transition-all duration-150"
+              className="surface-tile-hover hidden rounded-full border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-150 active:scale-90 sm:inline-flex"
               title="Map"
             >
               <Map className="w-4 h-4 text-slate-600" />
             </button>
             <button
               onClick={() => navigate('/Feed')}
-              className="surface-tile-hover p-2.5 rounded-full bg-white border border-slate-200 shadow-sm active:scale-90 transition-all duration-150"
+              className="surface-tile-hover hidden rounded-full border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-150 active:scale-90 sm:inline-flex"
               title="Main feed"
             >
               <Calendar className="w-4 h-4 text-slate-600" />
             </button>
             <button
               onClick={() => setActiveTab('discover')}
-              className="surface-tile-hover p-2.5 rounded-full bg-white border border-slate-200 shadow-sm active:scale-90 transition-all duration-150"
+              className="surface-tile-hover hidden rounded-full border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-150 active:scale-90 sm:inline-flex"
               title="Discover communities"
             >
               <Compass className="w-4 h-4 text-slate-600" />
@@ -1573,7 +1573,7 @@ export default function Communities() {
             )}
             <button
               onClick={() => setShowCreateModal(true)}
-              className="graphic-stripes rounded-full bg-blue-600 text-white px-4 py-2.5 text-[13px] font-semibold shadow-sm hover:bg-blue-700 active:scale-95 transition-all duration-150"
+              className="graphic-stripes shrink-0 rounded-full bg-blue-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm transition-all duration-150 hover:bg-blue-700 active:scale-95"
             >
               + Create
             </button>

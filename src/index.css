@@ -629,6 +629,12 @@
     pointer-events: auto;
   }
 
+  .app-feedback-action {
+    position: absolute;
+    left: var(--app-floating-gutter);
+    bottom: var(--app-floating-bottom);
+  }
+
   @media (min-width: 1024px) {
     .app-floating-banner {
       bottom: 24px;

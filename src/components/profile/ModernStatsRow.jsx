@@ -43,7 +43,7 @@ export default function ModernStatsRow({
               <UserRound className="h-3.5 w-3.5 text-emerald-600" />
             </div>
             <p className="text-[19px] font-black leading-none text-slate-950">{friends}</p>
-            <p className="mt-1 truncate text-[10px] font-black uppercase text-slate-400">Friends</p>
+            <p className="mt-1 text-[10px] font-black uppercase leading-tight text-slate-400">Friends</p>
           </button>
 
           {/* ── Communities ── */}
@@ -55,7 +55,7 @@ export default function ModernStatsRow({
               <UsersRound className="h-3.5 w-3.5 text-blue-600" />
             </div>
             <p className="text-[19px] font-black leading-none text-slate-950">{following}</p>
-            <p className="mt-1 truncate text-[10px] font-black uppercase text-slate-400">Communities</p>
+            <p className="mt-1 text-[9px] font-black uppercase leading-tight text-slate-400">Communities</p>
           </button>
 
           {/* ── Posts ── */}
@@ -67,7 +67,7 @@ export default function ModernStatsRow({
               <FileText className="h-3.5 w-3.5 text-purple-600" />
             </div>
             <p className="text-[19px] font-black leading-none text-slate-950">{posts}</p>
-            <p className="mt-1 truncate text-[10px] font-black uppercase text-slate-400">Posts</p>
+            <p className="mt-1 text-[10px] font-black uppercase leading-tight text-slate-400">Posts</p>
           </button>
 
           {/* ── Impact ── */}
@@ -79,7 +79,7 @@ export default function ModernStatsRow({
               <HeartHandshake className="h-3.5 w-3.5 text-[#6B8C42]" />
             </div>
             <p className="text-[19px] font-black leading-none text-slate-950">{impact}</p>
-            <p className="mt-1 truncate text-[10px] font-black uppercase text-slate-400">Impact</p>
+            <p className="mt-1 text-[10px] font-black uppercase leading-tight text-slate-400">Impact</p>
             {tier ? (
               <div className="mt-1.5 w-full px-1">
                 <div className="h-[3px] overflow-hidden rounded-full bg-slate-100">
