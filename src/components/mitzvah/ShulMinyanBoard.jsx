@@ -29,7 +29,7 @@ const shuls = [
     distance: '0.7 mi',
     minyanim: { shacharis: '6:30, 7:30, 8:30', mincha: '7:55 PM', maariv: '9:15, 10:00 PM' },
     about: 'Large central shul with daily minyanim, youth programming, shiurim, and active community announcements.',
-    events: ['Daf Yomi after Shacharis', 'Teen learning Thursday night', 'Community kiddush this Shabbos'],
+    events: [],
   },
   {
     id: 'young-israel-lawrence-cedarhurst',
@@ -41,7 +41,7 @@ const shuls = [
     distance: '1.1 mi',
     minyanim: { shacharis: '6:20, 7:15, 8:15', mincha: '7:50 PM', maariv: '9:05, 10:05 PM' },
     about: 'Central Cedarhurst shul with steady weekday minyanim, shiurim, and local events.',
-    events: ['Halacha chaburah tonight', 'Guest speaker Motzei Shabbos', 'Youth groups this Shabbos'],
+    events: [],
   },
   {
     id: 'chabad-five-towns',
@@ -53,7 +53,7 @@ const shuls = [
     distance: '1.3 mi',
     minyanim: { shacharis: '7:00, 8:00', mincha: '7:45 PM', maariv: '9:00 PM' },
     about: 'Chabad center for minyanim, Torah classes, holiday programs, and community support.',
-    events: ['Tanya class', 'Pre-Shabbos mivtzoim', 'Women’s class this week'],
+    events: [],
   },
   {
     id: 'congregation-beth-sholom',
@@ -65,7 +65,7 @@ const shuls = [
     distance: '1.5 mi',
     minyanim: { shacharis: '6:40, 7:45', mincha: '7:55 PM', maariv: '9:20 PM' },
     about: 'Lawrence shul with regular tefillah, learning, youth programming, and community events.',
-    events: ['Mishna shiur', 'Kiddush sponsor open', 'Parent-child learning Sunday'],
+    events: [],
   },
   {
     id: 'sephardic-temple',
@@ -77,7 +77,7 @@ const shuls = [
     distance: '1.8 mi',
     minyanim: { shacharis: '6:45, 8:00', mincha: '7:40 PM', maariv: '9:10 PM' },
     about: 'Sephardic community shul with minyanim, Torah learning, and family programming.',
-    events: ['Parsha class', 'Motzei Shabbos learning', 'Youth minyan update'],
+    events: [],
   },
   {
     id: 'congregation-ohr-torah',
@@ -89,7 +89,7 @@ const shuls = [
     distance: '2.3 mi',
     minyanim: { shacharis: '6:35, 7:40', mincha: '7:50 PM', maariv: '9:15 PM' },
     about: 'North Woodmere congregation with daily minyanim and neighborhood programming.',
-    events: ['Gemara shiur after Maariv', 'Shabbos kiddush update', 'Security volunteer rotation'],
+    events: [],
   },
   {
     id: 'inwood-shul',
@@ -101,7 +101,7 @@ const shuls = [
     distance: '2.8 mi',
     minyanim: { shacharis: '6:45, 8:00', mincha: '7:35 PM', maariv: '9:05 PM' },
     about: 'Inwood community minyan hub with weekday tefillah and neighborhood announcements.',
-    events: ['Maariv needs backup tonight', 'Shabbos hospitality thread', 'Local learning night'],
+    events: [],
   },
 ];
 
@@ -410,6 +410,7 @@ function ShulProfileSheet({ shul, onClose, onOpenMap, onFollow, showMinyanTimes 
 
           <div>
             <h3 className="mb-2 text-sm font-black text-slate-950">Events and recent posts</h3>
+            {shul.events.length > 0 ? (
             <div className="space-y-2">
               {shul.events.map((event) => (
                 <div key={event} className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700">
@@ -417,6 +418,11 @@ function ShulProfileSheet({ shul, onClose, onOpenMap, onFollow, showMinyanTimes 
                 </div>
               ))}
             </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-3 py-3 text-sm font-bold text-slate-500">
+                No verified shul posts yet.
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-2">

@@ -1069,34 +1069,9 @@ const STATIC_POINTS = [
     verification: 'Community resource',
     source_url: 'https://www.lylibrary.org/',
   },
-  {
-    id: 'lost-siddur',
-    title: 'Lost siddur reported',
-    description: 'Black siddur found near Central Ave. Claim with details.',
-    type: 'lost_found',
-    location_text: 'Cedarhurst',
-    location_lat: 40.6214,
-    location_lng: -73.7253,
-  },
-  {
-    id: 'event-learning',
-    title: 'Community learning night',
-    description: 'Setup help and shiur event tonight.',
-    type: 'event',
-    location_text: 'Lawrence',
-    location_lat: 40.6168,
-    location_lng: -73.7308,
-  },
-  {
-    id: 'event-shabbos',
-    title: 'Shabbos hosting meetup',
-    description: 'Host and guest matching event.',
-    type: 'event',
-    location_text: 'Five Towns',
-    location_lat: 40.6361,
-    location_lng: -73.7162,
-  },
 ];
+
+const VERIFIED_STATIC_POINTS = STATIC_POINTS.filter((point) => point.source_url || point.verification);
 
 function MapController({ center }) {
   const map = useMap();
@@ -1214,7 +1189,7 @@ export default function MitzvahMap({
     }));
   }, [communityPoints]);
   const allPoints = useMemo(
-    () => [...requestPoints, ...personalizedPoints, ...(includeStaticPoints ? STATIC_POINTS : [])],
+    () => [...requestPoints, ...personalizedPoints, ...(includeStaticPoints ? VERIFIED_STATIC_POINTS : [])],
     [includeStaticPoints, personalizedPoints, requestPoints]
   );
   const visiblePoints = useMemo(() => allPoints.filter((point) => activeTypes.has(point.type)), [activeTypes, allPoints]);
