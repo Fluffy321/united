@@ -15,17 +15,18 @@ const isRideOffer = (ride) => {
 };
 
 export default function CarpoolBoard({ rideRequests = [], signupsByRequest = {}, onCreateRide, onSelectRide, onClaimRide, isClaiming }) {
-  const [checkedSteps, setCheckedSteps] = useState(() => new Set(['Confirm driver and rider names']));
+  const [checkedSteps, setCheckedSteps] = useState(() => new Set());
   const [planner, setPlanner] = useState({
-    from: 'Cedarhurst',
-    to: 'School / shul',
-    pickup: '8:00 AM',
-    seats: '2'
+    from: '',
+    to: '',
+    pickup: '',
+    seats: ''
   });
 
   const rides = rideRequests;
   const offeredCount = useMemo(() => rides.filter(isRideOffer).length, [rides]);
   const neededCount = rides.length - offeredCount;
+  const hasRideStats = offeredCount > 0 || neededCount > 0;
 
   const toggleStep = (step) => {
     setCheckedSteps(prev => {
@@ -77,20 +78,26 @@ export default function CarpoolBoard({ rideRequests = [], signupsByRequest = {},
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="text-[15px] font-black text-slate-950">{offeredCount}</p>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">offering</p>
+            {hasRideStats ? (
+              <div className="grid grid-cols-2 gap-2">
+                {offeredCount > 0 && (
+                  <div className="rounded-2xl bg-slate-50 p-3">
+                    <p className="text-[15px] font-black text-slate-950">{offeredCount}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">offering</p>
+                  </div>
+                )}
+                {neededCount > 0 && (
+                  <div className="rounded-2xl bg-slate-50 p-3">
+                    <p className="text-[15px] font-black text-slate-950">{neededCount}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">needed</p>
+                  </div>
+                )}
               </div>
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="text-[15px] font-black text-slate-950">{neededCount}</p>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">needed</p>
-              </div>
-              <div className="rounded-2xl bg-emerald-50 p-3">
-                <p className="text-[15px] font-black text-emerald-700">{checkedSteps.size}/{CARPOOL_STEPS.length}</p>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600">planned</p>
-              </div>
-            </div>
+            ) : (
+              <p className="rounded-2xl border border-dashed border-sky-100 bg-white/75 px-3 py-2.5 text-[12px] font-bold text-slate-600">
+                Be the first to post a ride need or offer seats.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -188,59 +195,70 @@ export default function CarpoolBoard({ rideRequests = [], signupsByRequest = {},
         )}
       </div>
 
-      <div className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <div>
-            <h2 className="text-[17px] font-black text-slate-950">Pickup planner</h2>
-            <p className="text-[12px] font-medium text-slate-500">Draft the route before you post or message.</p>
+      {rides.length > 0 && (
+        <details className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
+          <summary className="cursor-pointer list-none text-[14px] font-black text-slate-950">
+            Ride coordination tools
+            <span className="ml-2 text-[11px] font-bold text-slate-400">Planner and checklist</span>
+          </summary>
+
+          <div className="mt-3 space-y-3 border-t border-slate-100 pt-3">
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <h2 className="text-[17px] font-black text-slate-950">Pickup planner</h2>
+                  <p className="text-[12px] font-medium text-slate-500">Draft the route before you post or message.</p>
+                </div>
+                <CalendarDays className="h-5 w-5 text-slate-500" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  ['from', 'From'],
+                  ['to', 'To'],
+                  ['pickup', 'Pickup'],
+                  ['seats', 'Seats']
+                ].map(([key, label]) => (
+                  <label key={key} className="rounded-2xl bg-slate-50 px-3 py-2">
+                    <span className="block text-[10px] font-black uppercase tracking-wide text-slate-400">{label}</span>
+                    <input
+                      value={planner[key]}
+                      onChange={(e) => setPlanner(prev => ({ ...prev, [key]: e.target.value }))}
+                      className="mt-1 w-full bg-transparent text-[13px] font-bold text-slate-900 outline-none"
+                    />
+                  </label>
+                ))}
+              </div>
+
+              <div className="mt-3 rounded-2xl bg-sky-50 px-3 py-2">
+                <p className="text-[12px] font-bold text-sky-800">{plannerSummary}</p>
+              </div>
+            </div>
+
+            <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-3">
+              <div className="mb-2 flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-emerald-700" />
+                <h2 className="text-[15px] font-black text-slate-950">Ride coordination checklist</h2>
+              </div>
+              <div className="space-y-2">
+                {CARPOOL_STEPS.map(step => {
+                  const checked = checkedSteps.has(step);
+                  return (
+                    <button
+                      key={step}
+                      onClick={() => toggleStep(step)}
+                      className="flex w-full items-center gap-2 rounded-2xl bg-white px-3 py-2 text-left active:scale-[0.99]"
+                    >
+                      <CheckCircle2 className={`h-4 w-4 shrink-0 ${checked ? 'text-emerald-600' : 'text-slate-300'}`} />
+                      <span className={`text-[12px] font-bold ${checked ? 'text-slate-900' : 'text-slate-500'}`}>{step}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-          <CalendarDays className="h-5 w-5 text-slate-500" />
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            ['from', 'From'],
-            ['to', 'To'],
-            ['pickup', 'Pickup'],
-            ['seats', 'Seats']
-          ].map(([key, label]) => (
-            <label key={key} className="rounded-2xl bg-slate-50 px-3 py-2">
-              <span className="block text-[10px] font-black uppercase tracking-wide text-slate-400">{label}</span>
-              <input
-                value={planner[key]}
-                onChange={(e) => setPlanner(prev => ({ ...prev, [key]: e.target.value }))}
-                className="mt-1 w-full bg-transparent text-[13px] font-bold text-slate-900 outline-none"
-              />
-            </label>
-          ))}
-        </div>
-
-        <div className="mt-3 rounded-2xl bg-sky-50 px-3 py-2">
-          <p className="text-[12px] font-bold text-sky-800">{plannerSummary}</p>
-        </div>
-      </div>
-
-      <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-3 shadow-sm">
-        <div className="mb-2 flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-emerald-700" />
-          <h2 className="text-[15px] font-black text-slate-950">Ride coordination checklist</h2>
-        </div>
-        <div className="space-y-2">
-          {CARPOOL_STEPS.map(step => {
-            const checked = checkedSteps.has(step);
-            return (
-              <button
-                key={step}
-                onClick={() => toggleStep(step)}
-                className="flex w-full items-center gap-2 rounded-2xl bg-white px-3 py-2 text-left active:scale-[0.99]"
-              >
-                <CheckCircle2 className={`h-4 w-4 shrink-0 ${checked ? 'text-emerald-600' : 'text-slate-300'}`} />
-                <span className={`text-[12px] font-bold ${checked ? 'text-slate-900' : 'text-slate-500'}`}>{step}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+        </details>
+      )}
     </div>
   );
 }

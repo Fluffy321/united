@@ -73,49 +73,7 @@ export function buildMitzvahLiveNowItems({ requests = [], offers = [] } = {}) {
     };
   });
 
-  const fallbackItems = [
-    {
-      id: 'mitzvah-live-meals',
-      type: 'mitzvah',
-      urgency: 'urgent',
-      eyebrow: 'Needs help now',
-      title: 'Post or claim a dinner, ride, or errand that needs action today',
-      meta: 'Five Towns chesed',
-      liveText: 'Turn a need into a completed mitzvah',
-      actionLabel: "I'll help",
-      href: '/MitzvahCircle?tab=browse',
-      progress: 35,
-      avatars: ['A', 'M'],
-    },
-    {
-      id: 'mitzvah-live-tonight',
-      type: 'mitzvah',
-      urgency: 'today',
-      eyebrow: 'Tonight',
-      title: 'Before tonight: meals, rides, visits, and quick favors',
-      meta: 'Lawrence, Cedarhurst, Woodmere, Hewlett, Inwood',
-      liveText: 'Coordinate fast',
-      actionLabel: 'Post need',
-      href: '/MitzvahCircle?create=1',
-      progress: 15,
-      avatars: ['FT'],
-    },
-    {
-      id: 'mitzvah-live-complete',
-      type: 'mitzvah',
-      urgency: 'active',
-      eyebrow: 'Community progress',
-      title: 'Complete one small mitzvah and show others the momentum',
-      meta: 'Helpers make the app feel alive',
-      liveText: 'Start the chain',
-      actionLabel: 'Browse',
-      href: '/MitzvahCircle',
-      progress: 10,
-      avatars: ['J'],
-    },
-  ];
-
-  return sortLiveItems([...liveRequests, ...fallbackItems]);
+  return sortLiveItems(liveRequests);
 }
 
 export function buildFeedLiveNowItems({ posts = [], networkLabel = 'Five Towns' } = {}) {

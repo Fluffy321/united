@@ -141,17 +141,8 @@ const initialMinyanim = [
   },
 ];
 
-const initialRequests = [
-  { id: 'req-1', type: 'Need people for minyan', title: 'Backup for late Maariv', shul: 'Inwood Shul', meta: 'Tonight - need 3 more', icon: Users },
-  { id: 'req-2', type: 'Ride to shul', title: 'Ride from Hewlett to Cedarhurst', shul: 'Young Israel of Lawrence-Cedarhurst', meta: 'Mincha/Maariv', icon: Car },
-  { id: 'req-3', type: 'Lost item', title: 'Black siddur left after Shacharis', shul: 'Congregation Beth Sholom', meta: 'Posted today', icon: Search },
-];
-
-const happenings = [
-  { id: 'h-1', kind: 'Shiur', title: 'Halacha chaburah before Maariv', place: 'Young Israel of Lawrence-Cedarhurst', time: 'Tonight', icon: BookOpen },
-  { id: 'h-2', kind: 'Speaker', title: 'Guest speaker Motzei Shabbos', place: 'Congregation Beth Sholom', time: 'This week', icon: Megaphone },
-  { id: 'h-3', kind: 'Kiddush', title: 'Kiddush sponsorship still open', place: 'Young Israel of Woodmere', time: 'Shabbos', icon: CalendarDays },
-];
+const initialRequests = [];
+const happenings = [];
 
 const requestTypes = ['Need people for minyan', 'Looking for ride to shul', 'Hosting guests', 'Lost item at shul'];
 const HAS_VERIFIED_MINYAN_DATA = false;
@@ -512,9 +503,9 @@ export default function ShulMinyanBoard({ currentUser }) {
             </button>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className={`mt-3 grid gap-2 ${requests.length > 0 ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <Stat value={shuls.length} label="Shuls" tone="emerald" />
-            <Stat value={requests.length} label="Requests" tone="amber" />
+            {requests.length > 0 && <Stat value={requests.length} label="Requests" tone="amber" />}
           </div>
         </div>
       </div>
@@ -578,32 +569,50 @@ export default function ShulMinyanBoard({ currentUser }) {
         </div>
       </section>
 
-      <section className="grid gap-3 lg:grid-cols-[1fr_1fr]">
-        <div className="rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
-          <div className="mb-2">
-            <h3 className="text-[15px] font-black text-slate-950">What’s Happening</h3>
-            <p className="text-[12px] font-semibold text-slate-500">Shiurim, speakers, kiddush, learning nights.</p>
-          </div>
-          <div className="space-y-2">
-            {happenings.map((item) => <HappeningCard key={item.id} item={item} />)}
-          </div>
-        </div>
-
-        <div className="rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
-          <div className="mb-2 flex items-end justify-between gap-3">
-            <div>
-              <h3 className="text-[15px] font-black text-slate-950">Requests</h3>
-              <p className="text-[12px] font-semibold text-slate-500">Minyan help, rides, hosting, and lost items.</p>
+      {(happenings.length > 0 || requests.length > 0) && (
+        <section className="grid gap-3 lg:grid-cols-[1fr_1fr]">
+          {happenings.length > 0 && (
+            <div className="rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
+              <div className="mb-2">
+                <h3 className="text-[15px] font-black text-slate-950">What’s Happening</h3>
+                <p className="text-[12px] font-semibold text-slate-500">Shiurim, speakers, kiddush, learning nights.</p>
+              </div>
+              <div className="space-y-2">
+                {happenings.map((item) => <HappeningCard key={item.id} item={item} />)}
+              </div>
             </div>
-            <button onClick={() => setShowPostRequest(true)} className="motion-press rounded-full bg-slate-950 px-3 py-1.5 text-[12px] font-black text-white">
-              Add
-            </button>
-          </div>
-          <div className="space-y-2">
-            {requests.map((request) => <RequestCard key={request.id} request={request} />)}
-          </div>
+          )}
+
+          {requests.length > 0 && (
+            <div className="rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
+              <div className="mb-2 flex items-end justify-between gap-3">
+                <div>
+                  <h3 className="text-[15px] font-black text-slate-950">Requests</h3>
+                  <p className="text-[12px] font-semibold text-slate-500">Minyan help, rides, hosting, and lost items.</p>
+                </div>
+                <button onClick={() => setShowPostRequest(true)} className="motion-press rounded-full bg-slate-950 px-3 py-1.5 text-[12px] font-black text-white">
+                  Add
+                </button>
+              </div>
+              <div className="space-y-2">
+                {requests.map((request) => <RequestCard key={request.id} request={request} />)}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {requests.length === 0 && (
+        <div className="rounded-[22px] border border-dashed border-slate-200 bg-white px-3 py-3 text-center shadow-sm">
+          <h3 className="text-[13px] font-black text-slate-950">No shul requests yet</h3>
+          <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-500">
+            Post a real shul request when someone needs minyan help, a ride, hosting, or a lost-item notice.
+          </p>
+          <button onClick={() => setShowPostRequest(true)} className="motion-press mt-3 rounded-full bg-slate-950 px-4 py-2 text-[12px] font-black text-white">
+            Post request
+          </button>
         </div>
-      </section>
+      )}
 
       <div className="rounded-[22px] border border-emerald-100 bg-emerald-50 px-3 py-2.5">
         <div className="flex items-start gap-3">

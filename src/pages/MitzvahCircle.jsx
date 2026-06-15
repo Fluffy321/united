@@ -1660,9 +1660,10 @@ export default function MitzvahCircle() {
     completedCount: requests.filter((r) => r.status === STATUSES.VERIFIED).length,
   }), [requests]);
   const liveNowItems = React.useMemo(() => buildMitzvahLiveNowItems({
-    requests: browseRequests.length ? browseRequests : requests.filter((r) => ![STATUSES.VERIFIED, STATUSES.CANCELLED].includes(r.status)),
+    requests: requests.filter((r) => r.status === STATUSES.OPEN),
     offers,
-  }), [browseRequests, requests, offers]);
+  }), [requests, offers]);
+  const hasMitzvahStats = totals.openCount > 0 || totals.offeredCount > 0 || totals.completedCount > 0;
 
   const workflowTabs = [
     { id: 'browse', label: 'Browse Needs' },
@@ -1714,11 +1715,17 @@ export default function MitzvahCircle() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  <Metric icon={HandHeart} label="Open" value={totals.openCount} tone="blue" />
-                  <Metric icon={Clock} label="In Progress" value={totals.offeredCount} tone="amber" />
-                  <Metric icon={Award} label="Completed" value={totals.completedCount} tone="emerald" />
-                </div>
+                {hasMitzvahStats ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    <Metric icon={HandHeart} label="Open" value={totals.openCount} tone="blue" />
+                    <Metric icon={Clock} label="In Progress" value={totals.offeredCount} tone="amber" />
+                    <Metric icon={Award} label="Completed" value={totals.completedCount} tone="emerald" />
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-blue-100 bg-white/75 px-3 py-2.5 text-[12px] font-bold text-slate-600">
+                    Be the first to post a mitzvah request or offer a ride.
+                  </div>
+                )}
 
 	                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
 	                  {[
@@ -1926,7 +1933,7 @@ export default function MitzvahCircle() {
               </>
             ) : (
               <EmptyState
-                title={`No ${getCategoryGroup(activeCategory).shortLabel.toLowerCase()} requests`}
+                title={activeCategory === 'all' ? 'No open requests' : `No ${getCategoryGroup(activeCategory).shortLabel.toLowerCase()} requests`}
                 text={activeCategory === 'all'
                   ? 'Be the first to post a chesed request in your community.'
                   : `${getCategoryGroup(activeCategory).description} will appear here when someone posts one.`}
