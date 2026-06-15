@@ -46,339 +46,7 @@ const TYPE_TO_CATEGORY = {
   Other: null,
 };
 
-const DEMO_COMMUNITIES = [
-  { id: 'demo-1', name: 'Young Israel Woodmere', type: 'Shul', follower_count: 420, description_short: 'Heart of the Five Towns community.', is_verified: true, neighborhood: 'Woodmere', description: 'Heart of the Five Towns community.' },
-  { id: 'demo-2', name: 'HAFTR Day School', type: 'School', follower_count: 310, description_short: 'Leading Jewish day school K–12.', is_verified: true, neighborhood: 'Lawrence', description: 'Leading Jewish day school K–12.' },
-  { id: 'demo-3', name: 'Chabad of Woodmere', type: 'Shul', follower_count: 280, description_short: 'Open to everyone. Shabbat & holidays.', neighborhood: 'Woodmere', description: 'Open to everyone. Shabbat & holidays.' },
-  { id: 'demo-4', name: 'Five Towns Chessed Network', type: 'Other', follower_count: 175, description_short: 'Connecting volunteers with those in need.', neighborhood: 'Five Towns', description: 'Connecting volunteers with those in need.' },
-  { id: 'demo-5', name: 'Hebrew Academy Long Beach', type: 'School', follower_count: 195, description_short: 'Torah and academic excellence since 1952.', neighborhood: 'Long Beach', description: 'Torah and academic excellence since 1952.' },
-  { id: 'demo-6', name: 'Woodmere Minyan', type: 'Shul', follower_count: 140, description_short: 'Multiple daily minyanim.', neighborhood: 'Woodmere', description: 'Multiple daily minyanim.' },
-];
 
-export const STARTER_COMMUNITIES = [
-  {
-    id: 'seed-daily-torah',
-    name: 'Daily Torah',
-    type: 'Official',
-    category: 'Learning & Torah',
-    communityKind: 'Official / Daily',
-    privacyLabel: 'Official',
-    description_short: 'Verified Torah ideas, daily learning prompts, and Friday parsha prep.',
-    hook: 'Start the day with one real Torah idea people can discuss.',
-    roomQuestion: 'What Torah idea should people carry today?',
-    follower_count: 1240,
-    activeNow: 28,
-    postsToday: 3,
-    friendsHere: 7,
-    neighborhood: 'Five Towns',
-    is_verified: true,
-    isOfficial: true,
-    gradient: 'from-amber-500 to-orange-500',
-    tags: ['Verified', 'Daily', 'Parsha'],
-  },
-  {
-    id: 'seed-five-towns-news',
-    name: 'Five Towns News & Updates',
-    type: 'Official',
-    category: 'Local Communities',
-    communityKind: 'Official / Daily',
-    privacyLabel: 'Official',
-    description_short: 'Road closures, openings, alerts, community notices, and local context.',
-    hook: 'Know what is happening locally before it turns into five WhatsApp chains.',
-    roomQuestion: 'What should the Five Towns know right now?',
-    follower_count: 2100,
-    activeNow: 42,
-    postsToday: 8,
-    friendsHere: 12,
-    neighborhood: 'Five Towns',
-    is_verified: true,
-    isOfficial: true,
-    gradient: 'from-sky-500 to-blue-700',
-    tags: ['Local', 'Alerts', 'Official'],
-  },
-  {
-    id: 'seed-chesed-updates',
-    name: 'Chesed & Mitzvah Updates',
-    type: 'Chessed',
-    category: 'Chessed & Volunteering',
-    communityKind: 'Official / Daily',
-    privacyLabel: 'Community-only',
-    description_short: 'Open needs, volunteer moments, meals, rides, and completed mitzvos.',
-    hook: 'See where one small action can help someone today.',
-    roomQuestion: 'Who needs help right now?',
-    follower_count: 980,
-    activeNow: 19,
-    postsToday: 5,
-    friendsHere: 4,
-    neighborhood: 'Five Towns',
-    is_verified: true,
-    isOfficial: true,
-    gradient: 'from-emerald-500 to-teal-600',
-    tags: ['Needs', 'Meals', 'Rides'],
-  },
-  {
-    id: 'seed-shabbos-zmanim',
-    name: 'Shabbos & Zmanim',
-    type: 'Official',
-    category: 'Learning & Torah',
-    communityKind: 'Official / Daily',
-    privacyLabel: 'Official',
-    description_short: 'Candle lighting, Havdalah, Eruv notes, hosts, guests, and Shabbos prep.',
-    hook: 'Everything time-sensitive before Shabbos in one calm place.',
-    roomQuestion: 'What needs to be handled before Shabbos?',
-    follower_count: 1450,
-    activeNow: 31,
-    postsToday: 6,
-    friendsHere: 9,
-    neighborhood: 'Five Towns',
-    is_verified: true,
-    isOfficial: true,
-    gradient: 'from-indigo-500 to-violet-700',
-    tags: ['Shabbos', 'Zmanim', 'Hosts'],
-  },
-  {
-    id: 'seed-school-stress',
-    name: 'School Stress Support',
-    type: 'Support',
-    category: 'Private Support',
-    communityKind: 'Private Support',
-    privacyLabel: 'Private / Anonymous',
-    description_short: 'A safer place to talk about school pressure, tests, teachers, and stress.',
-    hook: 'Get advice without feeling exposed.',
-    roomQuestion: 'What is making school hard this week?',
-    follower_count: 86,
-    activeNow: 6,
-    postsToday: 4,
-    friendsHere: 0,
-    neighborhood: 'Five Towns',
-    allowAnonymous: true,
-    hiddenMembership: true,
-    gradient: 'from-violet-400 to-indigo-600',
-    tags: ['Anonymous', 'School', 'Support'],
-  },
-  {
-    id: 'seed-mental-health',
-    name: 'Mental Health Support',
-    type: 'Support',
-    category: 'Private Support',
-    communityKind: 'Private Support',
-    privacyLabel: 'Private / Anonymous',
-    description_short: 'Private support for anxiety, pressure, loneliness, and hard days.',
-    hook: 'A quieter room for people who need real support, not public attention.',
-    roomQuestion: 'What kind of support would help today?',
-    follower_count: 118,
-    activeNow: 5,
-    postsToday: 3,
-    friendsHere: 0,
-    neighborhood: 'Five Towns',
-    allowAnonymous: true,
-    hiddenMembership: true,
-    gradient: 'from-teal-400 to-cyan-600',
-    tags: ['Anonymous', 'Safe space', 'Support'],
-  },
-  {
-    id: 'seed-family-changes',
-    name: 'Family Changes',
-    type: 'Support',
-    category: 'Private Support',
-    communityKind: 'Private Support',
-    privacyLabel: 'Private / Anonymous',
-    description_short: 'For divorce, family tension, blended homes, and complicated weeks.',
-    hook: 'Talk with people who understand without putting it on your public profile.',
-    roomQuestion: 'What would make home feel easier this week?',
-    follower_count: 72,
-    activeNow: 3,
-    postsToday: 2,
-    friendsHere: 0,
-    neighborhood: 'Five Towns',
-    allowAnonymous: true,
-    hiddenMembership: true,
-    gradient: 'from-rose-400 to-pink-600',
-    tags: ['Anonymous', 'Family', 'Moderated'],
-  },
-  {
-    id: 'seed-social-anxiety',
-    name: 'Social Anxiety & Belonging',
-    type: 'Support',
-    category: 'Private Support',
-    communityKind: 'Private Support',
-    privacyLabel: 'Private / Anonymous',
-    description_short: 'For people who want connection but need a softer way in.',
-    hook: 'Find low-pressure invites and people who get it.',
-    roomQuestion: 'What is one low-pressure way to connect this week?',
-    follower_count: 94,
-    activeNow: 4,
-    postsToday: 2,
-    friendsHere: 0,
-    neighborhood: 'Five Towns',
-    allowAnonymous: true,
-    hiddenMembership: true,
-    gradient: 'from-blue-400 to-slate-600',
-    tags: ['Anonymous', 'Belonging', 'Low pressure'],
-  },
-  {
-    id: 'seed-sports',
-    name: 'Five Towns Sports',
-    type: 'Sports',
-    category: 'Sports & Fitness',
-    communityKind: 'Lifestyle',
-    privacyLabel: 'Public',
-    description_short: 'Pickup basketball, football, soccer, gym runs, and training partners.',
-    hook: 'Find a game tonight instead of texting ten separate chats.',
-    roomQuestion: "Who's playing tonight?",
-    follower_count: 520,
-    activeNow: 16,
-    postsToday: 7,
-    friendsHere: 5,
-    neighborhood: 'Five Towns',
-    gradient: 'from-sky-500 to-blue-700',
-    tags: ['Games', 'Gym', 'Tonight'],
-  },
-  {
-    id: 'seed-kosher-food',
-    name: 'Kosher Food Finds',
-    type: 'Food',
-    category: 'Food & Lifestyle',
-    communityKind: 'Lifestyle',
-    privacyLabel: 'Public',
-    description_short: 'What is open, what is good, Shabbos extras, and quick recommendations.',
-    hook: 'Ask what is actually good nearby right now.',
-    roomQuestion: 'What is open or worth ordering today?',
-    follower_count: 760,
-    activeNow: 23,
-    postsToday: 9,
-    friendsHere: 8,
-    neighborhood: 'Five Towns',
-    gradient: 'from-orange-400 to-red-500',
-    tags: ['Restaurants', 'Shabbos', 'Recommendations'],
-  },
-  {
-    id: 'seed-business-jobs',
-    name: 'Five Towns Jobs & Business',
-    type: 'Business',
-    category: 'Careers & Networking',
-    communityKind: 'Lifestyle',
-    privacyLabel: 'Public',
-    description_short: 'Jobs, side hustles, internships, business questions, and local networking.',
-    hook: 'Turn local trust into real opportunities.',
-    roomQuestion: 'Who is hiring, looking, or building something?',
-    follower_count: 410,
-    activeNow: 11,
-    postsToday: 4,
-    friendsHere: 3,
-    neighborhood: 'Five Towns',
-    gradient: 'from-slate-700 to-blue-700',
-    tags: ['Jobs', 'Networking', 'Business'],
-  },
-  {
-    id: 'seed-music-creative',
-    name: 'Music & Creative',
-    type: 'Creative',
-    category: 'Social & Events',
-    communityKind: 'Lifestyle',
-    privacyLabel: 'Public',
-    description_short: 'Music, art, photos, videos, design, jam sessions, and creative projects.',
-    hook: 'Find people to make something with, not just scroll past.',
-    roomQuestion: 'Who wants to create something this week?',
-    follower_count: 255,
-    activeNow: 9,
-    postsToday: 3,
-    friendsHere: 2,
-    neighborhood: 'Five Towns',
-    gradient: 'from-fuchsia-500 to-purple-700',
-    tags: ['Music', 'Creative', 'Collab'],
-  },
-  {
-    id: 'seed-shabbos-hosts',
-    name: 'Shabbos Hosts & Guests',
-    type: 'Chessed',
-    category: 'Chessed & Volunteering',
-    communityKind: 'Five Towns Action',
-    privacyLabel: 'Community-only',
-    description_short: 'Find a meal, host someone, fill seats, and make Shabbos less lonely.',
-    hook: 'Help someone find a table before Shabbos.',
-    roomQuestion: 'Who needs a meal or has an open seat?',
-    follower_count: 640,
-    activeNow: 14,
-    postsToday: 5,
-    friendsHere: 5,
-    neighborhood: 'Five Towns',
-    gradient: 'from-amber-500 to-yellow-600',
-    tags: ['Meals', 'Hosts', 'Guests'],
-  },
-  {
-    id: 'seed-carpools-rides',
-    name: 'Carpools & Rides',
-    type: 'Travel',
-    category: 'Travel',
-    communityKind: 'Five Towns Action',
-    privacyLabel: 'Community-only',
-    description_short: 'School carpools, airport rides, errands, shul rides, and quick pickup asks.',
-    hook: 'Find a ride without making a whole group chat.',
-    roomQuestion: 'Who needs a ride or has seats today?',
-    follower_count: 590,
-    activeNow: 18,
-    postsToday: 6,
-    friendsHere: 4,
-    neighborhood: 'Five Towns',
-    gradient: 'from-cyan-500 to-blue-600',
-    tags: ['Rides', 'School', 'Airport'],
-  },
-  {
-    id: 'seed-parents-school',
-    name: 'Parents, School & Camp',
-    type: 'Parent',
-    category: 'Programs & Youth',
-    communityKind: 'Five Towns Action',
-    privacyLabel: 'Community-only',
-    description_short: 'School reminders, babysitters, camp tips, carpool help, and parent recs.',
-    hook: 'A calmer place for the things parents usually chase across chats.',
-    roomQuestion: 'What do parents need to coordinate today?',
-    follower_count: 870,
-    activeNow: 21,
-    postsToday: 8,
-    friendsHere: 6,
-    neighborhood: 'Five Towns',
-    gradient: 'from-emerald-400 to-blue-600',
-    tags: ['Parents', 'School', 'Camp'],
-  },
-  {
-    id: 'seed-apartments',
-    name: 'Apartments & Roommates',
-    type: 'Housing',
-    category: 'Local Communities',
-    communityKind: 'Five Towns Action',
-    privacyLabel: 'Community-only',
-    description_short: 'Apartments, basement rentals, roommates, sublets, and trusted leads.',
-    hook: 'Surface housing leads before they disappear.',
-    roomQuestion: 'Who knows of a place opening soon?',
-    follower_count: 330,
-    activeNow: 7,
-    postsToday: 3,
-    friendsHere: 2,
-    neighborhood: 'Five Towns',
-    gradient: 'from-indigo-500 to-slate-700',
-    tags: ['Housing', 'Sublets', 'Roommates'],
-  },
-  {
-    id: 'seed-lost-found',
-    name: 'Lost & Found',
-    type: 'Chessed',
-    category: 'Chessed & Volunteering',
-    communityKind: 'Five Towns Action',
-    privacyLabel: 'Public',
-    description_short: 'Lost keys, siddurim, jackets, phones, bikes, and community returns.',
-    hook: 'Turn “did anyone see this?” into one searchable place.',
-    roomQuestion: 'What needs to get back to its owner?',
-    follower_count: 390,
-    activeNow: 8,
-    postsToday: 4,
-    friendsHere: 3,
-    neighborhood: 'Five Towns',
-    gradient: 'from-purple-500 to-indigo-700',
-    tags: ['Lost', 'Found', 'Return'],
-  },
-];
 
 const TYPE_GRADIENTS = {
   Shul:     'from-blue-600 to-indigo-600',
@@ -388,17 +56,6 @@ const TYPE_GRADIENTS = {
   Camp:     'from-green-500 to-teal-600',
   Other:    'from-orange-500 to-amber-600',
 };
-
-const ACTIVITY_LABELS = [
-  'Just posted a new update',
-  'Shabbos event coming up',
-  'New members joined today',
-  'Someone posted a help request',
-  'Shared a learning resource',
-  'Hosting a community event',
-  'New discussion started',
-  'Mitzvah opportunity posted',
-];
 
 const CATEGORY_ICONS = {
   'Schools & Yeshivas': '🏫',
@@ -449,11 +106,9 @@ function getInitials(name = '') {
 
 function getMockActivity(id, community) {
   if (community) {
-    const copy = getCommunityActionCopy(community);
-    return copy.question;
+    return community.latestDiscussion || community.latest_discussion || community.latest_post_title || '';
   }
-  const idx = id ? id.charCodeAt(0) % ACTIVITY_LABELS.length : 0;
-  return ACTIVITY_LABELS[idx];
+  return '';
 }
 
 function getCached() {
@@ -494,24 +149,23 @@ function getFriendlyPulse(community) {
 
 function getProfileFaces(community) {
   const pool = [
-    community.name,
-    community.neighborhood,
-    community.category,
-    community.type,
+    community.member_initials,
+    community.memberInitials,
+    community.recent_member_initials,
+    community.recentMemberInitials,
   ].filter(Boolean);
 
-  const fallback = ['RK', 'SL', 'AM'];
-  const faces = pool
-    .map((label) => getInitials(label))
+  return pool
+    .flatMap((value) => Array.isArray(value) ? value : [value])
+    .map((label) => String(label).trim().toUpperCase().slice(0, 2))
     .filter(Boolean)
     .slice(0, 3);
-
-  return faces.length > 0 ? faces : fallback;
 }
 
 function ProfileFaces({ community, compact = false }) {
   const faces = getProfileFaces(community);
   const colors = ['from-sky-500 to-blue-600', 'from-rose-400 to-pink-500', 'from-emerald-500 to-teal-500'];
+  if (!faces.length) return null;
 
   return (
     <div className="flex items-center">
@@ -527,10 +181,6 @@ function ProfileFaces({ community, compact = false }) {
   );
 }
 
-function normalizeCommunityName(name = '') {
-  return String(name).trim().toLowerCase().replace(/&/g, 'and').replace(/\s+/g, ' ');
-}
-
 const FIVE_TOWNS_ROOM_BLUEPRINTS = [
   {
     id: 'seed-five-towns-news',
@@ -539,11 +189,7 @@ const FIVE_TOWNS_ROOM_BLUEPRINTS = [
     icon: '💬',
     label: 'Main room',
     purpose: 'One shared neighborhood thread for questions, updates, recommendations, alerts, and real neighbor help.',
-    latestDiscussion: 'Best place for a quiet business lunch on Central today?',
     prompt: 'Ask the neighborhood',
-    activeNow: 23,
-    postsToday: 18,
-    members: 2100,
     gradient: 'from-slate-950 via-blue-900 to-cyan-600',
   },
   {
@@ -553,11 +199,7 @@ const FIVE_TOWNS_ROOM_BLUEPRINTS = [
     icon: '🏀',
     label: 'Game room',
     purpose: 'Find pickup games, fill teams, get gym partners, and make tonight’s plans without ten group chats.',
-    latestDiscussion: 'Need two more for basketball after Maariv in Woodmere.',
     prompt: 'Find a game',
-    activeNow: 9,
-    postsToday: 7,
-    members: 640,
     gradient: 'from-sky-500 via-blue-600 to-indigo-700',
   },
   {
@@ -567,11 +209,7 @@ const FIVE_TOWNS_ROOM_BLUEPRINTS = [
     icon: '🕯️',
     label: 'Before Shabbos',
     purpose: 'Meals, hosting, guests, zmanim, rides, extras, and everything people need before Shabbos.',
-    latestDiscussion: 'Two guests looking for Friday night in Cedarhurst.',
     prompt: 'Make a Shabbos plan',
-    activeNow: 15,
-    postsToday: 12,
-    members: 890,
     gradient: 'from-amber-500 via-orange-500 to-rose-500',
   },
   {
@@ -581,11 +219,7 @@ const FIVE_TOWNS_ROOM_BLUEPRINTS = [
     icon: '🕍',
     label: 'Live minyanim',
     purpose: 'Minyan help, shiurim, kiddush updates, lost items, and shul rides in one useful room.',
-    latestDiscussion: 'Mincha needs two more near Lawrence in 20 minutes.',
     prompt: 'Post a shul update',
-    activeNow: 11,
-    postsToday: 9,
-    members: 1180,
     gradient: 'from-indigo-600 via-blue-700 to-slate-950',
   },
   {
@@ -595,11 +229,7 @@ const FIVE_TOWNS_ROOM_BLUEPRINTS = [
     icon: '🤝',
     label: 'Help now',
     purpose: 'See open needs, offer help, close the loop, and turn community care into completed mitzvahs.',
-    latestDiscussion: 'Still need one driver for a dinner drop-off tonight.',
     prompt: 'Help someone now',
-    activeNow: 18,
-    postsToday: 14,
-    members: 1320,
     gradient: 'from-rose-500 via-pink-600 to-red-600',
   },
   {
@@ -609,11 +239,7 @@ const FIVE_TOWNS_ROOM_BLUEPRINTS = [
     icon: '🥙',
     label: 'Food pulse',
     purpose: 'What is open, what is good, what has a line, what is verified, and what people are ordering now.',
-    latestDiscussion: 'Which place has the fastest lunch pickup in Woodmere?',
     prompt: 'Share a food tip',
-    activeNow: 16,
-    postsToday: 15,
-    members: 1540,
     gradient: 'from-emerald-500 via-teal-500 to-cyan-600',
   },
   {
@@ -623,11 +249,7 @@ const FIVE_TOWNS_ROOM_BLUEPRINTS = [
     icon: '🚗',
     label: 'Moving now',
     purpose: 'Safe ride requests, offers, school carpools, airport rides, and last-minute local pickups.',
-    latestDiscussion: 'Anyone driving from Inwood to Cedarhurst around 8?',
     prompt: 'Coordinate a ride',
-    activeNow: 8,
-    postsToday: 6,
-    members: 720,
     gradient: 'from-cyan-500 via-blue-600 to-violet-600',
   },
   {
@@ -637,11 +259,7 @@ const FIVE_TOWNS_ROOM_BLUEPRINTS = [
     icon: '📅',
     label: 'Happening soon',
     purpose: 'Shiurim, school nights, programs, meetups, and family events people can actually attend.',
-    latestDiscussion: 'Women’s shiur and dessert tonight near Hewlett.',
     prompt: 'Post an event',
-    activeNow: 7,
-    postsToday: 5,
-    members: 980,
     gradient: 'from-violet-500 via-purple-600 to-blue-700',
   },
   {
@@ -651,11 +269,7 @@ const FIVE_TOWNS_ROOM_BLUEPRINTS = [
     icon: '💼',
     label: 'Local work',
     purpose: 'Hire local, find side work, ask business questions, and support Jewish-owned services without spam.',
-    latestDiscussion: 'Looking for a local bookkeeper recommendation this week.',
     prompt: 'Ask for work help',
-    activeNow: 10,
-    postsToday: 8,
-    members: 830,
     gradient: 'from-slate-800 via-blue-800 to-emerald-600',
   },
   {
@@ -665,11 +279,7 @@ const FIVE_TOWNS_ROOM_BLUEPRINTS = [
     icon: '✨',
     label: 'Safe social',
     purpose: 'Plans, questions, sports, school stuff, rides, and safe ways to meet people with shared interests.',
-    latestDiscussion: 'What is everyone doing Motzei Shabbos?',
     prompt: 'Start a safe plan',
-    activeNow: 13,
-    postsToday: 10,
-    members: 760,
     gradient: 'from-fuchsia-500 via-blue-600 to-cyan-500',
   },
 ];
@@ -682,17 +292,17 @@ function getRoomBlueprint(community = {}, index = 0) {
 
 function buildRoomViewModel(community = {}, index = 0) {
   const blueprint = getRoomBlueprint(community, index);
-  const memberCount = community.follower_count || community.member_count || blueprint.members;
+  const memberCount = community.follower_count || community.member_count || null;
   return {
     ...community,
     roomName: blueprint.name,
     roomIcon: blueprint.icon,
     roomLabel: blueprint.label,
     roomPurpose: community.hook || community.description_short || blueprint.purpose,
-    roomLatest: community.latestDiscussion || community.latest_discussion || blueprint.latestDiscussion,
+    roomLatest: community.latestDiscussion || community.latest_discussion || community.latest_post_title || null,
     roomPrompt: community.roomQuestion || blueprint.prompt,
-    roomActiveNow: community.activeNow || community.active_now || community.active_members || blueprint.activeNow,
-    roomPostsToday: community.postsToday || community.posts_today || community.posts_this_week || blueprint.postsToday,
+    roomActiveNow: community.activeNow || community.active_now || community.active_members || 0,
+    roomPostsToday: community.postsToday || community.posts_today || community.posts_this_week || 0,
     roomMemberCount: memberCount,
     roomGradient: community.gradient || blueprint.gradient,
     roomBlueprintId: blueprint.id,
@@ -701,56 +311,21 @@ function buildRoomViewModel(community = {}, index = 0) {
 
 function getCoreFiveTownsRooms(communities = []) {
   const used = new Set();
-  return FIVE_TOWNS_ROOM_BLUEPRINTS.map((blueprint, index) => {
+  return FIVE_TOWNS_ROOM_BLUEPRINTS.flatMap((blueprint, index) => {
     const found = communities.find(c => {
       if (!c?.id || used.has(c.id)) return false;
       const text = `${c.id || ''} ${c.name || ''} ${c.slug || ''} ${c.type || ''} ${c.category || ''} ${c.description || ''}`.toLowerCase();
       return c.id === blueprint.id || blueprint.match.some(token => text.includes(token));
     });
-    const community = found || {
-      id: blueprint.id,
-      name: blueprint.name,
-      category: 'Five Towns',
-      type: 'neighborhood',
-      description: blueprint.purpose,
-      follower_count: blueprint.members,
-      tags: ['Five Towns', blueprint.label],
-    };
-    used.add(community.id);
-    return buildRoomViewModel(community, index);
+    if (!found) return [];
+    used.add(found.id);
+    return [buildRoomViewModel(found, index)];
   });
 }
 
 function mergeCommunityCatalog(communities = []) {
   const valid = (communities || []).filter(c => c?.id && c?.name);
-  const seen = new Set(valid.map(c => normalizeCommunityName(c.name)));
-  const starters = STARTER_COMMUNITIES.filter(c => !seen.has(normalizeCommunityName(c.name)));
-  const merged = [...valid, ...starters];
-  const roomFallbacks = FIVE_TOWNS_ROOM_BLUEPRINTS
-    .filter(room => !merged.some(c => {
-      const text = `${c.id || ''} ${c.name || ''} ${c.slug || ''} ${c.type || ''} ${c.category || ''} ${c.description || ''}`.toLowerCase();
-      return c.id === room.id || normalizeCommunityName(c.name) === normalizeCommunityName(room.name) || room.match.some(token => text.includes(token));
-    }))
-    .map(room => ({
-      id: room.id,
-      name: room.name,
-      category: 'Five Towns',
-      type: 'neighborhood',
-      description: room.purpose,
-      hook: room.purpose,
-      follower_count: room.members,
-      activeNow: room.activeNow,
-      postsToday: room.postsToday,
-      latestDiscussion: room.latestDiscussion,
-      gradient: room.gradient,
-      tags: ['Five Towns', room.label],
-      privacy: 'Public',
-    }));
-  return [...merged, ...roomFallbacks];
-}
-
-function isCatalogCommunity(id = '') {
-  return String(id).startsWith('seed-') || String(id).startsWith('starter-') || String(id).startsWith('demo-');
+  return valid;
 }
 
 function getCommunityKind(community = {}) {
@@ -784,7 +359,8 @@ function getDisplayMetric(community = {}) {
   const active = community.activeNow || community.active_now || community.active_members || 0;
   if (posts) return `${posts} posts today`;
   if (active) return `${active} active now`;
-  return `${(community.follower_count || community.member_count || 0).toLocaleString()} members`;
+  const members = community.follower_count || community.member_count || 0;
+  return members ? `${members.toLocaleString()} members` : '';
 }
 
 function CommunityDiscoveryCard({ community, isJoined, isJoining, onOpen, onJoin, featured = false }) {
@@ -794,6 +370,8 @@ function CommunityDiscoveryCard({ community, isJoined, isJoining, onOpen, onJoin
   const actionCopy = getCommunityActionCopy(community);
   const activeNow = community.activeNow || community.active_now || community.active_members || 0;
   const friendsHere = community.friendsHere || community.friends_here || 0;
+  const displayMetric = getDisplayMetric(community);
+  const memberCount = community.follower_count || community.member_count || 0;
 
   return (
     <article
@@ -838,19 +416,23 @@ function CommunityDiscoveryCard({ community, isJoined, isJoining, onOpen, onJoin
           ))}
         </div>
 
+        {(displayMetric || activeNow || friendsHere) && (
         <div className="mt-auto rounded-2xl bg-slate-50 p-3">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-400">Why check today</p>
-              <p className="mt-1 line-clamp-1 text-[12px] font-bold text-slate-700">{getDisplayMetric(community)}</p>
+              <p className="mt-1 line-clamp-1 text-[12px] font-bold text-slate-700">{displayMetric}</p>
             </div>
             <ProfileFaces community={community} compact />
           </div>
+          {(activeNow || memberCount || friendsHere) && (
           <div className="mt-2 flex items-center justify-between gap-2 text-[11px] font-bold text-slate-500">
-            <span>{activeNow ? `${activeNow} active now` : `${community.follower_count || 0} members`}</span>
-            <span>{friendsHere ? `${friendsHere} friends here` : 'Find your people'}</span>
+            <span>{activeNow ? `${activeNow} active now` : memberCount ? `${memberCount} members` : ''}</span>
+            <span>{friendsHere ? `${friendsHere} friends here` : ''}</span>
           </div>
+          )}
         </div>
+        )}
 
         <div className="flex items-center gap-2">
           <button
@@ -907,6 +489,9 @@ function CommunitySectionRail({ title, subtitle, communities, userCommunityIds, 
 function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOpen, onJoin, compact = false }) {
   if (!community?.id) return null;
   const room = buildRoomViewModel(community, index);
+  const hasActivity = Number(room.roomActiveNow || 0) > 0;
+  const hasPosts = Number(room.roomPostsToday || 0) > 0;
+  const hasMembers = Number(room.roomMemberCount || 0) > 0;
 
   return (
     <article
@@ -930,26 +515,34 @@ function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOp
               </p>
             </div>
           </div>
+          {hasActivity && (
           <span className="shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-black text-red-600 ring-1 ring-red-100">
             {room.roomActiveNow} active
           </span>
+          )}
         </div>
 
         <p className="line-clamp-2 text-[13px] font-semibold leading-relaxed text-slate-600">
           {room.roomPurpose}
         </p>
 
+        {(room.roomLatest || hasPosts || hasMembers || getProfileFaces(room).length > 0) && (
         <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
           <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">Latest thread</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">{room.roomLatest ? 'Latest thread' : 'Activity'}</p>
             <ProfileFaces community={room} compact />
           </div>
-          <p className="line-clamp-2 text-[14px] font-black leading-snug text-slate-950">{room.roomLatest}</p>
+          {room.roomLatest && (
+            <p className="line-clamp-2 text-[14px] font-black leading-snug text-slate-950">{room.roomLatest}</p>
+          )}
+          {(hasPosts || hasMembers) && (
           <div className="mt-2 flex items-center justify-between gap-2 text-[11px] font-bold text-slate-500">
-            <span>{room.roomPostsToday} posts today</span>
-            <span>{Number(room.roomMemberCount || 0).toLocaleString()} members</span>
+            <span>{hasPosts ? `${room.roomPostsToday} posts today` : ''}</span>
+            <span>{hasMembers ? `${Number(room.roomMemberCount || 0).toLocaleString()} members` : ''}</span>
           </div>
+          )}
         </div>
+        )}
 
         <div className="mt-auto grid grid-cols-[1fr_auto] gap-2">
           <button
@@ -979,6 +572,16 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
   const rooms = getCoreFiveTownsRooms(communities);
   const leadRooms = rooms.slice(0, 3);
   const remainingRooms = rooms.slice(3);
+  if (!rooms.length) {
+    return (
+      <section className="rounded-[28px] border border-dashed border-slate-300 bg-white p-5 text-center shadow-sm">
+        <h2 className="text-[18px] font-black tracking-tight text-slate-950">No Five Towns rooms yet</h2>
+        <p className="mt-1 text-[13px] font-semibold leading-relaxed text-slate-500">
+          Be the first to create a real room for local questions, help, or plans.
+        </p>
+      </section>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -1152,6 +755,7 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
   const activity = getMockActivity(community.id, community);
   const badge = getActivityBadge(community);
   const pulse = getFriendlyPulse(community);
+  const memberCount = community.follower_count || community.member_count || 0;
 
   const handleCardClick = (e) => {
     // Only navigate if the click wasn't on the join button
@@ -1186,8 +790,12 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
             <div className="min-w-0 flex-1">
               <div className="pr-10 text-[14px] font-black text-slate-900 line-clamp-2 leading-snug">{community.name}</div>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-                <span>{(community.follower_count || 0).toLocaleString()} members</span>
-                <span className="h-1 w-1 rounded-full bg-slate-300" />
+                {memberCount > 0 && (
+                  <>
+                    <span>{memberCount.toLocaleString()} members</span>
+                    <span className="h-1 w-1 rounded-full bg-slate-300" />
+                  </>
+                )}
                 <span>{catKey || typeKey || 'Community'}</span>
               </div>
             </div>
@@ -1215,10 +823,12 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
         <div className="mt-3 flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <ProfileFaces community={community} />
+            {activity && (
             <div className="min-w-0">
               <div className="text-[10px] font-bold uppercase text-slate-400">In the room</div>
               <div className="truncate text-[11px] font-semibold text-slate-600">{activity}</div>
             </div>
+            )}
           </div>
           <div className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition-transform group-hover:translate-x-0.5">
             <span>{actionCopy.primary}</span>
@@ -1264,18 +874,19 @@ function GroupCard({ group, isMember, onClick, onJoin }) {
           </div>
         </div>
 
+        {(group.description || activity) && (
         <div className="rounded-2xl border border-slate-100 bg-white/85 px-3 py-3 shadow-sm">
-          <p className="text-[12px] text-slate-700 line-clamp-2">{group.description || activity}</p>
-          <div className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-slate-500">
+          {group.description && <p className="text-[12px] text-slate-700 line-clamp-2">{group.description}</p>}
+          {activity && <div className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-slate-500">
             <MessageCircleMore className="h-3.5 w-3.5 text-indigo-500" />
             <span className="line-clamp-1">{activity}</span>
-          </div>
+          </div>}
         </div>
+        )}
 
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <ProfileFaces community={fauxCommunity} compact />
-            <span className="truncate text-[11px] font-semibold text-slate-600">People are gathering here</span>
           </div>
           {isMember ? (
             <button className="shrink-0 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-[11px] font-bold text-green-700 active:scale-95 transition-all duration-150">Joined</button>
@@ -1345,24 +956,25 @@ export default function Communities() {
       if (comms.status === 'fulfilled' && comms.value?.length > 0) {
         // Sanitize: only keep records with a valid id and name
         const sanitized = comms.value.filter(c => c?.id && c?.name);
-        const toSet = sanitized.length > 0 ? sanitized : DEMO_COMMUNITIES;
+        const toSet = sanitized;
         allCommunitiesRef.current = toSet;
         setAllCommunities(toSet);
-        setCache(sanitized.length > 0 ? sanitized : []);
-        setIsDemo(sanitized.length === 0);
+        setCache(sanitized);
+        setIsDemo(false);
       } else {
         const cached = getCached().filter(c => c?.id && c?.name);
-        const toSet = cached.length > 0 ? cached : DEMO_COMMUNITIES;
+        const toSet = cached;
         allCommunitiesRef.current = toSet;
         setAllCommunities(toSet);
-        setIsDemo(cached.length === 0);
+        setIsDemo(false);
       }
 
       if (groups.status === 'fulfilled') setAllGroups(groups.value || []);
     } catch {
       const cached = getCached().filter(c => c?.id && c?.name);
-      if (cached.length === 0) { setAllCommunities(DEMO_COMMUNITIES); setIsDemo(true); }
-      else { setAllCommunities(cached); }
+      allCommunitiesRef.current = cached;
+      setAllCommunities(cached);
+      setIsDemo(false);
     }
     setLoadingPhase('done');
   }, []);
@@ -1431,12 +1043,6 @@ export default function Communities() {
     if (!currentUser) { toast.error('Sign in to join communities'); return; }
     setJoiningId(community.id);
     try {
-      if (isCatalogCommunity(community.id) && !(allCommunities || []).some(c => c.id === community.id)) {
-        setUserCommunityIds(prev => new Set([...prev, community.id]));
-        toast.success(`Joined ${community.name}!`);
-        setJoiningId(null);
-        return;
-      }
       await base44.entities.UserCommunity.create({ user_id: currentUser.id, community_id: community.id, role: 'Member' });
       await base44.entities.Community.update(community.id, {
         follower_count: (community.follower_count || 0) + 1,
@@ -1464,14 +1070,11 @@ export default function Communities() {
   const openCommunity = useCallback((id) => {
     if (!id) return;
     const communities = allCommunitiesRef.current;
-    if (!isCatalogCommunity(id)) {
-      const community = communities.find(c => c.id === id);
-      if (community) {
-        base44.entities.Community.update(id, { views_count: (community.views_count || 0) + 1 }).catch(() => {});
-      }
+    const community = communities.find(c => c.id === id);
+    if (community) {
+      base44.entities.Community.update(id, { views_count: (community.views_count || 0) + 1 }).catch(() => {});
     }
-    const demoCommunity = isCatalogCommunity(id) ? communities.find(c => c.id === id) : undefined;
-    navigate(`/communities/${id}`, demoCommunity ? { state: { demoCommunity } } : undefined);
+    navigate(`/communities/${id}`);
   }, [navigate]); // navigate is stable; communities come from ref
   const backToList = () => navigate('/Communities');
 
