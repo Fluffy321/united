@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { BookOpenText, ChevronRight, Clock, Landmark, ScrollText } from 'lucide-react';
+import TehillimReader from './TehillimReader';
 
 const HUB_ITEMS = [
   {
@@ -51,6 +52,10 @@ export default function JewishContentHub() {
   const { pathname } = useLocation();
   const normalizedPath = pathname.replace(/\/$/, '');
   const placeholderTitle = PLACEHOLDERS[normalizedPath];
+
+  if (normalizedPath === '/JewishHub/tehillim') {
+    return <TehillimReader />;
+  }
 
   if (placeholderTitle) {
     return <JewishPlaceholder title={placeholderTitle} />;
