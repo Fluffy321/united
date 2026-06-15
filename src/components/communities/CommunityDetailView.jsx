@@ -32,6 +32,7 @@ import CommunityFormsTab from './CommunityFormsTab';
 import CommunityResourceLibrary from './CommunityResourceLibrary';
 import CommunityStoreTab from './CommunityStoreTab';
 import GroupChatSection from './GroupChatSection';
+import CommunityInviteModal from './CommunityInviteModal';
 import CommunityAdminCenter, { AppealSubmitModal } from './CommunityAdminCenter';
 import { useSwipeableTabs } from '@/hooks/useSwipeableTabs';
 import {
@@ -662,6 +663,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   const [highlightEventId, setHighlightEventId] = useState(null);
   const [showClaim, setShowClaim] = useState(false);
   const [showAdminCenter, setShowAdminCenter] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [adminInitialTab, setAdminInitialTab] = useState('overview');
   const [showAppealModal, setShowAppealModal] = useState(false);
   const [composeText, setComposeText] = useState('');
@@ -829,15 +831,11 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   }, [accentHex]);
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/communities/${communityId}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: community?.name, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        toast.success('Link copied!');
-      }
-    } catch {}
+    if (!currentUser) {
+      dataService.auth.redirectToLogin(`${window.location.pathname}${window.location.search || ''}`);
+      return;
+    }
+    setShowInviteModal(true);
   };
 
   const handleFollow = async () => {
@@ -1122,7 +1120,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
         {activeTab === 'chat' && featureCapabilities.chat && (
           <div className="mt-4 h-[60vh] overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
-            <GroupChatSection communityId={communityId} currentUser={currentUser} />
+            <GroupChatSection communityId={communityId} currentUser={currentUser} onInvite={handleShare} />
           </div>
         )}
       </div>
@@ -1153,6 +1151,13 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
           setShowAdminCenter(false);
           onBack?.();
         }}
+      />
+      <CommunityInviteModal
+        open={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        community={community}
+        currentUser={currentUser}
+        typeConfig={typeConfig}
       />
       {showAppealModal && myRemoval && (
         <AppealSubmitModal

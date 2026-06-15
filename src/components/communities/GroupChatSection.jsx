@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Share2 } from 'lucide-react';
 import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import UserAvatar from '@/components/common/UserAvatar';
 import { formatDistanceToNow } from 'date-fns';
 
-export default function GroupChatSection({ communityId, currentUser }) {
+export default function GroupChatSection({ communityId, currentUser, onInvite }) {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
@@ -79,6 +79,23 @@ export default function GroupChatSection({ communityId, currentUser }) {
 
   return (
     <div className="flex flex-col h-full bg-white">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-white px-4 py-3">
+        <div className="min-w-0">
+          <p className="text-[13px] font-black text-slate-900">Group chat</p>
+          <p className="truncate text-[11px] font-semibold text-slate-400">Invite people into this conversation</p>
+        </div>
+        {onInvite && (
+          <button
+            type="button"
+            onClick={onInvite}
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-slate-950 px-3 text-[12px] font-black text-white transition hover:bg-slate-800 active:scale-95"
+          >
+            <Share2 className="h-3.5 w-3.5" />
+            Invite
+          </button>
+        )}
+      </div>
+
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {isLoading ? (
