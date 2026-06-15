@@ -17,6 +17,7 @@ const HUB_ITEMS = [
     path: '/JewishHub/torah-parsha',
     Icon: BookOpenText,
     tone: 'blue',
+    soon: true,
   },
   {
     title: 'Zmanim (Five Towns)',
@@ -24,6 +25,7 @@ const HUB_ITEMS = [
     path: '/JewishHub/zmanim',
     Icon: Clock,
     tone: 'amber',
+    soon: true,
   },
   {
     title: 'Siddur',
@@ -31,6 +33,7 @@ const HUB_ITEMS = [
     path: '/JewishHub/siddur',
     Icon: Landmark,
     tone: 'emerald',
+    soon: true,
   },
 ];
 
@@ -76,7 +79,7 @@ export default function JewishContentHub() {
           <p className="text-[10px] font-black uppercase tracking-wide text-white/70">Jewish content</p>
           <h1 className="mt-1 text-[22px] font-black leading-tight">Jewish Hub</h1>
           <p className="mt-1.5 max-w-md text-[13px] font-semibold leading-snug text-white/80">
-            Tehillim, Torah, zmanim, and davening tools for the Five Towns.
+            Tehillim, Torah, Zmanim, and davening tools for the Five Towns.
           </p>
         </div>
 
@@ -102,7 +105,14 @@ function HubTile({ item }) {
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <h2 className="text-[15px] font-black leading-tight text-slate-950">{item.title}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-[15px] font-black leading-tight text-slate-950">{item.title}</h2>
+          {item.soon && (
+            <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-slate-400">
+              Soon
+            </span>
+          )}
+        </div>
         <p className="mt-1 text-[12px] font-semibold leading-snug text-slate-500">{item.description}</p>
       </div>
       <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />

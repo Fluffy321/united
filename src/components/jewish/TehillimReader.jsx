@@ -9,9 +9,11 @@ const CACHE_PREFIX = 'junited:tehillim:v1';
 const HEBREW_VERSION = {
   language: 'hebrew',
   responseLanguage: 'he',
-  title: 'Tanach with Text Only',
-  license: 'Public Domain',
+  title: 'Miqra according to the Masorah',
+  license: 'CC-BY-SA',
 };
+
+const RENDER_SHEM_AS_HASHEM = false;
 
 const ENGLISH_VERSION = {
   language: 'english',
@@ -149,9 +151,14 @@ function buildVerseRows(perekData) {
 
   return Array.from({ length: total }, (_, index) => ({
     number: index + 1,
-    hebrew: hebrew[index] || '',
+    hebrew: transformHebrewForDisplay(hebrew[index] || ''),
     english: english[index] || '',
   }));
+}
+
+function transformHebrewForDisplay(text) {
+  if (!RENDER_SHEM_AS_HASHEM || !text) return text;
+  return text.replace(/י[\u0591-\u05C7]*ה[\u0591-\u05C7]*ו[\u0591-\u05C7]*ה/g, 'ה׳');
 }
 
 function attributionText(version) {
