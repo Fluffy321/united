@@ -4,31 +4,6 @@ import { differenceInMinutes, differenceInHours, differenceInDays, isYesterday, 
 import { HandHeart, Bot, Sparkles, Users } from 'lucide-react';
 import { AI_AGENT } from '@/lib/aiAgent';
 
-
-const REALISTIC_PREVIEWS = [
-  'Are you going tonight?',
-  "I'll send it in a bit",
-  'Did you see the post?',
-  'Thanks again 🙏',
-  'Let me know what you think',
-  'Can you make it on Shabbos?',
-  'Just saw your message!',
-  'That sounds great 👍',
-  'We should catch up soon',
-  'Did you hear about the event?',
-  'I\'ll be there at 7',
-  'Check this out when you get a chance',
-  'Hope you\'re doing well!',
-  'Any update on that?',
-  'Sounds good to me!',
-];
-
-function getPreview(convId) {
-  if (!convId) return REALISTIC_PREVIEWS[0];
-  const idx = convId.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % REALISTIC_PREVIEWS.length;
-  return REALISTIC_PREVIEWS[idx];
-}
-
 function formatTimestamp(date) {
   if (!date) return '';
   const d = new Date(date);
@@ -42,20 +17,6 @@ function formatTimestamp(date) {
   const days = differenceInDays(now, d);
   if (days < 7) return format(d, 'EEE');
   return format(d, 'MMM d');
-}
-
-// Deterministically decide if a user appears "active" based on their ID
-function isLikelyActive(userId) {
-  if (!userId) return false;
-  const code = userId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  return code % 3 === 0; // ~33% appear active
-}
-
-// Deterministically mock typing state for ~15% of conversations
-function isMockTyping(convId) {
-  if (!convId) return false;
-  const code = convId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  return code % 7 === 0;
 }
 
 export default function ConversationList({ conversations, currentUser, selectedId, onSelect, onArchive, onMarkUnread }) {
@@ -182,9 +143,6 @@ export default function ConversationList({ conversations, currentUser, selectedI
               <Sparkles className="w-2.5 h-2.5 text-white" />
             </span>
           )}
-          {!isAIChat && !other.isCommunity && isLikelyActive(other.id) && (
-            <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
-          )}
           {isAIChat && (
             <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full shadow-sm" />
           )}
@@ -204,9 +162,6 @@ export default function ConversationList({ conversations, currentUser, selectedI
                   </span>
                 )}
               </span>
-              {isLikelyActive(other.id) && !isAIChat && !other.isCommunity && (
-                <span className="text-[10px] font-semibold text-emerald-500 leading-none mt-0.5">Active now</span>
-              )}
               {other.isCommunity && (
                 <span className="text-[10px] font-medium text-slate-400 leading-none mt-0.5">{other.memberCount.toLocaleString()} members</span>
               )}
@@ -240,22 +195,11 @@ export default function ConversationList({ conversations, currentUser, selectedI
               <HandHeart className="w-3 h-3 flex-shrink-0" /> {conv.request_title}
             </p>
           )}
-          {isMockTyping(conv.id) && !isAIChat ? (
-            <p className="text-[13px] text-emerald-500 font-semibold flex items-center gap-1">
-              <span className="flex gap-0.5 items-end h-3">
-                <span className="w-1 h-1 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-1 h-1 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-1 h-1 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </span>
-              typing…
-            </p>
-          ) : (
-            <p className={`text-[13px] truncate leading-snug ${
-              unread > 0 ? 'text-slate-800 font-semibold' : 'text-slate-500 font-medium'
-            }`}>
-              {conv.last_message || getPreview(conv.id)}
-            </p>
-          )}
+          <p className={`text-[13px] truncate leading-snug ${
+            unread > 0 ? 'text-slate-800 font-semibold' : 'text-slate-500 font-medium'
+          }`}>
+            {conv.last_message || 'No messages yet'}
+          </p>
         </div>
       </button>
       </SwipeableConversationItem>

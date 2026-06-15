@@ -127,53 +127,14 @@ export function buildFeedLiveNowItems({ posts = [], networkLabel = 'Five Towns' 
     return null;
   });
 
-  const liveItems = sortLiveItems(items);
-  const fallbackItems = [
-    {
-      id: 'feed-live-mitzvah',
-      type: 'mitzvah',
-      urgency: 'urgent',
-      eyebrow: 'Needs help now',
-      title: `See urgent mitzvah needs near ${networkLabel}`,
-      meta: networkLabel,
-      liveText: 'Help someone today',
-      actionLabel: 'Open mitzvahs',
-      href: '/MitzvahCircle',
-      avatars: ['M'],
-    },
-    {
-      id: 'feed-live-tonight',
-      type: 'event',
-      urgency: 'today',
-      eyebrow: 'Tonight',
-      title: `What is happening tonight in ${networkLabel}?`,
-      meta: 'Events, rides, shiurim, plans',
-      liveText: 'Check local activity',
-      actionLabel: 'Post update',
-      href: '/Feed',
-      avatars: ['FT'],
-    },
-    {
-      id: 'feed-live-community',
-      type: 'community',
-      urgency: 'active',
-      eyebrow: 'People active',
-      title: 'Join a community where people are coordinating now',
-      meta: 'Sports, Torah, Shabbos, chesed',
-      liveText: 'Find your people',
-      actionLabel: 'Discover',
-      href: '/Communities',
-      avatars: ['C'],
-    },
-  ];
-
-  return sortLiveItems([...liveItems, ...fallbackItems]).slice(0, 8);
+  return sortLiveItems(items).slice(0, 8);
 }
 
 export function buildCommunityLiveNowItems({ communities = [] } = {}) {
   const communityItems = communities.map((community) => {
     const activeNow = Number(community.activeNow || community.active_now || 0);
     const postsToday = Number(community.postsToday || community.posts_today || community.post_count || 0);
+    if (activeNow <= 0 && postsToday <= 0) return null;
     const name = community.name || 'Community';
     const title = /sports/i.test(name)
       ? "Who's playing tonight?"
@@ -192,38 +153,11 @@ export function buildCommunityLiveNowItems({ communities = [] } = {}) {
       liveText: postsToday > 0 ? `${postsToday} posts today` : 'Start the next move',
       actionLabel: community.joined ? 'Open' : 'Join',
       href: `/communities/${encodeURIComponent(community.id)}`,
-      avatars: Array.from({ length: Math.min(Math.max(activeNow, 1), 4) }, (_, index) => initials(`${name} ${index}`)),
+      avatars: [],
     };
   });
 
-  const fallbackItems = [
-    {
-      id: 'community-live-tonight',
-      type: 'community',
-      urgency: 'today',
-      eyebrow: 'Tonight',
-      title: 'Find the room where people are making plans, asking fast questions, or coordinating help',
-      meta: 'Five Towns communities',
-      liveText: 'Start with one useful post',
-      actionLabel: 'Discover',
-      href: '/Discover',
-      avatars: ['FT'],
-    },
-    {
-      id: 'community-live-support',
-      type: 'community',
-      urgency: 'active',
-      eyebrow: 'Support spaces',
-      title: 'Join a focused room for school, family, wellness, Torah, sports, or Shabbos needs',
-      meta: 'Identity and action rooms',
-      liveText: 'Pick your people',
-      actionLabel: 'Browse',
-      href: '/Communities',
-      avatars: ['C'],
-    },
-  ];
-
-  return sortLiveItems([...communityItems, ...fallbackItems]);
+  return sortLiveItems(communityItems);
 }
 
 export function getCommunityActionCopy(community = {}) {
@@ -315,12 +249,12 @@ export function buildCommunityActionItems(communities = []) {
       eyebrow: copy.room,
       title: copy.question,
       meta: community.name || community.category || 'Community',
-      liveText: community.member_count ? `${community.member_count} people here` : copy.nextWin,
+      liveText: community.member_count ? `${community.member_count} people here` : '',
       actionLabel: 'Open',
       href: community.id ? `/communities/${encodeURIComponent(community.id)}` : '/Communities',
-      avatars: [initials(community.name || copy.room)],
+      avatars: [],
       context: copy.promise,
-      people: community.member_count ? `${community.member_count} people here` : 'People nearby',
+      people: community.member_count ? `${community.member_count} people here` : '',
       tone: 'active',
     };
   });
@@ -345,73 +279,9 @@ export function buildMarketplaceLiveNowItems({ listings = [] } = {}) {
     };
   });
 
-  const fallbackItems = [
-    {
-      id: 'market-live-free',
-      type: 'marketplace',
-      urgency: 'today',
-      eyebrow: 'Before Shabbos',
-      title: 'Post free extras, furniture, baby gear, or items that need pickup soon',
-      meta: 'Trusted local marketplace',
-      liveText: 'Connect useful items to neighbors',
-      actionLabel: 'Post listing',
-      href: '/Marketplace?post=1',
-      avatars: ['M'],
-    },
-    {
-      id: 'market-live-looking',
-      type: 'marketplace',
-      urgency: 'active',
-      eyebrow: 'Looking for',
-      title: 'Ask the community before buying new',
-      meta: 'Books, cribs, sublets, Judaica, services',
-      liveText: 'Someone nearby may have it',
-      actionLabel: 'Ask',
-      href: '/Marketplace?mode=looking',
-      avatars: ['FT'],
-    },
-  ];
-
-  return sortLiveItems([...listingItems, ...fallbackItems]);
+  return sortLiveItems(listingItems);
 }
 
 export function buildMapLiveNowItems() {
-  return [
-    {
-      id: 'map-minyan',
-      type: 'minyan',
-      urgency: 'soon',
-      eyebrow: 'Map live',
-      title: 'Minyan needs and shul activity show as live pins',
-      meta: 'Shuls / yeshivas / mitzvahs',
-      liveText: 'Tap filters to act nearby',
-      actionLabel: 'Open pins',
-      href: '/Map?category=shuls',
-      avatars: ['FT'],
-    },
-    {
-      id: 'map-mitzvah',
-      type: 'mitzvah',
-      urgency: 'urgent',
-      eyebrow: 'Needs near you',
-      title: 'Urgent mitzvah requests should stand out on the map',
-      meta: 'Five Towns',
-      liveText: 'Red pins need attention',
-      actionLabel: 'View',
-      href: '/MitzvahCircle',
-      avatars: ['M'],
-    },
-    {
-      id: 'map-events',
-      type: 'event',
-      urgency: 'today',
-      eyebrow: 'Tonight',
-      title: 'Events, shiurim, and local plans should be visible by town',
-      meta: 'Lawrence, Cedarhurst, Woodmere, Hewlett, Inwood',
-      liveText: 'Filter by what you need',
-      actionLabel: 'Open map',
-      href: '/Map',
-      avatars: ['E'],
-    },
-  ];
+  return [];
 }
