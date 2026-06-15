@@ -1399,8 +1399,9 @@ export default function Communities() {
         onCreated={(newCommunity) => {
           loadData(currentUser);
           if (newCommunity?.id) {
-            // Small delay to let loadData start, then open the new community
-            setTimeout(() => openCommunity(newCommunity.id), 400);
+            setTimeout(() => {
+              navigate(`/communities/${encodeURIComponent(newCommunity.id)}?tab=chat&focus=message`);
+            }, 400);
           }
         }}
       />

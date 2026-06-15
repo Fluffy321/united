@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Send, Loader2 } from 'lucide-react';
 import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +11,8 @@ export default function GroupChatSection({ communityId, currentUser }) {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const [searchParams] = useSearchParams();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -34,6 +37,12 @@ export default function GroupChatSection({ communityId, currentUser }) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (searchParams.get('focus') !== 'message') return;
+    const timer = window.setTimeout(() => inputRef.current?.focus(), 150);
+    return () => window.clearTimeout(timer);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!communityId) return;
@@ -102,6 +111,7 @@ export default function GroupChatSection({ communityId, currentUser }) {
         <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 bg-slate-50">
           <div className="flex gap-2">
             <input
+              ref={inputRef}
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
