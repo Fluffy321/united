@@ -154,6 +154,7 @@ const happenings = [
 ];
 
 const requestTypes = ['Need people for minyan', 'Looking for ride to shul', 'Hosting guests', 'Lost item at shul'];
+const HAS_VERIFIED_MINYAN_DATA = false;
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -229,7 +230,7 @@ function MinyanNowCard({ minyan, joined, onJoin, onOpenShul, onOpenMap }) {
   );
 }
 
-function ShulCard({ shul, onOpen, onOpenMap }) {
+function ShulCard({ shul, onOpen, onOpenMap, showMinyanTimes = false }) {
   return (
     <article className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -252,11 +253,13 @@ function ShulCard({ shul, onOpen, onOpenMap }) {
         ))}
       </div>
 
-      <div className="mt-2 grid grid-cols-3 gap-2">
-        <TimeBox label="Shacharis" value={shul.minyanim.shacharis} />
-        <TimeBox label="Mincha" value={shul.minyanim.mincha} />
-        <TimeBox label="Maariv" value={shul.minyanim.maariv} />
-      </div>
+      {showMinyanTimes && (
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          <TimeBox label="Shacharis" value={shul.minyanim.shacharis} />
+          <TimeBox label="Mincha" value={shul.minyanim.mincha} />
+          <TimeBox label="Maariv" value={shul.minyanim.maariv} />
+        </div>
+      )}
 
       <div className="mt-2 flex gap-2">
         <button onClick={() => onOpen(shul)} className="motion-press h-9 flex-1 rounded-2xl bg-slate-950 text-sm font-black text-white">
@@ -373,7 +376,7 @@ function PostRequestModal({ onClose, onPost }) {
   );
 }
 
-function ShulProfileSheet({ shul, onClose, onOpenMap, onFollow }) {
+function ShulProfileSheet({ shul, onClose, onOpenMap, onFollow, showMinyanTimes = false }) {
   if (!shul) return null;
 
   return (
@@ -401,11 +404,13 @@ function ShulProfileSheet({ shul, onClose, onOpenMap, onFollow }) {
         </div>
 
         <div className="space-y-4 p-4">
-          <div className="grid grid-cols-3 gap-2">
-            <TimeBox label="Shacharis" value={shul.minyanim.shacharis} />
-            <TimeBox label="Mincha" value={shul.minyanim.mincha} />
-            <TimeBox label="Maariv" value={shul.minyanim.maariv} />
-          </div>
+          {showMinyanTimes && (
+            <div className="grid grid-cols-3 gap-2">
+              <TimeBox label="Shacharis" value={shul.minyanim.shacharis} />
+              <TimeBox label="Mincha" value={shul.minyanim.mincha} />
+              <TimeBox label="Maariv" value={shul.minyanim.maariv} />
+            </div>
+          )}
 
           <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
             <h3 className="text-sm font-black text-slate-950">About</h3>
@@ -494,11 +499,11 @@ export default function ShulMinyanBoard({ currentUser }) {
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-blue-700">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                Live minyan board
+                Shul directory
               </div>
               <h2 className="mt-2 text-[20px] font-black leading-6 text-slate-950">Shuls & Minyan</h2>
               <p className="mt-1 text-[13px] font-semibold leading-5 text-slate-500">
-                Find a minyan, open shul times, or post a quick shul request.
+                Find local shuls, open the map, or post a quick shul request.
               </p>
             </div>
             <button onClick={() => setShowPostRequest(true)} className="motion-press flex h-10 shrink-0 items-center gap-2 rounded-2xl bg-slate-950 px-3 text-sm font-black text-white">
@@ -507,8 +512,7 @@ export default function ShulMinyanBoard({ currentUser }) {
             </button>
           </div>
 
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            <Stat value={initialMinyanim.length} label="Minyanim" tone="blue" />
+          <div className="mt-3 grid grid-cols-2 gap-2">
             <Stat value={shuls.length} label="Shuls" tone="emerald" />
             <Stat value={requests.length} label="Requests" tone="amber" />
           </div>
@@ -527,33 +531,35 @@ export default function ShulMinyanBoard({ currentUser }) {
         </label>
       </div>
 
-      <section className="rounded-[26px] border border-slate-200 bg-slate-50/70 p-3">
-        <div className="mb-3 flex items-end justify-between gap-3">
-          <div>
-            <h3 className="text-[15px] font-black text-slate-950">Minyan Now</h3>
-            <p className="text-[12px] font-semibold text-slate-500">Fastest things to act on.</p>
+      {HAS_VERIFIED_MINYAN_DATA && (
+        <section className="rounded-[26px] border border-slate-200 bg-slate-50/70 p-3">
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div>
+              <h3 className="text-[15px] font-black text-slate-950">Minyan Now</h3>
+              <p className="text-[12px] font-semibold text-slate-500">Fastest things to act on.</p>
+            </div>
+            <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-black text-red-700">Live counts</span>
           </div>
-          <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-black text-red-700">Live counts</span>
-        </div>
-        <div className="grid gap-3 lg:grid-cols-3">
-          {initialMinyanim.map((minyan) => (
-            <MinyanNowCard
-              key={minyan.id}
-              minyan={minyan}
-              joined={joinedMinyanim.has(minyan.id)}
-              onJoin={joinMinyan}
-              onOpenShul={setSelectedShul}
-              onOpenMap={openMap}
-            />
-          ))}
-        </div>
-      </section>
+          <div className="grid gap-3 lg:grid-cols-3">
+            {initialMinyanim.map((minyan) => (
+              <MinyanNowCard
+                key={minyan.id}
+                minyan={minyan}
+                joined={joinedMinyanim.has(minyan.id)}
+                onJoin={joinMinyan}
+                onOpenShul={setSelectedShul}
+                onOpenMap={openMap}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
         <div className="mb-2 flex items-end justify-between gap-3">
           <div>
             <h3 className="text-[15px] font-black text-slate-950">Nearby Shuls</h3>
-            <p className="text-[12px] font-semibold text-slate-500">Times, distance, nusach, and map access.</p>
+            <p className="text-[12px] font-semibold text-slate-500">Directory, distance, nusach, and map access.</p>
           </div>
           <button onClick={() => navigate('/Map?category=shuls')} className="motion-press rounded-full bg-blue-50 px-3 py-1.5 text-[12px] font-black text-blue-700">
             Map pins
@@ -561,7 +567,13 @@ export default function ShulMinyanBoard({ currentUser }) {
         </div>
         <div className="grid gap-2 lg:grid-cols-2">
           {filteredShuls.map((shul) => (
-            <ShulCard key={shul.id} shul={shul} onOpen={setSelectedShul} onOpenMap={openMap} />
+            <ShulCard
+              key={shul.id}
+              shul={shul}
+              onOpen={setSelectedShul}
+              onOpenMap={openMap}
+              showMinyanTimes={HAS_VERIFIED_MINYAN_DATA}
+            />
           ))}
         </div>
       </section>
@@ -613,6 +625,7 @@ export default function ShulMinyanBoard({ currentUser }) {
           onClose={() => setSelectedShul(null)}
           onOpenMap={openMap}
           onFollow={followShul}
+          showMinyanTimes={HAS_VERIFIED_MINYAN_DATA}
         />
       )}
 

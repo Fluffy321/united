@@ -1270,10 +1270,11 @@ export default function MitzvahCircle() {
   const { user: currentUser, isLoadingAuth } = useAuth();
   const queryClient = useQueryClient();
 
-  const VALID_VIEWS = ['browse', 'shuls', 'offers', 'posted', 'completed'];
+  const VALID_VIEWS = ['browse', 'shuls', 'mine', 'completed'];
   const [activeView, setActiveView] = React.useState(() => {
     const tab = searchParams.get('tab');
     if (tab === 'open' || tab === 'carpool') return 'browse';
+    if (tab === 'offers' || tab === 'posted') return 'mine';
     return VALID_VIEWS.includes(tab) ? tab : 'browse';
   });
   const [activeCategory, setActiveCategory] = React.useState(() =>
@@ -1289,6 +1290,8 @@ export default function MitzvahCircle() {
     const tab = searchParams.get('tab');
     const nextView = tab === 'open' || tab === 'carpool'
       ? 'browse'
+      : tab === 'offers' || tab === 'posted'
+        ? 'mine'
       : VALID_VIEWS.includes(tab)
         ? tab
         : 'browse';
@@ -1422,9 +1425,9 @@ export default function MitzvahCircle() {
 	        expires_at: new Date(Date.now() + REQUEST_EXPIRY_MS).toISOString(),
 	        created_by_user_id: currentUser.id,
 	        created_by_name: currentUser.display_name || currentUser.full_name,
-	      });
+      });
       setShowCreate(false);
-      changeView('posted');
+      changeView('mine');
       toast.success('Request posted.');
     } catch (err) {
       toast.error(err.message || 'Could not post request.');
@@ -1630,6 +1633,12 @@ export default function MitzvahCircle() {
     r.poster_id === currentUser?.id
     && (detailCategoryFilter === 'All' || r.category === detailCategoryFilter)
   );
+  const myActivityItems = [
+    ...myPosted.map((request) => ({ type: 'request', request })),
+    ...myOfferRequests
+      .filter(({ request }) => request.poster_id !== currentUser?.id)
+      .map(({ request, offer }) => ({ type: 'offer', request, offer })),
+  ];
   const carpoolRequests = requests
     .filter((r) =>
       r.request_kind === 'carpool'
@@ -1658,8 +1667,7 @@ export default function MitzvahCircle() {
   const workflowTabs = [
     { id: 'browse', label: 'Browse Needs' },
     { id: 'shuls', label: 'Shuls & Minyan' },
-    { id: 'offers', label: 'My Offers' },
-    { id: 'posted', label: 'My Requests' },
+    { id: 'mine', label: 'Mine' },
     { id: 'completed', label: 'Completed' },
   ];
 
@@ -1677,15 +1685,6 @@ export default function MitzvahCircle() {
         icon={HandHeart}
         title="Mitzvah Circle"
         help={<PageHelp text="Post mitzvah opportunities, take one, share what you did, coordinate carpools, and build daily mitzvah streaks." />}
-        actions={(
-          <button
-            onClick={() => setShowCreate(true)}
-            className="app-icon-button surface-tile-hover touch-manipulation"
-            aria-label="Post mitzvah request"
-          >
-            <Plus className="h-[18px] w-[18px] text-slate-500" />
-          </button>
-        )}
       />
 
       <section className="mobile-page-wide px-3 pt-3 sm:px-4 sm:pt-4">
@@ -1811,8 +1810,21 @@ export default function MitzvahCircle() {
           />
         )}
 
+        {activeView === 'browse' && (
+          <div className="mb-3">
+            <CarpoolBoard
+              rideRequests={carpoolRequests}
+              signupsByRequest={signupsByRequest}
+              onCreateRide={(mode) => setCarpoolCreateMode(mode)}
+              onSelectRide={setQuickViewRequest}
+              onClaimRide={(_, ride) => handleOffer(ride)}
+              isClaiming={isOffering}
+            />
+          </div>
+        )}
+
         {/* Search/filter bar */}
-        {activeView !== 'offers' && activeView !== 'shuls' && (
+        {activeView !== 'shuls' && (
           <div className="surface-panel-soft mb-3 space-y-3 rounded-[24px] p-3">
             {activeView === 'browse' && (
               <div>
@@ -1891,19 +1903,9 @@ export default function MitzvahCircle() {
               <div className="flex justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
               </div>
-            ) : browseRequests.length || activeCategory === 'rides' ? (
+            ) : activeCategory === 'rides' ? null : browseRequests.length ? (
               <>
-                {activeCategory === 'rides' && (
-                  <CarpoolBoard
-                    rideRequests={carpoolRequests}
-                    signupsByRequest={signupsByRequest}
-                    onCreateRide={(mode) => setCarpoolCreateMode(mode)}
-                    onSelectRide={setQuickViewRequest}
-                    onClaimRide={(_, ride) => handleOffer(ride)}
-                    isClaiming={isOffering}
-                  />
-                )}
-                {activeCategory !== 'rides' && browseRequests.map((r) => (
+                {browseRequests.map((r) => (
                   <RequestCard
                     key={r.id}
                     request={r}
@@ -1932,56 +1934,33 @@ export default function MitzvahCircle() {
             )
           )}
 
-          {activeView === 'offers' && (
-            myOfferRequests.length ? (
-              myOfferRequests.map(({ request, offer }) => (
-                <RequestCard
-                  key={request.id}
-                  request={request}
-                  offers={offers}
-                  comments={commentsByRequest[request.id] || []}
-                  currentUser={currentUser}
-                  onOffer={handleOffer}
-                  onAcceptOffer={handleAcceptOffer}
-                  onStart={handleStart}
-                  onComplete={handleComplete}
-                  onVerify={handleVerify}
-                  onComment={handleCommentOnRequest}
-                  onOpenMap={openRequestOnMap}
-                  onUrgencyChange={handleUrgencyChange}
-                />
+          {activeView === 'mine' && (
+            myActivityItems.length ? (
+              myActivityItems.map(({ type, request }) => (
+                <div key={`${type}-${request.id}`} className="space-y-2">
+                  <p className="px-1 text-[11px] font-black uppercase tracking-wide text-slate-400">
+                    {type === 'request' ? 'My request' : 'My offer'}
+                  </p>
+                  <RequestCard
+                    request={request}
+                    offers={offers}
+                    comments={commentsByRequest[request.id] || []}
+                    currentUser={currentUser}
+                    onOffer={handleOffer}
+                    onAcceptOffer={handleAcceptOffer}
+                    onStart={handleStart}
+                    onComplete={handleComplete}
+                    onVerify={handleVerify}
+                    onComment={handleCommentOnRequest}
+                    onOpenMap={openRequestOnMap}
+                    onUrgencyChange={handleUrgencyChange}
+                  />
+                </div>
               ))
             ) : (
               <EmptyState
-                title="No offers yet"
-                text="Browse open requests and tap 'Offer to Help' to get started."
-              />
-            )
-          )}
-
-          {activeView === 'posted' && (
-            myPosted.length ? (
-              myPosted.map((r) => (
-                <RequestCard
-                  key={r.id}
-                  request={r}
-                  offers={offers}
-                  comments={commentsByRequest[r.id] || []}
-                  currentUser={currentUser}
-                  onOffer={handleOffer}
-                  onAcceptOffer={handleAcceptOffer}
-                  onStart={handleStart}
-                  onComplete={handleComplete}
-                  onVerify={handleVerify}
-                  onComment={handleCommentOnRequest}
-                  onOpenMap={openRequestOnMap}
-                  onUrgencyChange={handleUrgencyChange}
-                />
-              ))
-            ) : (
-              <EmptyState
-                title="No posted requests"
-                text="Post a request and your community will be notified."
+                title="Nothing in your activity yet"
+                text="Requests you post and offers you make will appear together here."
               />
             )
           )}
