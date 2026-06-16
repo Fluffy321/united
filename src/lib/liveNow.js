@@ -240,21 +240,33 @@ export function getCommunityActionCopy(community = {}) {
 }
 
 export function buildCommunityActionItems(communities = []) {
-  return communities.slice(0, 8).map((community) => {
+  return communities.filter(community => community?.id && community?.name).slice(0, 8).map((community) => {
     const copy = getCommunityActionCopy(community);
+    const memberCount = Number(community.member_count || community.follower_count || 0);
+    const initials = [
+      community.member_initials,
+      community.memberInitials,
+      community.recent_member_initials,
+      community.recentMemberInitials,
+    ].filter(Boolean)
+      .flatMap(value => Array.isArray(value) ? value : [value])
+      .map(label => String(label || '').trim().toUpperCase().slice(0, 2))
+      .filter(Boolean)
+      .slice(0, 3);
+
     return {
-      id: community.id || community.name,
+      id: community.id,
       type: 'community',
       urgency: 'active',
       eyebrow: copy.room,
       title: copy.question,
       meta: community.name || community.category || 'Community',
-      liveText: community.member_count ? `${community.member_count} people here` : '',
+      liveText: memberCount ? `${memberCount.toLocaleString()} people here` : '',
       actionLabel: 'Open',
-      href: community.id ? `/communities/${encodeURIComponent(community.id)}` : '/Communities',
-      avatars: [],
+      href: `/communities/${encodeURIComponent(community.id)}`,
+      faces: initials.map(initial => ({ initials: initial, name: community.name })),
       context: copy.promise,
-      people: community.member_count ? `${community.member_count} people here` : '',
+      people: memberCount ? `${memberCount.toLocaleString()} people here` : '',
       tone: 'active',
     };
   });

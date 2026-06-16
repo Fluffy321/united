@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, X, Clock, TrendingUp, Filter, ChevronLeft, Users, Calendar, FileText, User, Loader2, Store, ShoppingBag, HeartHandshake, MapPin } from 'lucide-react';
+import { Search, X, Clock, Filter, ChevronLeft, Users, Calendar, FileText, User, Loader2, Store, ShoppingBag, HeartHandshake, MapPin } from 'lucide-react';
 import { dataService, storageService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { formatDistanceToNow } from 'date-fns';
 
-const TRENDING = ['Five Towns minyan', 'Shabbos carpool', 'TAG school', 'kosher restaurant', 'marketplace crib', 'urgent mitzvah'];
 const POST_TYPES = [
   { value: '', label: 'All types' },
   { value: 'feed', label: 'Posts' },
@@ -19,66 +18,7 @@ const POST_TYPES = [
   { value: 'housing', label: 'Housing' },
 ];
 
-const DEMO_RESULTS = {
-  posts: [
-    {
-      id: 'demo-post-1',
-      title: 'Shabbos hospitality available',
-      body: 'A local family has room for guests this week. Reply through the app once messaging is connected.',
-      author_name: 'Local demo',
-      community_name: 'Five Towns',
-      created_date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      likes_count: 6,
-      comments_count: 2,
-    },
-    {
-      id: 'demo-post-2',
-      title: 'Tehillim group tonight',
-      body: 'Community Tehillim gathering after Maariv.',
-      author_name: 'Local demo',
-      community_name: 'JUnited',
-      created_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      likes_count: 12,
-      comments_count: 4,
-    },
-  ],
-  communities: [
-    { id: 'demo-community-1', name: 'Five Towns Community', type: 'Neighborhood', follower_count: 128 },
-    { id: 'demo-community-2', name: 'Chesed Volunteers', type: 'Group', follower_count: 47 },
-  ],
-  events: [
-    { id: 'demo-event-1', title: 'Community Dinner', start_date: new Date().toISOString().slice(0, 10), location: 'Main shul social hall' },
-  ],
-  people: [
-    { id: 'demo-person-1', full_name: 'Demo Member', bio: 'Local placeholder profile' },
-  ],
-  mitzvahRequests: [
-    { id: 'demo-mitzvah-1', title: 'Ride needed to Cedarhurst appointment', description: 'Today if possible. One passenger, can meet near Central Ave.', urgency: 'today', location_label: 'Cedarhurst' },
-    { id: 'demo-mitzvah-2', title: 'Two meals needed for a new family', description: 'Flexible this week. Volunteers can split nights.', urgency: 'flexible', location_label: 'Woodmere' },
-  ],
-  businesses: [
-    { id: 'demo-business-1', name: 'Traditions Eatery', category: 'Restaurant', address: '302 Central Ave, Lawrence', trust_status: 'source_backed' },
-    { id: 'demo-business-2', name: 'Chabad of the Five Towns', category: 'Shul / community place', address: '74 Maple Ave, Cedarhurst', trust_status: 'source_backed' },
-  ],
-  marketplace: [
-    { id: 'demo-market-1', title: 'White crib + mattress', price: '$120', category: 'Baby / Kids gear', neighborhood: 'Woodmere', urgencyLabel: 'Need gone by Friday' },
-    { id: 'demo-market-2', title: 'Extra challah rolls and kugel', price: 'Free', category: 'Food / Shabbos extras', neighborhood: 'Cedarhurst', urgencyLabel: 'Before Shabbos' },
-  ],
-};
-
-const searchDemoResults = (query) => {
-  const needle = query.toLowerCase();
-  const matches = (value) => String(value || '').toLowerCase().includes(needle);
-  return {
-    posts: DEMO_RESULTS.posts.filter(post => matches(post.title) || matches(post.body) || matches(post.community_name)),
-    communities: DEMO_RESULTS.communities.filter(community => matches(community.name) || matches(community.type)),
-    events: DEMO_RESULTS.events.filter(event => matches(event.title) || matches(event.location)),
-    people: DEMO_RESULTS.people.filter(person => matches(person.full_name) || matches(person.bio)),
-    mitzvahRequests: DEMO_RESULTS.mitzvahRequests.filter(request => matches(request.title) || matches(request.description) || matches(request.location_label) || matches(request.urgency)),
-    businesses: DEMO_RESULTS.businesses.filter(business => matches(business.name) || matches(business.category) || matches(business.address)),
-    marketplace: DEMO_RESULTS.marketplace.filter(listing => matches(listing.title) || matches(listing.category) || matches(listing.neighborhood) || matches(listing.price)),
-  };
-};
+const EMPTY_RESULTS = { posts: [], communities: [], events: [], people: [], mitzvahRequests: [], businesses: [], marketplace: [] };
 
 function ResultSection({ title, icon: Icon, count, children }) {
   if (!count) return null;
@@ -197,7 +137,7 @@ export default function SearchPage() {
     if (debouncedQuery.trim().length < 2) { setResults(null); return; }
     setSearching(true);
     if (!appParams.hasBackendConfig) {
-      setResults(searchDemoResults(debouncedQuery));
+      setResults(EMPTY_RESULTS);
       setSearching(false);
       const updated = [debouncedQuery, ...recentSearches.filter(s => s !== debouncedQuery)].slice(0, 8);
       setRecentSearches(updated);
@@ -206,7 +146,7 @@ export default function SearchPage() {
     }
     dataService.functions.invoke('universalSearch', { query: debouncedQuery, filters, user_id: user?.id })
       .then(res => {
-        setResults(res.data?.results || { posts: [], communities: [], events: [], people: [], mitzvahRequests: [], businesses: [], marketplace: [] });
+        setResults(res.data?.results || EMPTY_RESULTS);
         setSearching(false);
         // Save to recent
         const updated = [debouncedQuery, ...recentSearches.filter(s => s !== debouncedQuery)].slice(0, 8);
@@ -214,7 +154,7 @@ export default function SearchPage() {
         storageService.setJson('junited_recent_searches', updated);
       })
       .catch(() => {
-        setResults({ posts: [], communities: [], events: [], people: [], mitzvahRequests: [], businesses: [], marketplace: [] });
+        setResults(EMPTY_RESULTS);
         setSearching(false);
       });
   }, [debouncedQuery, filters, user?.id]);
@@ -288,7 +228,7 @@ export default function SearchPage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 pt-4">
-        {/* Empty state: recent + trending + saved */}
+        {/* Empty state: recent searches only. Suggestions should come from real data before rendering here. */}
         {!query && (
           <>
             {/* Recent */}
@@ -308,18 +248,15 @@ export default function SearchPage() {
               </div>
             )}
 
-            {/* Trending */}
-            <div>
-              <p className="text-[13px] font-bold text-slate-700 mb-2 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-orange-500" /> Trending</p>
-              <div className="flex flex-wrap gap-2">
-                {TRENDING.map(t => (
-                  <button key={t} onClick={() => setQuery(t)}
-                    className="px-3 py-1.5 rounded-full bg-orange-50 text-orange-700 text-[12px] font-semibold border border-orange-100 hover:bg-orange-100 transition-colors">
-                    🔥 {t}
-                  </button>
-                ))}
+            {recentSearches.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
+                <Search className="mx-auto h-6 w-6 text-slate-300" />
+                <p className="mt-3 text-[14px] font-bold text-slate-700">Search JUnited</p>
+                <p className="mt-1 text-[13px] font-semibold leading-5 text-slate-400">
+                  Type a real name, community, post, business, or mitzvah request to search.
+                </p>
               </div>
-            </div>
+            )}
           </>
         )}
 

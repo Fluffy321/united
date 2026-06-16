@@ -323,6 +323,18 @@ function getCoreFiveTownsRooms(communities = []) {
   });
 }
 
+function getRealRoomStats(rooms = []) {
+  const realRooms = rooms.filter(room => room?.id && room?.name);
+  const postsToday = realRooms.reduce((sum, room) => sum + Number(room.postsToday || room.posts_today || 0), 0);
+  const activeNow = realRooms.reduce((sum, room) => sum + Number(room.activeNow || room.active_now || room.active_members || 0), 0);
+
+  return [
+    realRooms.length > 0 ? [realRooms.length.toLocaleString(), 'real rooms'] : null,
+    postsToday > 0 ? [postsToday.toLocaleString(), 'posts today'] : null,
+    activeNow > 0 ? [activeNow.toLocaleString(), 'active now'] : null,
+  ].filter(Boolean);
+}
+
 function mergeCommunityCatalog(communities = []) {
   const valid = (communities || []).filter(c => c?.id && c?.name);
   return valid;
@@ -570,6 +582,7 @@ function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOp
 
 function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, onJoin }) {
   const rooms = getCoreFiveTownsRooms(communities);
+  const roomStats = getRealRoomStats(rooms);
   const leadRooms = rooms.slice(0, 3);
   const remainingRooms = rooms.slice(3);
   if (!rooms.length) {
@@ -596,18 +609,16 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
             Communities are not folders. They are live places to ask, plan, help, find people, and move real life forward.
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-2 p-3">
-          {[
-            ['10', 'core rooms'],
-            ['113', 'posts today'],
-            ['130', 'active now'],
-          ].map(([value, label]) => (
+        {roomStats.length > 0 && (
+        <div className={`grid gap-2 p-3 ${roomStats.length === 1 ? 'grid-cols-1' : roomStats.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+          {roomStats.map(([value, label]) => (
             <div key={label} className="rounded-2xl bg-slate-50 p-3 text-center">
               <p className="text-[20px] font-black text-slate-950">{value}</p>
               <p className="text-[10px] font-black uppercase text-slate-400">{label}</p>
             </div>
           ))}
         </div>
+        )}
       </section>
 
       <section className="space-y-3">
@@ -1226,8 +1237,8 @@ export default function Communities() {
         </div>
 
         <LiveNowPanel
-          title="Rooms active now"
-          subtitle="Find people planning, asking, helping, or learning near you."
+          title="Community rooms"
+          subtitle="Real rooms you can open, join, or use to start a local conversation."
           items={communityActionItems}
           className="mb-5"
         />
