@@ -3,6 +3,7 @@ import { ArrowLeft, Search, X } from 'lucide-react';
 import { dataService, messagesService, findOrCreateDirectConversation } from '@/services';
 import UserAvatar from '@/components/common/UserAvatar';
 import { toast } from 'sonner';
+import { captureError } from '@/lib/analytics';
 
 export default function NewMessageComposer({ currentUser, onConversationSelect, onCancel }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,7 +33,7 @@ export default function NewMessageComposer({ currentUser, onConversationSelect, 
       );
       setExistingConversations(existingIds);
     } catch (e) {
-      console.error('Failed to load members:', e);
+      captureError(e, { context: 'NewMessageComposer: load members' });
     }
   };
 
@@ -52,7 +53,7 @@ export default function NewMessageComposer({ currentUser, onConversationSelect, 
       });
       onConversationSelect(conversation);
     } catch (e) {
-      console.error('Failed to create/find conversation:', e);
+      captureError(e, { context: 'NewMessageComposer: create or find conversation' });
       toast.error(e?.message || 'Could not start conversation');
     }
   };

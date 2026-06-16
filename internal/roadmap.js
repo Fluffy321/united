@@ -1524,6 +1524,31 @@ Goals:
   },
 
   {
+    id: 'business-admin-verification',
+    category: 'Businesses & Map',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.HIGH,
+    title: 'Admin Business Verification Workflow',
+    description: 'Admin UI to grant/revoke verified_owner and verified Jewish-owned status on business listings. The Verified strip on the Businesses page and trust badges on business cards depend on these fields being set.',
+    why: 'The DB columns verification_status and jewish_owned_status exist but there is no admin workflow to set them — the Verified section in the redesigned Businesses page will remain empty until this is built.',
+    prompt: `You are implementing the Admin Business Verification workflow for JUnited.
+
+Context:
+- business_listings table has: verification_status (enum: pending, verified_owner, rejected), jewish_owned_status (enum: pending, verified, unverified), kosher_status (enum: not_applicable, self_declared, certified), claim_status.
+- Claim requests land in business_claim_requests table; admin can approve via approve_business_claim RPC in Map.jsx.
+- The Businesses page (src/pages/Map.jsx) shows a "Verified Jewish-Owned" horizontal strip for businesses where verification_status = 'verified_owner' OR jewish_owned_status = 'verified'.
+- Admin pages live under src/pages/Admin*.jsx. Admin tooling accesses supabase directly or via RPC.
+
+Goals:
+1. Add an "Admin: Verify Businesses" section to the existing admin tooling (src/pages/AdminAnalyticsDashboard.jsx or a new AdminBusinessVerification.jsx tab).
+2. List businesses pending verification (verification_status = 'pending' or jewish_owned_status = 'pending').
+3. Allow admin to: approve owner verification (set verification_status = 'verified_owner'), approve Jewish-owned status (set jewish_owned_status = 'verified'), mark kosher certification, or reject.
+4. Add a Supabase migration with a SECURITY DEFINER RPC admin_verify_business(p_business_id, p_verification_status, p_jewish_owned_status, p_kosher_status) that validates caller is admin.
+5. Send a notification to the business owner when verification is approved or rejected.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'organization-pages',
     category: 'Businesses & Map',
     status: STATUS.DEFERRED,
@@ -2439,6 +2464,52 @@ Goals:
 4. Document the complete token reference in a comment block at the top of index.css.
 5. Run npm run build to verify no visual regressions.
 6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'page-level-error-boundaries',
+    category: 'Infrastructure',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Add Page-Level Error Boundaries',
+    description: 'Currently only one global AppErrorBoundary catches all React errors. Adding per-page boundaries means a single page crash doesn\'t wipe the whole shell — the nav stays intact and only the failing page shows an error card.',
+    why: 'Surfaced during 2026-06-16 codebase audit. The global boundary already uses captureError → Sentry, so errors are tracked, but the UX fallback is coarse.',
+    prompt: `You are adding page-level error boundaries to JUnited.
+
+Context:
+- Global error boundary: src/components/common/AppErrorBoundary.jsx (class component, already uses captureError)
+- App routing: src/App.jsx — all pages are lazy-loaded with <Suspense> wrappers
+- AppErrorBoundary accepts an \`inline\` prop that renders a compact card instead of full-page error
+
+Goals:
+1. Wrap each <Route element={<Page />}> in App.jsx with <AppErrorBoundary inline> so page crashes are caught at the page level, not the app level.
+2. Verify the shell (bottom nav, header) remains visible when an error card is shown.
+3. Test: temporarily throw in Feed.jsx, confirm error card appears inside the page area, nav still works.
+4. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'typescript-migration',
+    category: 'Infrastructure',
+    status: STATUS.DEFERRED,
+    priority: PRIORITY.LOW,
+    title: 'TypeScript Migration',
+    description: 'The project uses jsconfig.json (JavaScript with path aliases) rather than TypeScript. Full TS would catch type errors at lint time and improve IDE refactoring support.',
+    why: 'Deferred post-audit (2026-06-16). Migration cost is high relative to current bug rate. Revisit once the team has capacity for a large, careful migration sprint.',
+    prompt: `You are migrating JUnited from JavaScript to TypeScript.
+
+Context:
+- Project uses jsconfig.json, Vite, React 18, Tailwind. No existing .ts/.tsx files.
+- Source root: src/. Key files: src/api/, src/services/, src/lib/, src/components/, src/pages/.
+- Supabase client: src/api/supabaseClient.js. Entity service: src/api/base44Client.js.
+
+Goals:
+1. Rename jsconfig.json → tsconfig.json and add strict TypeScript config.
+2. Update vite.config.js to handle .tsx files.
+3. Migrate incrementally: start with src/lib/ and src/services/ (lowest risk), then components, then pages.
+4. Generate Supabase types with: npx supabase gen types typescript --linked > src/types/supabase.ts
+5. Run npm run build after each file batch to confirm no regressions.
+6. Update src/config/roadmap.js: change this item's status to 'shipped'.`,
   },
 
   {

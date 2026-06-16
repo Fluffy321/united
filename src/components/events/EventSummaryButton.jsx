@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Sparkles, AlertCircle, Copy, Check } from 'lucide-react';
 import { dataService } from '@/services';
 import { toast } from 'sonner';
+import { captureError } from '@/lib/analytics';
 
 export default function EventSummaryButton({ event }) {
   const [loading, setLoading] = useState(false);
@@ -45,7 +46,7 @@ Highlight the main purpose, key activity, and why someone should attend.`;
       setSummary(generatedSummary);
       setShowSummary(true);
     } catch (err) {
-      console.error('Summary generation error:', err);
+      captureError(err, { context: 'EventSummaryButton: generate AI summary' });
       setError('Could not generate summary. Try again.');
       toast.error('Failed to generate summary');
     } finally {

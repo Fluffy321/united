@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { dataService } from '@/services';
+import { captureError } from '@/lib/analytics';
 
 const FIVE_TOWNS = ['Lawrence', 'Cedarhurst', 'Woodmere', 'Hewlett', 'Inwood'];
 
@@ -34,7 +35,7 @@ export default function CitySelector({ cityPreset, cityCustom, cityState, onChan
           setCities(response.data.cities || []);
           setShowDropdown(true);
         } catch (error) {
-          console.error('City search failed:', error);
+          captureError(error, { context: 'CitySelector: search cities' });
           setCities([]);
         }
         setIsSearching(false);

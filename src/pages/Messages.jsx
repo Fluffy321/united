@@ -14,6 +14,7 @@ import MessageRequestsTab from '@/components/messages/MessageRequestsTab';
 import ReportModal from '@/components/common/ReportModal';
 import BackButton from '@/components/common/BackButton';
 import { buildAIConversation } from '@/lib/aiAgent';
+import { captureError } from '@/lib/analytics';
 
 export default function Messages() {
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ export default function Messages() {
       }
       setSelectedConversation(conv);
     } catch (e) {
-      console.error('Failed to load conversation:', e);
+      captureError(e, { context: 'Messages: load conversation from URL param' });
       toast.error('Could not open that conversation. Please try again.');
     }
   };

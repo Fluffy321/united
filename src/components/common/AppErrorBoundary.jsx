@@ -19,8 +19,8 @@ export default class AppErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    console.error('JUnited app error:', error, info);
     captureError(error, {
+      context: 'AppErrorBoundary',
       componentStack: info?.componentStack,
       boundary: this.props.inline ? 'inline' : 'app',
     });

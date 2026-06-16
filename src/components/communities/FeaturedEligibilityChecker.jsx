@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle2, Zap } from 'lucide-react';
 import { dataService } from '@/services';
 import { toast } from 'sonner';
+import { captureError } from '@/lib/analytics';
 
 const MIN_FOLLOWERS = 50;
 const MIN_WEEKLY_ACTIVITY = 3; // posts + comments combined
@@ -24,7 +25,7 @@ export default function FeaturedEligibilityChecker({ community, onEligibilityChe
       }
     } catch (e) {
       toast.error('Failed to check eligibility');
-      console.error(e);
+      captureError(e, { context: 'FeaturedEligibilityChecker: check community eligibility' });
     }
 
     setLoading(false);

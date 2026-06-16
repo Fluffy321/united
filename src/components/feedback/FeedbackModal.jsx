@@ -4,6 +4,7 @@ import { CheckCircle2, Loader2, X } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
+import { captureError } from '@/lib/analytics';
 
 const FEEDBACK_TYPES = [
   { value: 'bug',       label: '🐛 Bug' },
@@ -101,7 +102,7 @@ export default function FeedbackModal({ open, onClose }) {
       setSubmitted(true);
       setTimeout(handleClose, 2000);
     } catch (err) {
-      console.error('Feedback submit error:', err);
+      captureError(err, { context: 'FeedbackModal: submit feedback' });
       toast.error('Could not send feedback — please try again.');
     } finally {
       setSubmitting(false);

@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import NewsletterComposer from './NewsletterComposer';
 import NewsletterHistoryModal from './NewsletterHistoryModal';
+import { captureError } from '@/lib/analytics';
 
 const COLORS = ['#2563EB', '#7C3AED', '#F59E0B', '#EF4444', '#10B981', '#EC4899', '#06B6D4', '#F97316'];
 
@@ -34,7 +35,7 @@ export default function GroupAnalyticsDashboard({ group, currentUser, isAdmin })
       const userIds = members.map(m => m.user_id).filter(Boolean);
       setMemberEmails(userIds);
     } catch (e) {
-      console.error('Failed to load member emails:', e);
+      captureError(e, { context: 'GroupAnalyticsDashboard: load member emails' });
     }
   };
 
@@ -370,7 +371,7 @@ async function calculateGroupAnalytics(groupId) {
       dailyActivity,
     };
   } catch (error) {
-    console.error('Error calculating analytics:', error);
+    captureError(error, { context: 'GroupAnalyticsDashboard: calculate analytics' });
     return null;
   }
 }

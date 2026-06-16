@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { dataService, findDirectConversation, createDirectConversation } from '@/services';
+import { captureError } from '@/lib/analytics';
 
 export default function CommunityPromptCard({ prompt, responses = [], onReply, currentUser }) {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export default function CommunityPromptCard({ prompt, responses = [], onReply, c
       });
       navigate(createPageUrl('Messages') + `?conversation=${conv.id}`);
     } catch (e) {
-      console.error('Message error', e);
+      captureError(e, { context: 'CommunityPromptCard: create direct conversation' });
     }
   };
 
