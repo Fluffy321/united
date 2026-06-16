@@ -3,6 +3,8 @@ import { CalendarDays, Flame, HandHeart, ScrollText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/api/supabaseClient';
 import { getShabbosTimes } from '@/utils/shabbos';
+import useShabbatLocation from '@/hooks/useShabbatLocation';
+import { getShabbatTimes } from '@/lib/hebrewDate';
 
 const FIVE_TOWNS_TIME_ZONE = 'America/New_York';
 const DEFAULT_CONTENT = {
@@ -33,10 +35,10 @@ function formatShortDate(date = new Date()) {
   }).format(date);
 }
 
-function formatTime(date) {
+function formatTime(date, timeZone = FIVE_TOWNS_TIME_ZONE) {
   if (!date) return 'TBD';
   return new Intl.DateTimeFormat('en-US', {
-    timeZone: FIVE_TOWNS_TIME_ZONE,
+    timeZone,
     hour: 'numeric',
     minute: '2-digit',
   }).format(date);
@@ -58,6 +60,12 @@ async function loadDailyContent(dateKey) {
 export default function TodayFiveTownsCard() {
   const today = new Date();
   const dateKey = getFiveTownsDateKey(today);
+  const {
+    location: candleLocation,
+    locationLoading,
+    locationError,
+    isDefault: isDefaultLocation,
+  } = useShabbatLocation({ autoRequest: true });
 
   const { data, isError } = useQuery({
     queryKey: ['daily-content', dateKey],
@@ -66,8 +74,42 @@ export default function TodayFiveTownsCard() {
     retry: 1,
   });
 
+  const { data: liveTimes, isLoading: timesLoading } = useQuery({
+    queryKey: [
+      'live-shabbos-times',
+      candleLocation?.lat,
+      candleLocation?.lng,
+      candleLocation?.tzid,
+      dateKey,
+    ],
+    queryFn: () => getShabbatTimes(
+      candleLocation.lat,
+      candleLocation.lng,
+      candleLocation.tzid || FIVE_TOWNS_TIME_ZONE,
+      today
+    ),
+    enabled: Boolean(candleLocation?.lat && candleLocation?.lng),
+    staleTime: 6 * 60 * 60 * 1000,
+    retry: 1,
+  });
+
   const content = data || DEFAULT_CONTENT;
-  const { candleLighting, havdalah } = getShabbosTimes(content);
+  const fallbackTimes = getShabbosTimes(content);
+  const candleLighting = liveTimes?.candleLighting
+    ? new Date(liveTimes.candleLighting)
+    : fallbackTimes.candleLighting;
+  const havdalah = liveTimes?.havdalah
+    ? new Date(liveTimes.havdalah)
+    : fallbackTimes.havdalah;
+  const timesTimeZone = candleLocation?.tzid || FIVE_TOWNS_TIME_ZONE;
+  const locationLabel = candleLocation?.label || 'Five Towns, NY';
+  const locationNote = locationLoading || timesLoading
+    ? 'Locating...'
+    : locationError === 'declined'
+      ? 'Five Towns fallback'
+      : isDefaultLocation
+        ? 'Five Towns default'
+        : locationLabel;
 
   return (
     <section className="mb-3 overflow-hidden rounded-[24px] border border-blue-100 bg-white shadow-sm">
@@ -97,13 +139,18 @@ export default function TodayFiveTownsCard() {
           tone="blue"
         />
         <div className="rounded-[18px] border border-amber-100 bg-amber-50 px-3 py-3">
-          <div className="flex items-center gap-2">
-            <Flame className="h-4 w-4 text-amber-600" />
-            <p className="text-[11px] font-black uppercase tracking-wide text-amber-700">Shabbos times</p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Flame className="h-4 w-4 text-amber-600" />
+              <p className="text-[11px] font-black uppercase tracking-wide text-amber-700">Shabbos times</p>
+            </div>
+            <p className="max-w-[48%] truncate text-right text-[10px] font-black uppercase tracking-wide text-amber-600/75">
+              {locationNote}
+            </p>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2">
-            <TimeBlock label="Candles" value={formatTime(candleLighting)} />
-            <TimeBlock label="Havdalah" value={formatTime(havdalah)} />
+            <TimeBlock label="Candles" value={formatTime(candleLighting, timesTimeZone)} />
+            <TimeBlock label="Havdalah" value={formatTime(havdalah, timesTimeZone)} />
           </div>
         </div>
         {isError && (

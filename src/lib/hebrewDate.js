@@ -74,16 +74,17 @@ export async function getZmanim(lat, lng, date = new Date()) {
 // Standard Ashkenazi candle-lighting offset (minutes before sunset).
 // Used as the `b` parameter in Hebcal API calls.
 export const CANDLE_LIGHTING_MINUTES = 18;
+export const HAVDALAH_MINUTES = 50;
 
 /**
  * Get candle-lighting and Havdalah times for any lat/lng.
  * tzid should be an IANA timezone string (e.g. 'America/New_York').
  */
-export async function getShabbatTimes(lat, lng, tzid = 'America/New_York', date = new Date()) {
+export async function getShabbatTimes(lat, lng, tzid = 'America/New_York', date = new Date(), havdalahMinutes = HAVDALAH_MINUTES) {
   const dateStr = date.toISOString().split('T')[0];
   try {
     const res = await fetch(
-      `${HEBCAL_BASE}/shabbat?cfg=json&geo=pos&latitude=${lat}&longitude=${lng}&tzid=${encodeURIComponent(tzid)}&m=20&b=${CANDLE_LIGHTING_MINUTES}&date=${dateStr}`
+      `${HEBCAL_BASE}/shabbat?cfg=json&geo=pos&latitude=${lat}&longitude=${lng}&tzid=${encodeURIComponent(tzid)}&m=${havdalahMinutes}&b=${CANDLE_LIGHTING_MINUTES}&date=${dateStr}`
     );
     const data = await res.json();
     const items = data.items || [];
