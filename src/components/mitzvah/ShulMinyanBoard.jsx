@@ -219,16 +219,16 @@ function MinyanNowCard({ minyan, joined, onJoin, onOpenShul, onOpenMap }) {
 
 function ShulCard({ shul, onOpen, onOpenMap, showMinyanTimes = false }) {
   return (
-    <article className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
+    <article className="w-full max-w-full min-w-0 rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
         <button onClick={() => onOpen(shul)} className="min-w-0 flex-1 text-left">
           <div className="flex min-w-0 items-center gap-2">
             <h3 className="truncate text-[15px] font-black text-slate-950">{shul.name}</h3>
             <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-500">{shul.nusach}</span>
           </div>
-          <p className="mt-1 flex items-center gap-1 text-[13px] font-semibold text-slate-500">
+          <p className="mt-1 flex min-w-0 items-start gap-1 text-[13px] font-semibold leading-5 text-slate-500">
             <MapPin className="h-3.5 w-3.5 shrink-0" />
-            {shul.address}
+            <span className="min-w-0 break-words">{shul.address}</span>
           </p>
         </button>
         <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">{shul.distance}</span>
@@ -241,7 +241,7 @@ function ShulCard({ shul, onOpen, onOpenMap, showMinyanTimes = false }) {
       </div>
 
       {showMinyanTimes && (
-        <div className="mt-2 grid grid-cols-3 gap-2">
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
           <TimeBox label="Shacharis" value={shul.minyanim.shacharis} />
           <TimeBox label="Mincha" value={shul.minyanim.mincha} />
           <TimeBox label="Maariv" value={shul.minyanim.maariv} />
@@ -548,7 +548,7 @@ export default function ShulMinyanBoard({ currentUser }) {
         </section>
       )}
 
-      <section className="rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
+      <section className="min-w-0 overflow-hidden rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
         <div className="mb-2 flex items-end justify-between gap-3">
           <div>
             <h3 className="text-[15px] font-black text-slate-950">Nearby Shuls</h3>
@@ -558,7 +558,7 @@ export default function ShulMinyanBoard({ currentUser }) {
             Map pins
           </button>
         </div>
-        <div className="grid gap-2 lg:grid-cols-2">
+        <div className="grid min-w-0 gap-2 lg:grid-cols-2">
           {filteredShuls.map((shul) => (
             <ShulCard
               key={shul.id}

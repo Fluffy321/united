@@ -16,7 +16,6 @@ import DestinationHeader from '@/components/layout/DestinationHeader';
 import useFeedData from '@/components/feed/useFeedData';
 import FeedFilters, { FeedFilterTrigger } from '@/components/feed/FeedFilters';
 import FeedComposer from '@/components/feed/FeedComposer';
-import FeedPost from '@/components/feed/FeedPost';
 import TodayFiveTownsCard from '@/components/feed/TodayFiveTownsCard';
 
 import { DEMO_POSTS } from '@/lib/feed/demoPosts';
@@ -424,16 +423,6 @@ export default function Feed({ isActive = true }) {
           onOpenMarketplace={() => navigate('/Marketplace')}
         />
 
-        <FiveTownsThreadChain
-          posts={feedPosts}
-          likedPostIds={userLikes}
-          onLike={handleLike}
-          onReply={handleCardReply}
-          onOpen={handleCardOpen}
-          onMap={() => navigate('/Map')}
-          onCreate={() => openComposer({ type: 'feed', subtype: 'discussion', initialBody: '' })}
-        />
-
         {/* One-time network banner for new users */}
         {showNetworkBanner && (
           <div className="graphic-stripes mb-3 flex items-center gap-2 rounded-[22px] bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-4 py-3 text-white text-[12px] font-medium shadow-[0_14px_30px_rgba(37,99,235,0.18)]">
@@ -509,32 +498,6 @@ export default function Feed({ isActive = true }) {
                 onMap={() => navigate('/Map')}
               />
             ))}
-
-            <details className="rounded-[24px] border border-slate-200 bg-white shadow-sm">
-              <summary className="cursor-pointer list-none px-4 py-3 text-[13px] font-black text-slate-900">
-                Full thread history
-                <span className="ml-2 text-[11px] font-bold text-slate-400">{feedPosts.length} posts</span>
-              </summary>
-              <div className="space-y-2 border-t border-slate-100 p-2">
-                {feedPosts.slice(0, 10).map((post) => (
-                  <FeedPost
-                    key={`history-${post.id}`}
-                    post={post}
-                    currentUser={currentUser}
-                    liked={userLikes.includes(post.id)}
-                    onLike={handleLike}
-                    onComment={handleComment}
-                    onDelete={handleDelete}
-                    onBlock={handleBlock}
-                    blockedIds={blockedIds}
-                    onReport={handleReport}
-                    communities={communityGroups}
-                    onCommunityClick={handleCommunityClick}
-                    isFromJoinedCommunity={post.community_id && joinedCommunityIds.has(post.community_id)}
-                  />
-                ))}
-              </div>
-            </details>
 
             {/* Load more */}
             {hasNextPage && (
@@ -976,8 +939,8 @@ function HeartbeatPostCard({ post, horizontal = false, liked = false, onLike, on
 
   return (
     <article
-      className={`group relative shrink-0 rounded-[20px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
-        horizontal ? 'w-[270px] sm:w-[300px]' : 'w-full'
+      className={`group relative min-w-0 max-w-full shrink-0 rounded-[20px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+        horizontal ? 'w-[min(270px,calc(100vw-48px))] sm:w-[300px]' : 'w-full'
       }`}
     >
       <div className={`absolute inset-y-3 left-0 w-1 rounded-r-full bg-gradient-to-b ${tone.bar}`} />

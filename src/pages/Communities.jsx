@@ -279,10 +279,9 @@ const FIVE_TOWNS_ROOM_BLUEPRINTS = [
   },
 ];
 
-function getRoomBlueprint(community = {}, index = 0) {
+function getRoomBlueprint(community = {}) {
   const text = `${community.id || ''} ${community.name || ''} ${community.slug || ''} ${community.type || ''} ${community.category || ''} ${community.description || ''}`.toLowerCase();
-  return FIVE_TOWNS_ROOM_BLUEPRINTS.find(room => room.id === community.id || room.match.some(token => text.includes(token))) ||
-    FIVE_TOWNS_ROOM_BLUEPRINTS[index % FIVE_TOWNS_ROOM_BLUEPRINTS.length];
+  return FIVE_TOWNS_ROOM_BLUEPRINTS.find(room => room.id === community.id || room.match.some(token => text.includes(token))) || null;
 }
 
 function buildRoomViewModel(community = {}, index = 0) {
@@ -290,17 +289,17 @@ function buildRoomViewModel(community = {}, index = 0) {
   const memberCount = community.follower_count || community.member_count || null;
   return {
     ...community,
-    roomName: blueprint.name,
-    roomIcon: blueprint.icon,
-    roomLabel: blueprint.label,
-    roomPurpose: community.hook || community.description_short || blueprint.purpose,
+    roomName: community.name || blueprint?.name || 'Community room',
+    roomIcon: community.icon || blueprint?.icon || '💬',
+    roomLabel: community.type || community.category || blueprint?.label || 'Community',
+    roomPurpose: community.hook || community.description_short || community.description || blueprint?.purpose || 'Open this room to start a real local conversation.',
     roomLatest: community.latestDiscussion || community.latest_discussion || community.latest_post_title || null,
-    roomPrompt: community.roomQuestion || blueprint.prompt,
+    roomPrompt: community.roomQuestion || (memberCount ? 'Open room' : 'Join room'),
     roomActiveNow: community.activeNow || community.active_now || community.active_members || 0,
     roomPostsToday: community.postsToday || community.posts_today || community.posts_this_week || 0,
     roomMemberCount: memberCount,
-    roomGradient: community.gradient || blueprint.gradient,
-    roomBlueprintId: blueprint.id,
+    roomGradient: community.gradient || blueprint?.gradient || 'from-blue-600 via-indigo-600 to-slate-900',
+    roomBlueprintId: blueprint?.id || null,
   };
 }
 
