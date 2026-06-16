@@ -12,11 +12,6 @@ const toneClasses = {
 
 const faceColors = ['#2563EB', '#7C3AED', '#059669'];
 
-function fallbackFaces(item, title) {
-  const label = item.meta || item.title || title || 'JUnited';
-  return [{ name: label, initials: String(label).slice(0, 2).toUpperCase() }];
-}
-
 export default function LiveNowPanel({
   title = 'Live now',
   subtitle = 'Time-sensitive things worth checking right now.',
@@ -44,7 +39,7 @@ export default function LiveNowPanel({
 
       <div className="flex gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map((item) => {
-          const faces = item.faces?.length ? item.faces : fallbackFaces(item, title);
+          const faces = item.faces?.length ? item.faces : [];
           return (
             <button
               key={item.id}
@@ -61,6 +56,7 @@ export default function LiveNowPanel({
                   <Radio className="h-3 w-3" />
                   {item.eyebrow}
                 </span>
+                {faces.length > 0 && (
                 <div className="flex -space-x-1.5">
                   {faces.slice(0, 3).map((face, index) => (
                     <span
@@ -73,6 +69,7 @@ export default function LiveNowPanel({
                     </span>
                   ))}
                 </div>
+                )}
               </div>
               <h3 className="line-clamp-2 text-base font-black leading-snug text-slate-950">{item.title}</h3>
               {item.context && (
