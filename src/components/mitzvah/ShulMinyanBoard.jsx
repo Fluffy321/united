@@ -1,13 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  BookOpen,
-  Building2,
-  CalendarDays,
   Car,
   CheckCircle2,
   MapPin,
-  Megaphone,
   MessageCircle,
   Navigation,
   Plus,
