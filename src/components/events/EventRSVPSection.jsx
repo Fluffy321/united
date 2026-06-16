@@ -3,6 +3,7 @@ import { Users, Loader2 } from 'lucide-react';
 import { dataService } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
+import { captureError } from '@/lib/analytics';
 
 const RSVP_STATUSES = [
   { value: 'going', label: 'Going', icon: '✓', color: 'bg-green-50 border-green-200 text-green-700' },
@@ -50,7 +51,7 @@ export default function EventRSVPSection({ postId, currentUser, eventDate }) {
       setUserStatus(userFound);
       setAttendees(allRSVPs.filter(r => r.status === 'going'));
     } catch (error) {
-      console.error('Failed to load RSVP data:', error);
+      captureError(error, { context: 'EventRSVPSection: load RSVP data' });
     }
     setLoading(false);
   };

@@ -5,6 +5,7 @@ import { paymentsService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
+import { captureError } from '@/lib/analytics';
 
 // Tier amounts are authoritative on the server.
 // $18/$36/$72 = chai / double chai / quadruple chai.
@@ -176,7 +177,7 @@ export default function SupportJUnited() {
         setLoading(false);
       }
     } catch (e) {
-      console.error('Checkout error:', e);
+      captureError(e, { context: 'SupportJUnited: start checkout' });
       toast.error('Checkout failed. Please try again.');
       setLoading(false);
     }

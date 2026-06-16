@@ -8,6 +8,7 @@ import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { captureError } from '@/lib/analytics';
 
 const CATEGORY_COLORS = {
   'Errand': 'bg-blue-600 text-white',
@@ -121,7 +122,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
           requestTitle: request.title
         });
       } catch (error) {
-        console.error('Notification failed:', error);
+        captureError(error, { context: 'MitzvahDetailSheet: send help_accepted notification' });
       }
 
       toast.success('You\'ve offered to help! Opening chat...');
@@ -129,7 +130,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
       onClose();
       navigate(createPageUrl('Messages') + `?conversation=${conversation.id}`);
     } catch (error) {
-      console.error('Error:', error);
+      captureError(error, { context: 'MitzvahDetailSheet: offer help' });
       toast.error('Failed to offer help');
     }
     setIsProcessing(false);
@@ -201,7 +202,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
           requestTitle: request.title
         });
       } catch (error) {
-        console.error('Notification failed:', error);
+        captureError(error, { context: 'MitzvahDetailSheet: send mitzvah_completed notification' });
       }
 
       toast.success('Mitzvah completed! Helper earned 10 points ✨');

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { paymentsService } from '@/services';
 import { toast } from 'sonner';
 import PaymentTrustBenefits from './PaymentTrustBenefits';
+import { captureError } from '@/lib/analytics';
 
 const DONATION_PRESETS = [10, 25, 50, 100];
 
@@ -99,7 +100,7 @@ export default function PaymentModal({
         throw new Error('No checkout URL returned');
       }
     } catch (error) {
-      console.error('Payment error:', error);
+      captureError(error, { context: 'PaymentModal: start checkout' });
       toast.error('Failed to start checkout. Please try again.');
       setIsLoading(false);
     }

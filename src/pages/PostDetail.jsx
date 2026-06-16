@@ -8,6 +8,7 @@ import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 import ReportModal from '@/components/common/ReportModal';
 import { toast } from 'sonner';
+import { captureError } from '@/lib/analytics';
 
 
 
@@ -44,7 +45,7 @@ export default function PostDetail() {
 
       }
     } catch (e) {
-      console.error('Failed to load post', e);
+      captureError(e, { context: 'PostDetail: load post' });
       navigate(createPageUrl('Feed'));
     }
     setLoading(false);

@@ -3,11 +3,17 @@ import { useSearchParams } from 'react-router-dom';
 import {
   BadgeCheck,
   BarChart3,
+  BookOpen,
+  Briefcase,
+  Building2,
   Edit3,
-  EyeOff,
   ExternalLink,
+  EyeOff,
   Globe2,
   HeartHandshake,
+  HeartPulse,
+  Home as HomeIcon,
+  LayoutGrid,
   List,
   Loader2,
   LockKeyhole,
@@ -18,10 +24,13 @@ import {
   Save,
   Search,
   ShieldCheck,
+  ShoppingBag,
   Sparkles,
   Star,
   Store,
+  Utensils,
   UsersRound,
+  Wrench,
   X,
 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -47,14 +56,14 @@ const COMMUNITY_LOCATION_FALLBACKS = {
 };
 
 const BUSINESS_CATEGORIES = [
-  { key: 'all', label: 'All' },
-  { key: 'kosher_food', label: 'Kosher Food' },
-  { key: 'services', label: 'Services' },
-  { key: 'retail', label: 'Retail' },
-  { key: 'judaica', label: 'Judaica' },
-  { key: 'health_wellness', label: 'Health' },
-  { key: 'professional', label: 'Professional' },
-  { key: 'home_services', label: 'Home' },
+  { key: 'all',            label: 'All',          shortLabel: 'All',       icon: LayoutGrid,  iconBg: 'bg-slate-100',   iconColor: 'text-slate-500',   labelColor: 'text-slate-500',   barColor: 'bg-slate-300',   chipActive: 'bg-slate-950 text-white border-slate-950',   chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'kosher_food',    label: 'Kosher Food',  shortLabel: 'Kosher',    icon: Utensils,    iconBg: 'bg-amber-50',    iconColor: 'text-amber-600',   labelColor: 'text-amber-700',   barColor: 'bg-amber-400',   chipActive: 'bg-amber-600 text-white border-amber-600',   chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'services',       label: 'Services',     shortLabel: 'Services',  icon: Wrench,      iconBg: 'bg-blue-50',     iconColor: 'text-blue-600',    labelColor: 'text-blue-700',    barColor: 'bg-blue-500',    chipActive: 'bg-blue-600 text-white border-blue-600',     chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'retail',         label: 'Retail',       shortLabel: 'Retail',    icon: ShoppingBag, iconBg: 'bg-purple-50',   iconColor: 'text-purple-600',  labelColor: 'text-purple-700',  barColor: 'bg-purple-500',  chipActive: 'bg-purple-600 text-white border-purple-600', chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'judaica',        label: 'Judaica',      shortLabel: 'Judaica',   icon: BookOpen,    iconBg: 'bg-yellow-50',   iconColor: 'text-yellow-600',  labelColor: 'text-yellow-700',  barColor: 'bg-yellow-400',  chipActive: 'bg-yellow-500 text-white border-yellow-500', chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'health_wellness',label: 'Health',       shortLabel: 'Health',    icon: HeartPulse,  iconBg: 'bg-emerald-50',  iconColor: 'text-emerald-600', labelColor: 'text-emerald-700', barColor: 'bg-emerald-500', chipActive: 'bg-emerald-600 text-white border-emerald-600',chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'professional',   label: 'Professional', shortLabel: 'Pro',       icon: Briefcase,   iconBg: 'bg-indigo-50',   iconColor: 'text-indigo-600',  labelColor: 'text-indigo-700',  barColor: 'bg-indigo-500',  chipActive: 'bg-indigo-600 text-white border-indigo-600', chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'home_services',  label: 'Home',         shortLabel: 'Home',      icon: HomeIcon,    iconBg: 'bg-orange-50',   iconColor: 'text-orange-600',  labelColor: 'text-orange-700',  barColor: 'bg-orange-400',  chipActive: 'bg-orange-500 text-white border-orange-500', chipInactive: 'bg-white text-slate-600 border-slate-200' },
 ];
 
 const LISTING_TYPES = [
@@ -178,93 +187,97 @@ function TrustBadges({ business }) {
   );
 }
 
+function VerifiedBusinessChip({ business, onView }) {
+  const cat = BUSINESS_CATEGORIES.find((c) => c.key === business.category) || BUSINESS_CATEGORIES[0];
+  const CatIcon = cat.icon;
+  return (
+    <button
+      type="button"
+      onClick={() => onView(business)}
+      className="flex w-[92px] shrink-0 flex-col items-center gap-2 rounded-[22px] border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+    >
+      <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${cat.iconBg}`}>
+        {business.logo_url
+          ? <img src={business.logo_url} alt="" className="h-full w-full rounded-2xl object-cover" />
+          : <CatIcon className={`h-5 w-5 ${cat.iconColor}`} />}
+      </div>
+      <p className="line-clamp-2 text-[10px] font-black leading-tight text-slate-900">{business.name}</p>
+      <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[9px] font-black text-blue-700">
+        <BadgeCheck className="h-2.5 w-2.5" />
+        Verified
+      </span>
+    </button>
+  );
+}
+
 function BusinessCard({ business, onView, onClaim }) {
   const isPhysical = business.listing_type === 'physical';
   const hasDirections = isPhysical && (business.address || (business.location_lat && business.location_lng)) && !business.hide_exact_address;
+  const cat = BUSINESS_CATEGORIES.find((c) => c.key === business.category) || BUSINESS_CATEGORIES[0];
+  const CatIcon = cat.icon;
+  const isVerifiedOwner = business.verification_status === 'verified_owner' || business.is_claimed;
 
   return (
-    <article className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="flex items-start gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-700">
-          {business.logo_url ? (
-            <img src={business.logo_url} alt="" className="h-full w-full rounded-2xl object-cover" />
+    <article className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className={`h-1.5 ${cat.barColor}`} />
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${cat.iconBg}`}>
+            {business.logo_url
+              ? <img src={business.logo_url} alt="" className="h-full w-full rounded-2xl object-cover" />
+              : <CatIcon className={`h-6 w-6 ${cat.iconColor}`} />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="truncate text-base font-black text-slate-950">{business.name}</h3>
+                <p className={`mt-0.5 text-[11px] font-black uppercase tracking-wider ${cat.labelColor}`}>{cat.label}</p>
+              </div>
+              {isVerifiedOwner && (
+                <span className="shrink-0 rounded-full bg-blue-50 p-1.5 ring-1 ring-blue-100">
+                  <BadgeCheck className="h-3.5 w-3.5 text-blue-600" />
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <TrustBadges business={business} />
+
+        <p className="mt-3 line-clamp-2 text-sm font-semibold leading-6 text-slate-600">
+          {business.description || 'A community-submitted Jewish business listing.'}
+        </p>
+
+        <div className="mt-2.5 flex items-center gap-1.5 text-xs font-bold text-slate-500">
+          {business.listing_type === 'online' ? (
+            <><Globe2 className="h-3.5 w-3.5 text-blue-500" />Online business</>
+          ) : business.listing_type === 'service_area' ? (
+            <><LockKeyhole className="h-3.5 w-3.5 text-slate-400" />{business.service_area_text || business.neighborhood || 'Service-area business'}</>
           ) : (
-            <Store className="h-6 w-6" />
+            <><MapPin className="h-3.5 w-3.5 text-blue-500" />{business.hide_exact_address ? (business.neighborhood || business.city || 'Location private') : (business.address || business.neighborhood || business.city || 'Location pending')}</>
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h3 className="truncate text-base font-black text-slate-950">{business.name}</h3>
-              <p className="mt-0.5 text-xs font-black uppercase tracking-wide text-blue-700">{badgeLabel(business.category)}</p>
-            </div>
-            {business.claim_status !== 'claimed' && (
-              <button
-                type="button"
-                onClick={() => onClaim(business)}
-                className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-600"
-              >
-                Claim
-              </button>
-            )}
-          </div>
-          <TrustBadges business={business} />
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" onClick={() => onView(business)} className="motion-press inline-flex h-9 items-center justify-center rounded-full bg-slate-950 px-4 text-xs font-black text-white">
+            View Details
+          </button>
+          {business.website && (
+            <a href={cleanUrl(business.website)} target="_blank" rel="noreferrer" className="motion-press inline-flex h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 text-xs font-black text-slate-700">
+              <ExternalLink className="h-3.5 w-3.5" />Website
+            </a>
+          )}
+          {hasDirections && (
+            <a href={directionsUrl(business)} target="_blank" rel="noreferrer" className="motion-press inline-flex h-9 items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-4 text-xs font-black text-blue-700">
+              <Navigation className="h-3.5 w-3.5" />Directions
+            </a>
+          )}
+          {business.claim_status !== 'claimed' && (
+            <button type="button" onClick={() => onClaim(business)} className="motion-press inline-flex h-9 items-center rounded-full border border-slate-200 px-3 text-xs font-black text-slate-500">
+              Claim
+            </button>
+          )}
         </div>
-      </div>
-
-      <p className="mt-3 line-clamp-2 text-sm font-semibold leading-6 text-slate-600">
-        {business.description || 'A community-submitted business listing pending richer details from the owner.'}
-      </p>
-
-      <div className="mt-3 flex items-center gap-1.5 text-xs font-bold text-slate-500">
-        {business.listing_type === 'online' ? (
-          <>
-            <Globe2 className="h-3.5 w-3.5 text-blue-600" />
-            Online business
-          </>
-        ) : business.listing_type === 'service_area' ? (
-          <>
-            <LockKeyhole className="h-3.5 w-3.5 text-slate-500" />
-            {business.service_area_text || business.neighborhood || 'Service-area business'}
-          </>
-        ) : (
-          <>
-            <MapPin className="h-3.5 w-3.5 text-blue-600" />
-            {business.hide_exact_address ? business.neighborhood || business.city || 'Location private' : business.address || business.neighborhood || business.city || 'Location pending'}
-          </>
-        )}
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => onView(business)}
-          className="motion-press inline-flex h-9 items-center justify-center rounded-full bg-slate-950 px-4 text-xs font-black text-white"
-        >
-          View
-        </button>
-        {business.website && (
-          <a
-            href={cleanUrl(business.website)}
-            target="_blank"
-            rel="noreferrer"
-            className="motion-press inline-flex h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 text-xs font-black text-slate-700"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            Website
-          </a>
-        )}
-        {hasDirections && (
-          <a
-            href={directionsUrl(business)}
-            target="_blank"
-            rel="noreferrer"
-            className="motion-press inline-flex h-9 items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-4 text-xs font-black text-blue-700"
-          >
-            <Navigation className="h-3.5 w-3.5" />
-            Directions
-          </a>
-        )}
       </div>
     </article>
   );
@@ -933,53 +946,54 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
     && !business.hide_exact_address
   )), [filteredBusinesses]);
 
-  const onlineCount = businesses.filter((business) => business.listing_type === 'online').length;
-  const verifiedCount = businesses.filter((business) => business.jewish_owned_status === 'verified' || business.verification_status === 'verified_owner').length;
+  const onlineCount = businesses.filter((b) => b.listing_type === 'online').length;
+  const verifiedCount = businesses.filter((b) => b.jewish_owned_status === 'verified' || b.verification_status === 'verified_owner').length;
+  const verifiedBusinesses = useMemo(
+    () => businesses.filter((b) => b.verification_status === 'verified_owner' || b.is_claimed || b.jewish_owned_status === 'verified'),
+    [businesses]
+  );
 
   return (
     <>
-      <section className="overflow-hidden rounded-[30px] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-5 shadow-sm">
-        <div className="flex items-start gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200">
-            <HeartHandshake className="h-6 w-6" />
+      {/* Hero */}
+      <section className="overflow-hidden rounded-[30px] bg-slate-950 p-5 shadow-xl">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/20 ring-1 ring-blue-400/30">
+            <Store className="h-5 w-5 text-blue-300" />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-black uppercase tracking-wide text-blue-700">JUnited Local Directory</p>
-            <h1 className="mt-1 text-3xl font-black leading-tight text-slate-950">Support a Local Jewish Business</h1>
-            <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
-              Discover trusted Jewish-owned businesses, kosher spots, and community services near you or online.
-            </p>
+          <p className="text-[11px] font-black uppercase tracking-widest text-blue-300">JUnited Directory</p>
+        </div>
+        <h1 className="mt-3 text-[27px] font-black leading-tight tracking-tight text-white">
+          Support Jewish<br />Business
+        </h1>
+        <p className="mt-2 text-[13px] font-semibold leading-5 text-slate-400">
+          <em className="not-italic text-slate-300">Kol Yisrael arevim zeh lazeh</em> — every Jew is responsible for one another. Shop with confidence from verified Jewish-owned businesses.
+        </p>
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <div className="rounded-2xl bg-white/8 p-3 ring-1 ring-white/10">
+            <p className="text-xl font-black text-white">{businesses.length}</p>
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Listed</p>
+          </div>
+          <div className="rounded-2xl bg-white/8 p-3 ring-1 ring-white/10">
+            <p className="text-xl font-black text-white">{verifiedCount}</p>
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Verified</p>
+          </div>
+          <div className="rounded-2xl bg-white/8 p-3 ring-1 ring-white/10">
+            <p className="text-xl font-black text-white">{onlineCount}</p>
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Online</p>
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          <button type="button" onClick={() => setShowSubmit(true)} className="motion-press inline-flex h-11 items-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-black text-white">
-            <Plus className="h-4 w-4" />
-            Submit a Business
+          <button type="button" onClick={() => setShowSubmit(true)} className="motion-press inline-flex h-10 items-center gap-2 rounded-full bg-white px-5 text-sm font-black text-slate-950">
+            <Plus className="h-3.5 w-3.5" />
+            List a Business
           </button>
           {(ownerManagerRows.length > 0 || claimRequests.length > 0) && (
-            <button type="button" onClick={() => setShowOwnerTools(true)} className="motion-press inline-flex h-11 items-center gap-2 rounded-full border border-blue-100 bg-white px-5 text-sm font-black text-blue-700">
-              <Edit3 className="h-4 w-4" />
+            <button type="button" onClick={() => setShowOwnerTools(true)} className="motion-press inline-flex h-10 items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 text-sm font-black text-white">
+              <Edit3 className="h-3.5 w-3.5" />
               Owner Tools
             </button>
           )}
-          <button type="button" onClick={() => setMode('map')} className="motion-press inline-flex h-11 items-center gap-2 rounded-full border border-blue-100 bg-white px-5 text-sm font-black text-blue-700">
-            <MapIcon className="h-4 w-4" />
-            Explore Map
-          </button>
-        </div>
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <div className="rounded-2xl bg-white/80 p-3">
-            <p className="text-xl font-black text-slate-950">{businesses.length}</p>
-            <p className="text-[11px] font-black uppercase text-slate-500">Approved</p>
-          </div>
-          <div className="rounded-2xl bg-white/80 p-3">
-            <p className="text-xl font-black text-slate-950">{verifiedCount}</p>
-            <p className="text-[11px] font-black uppercase text-slate-500">Verified</p>
-          </div>
-          <div className="rounded-2xl bg-white/80 p-3">
-            <p className="text-xl font-black text-slate-950">{onlineCount}</p>
-            <p className="text-[11px] font-black uppercase text-slate-500">Online</p>
-          </div>
         </div>
       </section>
 
@@ -987,37 +1001,69 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
         <section className="mt-3 rounded-[22px] border border-amber-200 bg-amber-50 p-3">
           <p className="text-[13px] font-black text-amber-900">Location is off</p>
           <p className="mt-1 text-[12px] font-semibold leading-5 text-amber-800">
-            Turn on location access and tap Near me if you want local distances and directions.
+            Turn on location access to see distances and directions for nearby businesses.
           </p>
         </section>
       )}
 
+      {/* Category grid */}
+      <section className="mt-3">
+        <div className="grid grid-cols-4 gap-2">
+          {BUSINESS_CATEGORIES.map((cat) => {
+            const CatIcon = cat.icon;
+            const isActive = category === cat.key;
+            return (
+              <button
+                key={cat.key}
+                type="button"
+                onClick={() => setCategory(cat.key)}
+                className={`motion-press flex flex-col items-center gap-2 rounded-[20px] border p-3 text-center transition ${isActive ? `${cat.chipActive} border-transparent` : cat.chipInactive}`}
+              >
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${isActive ? 'bg-white/20' : cat.iconBg}`}>
+                  <CatIcon className={`h-5 w-5 ${isActive ? 'text-current opacity-90' : cat.iconColor}`} />
+                </div>
+                <span className="text-[10px] font-black leading-tight">{cat.shortLabel}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Verified strip */}
+      {verifiedBusinesses.length > 0 && (
+        <section className="mt-4">
+          <div className="mb-2 flex items-center gap-1.5">
+            <BadgeCheck className="h-4 w-4 text-blue-600" />
+            <p className="text-[13px] font-black text-slate-900">Verified Jewish-Owned</p>
+            <span className="ml-auto text-[11px] font-black text-slate-400">{verifiedBusinesses.length}</span>
+          </div>
+          <div className="mobile-scroll-x flex gap-2 pb-1">
+            {verifiedBusinesses.map((business) => (
+              <VerifiedBusinessChip key={business.id} business={business} onView={setSelectedBusiness} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Search + filter toolbar */}
       <section className="mt-3 rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
         <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
-          <Search className="h-4 w-4 text-slate-400" />
+          <Search className="h-4 w-4 shrink-0 text-slate-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search businesses, services, or neighborhoods"
+            placeholder="Search businesses, services, neighborhoods"
             className="min-w-0 flex-1 bg-transparent text-sm font-bold text-slate-800 outline-none placeholder:text-slate-400"
           />
-        </div>
-
-        <div className="mobile-scroll-x mt-3 flex gap-2 pb-1">
-          {BUSINESS_CATEGORIES.map((cat) => (
-            <button
-              key={cat.key}
-              type="button"
-              onClick={() => setCategory(cat.key)}
-              className={`shrink-0 rounded-full border px-3 py-2 text-xs font-black ${category === cat.key ? 'border-slate-950 bg-slate-950 text-white' : 'border-slate-200 bg-white text-slate-600'}`}
-            >
-              {cat.label}
+          {search && (
+            <button type="button" onClick={() => setSearch('')} className="shrink-0 text-slate-400">
+              <X className="h-4 w-4" />
             </button>
-          ))}
+          )}
         </div>
 
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex gap-2">
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <div className="flex gap-1.5">
             {LISTING_TYPES.map((item) => (
               <button
                 key={item.key}
@@ -1029,20 +1075,20 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
               </button>
             ))}
           </div>
-
           <div className="flex rounded-full border border-slate-200 bg-slate-50 p-1">
-            <button type="button" onClick={() => setMode('list')} className={`inline-flex h-8 items-center gap-1 rounded-full px-3 text-[11px] font-black ${mode === 'list' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}>
-              <List className="h-3.5 w-3.5" />
+            <button type="button" onClick={() => setMode('list')} className={`inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-black ${mode === 'list' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}>
+              <List className="h-3 w-3" />
               List
             </button>
-            <button type="button" onClick={() => setMode('map')} className={`inline-flex h-8 items-center gap-1 rounded-full px-3 text-[11px] font-black ${mode === 'map' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}>
-              <MapIcon className="h-3.5 w-3.5" />
+            <button type="button" onClick={() => setMode('map')} className={`inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-black ${mode === 'map' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}>
+              <MapIcon className="h-3 w-3" />
               Map
             </button>
           </div>
         </div>
       </section>
 
+      {/* Results */}
       <section className="mt-3">
         {isLoading ? (
           <div className="flex justify-center rounded-[26px] border border-slate-200 bg-white py-12">
@@ -1055,9 +1101,9 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
         ) : filteredBusinesses.length === 0 ? (
           <div className="rounded-[26px] border border-dashed border-slate-200 bg-white p-6 text-center">
             <Store className="mx-auto h-10 w-10 text-slate-300" />
-            <p className="mt-3 text-base font-black text-slate-900">No approved businesses match this yet</p>
-            <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">Try a different filter, or submit a business for admin review.</p>
-            <button type="button" onClick={() => setShowSubmit(true)} className="mt-4 rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white">Submit a Business</button>
+            <p className="mt-3 text-base font-black text-slate-900">No businesses match this filter</p>
+            <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">Try a different category, or list a business for review.</p>
+            <button type="button" onClick={() => setShowSubmit(true)} className="mt-4 rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white">List a Business</button>
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
@@ -1374,9 +1420,9 @@ export default function MapPage() {
         sticky={false}
         className="relative before:pointer-events-none before:absolute before:inset-x-3 before:top-2 before:bottom-1 before:rounded-[30px] before:bg-gradient-to-r before:from-blue-200/45 before:via-white/35 before:to-emerald-100/45 before:blur-xl before:content-[''] sm:before:inset-x-4"
         toolbarClassName="relative"
-        icon={MapPin}
-        title="Map"
-        help={<PageHelp text="Discover Jewish businesses, services, mitzvah needs, and community posts around you." />}
+        icon={Store}
+        title="Our Businesses"
+        help={<PageHelp text="Discover trusted Jewish-owned businesses, kosher spots, and community services near you or online." />}
         actions={(
           <button
             onClick={handleUseMyLocation}

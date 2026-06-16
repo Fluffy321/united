@@ -1,5 +1,6 @@
 import dataService from './dataService';
 import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
+import { captureError } from '@/lib/analytics';
 
 async function sendPush({ userId, title, body, url, notificationType }) {
   if (!shouldUseSupabase || !supabase) return;
@@ -7,8 +8,10 @@ async function sendPush({ userId, title, body, url, notificationType }) {
     await supabase.functions.invoke('push-notify', {
       body: { user_id: userId, title, body, url, notification_type: notificationType },
     });
-  } catch {
-    // Push is best-effort — never let it break the in-app notification flow
+  } catch (err) {
+    // Push is best-effort — never let it break the in-app notification flow.
+    // Capture to Sentry so VAPID config drift and delivery failures are visible.
+    captureError(err, { context: 'notificationsService: push-notify delivery', userId, notificationType });
   }
 }
 

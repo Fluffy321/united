@@ -13,6 +13,7 @@ import FileAttachmentButton from '@/components/common/FileAttachmentButton';
 import { AttachmentPreview, PendingAttachmentChip } from '@/components/common/FileAttachmentPreview';
 import { AI_AGENT, isAIConversation, loadAIMessages, saveAIMessages, getAIReply } from '@/lib/aiAgent';
 import UserAvatar from '@/components/common/UserAvatar';
+import { captureError } from '@/lib/analytics';
 
 export default function ChatView({ conversation, currentUser, onBack, onReport, onBlock }) {
   const [messages, setMessages] = useState([]);
@@ -88,7 +89,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       const data = await messagesService.listMessages(conversation.id, 'created_date');
       setMessages(data);
     } catch (err) {
-      console.error('Failed to load messages:', err);
+      captureError(err, { context: 'ChatView: load messages' });
     } finally {
       if (!silent) setIsLoading(false);
     }
@@ -100,7 +101,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       const unreadCount = { ...conversation.unread_count, [currentUser.id]: 0 };
       await messagesService.updateConversation(conversation.id, { unread_count: unreadCount });
     } catch (error) {
-      console.error('Failed to mark conversation as read:', error);
+      captureError(error, { context: 'ChatView: mark conversation as read' });
     }
   };
 
@@ -115,7 +116,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           setHelpOffer(offer || null);
         }
       } catch (error) {
-        console.error('Failed to load mitzvah context:', error);
+        captureError(error, { context: 'ChatView: load mitzvah context' });
       }
     }
   };

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dataService, storageService } from '@/services';
 import { toast } from 'sonner';
+import { captureError } from '@/lib/analytics';
 
 export default function LocationPrompt({ show, onDismiss, onLocationSet }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -33,7 +34,7 @@ export default function LocationPrompt({ show, onDismiss, onLocationSet }) {
           onLocationSet();
         },
         (error) => {
-          console.error('Location error:', error);
+          captureError(error, { context: 'LocationPrompt: geolocation denied or failed' });
           toast.error('Could not get location');
           setIsLoading(false);
         }

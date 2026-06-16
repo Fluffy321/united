@@ -5,6 +5,7 @@ import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
+import { captureError } from '@/lib/analytics';
 
 export default function UserSettings() {
   const { user, isLoadingAuth: loading } = useAuth();
@@ -53,7 +54,7 @@ export default function UserSettings() {
       setAvatarUrl(url);
       toast.success('Avatar uploaded');
     } catch (error) {
-      console.error('Upload failed:', error);
+      captureError(error, { context: 'UserSettings: avatar upload' });
       toast.error('Failed to upload avatar');
     } finally {
       setUploading(false);
@@ -71,7 +72,7 @@ export default function UserSettings() {
       });
       toast.success('Profile updated successfully');
     } catch (error) {
-      console.error('Save failed:', error);
+      captureError(error, { context: 'UserSettings: save profile' });
       toast.error('Failed to save profile');
     } finally {
       setSaving(false);

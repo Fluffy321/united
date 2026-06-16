@@ -149,6 +149,22 @@ Do not omit this section from applicable final reports, even if the result is "n
 - For direct Supabase queries (joins, RPCs), import `supabase` from `src/api/supabaseClient.js`.
 - React Query keys follow the pattern `['entity-name', id]`. Invalidate after mutations.
 
+#### When direct `supabase` calls are acceptable (exceptions to the dataService rule)
+
+Direct `supabase.from()` / `supabase.rpc()` calls outside of `src/services/` are acceptable **only** in these cases:
+
+| Case | Example | Why |
+|---|---|---|
+| RPC calls with custom business logic | `supabase.rpc('vote_on_community_deletion', ...)` | No equivalent in dataService entity API |
+| Multi-table joins in a single query | `supabase.from('x').select('*, y(*)')` | dataService doesn't support nested selects |
+| Admin-only moderation endpoints | `supabase.rpc('approve_business_listing', ...)` | Admin surfaces with separate access patterns |
+| Storage uploads | `supabase.storage.from(...).upload(...)` | Storage API not wrapped in dataService |
+| Auth-level operations in service files | `supabase.auth.getUser()` | Auth calls belong at the service layer |
+
+**Do not** add direct calls for basic CRUD that dataService already handles. If you find yourself writing `supabase.from('posts').select(...)` in a component, use `dataService.entities.Post.filter(...)` instead.
+
+**If adding a new RPC or complex join**, add it as a named function in the appropriate `src/services/` file (e.g., `communitiesService.js`) so it's reusable and testable rather than inlining it in a component.
+
 ### Community modules
 - `allow_resources`, `allow_group_chat`, `allow_member_events`, `allow_member_listings` are columns on `communities`.
 - `getSupportedCommunityTabs()` in `src/lib/communityTypes.js` computes visible tabs from these flags.

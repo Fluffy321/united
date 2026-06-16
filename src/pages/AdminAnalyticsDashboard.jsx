@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Loader2, TrendingUp, Users, MessageSquare, Calendar, Activity, AlertTriangle, Download, ArrowUpRight, ArrowDownRight, ArrowLeft, CreditCard, Crown } from 'lucide-react';
 import { toast } from 'sonner';
+import { captureError } from '@/lib/analytics';
 import { subDays, format, startOfDay } from 'date-fns';
 
 const COLORS = ['#2563EB', '#7C3AED', '#EC4899', '#F59E0B', '#10B981', '#06B6D4', '#EF4444', '#84CC16'];
@@ -404,7 +405,7 @@ export default function AdminAnalyticsDashboard() {
       });
     } catch (e) {
       toast.error('Failed to load analytics');
-      console.error(e);
+      captureError(e, { context: 'AdminAnalyticsDashboard: load analytics data' });
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import UserAvatar from '@/components/common/UserAvatar';
 import { formatDistanceToNow } from 'date-fns';
+import { captureError } from '@/lib/analytics';
 
 export default function GroupChatSection({ communityId, currentUser }) {
   const [message, setMessage] = useState('');
@@ -62,7 +63,7 @@ export default function GroupChatSection({ communityId, currentUser }) {
       await refetch();
     } catch (error) {
       toast.error('Failed to send message');
-      console.error('Chat send error:', error);
+      captureError(error, { context: 'GroupChatSection: send message' });
     } finally {
       setSending(false);
     }

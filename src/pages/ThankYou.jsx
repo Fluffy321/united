@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
+import { captureError } from '@/lib/analytics';
 
 function formatDollars(cents) {
   return `$${(cents / 100).toFixed(2)}`;
@@ -40,7 +41,7 @@ export default function ThankYou() {
 
         if (!error && data) setTransaction(data);
       } catch (err) {
-        console.error('Failed to load transaction:', err);
+        captureError(err, { context: 'ThankYou: load transaction by session ID' });
       }
       setIsLoading(false);
     };
