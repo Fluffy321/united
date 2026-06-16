@@ -3,6 +3,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { dataService, feedRetentionService, shabbatReminderService, storageService, togglePostLike } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 import { toast } from 'sonner';
 import ReportModal from '@/components/common/ReportModal';
 import PageHelp from '@/components/common/PageHelp';
@@ -131,7 +132,7 @@ export default function Feed({ isActive = true }) {
         .filter(r => r.status === 'fulfilled' && r.value && typeof r.value.id === 'string')
         .map(r => r.value);
     },
-    enabled: !!currentUser?.id && appParams.hasBackendConfig,
+    enabled: COMMUNITIES_ENABLED && !!currentUser?.id && appParams.hasBackendConfig,
   });
 
   const { data: userBlocksList } = useQuery({
@@ -149,6 +150,10 @@ export default function Feed({ isActive = true }) {
   }, [userBlocksList]);
 
   useEffect(() => {
+    if (!COMMUNITIES_ENABLED) {
+      setCommunityGroups([]);
+      return;
+    }
     if (!userCommunitiesList) {
       if (!appParams.hasBackendConfig) {
         setCommunityGroups([{ id: 'demo-community', name: 'Five Towns', type: 'Neighborhood' }]);
@@ -407,6 +412,7 @@ export default function Feed({ isActive = true }) {
           momentum={feedMomentum}
           posts={feedPosts}
           joinedCommunityIds={joinedCommunityIds}
+          communitiesEnabled={COMMUNITIES_ENABLED}
           prompt={dailyPrompt}
           onOpenMap={() => navigate('/Map')}
           onOpenCommunities={() => navigate('/Communities')}
@@ -446,7 +452,7 @@ export default function Feed({ isActive = true }) {
           </div>
         )}
 
-        {appParams.hasBackendConfig && communitiesFetched && communityGroups.length === 0 && (
+        {COMMUNITIES_ENABLED && appParams.hasBackendConfig && communitiesFetched && communityGroups.length === 0 && (
           <div className="mb-3 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
@@ -533,7 +539,7 @@ export default function Feed({ isActive = true }) {
   );
 }
 
-function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, prompt, onOpenMap, onOpenCommunities, onCreate }) {
+function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, communitiesEnabled = true, prompt, onOpenMap, onOpenCommunities, onCreate }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const briefScrollerRef = useRef(null);
   const safeBrief = brief || {};
@@ -552,9 +558,9 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, promp
   const mitzvahNeeds = posts
     .filter((post) => post.type === 'help' || /help|chesed|meal|ride|offer|volunteer/i.test(`${post.title || ''} ${post.body || ''}`))
     .slice(0, 3);
-  const communityEvents = posts
+  const communityEvents = communitiesEnabled ? posts
     .filter((post) => post.type === 'event' && (!joinedCommunityIds?.size || joinedCommunityIds.has(post.community_id)))
-    .slice(0, 3);
+    .slice(0, 3) : [];
 
   const slideCandidates = [
     {
@@ -567,7 +573,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, promp
       actionLabel: 'Open map',
       onAction: onOpenMap,
     },
-    {
+    communitiesEnabled && {
       key: 'trending',
       eyebrow: 'Trending Posts',
       title: 'What neighbors are talking about',
@@ -587,7 +593,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, promp
       actionLabel: 'Post help',
       onAction: () => onCreate('help', 'chesed', ''),
     },
-    {
+    communitiesEnabled && {
       key: 'events',
       eyebrow: 'Events In Your Communities',
       title: 'What is coming up',
@@ -597,7 +603,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, promp
       actionLabel: 'Share event',
       onAction: () => onCreate('event', 'local_event', ''),
     },
-  ];
+  ].filter(Boolean);
 
   const slides = slideCandidates.filter((slide) => slide.items.length > 0);
   const statTiles = [

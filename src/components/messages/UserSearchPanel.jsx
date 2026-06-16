@@ -5,6 +5,7 @@ import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 import { canMessage } from '@/lib/messagingPermissions';
 import { AI_AGENT, buildAIConversation } from '@/lib/aiAgent';
 import { toast } from 'sonner';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const DEBOUNCE_MS = 300;
 
@@ -59,7 +60,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
       setResults(filtered.slice(0, 20));
 
       // Lazily load current user's communities for mutual community counts.
-      if (!userCommunities) {
+      if (COMMUNITIES_ENABLED && !userCommunities) {
         const memberships = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id });
         setUserCommunities(new Set(memberships.map(m => m.community_id)));
       }
@@ -117,7 +118,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
         setResults([]);
         toast.success('Conversation started!');
       } else {
-        toast.info('You can message people who share a community with you or are friends.');
+        toast.info('You can message people you are allowed to contact on JUnited.');
       }
     } catch (err) {
       if (err instanceof RateLimitError) { toast.error(err.message); return; }
@@ -167,7 +168,7 @@ function UserResultRow({ user, currentUserCommunities, loading, onClick }) {
   const isAI = user.id === AI_AGENT.id;
 
   React.useEffect(() => {
-    if (isAI || !currentUserCommunities) return;
+    if (isAI || !COMMUNITIES_ENABLED || !currentUserCommunities) return;
     dataService.entities.UserCommunity.filter({ user_id: user.id }).then(memberships => {
       const theirCommunities = new Set(memberships.map(m => m.community_id));
       const count = [...currentUserCommunities].filter(id => theirCommunities.has(id)).length;
@@ -193,7 +194,7 @@ function UserResultRow({ user, currentUserCommunities, loading, onClick }) {
         <p className="text-[14px] font-semibold text-slate-900 truncate">{user.full_name}</p>
         {isAI
           ? <p className="text-[11px] text-indigo-500 font-medium">AI • Jewish knowledge helper</p>
-          : mutualCount !== null && mutualCount > 0 && (
+          : COMMUNITIES_ENABLED && mutualCount !== null && mutualCount > 0 && (
             <p className="text-[11px] text-slate-400 flex items-center gap-1">
               <Users className="w-3 h-3" />
               {mutualCount} mutual communit{mutualCount === 1 ? 'y' : 'ies'}

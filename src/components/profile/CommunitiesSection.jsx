@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { dataService } from '@/services';
 import { useNavigate } from 'react-router-dom';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 export default function CommunitiesSection({ userCommunities }) {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function CommunitiesSection({ userCommunities }) {
     setCommunities(userComms.slice(0, 5));
   }, [allCommunities.length, userCommunities.length]);
 
-  if (communities.length === 0) return null;
+  if (!COMMUNITIES_ENABLED || communities.length === 0) return null;
 
   const getInitials = (name) => {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);

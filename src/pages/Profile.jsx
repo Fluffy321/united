@@ -20,6 +20,7 @@ import GetStartedCard from '@/components/profile/GetStartedCard.jsx';
 import BadgesSection from '@/components/profile/BadgesSection.jsx';
 import MitzvahJourneySection from '@/components/profile/MitzvahJourneySection.jsx';
 import CommunitiesSection from '@/components/profile/CommunitiesSection.jsx';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 import RecentPostsSection from '@/components/profile/RecentPostsSection.jsx';
 import SavedPostsSection from '@/components/profile/SavedPostsSection.jsx';
 import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
@@ -88,7 +89,7 @@ export default function Profile() {
   const { data: unifiedPosts = [] } = useQuery({
     queryKey: ['user-posts', profileUser?.id],
     queryFn: () => dataService.entities.UnifiedPost.filter({ user_id: profileUser.id }, '-created_date', 10),
-    enabled: !!profileUser,
+    enabled: !!profileUser && COMMUNITIES_ENABLED,
   });
 
   const { data: userStreak } = useQuery({
@@ -343,13 +344,14 @@ export default function Profile() {
 
             <ModernStatsRow
               friends={friendCount}
-              following={userCommunities.length}
+              following={COMMUNITIES_ENABLED ? userCommunities.length : 0}
               posts={unifiedPosts.length}
               impact={mitzvahPoints}
+              showFollowing={COMMUNITIES_ENABLED}
               onFriendsClick={isOwnProfile ? () => setShowFriendsHub(true) : undefined}
               onPostsClick={() => scrollTo('recent-posts-section')}
               onImpactClick={() => scrollTo('impact-section')}
-              onFollowingClick={() => scrollTo('communities-section')}
+              onFollowingClick={COMMUNITIES_ENABLED ? () => scrollTo('communities-section') : undefined}
             />
 
             <ModernActionButtons
@@ -394,7 +396,7 @@ export default function Profile() {
             </div>
           )}
 
-          {userCommunities.length > 0 && (
+          {COMMUNITIES_ENABLED && userCommunities.length > 0 && (
             <div id="communities-section" className="mx-3 motion-soft-in">
               <CommunitiesSection userCommunities={userCommunities} />
             </div>

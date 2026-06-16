@@ -28,12 +28,13 @@ export default function ModernStatsRow({
   onPostsClick,
   onImpactClick,
   onFollowingClick,
+  showFollowing = true,
 }) {
   const tier = getNextTier(impact);
 
   return (
     <div className="px-4 pb-3">
-      <div className="grid grid-cols-4 gap-2 rounded-[22px] border border-slate-100 bg-slate-50/80 p-1.5">
+      <div className={`grid ${showFollowing ? 'grid-cols-4' : 'grid-cols-3'} gap-2 rounded-[22px] border border-slate-100 bg-slate-50/80 p-1.5`}>
 
           <button
             onClick={onFriendsClick}
@@ -46,17 +47,18 @@ export default function ModernStatsRow({
             <p className="mt-1 text-[10px] font-black uppercase leading-tight text-slate-400">Friends</p>
           </button>
 
-          {/* ── Communities ── */}
-          <button
-            onClick={onFollowingClick}
-            className="min-w-0 rounded-2xl border border-white bg-white px-1.5 py-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
-          >
-            <div className="mx-auto mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-blue-50">
-              <UsersRound className="h-3.5 w-3.5 text-blue-600" />
-            </div>
-            <p className="text-[19px] font-black leading-none text-slate-950">{following}</p>
-            <p className="mt-1 text-[9px] font-black uppercase leading-tight text-slate-400">Communities</p>
-          </button>
+          {showFollowing && (
+            <button
+              onClick={onFollowingClick}
+              className="min-w-0 rounded-2xl border border-white bg-white px-1.5 py-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
+            >
+              <div className="mx-auto mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-blue-50">
+                <UsersRound className="h-3.5 w-3.5 text-blue-600" />
+              </div>
+              <p className="text-[19px] font-black leading-none text-slate-950">{following}</p>
+              <p className="mt-1 text-[9px] font-black uppercase leading-tight text-slate-400">Communities</p>
+            </button>
+          )}
 
           {/* ── Posts ── */}
           <button

@@ -14,6 +14,7 @@ import AdminRoute from '@/components/AdminRoute';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import OnboardingFlow, { hasCompletedOnboarding } from '@/components/onboarding/OnboardingFlow';
 import { getSupabaseConfigStatus } from '@/api/supabaseClient';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const supabaseStatus = getSupabaseConfigStatus();
 const PROD_CONFIG_MISSING = import.meta.env.PROD && !supabaseStatus.shouldUseSupabase;
@@ -121,6 +122,10 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
+const CommunityRouteGuard = ({ children }) => (
+  COMMUNITIES_ENABLED ? children : <Navigate to="/Feed" replace />
+);
+
 const PageFallback = () => (
   <div className="fixed inset-0 bg-[#F6F8FB] px-4 pt-5">
     <div className="mx-auto w-full max-w-2xl space-y-3 motion-page-enter">
@@ -185,15 +190,16 @@ const AuthenticatedApp = () => {
                   element={<PageTransition><LayoutWrapper currentPageName={path}><Page /></LayoutWrapper></PageTransition>}
                 />
               ))}
+            {!COMMUNITIES_ENABLED && <Route path="/Communities" element={<Navigate to="/Feed" replace />} />}
 
             {/* MVP utility routes */}
             <Route path="/PublicProfile" element={<PageTransition><PublicProfile /></PageTransition>} />
             <Route path="/PostDetail" element={<PageTransition><PostDetail /></PageTransition>} />
-            <Route path="/Discover" element={<Navigate to="/Communities" replace />} />
-            <Route path="/discover" element={<Navigate to="/Communities" replace />} />
-            <Route path="/community/:communityId" element={<PageTransition><LayoutWrapper currentPageName="CommunityDetail"><CommunityPage /></LayoutWrapper></PageTransition>} />
-            <Route path="/communities/:communityId" element={<PageTransition><LayoutWrapper currentPageName="CommunityDetail"><CommunityPage /></LayoutWrapper></PageTransition>} />
-            <Route path="/join" element={<PageTransition><JoinByCommunityCode /></PageTransition>} />
+            <Route path="/Discover" element={<Navigate to={COMMUNITIES_ENABLED ? '/Communities' : '/Feed'} replace />} />
+            <Route path="/discover" element={<Navigate to={COMMUNITIES_ENABLED ? '/Communities' : '/Feed'} replace />} />
+            <Route path="/community/:communityId" element={<CommunityRouteGuard><PageTransition><LayoutWrapper currentPageName="CommunityDetail"><CommunityPage /></LayoutWrapper></PageTransition></CommunityRouteGuard>} />
+            <Route path="/communities/:communityId" element={<CommunityRouteGuard><PageTransition><LayoutWrapper currentPageName="CommunityDetail"><CommunityPage /></LayoutWrapper></PageTransition></CommunityRouteGuard>} />
+            <Route path="/join" element={<CommunityRouteGuard><PageTransition><JoinByCommunityCode /></PageTransition></CommunityRouteGuard>} />
             <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
             <Route path="/Search" element={<Navigate to="/search" replace />} />
             <Route path="/JewishHub/*" element={<PageTransition><LayoutWrapper currentPageName="JewishHub"><JewishHub /></LayoutWrapper></PageTransition>} />
@@ -225,7 +231,7 @@ const AuthenticatedApp = () => {
           onComplete={async (result) => {
             setShowOnboarding(false);
             await checkAppState();
-            if (!(result?._joinedCount > 0)) {
+            if (COMMUNITIES_ENABLED && !(result?._joinedCount > 0)) {
               navigate('/Communities');
             }
           }}

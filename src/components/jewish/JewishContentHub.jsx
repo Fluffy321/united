@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, BookOpenText, ChevronRight, Clock, Landmark, ScrollText } from 'lucide-react';
 import TehillimReader from './TehillimReader';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const HUB_ITEMS = [
   {
@@ -69,11 +70,11 @@ export default function JewishContentHub() {
   return (
     <div className="mobile-page min-h-screen px-3 pb-28 pt-4">
       <Link
-        to="/Communities"
+        to={COMMUNITIES_ENABLED ? '/Communities' : '/Feed'}
         className="motion-press mb-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-black text-slate-700 shadow-sm"
       >
         <ArrowLeft className="h-4 w-4" />
-        Communities
+        {COMMUNITIES_ENABLED ? 'Communities' : 'Feed'}
       </Link>
 
       <section className="overflow-hidden rounded-[24px] border border-blue-100 bg-white shadow-sm">

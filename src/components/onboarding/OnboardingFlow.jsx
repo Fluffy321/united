@@ -4,6 +4,7 @@ import { communitiesService, dataService, friendsService, storageService } from 
 import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
 import { requestPushPermission, subscribeToPush } from '@/lib/pushSubscription';
 import { toast } from 'sonner';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const ONBOARDING_KEY_PREFIX = 'junited_onboarding_complete_';
 const USERNAME_REGEX = /^[a-z0-9_]{3,30}$/;
@@ -336,10 +337,10 @@ function ContactsStep({ matches, selectedIds, setSelectedIds, loading, error, on
 const APP_TOUR_ITEMS = [
   { icon: Home,          label: 'Feed',            desc: 'See community updates, posts, and announcements from people nearby.' },
   { icon: Sparkles,      label: 'Mitzvah Circle',  desc: 'Ask for help, offer help, and track mitzvahs from open to completed.' },
-  { icon: Users,         label: 'Communities',     desc: 'Join local Jewish communities. Tap the message icon here for private chats.' },
-  { icon: Map,           label: 'Map',             desc: 'Explore nearby communities, places, and events on a live map.' },
+  ...(COMMUNITIES_ENABLED ? [{ icon: Users, label: 'Communities', desc: 'Join local Jewish communities. Tap the message icon here for private chats.' }] : []),
+  { icon: Map,           label: 'Businesses',      desc: 'Explore nearby shuls, businesses, places, and useful local references.' },
   { icon: Bell,          label: 'Notifications',   desc: 'Keep up with replies, requests, and important updates.' },
-  { icon: MessageCircle, label: 'Messages',        desc: 'Access through Communities — coordinate privately with people or groups.' },
+  { icon: MessageCircle, label: 'Messages',        desc: 'Coordinate privately with people you connect with through JUnited.' },
 ];
 
 function AppTourStep() {
@@ -380,7 +381,7 @@ function NotificationsStep({ preferences, setPreferences }) {
           ['messages', 'Messages', 'New direct messages from community members.'],
           ['replies', 'Replies & mentions', 'Follow-up messages in threads you joined.'],
           ['mitzvah', 'Mitzvah updates', 'Offers, accepted tasks, and verification requests.'],
-          ['community', 'Community activity', 'Posts and announcements from communities you join.'],
+          ...(COMMUNITIES_ENABLED ? [['community', 'Community activity', 'Posts and announcements from communities you join.']] : []),
           ['localBrief', 'Daily brief', 'A useful recap of what matters nearby.'],
           ['mapActivity', 'Nearby map activity', 'Posts and local updates that appear on your community map.'],
         ].map(([key, label, description]) => (
@@ -441,12 +442,13 @@ export default function OnboardingFlow({ user, onComplete }) {
     'Neighborhood',
     'Identity',
     'Friends',
-    'Communities',
+    ...(COMMUNITIES_ENABLED ? ['Communities'] : []),
     'App Tour',
     'Notifications',
   ], []);
 
   useEffect(() => {
+    if (!COMMUNITIES_ENABLED) return undefined;
     let mounted = true;
     setLoadingCommunities(true);
     communitiesService.listCommunities('-follower_count', 20)
@@ -593,7 +595,7 @@ export default function OnboardingFlow({ user, onComplete }) {
 
       await dataService.auth.updateMe(profilePatch);
 
-      if (selectedCommunityIds.size > 0) {
+      if (COMMUNITIES_ENABLED && selectedCommunityIds.size > 0) {
         const memberships = await communitiesService.listMemberships({ user_id: user.id }, '-created_date', 100);
         const existingIds = new Set(memberships.map((membership) => membership.community_id));
         await Promise.allSettled(
@@ -643,8 +645,10 @@ export default function OnboardingFlow({ user, onComplete }) {
 
   const back = () => setStep((current) => Math.max(0, current - 1));
   const skip = () => {
-    if (step === 1 || step === 3 || step === 4 || step === 5 || step === 6) next();
+    if (['Photo', 'Identity', 'Friends', 'Communities', 'App Tour'].includes(steps[step])) next();
   };
+
+  const currentStep = steps[step];
 
   return (
     <div className="app-page fixed inset-0 z-[100] overflow-y-auto px-4 py-5">
@@ -671,7 +675,7 @@ export default function OnboardingFlow({ user, onComplete }) {
         </div>
 
         <div className="app-card-soft flex-1 p-4 sm:p-6">
-          {step === 0 && (
+          {currentStep === 'Name' && (
             <NameStep
               name={name}
               setName={setName}
@@ -682,7 +686,7 @@ export default function OnboardingFlow({ user, onComplete }) {
               checkingUsername={checkingUsername}
             />
           )}
-          {step === 1 && (
+          {currentStep === 'Photo' && (
             <PhotoStep
               name={name}
               avatarUrl={avatarUrl}
@@ -691,8 +695,8 @@ export default function OnboardingFlow({ user, onComplete }) {
               onSkipPhoto={skip}
             />
           )}
-          {step === 2 && <NeighborhoodStep neighborhood={neighborhood} setNeighborhood={setNeighborhood} />}
-          {step === 3 && (
+          {currentStep === 'Neighborhood' && <NeighborhoodStep neighborhood={neighborhood} setNeighborhood={setNeighborhood} />}
+          {currentStep === 'Identity' && (
             <IdentityContextStep
               shulPreference={shulPreference}
               setShulPreference={setShulPreference}
@@ -702,7 +706,7 @@ export default function OnboardingFlow({ user, onComplete }) {
               setPrivacyPreference={setPrivacyPreference}
             />
           )}
-          {step === 4 && (
+          {currentStep === 'Friends' && (
             <ContactsStep
               matches={contactMatches}
               selectedIds={selectedFriendIds}
@@ -712,7 +716,7 @@ export default function OnboardingFlow({ user, onComplete }) {
               onFindContacts={handleFindContacts}
             />
           )}
-          {step === 5 && (
+          {currentStep === 'Communities' && (
             <CommunitiesStep
               communities={communities}
               selectedIds={selectedCommunityIds}
@@ -720,8 +724,8 @@ export default function OnboardingFlow({ user, onComplete }) {
               loading={loadingCommunities}
             />
           )}
-          {step === 6 && <AppTourStep />}
-          {step === 7 && <NotificationsStep preferences={notificationPrefs} setPreferences={setNotificationPrefs} />}
+          {currentStep === 'App Tour' && <AppTourStep />}
+          {currentStep === 'Notifications' && <NotificationsStep preferences={notificationPrefs} setPreferences={setNotificationPrefs} />}
         </div>
 
         <div className="mt-4 flex items-center gap-2">

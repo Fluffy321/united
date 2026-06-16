@@ -15,14 +15,15 @@ import {
 } from "@/components/ui/dialog";
 import { dataService } from '@/services';
 import { toast } from 'sonner';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const CATEGORIES = ['Ride', 'Errand', 'Lost & Found', 'Quick Favor', 'Tutoring', 'Shabbat Help', 'Other'];
 
 const VISIBILITY_OPTIONS = [
   {
     value: 'community',
-    label: 'Community',
-    description: 'Visible to people in the relevant community or feed.',
+    label: 'JUnited Feed',
+    description: 'Visible in the main beta feed and Mitzvah Circle.',
     icon: Globe,
   },
   {
@@ -54,7 +55,7 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser, in
   }, [open, initialValues]);
 
   useEffect(() => {
-    if (open && currentUser?.id) {
+    if (open && currentUser?.id && COMMUNITIES_ENABLED) {
       dataService.entities.UserCommunity.filter({ user_id: currentUser.id }).then(memberships => {
         const communityIds = memberships.map(m => m.community_id);
         Promise.all(communityIds.map(id => dataService.entities.Community.filter({ id }))).then(results => {
@@ -62,6 +63,10 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser, in
           setUserCommunities(communities);
         });
       });
+    }
+    } else if (open && !COMMUNITIES_ENABLED) {
+      setCommunityId('');
+      setUserCommunities([]);
     }
   }, [open, currentUser?.id]);
 
@@ -215,26 +220,28 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser, in
             </div>
           </div>
 
-          <div>
-            <Label>Post to Community (optional)</Label>
-            <Select value={communityId} onValueChange={setCommunityId}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select a community" />
-              </SelectTrigger>
-              <SelectContent>
-                {userCommunities.map(community => (
-                  <SelectItem key={community.id} value={community.id}>
-                    {community.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-slate-500 mt-1">
-              {visibility === 'friends_only'
-                ? 'Friends-only requests are visible to friends regardless of community.'
-                : 'Request will be visible to members of this community'}
-            </p>
-          </div>
+          {COMMUNITIES_ENABLED && (
+            <div>
+              <Label>Post to Community (optional)</Label>
+              <Select value={communityId} onValueChange={setCommunityId}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select a community" />
+                </SelectTrigger>
+                <SelectContent>
+                  {userCommunities.map(community => (
+                    <SelectItem key={community.id} value={community.id}>
+                      {community.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-slate-500 mt-1">
+                {visibility === 'friends_only'
+                  ? 'Friends-only requests are visible to friends regardless of community.'
+                  : 'Request will be visible to members of this community'}
+              </p>
+            </div>
+          )}
 
           <div>
             <Label>Approximate Location</Label>

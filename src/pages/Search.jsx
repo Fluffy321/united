@@ -4,12 +4,13 @@ import { Search, X, Clock, Filter, ChevronLeft, Users, Calendar, FileText, User,
 import { dataService, storageService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 import { formatDistanceToNow } from 'date-fns';
 
 const POST_TYPES = [
   { value: '', label: 'All types' },
   { value: 'feed', label: 'Posts' },
-  { value: 'community_post', label: 'Community posts' },
+  ...(COMMUNITIES_ENABLED ? [{ value: 'community_post', label: 'Community posts' }] : []),
   { value: 'event', label: 'Events' },
   { value: 'help', label: 'Help requests' },
   { value: 'marketplace_listing', label: 'Marketplace' },
@@ -168,9 +169,10 @@ export default function SearchPage() {
     storageService.removeItem('junited_recent_searches');
   };
 
+  const visibleCommunities = COMMUNITIES_ENABLED ? (results?.communities || []) : [];
   const totalResults = results
     ? (results.posts?.length || 0)
-      + (results.communities?.length || 0)
+      + visibleCommunities.length
       + (results.events?.length || 0)
       + (results.people?.length || 0)
       + (results.mitzvahRequests?.length || 0)
@@ -253,7 +255,7 @@ export default function SearchPage() {
                 <Search className="mx-auto h-6 w-6 text-slate-300" />
                 <p className="mt-3 text-[14px] font-bold text-slate-700">Search JUnited</p>
                 <p className="mt-1 text-[13px] font-semibold leading-5 text-slate-400">
-                  Type a real name, community, post, business, or mitzvah request to search.
+                  Type a real name, post, business, shul, or mitzvah request to search.
                 </p>
               </div>
             )}
@@ -293,9 +295,11 @@ export default function SearchPage() {
               {results.posts?.map(p => <PostResult key={p.id} post={p} onClick={handlePostClick} />)}
             </ResultSection>
 
-            <ResultSection title="Communities" icon={Users} count={results.communities?.length}>
-              {results.communities?.map(c => <CommunityResult key={c.id} community={c} onNavigate={navigate} />)}
-            </ResultSection>
+            {COMMUNITIES_ENABLED && (
+              <ResultSection title="Communities" icon={Users} count={visibleCommunities.length}>
+                {visibleCommunities.map(c => <CommunityResult key={c.id} community={c} onNavigate={navigate} />)}
+              </ResultSection>
+            )}
 
             <ResultSection title="Events" icon={Calendar} count={results.events?.length}>
               {results.events?.map(e => <EventResult key={e.id} event={e} />)}

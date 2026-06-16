@@ -18,6 +18,7 @@
  */
 import { lazy } from 'react';
 import __Layout from './Layout.jsx';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const Communities          = lazy(() => import('./pages/Communities'));
 const Feed                 = lazy(() => import('./pages/Feed'));
@@ -29,7 +30,6 @@ const Profile              = lazy(() => import('./pages/Profile'));
 const Settings             = lazy(() => import('./pages/Settings'));
 
 export const PAGES = {
-  Communities,
   Feed,
   Map,
   Marketplace,
@@ -37,6 +37,7 @@ export const PAGES = {
   MitzvahCircle,
   Profile,
   Settings,
+  ...(COMMUNITIES_ENABLED ? { Communities } : {}),
 };
 
 export const pagesConfig = {

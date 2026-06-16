@@ -2,6 +2,7 @@ import React from 'react';
 import { HandHeart, Users, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const STEPS = [
   {
@@ -19,6 +20,7 @@ const STEPS = [
     title: 'Join a community',
     subtitle: 'Shuls, Chesed & more',
     page: 'Communities',
+    requiresCommunities: true,
   },
   {
     Icon: BookOpen,
@@ -47,7 +49,7 @@ export default function GetStartedCard() {
 
       {/* Step rows */}
       <div className="divide-y divide-slate-100">
-        {STEPS.map(({ Icon, iconBg, iconColor, title, subtitle, page }, i) => (
+        {STEPS.filter((step) => COMMUNITIES_ENABLED || !step.requiresCommunities).map(({ Icon, iconBg, iconColor, title, subtitle, page }, i) => (
           <button
             key={i}
             onClick={() => navigate(createPageUrl(page))}

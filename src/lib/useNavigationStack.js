@@ -1,7 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
-const ROOT_ROUTES = ['/', '/Feed', '/Profile', '/MitzvahCircle', '/Communities'];
+const ROOT_ROUTES = ['/', '/Feed', '/Profile', '/MitzvahCircle', ...(COMMUNITIES_ENABLED ? ['/Communities'] : [])];
 
 export function useNavigationStack() {
   const location = useLocation();

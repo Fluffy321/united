@@ -1,6 +1,7 @@
 import dataService from './dataService';
 import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 import { captureError } from '@/lib/analytics';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 async function sendPush({ userId, title, body, url, notificationType }) {
   if (!shouldUseSupabase || !supabase) return;
@@ -16,6 +17,9 @@ async function sendPush({ userId, title, body, url, notificationType }) {
 }
 
 const nowISO = () => new Date().toISOString();
+const communityLink = (communityId) => (
+  COMMUNITIES_ENABLED && communityId ? `/Communities?community=${communityId}` : '/Feed'
+);
 
 const normalizeNotification = (notification = {}) => ({
   ...notification,
@@ -202,7 +206,7 @@ export const notificationsService = {
       type:         'community_activity',
       title:        'Community activity',
       body:         `${actorName || 'Someone'} posted in ${communityName || 'your community'}.`,
-      linkUrl:      postId ? `/PostDetail?id=${postId}` : '/Communities',
+      linkUrl:      postId ? `/PostDetail?id=${postId}` : communityLink(communityId),
       postId,
       data:         { community_id: communityId },
       aggregateKey: communityId ? `community_activity:${communityId}` : null,
@@ -353,7 +357,7 @@ export const notificationsService = {
       type: 'community_removal',
       title: 'You were removed from a community',
       body: `You were removed from ${communityName || 'a community'}. You may submit an appeal.`,
-      linkUrl: communityId ? `/Communities?community=${communityId}` : '/Communities',
+      linkUrl: communityLink(communityId),
       data: { community_id: communityId, removal_id: removalId, can_appeal: true },
     });
   },
@@ -368,7 +372,7 @@ export const notificationsService = {
       body: approved
         ? `Your appeal to rejoin ${communityName || 'the community'} was approved. You are now a member again.`
         : `Your appeal to rejoin ${communityName || 'the community'} was reviewed and denied.`,
-      linkUrl: communityId ? `/Communities?community=${communityId}` : '/Communities',
+      linkUrl: communityLink(communityId),
       data: { community_id: communityId, decision },
     });
   },
@@ -380,7 +384,7 @@ export const notificationsService = {
       type:     'deletion_vote',
       title:    'Community deletion vote started',
       body:     `${initiatorName || 'An admin'} has initiated a vote to delete "${communityName || 'your community'}". Your approval is required.`,
-      linkUrl:  communityId ? `/Communities?community=${communityId}` : '/Communities',
+      linkUrl:  communityLink(communityId),
       data:     { community_id: communityId, request_id: requestId },
     });
   },

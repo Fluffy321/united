@@ -15,6 +15,7 @@ import ReportModal from '@/components/common/ReportModal';
 import BackButton from '@/components/common/BackButton';
 import { buildAIConversation } from '@/lib/aiAgent';
 import { captureError } from '@/lib/analytics';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 export default function Messages() {
   const navigate = useNavigate();
@@ -53,6 +54,12 @@ export default function Messages() {
     });
     return unsubscribe;
   }, [currentUser?.id]);
+
+  useEffect(() => {
+    if (!COMMUNITIES_ENABLED && activeFilter === 'communities') {
+      setActiveFilter('all');
+    }
+  }, [activeFilter]);
 
   const loadConversation = async (id) => {
     try {
@@ -94,7 +101,7 @@ export default function Messages() {
         unread_count: {},
       }));
     },
-    enabled: !!currentUser,
+    enabled: !!currentUser && COMMUNITIES_ENABLED,
     staleTime: 120000,
   });
 
@@ -126,7 +133,7 @@ export default function Messages() {
   const allConversations = [
     ...(aiConversation ? [aiConversation] : []),
     ...conversations,
-    ...communityConversations,
+    ...(COMMUNITIES_ENABLED ? communityConversations : []),
   ];
 
   const { data: pendingRequests = [] } = useQuery({
@@ -213,12 +220,12 @@ export default function Messages() {
   const visibleConversations = allConversations.filter(conv => {
     if (conv.is_archived) return false;
     if (activeFilter === 'unread') return (conv.unread_count?.[currentUser?.id] || 0) > 0;
-    if (activeFilter === 'communities') return !!conv.community_id;
+    if (COMMUNITIES_ENABLED && activeFilter === 'communities') return !!conv.community_id;
     if (activeFilter === 'requests') return !!conv.request_id;
     return true;
   });
   const unreadTotal = allConversations.reduce((sum, conv) => sum + (conv.unread_count?.[currentUser?.id] || 0), 0);
-  const communityTotal = allConversations.filter((conv) => conv.community_id || conv.is_community_chat).length;
+  const communityTotal = COMMUNITIES_ENABLED ? allConversations.filter((conv) => conv.community_id || conv.is_community_chat).length : 0;
 
   return (
     <div className="relative flex min-h-[100dvh] flex-col bg-[#F6F8FB] mobile-safe-bottom">
@@ -233,7 +240,7 @@ export default function Messages() {
               <div className="flex min-w-0 items-center gap-1.5">
                 <BackButton fallbackTo="/Feed" className="-ml-2 shrink-0" />
                 <h1 className="text-[20px] font-black tracking-normal text-slate-950">Messages</h1>
-                <PageHelp text="Coordinate privately with people or groups connected to your communities." align="end" />
+                <PageHelp text="Coordinate privately with people you connect with through JUnited." align="end" />
               </div>
               <button
                 onClick={() => setShowNewMessage(true)}
@@ -290,7 +297,7 @@ export default function Messages() {
                 {[
                   { key: 'all', label: 'All' },
                   { key: 'unread', label: 'Unread' },
-                  { key: 'communities', label: 'Communities' },
+                  ...(COMMUNITIES_ENABLED ? [{ key: 'communities', label: 'Communities' }] : []),
                   { key: 'requests', label: 'Requests' },
                 ].map(f => (
                   <button

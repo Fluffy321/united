@@ -1,3 +1,5 @@
+import { COMMUNITIES_ENABLED } from '@/config/features';
+
 const URGENCY_RANK = { now: 5, urgent: 4, soon: 3, today: 2, active: 1, completed: 0 };
 
 const toTime = (value) => {
@@ -131,6 +133,8 @@ export function buildFeedLiveNowItems({ posts = [], networkLabel = 'Five Towns' 
 }
 
 export function buildCommunityLiveNowItems({ communities = [] } = {}) {
+  if (!COMMUNITIES_ENABLED) return [];
+
   const communityItems = communities.map((community) => {
     const activeNow = Number(community.activeNow || community.active_now || 0);
     const postsToday = Number(community.postsToday || community.posts_today || community.post_count || 0);
@@ -240,6 +244,8 @@ export function getCommunityActionCopy(community = {}) {
 }
 
 export function buildCommunityActionItems(communities = []) {
+  if (!COMMUNITIES_ENABLED) return [];
+
   return communities.filter(community => community?.id && community?.name).slice(0, 8).map((community) => {
     const copy = getCommunityActionCopy(community);
     const memberCount = Number(community.member_count || community.follower_count || 0);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, Store, MessageSquarePlus, User, Users } from 'lucide-react';
+import { BookOpenText, Home, Store, MessageSquarePlus, User, Users } from 'lucide-react';
 import { MitzvahIcon } from '@/components/common/JIcons';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/AuthContext';
 import AppErrorBoundary from '@/components/common/AppErrorBoundary';
 import FeedbackModal from '@/components/feedback/FeedbackModal';
 import { FloatingActionsProvider, useFloatingActions } from '@/components/layout/FloatingActionsContext';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 // Lazy load main pages
 const Feed = lazy(() => import('@/pages/Feed'));
@@ -22,7 +23,9 @@ const Profile = lazy(() => import('@/pages/Profile'));
 const navItems = [
   { key: 'Feed',        name: 'Feed',        icon: Home,      page: 'Feed' },
   { key: 'Mitzvah',    name: 'Mitzvah',     icon: null,      page: 'MitzvahCircle', to: '/MitzvahCircle', isMitzvah: true },
-  { key: 'Communities',name: 'Communities', icon: Users,     page: 'Communities' },
+  COMMUNITIES_ENABLED
+    ? { key: 'Communities', name: 'Communities', icon: Users, page: 'Communities' }
+    : { key: 'JewishHub', name: 'Jewish', icon: BookOpenText, page: 'JewishHub', to: '/JewishHub/tehillim' },
   { key: 'Map',        name: 'Businesses',  icon: Store,     page: 'Map',          to: '/Map' },
   { key: 'Profile',    name: 'Profile',     icon: User,      page: 'Profile', isProfile: true },
 ];
@@ -86,9 +89,10 @@ function LayoutContent({ children, currentPageName }) {
   }, [currentUser?.notification_settings?.mitzvahDailyReminders, currentUser?.app_settings?.quietMode]);
 
   const activeNavKey = currentPageName === 'MitzvahCircle' ? 'Mitzvah' : currentPageName;
-  const swipeablePages = ['Feed', 'MitzvahCircle', 'Communities'];
+  const swipeablePages = COMMUNITIES_ENABLED ? ['Feed', 'MitzvahCircle', 'Communities'] : ['Feed', 'MitzvahCircle'];
   const currentIndex = swipeablePages.indexOf(currentPageName);
   const isSwipeable = currentIndex !== -1;
+  const swipeLabels = COMMUNITIES_ENABLED ? ['Feed', 'Mitzvah', 'Communities'] : ['Feed', 'Mitzvah'];
 
   const handleTabChange = (newIndex) => {
     if (newIndex >= 0 && newIndex < swipeablePages.length) {
@@ -107,7 +111,7 @@ function LayoutContent({ children, currentPageName }) {
       <main className="min-h-screen overflow-visible">
         {isSwipeable ? (
           <SwipeableTabs
-            tabs={['Feed', 'Mitzvah', 'Communities']}
+            tabs={swipeLabels}
             activeIndex={currentIndex}
             onIndexChange={handleTabChange}
           >
@@ -121,11 +125,13 @@ function LayoutContent({ children, currentPageName }) {
                 <MitzvahCircle isActive={currentIndex === 1} />
               </Suspense>
             </AppErrorBoundary>
-            <AppErrorBoundary inline resetKey={`${location.key}:communities:${currentIndex}`} fallbackMessage="Communities could not load.">
-              <Suspense fallback={<InlinePageSkeleton />}>
-                <Communities />
-              </Suspense>
-            </AppErrorBoundary>
+            {COMMUNITIES_ENABLED && (
+              <AppErrorBoundary inline resetKey={`${location.key}:communities:${currentIndex}`} fallbackMessage="Communities could not load.">
+                <Suspense fallback={<InlinePageSkeleton />}>
+                  <Communities />
+                </Suspense>
+              </AppErrorBoundary>
+            )}
           </SwipeableTabs>
         ) : (
           children
