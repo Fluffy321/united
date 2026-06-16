@@ -1,3 +1,4 @@
+// DEFERRED: no backing table — do not use in beta
 import React, { useState } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -31,13 +32,13 @@ const boards = [
 ];
 
 const helpCategories = [
-  { value: 'advice', label: '💭 Advice' },
-  { value: 'lonely', label: '🤝 Want to Talk' },
-  { value: 'school', label: '📚 School' },
-  { value: 'jobs', label: '💼 Jobs' },
-  { value: 'family', label: '👨‍👩‍👧‍👦 Family' },
-  { value: 'antisemitism', label: '✡️ Antisemitism' },
-  { value: 'other', label: '📝 Other' }
+  { value: 'advice', label: '💭 Advice / Guidance' },
+  { value: 'lonely', label: '🤝 Support / Check-in' },
+  { value: 'school', label: '📚 School Help' },
+  { value: 'jobs', label: '💼 Jobs / Networking' },
+  { value: 'family', label: '🏠 Family / Home' },
+  { value: 'antisemitism', label: '🛡️ Safety / Hate Incident' },
+  { value: 'other', label: '💬 Other Help' }
 ];
 
 export default function CreateChalkboardModal({ open, onOpenChange, currentUser, onPostCreated, defaultBoard }) {

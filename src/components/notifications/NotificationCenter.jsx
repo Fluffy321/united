@@ -9,6 +9,7 @@ import { getNotificationRoute } from '@/lib/notificationRoute';
 
 const TYPE_CONFIG = {
   new_message:          { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600',       label: 'Message' },
+  marketplace_message:  { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600',       label: 'Message' },
   comment_reply:        { icon: MessageCircle, tone: 'bg-violet-50 text-violet-600',   label: 'Reply' },
   post_commented:       { icon: MessageCircle, tone: 'bg-violet-50 text-violet-600',   label: 'Comment' },
   user_mentioned:       { icon: AtSign,        tone: 'bg-indigo-50 text-indigo-600',   label: 'Mention' },

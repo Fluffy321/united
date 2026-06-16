@@ -21,7 +21,6 @@ import {
   Search,
   Shield,
   Smartphone,
-  Sparkles,
   Trash2,
   UserRound,
   Users,
@@ -732,15 +731,15 @@ export default function Settings() {
 
               <SettingsCard>
                 <Link
-                  to="/SupportJUnited"
+                  to="/MitzvahCircle"
                   className="flex items-center gap-3 py-3.5 text-slate-700 transition hover:text-slate-900"
                 >
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-50">
                     <Heart className="h-4 w-4 text-rose-500" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13.5px] font-semibold text-slate-900">Support JUnited</p>
-                    <p className="mt-0.5 text-[12px] leading-4 text-slate-500">Help us keep building community tools.</p>
+                    <p className="text-[13.5px] font-semibold text-slate-900">Mitzvah Circle</p>
+                    <p className="mt-0.5 text-[12px] leading-4 text-slate-500">Find ways to help or post a local need.</p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-slate-300" />
                 </Link>
@@ -759,8 +758,6 @@ export default function Settings() {
                       { to: '/AdminModerationQueue',   icon: Flag,        label: 'Moderation Queue',         color: 'text-rose-500' },
                       { to: '/AdminAnalyticsDashboard', icon: Shield,     label: 'Analytics Dashboard',      color: 'text-blue-500' },
                       { to: '/AdminFeedbackInbox',      icon: Inbox,      label: 'Feedback Inbox',           color: 'text-violet-500' },
-                      { to: '/AdminiOSReadiness',       icon: Smartphone, label: 'iOS App Store Readiness',  color: 'text-slate-500' },
-                      { to: '/FutureFeatures',          icon: Sparkles,   label: 'Future Features',          color: 'text-amber-500' },
                     ].map(({ to, icon: Icon, label, color }) => (
                       <Link
                         key={to}

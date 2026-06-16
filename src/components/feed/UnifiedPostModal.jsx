@@ -1,199 +1,291 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Loader2, MapPin, Check, Bold, Italic, List, MessageCircle, HelpCircle, Calendar, Bell, BarChart2, Plus, Trash2, Image, Send, Sparkles } from 'lucide-react';
-import { LOCAL_NETWORKS } from '@/lib/localNetworks';
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertTriangle,
+  BarChart2,
+  Bell,
+  Calendar,
+  ChevronDown,
+  Globe2,
+  HeartHandshake,
+  HelpCircle,
+  Image,
+  Loader2,
+  MapPin,
+  MessageCircle,
+  Plus,
+  Send,
+  ShoppingBag,
+  Trash2,
+  X,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { dataService, notificationsService, checkRateLimit, RateLimitError } from '@/services';
+import postsService from '@/services/postsService';
+import { ACTIVITY_KIND } from '@/lib/productInfrastructure';
 import { toast } from 'sonner';
 
-const PLACEHOLDERS = {
-  feed: [
-    'Share something happening near you...',
-    'Ask the community a question...',
-    'What\'s going on today?',
-    'Need something or planning something?'
-  ],
-  help: [
-    'What do you need help with today?',
-    'Ask your community something...',
-    'Need advice or support?',
-    'What\'s going on?'
-  ]
-};
+const POST_TYPES = [
+  { value: 'post', label: 'Post', icon: MessageCircle, tone: 'from-blue-500 to-cyan-500', soft: 'bg-blue-50 text-blue-700', placeholder: "What's happening in the Five Towns?" },
+  { value: 'ask', label: 'Ask', icon: HelpCircle, tone: 'from-violet-500 to-fuchsia-500', soft: 'bg-violet-50 text-violet-700', placeholder: 'Ask neighbors for a rec, ride, host, game, or advice...' },
+  { value: 'event', label: 'Event', icon: Calendar, tone: 'from-orange-500 to-amber-500', soft: 'bg-orange-50 text-orange-700', placeholder: 'Tell people what is happening and why they should come...' },
+  { value: 'alert', label: 'Alert', icon: Bell, tone: 'from-red-500 to-rose-500', soft: 'bg-red-50 text-red-700', placeholder: 'Share something people should know before they head out...' },
+  { value: 'poll', label: 'Poll', icon: BarChart2, tone: 'from-emerald-500 to-teal-500', soft: 'bg-emerald-50 text-emerald-700', placeholder: 'Ask the Five Towns to choose...' },
+  { value: 'help', label: 'Need Help', icon: HeartHandshake, tone: 'from-rose-500 to-pink-500', soft: 'bg-rose-50 text-rose-700', placeholder: 'What do you need help with right now?' },
+  { value: 'marketplace', label: 'Sell / Give', icon: ShoppingBag, tone: 'from-teal-500 to-sky-500', soft: 'bg-teal-50 text-teal-700', placeholder: 'What are you selling, giving, or looking for?' },
+];
 
 const HELP_CATEGORIES = [
-  { value: 'advice', label: 'Advice', bgColor: '#E8F1FF', textColor: '#1E40AF', selectedBg: '#BFDBFE', emoji: '💡' },
-  { value: 'lonely', label: 'Lonely', bgColor: '#F1E6FF', textColor: '#7C3AED', selectedBg: '#DDD6FE', emoji: '🤝' },
-  { value: 'school', label: 'School', bgColor: '#FFF6D6', textColor: '#B45309', selectedBg: '#FDE68A', emoji: '📚' },
-  { value: 'jobs', label: 'Jobs', bgColor: '#E6F7EC', textColor: '#15803D', selectedBg: '#BBF7D0', emoji: '💼' },
-  { value: 'family', label: 'Family', bgColor: '#FFEBD6', textColor: '#C2410C', selectedBg: '#FED7AA', emoji: '👨‍👩‍👧‍👦' },
-  { value: 'antisemitism', label: 'Antisemitism', bgColor: '#FFE3E3', textColor: '#991B1B', selectedBg: '#FECACA', emoji: '🛡️' },
-  { value: 'other', label: 'Other', bgColor: '#F2F2F2', textColor: '#374151', selectedBg: '#E5E7EB', emoji: '💬' }
+  { value: 'advice', label: 'Advice' },
+  { value: 'support', label: 'Support' },
+  { value: 'school', label: 'School' },
+  { value: 'jobs', label: 'Jobs' },
+  { value: 'family', label: 'Family' },
+  { value: 'recommendation', label: 'Local rec' },
+  { value: 'safety', label: 'Safety' },
+  { value: 'other', label: 'Other' },
 ];
 
-const FEED_SUBTYPES = [
-  { value: 'discussion', label: 'Discussion', icon: MessageCircle, active: 'border-blue-200 bg-blue-600 text-white shadow-blue-200', inactive: 'border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50' },
-  { value: 'question',   label: 'Question',   icon: HelpCircle,    active: 'border-amber-200 bg-amber-500 text-white shadow-amber-200', inactive: 'border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:bg-amber-50' },
-  { value: 'event',      label: 'Event',      icon: Calendar,      active: 'border-emerald-200 bg-emerald-600 text-white shadow-emerald-200', inactive: 'border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:bg-emerald-50' },
-  { value: 'alert',      label: 'Alert',      icon: Bell,          active: 'border-red-200 bg-red-500 text-white shadow-red-200', inactive: 'border-slate-200 bg-white text-slate-700 hover:border-red-300 hover:bg-red-50' },
-  { value: 'poll',       label: 'Poll',       icon: BarChart2,     active: 'border-violet-200 bg-violet-600 text-white shadow-violet-200', inactive: 'border-slate-200 bg-white text-slate-700 hover:border-violet-300 hover:bg-violet-50' },
+const MARKET_CATEGORIES = [
+  'Furniture',
+  'Baby / kids',
+  'Clothing',
+  'Judaica',
+  'Books',
+  'Food',
+  'Services',
+  'Other',
 ];
 
-export default function UnifiedPostModal({ open, onOpenChange, currentUser, postType = 'feed', promptId = null, promptText = null, initialSubtype = null, initialBody = '', initialCommunityId = null, userCommunities = [] }) {
-  const userInitials = (currentUser?.display_name || currentUser?.full_name || '?').charAt(0).toUpperCase();
+const URGENCY_OPTIONS = [
+  { value: 'flexible', label: 'Flexible', className: 'border-slate-200 bg-slate-50 text-slate-700' },
+  { value: 'today', label: 'Today', className: 'border-orange-200 bg-orange-50 text-orange-700' },
+  { value: 'urgent', label: 'Urgent', className: 'border-red-200 bg-red-50 text-red-700' },
+];
+
+const CITY_OPTIONS = ['Five Towns', 'Lawrence', 'Cedarhurst', 'Woodmere', 'Hewlett', 'Inwood'];
+
+const typeFromLegacyProps = (postType, initialSubtype) => {
+  if (postType === 'help') return 'help';
+  if (postType === 'event' || initialSubtype === 'event') return 'event';
+  if (postType === 'job' || postType === 'housing' || postType === 'food' || initialSubtype === 'marketplace') return 'marketplace';
+  if (initialSubtype === 'question') return 'ask';
+  if (initialSubtype === 'alert') return 'alert';
+  if (initialSubtype === 'poll') return 'poll';
+  return 'post';
+};
+
+const titleFromBody = (value) => {
+  const firstLine = (value || '').split('\n').find(Boolean) || '';
+  return firstLine.trim().slice(0, 80);
+};
+
+export default function UnifiedPostModal({
+  open,
+  onOpenChange,
+  currentUser,
+  postType = 'feed',
+  promptId = null,
+  promptText = null,
+  initialSubtype = null,
+  initialBody = '',
+  initialCommunityId = null,
+  userCommunities = [],
+}) {
+  const textareaRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [postKind, setPostKind] = useState(typeFromLegacyProps(postType, initialSubtype));
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [location, setLocation] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [selectedCity, setSelectedCity] = useState('Five Towns');
+  const [selectedCommunityId, setSelectedCommunityId] = useState(initialCommunityId || '');
+  const [destinationMode, setDestinationMode] = useState(initialCommunityId ? 'community' : 'five-towns');
+  const [showLocation, setShowLocation] = useState(false);
   const [category, setCategory] = useState('');
-  const [postSubtype, setPostSubtype] = useState('discussion');
+  const [urgency, setUrgency] = useState('today');
+  const [neededBy, setNeededBy] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [eventTime, setEventTime] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [placeholder, setPlaceholder] = useState('');
-  const [attachedFiles, setAttachedFiles] = useState([]);
-  const [caption, setCaption] = useState('');
-  const [uploadingImages, setUploadingImages] = useState(false);
-  const [imageUrls, setImageUrls] = useState([]);
+  const [marketPrice, setMarketPrice] = useState('');
+  const [marketCategory, setMarketCategory] = useState('');
+  const [pickupOption, setPickupOption] = useState('pickup');
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [pollOptions, setPollOptions] = useState(['', '']);
-  const [selectedCommunityId, setSelectedCommunityId] = useState(initialCommunityId || '');
-  const textareaRef = useRef(null);
-  const isPoll = postSubtype === 'poll';
-  const activeSubtype = FEED_SUBTYPES.find((item) => item.value === postSubtype);
+  const [caption, setCaption] = useState('');
+  const [starterPlaceholder, setStarterPlaceholder] = useState('');
+  const [imageUrls, setImageUrls] = useState([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const selectedType = useMemo(
+    () => POST_TYPES.find((item) => item.value === postKind) || POST_TYPES[0],
+    [postKind]
+  );
+  const selectedCommunity = userCommunities.find((community) => community.id === selectedCommunityId);
+  const userInitials = (currentUser?.display_name || currentUser?.full_name || 'J').charAt(0).toUpperCase();
+  const isPromptReply = Boolean(promptId);
+  const needsUrgency = postKind === 'help' || postKind === 'alert';
+  const canPost = body.trim().length > 0 || title.trim().length > 0;
+  const submitDisabled = isSubmitting || !canPost || (postKind === 'poll' && pollOptions.filter((option) => option.trim()).length < 2);
 
   useEffect(() => {
-    if (open) {
-      const placeholderList = postType === 'help' ? PLACEHOLDERS.help : PLACEHOLDERS.feed;
-      const randomPlaceholder = placeholderList[Math.floor(Math.random() * placeholderList.length)];
-      setPlaceholder(initialBody || randomPlaceholder);
-      if (initialSubtype) setPostSubtype(initialSubtype);
-      setBody('');
-      setSelectedCommunityId(initialCommunityId || '');
-      // Default city to user's primary network
-      setSelectedCity(currentUser?.cityPreset || 'Five Towns');
-    }
+    if (!open) return;
+    const nextType = typeFromLegacyProps(postType, initialSubtype);
+    setPostKind(nextType);
+    setTitle('');
+    setBody('');
+    setStarterPlaceholder(initialBody || '');
+    setLocation('');
+    setSelectedCity(currentUser?.cityPreset || 'Five Towns');
+    setSelectedCommunityId(initialCommunityId || '');
+    setDestinationMode(initialCommunityId ? 'community' : 'five-towns');
+    setShowLocation(false);
+    setCategory('');
+    setUrgency(nextType === 'alert' ? 'urgent' : 'today');
+    setNeededBy('');
+    setEventDate('');
+    setEventTime('');
+    setMarketPrice('');
+    setMarketCategory('');
+    setPickupOption('pickup');
+    setIsAnonymous(false);
+    setPollOptions(['', '']);
+    setCaption('');
+    setImageUrls([]);
+    setTimeout(() => textareaRef.current?.focus(), 120);
   }, [open, postType, initialSubtype, initialBody, initialCommunityId, currentUser]);
 
-  const isPromptReply = !!promptId;
-  const isHelp = postType === 'help';
-  const isEvent = postType === 'event';
-  const requiresTitle = isEvent || postType === 'job' || postType === 'housing';
-  const categories = HELP_CATEGORIES || [];
-
-  const applyFormatting = (format) => {
-    if (!textareaRef.current) return;
+  useEffect(() => {
     const textarea = textareaRef.current;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = body.substring(start, end);
-    if (!selectedText) return;
-    let formattedText;
-    switch (format) {
-      case 'bold': formattedText = `**${selectedText}**`; break;
-      case 'italic': formattedText = `*${selectedText}*`; break;
-      case 'bullet': formattedText = selectedText.split('\n').map(line => `• ${line}`).join('\n'); break;
-      default: return;
-    }
-    const newBody = body.substring(0, start) + formattedText + body.substring(end);
-    setBody(newBody);
-    setTimeout(() => {
-      textarea.focus();
-      textarea.selectionStart = textarea.selectionEnd = start + formattedText.length;
-    }, 0);
+    if (!textarea || !open) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 84), 172)}px`;
+  }, [body, open, postKind]);
+
+  const getSubmitLabel = () => {
+    if (!canPost) return 'Write something first';
+    if (postKind === 'poll' && pollOptions.filter((option) => option.trim()).length < 2) return 'Add poll choices';
+    if (postKind === 'help') return 'Ask for Help';
+    if (postKind === 'event') return 'Share Event';
+    if (postKind === 'poll') return 'Post Poll';
+    if (postKind === 'marketplace') return 'Post Listing';
+    if (postKind === 'alert') return 'Send Alert';
+    if (postKind === 'ask') return 'Ask Community';
+    return 'Share Post';
   };
 
-  const getModalTitle = () => {
-    if (isPromptReply) return 'Reply to Prompt';
-    if (isHelp) return 'Need Help?';
-    if (isEvent) return 'Create Event';
-    if (postType === 'job') return 'Post a Job';
-    if (postType === 'housing') return 'Post Housing';
-    if (postType === 'food') return 'Food Post';
-    if (postType === 'prompt') return 'Ask the Community';
-    return 'What\'s happening?';
-  };
-
-  const getPlaceholderBySubtype = () => {
-    if (placeholder) return placeholder;
-    if (postSubtype === 'question') return 'Ask the community something...';
-    if (postSubtype === 'event') return 'Tell people about this event...';
-    if (postSubtype === 'alert') return 'Share an important update...';
-    if (postSubtype === 'poll') return 'What should people vote on?';
-    return 'Share something with your community...';
-  };
-
-  const getBoardFromType = () => {
-    if (postType === 'event') return 'events';
-    if (postType === 'job') return 'jobs';
-    if (postType === 'housing') return 'housing';
-    if (postType === 'food') return 'food';
-    if (postType === 'help') return 'help';
-    if (postType === 'prompt') return 'feed';
+  const getBoard = () => {
+    if (postKind === 'event') return 'events';
+    if (postKind === 'help') return 'help';
+    if (postKind === 'marketplace') return 'marketplace';
     return 'feed';
   };
 
+  const getUnifiedType = () => {
+    if (isPromptReply) return 'prompt_reply';
+    if (postKind === 'post') return 'feed';
+    if (postKind === 'ask') return 'question';
+    if (postKind === 'marketplace') return 'marketplace';
+    return postKind;
+  };
+
+  const getActivityKind = () => {
+    if (postKind === 'marketplace') return ACTIVITY_KIND.MARKETPLACE_LISTING;
+    if (postKind === 'help') return ACTIVITY_KIND.MITZVAH_REQUEST;
+    if (selectedCommunityId) return ACTIVITY_KIND.COMMUNITY_POST;
+    return ACTIVITY_KIND.FEED_POST;
+  };
+
+  const resetAfterPost = () => {
+    setTitle('');
+    setBody('');
+    setStarterPlaceholder('');
+    setLocation('');
+    setSelectedCommunityId('');
+    setDestinationMode('five-towns');
+    setShowLocation(false);
+    setCategory('');
+    setNeededBy('');
+    setEventDate('');
+    setEventTime('');
+    setMarketPrice('');
+    setMarketCategory('');
+    setPickupOption('pickup');
+    setIsAnonymous(false);
+    setPollOptions(['', '']);
+    setCaption('');
+    setImageUrls([]);
+  };
+
   const handleSubmit = async () => {
-    if (!body.trim()) { toast.error('Please write something'); return; }
-    if (requiresTitle && !title.trim()) { toast.error('Title is required'); return; }
-    if (isHelp && !category) { toast.error('Please select a category'); return; }
+    const trimmedBody = body.trim();
+    const trimmedTitle = title.trim() || titleFromBody(trimmedBody);
+    if (!trimmedBody && !trimmedTitle) {
+      toast.error('Write something first');
+      return;
+    }
+
+    const validPollOptions = pollOptions.map((option) => option.trim()).filter(Boolean);
+    if (postKind === 'poll' && validPollOptions.length < 2) {
+      toast.error('Add at least two poll options');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       await checkRateLimit('create_post');
 
-      const isFeedPost = !isPromptReply && postType === 'feed';
-      if (isPoll) {
-        const validOptions = pollOptions.filter(o => o.trim());
-        if (validOptions.length < 2) { toast.error('Add at least 2 poll options'); setIsSubmitting(false); return; }
-      }
-      const selectedCommunity = userCommunities.find(c => c.id === selectedCommunityId);
       const postData = {
-        user_id: currentUser.id,
-        user_name: isAnonymous ? 'Anonymous' : currentUser.display_name,
-        user_age_range: currentUser.age_range,
-        type: isPromptReply ? 'prompt_reply' : postType,
-        board: getBoardFromType(),
-        title: title.trim() || undefined,
-        body: body.trim(),
-        location_text: location.trim() || undefined,
-        is_anonymous: isAnonymous,
-        category: category || undefined,
+        user_id: currentUser?.id || 'local-demo-user',
+        user_name: isAnonymous ? 'Anonymous' : currentUser?.display_name || currentUser?.full_name || 'Local member',
+        user_age_range: currentUser?.age_range,
+        user_avatar_url: currentUser?.avatar_url || currentUser?.profile_image_url || undefined,
+        activity_kind: getActivityKind(),
+        type: getUnifiedType(),
+        board: getBoard(),
+        title: trimmedTitle || undefined,
+        body: trimmedBody || trimmedTitle,
+        content: trimmedBody || trimmedTitle,
+        location_text: location.trim() || selectedCity,
         city: selectedCity || currentUser?.cityPreset || 'Five Towns',
-        event_date: eventDate || undefined,
-        event_time: eventTime || undefined,
+        is_anonymous: isAnonymous,
+        category: postKind === 'help' ? category || undefined : undefined,
+        urgency: needsUrgency ? urgency : undefined,
+        needed_by: postKind === 'help' ? neededBy || undefined : undefined,
+        request_kind: postKind === 'help' ? category || 'community_help' : undefined,
+        event_date: postKind === 'event' ? eventDate || undefined : undefined,
+        event_time: postKind === 'event' ? eventTime || undefined : undefined,
+        poll_options: postKind === 'poll' ? validPollOptions : undefined,
+        marketplace_category: postKind === 'marketplace' ? marketCategory || undefined : undefined,
+        price: postKind === 'marketplace' ? marketPrice.trim() || undefined : undefined,
+        pickup_option: postKind === 'marketplace' ? pickupOption : undefined,
         prompt_id: promptId || undefined,
         prompt_text: promptText || undefined,
-        image_url: imageUrls[0] || attachedFiles[0]?.url || undefined,
-        image_urls: imageUrls.length > 0 ? imageUrls : undefined,
+        image_url: imageUrls[0] || undefined,
+        image_urls: imageUrls.length ? imageUrls : undefined,
         caption: caption.trim() || undefined,
-        attachment_urls: attachedFiles.map(f => f.url),
-        post_subtype: isFeedPost ? postSubtype : undefined,
-        poll_options: isPoll ? pollOptions.filter(o => o.trim()) : undefined,
+        post_subtype: postKind,
         community_id: selectedCommunityId || undefined,
         community_name: selectedCommunity?.name || undefined,
+        replies_enabled: true,
+        reactions_enabled: true,
       };
 
-      const created = await dataService.entities.UnifiedPost.create(postData);
+      const created = await postsService.createPost(postData);
 
       if (selectedCommunity?.id) {
         const recipientIds = selectedCommunity.member_ids || selectedCommunity.memberIds || [];
         recipientIds
-          .filter((memberId) => memberId && memberId !== currentUser.id)
+          .filter((memberId) => memberId && memberId !== currentUser?.id)
           .slice(0, 25)
           .forEach((memberId) => {
             notificationsService.notifyCommunityActivity({
               userId: memberId,
-              actorId: currentUser.id,
-              actorName: currentUser.display_name || currentUser.full_name,
+              actorId: currentUser?.id,
+              actorName: currentUser?.display_name || currentUser?.full_name,
               communityId: selectedCommunity.id,
               communityName: selectedCommunity.name,
               postId: created.id,
@@ -201,292 +293,378 @@ export default function UnifiedPostModal({ open, onOpenChange, currentUser, post
           });
       }
 
-      // Fire-and-forget AI moderation scan (non-blocking)
-      if (created?.id && body.trim().length > 10) {
+      if (created?.id && (trimmedBody || trimmedTitle).length > 10) {
         dataService.functions.invoke('moderateContent', {
-          text: [title, body].filter(Boolean).join(' '),
+          text: [trimmedTitle, trimmedBody].filter(Boolean).join(' '),
           content_id: created.id,
           content_type: 'unified_post',
-          author_id: currentUser.id,
+          author_id: currentUser?.id,
         }).catch(() => {});
       }
 
       if (promptId) {
         const prompt = await dataService.entities.DailyFeedPrompt.filter({ id: promptId });
         if (prompt[0]) {
-          await dataService.entities.DailyFeedPrompt.update(promptId, { replies_count: (prompt[0].replies_count || 0) + 1 });
+          await dataService.entities.DailyFeedPrompt.update(promptId, {
+            replies_count: (prompt[0].replies_count || 0) + 1,
+          });
         }
       }
 
-      toast.success('Posted!');
+      toast.success('Posted');
       onOpenChange(false);
-      setTitle(''); setBody(''); setLocation(''); setIsAnonymous(false);
-      setCategory(''); setPostSubtype('discussion'); setEventDate('');
-      setEventTime(''); setAttachedFiles([]); setCaption(''); setImageUrls([]);
-      setPollOptions(['', '']); setSelectedCommunityId('');
-      setSelectedCity(currentUser?.cityPreset || 'Five Towns');
+      resetAfterPost();
     } catch (error) {
-      if (error instanceof RateLimitError) { toast.error(error.message); return; }
-      toast.error('Failed to post');
+      if (error instanceof RateLimitError) toast.error(error.message);
+      else toast.error('Failed to post');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleImagePick = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploadingImages(true);
+    try {
+      const { uploadImage } = await import('@/lib/imageUpload');
+      const { url } = await uploadImage(file);
+      setImageUrls((current) => [...current, url].slice(0, 3));
+    } catch {
+      toast.error('Could not upload image');
+    } finally {
+      setUploadingImages(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleComposerKeyDown = (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+      event.preventDefault();
+      if (!submitDisabled) handleSubmit();
+    }
+  };
+
+  const renderTypeSpecificFields = () => {
+    if (postKind === 'event') {
+      return (
+        <div className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
+          <p className="mb-2 text-xs font-black text-slate-500">Event details</p>
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Event name" className="mb-2 h-10 rounded-xl border-slate-200 bg-slate-50 font-semibold" />
+          <div className="grid grid-cols-2 gap-2">
+            <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="h-10 rounded-xl border-slate-200 bg-white font-semibold" />
+            <Input type="time" value={eventTime} onChange={(e) => setEventTime(e.target.value)} className="h-10 rounded-xl border-slate-200 bg-white font-semibold" />
+          </div>
+          <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3">
+            <MapPin className="h-4 w-4 text-slate-500" />
+            <input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Location optional" className="h-10 flex-1 bg-transparent text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400" />
+          </div>
+        </div>
+      );
+    }
+
+    if (postKind === 'poll') {
+      return (
+        <div className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
+          <p className="mb-2 text-xs font-black text-slate-500">Poll choices</p>
+          <div className="space-y-2">
+            {pollOptions.map((option, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Input
+                  value={option}
+                  onChange={(event) => setPollOptions((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))}
+                  placeholder={`Choice ${index + 1}`}
+                  maxLength={80}
+                  className="h-10 rounded-xl border-slate-200 bg-white font-semibold"
+                />
+                {pollOptions.length > 2 && (
+                  <button type="button" onClick={() => setPollOptions((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="rounded-full p-2 text-slate-400 hover:bg-red-50 hover:text-red-500">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          {pollOptions.length < 6 && (
+            <button type="button" onClick={() => setPollOptions((current) => [...current, ''])} className="mt-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-700 active:scale-95">
+              <Plus className="h-3.5 w-3.5" /> Add choice
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    if (postKind === 'help') {
+      return (
+        <div className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
+          <p className="mb-2 text-xs font-black text-slate-500">Need details</p>
+          <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
+            {URGENCY_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setUrgency(option.value)}
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-black transition active:scale-95 ${urgency === option.value ? option.className : 'border-slate-200 bg-white text-slate-500'}`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Input value={neededBy} onChange={(e) => setNeededBy(e.target.value)} placeholder="Needed by" className="h-10 rounded-xl border-slate-200 bg-slate-50 font-semibold" />
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-black text-slate-700 outline-none">
+              <option value="">Category optional</option>
+              {HELP_CATEGORIES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsAnonymous((value) => !value)}
+            className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition active:scale-[0.99]"
+          >
+            <span>Post anonymously</span>
+            <span className={`rounded-full px-2.5 py-1 text-[11px] font-black ${isAnonymous ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-500'}`}>
+              {isAnonymous ? 'On' : 'Off'}
+            </span>
+          </button>
+        </div>
+      );
+    }
+
+    if (postKind === 'marketplace') {
+      return (
+        <div className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
+          <p className="mb-2 text-xs font-black text-slate-500">Listing details</p>
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What is it?" className="mb-2 h-10 rounded-xl border-slate-200 bg-slate-50 font-semibold" />
+          <div className="grid grid-cols-2 gap-2">
+            <Input value={marketPrice} onChange={(e) => setMarketPrice(e.target.value)} placeholder="Price or Free" className="h-10 rounded-xl border-slate-200 bg-slate-50 font-semibold" />
+            <select value={marketCategory} onChange={(e) => setMarketCategory(e.target.value)} className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-black text-slate-700 outline-none">
+              <option value="">Category</option>
+              {MARKET_CATEGORIES.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+          </div>
+          <div className="mt-2 flex gap-2">
+            {['pickup', 'delivery', 'either'].map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setPickupOption(option)}
+                className={`flex-1 rounded-xl border px-2 py-2 text-xs font-black capitalize transition active:scale-95 ${pickupOption === option ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-600'}`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (postKind === 'alert') {
+      return (
+        <div className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
+          <p className="mb-2 text-xs font-black text-slate-500">Alert level</p>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {URGENCY_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setUrgency(option.value)}
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-black transition active:scale-95 ${urgency === option.value ? option.className : 'border-slate-200 bg-white text-slate-500'}`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  const SelectedTypeIcon = selectedType.icon;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="left-0 top-0 h-[100dvh] w-full max-w-none translate-x-0 translate-y-0 border-0 bg-white p-0 flex flex-col rounded-none overflow-hidden shadow-2xl sm:left-[50%] sm:top-[50%] sm:h-auto sm:max-h-[92dvh] sm:w-[calc(100%-20px)] sm:max-w-[520px] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-[26px]">
-        <DialogTitle className="sr-only">{getModalTitle()}</DialogTitle>
-        {/* Fixed header */}
-        <div className="flex-shrink-0 border-b border-slate-200 bg-white px-4 pb-3 pt-4">
-          <div className="flex items-start gap-3 pr-8">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
-              <Sparkles className="h-4 w-4" />
+      <DialogContent className="bottom-0 left-0 top-auto flex max-h-[90dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-t-[30px] border-0 bg-white p-0 shadow-2xl sm:bottom-auto sm:left-[50%] sm:top-[50%] sm:max-h-[82dvh] sm:w-[calc(100%-28px)] sm:max-w-[420px] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-[30px] [&>button]:hidden">
+        <DialogTitle className="sr-only">Create post</DialogTitle>
+
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className={`flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br ${selectedType.tone} text-white shadow-lg shadow-blue-900/10`}>
+              <SelectedTypeIcon className="h-[18px] w-[18px]" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-xl font-black leading-tight text-slate-950">{getModalTitle()}</h2>
-              <p className="mt-0.5 text-[12px] font-semibold leading-4 text-slate-500">
-                Write it, choose where it goes, post.
-              </p>
+              <h2 className="truncate text-lg font-black text-slate-950">Start a {selectedType.label.toLowerCase()}</h2>
+              <p className="truncate text-xs font-bold text-slate-500">Keep it local. Keep it useful.</p>
             </div>
           </div>
+          <button type="button" onClick={() => onOpenChange(false)} aria-label="Close composer" className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 active:scale-95">
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto bg-[#F7F9FC] px-3 py-3 space-y-3">
-          {requiresTitle && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-              <Label className="text-[12px] font-black text-slate-800">Title</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter title..." className="mt-1 h-10 rounded-xl border-slate-300 font-semibold" />
-            </div>
-          )}
-
-          {/* Main composer */}
-          <div className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
-            <div className="mb-2 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-emerald-600 flex items-center justify-center text-white font-black text-sm flex-shrink-0 overflow-hidden">
-                {currentUser?.avatar_url
-                  ? <img src={currentUser.avatar_url} alt="" className="w-full h-full object-cover" />
-                  : userInitials
-                }
+        <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50/80 to-white px-4 py-4">
+          <div className="rounded-[24px] border border-slate-200 bg-white p-3 shadow-sm">
+            <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-600 to-emerald-500 text-xs font-black text-white">
+                {currentUser?.avatar_url ? <img src={currentUser.avatar_url} alt="" className="h-full w-full object-cover" /> : userInitials}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-black text-slate-950">{isAnonymous ? 'Posting anonymously' : currentUser?.display_name || currentUser?.full_name || 'Local demo'}</p>
-                <p className="truncate text-[12px] font-semibold text-slate-500">
-                  {activeSubtype?.label || 'Post'} · {selectedCommunityId ? userCommunities.find(c => c.id === selectedCommunityId)?.name : 'General Feed'} · {location || selectedCity || currentUser?.cityPreset || 'Five Towns'}
-                </p>
+                <p className="truncate text-sm font-black text-slate-900">{isAnonymous ? 'Anonymous' : currentUser?.display_name || currentUser?.full_name || 'Local member'}</p>
+                <p className="truncate text-xs font-bold text-slate-400">{selectedCommunity?.name || (destinationMode === 'feed' ? 'Feed' : selectedCity)}</p>
+              </div>
+              <div className="relative shrink-0">
+                <SelectedTypeIcon className={`pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${selectedType.soft.split(' ').slice(1).join(' ')}`} />
+                <select
+                  value={postKind}
+                  onChange={(event) => setPostKind(event.target.value)}
+                  aria-label="Post type"
+                  className={`h-9 appearance-none rounded-full border border-slate-200 py-0 pl-8 pr-8 text-xs font-black outline-none transition focus:border-blue-300 focus:bg-white focus:ring-2 focus:ring-blue-100 ${selectedType.soft}`}
+                >
+                  {POST_TYPES.map((item) => (
+                    <option key={item.value} value={item.value}>{item.label}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
               </div>
             </div>
-            <div className="flex flex-col">
-              <Textarea
-                ref={textareaRef}
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder={getPlaceholderBySubtype() || "What's going on?"}
-                className="min-h-[170px] resize-none rounded-[20px] rounded-b-none border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] font-medium leading-6 text-slate-950 focus:ring-0 focus:border-blue-400 focus:bg-white placeholder:text-slate-500 transition-all"
-                maxLength={1000}
-              />
-              {/* Formatting toolbar + char counter */}
-              <div className="flex items-center justify-between rounded-b-[20px] border border-t-0 border-slate-200 bg-slate-50 px-3 py-2">
-                <div className="flex items-center gap-1">
-                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormatting('bold'); }}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
-                    title="Bold (select text first)">
-                    <Bold className="w-3.5 h-3.5" />
-                  </button>
-                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormatting('italic'); }}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
-                    title="Italic (select text first)">
-                    <Italic className="w-3.5 h-3.5" />
-                  </button>
-                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormatting('bullet'); }}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
-                    title="Bullet list (select lines first)">
-                    <List className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <span className={`text-[11px] font-black tabular-nums ${
-                  body.length > 900 ? 'text-red-500' : body.length > 700 ? 'text-amber-500' : 'text-slate-400'
-                }`}>{body.length}/1000</span>
-              </div>
+
+            <Textarea
+              ref={textareaRef}
+              value={body}
+              onChange={(event) => setBody(event.target.value)}
+              onKeyDown={handleComposerKeyDown}
+              aria-label="Write post"
+              placeholder={starterPlaceholder || selectedType.placeholder}
+              maxLength={1000}
+              className="mt-2 min-h-[84px] resize-none overflow-y-auto rounded-none border-0 bg-transparent px-0 py-2 text-[18px] font-semibold leading-7 text-slate-950 shadow-none outline-none placeholder:text-slate-400 focus-visible:ring-0"
+            />
+            <div className="flex items-center justify-between border-t border-slate-100 pt-2">
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-2 text-xs font-black text-blue-600 transition hover:bg-blue-50 hover:text-blue-700 active:scale-95">
+                {uploadingImages ? <Loader2 className="h-4 w-4 animate-spin" /> : <Image className="h-4 w-4" />}
+                Photo
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImagePick} />
+              <span className={`text-xs font-black tabular-nums ${body.length > 900 ? 'text-red-500' : 'text-slate-300'}`}>{body.length}/1000</span>
             </div>
           </div>
 
-          {!isPromptReply && postType === 'feed' && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-              <div className="grid grid-cols-2 gap-2">
-                <label>
-                  <span className="mb-1 block text-[11px] font-black uppercase tracking-wide text-slate-400">Type</span>
-                  <select
-                    value={postSubtype}
-                    onChange={(event) => setPostSubtype(event.target.value)}
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-[13px] font-black text-slate-800 outline-none focus:border-blue-400"
-                  >
-                    {FEED_SUBTYPES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-                  </select>
-                </label>
-                <label>
-                  <span className="mb-1 block text-[11px] font-black uppercase tracking-wide text-slate-400">Post to</span>
-                  <select
-                    value={selectedCommunityId}
-                    onChange={(event) => setSelectedCommunityId(event.target.value)}
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-[13px] font-black text-slate-800 outline-none focus:border-blue-400"
-                  >
-                    <option value="">General Feed</option>
-                    {userCommunities.map((community) => (
-                      <option key={community.id} value={community.id}>{community.name}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+          <div className="mt-3 space-y-3">
+            {renderTypeSpecificFields()}
 
-              <details className="mt-2 group">
-                <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-[12px] font-black text-slate-600 transition hover:bg-slate-100">
-                  <MapPin className="h-3.5 w-3.5 text-blue-600" />
-                  {location || selectedCity || 'Add location'}
-                </summary>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                  <select
-                    value={selectedCity}
-                    onChange={(event) => setSelectedCity(event.target.value)}
-                    className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-[13px] font-bold text-slate-800 outline-none"
-                  >
-                    {LOCAL_NETWORKS.map((network) => (
-                      <option key={network.id} value={network.cityPreset}>{network.emoji} {network.shortLabel}</option>
-                    ))}
-                  </select>
-                  <input
-                    value={location}
-                    onChange={(event) => setLocation(event.target.value)}
-                    placeholder="Specific place or neighborhood"
-                    className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-[13px] font-bold text-slate-800 outline-none"
-                  />
-                </div>
-              </details>
-            </div>
-          )}
-
-          {/* Poll builder */}
-          {isPoll && (
-            <div className="space-y-2 rounded-2xl border border-violet-100 bg-white p-3 shadow-sm">
-              <p className="text-[12px] font-black uppercase tracking-wide text-violet-700">Poll Options</p>
-              {pollOptions.map((opt, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <input
-                    value={opt}
-                    onChange={e => setPollOptions(prev => prev.map((o, idx) => idx === i ? e.target.value : o))}
-                    placeholder={`Option ${i + 1}`}
-                    maxLength={80}
-                    className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[13px] font-semibold text-slate-900 focus:outline-none focus:border-violet-400 focus:bg-white transition-colors"
-                  />
-                  {pollOptions.length > 2 && (
-                    <button type="button" onClick={() => setPollOptions(prev => prev.filter((_, idx) => idx !== i))}
-                      className="w-7 h-7 flex items-center justify-center rounded-full text-red-400 hover:bg-red-50">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-              ))}
-              {pollOptions.length < 6 && (
-                <button type="button" onClick={() => setPollOptions(prev => [...prev, ''])}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold text-violet-600 bg-violet-50 border border-violet-200 hover:bg-violet-100 transition-colors">
-                  <Plus className="w-3 h-3" /> Add option
+            <div className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-black uppercase tracking-wide text-slate-400">Where it goes</p>
+                <button
+                  type="button"
+                  onClick={() => setShowLocation((current) => !current)}
+                  className={`inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-[11px] font-black transition active:scale-95 ${showLocation ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                >
+                  <MapPin className="h-3.5 w-3.5" />
+                  {location || selectedCity}
                 </button>
+              </div>
+
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDestinationMode('feed');
+                    setSelectedCommunityId('');
+                  }}
+                  className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border px-2 text-xs font-black transition active:scale-95 ${destinationMode === 'feed' ? 'border-slate-950 bg-slate-950 text-white shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600'}`}
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  Feed
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDestinationMode('five-towns');
+                    setSelectedCommunityId('');
+                  }}
+                  className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border px-2 text-xs font-black transition active:scale-95 ${destinationMode === 'five-towns' ? 'border-slate-950 bg-slate-950 text-white shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600'}`}
+                >
+                  <Globe2 className="h-3.5 w-3.5" />
+                  Five Towns
+                </button>
+                {userCommunities.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDestinationMode('community');
+                      setSelectedCommunityId((current) => current || userCommunities[0]?.id || '');
+                    }}
+                    className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border px-2 text-xs font-black transition active:scale-95 ${destinationMode === 'community' ? 'border-slate-950 bg-slate-950 text-white shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600'}`}
+                  >
+                    <HeartHandshake className="h-3.5 w-3.5" />
+                    Community
+                  </button>
+                )}
+              </div>
+
+              {destinationMode === 'community' && userCommunities.length > 0 && (
+                <div className="mt-2 flex gap-2 overflow-x-auto border-t border-slate-100 pt-2">
+                  {userCommunities.map((community) => (
+                    <button
+                      key={community.id}
+                      type="button"
+                      onClick={() => setSelectedCommunityId(community.id)}
+                      className={`h-8 shrink-0 rounded-full border px-3 text-[11px] font-black transition active:scale-95 ${selectedCommunityId === community.id ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600'}`}
+                    >
+                      {community.name}
+                    </button>
+                  ))}
+                </div>
               )}
-            </div>
-          )}
 
-          {/* Simple attachments */}
-          <div className="mobile-scroll-x flex gap-2 pb-1">
-            <button type="button" onClick={() => document.querySelector('input[type="file"]')?.click()}
-              className="flex h-10 shrink-0 items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 text-[13px] font-black text-slate-700 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50">
-              <Image className="h-4 w-4 text-blue-600" /> Photo
-            </button>
-          </div>
-
-          {/* Help categories */}
-          {isHelp && (
-            <div className="space-y-2">
-              <details className="group">
-                <summary className="cursor-pointer text-sm font-medium text-slate-600 hover:text-slate-900 py-2">Choose a category</summary>
-                <div className="grid grid-cols-2 gap-2 pt-2">
-                  {categories.map(cat => {
-                    const isSelected = category === cat.value;
-                    return (
-                      <button key={cat.value} type="button" onClick={() => setCategory(cat.value)}
-                        className="relative rounded-xl p-3 text-left transition-all duration-200 hover:scale-105 active:scale-95"
-                        style={{ backgroundColor: isSelected ? cat.selectedBg : cat.bgColor, color: cat.textColor, boxShadow: isSelected ? `0 0 0 2px ${cat.textColor}40` : 'none' }}>
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{cat.emoji}</span>
-                            <span className="font-medium text-sm">{cat.label}</span>
-                          </div>
-                          {isSelected && <Check className="w-4 h-4 animate-in zoom-in duration-150" strokeWidth={3} />}
-                        </div>
+              {showLocation && postKind !== 'event' && (
+                <div className="mt-2 border-t border-slate-100 pt-2">
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {CITY_OPTIONS.map((city) => (
+                      <button key={city} type="button" onClick={() => setSelectedCity(city)} className={`h-8 shrink-0 rounded-full border px-3 text-[11px] font-black transition active:scale-95 ${selectedCity === city ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600'}`}>
+                        {city}
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 rounded-xl bg-slate-50 px-3">
+                    <MapPin className="h-3.5 w-3.5 text-blue-600" />
+                    <input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Optional spot, address, or shul" className="h-9 min-w-0 flex-1 bg-transparent text-xs font-semibold text-slate-800 outline-none placeholder:text-slate-400" />
+                  </div>
                 </div>
-              </details>
-              <div className="flex items-center justify-between p-2.5 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
-                <Label className="text-sm font-medium cursor-pointer">Post anonymously</Label>
-                <Switch checked={isAnonymous} onCheckedChange={setIsAnonymous} />
-              </div>
-            </div>
-          )}
-
-          {isEvent && (
-            <details className="group">
-              <summary className="cursor-pointer text-sm font-medium text-slate-600 hover:text-slate-900 py-2">Event details</summary>
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                <div>
-                  <Label className="text-xs">Date</Label>
-                  <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="mt-1 h-8" />
-                </div>
-                <div>
-                  <Label className="text-xs">Time</Label>
-                  <Input type="time" value={eventTime} onChange={(e) => setEventTime(e.target.value)} className="mt-1 h-8" />
-                </div>
-              </div>
-            </details>
-          )}
-
-          {/* Photo upload */}
-          {(postType === 'feed' || postType === 'housing') && imageUrls.length > 0 && (
-            <div className="flex items-center gap-2">
-              {imageUrls.map((url, i) => (
-                <div key={i} className="relative group w-12 h-12">
-                  <img src={url} alt="" className="w-full h-full object-cover rounded" />
-                  <button type="button" onClick={() => setImageUrls(prev => prev.filter((_, idx) => idx !== i))}
-                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px]">✕</button>
-                </div>
-              ))}
-              {imageUrls.length > 0 && (
-                <input value={caption} onChange={e => setCaption(e.target.value)} placeholder="Caption..." maxLength={200}
-                  className="flex-1 px-2 py-1.5 text-[12px] rounded border border-slate-200 outline-none focus:border-blue-400" />
               )}
             </div>
-          )}
-          {(postType === 'feed' || postType === 'housing') && imageUrls.length < 3 && (
-            <label className="hidden">
-              <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                const file = e.target.files[0]; if (!file) return;
-                setUploadingImages(true);
-                const { uploadImage } = await import('@/lib/imageUpload');
-                const { url } = await uploadImage(file);
-                setImageUrls(prev => [...prev, url]);
-                setUploadingImages(false); e.target.value = '';
-              }} />
-            </label>
-          )}
+
+            {imageUrls.length > 0 && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                <div className="mb-2 flex gap-2">
+                  {imageUrls.map((url, index) => (
+                    <div key={url} className="relative h-14 w-14 overflow-hidden rounded-xl">
+                      <img src={url} alt="" className="h-full w-full object-cover" />
+                      <button type="button" onClick={() => setImageUrls((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <Input value={caption} onChange={(event) => setCaption(event.target.value)} placeholder="Caption optional" maxLength={200} className="h-10 rounded-xl border-slate-200 bg-slate-50 font-semibold" />
+              </div>
+            )}
+
+            {postKind === 'alert' && (
+              <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                Alerts should be real, local, and useful. They can notify people faster than a normal post.
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Fixed footer */}
-        <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3">
-          <Button onClick={handleSubmit} disabled={isSubmitting || !body.trim()}
-            className="w-full h-11 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-blue-700 to-emerald-700 hover:brightness-95 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm">
-            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : <Send className="mr-2 h-4 w-4" />}
-            {isSubmitting ? 'Posting...' : 'Post to JUnited'}
+        <div className="shrink-0 border-t border-slate-100 bg-white px-4 py-3">
+          <Button onClick={handleSubmit} disabled={submitDisabled} className={`h-12 w-full rounded-2xl bg-gradient-to-r ${selectedType.tone} text-sm font-black text-white shadow-lg shadow-blue-900/15 transition hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-80 disabled:saturate-75 disabled:shadow-sm`}>
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+            {isSubmitting ? 'Posting...' : getSubmitLabel()}
           </Button>
         </div>
       </DialogContent>

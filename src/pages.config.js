@@ -6,23 +6,21 @@
  * when first navigated to. This keeps the main bundle lean.
  *
  * THE ONLY EDITABLE VALUE: mainPage
- * This controls which page is the landing page (shown when users visit the app).
+ * This controls the authenticated app fallback/legacy redirect page.
+ * The public marketing homepage lives in src/pages/Landing.jsx and is served at /.
  * The value must match a key in the PAGES object exactly.
  *
- * NON-MVP PAGES: Groups, News, Organization, ShulPage, MyEvents, CommunityUpdates,
- * AdminSeedControl (admin-only), Events, BusinessDirectory, BusinessListing,
- * SupportJUnited, YahrzeitManager, RefuahList are intentionally excluded.
- * See FutureFeatures page (admin-only) for the full list and task prompts.
+ * ACTIVE APP PAGES: Feed, Communities, Map, Marketplace, Messages,
+ * MitzvahCircle, Profile, Settings.
+ *
+ * Old standalone feature pages are intentionally excluded from this registry.
+ * App.jsx keeps those URLs alive as redirects so beta users do not hit 404s.
  */
 import { lazy } from 'react';
 import __Layout from './Layout.jsx';
 
-const AdminModerationQueue = lazy(() => import('./pages/AdminModerationQueue'));
-const AdminSeedControl     = lazy(() => import('./pages/AdminSeedControl'));
-const Notifications        = lazy(() => import('./pages/Notifications'));
 const Communities          = lazy(() => import('./pages/Communities'));
 const Feed                 = lazy(() => import('./pages/Feed'));
-const InviteJoin           = lazy(() => import('./pages/InviteJoin'));
 const Map                  = lazy(() => import('./pages/Map'));
 const Marketplace          = lazy(() => import('./pages/Marketplace'));
 const Messages             = lazy(() => import('./pages/Messages'));
@@ -31,12 +29,8 @@ const Profile              = lazy(() => import('./pages/Profile'));
 const Settings             = lazy(() => import('./pages/Settings'));
 
 export const PAGES = {
-  AdminModerationQueue,
-  AdminSeedControl,
-  Notifications,
   Communities,
   Feed,
-  InviteJoin,
   Map,
   Marketplace,
   Messages,

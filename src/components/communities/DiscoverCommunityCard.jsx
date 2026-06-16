@@ -39,6 +39,14 @@ export default function DiscoverCommunityCard({ community, onOpen, onToggleJoin,
       : community.post_count > 0
       ? `${community.post_count}+ posts`
       : null;
+  const activeNow = Number(community.activeNow || community.active_now || 0);
+  const actionHook = /sports/i.test(community.name || '')
+    ? "Who's playing tonight?"
+    : /chesed|mitzvah/i.test(community.name || '')
+      ? 'Help needed near you'
+      : /shabbos|host/i.test(community.name || '')
+        ? 'Find a meal this week'
+        : community.dailyPrompt || community.valueHook || 'Join the next local action';
 
   const brandingSettings = (community?.settings && typeof community.settings === 'object')
     ? (community.settings.branding || {})
@@ -131,6 +139,14 @@ export default function DiscoverCommunityCard({ community, onOpen, onToggleJoin,
           {description}
         </p>
 
+        <div className="rounded-2xl border border-blue-100 bg-blue-50/70 px-2.5 py-2">
+          <p className="text-[10px] font-black uppercase tracking-wide text-blue-600">Action prompt</p>
+          <p className="mt-0.5 line-clamp-1 text-[12px] font-black text-slate-900">{actionHook}</p>
+          <p className="mt-1 text-[11px] font-bold text-blue-700">
+            {activeNow > 0 ? `${activeNow} active now` : 'Start the next move'}
+          </p>
+        </div>
+
         {/* "What's inside" feature pills */}
         {features.length > 0 && (
           <div className="flex flex-wrap gap-1">
@@ -149,7 +165,7 @@ export default function DiscoverCommunityCard({ community, onOpen, onToggleJoin,
         {activitySignal && (
           <p className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-            {activitySignal}
+            {activeNow > 0 ? `${activeNow} active now · ${activitySignal || 'live discussion'}` : activitySignal}
           </p>
         )}
       </div>

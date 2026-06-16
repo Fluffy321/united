@@ -1,6 +1,16 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
+const packageNameFromId = (id) => {
+  const marker = 'node_modules/';
+  const index = id.lastIndexOf(marker);
+  if (index === -1) return null;
+
+  const parts = id.slice(index + marker.length).split('/');
+  if (parts[0]?.startsWith('@')) return `${parts[0]}/${parts[1]}`;
+  return parts[0];
+};
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -11,20 +21,58 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Split large vendors into named chunks so they can be cached
-        // independently of app code. Each chunk gets a content-hash filename
-        // so a CDN can cache it indefinitely; only changed chunks re-download.
+        // Split large vendors into named chunks so route-only libraries do not
+        // ride along in the first shared vendor download.
         manualChunks(id) {
-          // Supabase has no React dependency — safe to split independently.
-          if (id.includes('node_modules/@supabase')) {
+          if (id.includes('/node_modules/recharts/')) {
+            return 'vendor-charts';
+          }
+
+          const pkg = packageNameFromId(id);
+          if (!pkg) return undefined;
+
+          if (pkg.startsWith('@supabase/')) {
             return 'vendor-supabase';
           }
-          // All other node_modules (React, recharts, d3, leaflet, react-leaflet,
-          // framer-motion, etc.) go into one vendor chunk. Splitting any of these
-          // into separate chunks creates cross-chunk circular dependencies that
-          // break production initialization order (TDZ / undefined React errors).
-          if (id.includes('node_modules/')) {
-            return 'vendor';
+
+          if (['react', 'react-dom', 'scheduler'].includes(pkg)) {
+            return 'vendor-react';
+          }
+
+          if (['react-router', 'react-router-dom', '@remix-run/router'].includes(pkg)) {
+            return 'vendor-router';
+          }
+
+          if (pkg.startsWith('@tanstack/')) {
+            return 'vendor-query';
+          }
+
+          if (['leaflet', 'react-leaflet', 'react-leaflet-cluster', '@react-leaflet/core'].includes(pkg)) {
+            return 'vendor-maps';
+          }
+
+          if (
+            pkg === 'recharts' ||
+            pkg === 'recharts-scale' ||
+            pkg === 'react-smooth' ||
+            pkg === 'decimal.js-light' ||
+            pkg === 'lodash' ||
+            pkg === 'fast-equals' ||
+            pkg.startsWith('d3-')
+          ) {
+            return 'vendor-charts';
+          }
+
+          if (['framer-motion', 'motion-dom', 'motion-utils'].includes(pkg)) {
+            return 'vendor-motion';
+          }
+
+          if (pkg.startsWith('@radix-ui/')) {
+            return 'vendor-radix';
+          }
+
+          if (pkg === 'lucide-react') {
+            return 'vendor-icons';
           }
         },
       },

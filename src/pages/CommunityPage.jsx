@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/lib/AuthContext';
+import { base44 } from '@/api/base44Client';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
 
 // Vanity slug → real community ID mapping
@@ -13,18 +13,22 @@ export default function CommunityPage() {
   const { communityId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user: currentUser } = useAuth();
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
 
   // Resolve vanity slug to real ID, or use the raw ID directly
   const resolvedId = SLUG_MAP[communityId] || communityId;
-  const demoCommunity = location.state?.demoCommunity || null;
+  const fallbackCommunity = location.state?.demoCommunity || null;
 
   return (
     <CommunityDetailView
       communityId={resolvedId}
       currentUser={currentUser}
       onBack={() => navigate('/Communities')}
-      fallbackCommunity={demoCommunity}
+      fallbackCommunity={fallbackCommunity}
     />
   );
 }

@@ -1,5 +1,15 @@
-// Central config for all supported local networks / cities
-// Used across Feed, UserSettings, onboarding, etc.
+// Central config for the local network / towns JUnited currently supports.
+// Keep this focused on the Five Towns until the product is ready to expand.
+
+export const FIVE_TOWNS_NEIGHBORHOODS = ['Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood'];
+
+const FIVE_TOWNS_CENTERS = {
+  Lawrence: { lat: 40.6157, lng: -73.7296 },
+  Woodmere: { lat: 40.6321, lng: -73.7126 },
+  Cedarhurst: { lat: 40.6229, lng: -73.7243 },
+  Hewlett: { lat: 40.6432, lng: -73.6957 },
+  Inwood: { lat: 40.6220, lng: -73.7468 },
+};
 
 export const LOCAL_NETWORKS = [
   {
@@ -7,51 +17,21 @@ export const LOCAL_NETWORKS = [
     label: 'Five Towns, NY',
     shortLabel: 'Five Towns',
     emoji: '🏘️',
-    region: 'New York',
-    neighborhoods: ['Lawrence', 'Woodmere', 'Cedarhurst', 'Hewlett', 'Inwood'],
+    region: 'Five Towns',
+    neighborhoods: FIVE_TOWNS_NEIGHBORHOODS,
     center: { lat: 40.6237, lng: -73.7257 },
     cityPreset: 'Five Towns',
   },
-  {
-    id: 'brooklyn',
-    label: 'Brooklyn, NY',
-    shortLabel: 'Brooklyn',
-    emoji: '🌉',
-    region: 'New York',
-    neighborhoods: ['Borough Park', 'Flatbush', 'Crown Heights', 'Williamsburg'],
-    center: { lat: 40.6501, lng: -73.9496 },
-    cityPreset: 'Brooklyn',
-  },
-  {
-    id: 'lakewood',
-    label: 'Lakewood, NJ',
-    shortLabel: 'Lakewood',
-    emoji: '🌲',
-    region: 'New Jersey',
-    neighborhoods: ['Lakewood'],
-    center: { lat: 40.0979, lng: -74.2179 },
-    cityPreset: 'Lakewood',
-  },
-  {
-    id: 'miami',
-    label: 'Miami / South Florida',
-    shortLabel: 'Miami',
-    emoji: '🌴',
-    region: 'Florida',
-    neighborhoods: ['Miami Beach', 'Aventura', 'Sunny Isles', 'Bal Harbour', 'Surfside'],
-    center: { lat: 25.7617, lng: -80.1918 },
-    cityPreset: 'Miami',
-  },
-  {
-    id: 'boca_raton',
-    label: 'Boca Raton, FL',
-    shortLabel: 'Boca Raton',
-    emoji: '☀️',
-    region: 'Florida',
-    neighborhoods: ['Boca Raton', 'Delray Beach', 'Boynton Beach'],
-    center: { lat: 26.3683, lng: -80.1289 },
-    cityPreset: 'Boca Raton',
-  },
+  ...FIVE_TOWNS_NEIGHBORHOODS.map((town) => ({
+    id: town.toLowerCase(),
+    label: `${town}, NY`,
+    shortLabel: town,
+    emoji: '📍',
+    region: 'Five Towns',
+    neighborhoods: [town],
+    center: FIVE_TOWNS_CENTERS[town],
+    cityPreset: town,
+  })),
 ];
 
 export const ALL_CITY_PRESETS = LOCAL_NETWORKS.map(n => n.cityPreset);

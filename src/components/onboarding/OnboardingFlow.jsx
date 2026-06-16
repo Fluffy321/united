@@ -17,11 +17,6 @@ const NEIGHBORHOODS = [
   'Woodmere',
   'Hewlett',
   'Inwood',
-  'Far Rockaway',
-  'Brooklyn',
-  'Lakewood',
-  'Teaneck',
-  'Other',
 ];
 
 const DEFAULT_COMMUNITIES = [
@@ -629,7 +624,7 @@ export default function OnboardingFlow({ user, onComplete }) {
       }
 
       storageService.setItem(getOnboardingStorageKey(user.id), '1');
-      onComplete?.({ ...user, ...profilePatch });
+      onComplete?.({ ...user, ...profilePatch, _joinedCount: selectedCommunityIds.size });
     } catch (error) {
       toast.error(error?.message || 'Could not save onboarding. Please try again.');
     } finally {

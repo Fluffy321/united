@@ -17,6 +17,8 @@ export default function JoinByCommunityCode() {
   const [alreadyMember, setAlreadyMember] = useState(false);
   const [inviterName, setInviterName] = useState('');
 
+  const chatPath = (communityId) => `/communities/${encodeURIComponent(communityId)}?tab=chat&focus=message`;
+
   useEffect(() => {
     if (!code) { setStatus('error'); return; }
     loadInvite();
@@ -67,7 +69,7 @@ export default function JoinByCommunityCode() {
       return;
     }
     if (alreadyMember) {
-      navigate(`/communities/${community.id}`);
+      navigate(chatPath(community.id), { replace: true });
       return;
     }
 
@@ -93,11 +95,17 @@ export default function JoinByCommunityCode() {
           }),
         ]);
       }
-      setStatus('joined');
+      navigate(chatPath(invite.community_id), { replace: true });
     } catch {
       setStatus('error');
     }
   };
+
+  useEffect(() => {
+    if (status === 'preview' && currentUser && community?.id && invite?.id) {
+      handleJoin();
+    }
+  }, [status, currentUser?.id, community?.id, invite?.id]);
 
   if (status === 'loading') {
     return (
@@ -210,10 +218,10 @@ export default function JoinByCommunityCode() {
               <p className="text-[17px] font-bold text-slate-900">You're in! 🎉</p>
               <p className="text-[13px] text-slate-500">Welcome to {community.name}!</p>
               <button
-                onClick={() => navigate(`/communities/${community.id}`)}
+                onClick={() => navigate(chatPath(community.id), { replace: true })}
                 className="mt-2 flex items-center gap-2 px-6 py-3 rounded-full bg-blue-600 text-white text-[14px] font-bold"
               >
-                Open Community <ArrowRight className="w-4 h-4" />
+                Open Chat <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           ) : (

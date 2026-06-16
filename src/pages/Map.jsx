@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   BadgeCheck,
   BarChart3,
@@ -37,6 +37,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import PageHelp from '@/components/common/PageHelp';
 import DestinationHeader from '@/components/layout/DestinationHeader';
+import LiveNowRail from '@/components/common/LiveNowRail';
+import { buildMapLiveNowItems } from '@/lib/liveNow';
 import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/api/supabaseClient';
@@ -1373,6 +1375,7 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
 }
 
 export default function MapPage() {
+  const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [searchParams] = useSearchParams();
   const [activeView, setActiveView] = useState(() => (
@@ -1413,11 +1416,14 @@ export default function MapPage() {
   }, [searchParams]);
 
   const handleUseMyLocation = () => requestUserLocation(true);
+  const isDeepLinkedMap = searchParams.toString().length > 0;
 
   return (
     <main className="app-page flex h-dvh flex-col overflow-hidden mobile-safe-bottom">
       <DestinationHeader
         sticky={false}
+        showBack={isDeepLinkedMap}
+        backTo="/Feed"
         className="relative before:pointer-events-none before:absolute before:inset-x-3 before:top-2 before:bottom-1 before:rounded-[30px] before:bg-gradient-to-r before:from-blue-200/45 before:via-white/35 before:to-emerald-100/45 before:blur-xl before:content-[''] sm:before:inset-x-4"
         toolbarClassName="relative"
         icon={Store}
@@ -1453,6 +1459,14 @@ export default function MapPage() {
             Community Map
           </button>
         </div>
+
+        <LiveNowRail
+          className="mb-3"
+          title="Activity map"
+          subtitle="Live needs, minyanim, and trusted places around the Five Towns"
+          items={buildMapLiveNowItems()}
+          onItemClick={(item) => navigate(item.href || '/Map')}
+        />
 
         {activeView === 'businesses' ? (
           <BusinessDirectoryExperience

@@ -1,3 +1,4 @@
+// DEFERRED: no backing table — do not use in beta
 import React, { useState } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { MessageSquare, Heart, ChevronDown, ChevronUp, Send, Plus, X } from 'lucide-react';

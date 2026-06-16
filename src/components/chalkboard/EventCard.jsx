@@ -1,3 +1,4 @@
+// DEFERRED: no backing table — do not use in beta
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, Users, MessageCircle, Check, MoreVertical } from 'lucide-react';
 import { Button } from "@/components/ui/button";

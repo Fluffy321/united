@@ -12,10 +12,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import FileUploadZone from '@/components/common/FileUploadZone';
-import { dataService } from '@/services';
+import postsService from '@/services/postsService';
 import { toast } from 'sonner';
 
 export const HELP_REQUEST_CATEGORIES = [
+  { value: 'advice',         label: 'Advice / Guidance', emoji: '💡', bgColor: '#E8F1FF', textColor: '#1E40AF', selectedBg: '#BFDBFE' },
+  { value: 'lonely',         label: 'Support / Check-in', emoji: '🤝', bgColor: '#F1E6FF', textColor: '#7C3AED', selectedBg: '#DDD6FE' },
+  { value: 'recommendation', label: 'Local Recommendation', emoji: '📍', bgColor: '#E6F7FF', textColor: '#0369A1', selectedBg: '#BAE6FD' },
+  { value: 'antisemitism',   label: 'Safety / Hate Incident', emoji: '🛡️', bgColor: '#FFE3E3', textColor: '#991B1B', selectedBg: '#FECACA' },
+  { value: 'school',         label: 'School Help', emoji: '📚', bgColor: '#FFF6D6', textColor: '#B45309', selectedBg: '#FDE68A' },
+  { value: 'jobs',           label: 'Jobs / Networking', emoji: '💼', bgColor: '#E6F7EC', textColor: '#15803D', selectedBg: '#BBF7D0' },
+  { value: 'family',         label: 'Family / Home', emoji: '🏠', bgColor: '#FFEBD6', textColor: '#C2410C', selectedBg: '#FED7AA' },
   { value: 'shopping',       label: 'Shopping',       emoji: '🛒', bgColor: '#E8F5E9', textColor: '#2E7D32', selectedBg: '#A5D6A7' },
   { value: 'transportation', label: 'Transportation',  emoji: '🚗', bgColor: '#E3F2FD', textColor: '#1565C0', selectedBg: '#90CAF9' },
   { value: 'tech_support',   label: 'Tech Support',    emoji: '💻', bgColor: '#F3E5F5', textColor: '#6A1B9A', selectedBg: '#CE93D8' },
@@ -43,7 +50,7 @@ export default function RequestHelpModal({ open, onOpenChange, currentUser }) {
     if (!category) { toast.error('Please select a category'); return; }
 
     setIsSubmitting(true);
-    await dataService.entities.UnifiedPost.create({
+    await postsService.createMitzvahRequestPost({
       user_id: currentUser.id,
       user_name: isAnonymous ? 'Anonymous' : (currentUser.display_name || currentUser.full_name),
       user_age_range: currentUser.age_range,
@@ -57,6 +64,7 @@ export default function RequestHelpModal({ open, onOpenChange, currentUser }) {
       image_url: attachedFiles[0]?.url || undefined,
       attachment_urls: attachedFiles.map(f => f.url),
       help_status: 'open',
+      request_kind: category,
     });
 
     toast.success('Help request posted!');

@@ -1,3 +1,4 @@
+// DEFERRED: no backing table — do not use in beta
 import React, { useState } from 'react';
 import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';

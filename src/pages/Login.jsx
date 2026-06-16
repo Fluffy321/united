@@ -22,26 +22,26 @@ const withTimeout = (promise, timeoutMs, message) => new Promise((resolve, rejec
 const VALUE_CHIPS = [
   {
     icon: Users,
-    label: 'Communities & groups',
-    text: 'Find the circles that fit your life.',
+    label: 'Five Towns feed',
+    text: 'Talk to neighbors and see what is happening now.',
     className: 'bg-blue-50 text-blue-700 border-blue-100',
   },
   {
     icon: HeartHandshake,
-    label: 'Chesed requests',
+    label: 'Mitzvah needs',
     text: 'Ask for help or show up for someone nearby.',
     className: 'bg-emerald-50 text-emerald-700 border-emerald-100',
   },
   {
     icon: ShieldCheck,
-    label: 'Trusted sharing',
+    label: 'Trusted local sharing',
     text: 'Post and message with more confidence.',
     className: 'bg-amber-50 text-amber-700 border-amber-100',
   },
   {
     icon: MapPin,
-    label: 'Local discovery',
-    text: 'See what is happening around your community.',
+    label: 'Shuls, events, map',
+    text: 'Find places and plans around the Five Towns.',
     className: 'bg-indigo-50 text-indigo-700 border-indigo-100',
   },
 ];
@@ -54,7 +54,7 @@ function BrandMark({ compact = false }) {
       </div>
       <div>
         <p className={`${compact ? 'text-[18px]' : 'text-[21px]'} font-black leading-none text-slate-950`}>JUnited</p>
-        <p className="mt-1 text-[12px] font-bold text-slate-500">Community, chesed, connection.</p>
+        <p className="mt-1 text-[12px] font-bold text-slate-500">Five Towns, live in one place.</p>
       </div>
     </div>
   );
@@ -219,15 +219,15 @@ export default function Login() {
 
           <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[11px] font-black text-blue-700">
             <Sparkles className="h-3.5 w-3.5" />
-            Built for Jewish community life
+            Built for Five Towns Jewish life
           </div>
 
           <h1 className="mt-3 text-[28px] font-black leading-[1.08] text-slate-950 sm:text-[34px]">
-            Your Jewish community, connected.
+            The Five Towns, connected.
           </h1>
 
           <p className="mt-2 text-[14px] font-semibold leading-6 text-slate-600">
-            Communities, chesed, local updates, and nearby discovery — all in one place.
+            Local updates, mitzvah needs, shuls, events, businesses, carpools, and neighbors in one trusted place.
           </p>
 
           <div className="mt-4 grid grid-cols-2 gap-2">
@@ -252,7 +252,7 @@ export default function Login() {
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
                 <Compass className="h-4 w-4" />
               </div>
-              <p className="text-[13px] font-black">Your community, all in one calm place.</p>
+              <p className="text-[13px] font-black">Less noise than group chats. More useful than scrolling.</p>
             </div>
           </div>
 

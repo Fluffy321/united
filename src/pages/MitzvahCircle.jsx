@@ -18,6 +18,7 @@ import {
   Plus,
   Search,
   Send,
+  Share2,
   ShoppingBag,
   ShieldCheck,
   Sparkles,
@@ -29,9 +30,11 @@ import {
 import { mitzvahService, notificationsService } from '@/services';
 import { toast } from 'sonner';
 import PageHelp from '@/components/common/PageHelp';
+import LiveNowRail from '@/components/common/LiveNowRail';
 import DestinationHeader from '@/components/layout/DestinationHeader';
 import CarpoolBoard from '@/components/mitzvah/CarpoolBoard';
 import ShulMinyanBoard from '@/components/mitzvah/ShulMinyanBoard';
+import { buildMitzvahLiveNowItems } from '@/lib/liveNow';
 
 const CATEGORIES = [
   'Transportation',
@@ -366,6 +369,48 @@ const getApproxDistance = (request) => {
   return 'Nearby';
 };
 
+const getUpdatedLabel = (request) => {
+  const updatedAt = request.updated_at || request.updated_date || request.created_at || request.created_date;
+  if (!updatedAt) return 'Updated just now';
+  const minutes = Math.max(1, Math.round((Date.now() - new Date(updatedAt).getTime()) / 60000));
+  if (!Number.isFinite(minutes) || minutes < 2) return 'Updated just now';
+  if (minutes < 60) return `Updated ${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `Updated ${hours} hr${hours === 1 ? '' : 's'} ago`;
+  const days = Math.round(hours / 24);
+  return `Updated ${days} day${days === 1 ? '' : 's'} ago`;
+};
+
+const getUrgencyHeadline = (request, urgencyInfo) => {
+  const text = `${request.title || ''} ${request.description || ''} ${request.category || ''}`.toLowerCase();
+  if (/meal|food|dinner|supper|lunch|shabbos|challah/.test(text)) {
+    if (urgencyInfo.label === 'Urgent') return 'Need food in next 30 min';
+    if (urgencyInfo.label === 'Today') return 'Dinner needed tonight';
+    return 'Meal help needed';
+  }
+  if (/ride|carpool|seat|drive|pickup|airport/.test(text)) {
+    if (urgencyInfo.label === 'Urgent') return 'Ride needed soon';
+    if (urgencyInfo.label === 'Today') return 'Ride needed today';
+    return 'Ride help requested';
+  }
+  if (/errand|pickup|store|pharmacy|delivery/.test(text)) {
+    if (urgencyInfo.label === 'Urgent') return 'Errand needed right away';
+    if (urgencyInfo.label === 'Today') return 'Errand needed today';
+    return 'Errand help requested';
+  }
+  if (urgencyInfo.label === 'Urgent') return 'Community need right now';
+  if (urgencyInfo.label === 'Today') return 'Help needed today';
+  return 'Flexible mitzvah opportunity';
+};
+
+const getPrimaryActionLabel = (request, fallback) => {
+  const text = `${request.title || ''} ${request.description || ''} ${request.category || ''}`.toLowerCase();
+  if (/meal|food|dinner|supper|lunch|shabbos|challah/.test(text)) return 'Bring food';
+  if (/ride|carpool|seat|drive|pickup|airport/.test(text)) return "I'll drive";
+  if (/errand|pickup|store|pharmacy|delivery/.test(text)) return 'Run errand';
+  return fallback || 'Take this mitzvah';
+};
+
 const STATUS_CONFIGS = {
   [STATUSES.OPEN]:      { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', Icon: HandHeart,    label: 'Open' },
   [STATUSES.OFFERED]:   { cls: 'bg-blue-50 text-blue-700 border-blue-200',          Icon: Eye,          label: 'Offered' },
@@ -443,17 +488,30 @@ function RequestCard({
     violet: 'from-violet-500 to-blue-500',
   }[progress.tone] || 'from-blue-500 to-sky-500';
   const helpCta = getHelpCta(request);
+  const primaryActionLabel = getPrimaryActionLabel(request, helpCta);
   const distanceLabel = getApproxDistance(request);
-  const urgencyCardTone = {
-    Urgent: 'border-red-200 bg-gradient-to-br from-red-50/80 via-white to-white',
-    Today: 'border-orange-200 bg-gradient-to-br from-orange-50/80 via-white to-white',
-    Flexible: 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-white',
-  }[urgencyInfo.label] || 'border-slate-200 bg-white';
+  const urgencyHeadline = getUrgencyHeadline(request, urgencyInfo);
+  const updatedLabel = getUpdatedLabel(request);
+  const cardStateTone = request.status === STATUSES.VERIFIED
+    ? 'border-emerald-200 bg-gradient-to-br from-emerald-50/90 via-white to-white'
+    : request.status === STATUSES.OFFERED || request.status === STATUSES.ACCEPTED || request.status === STATUSES.IN_PROG
+      ? 'border-amber-200 bg-gradient-to-br from-amber-50/90 via-white to-white'
+      : {
+        Urgent: 'border-red-200 bg-gradient-to-br from-red-50/90 via-white to-white',
+        Today: 'border-orange-200 bg-gradient-to-br from-orange-50/80 via-white to-white',
+        Flexible: 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-white',
+      }[urgencyInfo.label] || 'border-slate-200 bg-white';
   const urgencyRail = {
-    Urgent: 'bg-red-500',
-    Today: 'bg-orange-500',
+    Urgent: request.status === STATUSES.VERIFIED ? 'bg-emerald-500' : 'bg-red-500',
+    Today: request.status === STATUSES.VERIFIED ? 'bg-emerald-500' : request.status === STATUSES.IN_PROG ? 'bg-amber-500' : 'bg-orange-500',
     Flexible: 'bg-slate-400',
   }[urgencyInfo.label] || 'bg-slate-300';
+  const firstHelperName = helperNames[0] || request.claimed_by_name || null;
+  const liveActivityText = firstHelperName
+    ? `${firstHelperName} offered help`
+    : visibleHelperCount > 0
+      ? `${visibleHelperCount} people responding now`
+      : 'Be the first to help';
 
   const submitComment = async (event) => {
     event.preventDefault();
@@ -469,11 +527,24 @@ function RequestCard({
     onOpenMap(request);
   };
 
+  const handleShare = async (event) => {
+    event.stopPropagation();
+    const shareText = `${urgencyHeadline}: ${request.title}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Mitzvah request', text: shareText, url: window.location.href });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(`${shareText} ${window.location.href}`);
+        toast.success('Request link copied.');
+      }
+    } catch {}
+  };
+
   const canAdjustUrgency = Boolean(isPoster && onUrgencyChange && ![STATUSES.VERIFIED, STATUSES.CANCELLED].includes(request.status));
 
   return (
 	    <article
-	      className={`relative cursor-pointer overflow-hidden rounded-2xl border px-3 py-2.5 shadow-sm transition hover:shadow-md ${urgencyCardTone}`}
+	      className={`relative cursor-pointer overflow-hidden rounded-2xl border px-3.5 py-3 shadow-sm transition hover:shadow-md ${cardStateTone}`}
       onClick={handleCardClick}
       role={onOpenMap ? 'button' : undefined}
       tabIndex={onOpenMap ? 0 : undefined}
@@ -514,25 +585,32 @@ function RequestCard({
               })}
             </div>
           )}
-	          <h2 className="line-clamp-1 text-[15px] font-black leading-tight text-slate-950">{request.title}</h2>
-	          <p className="mt-0.5 line-clamp-1 text-[12px] font-medium leading-4 text-slate-600">
+	          <p className="mb-0.5 text-[11px] font-black uppercase tracking-wide text-red-600">
+	            {urgencyHeadline}
+	          </p>
+	          <h2 className="line-clamp-2 text-[19px] font-black leading-[1.12] text-slate-950">{request.title}</h2>
+	          <p className="mt-1 line-clamp-2 text-[13px] font-semibold leading-5 text-slate-600">
 	            {request.description}
 	          </p>
 	
-		          <div className="mt-1.5">
-		            <div className="flex items-center gap-2 text-[10px] font-black text-slate-600">
-		              <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 ${urgencyInfo.tone}`}>
+		          <div className="mt-3 rounded-2xl border border-white/80 bg-white/75 p-2.5 shadow-sm">
+		            <div className="flex items-center gap-2 text-[11px] font-black text-slate-700">
+		              <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 ${urgencyInfo.tone}`}>
 		                <Clock className="h-3 w-3" />
 		                {urgencyInfo.detail}
 		              </span>
 		              <span className="min-w-0 flex-1 truncate">{progress.title}</span>
 		              <span className="shrink-0 text-slate-400">{progress.percent}%</span>
 		            </div>
-		            <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-100">
+		            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
 		              <div
 		                className={`h-full rounded-full bg-gradient-to-r ${progressTone} transition-all duration-300`}
 		                style={{ width: `${progress.percent}%` }}
 		              />
+		            </div>
+		            <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px] font-bold text-slate-500">
+		              <span className="truncate">{progress.detail}</span>
+		              <span className="shrink-0">{updatedLabel}</span>
 		            </div>
 		          </div>
 
@@ -550,13 +628,13 @@ function RequestCard({
             </div>
           )}
 
-	          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-	            <div className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-1.5 py-0.5">
+	          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+	            <div className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-slate-100 bg-white px-2 py-1 shadow-sm">
 	              <div className="flex -space-x-2">
 	                {helperPreviewNames.length > 0 ? helperPreviewNames.slice(0, 4).map((name) => (
 	                  <span
 	                    key={name}
-	                    className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-[9px] font-black text-white"
+	                    className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-[10px] font-black text-white"
                     title={name}
                   >
                     {name.charAt(0).toUpperCase()}
@@ -567,14 +645,14 @@ function RequestCard({
                   </span>
                 )}
               </div>
-	              <span className="text-[10px] font-black text-slate-700">
-	                {visibleHelperCount} offered
+	              <span className="text-[11px] font-black text-slate-700">
+	                {liveActivityText}
 	              </span>
 	            </div>
             <button
               type="button"
               onClick={() => setDiscussionOpen((value) => !value)}
-	              className="motion-press inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-600"
+	              className="motion-press inline-flex min-h-8 items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] font-black text-slate-600"
 	            >
               <MessageCircle className="h-3.5 w-3.5" />
 	              {commentCount} replies
@@ -635,24 +713,40 @@ function RequestCard({
         </div>
       )}
 
-		      <div className="mt-1.5 flex flex-wrap gap-1.5">
+		      <div className="mt-3 flex flex-wrap gap-2">
 	        {canOffer && (
 	          <button
 	            onClick={() => onOffer(request)}
-		            className="chesed-cta-pulse app-button-primary h-7 rounded-lg px-2 text-[10px]"
+		            className="chesed-cta-pulse app-button-primary h-10 rounded-xl px-4 text-[13px] shadow-md"
             style={{ background: '#556B2F' }}
           >
 	            <HandHeart className="h-3.5 w-3.5" />
-            {helpCta}
+            {primaryActionLabel}
           </button>
         )}
+        <button
+          type="button"
+          onClick={() => setDiscussionOpen((value) => !value)}
+          className="motion-press inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-black text-slate-700"
+        >
+          <MessageCircle className="h-4 w-4" />
+          Comment
+        </button>
+        <button
+          type="button"
+          onClick={handleShare}
+          className="motion-press inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-black text-slate-700"
+        >
+          <Share2 className="h-4 w-4" />
+          Share
+        </button>
         {onOpenMap && (
 	          <button
 	            type="button"
 	            onClick={() => onOpenMap(request)}
-		            className="motion-press inline-flex h-7 items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2 text-[10px] font-black text-blue-700"
+		            className="motion-press inline-flex h-10 items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 text-[12px] font-black text-blue-700"
           >
-	            <MapPin className="h-3.5 w-3.5" />
+	            <MapPin className="h-4 w-4" />
 	            Map
           </button>
         )}
@@ -1176,10 +1270,11 @@ export default function MitzvahCircle() {
   const { user: currentUser, isLoadingAuth } = useAuth();
   const queryClient = useQueryClient();
 
-  const VALID_VIEWS = ['browse', 'shuls', 'offers', 'posted', 'completed'];
+  const VALID_VIEWS = ['browse', 'shuls', 'mine', 'completed'];
   const [activeView, setActiveView] = React.useState(() => {
     const tab = searchParams.get('tab');
     if (tab === 'open' || tab === 'carpool') return 'browse';
+    if (tab === 'offers' || tab === 'posted') return 'mine';
     return VALID_VIEWS.includes(tab) ? tab : 'browse';
   });
   const [activeCategory, setActiveCategory] = React.useState(() =>
@@ -1195,6 +1290,8 @@ export default function MitzvahCircle() {
     const tab = searchParams.get('tab');
     const nextView = tab === 'open' || tab === 'carpool'
       ? 'browse'
+      : tab === 'offers' || tab === 'posted'
+        ? 'mine'
       : VALID_VIEWS.includes(tab)
         ? tab
         : 'browse';
@@ -1328,9 +1425,9 @@ export default function MitzvahCircle() {
 	        expires_at: new Date(Date.now() + REQUEST_EXPIRY_MS).toISOString(),
 	        created_by_user_id: currentUser.id,
 	        created_by_name: currentUser.display_name || currentUser.full_name,
-	      });
+      });
       setShowCreate(false);
-      changeView('posted');
+      changeView('mine');
       toast.success('Request posted.');
     } catch (err) {
       toast.error(err.message || 'Could not post request.');
@@ -1536,6 +1633,12 @@ export default function MitzvahCircle() {
     r.poster_id === currentUser?.id
     && (detailCategoryFilter === 'All' || r.category === detailCategoryFilter)
   );
+  const myActivityItems = [
+    ...myPosted.map((request) => ({ type: 'request', request })),
+    ...myOfferRequests
+      .filter(({ request }) => request.poster_id !== currentUser?.id)
+      .map(({ request, offer }) => ({ type: 'offer', request, offer })),
+  ];
   const carpoolRequests = requests
     .filter((r) =>
       r.request_kind === 'carpool'
@@ -1556,12 +1659,16 @@ export default function MitzvahCircle() {
     ).length,
     completedCount: requests.filter((r) => r.status === STATUSES.VERIFIED).length,
   }), [requests]);
+  const liveNowItems = React.useMemo(() => buildMitzvahLiveNowItems({
+    requests: requests.filter((r) => r.status === STATUSES.OPEN),
+    offers,
+  }), [requests, offers]);
+  const hasMitzvahStats = totals.openCount > 0 || totals.offeredCount > 0 || totals.completedCount > 0;
 
   const workflowTabs = [
     { id: 'browse', label: 'Browse Needs' },
     { id: 'shuls', label: 'Shuls & Minyan' },
-    { id: 'offers', label: 'My Offers' },
-    { id: 'posted', label: 'My Requests' },
+    { id: 'mine', label: 'Mine' },
     { id: 'completed', label: 'Completed' },
   ];
 
@@ -1578,16 +1685,7 @@ export default function MitzvahCircle() {
       <DestinationHeader
         icon={HandHeart}
         title="Mitzvah Circle"
-        help={<PageHelp text="Give help, ask for help, and follow mitzvah requests from open to completed." />}
-        actions={(
-          <button
-            onClick={() => setShowCreate(true)}
-            className="app-icon-button surface-tile-hover touch-manipulation"
-            aria-label="Post mitzvah request"
-          >
-            <Plus className="h-[18px] w-[18px] text-slate-500" />
-          </button>
-        )}
+        help={<PageHelp text="Post mitzvah opportunities, take one, share what you did, coordinate carpools, and build daily mitzvah streaks." />}
       />
 
       <section className="mobile-page-wide px-3 pt-3 sm:px-4 sm:pt-4">
@@ -1601,10 +1699,10 @@ export default function MitzvahCircle() {
                   <div className="min-w-0">
                     <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/75 px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-blue-700">
                       <HandHeart className="h-3.5 w-3.5" />
-                      Community help hub
+                      Real mitzvah network
                     </div>
                     <p className="max-w-xl text-[15px] font-black leading-6 text-slate-950">
-                      Give help. Ask for help. Strengthen the community.
+                      Post an opportunity, take a mitzvah, share what you did, and keep the community moving.
                     </p>
                   </div>
                   <button
@@ -1617,10 +1715,70 @@ export default function MitzvahCircle() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  <Metric icon={HandHeart} label="Open" value={totals.openCount} tone="blue" />
-                  <Metric icon={Clock} label="In Progress" value={totals.offeredCount} tone="amber" />
-                  <Metric icon={Award} label="Completed" value={totals.completedCount} tone="emerald" />
+                {hasMitzvahStats ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    <Metric icon={HandHeart} label="Open" value={totals.openCount} tone="blue" />
+                    <Metric icon={Clock} label="In Progress" value={totals.offeredCount} tone="amber" />
+                    <Metric icon={Award} label="Completed" value={totals.completedCount} tone="emerald" />
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-blue-100 bg-white/75 px-3 py-2.5 text-[12px] font-bold text-slate-600">
+                    Be the first to post a mitzvah request or offer a ride.
+                  </div>
+                )}
+
+	                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+	                  {[
+	                    {
+	                      label: 'Post opportunity',
+	                      detail: 'Ask or offer help',
+                      icon: Plus,
+                      onClick: () => setShowCreate(true),
+	                    },
+	                    {
+	                      label: 'Do one now',
+	                      detail: 'Browse open needs',
+	                      icon: HandHeart,
+	                      onClick: () => changeView('browse'),
+	                    },
+	                    {
+	                      label: 'Share completed',
+	                      detail: 'Build your streak',
+	                      icon: Award,
+	                      onClick: () => changeView('completed'),
+	                    },
+	                    {
+	                      label: 'Carpool safely',
+	                      detail: 'Rides in one place',
+                      icon: Car,
+                      onClick: () => {
+                        changeView('browse');
+                        changeBrowseCategory('rides');
+                      },
+	                    },
+	                    {
+	                      label: 'Jewish business',
+	                      detail: 'Work local',
+	                      icon: ShoppingBag,
+	                      onClick: () => navigate('/Marketplace'),
+	                    },
+                  ].map((action) => {
+                    const Icon = action.icon;
+                    return (
+                      <button
+                        key={action.label}
+                        type="button"
+                        onClick={action.onClick}
+                        className="motion-press rounded-2xl border border-white bg-white/80 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                      >
+                        <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <p className="text-[12px] font-black text-slate-950">{action.label}</p>
+                        <p className="mt-0.5 text-[11px] font-bold text-slate-500">{action.detail}</p>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -1649,8 +1807,31 @@ export default function MitzvahCircle() {
           </div>
         </div>
 
+        {activeView !== 'shuls' && (
+          <LiveNowRail
+            className="mb-3"
+            title="Needs help now"
+            subtitle="Live mitzvah requests with progress and people responding"
+            items={liveNowItems}
+            onItemClick={(item) => navigate(item.href || '/MitzvahCircle')}
+          />
+        )}
+
+        {activeView === 'browse' && (
+          <div className="mb-3">
+            <CarpoolBoard
+              rideRequests={carpoolRequests}
+              signupsByRequest={signupsByRequest}
+              onCreateRide={(mode) => setCarpoolCreateMode(mode)}
+              onSelectRide={setQuickViewRequest}
+              onClaimRide={(_, ride) => handleOffer(ride)}
+              isClaiming={isOffering}
+            />
+          </div>
+        )}
+
         {/* Search/filter bar */}
-        {activeView !== 'offers' && activeView !== 'shuls' && (
+        {activeView !== 'shuls' && (
           <div className="surface-panel-soft mb-3 space-y-3 rounded-[24px] p-3">
             {activeView === 'browse' && (
               <div>
@@ -1729,19 +1910,9 @@ export default function MitzvahCircle() {
               <div className="flex justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
               </div>
-            ) : browseRequests.length || activeCategory === 'rides' ? (
+            ) : activeCategory === 'rides' ? null : browseRequests.length ? (
               <>
-                {activeCategory === 'rides' && (
-                  <CarpoolBoard
-                    rideRequests={carpoolRequests}
-                    signupsByRequest={signupsByRequest}
-                    onCreateRide={(mode) => setCarpoolCreateMode(mode)}
-                    onSelectRide={setQuickViewRequest}
-                    onClaimRide={(_, ride) => handleOffer(ride)}
-                    isClaiming={isOffering}
-                  />
-                )}
-                {activeCategory !== 'rides' && browseRequests.map((r) => (
+                {browseRequests.map((r) => (
                   <RequestCard
                     key={r.id}
                     request={r}
@@ -1762,7 +1933,7 @@ export default function MitzvahCircle() {
               </>
             ) : (
               <EmptyState
-                title={`No ${getCategoryGroup(activeCategory).shortLabel.toLowerCase()} requests`}
+                title={activeCategory === 'all' ? 'No open requests' : `No ${getCategoryGroup(activeCategory).shortLabel.toLowerCase()} requests`}
                 text={activeCategory === 'all'
                   ? 'Be the first to post a chesed request in your community.'
                   : `${getCategoryGroup(activeCategory).description} will appear here when someone posts one.`}
@@ -1770,56 +1941,33 @@ export default function MitzvahCircle() {
             )
           )}
 
-          {activeView === 'offers' && (
-            myOfferRequests.length ? (
-              myOfferRequests.map(({ request, offer }) => (
-                <RequestCard
-                  key={request.id}
-                  request={request}
-                  offers={offers}
-                  comments={commentsByRequest[request.id] || []}
-                  currentUser={currentUser}
-                  onOffer={handleOffer}
-                  onAcceptOffer={handleAcceptOffer}
-                  onStart={handleStart}
-                  onComplete={handleComplete}
-                  onVerify={handleVerify}
-                  onComment={handleCommentOnRequest}
-                  onOpenMap={openRequestOnMap}
-                  onUrgencyChange={handleUrgencyChange}
-                />
+          {activeView === 'mine' && (
+            myActivityItems.length ? (
+              myActivityItems.map(({ type, request }) => (
+                <div key={`${type}-${request.id}`} className="space-y-2">
+                  <p className="px-1 text-[11px] font-black uppercase tracking-wide text-slate-400">
+                    {type === 'request' ? 'My request' : 'My offer'}
+                  </p>
+                  <RequestCard
+                    request={request}
+                    offers={offers}
+                    comments={commentsByRequest[request.id] || []}
+                    currentUser={currentUser}
+                    onOffer={handleOffer}
+                    onAcceptOffer={handleAcceptOffer}
+                    onStart={handleStart}
+                    onComplete={handleComplete}
+                    onVerify={handleVerify}
+                    onComment={handleCommentOnRequest}
+                    onOpenMap={openRequestOnMap}
+                    onUrgencyChange={handleUrgencyChange}
+                  />
+                </div>
               ))
             ) : (
               <EmptyState
-                title="No offers yet"
-                text="Browse open requests and tap 'Offer to Help' to get started."
-              />
-            )
-          )}
-
-          {activeView === 'posted' && (
-            myPosted.length ? (
-              myPosted.map((r) => (
-                <RequestCard
-                  key={r.id}
-                  request={r}
-                  offers={offers}
-                  comments={commentsByRequest[r.id] || []}
-                  currentUser={currentUser}
-                  onOffer={handleOffer}
-                  onAcceptOffer={handleAcceptOffer}
-                  onStart={handleStart}
-                  onComplete={handleComplete}
-                  onVerify={handleVerify}
-                  onComment={handleCommentOnRequest}
-                  onOpenMap={openRequestOnMap}
-                  onUrgencyChange={handleUrgencyChange}
-                />
-              ))
-            ) : (
-              <EmptyState
-                title="No posted requests"
-                text="Post a request and your community will be notified."
+                title="Nothing in your activity yet"
+                text="Requests you post and offers you make will appear together here."
               />
             )
           )}

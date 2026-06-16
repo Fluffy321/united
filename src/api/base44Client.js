@@ -76,6 +76,8 @@ const SUPABASE_ENTITY_TABLES = {
   GroupMember:       'group_members',
   GroupPost:         'group_posts',
   GroupJoinRequest:  'group_join_requests',
+  // Community invites — migration 20260519220000_invite_links.sql
+  InviteLink: 'invite_links',
   // Activity digest — migration 20260519000000_community_last_visits.sql
   CommunityLastVisit: 'community_last_visits',
   // All other entities (Shul, etc.) are
@@ -1378,7 +1380,9 @@ export const batchFetchByIds = async (entityName, ids) => {
   if (shouldUseSupabase && supabase) {
     const table = SUPABASE_ENTITY_TABLES[entityName];
     if (table) {
-      const { data, error } = await supabase.from(table).select('*').in('id', ids);
+      const readTable = PUBLIC_PROFILE_ENTITIES.has(entityName) ? 'public_profiles' : table;
+      const readSelect = PUBLIC_PROFILE_ENTITIES.has(entityName) ? PUBLIC_PROFILE_SELECT : '*';
+      const { data, error } = await supabase.from(readTable).select(readSelect).in('id', ids);
       if (error) throw error;
       return (data || []).map(toAppRow);
     }

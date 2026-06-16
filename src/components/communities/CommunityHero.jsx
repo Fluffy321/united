@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle2, Star, Settings, Share2, UserPlus } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Star, Share2, UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CommunityLogo from './CommunityLogo';
 import CommunityInviteModal from './CommunityInviteModal';
@@ -100,7 +100,7 @@ export default function CommunityHero({
       )}
 
       {/* ── Branded cover ── */}
-      <div className="relative overflow-hidden" style={{ height: inAppShell ? 120 : 128 }}>
+      <div className="relative overflow-hidden" style={{ height: inAppShell ? 72 : 128 }}>
         {/* Cover: image or type-specific gradient */}
         <div className="absolute inset-0 w-full">
           {(community.cover_url || community.cover_image_url) ? (
@@ -177,31 +177,13 @@ export default function CommunityHero({
         </p>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          {isCreator ? (
+          {isFollowing ? (
             <button
-              onClick={onManage}
-              className="h-8 px-3 text-[12px] font-bold rounded-full bg-slate-950 text-white active:scale-95 transition-all"
+              onClick={onFollow}
+              className="h-8 px-3 text-[12px] font-bold rounded-full bg-slate-100 text-slate-600 active:scale-95 transition-all"
             >
-              Admin
+              Joined ✓
             </button>
-          ) : isFollowing ? (
-            <>
-              <button
-                onClick={onFollow}
-                className="h-8 px-3 text-[12px] font-bold rounded-full bg-slate-100 text-slate-600 active:scale-95 transition-all"
-              >
-                Joined ✓
-              </button>
-              {isAdmin && (
-                <button
-                  onClick={onManage}
-                  className="h-8 w-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 active:scale-95 transition-all"
-                  aria-label="Admin center"
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </>
           ) : (
             <button
               onClick={onFollow}
@@ -222,7 +204,7 @@ export default function CommunityHero({
             className="flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left hover:bg-slate-100 active:scale-[0.99] transition-all"
           >
             <UserPlus className="h-3.5 w-3.5 text-slate-500 flex-shrink-0" />
-            <span className="flex-1 text-[12px] font-semibold text-slate-600">Invite people to {community.name}</span>
+            <span className="flex-1 text-[12px] font-semibold text-slate-600">Invite people</span>
             <span className="text-[11px] font-black text-blue-600">Share</span>
           </button>
         </div>

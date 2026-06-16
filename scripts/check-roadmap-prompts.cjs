@@ -12,7 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const roadmapPath = path.join(__dirname, '../src/config/roadmap.js');
+const roadmapPath = path.join(__dirname, '../internal/roadmap.js');
 const src = fs.readFileSync(roadmapPath, 'utf8');
 
 // Statuses that don't need prompts (done or dropped)
@@ -58,7 +58,7 @@ if (missing.length === 0) {
   });
   console.error(
     'Each entry that an AI agent can implement must include a `prompt` field.\n' +
-    'See the PROMPT FIELD section at the top of src/config/roadmap.js for the required format.\n' +
+    'See the PROMPT FIELD section at the top of internal/roadmap.js for the required format.\n' +
     'Omit only for items that are genuinely manual-only, and document why in `why`.\n'
   );
   process.exit(1);

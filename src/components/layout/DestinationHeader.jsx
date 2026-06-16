@@ -1,4 +1,5 @@
 import React from 'react';
+import BackButton from '@/components/common/BackButton';
 
 export default function DestinationHeader({
   icon: Icon,
@@ -6,6 +7,8 @@ export default function DestinationHeader({
   help,
   leading,
   actions,
+  showBack = false,
+  backTo = '/Feed',
   sticky = true,
   className = '',
   toolbarClassName = '',
@@ -15,13 +18,16 @@ export default function DestinationHeader({
       className={`${sticky ? 'sticky top-0' : 'relative'} z-[60] shrink-0 px-3 pt-3 pb-2 sm:px-4 sm:pt-4 ${className}`}
     >
       <div className={`glass-toolbar mobile-page flex min-h-[56px] items-center justify-between rounded-[24px] px-3 py-2 ${toolbarClassName}`}>
-        {leading || (
-          <div className="flex min-w-0 items-center gap-2">
-            {Icon && <Icon className="h-[18px] w-[18px] shrink-0 text-blue-600" strokeWidth={2.5} />}
-            <h1 className="truncate text-[17px] font-black text-slate-950">{title}</h1>
-            {help}
-          </div>
-        )}
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {showBack && <BackButton fallbackTo={backTo} className="shrink-0" />}
+          {leading || (
+            <div className="flex min-w-0 items-center gap-2">
+              {Icon && <Icon className="h-[18px] w-[18px] shrink-0 text-blue-600" strokeWidth={2.5} />}
+              <h1 className="truncate text-[17px] font-black text-slate-950">{title}</h1>
+              {help}
+            </div>
+          )}
+        </div>
 
         {actions && (
           <div className="flex shrink-0 items-center gap-1">

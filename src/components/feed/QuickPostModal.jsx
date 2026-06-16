@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { dataService } from '@/services';
+import postsService from '@/services/postsService';
 import { toast } from 'sonner';
 
 const QUICK_CATEGORIES = [
@@ -44,13 +44,13 @@ export default function QuickPostModal({ open, onOpenChange, currentUser }) {
         city: currentUser.city || 'Five Towns'
       };
 
-      await dataService.entities.UnifiedPost.create(postData);
+      await postsService.createPost(postData);
       
       setContent('');
       setSelectedCategory(null);
       onOpenChange(false);
       toast.success('Posted!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to post');
     } finally {
       setIsSubmitting(false);

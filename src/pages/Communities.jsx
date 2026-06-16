@@ -1,1422 +1,1580 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  CalendarDays,
-  HeartHandshake,
-  Loader2,
-  MapPinned,
-  MessageCircle,
-  Plus,
-  Search,
-  ShoppingBag,
-  ShieldCheck,
-  Sparkles,
-  Users,
-} from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/lib/AuthContext';
-import { dataService, incrementCounter } from '@/services';
-import { storageService } from '@/services/storageService';
-import { supabase } from '@/api/supabaseClient';
-import { toast } from 'sonner';
-import { appParams } from '@/lib/app-params';
-import CommunityHubCard from '@/components/communities/CommunityHubCard';
-import DiscoverCommunityCard from '@/components/communities/DiscoverCommunityCard';
+import { Loader2, Search, X, AlertCircle, Map, Calendar, Compass, ArrowUpRight, MessageCircleMore, Sparkles, BookOpenText, ChevronRight } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityDetailView from '@/components/communities/CommunityDetailView';
-import CommunityAdminCenter from '@/components/communities/CommunityAdminCenter';
+import CommunityDetailPage from '@/components/communities/CommunityDetailView';
+import CommunityNetworkView from '@/components/communities/CommunityNetworkView';
+import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
+import ShulCommunityPage from '@/components/shul/ShulCommunityPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
-import MessagesDrawer from '@/components/communities/MessagesDrawer';
-import DestinationHeader from '@/components/layout/DestinationHeader';
-import { COMMUNITY_TYPE_CONFIG, COMMUNITY_TYPE_OPTIONS, getCommunityTypeConfig, getCommunityTypeKey } from '@/lib/communityTypes';
+import FeaturedHeroCard from '@/components/communities/FeaturedHeroCard.jsx';
+import FeaturedSecondaryCard from '@/components/communities/FeaturedSecondaryCard.jsx';
+import FeaturedCommunityBanner from '@/components/communities/FeaturedCommunityBanner';
+import DiscoverCategoryCards, { DISCOVER_CATEGORIES } from '@/components/communities/DiscoverCategoriesScreen';
+import CommunityInterestOnboarding from '@/components/communities/CommunityInterestOnboarding';
+import SuggestedCommunities from '@/components/communities/SuggestedCommunities';
+import DiscoverFilters, { applyExtraFilters } from '@/components/communities/DiscoverFilters';
+import { toast } from 'sonner';
+import LiveNowPanel from '@/components/common/LiveNowPanel';
+import { buildCommunityActionItems, getCommunityActionCopy } from '@/lib/liveNow';
 
-const COMMUNITY_FILTERS = [{ key: 'all', label: 'All' }, ...COMMUNITY_TYPE_OPTIONS.map(({ key, label }) => ({ key, label }))];
-const MANAGEMENT_ROLES = new Set(['owner', 'admin', 'moderator']);
+const CACHE_KEY = 'communities_v3_cache';
+const FEATURED_SHULS = ["Young Israel Woodmere", "Chabad of Woodmere", "Beth Shalom", "Shaaray Tefila"];
 
-// Ordered by community prevalence in the Five Towns context
-const DISCOVER_SECTION_ORDER = ['neighborhood', 'shul', 'chesed', 'learning', 'events', 'parents', 'marketplace', 'general'];
-const DISCOVER_SECTION_SUBTITLES = {
-  neighborhood: 'Local updates, neighbor questions, and what\'s happening near you.',
-  shul: 'Your shul\'s events, announcements, and community shiurim in one place.',
-  chesed: 'Open needs, volunteer opportunities, and concrete mitzvah acts.',
-  learning: 'Torah discussions, shiurim, chavrusa connections, and study resources.',
-  events: 'Upcoming events, social plans, and community gatherings.',
-  parents: 'School questions, camp talk, recommendations, and parenting support.',
-  marketplace: 'Buy, sell, and share within the community marketplace.',
-  general: 'Community spaces open to everyone.',
+const CATEGORIES = [
+  { key: 'all', label: 'All', value: null },
+  { key: 'official', label: '✅ Official', value: 'Official / Daily' },
+  { key: 'local', label: '📍 Five Towns', value: 'Local Communities' },
+  { key: 'support', label: '🛡️ Private Support', value: 'Private Support' },
+  { key: 'shabbos', label: '🍽️ Shabbos', value: 'Shabbos & Meals' },
+  { key: 'sports', label: '🏀 Sports', value: 'Sports & Fitness' },
+  { key: 'food', label: '🥯 Kosher Food', value: 'Food & Lifestyle' },
+  { key: 'parents', label: '🎒 Parents & School', value: 'Programs & Youth' },
+  { key: 'chessed', label: '🤝 Chessed & Volunteering', value: 'Chessed & Volunteering' },
+  { key: 'careers', label: '💼 Careers & Networking', value: 'Careers & Networking' },
+  { key: 'learning', label: '📚 Learning & Torah', value: 'Learning & Torah' },
+];
+
+const TYPE_TO_CATEGORY = {
+  School: 'Schools & Yeshivas',
+  Yeshiva: 'Schools & Yeshivas',
+  Seminary: 'Schools & Yeshivas',
+  Shul: 'Local Communities',
+  Camp: 'Programs & Youth',
+  Other: null,
 };
 
-const EXPERIENCE_SEEDS = [
+
+
+const TYPE_GRADIENTS = {
+  Shul:     'from-blue-600 to-indigo-600',
+  School:   'from-purple-600 to-violet-600',
+  Yeshiva:  'from-indigo-600 to-blue-700',
+  Seminary: 'from-pink-500 to-rose-600',
+  Camp:     'from-green-500 to-teal-600',
+  Other:    'from-orange-500 to-amber-600',
+};
+
+const CATEGORY_ICONS = {
+  'Schools & Yeshivas': '🏫',
+  'Chessed & Volunteering': '🤝',
+  'Travel': '✈️',
+  'Careers & Networking': '💼',
+  'Learning & Torah': '📚',
+  'Social & Events': '🎉',
+  'Programs & Youth': '🧒',
+  'Sports & Fitness': '🏀',
+  'Food & Lifestyle': '🍽️',
+  'Local Communities': '🌍',
+  School: '🏫', Yeshiva: '🏫', Seminary: '🎓',
+  Shul: '🕍', Camp: '⛺', Other: '🌐',
+};
+
+const VALUE_PROPOSITIONS = {
+  'Schools & Yeshivas': ['Connect with alumni & families', 'Share resources & study tips', 'Network with educators'],
+  'Chessed & Volunteering': ['Help others & build community', 'Find volunteering opportunities', 'Make a real difference'],
+  'Travel': ['Plan trips together', 'Share travel tips & deals', 'Meet fellow travelers'],
+  'Careers & Networking': ['Find jobs & network', 'Share career opportunities', 'Grow professionally'],
+  'Learning & Torah': ['Daily Torah discussions', 'Deepen your knowledge', 'Learn with others'],
+  'Social & Events': ['Weekly events & real connections', 'Meet people & have fun', 'Build lasting friendships'],
+  'Programs & Youth': ['Programs for all ages', 'Activities & mentorship', 'Youth engagement'],
+  'Sports & Fitness': ['Join leagues & activities', 'Find workout partners', 'Stay active together'],
+  'Food & Lifestyle': ['Kosher dining & recipes', 'Share lifestyle tips', 'Food events & gatherings'],
+  'Local Communities': ['Connect with your neighborhood', 'Local updates & events', 'Build community bonds'],
+  'Shul': ['Shabbos meals & rides', 'Daily minyanim & programming', 'Community connection'],
+  'School': ['Connect with school community', 'Share resources & updates', 'Parent networking'],
+};
+
+function getActivityBadge(community) {
+  const joinsThisWeek = community.joins_this_week || 0;
+  const postsThisWeek = community.posts_this_week || 0;
+  const commentsThisWeek = community.comments_this_week || 0;
+  const totalActivity = joinsThisWeek * 2 + postsThisWeek + commentsThisWeek;
+
+  // "Hot" requires actual recent activity (not a static hash of the ID)
+  if (totalActivity >= 10) return { label: '🔥 Hot', color: 'bg-red-50 text-red-600' };
+  if (totalActivity >= 3 || joinsThisWeek > 0) return { label: '🟢 Active', color: 'bg-green-50 text-green-700' };
+  // Brand-new communities (created within 7 days)
+  return { label: '✨ New', color: 'bg-violet-50 text-violet-600' };
+}
+
+function getInitials(name = '') {
+  return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+}
+
+function getMockActivity(id, community) {
+  if (community) {
+    return community.latestDiscussion || community.latest_discussion || community.latest_post_title || '';
+  }
+  return '';
+}
+
+function getCached() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '[]'); } catch { return []; }
+}
+function setCache(list) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(list)); } catch {}
+}
+
+const CATEGORY_GRADIENTS = {
+  'Schools & Yeshivas':    'from-sky-500 to-blue-600',
+  'Chessed & Volunteering':'from-emerald-500 to-green-600',
+  'Travel':                'from-cyan-500 to-teal-500',
+  'Careers & Networking':  'from-indigo-500 to-violet-600',
+  'Learning & Torah':      'from-amber-400 to-orange-500',
+  'Social & Events':       'from-pink-500 to-rose-500',
+  'Programs & Youth':      'from-purple-500 to-fuchsia-500',
+  'Sports & Fitness':      'from-lime-500 to-green-500',
+  'Food & Lifestyle':      'from-red-400 to-orange-500',
+  'Local Communities':     'from-blue-500 to-indigo-500',
+};
+
+const CATEGORY_CARD_GRADIENTS = {
+  School:    'from-sky-500 to-blue-600',
+  Yeshiva:   'from-sky-500 to-blue-600',
+  Seminary:  'from-sky-500 to-blue-600',
+  Shul:      'from-violet-500 to-purple-600',
+  Community: 'from-indigo-500 to-blue-600',
+  Travel:    'from-cyan-500 to-teal-500',
+  Chessed:   'from-emerald-500 to-green-600',
+  Camp:      'from-amber-400 to-orange-500',
+  Other:     'from-blue-500 to-purple-600',
+};
+
+function getFriendlyPulse(community) {
+  return getCommunityActionCopy(community).promise;
+}
+
+function getProfileFaces(community) {
+  const pool = [
+    community.member_initials,
+    community.memberInitials,
+    community.recent_member_initials,
+    community.recentMemberInitials,
+  ].filter(Boolean);
+
+  return pool
+    .flatMap((value) => Array.isArray(value) ? value : [value])
+    .map((label) => String(label).trim().toUpperCase().slice(0, 2))
+    .filter(Boolean)
+    .slice(0, 3);
+}
+
+function ProfileFaces({ community, compact = false }) {
+  const faces = getProfileFaces(community);
+  const colors = ['from-sky-500 to-blue-600', 'from-rose-400 to-pink-500', 'from-emerald-500 to-teal-500'];
+  if (!faces.length) return null;
+
+  return (
+    <div className="flex items-center">
+      {faces.map((face, index) => (
+        <div
+          key={`${community.id || community.name}-${face}-${index}`}
+          className={`${compact ? 'h-6 w-6 text-[9px]' : 'h-7 w-7 text-[10px]'} -ml-2 first:ml-0 rounded-full border-2 border-white bg-gradient-to-br ${colors[index % colors.length]} flex items-center justify-center font-black text-white shadow-sm`}
+        >
+          {face}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const FIVE_TOWNS_ROOM_BLUEPRINTS = [
   {
-    id: 'seed-daily-torah',
-    name: 'Daily Torah',
-    category: 'Official',
-    communityType: 'official',
-    privacy: 'Public',
-    location: 'JUnited Daily',
-    verified: true,
-    trending: true,
-    follower_count: 1820,
-    postsToday: 12,
-    activeNow: 38,
-    friendsInCommunity: 7,
-    valueHook: 'Start your day with verified, source-backed Torah people can actually discuss.',
-    growth: '+84 this week',
-    engagement: '312 learned today',
-    identityTags: ['Torah every day', 'Parsha', 'Short shiurim'],
-    recommendationReason: 'Matches your learning and reflection activity.',
-    description: 'A trusted daily Torah hub with short sourced posts, parsha prompts, chavrusa energy, and discussion that fits real life.',
-    dailyPrompt: 'What is one sourced Torah line you want to carry into today?',
-    quickActions: ['Share a sourced thought', 'Ask for the source', 'Find a chavrusa'],
-    announcements: ['Three source-backed Torah drops are scheduled daily.', 'Friday noon parsha posts are pulled from the weekly parsha calendar.', 'Official posts show a source link so people can verify.'],
-    resources: ['Sefaria source links', 'Friday parsha prompts', '10-minute learning streak'],
-    updates: ['Morning source-backed Torah drop', 'Afternoon reflection prompt', 'Friday parsha table questions'],
-    posts: [
-      { id: 'torah-1', type: 'announcement', title: 'Verified Torah posts are loading', author: 'JUnited Torah Desk', source_name: 'Sefaria', source_ref: 'Pirkei Avot 1:2', source_url: 'https://www.sefaria.org/Pirkei_Avot.1.2', is_official: true, body: 'Daily Torah is wired for source-backed posts from Sefaria. Pirkei Avot 1:2 teaches that the world stands on Torah, avodah, and acts of chesed.\n\nReflect: Which one of those three can you strengthen today?', meta: 'Official · source-backed' },
-      { id: 'torah-2', type: 'announcement', title: 'Friday parsha posts', author: 'JUnited Torah Desk', source_name: 'Hebcal', source_ref: 'Weekly parsha calendar', source_url: 'https://www.hebcal.com/home/developer-apis', is_official: true, body: 'Every Friday at noon, the app is set up to publish parsha-based prompts from the verified weekly parsha calendar.\n\nQuestion: What is one parsha idea that belongs at your Shabbos table?', meta: 'Official · Friday noon' },
-      { id: 'torah-3', type: 'question', title: 'Ask for the source', author: 'JUnited Torah Desk', source_name: 'Sefaria', source_ref: 'Daily verified source links', source_url: 'https://www.sefaria.org', is_official: true, body: 'If a Torah post hits you, open the source and add one sentence in your own words. This keeps the community real, not copied-and-pasted inspiration.', meta: 'Official · discussion' },
-    ],
-  },
-  {
-    id: 'seed-jewish-news',
-    name: 'Jewish News / Updates',
-    category: 'Official',
-    communityType: 'official',
-    privacy: 'Public',
-    location: 'Local + Jewish world',
-    verified: true,
-    trending: true,
-    follower_count: 2415,
-    postsToday: 18,
-    activeNow: 52,
-    friendsInCommunity: 9,
-    valueHook: 'Know what matters today without digging through noisy chats.',
-    growth: '+126 this week',
-    engagement: 'Fresh brief every day',
-    identityTags: ['Verified updates', 'Local brief', 'Useful news'],
-    recommendationReason: 'Official context for what matters today.',
-    description: 'Moderated Jewish updates, local alerts, event notes, and high-signal information without chat-thread chaos.',
-    dailyPrompt: 'What verified local update should be in tomorrow’s brief?',
-    quickActions: ['Submit verified update', 'Ask what changed', 'Save for later'],
-    announcements: ['Morning and evening briefs stay pinned.', 'Local alerts are reviewed before boost.', 'Rumor-check threads keep noise down.'],
-    resources: ['Submit a verified update', 'Public alert checklist', 'Event digest archive'],
-    updates: ['Morning brief refreshed', 'Two local event notices added', 'Rumor review queue cleared'],
-    posts: [
-      { id: 'news-1', type: 'Pinned', title: 'Five Towns morning brief', author: 'JUnited Updates', body: 'Traffic, school reminders, local events, and useful neighborhood notes in one place.', meta: '14m ago · 12 replies' },
-      { id: 'news-2', type: 'Prompt', title: 'Build tomorrow’s brief', author: 'JUnited Updates', body: 'Drop verified notices, deadlines, closures, and public community updates.', meta: '2h ago · 16 replies' },
-      { id: 'news-3', type: 'Update', title: 'What changed since yesterday?', author: 'JUnited Updates', body: 'A clean delta of notable school, shul, traffic, and community changes.', meta: 'Today · 8 replies' },
-      { id: 'news-4', type: 'Review', title: 'Rumor check thread', author: 'Moderator Desk', body: 'If something is circulating in chats and you are unsure, post the claim here for review.', meta: 'Today · 14 replies' },
-      { id: 'news-5', type: 'Evening brief', title: 'What mattered today in one scroll', author: 'JUnited Updates', body: 'The 5 items worth knowing tonight, with links, context, and what affects local Jewish families.', meta: 'Today · 11 replies' },
-      { id: 'news-6', type: 'Community ask', title: 'What should we track more closely this week?', author: 'Updates Desk', body: 'School notices, traffic, politics that affect the community, shul calendars, or local business changes?', meta: 'Today · 23 replies' },
-      { id: 'news-7', type: 'Explainer', title: 'Why this update matters', author: 'JUnited Updates', body: 'A short explainer thread for news that deserves context, not just reposting.', meta: 'Yesterday · 17 replies' },
-      { id: 'news-8', type: 'Poll', title: 'Morning brief or evening wrap first?', author: 'JUnited Updates', body: 'Vote on what would make this community part of your daily routine.', meta: 'Yesterday · 39 votes' },
-    ],
-  },
-  {
-    id: 'seed-five-towns-local',
-    name: 'Five Towns Local',
-    category: 'Local',
-    communityType: 'official',
-    privacy: 'Public',
-    location: 'Lawrence, Cedarhurst, Woodmere, Hewlett, Inwood',
-    verified: true,
-    trending: true,
-    follower_count: 3180,
-    postsToday: 27,
-    activeNow: 89,
-    friendsInCommunity: 14,
-    valueHook: 'See what is happening tonight, what changed today, and what locals are asking.',
-    growth: '+208 this week',
-    engagement: '89 local replies today',
-    identityTags: ['Five Towns', 'Neighbors', 'Local life'],
-    recommendationReason: 'Your real-world Jewish hub.',
-    description: 'The daily digital town square for local questions, store updates, carpools, lost and found, events, and practical help.',
-    dailyPrompt: 'What does someone in the Five Towns need to know today?',
-    quickActions: ['Ask local question', 'Post lost & found', 'Share an event'],
-    announcements: ['Town pulse updates refresh throughout the day.', 'Map recommendations now cross-link from local threads.', 'Urgent posts can be escalated to official updates.'],
-    resources: ['Five Towns map', 'Lost & found desk', 'Local event board'],
-    updates: ['Two carpools matched', 'One lost item returned', 'Restaurant map suggestions received'],
-    posts: [
-      { id: 'local-1', type: 'Pinned', title: 'Today around town', author: 'Five Towns Desk', body: 'Central Ave traffic note, event roundup, and reminders from the local map.', meta: '22m ago · 28 replies' },
-      { id: 'local-2', type: 'Hot discussion', title: 'Which shops should go on the map next?', author: 'Miriam Cohen', body: 'Drop restaurants, services, Judaica, bakeries, or wellness spots that matter locally.', meta: '1h ago · 24 replies' },
-      { id: 'local-3', type: 'Question', title: 'Best quick weekday lunch near Woodmere?', author: 'Community member', body: 'Need something reliable, sit-down optional, good for a short break.', meta: 'Today · 19 replies' },
-      { id: 'local-4', type: 'Community pulse', title: 'Weekend plans board', author: 'Five Towns Desk', body: 'Events, shiurim, sports, helping opportunities, and family ideas in one thread.', meta: 'Today · 21 replies' },
-      { id: 'local-5', type: 'Interactive board', title: 'Ask the Five Towns anything practical', author: 'Five Towns Desk', body: 'Parking, stores, shuls, classes, carpool, programs, errands. One thread for useful local answers.', meta: 'Today · 46 replies' },
-      { id: 'local-6', type: 'Hot list', title: 'Most recommended places this week', author: 'Local Pulse', body: 'Restaurants, bakeries, Judaica, services, and quiet gems people keep recommending.', meta: 'Today · 28 replies' },
-      { id: 'local-7', type: 'Plan', title: 'Sunday family idea swap', author: 'Five Towns Desk', body: 'Share one low-friction idea for kids, teens, or visiting relatives.', meta: 'Yesterday · 31 replies' },
-      { id: 'local-8', type: 'Question', title: 'What does this app still need to replace local WhatsApp chaos?', author: 'Community member', body: 'Events? verified updates? school notices? lost and found? Better search?', meta: 'Yesterday · 37 replies' },
-    ],
-  },
-  {
-    id: 'seed-chesed-updates',
-    name: 'Chesed / Mitzvah Updates',
-    category: 'Support',
-    communityType: 'official',
-    privacy: 'Community-only',
-    location: 'Five Towns',
-    verified: true,
-    follower_count: 1368,
-    postsToday: 15,
-    activeNow: 31,
-    friendsInCommunity: 6,
-    valueHook: 'Find a mitzvah you can actually complete today.',
-    growth: '+63 this week',
-    engagement: '17 mitzvahs covered',
-    identityTags: ['Chesed', 'Mitzvahs', 'Volunteer'],
-    recommendationReason: 'Connects directly to Mitzvah Circle.',
-    description: 'Meals, rides, bikur cholim, urgent errands, mitzvah opportunities, and follow-through gratitude.',
-    dailyPrompt: 'Can you cover one mitzvah need today, even something small?',
-    quickActions: ['Offer a ride', 'Cover a meal', 'Post a mitzvah need'],
-    announcements: ['Completed needs should be marked closed.', 'Reflections from mitzvah tracking can be shared here.', 'Urgent needs are reviewed before amplification.'],
-    resources: ['Meal train checklist', 'Ride matching guide', 'Bikur cholim starter pack'],
-    updates: ['Meal train almost covered', 'Ride team needs two more volunteers', 'Reflection thread open'],
-    posts: [
-      { id: 'chesed-1', type: 'Pinned', title: 'Two dinner slots left', author: 'Chesed Desk', body: 'Thursday and Sunday dinners still need coverage. Dairy or pareve works.', meta: '35m ago · 9 replies' },
-      { id: 'chesed-2', type: 'Prompt', title: 'Two-mitzvah challenge', author: 'Chesed Desk', body: 'Pick one private mitzvah and one community mitzvah. Share how it affected you.', meta: 'Today · 22 replies' },
-      { id: 'chesed-3', type: 'Match', title: 'After-school ride matching', author: 'Ride Team', body: 'Comment town, pickup window, and whether you can offer or need a seat. No exact addresses here.', meta: 'Today · 17 replies' },
-      { id: 'chesed-4', type: 'Reflection', title: 'How did helping someone affect you?', author: 'Mitzvah Tracker', body: 'Short reflections from real mitzvah actions help inspire the next person.', meta: 'Today · 13 replies' },
-      { id: 'chesed-5', type: 'Urgent board', title: 'Small favors that matter today', author: 'Chesed Desk', body: 'Pickups, pharmacy runs, meal handoffs, short visits, and quick check-ins. Take one if you can.', meta: 'Today · 26 replies' },
-      { id: 'chesed-6', type: 'Volunteer pulse', title: 'Where can you reliably help once a week?', author: 'Volunteer Desk', body: 'Meals, rides, phone calls, errands, hospital visits, or school support?', meta: 'Today · 19 replies' },
-      { id: 'chesed-7', type: 'Impact story', title: 'A ride offer became a whole support chain', author: 'Chesed Desk', body: 'A short story on why tiny offers belong in the app, followed by an invite to post one small thing you can do.', meta: 'Yesterday · 24 replies' },
-      { id: 'chesed-8', type: 'Prompt', title: 'What kind of help is hardest to ask for?', author: 'Mitzvah Tracker', body: 'Answer gently. The goal is to design better support, not expose anyone.', meta: 'Yesterday · 33 replies' },
-    ],
-  },
-  {
-    id: 'seed-divorced-teens',
-    name: 'Divorced Teens',
-    category: 'Support',
-    communityType: 'support',
-    privacy: 'Private / Anonymous',
-    supportsIncognito: true,
-    supportsAnonymousPosting: true,
-    hideMembershipDefault: true,
-    location: 'Private space',
-    follower_count: 128,
-    postsToday: 6,
-    activeNow: 5,
-    friendsInCommunity: 0,
-    valueHook: 'Get real support anonymously, without showing up on your profile.',
-    growth: '+11 this week',
-    engagement: 'Moderator active today',
-    identityTags: ['Safe space', 'Anonymous option', 'Teen support'],
-    recommendationReason: 'Quiet spaces can be joined privately.',
-    description: 'A moderated support community for teens navigating divorce at home, with no public exposure.',
-    dailyPrompt: 'What is one thing you wish people understood without you having to explain it?',
-    quickActions: ['Post anonymously', 'Ask for advice', 'Quiet check-in'],
-    announcements: ['Membership stays hidden by default.', 'Posts are designed for moderation-first support.', 'No screenshots or forwarding expectations are reinforced.'],
-    resources: ['Privacy guide', 'Trusted adult checklist', 'How to ask for support'],
-    updates: ['Moderator check-in thread open', 'New anonymous reflection prompt posted', 'Support resource refreshed'],
-    posts: [
-      { id: 'support-1', type: 'Prompt', title: 'No-pressure check-in', author: 'Anonymous moderator', body: 'Use one word for how home feels this week. Say more only if you want.', meta: 'Today · 17 replies' },
-      { id: 'support-2', type: 'Question', title: 'How do you handle split weekends?', author: 'Anonymous member', body: 'Looking for practical advice on not feeling pulled in both directions.', meta: 'Yesterday · 13 replies' },
-      { id: 'support-3', type: 'Resource', title: 'What helps when plans change suddenly?', author: 'Support Moderator', body: 'A gentle thread of coping tools and scripts from people who understand.', meta: 'Today · 11 replies' },
-    ],
-  },
-  {
-    id: 'seed-mental-health',
-    name: 'Mental Health Support',
-    category: 'Support',
-    communityType: 'support',
-    privacy: 'Private / Anonymous',
-    supportsIncognito: true,
-    supportsAnonymousPosting: true,
-    hideMembershipDefault: true,
-    location: 'Private space',
-    follower_count: 214,
-    postsToday: 9,
-    activeNow: 8,
-    friendsInCommunity: 0,
-    valueHook: 'A quiet place to check in when you do not want the whole world watching.',
-    growth: '+19 this week',
-    engagement: '36 supportive replies',
-    identityTags: ['Support', 'Anonymous posting', 'Moderated'],
-    recommendationReason: 'Designed for safety first.',
-    description: 'A calm, moderated community for encouragement, coping strategies, and finding help without public exposure.',
-    dailyPrompt: 'What is one small next step that feels doable, not perfect?',
-    quickActions: ['Anonymous check-in', 'Share coping idea', 'Ask for support'],
-    announcements: ['Anonymous posting is available.', 'Advice threads stay supportive, not diagnostic.', 'Escalation language points users toward real help when needed.'],
-    resources: ['Support resource list', 'Grounding ideas', 'How to message a trusted person'],
-    updates: ['Daily reset thread refreshed', 'Resource card updated', 'Moderator office hour planned'],
-    posts: [
-      { id: 'mental-1', type: 'Pinned', title: 'Tiny next step thread', author: 'Wellness Moderator', body: 'Name one small action for today: breathe, text someone, take a walk, ask for help.', meta: 'Today · 29 replies' },
-      { id: 'mental-2', type: 'Resource', title: 'What to say when you need help', author: 'Community Mentor', body: 'Simple scripts for starting a hard conversation.', meta: 'Yesterday · 11 replies' },
-      { id: 'mental-3', type: 'Check-in', title: 'What felt heavier than usual this week?', author: 'Anonymous member', body: 'A slow thread for being honest without needing to perform.', meta: 'Today · 18 replies' },
-    ],
-  },
-  {
-    id: 'seed-school-struggles',
-    name: 'Struggling in School',
-    category: 'Support',
-    communityType: 'support',
-    privacy: 'Private / Anonymous',
-    supportsIncognito: true,
-    supportsAnonymousPosting: true,
-    hideMembershipDefault: true,
-    location: 'Private space',
-    follower_count: 169,
-    postsToday: 7,
-    activeNow: 7,
-    friendsInCommunity: 0,
-    valueHook: 'Ask for school help without feeling embarrassed.',
-    growth: '+15 this week',
-    engagement: 'Study support active',
-    identityTags: ['School', 'Support', 'Anonymous'],
-    recommendationReason: 'Help without embarrassment.',
-    description: 'A private place for school pressure, catching up, motivation, and asking for help without exposure.',
-    dailyPrompt: 'What is the smallest assignment or next step you can finish today?',
-    quickActions: ['Ask study help', 'Post anonymously', 'Start reset sprint'],
-    announcements: ['No public student lists.', 'Support threads focus on progress, not shame.', 'Useful tutor/gemach leads can be shared carefully.'],
-    resources: ['20-minute reset plan', 'Teacher email scripts', 'Study buddy board'],
-    updates: ['Reset sprint open', 'Study buddy requests active', 'Tutor resource refreshed'],
-    posts: [
-      { id: 'school-1', type: 'Prompt', title: 'Back-on-track sprint', author: 'Support Mod', body: 'Post one task you can finish in 20 minutes. Come back and reply done.', meta: 'Today · 25 replies' },
-      { id: 'school-2', type: 'Question', title: 'How do I email a teacher after missing work?', author: 'Anonymous student', body: 'Can someone help write a respectful message?', meta: 'Yesterday · 20 replies' },
-      { id: 'school-3', type: 'Match', title: 'Need a study buddy for tests?', author: 'Support Desk', body: 'Drop subject and schedule. Keep details general until matched privately.', meta: 'Today · 16 replies' },
-    ],
+    id: 'seed-five-towns-news',
+    match: ['five towns news', 'five towns local', 'updates', 'talk'],
+    name: 'Five Towns Talk',
+    icon: '💬',
+    label: 'Main room',
+    purpose: 'One shared neighborhood thread for questions, updates, recommendations, alerts, and real neighbor help.',
+    prompt: 'Ask the neighborhood',
+    gradient: 'from-slate-950 via-blue-900 to-cyan-600',
   },
   {
     id: 'seed-sports',
-    name: 'Sports',
-    category: 'Sports',
-    communityType: 'lifestyle',
-    privacy: 'Public',
-    location: 'Five Towns courts and gyms',
-    follower_count: 386,
-    trending: true,
-    postsToday: 11,
-    activeNow: 21,
-    friendsInCommunity: 5,
-    valueHook: 'Find games this week instantly.',
-    growth: '+44 this week',
-    engagement: '3 pickup games planned',
-    identityTags: ['Sports', 'Teen life', 'Pickup games'],
-    recommendationReason: 'Fast-moving and social near you.',
-    description: 'Pickup basketball, flag football, gym runs, training partners, and sports talk for Jewish teens.',
-    dailyPrompt: 'Who is playing this week, where, and at what level?',
-    quickActions: ['Plan pickup game', 'Reserve a spot', 'Find gym partner'],
-    announcements: ['Pickup boards refresh weekly.', 'Skill level helps avoid mismatched games.', 'Sports meetups can be promoted to Events later.'],
-    resources: ['Court board', 'Pickup etiquette', 'Beginner run thread'],
-    updates: ['Motzei Shabbos board open', 'Two beginner games proposed', 'Flag football poll trending'],
-    posts: [
-      { id: 'sports-1', type: 'Plan', title: 'Motzei Shabbos pickup board', author: 'Ari Stein', body: 'Comment basketball, football, or soccer plus time and skill level.', meta: 'Today · 32 replies' },
-      { id: 'sports-2', type: 'Question', title: 'Any beginners want a low-pressure run?', author: 'Dovid L.', body: 'Looking for people who want to play without varsity intensity.', meta: 'Yesterday · 21 replies' },
-      { id: 'sports-3', type: 'Poll', title: 'Which sport needs its own weekly ladder?', author: 'Sports Desk', body: 'Basketball, football, soccer, pickleball, or running group?', meta: 'Today · 26 votes' },
-    ],
+    match: ['sports', 'basketball', 'football', 'gym'],
+    name: "Who's Playing Tonight",
+    icon: '🏀',
+    label: 'Game room',
+    purpose: 'Find pickup games, fill teams, get gym partners, and make tonight’s plans without ten group chats.',
+    prompt: 'Find a game',
+    gradient: 'from-sky-500 via-blue-600 to-indigo-700',
   },
   {
-    id: 'seed-fitness',
-    name: 'Gym / Fitness',
-    category: 'Lifestyle',
-    communityType: 'lifestyle',
-    privacy: 'Public',
-    location: 'Five Towns',
-    follower_count: 312,
-    postsToday: 8,
-    activeNow: 14,
-    friendsInCommunity: 4,
-    valueHook: 'Find someone to walk, lift, or stay accountable with today.',
-    growth: '+27 this week',
-    engagement: '14 check-ins today',
-    identityTags: ['Fitness', 'Healthy habits', 'Accountability'],
-    recommendationReason: 'Built for habit loops.',
-    description: 'Workout accountability, walking groups, gym partners, and healthy routines that feel social.',
-    dailyPrompt: 'What movement can you actually commit to today?',
-    quickActions: ['Join walk streak', 'Find workout buddy', 'Share route'],
-    announcements: ['Weekly accountability stays pinned.', 'Walking and gym threads are separated for clarity.', 'Healthy habits are celebrated, not shamed.'],
-    resources: ['Walking routes', 'Accountability board', 'Beginner training ideas'],
-    updates: ['Morning walk thread active', 'Four accountability goals posted', 'Route suggestions added'],
-    posts: [
-      { id: 'fitness-1', type: 'Prompt', title: 'Sunday accountability board', author: 'Naomi Adler', body: 'Post one realistic goal for the week, small enough to keep.', meta: 'Today · 39 replies' },
-      { id: 'fitness-2', type: 'Plan', title: 'Early morning walking group', author: 'Ben Torah', body: 'Cedarhurst route, 25 minutes, no-pressure pace.', meta: 'Yesterday · 15 replies' },
-      { id: 'fitness-3', type: 'Check-in', title: 'Who actually moved today?', author: 'Fitness Desk', body: 'A quick honest check-in. Five minutes still counts.', meta: 'Today · 24 replies' },
-    ],
+    id: 'seed-shabbos-hosts',
+    match: ['shabbos hosts', 'shabbos plans', 'zmanim', 'hosts'],
+    name: 'Shabbos Plans',
+    icon: '🕯️',
+    label: 'Before Shabbos',
+    purpose: 'Meals, hosting, guests, zmanim, rides, extras, and everything people need before Shabbos.',
+    prompt: 'Make a Shabbos plan',
+    gradient: 'from-amber-500 via-orange-500 to-rose-500',
   },
   {
-    id: 'seed-gemara',
-    name: 'Learning Gemara',
-    category: 'Learning',
-    communityType: 'lifestyle',
-    privacy: 'Community-only',
-    location: 'Online and local batei midrash',
-    follower_count: 448,
-    postsToday: 10,
-    activeNow: 18,
-    friendsInCommunity: 6,
-    valueHook: 'Find a chavrusa, ask a real question, and stay consistent.',
-    growth: '+36 this week',
-    engagement: '58 chavrusa posts this month',
-    identityTags: ['Gemara', 'Chavrusa', 'Learning goals'],
-    recommendationReason: 'High fit for learning behavior.',
-    description: 'Find chavrusas, ask sugya questions, share review systems, and build consistency.',
-    dailyPrompt: 'What daf, sugya, or learning block are you trying to stay consistent with?',
-    quickActions: ['Find chavrusa', 'Ask sugya question', 'Join night seder'],
-    announcements: ['Chavrusa matching refreshes weekly.', 'Questions welcome at every level.', 'Review threads are separated from new learning.'],
-    resources: ['Chavrusa board', 'Review tracker', 'Beginner sugya list'],
-    updates: ['Night seder board refreshed', 'Three new chavrusa requests', 'Review tips thread active'],
-    posts: [
-      { id: 'gemara-1', type: 'Match', title: 'This week’s chavrusa matching', author: 'Chavrusa Board', body: 'Reply with topic, level, and time window. Beginners welcome.', meta: 'Today · 33 replies' },
-      { id: 'gemara-2', type: 'Question', title: 'How do you review without falling behind?', author: 'Moshe Klein', body: 'Looking for a system when you only have a few nights a week.', meta: 'Yesterday · 12 replies' },
-      { id: 'gemara-3', type: 'Prompt', title: 'One Gemara goal for this week', author: 'Learning Desk', body: 'Write it down publicly enough to make it real, gently enough to be doable.', meta: 'Today · 18 replies' },
-    ],
+    id: 'seed-shul-minyan',
+    match: ['shul', 'minyan', 'minyanim'],
+    name: 'Minyan & Shul Updates',
+    icon: '🕍',
+    label: 'Live minyanim',
+    purpose: 'Minyan help, shiurim, kiddush updates, lost items, and shul rides in one useful room.',
+    prompt: 'Post a shul update',
+    gradient: 'from-indigo-600 via-blue-700 to-slate-950',
   },
   {
-    id: 'seed-creative',
-    name: 'Music / Creative',
-    category: 'Creative',
-    communityType: 'lifestyle',
-    privacy: 'Public',
-    location: 'Five Towns and online',
-    follower_count: 235,
-    postsToday: 5,
-    activeNow: 12,
-    friendsInCommunity: 3,
-    valueHook: 'Share what you are making and find people who want to build with you.',
-    growth: '+22 this week',
-    engagement: '12 projects shared',
-    identityTags: ['Music', 'Creative', 'Collaborators'],
-    recommendationReason: 'A place to make things together.',
-    description: 'Music, writing, design, photography, video, and Jewish creators sharing work and building together.',
-    dailyPrompt: 'What are you making, practicing, writing, filming, or dreaming up?',
-    quickActions: ['Share project', 'Find collaborator', 'Ask feedback'],
-    announcements: ['Showcase threads open Fridays.', 'Feedback should be specific and kind.', 'Collaborator requests stay visible.'],
-    resources: ['Collaboration board', 'Project showcase', 'Open mic ideas'],
-    updates: ['Two collaboration asks posted', 'Open mic thread growing', 'Friday showcase queued'],
-    posts: [
-      { id: 'creative-1', type: 'Prompt', title: 'Share one unfinished thing', author: 'Creative Board', body: 'A lyric, photo, design, idea, or sketch. Feedback should be kind and useful.', meta: 'Today · 26 replies' },
-      { id: 'creative-2', type: 'Match', title: 'Who wants to collaborate?', author: 'Shira Feld', body: 'Editors, musicians, photographers, and writers: say what you do.', meta: 'Yesterday · 28 replies' },
-      { id: 'creative-3', type: 'Event idea', title: 'Should we do a community open mic?', author: 'Creative Desk', body: 'Low-pressure, Motzei Shabbos, local venue. Who would come or help?', meta: 'Today · 19 replies' },
-    ],
+    id: 'seed-chesed-updates',
+    match: ['chesed', 'mitzvah', 'help'],
+    name: 'Chesed Opportunities',
+    icon: '🤝',
+    label: 'Help now',
+    purpose: 'See open needs, offer help, close the loop, and turn community care into completed mitzvahs.',
+    prompt: 'Help someone now',
+    gradient: 'from-rose-500 via-pink-600 to-red-600',
   },
   {
-    id: 'seed-business',
-    name: 'Business / Hustle',
-    category: 'Business',
-    communityType: 'lifestyle',
-    privacy: 'Community-only',
-    location: 'Five Towns and NYC',
-    follower_count: 527,
-    trending: true,
-    postsToday: 13,
-    activeNow: 26,
-    friendsInCommunity: 8,
-    valueHook: 'Get intros, leads, jobs, and smart advice from people nearby.',
-    growth: '+58 this week',
-    engagement: '27 intros this month',
-    identityTags: ['Business', 'Networking', 'Opportunities'],
-    recommendationReason: 'Popular near you with strong engagement.',
-    description: 'A Jewish professional network for side hustles, jobs, internships, mentors, and local opportunities.',
-    dailyPrompt: 'What intro, lead, advice, or opportunity would help you move this week?',
-    quickActions: ['Post opportunity', 'Ask mentor advice', 'Offer intro'],
-    announcements: ['Give-before-ask keeps threads useful.', 'Internship leads should include pay and time when known.', 'Mentor threads refresh twice monthly.'],
-    resources: ['Intro board', 'Resume review thread', 'Local opportunity desk'],
-    updates: ['Three leads posted today', 'Mentor asks receiving replies', 'Resume review queue open'],
-    posts: [
-      { id: 'business-1', type: 'Pinned', title: 'Give one, ask one', author: 'Daniel Price', body: 'Offer one helpful intro, tip, or lead, then ask for one thing you need.', meta: 'Today · 35 replies' },
-      { id: 'business-2', type: 'Question', title: 'Teen-friendly summer jobs?', author: 'Maya Rosen', body: 'Looking for real local leads with clear hours and pay.', meta: 'Yesterday · 24 replies' },
-      { id: 'business-3', type: 'Prompt', title: 'What are you building?', author: 'Business Desk', body: 'Share the project, customer, or opportunity you are trying to understand better.', meta: 'Today · 17 replies' },
-    ],
+    id: 'seed-kosher-food',
+    match: ['kosher food', 'restaurant', 'bakery', 'lunch'],
+    name: 'Kosher Food & Lunch Spots',
+    icon: '🥙',
+    label: 'Food pulse',
+    purpose: 'What is open, what is good, what has a line, what is verified, and what people are ordering now.',
+    prompt: 'Share a food tip',
+    gradient: 'from-emerald-500 via-teal-500 to-cyan-600',
   },
   {
-    id: 'seed-gaming',
-    name: 'Gaming',
-    category: 'Gaming',
-    communityType: 'lifestyle',
-    privacy: 'Public',
-    location: 'Online + local',
-    follower_count: 274,
-    postsToday: 9,
-    activeNow: 19,
-    friendsInCommunity: 4,
-    valueHook: 'Find a squad tonight without spamming a group chat.',
-    growth: '+33 this week',
-    engagement: 'Two squads formed today',
-    identityTags: ['Gaming', 'Friends', 'Low-pressure'],
-    recommendationReason: 'Good casual retention community.',
-    description: 'Find teammates, compare games, schedule casual sessions, and make social time easier.',
-    dailyPrompt: 'What are you playing this week, and who wants in?',
-    quickActions: ['Find squad', 'Start poll', 'Plan game night'],
-    announcements: ['Squad matching stays casual by default.', 'Game nights can spin into events.', 'Use platform tags to match players faster.'],
-    resources: ['Squad board', 'Game night poll', 'Beginner-friendly picks'],
-    updates: ['Two squads formed', 'Motzei Shabbos poll live', 'Party game thread active'],
-    posts: [
-      { id: 'gaming-1', type: 'Prompt', title: 'Game night board', author: 'Gaming Desk', body: 'Reply with game, platform, and whether you want competitive or relaxed.', meta: 'Today · 30 replies' },
-      { id: 'gaming-2', type: 'Question', title: 'Best group game for Motzei Shabbos?', author: 'Eli B.', body: 'Looking for something fun that works with a bunch of people.', meta: 'Yesterday · 18 replies' },
-      { id: 'gaming-3', type: 'Poll', title: 'Competitive or chill lobby tonight?', author: 'Gaming Desk', body: 'Vote so matching does not mix totally different moods.', meta: 'Today · 23 votes' },
-    ],
+    id: 'seed-carpools-rides',
+    match: ['carpool', 'rides', 'ride'],
+    name: 'Rides & Carpools',
+    icon: '🚗',
+    label: 'Moving now',
+    purpose: 'Safe ride requests, offers, school carpools, airport rides, and last-minute local pickups.',
+    prompt: 'Coordinate a ride',
+    gradient: 'from-cyan-500 via-blue-600 to-violet-600',
+  },
+  {
+    id: 'seed-events-week',
+    match: ['events', 'this week', 'calendar'],
+    name: 'Events This Week',
+    icon: '📅',
+    label: 'Happening soon',
+    purpose: 'Shiurim, school nights, programs, meetups, and family events people can actually attend.',
+    prompt: 'Post an event',
+    gradient: 'from-violet-500 via-purple-600 to-blue-700',
+  },
+  {
+    id: 'seed-business-jobs',
+    match: ['business', 'jobs', 'hustle'],
+    name: 'Jobs & Business',
+    icon: '💼',
+    label: 'Local work',
+    purpose: 'Hire local, find side work, ask business questions, and support Jewish-owned services without spam.',
+    prompt: 'Ask for work help',
+    gradient: 'from-slate-800 via-blue-800 to-emerald-600',
+  },
+  {
+    id: 'seed-five-towns-teens',
+    match: ['teen', 'hangout', 'school stress', 'social'],
+    name: 'Teens Hangout',
+    icon: '✨',
+    label: 'Safe social',
+    purpose: 'Plans, questions, sports, school stuff, rides, and safe ways to meet people with shared interests.',
+    prompt: 'Start a safe plan',
+    gradient: 'from-fuchsia-500 via-blue-600 to-cyan-500',
   },
 ];
 
-function adaptCommunity(c, joinedIds, membershipsByCommunity) {
-  const typeKey = getCommunityTypeKey(c);
-  const typeConfig = getCommunityTypeConfig(c);
-  const category = c.category || typeConfig.label;
-  const membership = membershipsByCommunity.get(c.id);
-  const settings = c.settings && typeof c.settings === 'object' ? c.settings : {};
-  const rulesFromSettings = Array.isArray(settings.rules) ? settings.rules.join('\n') : settings.rules;
-  const memberCount = c.follower_count || c.memberCount || 0;
-  const postsToday = c.postsToday || c.posts_this_week || c.post_count || 0;
+function getRoomBlueprint(community = {}, index = 0) {
+  const text = `${community.id || ''} ${community.name || ''} ${community.slug || ''} ${community.type || ''} ${community.category || ''} ${community.description || ''}`.toLowerCase();
+  return FIVE_TOWNS_ROOM_BLUEPRINTS.find(room => room.id === community.id || room.match.some(token => text.includes(token))) ||
+    FIVE_TOWNS_ROOM_BLUEPRINTS[index % FIVE_TOWNS_ROOM_BLUEPRINTS.length];
+}
+
+function buildRoomViewModel(community = {}, index = 0) {
+  const blueprint = getRoomBlueprint(community, index);
+  const memberCount = community.follower_count || community.member_count || null;
   return {
-    ...c,
-    typeKey,
-    category,
-    communityType: c.communityType || settings.communityType || (category === 'Support' ? 'support' : 'user'),
-    privacy: c.privacy || 'Public',
-    memberCount,
-    joined: joinedIds.has(c.id) || Boolean(c.joined),
-    joinedIncognito: Boolean(membership?.incognito || membership?.hide_membership || c.joinedIncognito),
-    hideMembershipDefault: Boolean(c.hideMembershipDefault || settings.hideMembershipDefault),
-    hideMembership: Boolean(membership?.hide_membership || c.hideMembership || settings.hideMembershipDefault),
-    postsToday,
-    activeNow: c.activeNow || c.active_now || 0,
-    friendsInCommunity: c.friendsInCommunity || c.friends_in_community || 0,
-    valueHook: c.valueHook || c.featured_tagline || typeConfig.tagline,
-    socialProof: c.socialProof || null,
-    growth: c.growth || '',
-    engagement: c.engagement || '',
-    dailyPrompt: c.dailyPrompt || '',
-    quickActions: c.quickActions || typeConfig.prompts,
-    posts: c.posts || [],
-    identityTags: c.identityTags || settings.identityTags || [typeConfig.label, c.privacy || 'Public'],
-    rules: c.rules || rulesFromSettings || '',
+    ...community,
+    roomName: blueprint.name,
+    roomIcon: blueprint.icon,
+    roomLabel: blueprint.label,
+    roomPurpose: community.hook || community.description_short || blueprint.purpose,
+    roomLatest: community.latestDiscussion || community.latest_discussion || community.latest_post_title || null,
+    roomPrompt: community.roomQuestion || blueprint.prompt,
+    roomActiveNow: community.activeNow || community.active_now || community.active_members || 0,
+    roomPostsToday: community.postsToday || community.posts_today || community.posts_this_week || 0,
+    roomMemberCount: memberCount,
+    roomGradient: community.gradient || blueprint.gradient,
+    roomBlueprintId: blueprint.id,
   };
 }
 
-function getManagementRole(community, currentUser, membershipsByCommunity) {
-  if (!currentUser?.id || !community?.id) return null;
-  if (community.created_by_user_id === currentUser.id) return 'Owner';
+function getCoreFiveTownsRooms(communities = []) {
+  const used = new Set();
+  return FIVE_TOWNS_ROOM_BLUEPRINTS.flatMap((blueprint, index) => {
+    const found = communities.find(c => {
+      if (!c?.id || used.has(c.id)) return false;
+      const text = `${c.id || ''} ${c.name || ''} ${c.slug || ''} ${c.type || ''} ${c.category || ''} ${c.description || ''}`.toLowerCase();
+      return c.id === blueprint.id || blueprint.match.some(token => text.includes(token));
+    });
+    if (!found) return [];
+    used.add(found.id);
+    return [buildRoomViewModel(found, index)];
+  });
+}
 
-  const membership = membershipsByCommunity.get(community.id);
-  const role = String(membership?.role || '').toLowerCase();
-  if (!MANAGEMENT_ROLES.has(role)) return null;
+function mergeCommunityCatalog(communities = []) {
+  const valid = (communities || []).filter(c => c?.id && c?.name);
+  return valid;
+}
 
-  if (role === 'owner') return 'Owner';
-  if (role === 'admin') return 'Admin';
-  return 'Moderator';
+function getCommunityKind(community = {}) {
+  if (community.communityKind) return community.communityKind;
+  const text = `${community.name || ''} ${community.type || ''} ${community.category || ''} ${community.description || ''}`.toLowerCase();
+  if (community.isOfficial || text.includes('official') || text.includes('daily torah') || text.includes('news')) return 'Official / Daily';
+  if (community.allowAnonymous || community.hiddenMembership || text.includes('support') || text.includes('anxiety') || text.includes('stress') || text.includes('family changes')) return 'Private Support';
+  if (text.includes('ride') || text.includes('carpool') || text.includes('host') || text.includes('guest') || text.includes('lost') || text.includes('apartment')) return 'Five Towns Action';
+  return 'Lifestyle';
+}
+
+function getPrivacyLabel(community = {}) {
+  if (community.privacyLabel) return community.privacyLabel;
+  if (community.allowAnonymous || community.hiddenMembership) return 'Private / Anonymous';
+  if (community.isOfficial || community.is_verified) return 'Official';
+  return community.privacy || 'Public';
+}
+
+function getCommunityHook(community = {}) {
+  return (
+    community.hook ||
+    community.description_short ||
+    community.description ||
+    getCommunityActionCopy(community).promise ||
+    'Find useful people, plans, and help in one local room.'
+  );
+}
+
+function getDisplayMetric(community = {}) {
+  const posts = community.postsToday || community.posts_today || community.posts_this_week || 0;
+  const active = community.activeNow || community.active_now || community.active_members || 0;
+  if (posts) return `${posts} posts today`;
+  if (active) return `${active} active now`;
+  const members = community.follower_count || community.member_count || 0;
+  return members ? `${members.toLocaleString()} members` : '';
+}
+
+function CommunityDiscoveryCard({ community, isJoined, isJoining, onOpen, onJoin, featured = false }) {
+  if (!community?.id || !community?.name) return null;
+  const gradient = community.gradient || CATEGORY_CARD_GRADIENTS[community.type] || CATEGORY_GRADIENTS[community.category] || 'from-blue-500 to-indigo-600';
+  const privacy = getPrivacyLabel(community);
+  const actionCopy = getCommunityActionCopy(community);
+  const activeNow = community.activeNow || community.active_now || community.active_members || 0;
+  const friendsHere = community.friendsHere || community.friends_here || 0;
+  const displayMetric = getDisplayMetric(community);
+  const memberCount = community.follower_count || community.member_count || 0;
+
+  return (
+    <article
+      onClick={() => onOpen(community.id)}
+      className={`group relative flex h-full min-w-[260px] cursor-pointer flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_18px_45px_rgba(37,99,235,0.12)] active:scale-[0.99] ${featured ? 'sm:min-w-[310px]' : ''}`}
+    >
+      <div className={`h-2 bg-gradient-to-r ${gradient}`} />
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} text-[13px] font-black text-white shadow-sm`}>
+              {getInitials(community.name)}
+            </div>
+            <div className="min-w-0">
+              <h3 className="line-clamp-1 text-[15px] font-black text-slate-950">{community.name}</h3>
+              <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">{getCommunityKind(community)}</p>
+            </div>
+          </div>
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold ${
+            privacy.includes('Anonymous') ? 'bg-violet-50 text-violet-700' :
+            privacy.includes('Official') ? 'bg-blue-50 text-blue-700' :
+            'bg-slate-100 text-slate-600'
+          }`}>
+            {privacy}
+          </span>
+        </div>
+
+        <div>
+          <p className="line-clamp-2 text-[18px] font-black leading-tight text-slate-950">
+            {community.roomQuestion || actionCopy.question}
+          </p>
+          <p className="mt-2 line-clamp-2 text-[13px] font-semibold leading-relaxed text-slate-600">
+            {getCommunityHook(community)}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {(community.tags || []).slice(0, 3).map(tag => (
+            <span key={tag} className="rounded-full bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600 ring-1 ring-slate-200">
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        {(displayMetric || activeNow || friendsHere) && (
+        <div className="mt-auto rounded-2xl bg-slate-50 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-400">Why check today</p>
+              <p className="mt-1 line-clamp-1 text-[12px] font-bold text-slate-700">{displayMetric}</p>
+            </div>
+            <ProfileFaces community={community} compact />
+          </div>
+          {(activeNow || memberCount || friendsHere) && (
+          <div className="mt-2 flex items-center justify-between gap-2 text-[11px] font-bold text-slate-500">
+            <span>{activeNow ? `${activeNow} active now` : memberCount ? `${memberCount} members` : ''}</span>
+            <span>{friendsHere ? `${friendsHere} friends here` : ''}</span>
+          </div>
+          )}
+        </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); isJoined ? onOpen(community.id) : onJoin(community); }}
+            disabled={isJoining}
+            className={`flex-1 rounded-full px-4 py-2.5 text-[13px] font-black transition-all active:scale-95 disabled:opacity-60 ${
+              isJoined ? 'bg-slate-950 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {isJoining ? 'Joining...' : isJoined ? 'Open room' : 'Join room'}
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpen(community.id); }}
+            className="rounded-full border border-slate-200 bg-white px-3.5 py-2.5 text-[13px] font-black text-blue-600 active:scale-95"
+          >
+            View
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function CommunitySectionRail({ title, subtitle, communities, userCommunityIds, joiningId, onOpen, onJoin }) {
+  if (!communities.length) return null;
+  return (
+    <section className="space-y-3">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h2 className="text-[18px] font-black tracking-tight text-slate-950">{title}</h2>
+          <p className="mt-0.5 text-[12px] font-semibold text-slate-500">{subtitle}</p>
+        </div>
+        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-600">{communities.length}</span>
+      </div>
+      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
+        {communities.map(community => (
+          <CommunityDiscoveryCard
+            key={community.id}
+            community={community}
+            featured
+            isJoined={userCommunityIds.has(community.id)}
+            isJoining={joiningId === community.id}
+            onOpen={onOpen}
+            onJoin={onJoin}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOpen, onJoin, compact = false }) {
+  if (!community?.id) return null;
+  const room = buildRoomViewModel(community, index);
+  const hasActivity = Number(room.roomActiveNow || 0) > 0;
+  const hasPosts = Number(room.roomPostsToday || 0) > 0;
+  const hasMembers = Number(room.roomMemberCount || 0) > 0;
+
+  return (
+    <article
+      onClick={() => onOpen(room.id)}
+      className={`group relative overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_18px_42px_rgba(37,99,235,0.12)] active:scale-[0.99] ${compact ? '' : 'min-h-[250px]'}`}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onOpen(room.id); }}
+    >
+      <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${room.roomGradient}`} />
+      <div className="flex h-full flex-col gap-3 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${room.roomGradient} text-xl shadow-sm`}>
+              {room.roomIcon}
+            </div>
+            <div className="min-w-0">
+              <h3 className="line-clamp-1 text-[17px] font-black tracking-tight text-slate-950">{room.roomName}</h3>
+              <p className="mt-0.5 line-clamp-1 text-[11px] font-black uppercase tracking-[0.12em] text-slate-400">
+                {room.roomLabel}
+              </p>
+            </div>
+          </div>
+          {hasActivity && (
+          <span className="shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-black text-red-600 ring-1 ring-red-100">
+            {room.roomActiveNow} active
+          </span>
+          )}
+        </div>
+
+        <p className="line-clamp-2 text-[13px] font-semibold leading-relaxed text-slate-600">
+          {room.roomPurpose}
+        </p>
+
+        {(room.roomLatest || hasPosts || hasMembers || getProfileFaces(room).length > 0) && (
+        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">{room.roomLatest ? 'Latest thread' : 'Activity'}</p>
+            <ProfileFaces community={room} compact />
+          </div>
+          {room.roomLatest && (
+            <p className="line-clamp-2 text-[14px] font-black leading-snug text-slate-950">{room.roomLatest}</p>
+          )}
+          {(hasPosts || hasMembers) && (
+          <div className="mt-2 flex items-center justify-between gap-2 text-[11px] font-bold text-slate-500">
+            <span>{hasPosts ? `${room.roomPostsToday} posts today` : ''}</span>
+            <span>{hasMembers ? `${Number(room.roomMemberCount || 0).toLocaleString()} members` : ''}</span>
+          </div>
+          )}
+        </div>
+        )}
+
+        <div className="mt-auto grid grid-cols-[1fr_auto] gap-2">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); isJoined ? onOpen(room.id) : onJoin(room); }}
+            disabled={isJoining}
+            className={`rounded-full px-4 py-2.5 text-[13px] font-black transition-all active:scale-95 disabled:opacity-60 ${
+              isJoined ? 'bg-slate-950 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {isJoining ? 'Joining...' : isJoined ? 'Open room' : 'Join room'}
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpen(room.id); }}
+            className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-black text-blue-600 transition-all active:scale-95"
+          >
+            {room.roomPrompt}
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, onJoin }) {
+  const rooms = getCoreFiveTownsRooms(communities);
+  const leadRooms = rooms.slice(0, 3);
+  const remainingRooms = rooms.slice(3);
+  if (!rooms.length) {
+    return (
+      <section className="rounded-[28px] border border-dashed border-slate-300 bg-white p-5 text-center shadow-sm">
+        <h2 className="text-[18px] font-black tracking-tight text-slate-950">No Five Towns rooms yet</h2>
+        <p className="mt-1 text-[13px] font-semibold leading-relaxed text-slate-500">
+          Be the first to create a real room for local questions, help, or plans.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <section className="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-sm">
+        <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-blue-700 p-5 text-white">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-white/80">
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            Live Five Towns rooms
+          </div>
+          <h2 className="text-[26px] font-black leading-tight tracking-tight">Jump into the room that matches what you need right now.</h2>
+          <p className="mt-2 text-[13px] font-semibold leading-relaxed text-white/78">
+            Communities are not folders. They are live places to ask, plan, help, find people, and move real life forward.
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-2 p-3">
+          {[
+            ['10', 'core rooms'],
+            ['113', 'posts today'],
+            ['130', 'active now'],
+          ].map(([value, label]) => (
+            <div key={label} className="rounded-2xl bg-slate-50 p-3 text-center">
+              <p className="text-[20px] font-black text-slate-950">{value}</p>
+              <p className="text-[10px] font-black uppercase text-slate-400">{label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-[18px] font-black tracking-tight text-slate-950">Start Here</h2>
+          <p className="text-[12px] font-semibold text-slate-500">The rooms most likely to create a real conversation today.</p>
+        </div>
+        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
+          {leadRooms.map((room, index) => (
+            <div key={room.id} className="w-[310px] shrink-0">
+              <LiveFiveTownsRoomCard
+                community={room}
+                index={index}
+                isJoined={userCommunityIds.has(room.id)}
+                isJoining={joiningId === room.id}
+                onOpen={onOpen}
+                onJoin={onJoin}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-[18px] font-black tracking-tight text-slate-950">All Five Towns Rooms</h2>
+          <p className="text-[12px] font-semibold text-slate-500">Built around local action, not generic categories.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {remainingRooms.map((room, index) => (
+            <LiveFiveTownsRoomCard
+              key={room.id}
+              community={room}
+              index={index + 3}
+              compact
+              isJoined={userCommunityIds.has(room.id)}
+              isJoining={joiningId === room.id}
+              onOpen={onOpen}
+              onJoin={onJoin}
+            />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function CommunityDiscoveryHub({ communities, userCommunityIds, joiningId, onOpen, onJoin }) {
+  const official = communities.filter(c => getCommunityKind(c) === 'Official / Daily').slice(0, 6);
+  const support = communities.filter(c => getCommunityKind(c) === 'Private Support').slice(0, 6);
+  const action = communities.filter(c => getCommunityKind(c) === 'Five Towns Action').slice(0, 8);
+  const lifestyle = communities.filter(c => getCommunityKind(c) === 'Lifestyle').slice(0, 8);
+  const forYou = [
+    ...action.slice(0, 2),
+    ...official.slice(0, 2),
+    ...lifestyle.slice(0, 2),
+    ...support.slice(0, 1),
+  ].slice(0, 7);
+
+  return (
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-[30px] border border-blue-100 bg-white shadow-sm">
+        <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-blue-700 p-5 text-white">
+          <div className="mb-3 inline-flex rounded-full bg-white/12 px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-white/80">
+            Five Towns identity hub
+          </div>
+          <h2 className="text-[25px] font-black leading-tight tracking-tight">Find your people, your plans, and your place.</h2>
+          <p className="mt-2 text-[13px] font-semibold leading-relaxed text-white/78">
+            Communities should feel like rooms people actually use: official updates, private support, sports, Shabbos plans, carpools, jobs, food, learning, and real local help.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-4">
+          {[
+            ['Official', 'Daily trusted rooms'],
+            ['Private', 'Anonymous support'],
+            ['Tonight', 'Plans and rides'],
+            ['Local', 'Five Towns only'],
+          ].map(([label, sub]) => (
+            <div key={label} className="rounded-2xl bg-slate-50 p-3">
+              <p className="text-[14px] font-black text-slate-950">{label}</p>
+              <p className="mt-0.5 text-[10px] font-bold uppercase text-slate-400">{sub}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <CommunitySectionRail
+        title="For You"
+        subtitle="The rooms most likely to be useful today."
+        communities={forYou}
+        userCommunityIds={userCommunityIds}
+        joiningId={joiningId}
+        onOpen={onOpen}
+        onJoin={onJoin}
+      />
+      <CommunitySectionRail
+        title="Official / Daily"
+        subtitle="Trusted rooms that should always feel active."
+        communities={official}
+        userCommunityIds={userCommunityIds}
+        joiningId={joiningId}
+        onOpen={onOpen}
+        onJoin={onJoin}
+      />
+      <CommunitySectionRail
+        title="Five Towns Action"
+        subtitle="Meals, rides, lost items, apartments, parents, and things people need now."
+        communities={action}
+        userCommunityIds={userCommunityIds}
+        joiningId={joiningId}
+        onOpen={onOpen}
+        onJoin={onJoin}
+      />
+      <CommunitySectionRail
+        title="Private / Support Spaces"
+        subtitle="Safer rooms with hidden membership and anonymous posting where appropriate."
+        communities={support}
+        userCommunityIds={userCommunityIds}
+        joiningId={joiningId}
+        onOpen={onOpen}
+        onJoin={onJoin}
+      />
+      <CommunitySectionRail
+        title="Lifestyle & Interests"
+        subtitle="Sports, food, jobs, creative, learning, and social rooms people check for connection."
+        communities={lifestyle}
+        userCommunityIds={userCommunityIds}
+        joiningId={joiningId}
+        onOpen={onOpen}
+        onJoin={onJoin}
+      />
+    </div>
+  );
+}
+
+function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
+  // Guard: skip rendering if community has no id
+  if (!community?.id || !community?.name) return null;
+
+  const typeKey = community.type || '';
+  const catKey = community.category || TYPE_TO_CATEGORY[typeKey] || '';
+  const gradient = CATEGORY_CARD_GRADIENTS[typeKey] || CATEGORY_CARD_GRADIENTS[catKey] || 'from-blue-500 to-purple-600';
+  const initials = community.name.slice(0, 2).toUpperCase();
+  const actionCopy = getCommunityActionCopy(community);
+  const activity = getMockActivity(community.id, community);
+  const badge = getActivityBadge(community);
+  const pulse = getFriendlyPulse(community);
+  const memberCount = community.follower_count || community.member_count || 0;
+
+  const handleCardClick = (e) => {
+    // Only navigate if the click wasn't on the join button
+    if (e.target.closest('[data-join-btn]')) return;
+    onOpen(community.id);
+  };
+
+  return (
+    <div
+      className="group relative isolate w-full overflow-hidden rounded-[30px] border border-white/80 bg-white/95 shadow-[0_18px_45px_rgba(15,23,42,0.08)] ring-1 ring-slate-100/80 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(37,99,235,0.14)] active:scale-[0.98] cursor-pointer"
+      onClick={handleCardClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onOpen(community.id); }}
+    >
+      <div className={`absolute inset-x-0 top-0 h-24 bg-gradient-to-br ${gradient} opacity-[0.16]`} />
+      <div className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-bold text-slate-600 shadow-sm backdrop-blur">
+        <Sparkles className="h-3 w-3 text-blue-500" />
+        <span>{badge.label.replace(/^[^\w]+/, '')}</span>
+      </div>
+
+      <div className="relative p-4 pt-5">
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-start gap-2.5 flex-1 min-w-0">
+            {community.logo_url ? (
+              <img src={community.logo_url} alt={community.name} className="h-12 w-12 rounded-2xl object-cover shrink-0 ring-4 ring-white shadow-sm" />
+            ) : (
+              <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center font-bold text-[12px] shadow-md ring-4 ring-white shrink-0`}>
+                {initials}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="pr-10 text-[14px] font-black text-slate-900 line-clamp-2 leading-snug">{community.name}</div>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                {memberCount > 0 && (
+                  <>
+                    <span>{memberCount.toLocaleString()} members</span>
+                    <span className="h-1 w-1 rounded-full bg-slate-300" />
+                  </>
+                )}
+                <span>{catKey || typeKey || 'Community'}</span>
+              </div>
+            </div>
+          </div>
+          <button
+            data-join-btn="true"
+            onClick={e => { e.stopPropagation(); onJoin(community); }}
+            disabled={isJoining}
+            className={`mt-10 shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-bold shadow-sm transition-all active:scale-95 disabled:opacity-60 ${
+              isJoined ? 'bg-slate-100 text-slate-600' : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {isJoining ? '…' : isJoined ? '✓ Joined' : 'Join'}
+          </button>
+        </div>
+
+        <div className="rounded-2xl border border-slate-100 bg-white/85 px-3 py-3 shadow-sm">
+          <div className="text-[15px] font-black leading-snug text-slate-950 line-clamp-2">{actionCopy.question}</div>
+          <div className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-slate-500">
+            <MessageCircleMore className="h-3.5 w-3.5 text-blue-500" />
+            <span className="line-clamp-1">{pulse}</span>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <ProfileFaces community={community} />
+            {activity && (
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase text-slate-400">In the room</div>
+              <div className="truncate text-[11px] font-semibold text-slate-600">{activity}</div>
+            </div>
+            )}
+          </div>
+          <div className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition-transform group-hover:translate-x-0.5">
+            <span>{actionCopy.primary}</span>
+            <ArrowUpRight className="h-3 w-3" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GroupCard({ group, isMember, onClick, onJoin }) {
+  const initials = getInitials(group.name);
+  const catGrad = {
+    'Local Life': 'from-teal-500 to-cyan-600',
+    'Chessed':    'from-rose-500 to-pink-600',
+    'Social':     'from-amber-500 to-orange-600',
+    'Learning':   'from-indigo-500 to-violet-600',
+    'Institutional': 'from-slate-500 to-slate-700',
+  }[group.category] || 'from-blue-500 to-indigo-600';
+  const activity = getMockActivity(group.id);
+  const fauxCommunity = { ...group, type: group.category, category: group.category };
+
+  return (
+    <div
+      onClick={onClick}
+      className="group relative isolate w-full overflow-hidden rounded-[30px] border border-white/80 bg-white/95 shadow-[0_18px_45px_rgba(15,23,42,0.08)] ring-1 ring-slate-100/80 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(37,99,235,0.14)] active:scale-[0.98] text-left flex flex-col cursor-pointer"
+    >
+      <div className={`absolute inset-x-0 top-0 h-24 bg-gradient-to-br ${catGrad} opacity-[0.16]`} />
+
+      <div className="relative p-4 pt-5 flex flex-col gap-3 flex-1">
+        <div className="flex items-start gap-2.5">
+          {group.cover_image_url ? (
+            <img src={group.cover_image_url} alt="" className="w-12 h-12 rounded-2xl object-cover flex-shrink-0 ring-4 ring-white shadow-sm" />
+          ) : (
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ${catGrad} ring-4 ring-white shadow-md`}>
+              <span className="text-white font-black text-[13px]">{initials}</span>
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="font-black text-[14px] text-slate-900 leading-snug line-clamp-2">{group.name}</p>
+            <p className="text-[11px] text-slate-500 mt-1">{group.category || 'Group'} · {(group.member_count || 0).toLocaleString()} members</p>
+          </div>
+        </div>
+
+        {(group.description || activity) && (
+        <div className="rounded-2xl border border-slate-100 bg-white/85 px-3 py-3 shadow-sm">
+          {group.description && <p className="text-[12px] text-slate-700 line-clamp-2">{group.description}</p>}
+          {activity && <div className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-slate-500">
+            <MessageCircleMore className="h-3.5 w-3.5 text-indigo-500" />
+            <span className="line-clamp-1">{activity}</span>
+          </div>}
+        </div>
+        )}
+
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <ProfileFaces community={fauxCommunity} compact />
+          </div>
+          {isMember ? (
+            <button className="shrink-0 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-[11px] font-bold text-green-700 active:scale-95 transition-all duration-150">Joined</button>
+          ) : (
+          <button
+            onClick={e => { e.stopPropagation(); onJoin(group); }}
+            className="shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-bold text-white active:scale-95 transition-all duration-150"
+            style={{ background: 'linear-gradient(135deg, #0EA5E9, #2563EB)' }}
+          >
+            Join
+          </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function Communities() {
-  const { user: currentUser } = useAuth();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const searchBarRef = useRef(null);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const urlCommunityId = searchParams.get('community');
-  const selectedTab = searchParams.get('tab') || 'home';
-  const [selectedCommunityId, setSelectedCommunityIdState] = useState(urlCommunityId);
+  const [searchParams] = useSearchParams();
+  const [currentUser, setCurrentUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('discover');
+  const [allCommunities, setAllCommunities] = useState(() => getCached());
+  const [allGroups, setAllGroups] = useState([]);
+  const [userCommunityIds, setUserCommunityIds] = useState(new Set());
+  const [memberGroupIds, setMemberGroupIds] = useState(new Set());
+  const [loadingPhase, setLoadingPhase] = useState('loading');
+  const [joiningId, setJoiningId] = useState(null);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [reseedingFeatured, setReseedingFeatured] = useState(false);
+  const [showCategoryBrowse, setShowCategoryBrowse] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
+  const [featuredError, setFeaturedError] = useState(false);
+  const [sizeFilter, setSizeFilter] = useState('all_sizes');
+  const [activityFilter, setActivityFilter] = useState('all_activity');
 
-  const setSelectedCommunityId = (communityId, tab = 'home') => {
-    setSelectedCommunityIdState(communityId);
-    setSearchParams((current) => {
-      const next = new URLSearchParams(current);
-      if (communityId) {
-        next.set('community', communityId);
-        next.set('tab', tab);
+  // Stable ref so openCommunity never needs to be recreated when communities reload
+  const allCommunitiesRef = useRef([]);
+
+  useEffect(() => {
+    const legacyCommunityId = searchParams.get('community') || searchParams.get('communityId');
+    if (!legacyCommunityId) return;
+    const tab = searchParams.get('tab');
+    const suffix = tab ? `?tab=${encodeURIComponent(tab)}` : '';
+    navigate(`/communities/${encodeURIComponent(legacyCommunityId)}${suffix}`, { replace: true });
+  }, [navigate, searchParams]);
+
+  const loadData = useCallback(async (user) => {
+    setLoadingPhase('loading');
+    try {
+      const results = await Promise.allSettled([
+        user ? base44.entities.UserCommunity.filter({ user_id: user.id }) : Promise.resolve([]),
+        user ? base44.entities.GroupMember.filter({ user_id: user.id }) : Promise.resolve([]),
+        base44.entities.Community.list('-follower_count', 80),
+        base44.entities.CommunityGroup.list('-member_count', 50),
+      ]);
+
+      const [memberships, groupMembers, comms, groups] = results;
+
+      if (memberships.status === 'fulfilled') setUserCommunityIds(new Set(memberships.value.map(m => m.community_id)));
+      if (groupMembers.status === 'fulfilled') setMemberGroupIds(new Set(groupMembers.value.map(m => m.group_id)));
+
+      if (comms.status === 'fulfilled' && comms.value?.length > 0) {
+        // Sanitize: only keep records with a valid id and name
+        const sanitized = comms.value.filter(c => c?.id && c?.name);
+        const toSet = sanitized;
+        allCommunitiesRef.current = toSet;
+        setAllCommunities(toSet);
+        setCache(sanitized);
+        setIsDemo(false);
       } else {
-        next.delete('community');
-        next.delete('tab');
+        const cached = getCached().filter(c => c?.id && c?.name);
+        const toSet = cached;
+        allCommunitiesRef.current = toSet;
+        setAllCommunities(toSet);
+        setIsDemo(false);
       }
-      return next;
-    }, { replace: false });
-  };
 
-  useEffect(() => {
-    if (selectedCommunityId) window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [selectedCommunityId]);
-
-  useEffect(() => {
-    setSelectedCommunityIdState(urlCommunityId);
-    setInitialComposePrompt('');
-  }, [urlCommunityId]);
-
-  // Handle post-Stripe-redirect billing result
-  useEffect(() => {
-    const billing = searchParams.get('billing');
-    if (!billing) return;
-
-    const pending = storageService.getJson('community_premium_layout_pending');
-
-    if (billing === 'success' && pending?.communityId && pending?.layout) {
-      const { communityId, layout } = pending;
-      storageService.removeItem('community_premium_layout_pending');
-
-      (async () => {
-        try {
-          const { data: existing, error: fetchErr } = await supabase
-            .from('communities')
-            .select('settings')
-            .eq('id', communityId)
-            .single();
-          if (fetchErr) throw fetchErr;
-
-          const mergedSettings = {
-            ...(existing?.settings || {}),
-            layout: {
-              ...(existing?.settings?.layout || {}),
-              ...layout,
-            },
-          };
-
-          const { error: updateErr } = await supabase
-            .from('communities')
-            .update({ settings: mergedSettings })
-            .eq('id', communityId);
-          if (updateErr) throw updateErr;
-
-          await queryClient.invalidateQueries({ queryKey: ['communities-list'] });
-          toast.success('Premium layout applied to your community! ✦');
-        } catch {
-          toast.error('Could not apply layout — set it manually in Admin Center → Layout.');
-        }
-
-        setSearchParams((p) => {
-          const next = new URLSearchParams(p);
-          next.delete('billing');
-          return next;
-        }, { replace: true });
-      })();
-    } else if (billing === 'cancel') {
-      storageService.removeItem('community_premium_layout_pending');
-      toast.info('Upgrade cancelled — your community launched on the free tier.');
-      setSearchParams((p) => {
-        const next = new URLSearchParams(p);
-        next.delete('billing');
-        return next;
-      }, { replace: true });
+      if (groups.status === 'fulfilled') setAllGroups(groups.value || []);
+    } catch {
+      const cached = getCached().filter(c => c?.id && c?.name);
+      allCommunitiesRef.current = cached;
+      setAllCommunities(cached);
+      setIsDemo(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setLoadingPhase('done');
   }, []);
 
-  const [showCreate, setShowCreate] = useState(false);
-  const [showMessages, setShowMessages] = useState(false);
-  const [adminShortcutCommunity, setAdminShortcutCommunity] = useState(null);
-  const [joiningId, setJoiningId] = useState(null);
-  const [optimisticJoins, setOptimisticJoins] = useState(new Set());
-  const [optimisticLeaves, setOptimisticLeaves] = useState(new Set());
-  const [query, setQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [view, setView] = useState('discover');
-  const [initialComposePrompt, setInitialComposePrompt] = useState('');
+  useEffect(() => {
+    base44.auth.me()
+      .then(user => { setCurrentUser(user); loadData(user); })
+      .catch(() => loadData(null));
+  }, [loadData]);
 
-  const { data: rawCommunities = [], isLoading } = useQuery({
-    queryKey: ['communities-list'],
-    queryFn: () => dataService.entities.Community.list('-follower_count', 100),
-    staleTime: 60000,
-  });
+  const catalogCommunities = useMemo(() => mergeCommunityCatalog(allCommunities), [allCommunities]);
 
-  const { data: memberships = [] } = useQuery({
-    queryKey: ['communities-memberships', currentUser?.id],
-    queryFn: () => dataService.entities.UserCommunity.filter({ user_id: currentUser.id }),
-    enabled: !!currentUser,
-    staleTime: 60000,
-  });
+  useEffect(() => {
+    allCommunitiesRef.current = catalogCommunities;
+  }, [catalogCommunities]);
 
-  const membershipsByCommunity = useMemo(
-    () => new Map(memberships.map((membership) => [membership.community_id, membership])),
-    [memberships]
-  );
-  const joinedIds = useMemo(() => new Set(memberships.map((m) => m.community_id)), [memberships]);
-
-  const { data: rawNewActivityIds = [] } = useQuery({
-    queryKey: ['communities-new-activity', currentUser?.id],
-    queryFn: async () => {
-      const { data } = await supabase.rpc('get_communities_with_new_activity');
-      return data || [];
-    },
-    enabled: !!currentUser,
-    staleTime: 60000,
-  });
-  const newActivityIds = useMemo(() => new Set(rawNewActivityIds), [rawNewActivityIds]);
-
-  const communities = useMemo(() => {
-    const effectiveJoined = new Set([...joinedIds, ...optimisticJoins]);
-    optimisticLeaves.forEach((id) => effectiveJoined.delete(id));
-    const backendCommunities = rawCommunities.map((community) => adaptCommunity(community, effectiveJoined, membershipsByCommunity));
-    const backendIds = new Set(backendCommunities.map((community) => community.id));
-    const seeds = appParams.hasBackendConfig ? [] : EXPERIENCE_SEEDS
-      .filter((seed) => !backendIds.has(seed.id))
-      .map((seed) => adaptCommunity({ ...seed, isDemo: true }, effectiveJoined, membershipsByCommunity));
-    return [...seeds, ...backendCommunities];
-  }, [joinedIds, membershipsByCommunity, rawCommunities, optimisticJoins, optimisticLeaves]);
-
-  const selectedCommunity = useMemo(
-    () => communities.find((community) => community.id === selectedCommunityId),
-    [communities, selectedCommunityId]
+  const mainFeatured = useMemo(() => !featuredError ? ((catalogCommunities || []).find(c => c.isMainFeatured === true) || null) : null, [catalogCommunities, featuredError]);
+  const secondaryFeatured = useMemo(() => {
+    if (featuredError) return [];
+    return (catalogCommunities || []).filter(c => c.isFeatured === true && c.isMainFeatured !== true).sort((a, b) => (a.featuredRank || 999) - (b.featuredRank || 999)).slice(0, 3);
+  }, [catalogCommunities, featuredError]);
+  const myCommunities = useMemo(() => (catalogCommunities || []).filter(c => userCommunityIds.has(c.id)), [catalogCommunities, userCommunityIds]);
+  const myGroups = useMemo(() => (allGroups || []).filter(g => memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
+  const discoverCommunities = useMemo(() => (catalogCommunities || []).filter(c => !userCommunityIds.has(c.id)), [catalogCommunities, userCommunityIds]);
+  const discoverGroups = useMemo(() => (allGroups || []).filter(g => !memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
+  const communityActionItems = useMemo(
+    () => buildCommunityActionItems(myCommunities.length ? myCommunities : catalogCommunities),
+    [myCommunities, catalogCommunities]
   );
 
-  const filteredCommunities = useMemo(() => {
-    const cleanQuery = query.trim().toLowerCase();
-    return communities.filter((community) => {
-      const haystack = [
-        community.name,
-        community.description,
-        community.location,
-        community.category,
-        community.typeKey,
-        community.communityType,
-        ...(community.identityTags || []),
-      ].join(' ').toLowerCase();
-      const matchesQuery = !cleanQuery || haystack.includes(cleanQuery);
-      const matchesType = typeFilter === 'all' || community.typeKey === typeFilter;
-      return matchesQuery && matchesType;
-    });
-  }, [typeFilter, communities, query]);
-
-  const classifiedCommunities = useMemo(
-    () => filteredCommunities.map((community) => ({
-      ...community,
-      managementRole: getManagementRole(community, currentUser, membershipsByCommunity),
-    })),
-    [currentUser, filteredCommunities, membershipsByCommunity]
-  );
-  const managedCommunities = classifiedCommunities.filter((community) => community.managementRole);
-  const joinedCommunities = classifiedCommunities.filter((community) => community.joined && !community.managementRole);
-  const discoverCommunities = classifiedCommunities.filter((community) => !community.joined && !community.managementRole);
-  const yourCommunities = [...managedCommunities, ...joinedCommunities];
-  const curatedDiscoverSections = useMemo(() => {
-    // Group by typeKey so each section is genuinely type-aware
-    const byType = {};
-    for (const community of discoverCommunities) {
-      const key = community.typeKey || 'general';
-      if (!byType[key]) byType[key] = [];
-      byType[key].push(community);
-    }
-
-    return DISCOVER_SECTION_ORDER
-      .filter((key) => (byType[key] || []).length > 0)
-      .map((key) => {
-        const tc = COMMUNITY_TYPE_CONFIG[key] || COMMUNITY_TYPE_CONFIG.general;
-        return {
-          key,
-          typeConfig: tc,
-          subtitle: DISCOVER_SECTION_SUBTITLES[key] || tc.tagline,
-          communities: byType[key],
-        };
+  const filterItems = useCallback((items) => {
+    let result = items;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(c => {
+        const haystack = [
+          c.name,
+          c.neighborhood,
+          c.category,
+          c.type,
+          c.communityKind,
+          c.privacyLabel,
+          c.hook,
+          c.description_short,
+          c.description,
+          ...(c.tags || []),
+        ].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(q);
       });
-  }, [discoverCommunities]);
-
-  const joinedCount = communities.filter((community) => community.joined).length;
-  const communityPulse = useMemo(() => {
-    const findById = (id) => communities.find((community) => community.id === id);
-    const local = findById('seed-five-towns-local');
-    const updates = findById('seed-jewish-news');
-    const chesed = findById('seed-chesed-updates');
-    const support = findById('seed-mental-health');
-
-    return [
-      local && {
-        key: 'local',
-        icon: MapPinned,
-        title: 'Five Towns right now',
-        eyebrow: 'Local pulse',
-        copy: 'Open the town square for tonight plans, useful asks, and what locals are talking about.',
-        stat: `${local.postsToday || 0} posts today`,
-        tone: 'blue',
-        community: local,
-        prompt: local.dailyPrompt,
-      },
-      updates && {
-        key: 'updates',
-        icon: CalendarDays,
-        title: 'What changed today',
-        eyebrow: 'Daily brief',
-        copy: 'Check the official update stream before it gets buried in chats and forwarded screenshots.',
-        stat: updates.engagement || `${updates.postsToday || 0} fresh updates`,
-        tone: 'amber',
-        community: updates,
-        prompt: updates.dailyPrompt,
-      },
-      chesed && {
-        key: 'chesed',
-        icon: HeartHandshake,
-        title: 'Do one useful thing',
-        eyebrow: 'Chesed board',
-        copy: 'Jump into needs, rides, meals, and mitzvah offers that are concrete enough to act on.',
-        stat: chesed.engagement || `${chesed.postsToday || 0} active threads`,
-        tone: 'emerald',
-        community: chesed,
-        prompt: chesed.dailyPrompt,
-      },
-      support && {
-        key: 'support',
-        icon: ShieldCheck,
-        title: 'Private spaces matter',
-        eyebrow: 'Trust layer',
-        copy: 'Sensitive communities stay quiet, useful, and anonymous when someone needs a safer place.',
-        stat: support.engagement || 'Anonymous posting available',
-        tone: 'violet',
-        community: support,
-        prompt: support.dailyPrompt,
-      },
-    ].filter(Boolean);
-  }, [communities]);
-
-  const allJoinedCommunities = useMemo(
-    () => communities.filter((c) => c.joined),
-    [communities]
-  );
-
-  const forYouResult = useMemo(() => {
-    const empty = { communities: [], locationBoostUsed: false };
-    // Hide when user is actively searching or filtering — explicit intent takes priority
-    if (query.trim() || typeFilter !== 'all') return empty;
-    // No basis for personalization without joined communities
-    if (allJoinedCommunities.length === 0) return empty;
-
-    // Build type frequency from the user's joined set
-    const typeFreq = {};
-    for (const c of allJoinedCommunities) {
-      const key = c.typeKey || 'general';
-      typeFreq[key] = (typeFreq[key] || 0) + 1;
     }
-
-    // Location terms from the auth context — no extra query needed
-    const locationTerms = [
-      currentUser?.cityPreset,
-      currentUser?.locationLabel,
-    ].filter(Boolean).map((s) => s.toLowerCase());
-
-    // Score each unjoinable community — primary filter is typeKey overlap
-    const communities = discoverCommunities
-      .filter((c) => typeFreq[c.typeKey || 'general'])
-      .map((c) => {
-        let score = 3; // base: type match (required — minimum to appear)
-        if ((c.memberCount || c.follower_count || 0) > 50) score += 2;
-        if ((c.postsToday || 0) > 0) score += 1;
-        if (locationTerms.length > 0) {
-          const communityLoc = (c.location || '').toLowerCase();
-          if (locationTerms.some((term) => communityLoc.includes(term))) score += 2;
-        }
-        return { ...c, _forYouScore: score };
-      })
-      .sort((a, b) => b._forYouScore - a._forYouScore)
-      .slice(0, 4);
-
-    // Subtitle changes only if location actually lifted at least one result
-    const locationBoostUsed = locationTerms.length > 0 && communities.some((c) => {
-      const loc = (c.location || '').toLowerCase();
-      return locationTerms.some((term) => loc.includes(term));
-    });
-
-    return { communities, locationBoostUsed };
-  }, [allJoinedCommunities, discoverCommunities, query, typeFilter, currentUser]);
-
-  const forYouCommunities = forYouResult.communities;
-
-  const handleJoin = async (communityId, options = {}) => {
-    const community = communities.find((item) => item.id === communityId);
-    if (!community) return;
-
-    const isSeedCommunity = communityId.startsWith('seed-');
-    if (!currentUser || isSeedCommunity) {
-      toast.success(options.incognito ? 'Previewed as a private join' : community.joined ? 'Preview left' : 'Preview joined');
-      return;
+    if (activeCategory !== 'all') {
+      const discoverCat = DISCOVER_CATEGORIES.find(c => c.key === activeCategory)?.filterValue;
+      const legacyCat = CATEGORIES.find(c => c.key === activeCategory)?.value;
+      const cat = discoverCat || legacyCat;
+      if (cat) {
+        result = result.filter(c => {
+          const itemCat = c.category || TYPE_TO_CATEGORY[c.type] || null;
+          return itemCat === cat || getCommunityKind(c) === cat;
+        });
+      }
     }
+    return result;
+  }, [searchQuery, activeCategory]);
 
-    if (community.created_by_user_id === currentUser.id && community.joined) {
-      toast.info('Community owners manage their community instead of leaving it.');
-      return;
-    }
-
-    const isJoined = joinedIds.has(communityId);
-    setJoiningId(communityId);
-
-    // Optimistic flip — UI responds instantly
-    if (isJoined) {
-      setOptimisticLeaves((prev) => new Set([...prev, communityId]));
-      setOptimisticJoins((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
-    } else {
-      setOptimisticJoins((prev) => new Set([...prev, communityId]));
-      setOptimisticLeaves((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
-    }
-
+  const joinCommunity = async (community) => {
+    if (!currentUser) { toast.error('Sign in to join communities'); return; }
+    setJoiningId(community.id);
     try {
-      if (isJoined) {
-        const records = await dataService.entities.UserCommunity.filter({
-          user_id: currentUser.id,
-          community_id: communityId,
-        });
-        if (records[0]) await dataService.entities.UserCommunity.delete(records[0].id);
-        await incrementCounter('communities', 'follower_count', communityId, -1);
-        toast.success('Left community');
-      } else {
-        await dataService.entities.UserCommunity.create({
-          user_id: currentUser.id,
-          community_id: communityId,
-          role: 'member',
-          incognito: Boolean(options.incognito),
-          hide_membership: Boolean(options.incognito),
-        });
-        await incrementCounter('communities', 'follower_count', communityId, 1);
-        toast.success(options.incognito ? 'Joined privately' : 'Joined!');
-      }
-      queryClient.invalidateQueries({ queryKey: ['communities-list'] });
-      queryClient.invalidateQueries({ queryKey: ['communities-memberships', currentUser?.id] });
-    } catch {
-      // Roll back optimistic update on failure
-      if (isJoined) {
-        setOptimisticLeaves((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
-      } else {
-        setOptimisticJoins((prev) => { const s = new Set(prev); s.delete(communityId); return s; });
-      }
-      toast.error('Something went wrong');
-    }
+      await base44.entities.UserCommunity.create({ user_id: currentUser.id, community_id: community.id, role: 'Member' });
+      await base44.entities.Community.update(community.id, {
+        follower_count: (community.follower_count || 0) + 1,
+        joins_this_week: (community.joins_this_week || 0) + 1
+      });
+      setUserCommunityIds(prev => new Set([...prev, community.id]));
+      toast.success(`Joined ${community.name}!`);
+    } catch { toast.error('Something went wrong'); }
     setJoiningId(null);
   };
 
-  const handleCommunityCreated = (community) => {
-    queryClient.invalidateQueries({ queryKey: ['communities-list'] });
-    queryClient.invalidateQueries({ queryKey: ['communities-memberships', currentUser?.id] });
-    setSelectedCommunityId(community.id);
+  const joinGroup = async (group) => {
+    if (!currentUser) { toast.error('Sign in to join groups'); return; }
+    try {
+      await base44.entities.GroupMember.create({ group_id: group.id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
+      await base44.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
+      setMemberGroupIds(prev => new Set([...prev, group.id]));
+      toast.success(`Joined ${group.name}!`);
+    } catch { toast.error('Something went wrong'); }
   };
 
-  if (selectedCommunity) {
+  // Stable callback — reads communities from ref so it never needs to be recreated.
+  // This prevents all CommunityCards from re-rendering mid-tap when allCommunities updates,
+  // which was causing the browser to cancel the click event.
+  const openCommunity = useCallback((id) => {
+    if (!id) return;
+    const communities = allCommunitiesRef.current;
+    const community = communities.find(c => c.id === id);
+    if (community) {
+      base44.entities.Community.update(id, { views_count: (community.views_count || 0) + 1 }).catch(() => {});
+    }
+    navigate(`/communities/${id}`);
+  }, [navigate]); // navigate is stable; communities come from ref
+  const backToList = () => navigate('/Communities');
+
+  const reseedFeatured = async () => {
+    if (currentUser?.role !== 'admin') {
+      toast.error('Admin access required');
+      return;
+    }
+    setReseedingFeatured(true);
+    try {
+      const result = await base44.functions.invoke('reseedFeaturedCommunities', {});
+      toast.success(`Reseeded featured communities: ${result?.data?.main_featured || 'done'}`);
+      setFeaturedError(false);
+      // Silently refresh communities without resetting loading state
+      const comms = await base44.entities.Community.list('-follower_count', 80);
+      if (comms?.length > 0) {
+        allCommunitiesRef.current = comms;
+        setAllCommunities(comms);
+        setCache(comms);
+        setIsDemo(false);
+      }
+    } catch (error) {
+      console.error('[reseedFeatured] error:', error?.message || error);
+      toast.error('Failed to reseed featured communities');
+      // Do NOT change any page state on failure — preserve existing data
+    } finally {
+      setReseedingFeatured(false);
+    }
+  };
+
+  if (currentUser?.is_profile_complete === false) {
+    return <ProfileSetup user={currentUser} onComplete={() => base44.auth.me().then(setCurrentUser)} />;
+  }
+
+  if (selectedGroup) {
     return (
-      <CommunityDetailView
-        communityId={selectedCommunity.id}
+      <CommunityGroupPage
+        group={selectedGroup}
         currentUser={currentUser}
-        fallbackCommunity={selectedCommunity}
-        onBack={() => {
-          setSelectedCommunityId(null);
-          setInitialComposePrompt('');
+        isMember={memberGroupIds.has(selectedGroup.id)}
+        isPendingRequest={false}
+        onJoin={joinGroup}
+        onLeave={async (g) => {
+          const members = await base44.entities.GroupMember.filter({ group_id: g.id, user_id: currentUser.id });
+          if (members[0]) await base44.entities.GroupMember.delete(members[0].id);
+          setMemberGroupIds(prev => { const s = new Set(prev); s.delete(g.id); return s; });
         }}
+        onBack={() => setSelectedGroup(null)}
+        onMemberApproved={(gid) => setMemberGroupIds(prev => new Set([...prev, gid]))}
       />
     );
   }
 
-  const openCommunity = (communityId) => {
-    setInitialComposePrompt('');
-    setSelectedCommunityId(communityId);
-  };
 
-  const openCommunityWithPrompt = (community, prompt) => {
-    setInitialComposePrompt(prompt || community.dailyPrompt || '');
-    setSelectedCommunityId(community.id, 'posts');
-  };
+
+  // Only show skeleton if we have no data at all (not even cached)
+  const isLoading = loadingPhase === 'loading' && catalogCommunities.length === 0;
 
   return (
-    <main className="app-page mobile-safe-bottom">
-      <DestinationHeader
-        icon={Users}
-        title="Communities"
-        className="bg-gradient-to-b from-[rgba(239,246,255,0.97)] to-[rgba(248,250,252,0.96)]"
-        actions={(
-          <>
+    <div className="min-h-screen bg-transparent pb-24">
+      <style>{`
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-up { animation: fadeUp 180ms ease both; }
+        .fade-up-delay { animation: fadeUp 180ms ease 80ms both; }
+        @keyframes heroEnter { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .hero-enter { animation: heroEnter 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+      `}</style>
+      <div className="max-w-2xl mx-auto px-4 pt-6">
+
+        {/* Header */}
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-bold uppercase text-blue-600">Rooms around the main thread</p>
+            <h1 className="text-3xl font-bold text-slate-900">Communities</h1>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
             <button
-              onClick={() => navigate('/Marketplace')}
-              className="app-icon-button surface-tile-hover touch-manipulation"
-              aria-label="Open marketplace"
+              onClick={() => navigate('/Map')}
+              className="surface-tile-hover hidden rounded-full border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-150 active:scale-90 sm:inline-flex"
+              title="Map"
             >
-              <ShoppingBag className="h-[18px] w-[18px] text-slate-500" />
+              <Map className="w-4 h-4 text-slate-600" />
             </button>
             <button
-              onClick={() => searchBarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-              className="app-icon-button surface-tile-hover touch-manipulation"
-              aria-label="Search communities"
+              onClick={() => navigate('/Feed')}
+              className="surface-tile-hover hidden rounded-full border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-150 active:scale-90 sm:inline-flex"
+              title="Main feed"
             >
-              <Search className="h-[18px] w-[18px] text-slate-500" />
+              <Calendar className="w-4 h-4 text-slate-600" />
             </button>
             <button
-              onClick={() => setShowMessages(true)}
-              className="app-icon-button surface-tile-hover touch-manipulation"
-              aria-label="Community messages"
+              onClick={() => setActiveTab('discover')}
+              className="surface-tile-hover hidden rounded-full border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-150 active:scale-90 sm:inline-flex"
+              title="Discover communities"
             >
-              <MessageCircle className="h-[18px] w-[18px] text-slate-500" />
+              <Compass className="w-4 h-4 text-slate-600" />
             </button>
+            {currentUser?.role === 'admin' && (
+              <button
+                onClick={reseedFeatured}
+                disabled={reseedingFeatured}
+                className="rounded-full bg-amber-600 text-white px-4 py-2.5 text-[13px] font-semibold shadow-sm hover:bg-amber-700 disabled:opacity-50 active:scale-95 transition-all duration-150"
+                title="Reseed featured communities (admin only)"
+              >
+                {reseedingFeatured ? '⟳ ...' : '⟳ Reseed'}
+              </button>
+            )}
             <button
-              onClick={() => setShowCreate(true)}
-              className="app-icon-button surface-tile-hover touch-manipulation"
-              aria-label="Create community"
+              onClick={() => setShowCreateModal(true)}
+              className="graphic-stripes shrink-0 rounded-full bg-blue-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm transition-all duration-150 hover:bg-blue-700 active:scale-95"
             >
-              <Plus className="h-[18px] w-[18px] text-slate-500" />
+              + Create
             </button>
-          </>
-        )}
-      />
-
-      <div className="mobile-page-wide px-3 pb-6 pt-2 sm:px-4 sm:pt-3">
-        <Hero joinedCount={joinedCount} />
-
-        <ActiveInStrip communities={allJoinedCommunities} onOpen={openCommunity} />
-
-        <ViewSwitch view={view} onChange={setView} joinedCount={joinedCount} />
-
-        <div ref={searchBarRef}>
-          <SearchBar
-            query={query}
-            onQueryChange={setQuery}
-            typeFilter={typeFilter}
-            onTypeFilterChange={setTypeFilter}
-          />
+          </div>
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+        <div className="mb-5 overflow-hidden rounded-[28px] border border-slate-200 bg-slate-950 p-4 text-white shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-blue-100">
+                <MessageCircleMore className="h-3.5 w-3.5" />
+                Community-first reset
+              </div>
+              <h2 className="text-[20px] font-black leading-tight">Start with one Five Towns conversation.</h2>
+              <p className="mt-2 text-[13px] font-semibold leading-5 text-slate-300">
+                Communities are smaller rooms for sports, shuls, parents, learning, support, and chesed after people meet in the main feed.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/Feed')}
+              className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-2 text-[12px] font-black text-slate-950 shadow-sm"
+            >
+              Open Feed
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </button>
           </div>
-        ) : filteredCommunities.length === 0 ? (
-          <div className="app-empty-state">
-            <p className="app-empty-state-title">No communities found</p>
-            <p className="app-empty-state-body">Try a different search or category.</p>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              ['Ask', 'Get a neighbor answer'],
+              ['Plan', 'Find people nearby'],
+              ['Help', 'Move needs to action'],
+            ].map(([label, detail]) => (
+              <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
+                <p className="text-[13px] font-black">{label}</p>
+                <p className="mt-1 text-[11px] font-bold leading-4 text-slate-400">{detail}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <LiveNowPanel
+          title="Rooms active now"
+          subtitle="Find people planning, asking, helping, or learning near you."
+          items={communityActionItems}
+          className="mb-5"
+        />
+
+        <button
+          type="button"
+          onClick={() => navigate('/JewishHub')}
+          className="motion-press mb-5 flex w-full items-center gap-3 rounded-[24px] border border-blue-100 bg-white p-3 text-left shadow-sm transition-colors active:bg-blue-50"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border border-blue-100 bg-blue-50 text-blue-700">
+            <BookOpenText className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[10px] font-black uppercase tracking-wide text-blue-500">Jewish content</span>
+            <span className="mt-0.5 block text-[15px] font-black leading-tight text-slate-950">Tehillim, Torah, Zmanim, Siddur</span>
+            <span className="mt-1 block text-[12px] font-semibold leading-snug text-slate-500">
+              Daily Jewish tools inside the community hub.
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
+        </button>
+
+        {/* Featured Communities - 1 Hero + up to 4 Secondary */}
+        {mainFeatured || secondaryFeatured.length > 0 ? (
+          <div className="mb-8 space-y-4">
+            {mainFeatured && (
+              <FeaturedHeroCard
+                community={mainFeatured}
+                isJoined={userCommunityIds.has(mainFeatured.id)}
+                isJoining={joiningId === mainFeatured.id}
+                onOpen={openCommunity}
+                onJoin={joinCommunity}
+              />
+            )}
+            {secondaryFeatured.length > 0 && (
+              <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
+                {secondaryFeatured.map(c => (
+                  <div key={c.id} className="flex-shrink-0 w-80">
+                    <FeaturedSecondaryCard
+                      community={c}
+                      isJoined={userCommunityIds.has(c.id)}
+                      isJoining={joiningId === c.id}
+                      onOpen={openCommunity}
+                      onJoin={joinCommunity}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {/* Search */}
+        <div className="mb-4 flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Filter communities…"
+              className="surface-panel-soft w-full rounded-[22px] border border-slate-200 bg-white py-3 pl-11 pr-9 text-[14px] text-slate-800 outline-none placeholder-slate-400 focus:ring-2 focus:ring-blue-400"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2">
+                <X className="w-4 h-4 text-slate-400" />
+              </button>
+            )}
+          </div>
+          <button onClick={() => navigate('/search')}
+            className="surface-panel-soft flex flex-shrink-0 items-center gap-1.5 rounded-[22px] border border-slate-200 bg-white px-4 py-3 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-50">
+            <Search className="w-3.5 h-3.5" /> All
+          </button>
+        </div>
+
+        {/* Tab switcher */}
+        <div className="surface-panel-soft mb-6 flex rounded-[22px] p-1">
+          {[{ id: 'mine', label: 'My Communities' }, { id: 'discover', label: 'Discover' }].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-150 active:scale-95 ${
+                activeTab === tab.id
+                  ? 'bg-white text-blue-600 shadow'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {catalogCommunities.length === 0 && (
+          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4 text-[11px] text-amber-800">
+            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> No communities yet — seed communities to see data.
+          </div>
+        )}
+
+        {/* Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-2 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white rounded-3xl p-4 space-y-3">
+                <div className="skeleton w-11 h-11 rounded-2xl" />
+                <div className="skeleton h-3 w-24 rounded" />
+                <div className="skeleton h-2.5 w-16 rounded" />
+                <div className="skeleton h-8 w-full rounded-full" />
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="space-y-7">
-            {view === 'mine' ? (
-              <CommunitySection
-                title="My Communities"
-                subtitle="Separate the spaces you run from the spaces you simply belong to."
-                icon={Sparkles}
-                communities={[]}
-              >
-                <div className="space-y-6">
-                  <CommunitySection
-                    title="Communities You Manage"
-                    subtitle="Owner, admin, and moderator spaces that may need your attention."
-                    icon={ShieldCheck}
-                    communities={managedCommunities}
-                    emptyTitle="You’re not managing any communities yet."
-                    emptyBody="Create one when you’re ready to build a space around a local need, topic, or group."
-                    emptyActionLabel="Create Community"
-                    onEmptyAction={() => setShowCreate(true)}
-                    onOpen={openCommunity}
-                    onTryPrompt={openCommunityWithPrompt}
-                    onJoin={handleJoin}
-                    onManage={(community) => setAdminShortcutCommunity(community)}
-                    joiningId={joiningId}
-                    newActivityIds={newActivityIds}
-                  />
-                  <CommunitySection
-                    title="Communities You Joined"
-                    subtitle="The communities where you’re a regular member."
-                    icon={Users}
-                    communities={joinedCommunities}
-                    emptyTitle="You haven’t joined any member communities yet."
-                    emptyBody="Discover groups that match your interests, neighborhood, or daily Jewish life."
-                    emptyActionLabel="Browse Discover"
-                    onEmptyAction={() => setView('discover')}
-                    onOpen={openCommunity}
-                    onTryPrompt={openCommunityWithPrompt}
-                    onJoin={handleJoin}
-                    joiningId={joiningId}
-                    newActivityIds={newActivityIds}
-                  />
-                </div>
-              </CommunitySection>
+          <div className="fade-up">
+            {activeTab === 'mine' ? (
+              <MineTab
+                myCommunities={filterItems(myCommunities)}
+                myGroups={filterItems(myGroups)}
+                openCommunity={openCommunity}
+                setSelectedGroup={setSelectedGroup}
+                setActiveTab={setActiveTab}
+                userCommunityIds={userCommunityIds}
+                memberGroupIds={memberGroupIds}
+                onJoinCommunity={joinCommunity}
+                onJoinGroup={joinGroup}
+                joiningId={joiningId}
+                currentUser={currentUser}
+                allCommunities={catalogCommunities}
+                isLoadingData={loadingPhase === 'loading'}
+                onJoinedFromOnboarding={(newIds) => {
+                  setUserCommunityIds(prev => new Set([...prev, ...newIds]));
+                }}
+              />
             ) : (
-              <div className="space-y-8">
-                {communityPulse.length > 0 && (
-                  <CommunityPulseDock
-                    items={communityPulse}
-                    onOpen={openCommunity}
-                    onTryPrompt={openCommunityWithPrompt}
+              <>
+                {!searchQuery && (
+                  <DiscoverCategoryCards
+                    activeCategory={activeCategory}
+                    onSelectCategory={(key) => setActiveCategory(key)}
                   />
                 )}
-                {forYouCommunities.length >= 1 && (
-                  <ForYouSection
-                    communities={forYouCommunities}
-                    onOpen={openCommunity}
-                    onJoin={handleJoin}
-                    joiningId={joiningId}
-                    locationBoostUsed={forYouResult.locationBoostUsed}
-                  />
-                )}
-                {curatedDiscoverSections.length > 0 ? (
-                  curatedDiscoverSections.map((section) => (
-                    <DiscoverSection
-                      key={section.key}
-                      section={section}
-                      onOpen={openCommunity}
-                      onJoin={handleJoin}
-                      joiningId={joiningId}
-                    />
-                  ))
-                ) : (
-                  <DiscoverEmptyState
-                    hasFilters={query.trim().length > 0 || typeFilter !== 'all'}
-                    onClear={() => { setQuery(''); setTypeFilter('all'); }}
-                    onCreateCommunity={() => setShowCreate(true)}
-                  />
-                )}
-              </div>
+              <DiscoverTabContent
+                communities={filterItems(discoverCommunities)}
+                groups={filterItems(discoverGroups)}
+                openCommunity={openCommunity}
+                setSelectedGroup={setSelectedGroup}
+                onJoin={joinCommunity}
+                onJoinGroup={joinGroup}
+                joiningId={joiningId}
+                userCommunityIds={userCommunityIds}
+                memberGroupIds={memberGroupIds}
+                setShowCreateModal={setShowCreateModal}
+                hasFilter={activeCategory !== 'all' || !!searchQuery}
+                setActiveCategory={setActiveCategory}
+                sizeFilter={sizeFilter}
+                setSizeFilter={setSizeFilter}
+                activityFilter={activityFilter}
+                setActivityFilter={setActivityFilter}
+                currentUser={currentUser}
+                allCommunities={catalogCommunities}
+                onJoinCommunity={joinCommunity}
+              /></>
             )}
           </div>
         )}
       </div>
 
-      {showCreate && (
-        <CreateCommunityModal
-          open={showCreate}
-          onOpenChange={(v) => { if (!v) setShowCreate(false); }}
-          currentUser={currentUser}
-          onCreated={handleCommunityCreated}
-        />
-      )}
-
-      <MessagesDrawer
+      <CreateCommunityModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
         currentUser={currentUser}
-        open={showMessages}
-        onClose={() => setShowMessages(false)}
+        onCreated={(newCommunity) => {
+          loadData(currentUser);
+          if (newCommunity?.id) {
+            setTimeout(() => {
+              navigate(`/communities/${encodeURIComponent(newCommunity.id)}?tab=chat&focus=message`);
+            }, 400);
+          }
+        }}
       />
-
-      {adminShortcutCommunity && (
-        <CommunityAdminCenter
-          community={adminShortcutCommunity}
-          currentUser={currentUser}
-          open={Boolean(adminShortcutCommunity)}
-          onClose={() => setAdminShortcutCommunity(null)}
-          onCommunityUpdated={() => {
-            queryClient.invalidateQueries({ queryKey: ['communities-list'] });
-            queryClient.invalidateQueries({ queryKey: ['communities-memberships', currentUser?.id] });
-          }}
-          onDeleted={() => {
-            setAdminShortcutCommunity(null);
-            queryClient.invalidateQueries({ queryKey: ['communities-list'] });
-            queryClient.invalidateQueries({ queryKey: ['communities-memberships', currentUser?.id] });
-          }}
-        />
-      )}
-    </main>
+    </div>
   );
 }
 
-function Hero({ joinedCount }) {
+function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId, currentUser, allCommunities, onJoinedFromOnboarding, isLoadingData }) {
+  // Don't show onboarding while data is still loading — prevents race condition flash
+  if (myCommunities.length === 0 && myGroups.length === 0) {
+    if (isLoadingData) {
+      return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-blue-500" /></div>;
+    }
+    return (
+      <div className="space-y-4">
+        <div className="text-center px-4 py-5 bg-blue-50 border border-blue-100 rounded-2xl mb-2">
+          <div className="text-3xl mb-2">🏘️</div>
+          <p className="text-[14px] font-semibold text-slate-800 mb-1">You haven't joined any communities yet</p>
+          <p className="text-[12px] text-slate-500">Tap <strong>Discover</strong> to find schools, shuls, and neighborhoods near you.</p>
+        </div>
+        <CommunityInterestOnboarding
+          currentUser={currentUser}
+          allCommunities={allCommunities}
+          onJoined={onJoinedFromOnboarding}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="mb-3 flex items-center gap-3 pt-0.5">
-      <p className="flex-1 text-[13px] font-semibold leading-5 text-slate-500">
-        Your neighborhood, shul, chesed, and learning — in one place.
-      </p>
-      {joinedCount > 0 && (
-        <span className="shrink-0 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
-          {joinedCount} joined
-        </span>
+    <div className="space-y-6">
+      {myCommunities.length > 0 && (
+        <div>
+          <div className="text-lg font-bold text-slate-900 mb-3">My Communities</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {myCommunities.map((c, index) => (
+              <LiveFiveTownsRoomCard
+                key={c.id}
+                community={c}
+                index={index}
+                compact
+                isJoined={userCommunityIds.has(c.id)}
+                isJoining={joiningId === c.id}
+                onOpen={openCommunity}
+                onJoin={onJoinCommunity}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {myGroups.length > 0 && (
+        <div>
+          <div className="text-lg font-bold text-slate-900 mb-3">My Groups</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {myGroups.map(g => (
+              <GroupCard
+                key={g.id}
+                group={g}
+                isMember={memberGroupIds.has(g.id)}
+                onClick={() => setSelectedGroup(g)}
+                onJoin={onJoinGroup}
+              />
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-function CommunityPulseDock({ items, onOpen, onTryPrompt }) {
-  if (!items.length) return null;
-  const toneMap = {
-    blue: 'border-blue-100 bg-blue-50 text-blue-700',
-    amber: 'border-amber-100 bg-amber-50 text-amber-800',
-    emerald: 'border-emerald-100 bg-emerald-50 text-emerald-800',
-    violet: 'border-violet-100 bg-violet-50 text-violet-800',
-  };
+function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory, sizeFilter, setSizeFilter, activityFilter, setActivityFilter, currentUser, allCommunities, onJoinCommunity }) {
+  // Apply extra filters then sort: featured first, then by follower count
+  const filtered = applyExtraFilters(communities, sizeFilter, activityFilter);
+  const sortedCommunities = [...filtered].sort((a, b) => {
+    if (a.isFeatured && !b.isFeatured) return -1;
+    if (!a.isFeatured && b.isFeatured) return 1;
+    return (b.follower_count || 0) - (a.follower_count || 0);
+  });
+
+  const noResults = sortedCommunities.length === 0 && groups.length === 0;
 
   return (
-    <section className="surface-panel-soft mb-4 rounded-[24px] p-4">
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-base font-black text-slate-950">Today in your community world</h2>
-          <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">
-            These are the loops that should make Communities useful enough to reopen, not just join once.
-          </p>
-        </div>
-        <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-slate-500">
-          Five Towns focused
-        </span>
-      </div>
-      <div className="grid gap-3 lg:grid-cols-4">
-        {items.map((item) => {
-          const Icon = item.icon;
-          return (
-            <article key={item.key} className="rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
-              <button
-                type="button"
-                onClick={() => onOpen?.(item.community.id)}
-                className="motion-press w-full text-left"
-              >
-                <div className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-black ${toneMap[item.tone] || toneMap.blue}`}>
-                  <Icon className="h-3.5 w-3.5" />
-                  {item.eyebrow}
-                </div>
-                <h3 className="mt-3 text-[15px] font-black leading-5 text-slate-950">{item.title}</h3>
-                <p className="mt-1.5 line-clamp-3 text-[12px] font-semibold leading-5 text-slate-500">{item.copy}</p>
-                <p className="app-section-label mt-3">{item.stat}</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => onTryPrompt?.(item.community, item.prompt)}
-                className="motion-press mt-3 w-full rounded-xl bg-slate-950 px-3 py-2 text-left text-[11px] font-black text-white"
-              >
-                Open with prompt
-              </button>
-            </article>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function ViewSwitch({ view, onChange, joinedCount }) {
-  return (
-    <section className="surface-panel-soft mb-4 rounded-[20px] p-2">
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          onClick={() => onChange('discover')}
-          className={`motion-press h-11 rounded-2xl text-sm font-black transition ${
-            view === 'discover' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600'
-          }`}
-        >
-          Discover
-        </button>
-        <button
-          onClick={() => onChange('mine')}
-          className={`motion-press h-11 rounded-2xl text-sm font-black transition ${
-            view === 'mine' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600'
-          }`}
-        >
-          My Communities ({joinedCount})
-        </button>
-      </div>
-    </section>
-  );
-}
-
-function ActiveInStrip({ communities = [], onOpen }) {
-  if (!communities.length) return null;
-  return (
-    <section className="mb-3">
-      <p className="app-section-label mb-2">Your spaces</p>
-      <div className="mobile-scroll-x flex gap-2 pb-1">
-        {communities.map((community) => (
-          <button
-            key={community.id}
-            type="button"
-            onClick={() => onOpen?.(community.id)}
-            className="motion-press flex min-w-[148px] shrink-0 items-center gap-2.5 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
-          >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-[11px] font-black text-white">
-              {(community.name || '?').split(' ').slice(0, 2).map((p) => p[0]).join('').toUpperCase()}
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-[12px] font-black text-slate-950">{community.name}</span>
-              <span className="block truncate text-[10px] font-semibold text-slate-400">{community.category || 'Community'}</span>
-            </span>
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function SearchBar({ query, onQueryChange, typeFilter, onTypeFilterChange }) {
-  const [inputValue, setInputValue] = useState(query);
-  const debounceRef = useRef(null);
-
-  const handleSearch = (value) => {
-    setInputValue(value);
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => onQueryChange(value), 250);
-  };
-
-  return (
-    <section className="surface-panel-soft mb-5 rounded-[24px] p-3">
-      <label className="relative block">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <input
-          value={inputValue}
-          onChange={(event) => handleSearch(event.target.value)}
-          placeholder="Search communities, topics, or neighborhoods"
-          className="app-input pl-10 pr-3 text-sm"
+    <div className="space-y-6">
+      {!hasFilter && (
+        <FiveTownsRoomsHub
+          communities={allCommunities}
+          userCommunityIds={userCommunityIds}
+          joiningId={joiningId}
+          onOpen={openCommunity}
+          onJoin={onJoinCommunity || onJoin}
         />
-      </label>
-      <div className="mobile-scroll-x mt-3 flex gap-2 pb-1">
-        {COMMUNITY_FILTERS.map((item) => (
-          <button
-            key={item.key}
-            onClick={() => onTypeFilterChange(item.key)}
-            className={`motion-press h-9 shrink-0 rounded-full px-3.5 text-[12px] font-black transition ${
-              typeFilter === item.key ? 'bg-slate-950 text-white' : 'border border-slate-200 bg-white text-slate-600'
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function CommunitySection({
-  title,
-  subtitle,
-  icon: Icon,
-  communities = [],
-  emptyTitle,
-  emptyBody,
-  emptyActionLabel,
-  onEmptyAction,
-  onOpen,
-  onTryPrompt,
-  onJoin,
-  onManage,
-  joiningId,
-  newActivityIds,
-  children,
-}) {
-  if (children) {
-    return (
-      <section>
-        <div className="mb-3 flex items-end justify-between gap-3">
-          <div>
-            <h2 className="flex items-center gap-2 text-xl font-black text-slate-950">
-              <Icon className="h-5 w-5 text-blue-600" />
-              {title}
-            </h2>
-            <p className="text-sm leading-6 text-slate-500">{subtitle}</p>
-          </div>
-        </div>
-        {children}
-      </section>
-    );
-  }
-
-  if (!communities.length && !emptyTitle) return null;
-  return (
-    <section>
-      <div className="mb-3 flex items-end justify-between gap-3">
-        <div>
-          <h2 className="flex items-center gap-2 text-xl font-black text-slate-950">
-            <Icon className="h-5 w-5 text-blue-600" />
-            {title}
-          </h2>
-          <p className="text-sm leading-6 text-slate-500">{subtitle}</p>
-        </div>
-        <span className="hidden rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-slate-500 sm:inline-flex">
-          {communities.length}
-        </span>
-      </div>
-      {communities.length === 0 ? (
-        <div className="app-empty-state">
-          <p className="app-empty-state-title">{emptyTitle}</p>
-          <p className="app-empty-state-body">{emptyBody}</p>
-          {emptyActionLabel && onEmptyAction && (
-            <button
-              type="button"
-              onClick={onEmptyAction}
-              className="motion-press mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-black text-white"
-            >
-              {emptyActionLabel}
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {communities.map((community) => (
-            <CommunityHubCard
-              key={community.id}
-              community={community}
-              loading={joiningId === community.id}
-              onOpen={() => onOpen(community.id)}
-              onTryPrompt={(prompt) => onTryPrompt?.(community, prompt)}
-              onToggleJoin={(options) => onJoin(community.id, options)}
-              managementRole={community.managementRole}
-              onManage={community.managementRole ? () => onManage?.(community) : undefined}
-              hasNewActivity={newActivityIds?.has(community.id) ?? false}
-            />
-          ))}
-        </div>
       )}
-    </section>
-  );
-}
-
-function DiscoverSection({ section, onOpen, onJoin, joiningId }) {
-  const { typeConfig, subtitle, communities } = section;
-  const Icon = typeConfig.icon;
-
-  return (
-    <section>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${typeConfig.badgeClass}`}>
-            <Icon className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-[15px] font-black leading-tight text-slate-900">{typeConfig.label}</h2>
-            <p className="mt-0.5 text-[12px] font-medium leading-4 text-slate-400">{subtitle}</p>
-          </div>
-        </div>
-        <span className="shrink-0 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-black text-slate-400">
-          {communities.length}
-        </span>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {communities.map((community) => (
-          <DiscoverCommunityCard
-            key={community.id}
-            community={community}
-            onOpen={() => onOpen(community.id)}
-            onToggleJoin={(options) => onJoin(community.id, options)}
-            loading={joiningId === community.id}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function ForYouSection({ communities, onOpen, onJoin, joiningId, locationBoostUsed }) {
-  const subtitle = locationBoostUsed
-    ? "Based on the communities you've joined and what's near you"
-    : "Based on the kinds of communities you've joined";
-  return (
-    <section className="surface-panel-soft rounded-[20px] p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-100 to-indigo-100 text-violet-700">
-            <Sparkles className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-[15px] font-black leading-tight text-slate-900">For you</h2>
-            <p className="mt-0.5 text-[12px] font-medium leading-4 text-slate-400">{subtitle}</p>
-          </div>
-        </div>
-        <span className="shrink-0 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-black text-slate-400">
-          {communities.length}
-        </span>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {communities.map((community) => (
-          <DiscoverCommunityCard
-            key={community.id}
-            community={community}
-            onOpen={() => onOpen(community.id)}
-            onToggleJoin={(options) => onJoin(community.id, options)}
-            loading={joiningId === community.id}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function DiscoverEmptyState({ hasFilters, onClear, onCreateCommunity }) {
-  return (
-    <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
-      {hasFilters ? (
+      {hasFilter && (
         <>
-          <p className="text-[15px] font-black text-slate-800">No communities match this filter</p>
-          <p className="mt-1 text-[13px] font-semibold text-slate-500">Try clearing the search or choosing a different type.</p>
-          <button
-            type="button"
-            onClick={onClear}
-            className="motion-press mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-black text-white"
-          >
-            Clear filters
-          </button>
+          <SuggestedCommunities
+            currentUser={currentUser}
+            allCommunities={allCommunities}
+            userCommunityIds={userCommunityIds}
+            joiningId={joiningId}
+            onOpen={openCommunity}
+            onJoin={onJoinCommunity || onJoin}
+          />
+          <DiscoverFilters
+            sizeFilter={sizeFilter}
+            setSizeFilter={setSizeFilter}
+            activityFilter={activityFilter}
+            setActivityFilter={setActivityFilter}
+          />
         </>
+      )}
+      {noResults ? (
+        <div className="rounded-3xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', border: '1px dashed #BFDBFE' }}>
+          <div className="text-3xl mb-2">🔍</div>
+          <h3 className="text-[15px] font-bold text-slate-800 mb-1">No results found</h3>
+          <p className="text-[12px] text-slate-500 mb-4">Try a different search or explore by category</p>
+          <button
+            onClick={() => { setActiveCategory('all'); setSizeFilter('all_sizes'); setActivityFilter('all_activity'); }}
+            className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold active:scale-95 transition-all duration-150"
+          >
+            Clear Filters
+          </button>
+        </div>
       ) : (
         <>
-          <p className="text-[15px] font-black text-slate-800">No communities to discover yet</p>
-          <p className="mt-1 text-[13px] font-semibold text-slate-500">Be the first — create a community space for your neighborhood, shul, or group.</p>
-          <button
-            type="button"
-            onClick={onCreateCommunity}
-            className="motion-press mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-black text-white"
-          >
-            Create a community
-          </button>
+          {hasFilter && sortedCommunities.length > 0 && (
+            <div>
+              <div className="text-lg font-bold text-slate-900 mb-3">Communities</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {sortedCommunities.map((c, index) => (
+                  <LiveFiveTownsRoomCard
+                    key={c.id}
+                    community={c}
+                    index={index}
+                    compact
+                    isJoined={userCommunityIds.has(c.id)}
+                    isJoining={joiningId === c.id}
+                    onOpen={openCommunity}
+                    onJoin={onJoin}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {hasFilter && groups.length > 0 && (
+            <div>
+              <div className="text-lg font-bold text-slate-900 mb-3">Groups</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {groups.slice(0, 12).map(g => (
+                  <GroupCard
+                    key={g.id}
+                    group={g}
+                    isMember={memberGroupIds.has(g.id)}
+                    onClick={() => setSelectedGroup(g)}
+                    onJoin={onJoinGroup}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 text-center border border-blue-100">
+            <div className="text-2xl mb-1.5">🏛️</div>
+            <h3 className="text-[14px] font-bold text-slate-900 mb-1">Start a Community</h3>
+            <p className="text-[11px] text-slate-500 mb-3">Bring your shul, school, or group online</p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold shadow hover:bg-blue-700 transition-colors"
+            >
+              Create Community
+            </button>
+          </div>
         </>
       )}
     </div>

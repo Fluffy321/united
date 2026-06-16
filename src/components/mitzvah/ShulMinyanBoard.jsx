@@ -29,7 +29,7 @@ const shuls = [
     distance: '0.7 mi',
     minyanim: { shacharis: '6:30, 7:30, 8:30', mincha: '7:55 PM', maariv: '9:15, 10:00 PM' },
     about: 'Large central shul with daily minyanim, youth programming, shiurim, and active community announcements.',
-    events: ['Daf Yomi after Shacharis', 'Teen learning Thursday night', 'Community kiddush this Shabbos'],
+    events: [],
   },
   {
     id: 'young-israel-lawrence-cedarhurst',
@@ -41,7 +41,7 @@ const shuls = [
     distance: '1.1 mi',
     minyanim: { shacharis: '6:20, 7:15, 8:15', mincha: '7:50 PM', maariv: '9:05, 10:05 PM' },
     about: 'Central Cedarhurst shul with steady weekday minyanim, shiurim, and local events.',
-    events: ['Halacha chaburah tonight', 'Guest speaker Motzei Shabbos', 'Youth groups this Shabbos'],
+    events: [],
   },
   {
     id: 'chabad-five-towns',
@@ -53,7 +53,7 @@ const shuls = [
     distance: '1.3 mi',
     minyanim: { shacharis: '7:00, 8:00', mincha: '7:45 PM', maariv: '9:00 PM' },
     about: 'Chabad center for minyanim, Torah classes, holiday programs, and community support.',
-    events: ['Tanya class', 'Pre-Shabbos mivtzoim', 'Women’s class this week'],
+    events: [],
   },
   {
     id: 'congregation-beth-sholom',
@@ -65,7 +65,7 @@ const shuls = [
     distance: '1.5 mi',
     minyanim: { shacharis: '6:40, 7:45', mincha: '7:55 PM', maariv: '9:20 PM' },
     about: 'Lawrence shul with regular tefillah, learning, youth programming, and community events.',
-    events: ['Mishna shiur', 'Kiddush sponsor open', 'Parent-child learning Sunday'],
+    events: [],
   },
   {
     id: 'sephardic-temple',
@@ -77,7 +77,7 @@ const shuls = [
     distance: '1.8 mi',
     minyanim: { shacharis: '6:45, 8:00', mincha: '7:40 PM', maariv: '9:10 PM' },
     about: 'Sephardic community shul with minyanim, Torah learning, and family programming.',
-    events: ['Parsha class', 'Motzei Shabbos learning', 'Youth minyan update'],
+    events: [],
   },
   {
     id: 'congregation-ohr-torah',
@@ -89,7 +89,7 @@ const shuls = [
     distance: '2.3 mi',
     minyanim: { shacharis: '6:35, 7:40', mincha: '7:50 PM', maariv: '9:15 PM' },
     about: 'North Woodmere congregation with daily minyanim and neighborhood programming.',
-    events: ['Gemara shiur after Maariv', 'Shabbos kiddush update', 'Security volunteer rotation'],
+    events: [],
   },
   {
     id: 'inwood-shul',
@@ -101,7 +101,7 @@ const shuls = [
     distance: '2.8 mi',
     minyanim: { shacharis: '6:45, 8:00', mincha: '7:35 PM', maariv: '9:05 PM' },
     about: 'Inwood community minyan hub with weekday tefillah and neighborhood announcements.',
-    events: ['Maariv needs backup tonight', 'Shabbos hospitality thread', 'Local learning night'],
+    events: [],
   },
 ];
 
@@ -141,19 +141,11 @@ const initialMinyanim = [
   },
 ];
 
-const initialRequests = [
-  { id: 'req-1', type: 'Need people for minyan', title: 'Backup for late Maariv', shul: 'Inwood Shul', meta: 'Tonight - need 3 more', icon: Users },
-  { id: 'req-2', type: 'Ride to shul', title: 'Ride from Hewlett to Cedarhurst', shul: 'Young Israel of Lawrence-Cedarhurst', meta: 'Mincha/Maariv', icon: Car },
-  { id: 'req-3', type: 'Lost item', title: 'Black siddur left after Shacharis', shul: 'Congregation Beth Sholom', meta: 'Posted today', icon: Search },
-];
-
-const happenings = [
-  { id: 'h-1', kind: 'Shiur', title: 'Halacha chaburah before Maariv', place: 'Young Israel of Lawrence-Cedarhurst', time: 'Tonight', icon: BookOpen },
-  { id: 'h-2', kind: 'Speaker', title: 'Guest speaker Motzei Shabbos', place: 'Congregation Beth Sholom', time: 'This week', icon: Megaphone },
-  { id: 'h-3', kind: 'Kiddush', title: 'Kiddush sponsorship still open', place: 'Young Israel of Woodmere', time: 'Shabbos', icon: CalendarDays },
-];
+const initialRequests = [];
+const happenings = [];
 
 const requestTypes = ['Need people for minyan', 'Looking for ride to shul', 'Hosting guests', 'Lost item at shul'];
+const HAS_VERIFIED_MINYAN_DATA = false;
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -229,7 +221,7 @@ function MinyanNowCard({ minyan, joined, onJoin, onOpenShul, onOpenMap }) {
   );
 }
 
-function ShulCard({ shul, onOpen, onOpenMap }) {
+function ShulCard({ shul, onOpen, onOpenMap, showMinyanTimes = false }) {
   return (
     <article className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -252,11 +244,13 @@ function ShulCard({ shul, onOpen, onOpenMap }) {
         ))}
       </div>
 
-      <div className="mt-2 grid grid-cols-3 gap-2">
-        <TimeBox label="Shacharis" value={shul.minyanim.shacharis} />
-        <TimeBox label="Mincha" value={shul.minyanim.mincha} />
-        <TimeBox label="Maariv" value={shul.minyanim.maariv} />
-      </div>
+      {showMinyanTimes && (
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          <TimeBox label="Shacharis" value={shul.minyanim.shacharis} />
+          <TimeBox label="Mincha" value={shul.minyanim.mincha} />
+          <TimeBox label="Maariv" value={shul.minyanim.maariv} />
+        </div>
+      )}
 
       <div className="mt-2 flex gap-2">
         <button onClick={() => onOpen(shul)} className="motion-press h-9 flex-1 rounded-2xl bg-slate-950 text-sm font-black text-white">
@@ -373,7 +367,7 @@ function PostRequestModal({ onClose, onPost }) {
   );
 }
 
-function ShulProfileSheet({ shul, onClose, onOpenMap, onFollow }) {
+function ShulProfileSheet({ shul, onClose, onOpenMap, onFollow, showMinyanTimes = false }) {
   if (!shul) return null;
 
   return (
@@ -401,11 +395,13 @@ function ShulProfileSheet({ shul, onClose, onOpenMap, onFollow }) {
         </div>
 
         <div className="space-y-4 p-4">
-          <div className="grid grid-cols-3 gap-2">
-            <TimeBox label="Shacharis" value={shul.minyanim.shacharis} />
-            <TimeBox label="Mincha" value={shul.minyanim.mincha} />
-            <TimeBox label="Maariv" value={shul.minyanim.maariv} />
-          </div>
+          {showMinyanTimes && (
+            <div className="grid grid-cols-3 gap-2">
+              <TimeBox label="Shacharis" value={shul.minyanim.shacharis} />
+              <TimeBox label="Mincha" value={shul.minyanim.mincha} />
+              <TimeBox label="Maariv" value={shul.minyanim.maariv} />
+            </div>
+          )}
 
           <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
             <h3 className="text-sm font-black text-slate-950">About</h3>
@@ -414,6 +410,7 @@ function ShulProfileSheet({ shul, onClose, onOpenMap, onFollow }) {
 
           <div>
             <h3 className="mb-2 text-sm font-black text-slate-950">Events and recent posts</h3>
+            {shul.events.length > 0 ? (
             <div className="space-y-2">
               {shul.events.map((event) => (
                 <div key={event} className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700">
@@ -421,6 +418,11 @@ function ShulProfileSheet({ shul, onClose, onOpenMap, onFollow }) {
                 </div>
               ))}
             </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-3 py-3 text-sm font-bold text-slate-500">
+                No verified shul posts yet.
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -494,11 +496,11 @@ export default function ShulMinyanBoard({ currentUser }) {
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-blue-700">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                Live minyan board
+                Shul directory
               </div>
               <h2 className="mt-2 text-[20px] font-black leading-6 text-slate-950">Shuls & Minyan</h2>
               <p className="mt-1 text-[13px] font-semibold leading-5 text-slate-500">
-                Find a minyan, open shul times, or post a quick shul request.
+                Find local shuls, open the map, or post a quick shul request.
               </p>
             </div>
             <button onClick={() => setShowPostRequest(true)} className="motion-press flex h-10 shrink-0 items-center gap-2 rounded-2xl bg-slate-950 px-3 text-sm font-black text-white">
@@ -507,10 +509,9 @@ export default function ShulMinyanBoard({ currentUser }) {
             </button>
           </div>
 
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            <Stat value={initialMinyanim.length} label="Minyanim" tone="blue" />
+          <div className={`mt-3 grid gap-2 ${requests.length > 0 ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <Stat value={shuls.length} label="Shuls" tone="emerald" />
-            <Stat value={requests.length} label="Requests" tone="amber" />
+            {requests.length > 0 && <Stat value={requests.length} label="Requests" tone="amber" />}
           </div>
         </div>
       </div>
@@ -527,33 +528,35 @@ export default function ShulMinyanBoard({ currentUser }) {
         </label>
       </div>
 
-      <section className="rounded-[26px] border border-slate-200 bg-slate-50/70 p-3">
-        <div className="mb-3 flex items-end justify-between gap-3">
-          <div>
-            <h3 className="text-[15px] font-black text-slate-950">Minyan Now</h3>
-            <p className="text-[12px] font-semibold text-slate-500">Fastest things to act on.</p>
+      {HAS_VERIFIED_MINYAN_DATA && (
+        <section className="rounded-[26px] border border-slate-200 bg-slate-50/70 p-3">
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div>
+              <h3 className="text-[15px] font-black text-slate-950">Minyan Now</h3>
+              <p className="text-[12px] font-semibold text-slate-500">Fastest things to act on.</p>
+            </div>
+            <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-black text-red-700">Live counts</span>
           </div>
-          <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-black text-red-700">Live counts</span>
-        </div>
-        <div className="grid gap-3 lg:grid-cols-3">
-          {initialMinyanim.map((minyan) => (
-            <MinyanNowCard
-              key={minyan.id}
-              minyan={minyan}
-              joined={joinedMinyanim.has(minyan.id)}
-              onJoin={joinMinyan}
-              onOpenShul={setSelectedShul}
-              onOpenMap={openMap}
-            />
-          ))}
-        </div>
-      </section>
+          <div className="grid gap-3 lg:grid-cols-3">
+            {initialMinyanim.map((minyan) => (
+              <MinyanNowCard
+                key={minyan.id}
+                minyan={minyan}
+                joined={joinedMinyanim.has(minyan.id)}
+                onJoin={joinMinyan}
+                onOpenShul={setSelectedShul}
+                onOpenMap={openMap}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
         <div className="mb-2 flex items-end justify-between gap-3">
           <div>
             <h3 className="text-[15px] font-black text-slate-950">Nearby Shuls</h3>
-            <p className="text-[12px] font-semibold text-slate-500">Times, distance, nusach, and map access.</p>
+            <p className="text-[12px] font-semibold text-slate-500">Directory, distance, nusach, and map access.</p>
           </div>
           <button onClick={() => navigate('/Map?category=shuls')} className="motion-press rounded-full bg-blue-50 px-3 py-1.5 text-[12px] font-black text-blue-700">
             Map pins
@@ -561,37 +564,61 @@ export default function ShulMinyanBoard({ currentUser }) {
         </div>
         <div className="grid gap-2 lg:grid-cols-2">
           {filteredShuls.map((shul) => (
-            <ShulCard key={shul.id} shul={shul} onOpen={setSelectedShul} onOpenMap={openMap} />
+            <ShulCard
+              key={shul.id}
+              shul={shul}
+              onOpen={setSelectedShul}
+              onOpenMap={openMap}
+              showMinyanTimes={HAS_VERIFIED_MINYAN_DATA}
+            />
           ))}
         </div>
       </section>
 
-      <section className="grid gap-3 lg:grid-cols-[1fr_1fr]">
-        <div className="rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
-          <div className="mb-2">
-            <h3 className="text-[15px] font-black text-slate-950">What’s Happening</h3>
-            <p className="text-[12px] font-semibold text-slate-500">Shiurim, speakers, kiddush, learning nights.</p>
-          </div>
-          <div className="space-y-2">
-            {happenings.map((item) => <HappeningCard key={item.id} item={item} />)}
-          </div>
-        </div>
-
-        <div className="rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
-          <div className="mb-2 flex items-end justify-between gap-3">
-            <div>
-              <h3 className="text-[15px] font-black text-slate-950">Requests</h3>
-              <p className="text-[12px] font-semibold text-slate-500">Minyan help, rides, hosting, and lost items.</p>
+      {(happenings.length > 0 || requests.length > 0) && (
+        <section className="grid gap-3 lg:grid-cols-[1fr_1fr]">
+          {happenings.length > 0 && (
+            <div className="rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
+              <div className="mb-2">
+                <h3 className="text-[15px] font-black text-slate-950">What’s Happening</h3>
+                <p className="text-[12px] font-semibold text-slate-500">Shiurim, speakers, kiddush, learning nights.</p>
+              </div>
+              <div className="space-y-2">
+                {happenings.map((item) => <HappeningCard key={item.id} item={item} />)}
+              </div>
             </div>
-            <button onClick={() => setShowPostRequest(true)} className="motion-press rounded-full bg-slate-950 px-3 py-1.5 text-[12px] font-black text-white">
-              Add
-            </button>
-          </div>
-          <div className="space-y-2">
-            {requests.map((request) => <RequestCard key={request.id} request={request} />)}
-          </div>
+          )}
+
+          {requests.length > 0 && (
+            <div className="rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
+              <div className="mb-2 flex items-end justify-between gap-3">
+                <div>
+                  <h3 className="text-[15px] font-black text-slate-950">Requests</h3>
+                  <p className="text-[12px] font-semibold text-slate-500">Minyan help, rides, hosting, and lost items.</p>
+                </div>
+                <button onClick={() => setShowPostRequest(true)} className="motion-press rounded-full bg-slate-950 px-3 py-1.5 text-[12px] font-black text-white">
+                  Add
+                </button>
+              </div>
+              <div className="space-y-2">
+                {requests.map((request) => <RequestCard key={request.id} request={request} />)}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {requests.length === 0 && (
+        <div className="rounded-[22px] border border-dashed border-slate-200 bg-white px-3 py-3 text-center shadow-sm">
+          <h3 className="text-[13px] font-black text-slate-950">No shul requests yet</h3>
+          <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-500">
+            Post a real shul request when someone needs minyan help, a ride, hosting, or a lost-item notice.
+          </p>
+          <button onClick={() => setShowPostRequest(true)} className="motion-press mt-3 rounded-full bg-slate-950 px-4 py-2 text-[12px] font-black text-white">
+            Post request
+          </button>
         </div>
-      </section>
+      )}
 
       <div className="rounded-[22px] border border-emerald-100 bg-emerald-50 px-3 py-2.5">
         <div className="flex items-start gap-3">
@@ -613,6 +640,7 @@ export default function ShulMinyanBoard({ currentUser }) {
           onClose={() => setSelectedShul(null)}
           onOpenMap={openMap}
           onFollow={followShul}
+          showMinyanTimes={HAS_VERIFIED_MINYAN_DATA}
         />
       )}
 

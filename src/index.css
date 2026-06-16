@@ -629,6 +629,12 @@
     pointer-events: auto;
   }
 
+  .app-feedback-action {
+    position: fixed;
+    left: max(var(--app-floating-gutter), calc((100vw - var(--app-content-max)) / 2 + var(--app-floating-gutter)));
+    top: calc(env(safe-area-inset-top, 0px) + 128px);
+  }
+
   @media (min-width: 1024px) {
     .app-floating-banner {
       bottom: 24px;

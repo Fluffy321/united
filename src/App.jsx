@@ -7,7 +7,7 @@ import PageTransition from '@/components/common/PageTransition'
 import AppErrorBoundary from '@/components/common/AppErrorBoundary'
 import AppSplashScreen from '@/components/common/AppSplashScreen'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import AdminRoute from '@/components/AdminRoute';
@@ -63,8 +63,8 @@ function ProductionConfigError() {
 // Route-level code splitting — only MVP pages are eagerly imported here.
 const PublicProfile           = lazy(() => import('@/pages/PublicProfile'));
 const AdminAnalyticsDashboard = lazy(() => import('@/pages/AdminAnalyticsDashboard'));
-const FutureFeatures          = lazy(() => import('@/pages/FutureFeatures'));
-const UserSettings            = lazy(() => import('@/pages/UserSettings'));
+const AdminModerationQueue    = lazy(() => import('@/pages/AdminModerationQueue'));
+const AdminSeedControl        = lazy(() => import('@/pages/AdminSeedControl'));
 const PostDetail              = lazy(() => import('@/pages/PostDetail'));
 const CommunityPage           = lazy(() => import('@/pages/CommunityPage'));
 const JoinByCommunityCode     = lazy(() => import('@/pages/JoinByCommunityCode'));
@@ -75,11 +75,11 @@ const CommunityGuidelines     = lazy(() => import('@/pages/CommunityGuidelines')
 const DMCAPolicy              = lazy(() => import('@/pages/DMCAPolicy'));
 const PrivacyRights           = lazy(() => import('@/pages/PrivacyRights'));
 const SearchPage              = lazy(() => import('@/pages/Search'));
+const Landing                 = lazy(() => import('@/pages/Landing'));
 const Login                   = lazy(() => import('@/pages/Login'));
-const Events                  = lazy(() => import('@/pages/Events'));
-const MyEvents                = lazy(() => import('@/pages/MyEvents'));
+const JewishHub               = lazy(() => import('@/pages/JewishHub'));
 const AdminFeedbackInbox      = lazy(() => import('@/pages/AdminFeedbackInbox'));
-const AdminiOSReadiness       = lazy(() => import('@/pages/AdminiOSReadiness'));
+const Notifications           = lazy(() => import('@/pages/Notifications'));
 const SupportJUnited          = lazy(() => import('@/pages/SupportJUnited'));
 const ThankYou                = lazy(() => import('@/pages/ThankYou'));
 
@@ -88,8 +88,34 @@ const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const mainPagePath = `/${mainPageKey || 'Feed'}`;
 
 const ADMIN_PAGE_KEYS = new Set(['AdminModerationQueue', 'AdminSeedControl']);
+const ROUTER_FUTURE_FLAGS = {
+  v7_startTransition: true,
+  v7_relativeSplatPath: true,
+};
 const SPLASH_MIN_VISIBLE_MS = 720;
 const SPLASH_MAX_WAIT_MS = 4500;
+const LEGACY_FEED_ROUTES = [
+  '/BusinessDirectory',
+  '/BusinessListing',
+  '/CommunityCalendar',
+  '/CommunityDiscover',
+  '/CommunitiesDiscover',
+  '/CommunityUpdates',
+  '/CreateBusinessListing',
+  '/DiscoverCommunitiesFeed',
+  '/Events',
+  '/Groups',
+  '/groups/:groupId',
+  '/InviteJoin',
+  '/MitzvahMap',
+  '/MyEvents',
+  '/News',
+  '/Organization',
+  '/ShulPage',
+  '/tehillim',
+  '/UserSettings',
+  '/yahrzeits',
+];
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -125,6 +151,7 @@ const PageFallback = () => (
 
 const AuthenticatedApp = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, checkAppState } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -136,28 +163,19 @@ const AuthenticatedApp = () => {
     <>
       <Suspense fallback={<PageFallback />}>
         <Routes>
+          <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
+          <Route path="/welcome" element={<PageTransition><Landing /></PageTransition>} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route element={<ProtectedRoute />}>
             {/* Admin-only routes */}
             <Route element={<AdminRoute />}>
-              {[...ADMIN_PAGE_KEYS].map((key) => {
-                const Page = Pages[key];
-                return (
-                  <Route
-                    key={key}
-                    path={`/${key}`}
-                    element={<PageTransition><LayoutWrapper currentPageName={key}><Page /></LayoutWrapper></PageTransition>}
-                  />
-                );
-              })}
+              <Route path="/AdminModerationQueue" element={<PageTransition><LayoutWrapper currentPageName="AdminModerationQueue"><AdminModerationQueue /></LayoutWrapper></PageTransition>} />
+              <Route path="/AdminSeedControl" element={<PageTransition><LayoutWrapper currentPageName="AdminSeedControl"><AdminSeedControl /></LayoutWrapper></PageTransition>} />
               <Route path="/AdminAnalyticsDashboard" element={<PageTransition><AdminAnalyticsDashboard /></PageTransition>} />
-              <Route path="/FutureFeatures" element={<PageTransition><FutureFeatures /></PageTransition>} />
               <Route path="/AdminFeedbackInbox" element={<PageTransition><AdminFeedbackInbox /></PageTransition>} />
-              <Route path="/AdminiOSReadiness" element={<PageTransition><AdminiOSReadiness /></PageTransition>} />
             </Route>
 
             {/* Main app routes */}
-            <Route path="/" element={<Navigate to={mainPagePath} replace />} />
             {Object.entries(Pages)
               .filter(([path]) => !ADMIN_PAGE_KEYS.has(path))
               .map(([path, Page]) => (
@@ -171,11 +189,16 @@ const AuthenticatedApp = () => {
             {/* MVP utility routes */}
             <Route path="/PublicProfile" element={<PageTransition><PublicProfile /></PageTransition>} />
             <Route path="/PostDetail" element={<PageTransition><PostDetail /></PageTransition>} />
-            <Route path="/UserSettings" element={<PageTransition><UserSettings /></PageTransition>} />
+            <Route path="/Discover" element={<Navigate to="/Communities" replace />} />
+            <Route path="/discover" element={<Navigate to="/Communities" replace />} />
             <Route path="/community/:communityId" element={<PageTransition><LayoutWrapper currentPageName="CommunityDetail"><CommunityPage /></LayoutWrapper></PageTransition>} />
             <Route path="/communities/:communityId" element={<PageTransition><LayoutWrapper currentPageName="CommunityDetail"><CommunityPage /></LayoutWrapper></PageTransition>} />
             <Route path="/join" element={<PageTransition><JoinByCommunityCode /></PageTransition>} />
             <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
+            <Route path="/Search" element={<Navigate to="/search" replace />} />
+            <Route path="/JewishHub/*" element={<PageTransition><LayoutWrapper currentPageName="JewishHub"><JewishHub /></LayoutWrapper></PageTransition>} />
+            <Route path="/Notifications" element={<PageTransition><LayoutWrapper currentPageName="Notifications"><Notifications /></LayoutWrapper></PageTransition>} />
+            <Route path="/SupportJUnited" element={<PageTransition><LayoutWrapper currentPageName="SupportJUnited"><SupportJUnited /></LayoutWrapper></PageTransition>} />
 
             {/* Legal & policy pages */}
             <Route path="/MinorSafetyPolicy" element={<PageTransition><MinorSafetyPolicy /></PageTransition>} />
@@ -185,32 +208,13 @@ const AuthenticatedApp = () => {
             <Route path="/dmca" element={<PageTransition><DMCAPolicy /></PageTransition>} />
             <Route path="/privacy-rights" element={<PageTransition><PrivacyRights /></PageTransition>} />
 
-            {/* Legacy redirects — keep old links working */}
-            <Route path="/CommunityMap" element={<Navigate to="/Communities" replace />} />
-            <Route path="/DiscoverCommunitiesFeed" element={<Navigate to="/Communities" replace />} />
-            <Route path="/MitzvahMap" element={<Navigate to="/Map" replace />} />
+            <Route path="/CommunityMap" element={<Navigate to="/Map" replace />} />
 
-            {/* Standalone events pages */}
-            <Route path="/Events" element={<PageTransition><LayoutWrapper currentPageName="Events"><Events /></LayoutWrapper></PageTransition>} />
-            <Route path="/MyEvents" element={<PageTransition><LayoutWrapper currentPageName="MyEvents"><MyEvents /></LayoutWrapper></PageTransition>} />
-            <Route path="/CommunityCalendar" element={<Navigate to="/Events" replace />} />
-
-            {/* Legacy group routes now resolve into Communities, the canonical social layer. */}
-            <Route path="/Groups" element={<Navigate to="/Communities" replace />} />
-            <Route path="/groups/:groupId" element={<Navigate to="/Communities" replace />} />
-
-            {/* Non-MVP routes — redirect to home rather than 404 to avoid confusing beta users */}
-            <Route path="/News" element={<Navigate to={mainPagePath} replace />} />
-            <Route path="/Organization" element={<Navigate to={mainPagePath} replace />} />
-            <Route path="/ShulPage" element={<Navigate to={mainPagePath} replace />} />
-            <Route path="/CommunityUpdates" element={<Navigate to="/Communities" replace />} />
-            <Route path="/BusinessDirectory" element={<Navigate to={mainPagePath} replace />} />
-            <Route path="/BusinessListing" element={<Navigate to={mainPagePath} replace />} />
-            <Route path="/CreateBusinessListing" element={<Navigate to={mainPagePath} replace />} />
-            <Route path="/SupportJUnited" element={<PageTransition><SupportJUnited /></PageTransition>} />
+            {/* Legacy redirects — old feature pages now resolve into the core app. */}
+            {LEGACY_FEED_ROUTES.map((path) => (
+              <Route key={path} path={path} element={<Navigate to={mainPagePath} replace />} />
+            ))}
             <Route path="/ThankYou" element={<PageTransition><ThankYou /></PageTransition>} />
-            <Route path="/yahrzeits" element={<Navigate to={mainPagePath} replace />} />
-            <Route path="/tehillim" element={<Navigate to={mainPagePath} replace />} />
           </Route>
           <Route path="*" element={<PageNotFound />} />
         </Routes>
@@ -218,9 +222,12 @@ const AuthenticatedApp = () => {
       {showOnboarding && (
         <OnboardingFlow
           user={user}
-          onComplete={async () => {
+          onComplete={async (result) => {
             setShowOnboarding(false);
             await checkAppState();
+            if (!(result?._joinedCount > 0)) {
+              navigate('/Communities');
+            }
           }}
         />
       )}
@@ -271,7 +278,7 @@ function App() {
         <AuthProvider>
           <QueryClientProvider client={queryClientInstance}>
             <InitialAppGate>
-              <Router>
+              <Router future={ROUTER_FUTURE_FLAGS}>
                 <NavigationTracker />
                 <AuthenticatedApp />
               </Router>
