@@ -37,6 +37,8 @@ const HUB_ITEMS = [
   },
 ];
 
+const VISIBLE_HUB_ITEMS = HUB_ITEMS.filter((item) => !item.soon);
+
 const PLACEHOLDERS = {
   '/JewishHub/tehillim': 'Tehillim',
   '/JewishHub/torah-parsha': 'Torah / Parsha',
@@ -79,12 +81,12 @@ export default function JewishContentHub() {
           <p className="text-[10px] font-black uppercase tracking-wide text-white/70">Jewish content</p>
           <h1 className="mt-1 text-[22px] font-black leading-tight">Jewish Hub</h1>
           <p className="mt-1.5 max-w-md text-[13px] font-semibold leading-snug text-white/80">
-            Tehillim, Torah, Zmanim, and davening tools for the Five Towns.
+            Tehillim reader for learning, davening, and reflection.
           </p>
         </div>
 
         <div className="grid gap-3 p-3">
-          {HUB_ITEMS.map((item) => (
+          {VISIBLE_HUB_ITEMS.map((item) => (
             <HubTile key={item.path} item={item} />
           ))}
         </div>

@@ -192,7 +192,7 @@ function UserResultRow({ user, currentUserCommunities, loading, onClick }) {
       <div className="flex-1 min-w-0">
         <p className="text-[14px] font-semibold text-slate-900 truncate">{user.full_name}</p>
         {isAI
-          ? <p className="text-[11px] text-indigo-500 font-medium">AI • Ask anything about the community</p>
+          ? <p className="text-[11px] text-indigo-500 font-medium">AI • Jewish knowledge helper</p>
           : mutualCount !== null && mutualCount > 0 && (
             <p className="text-[11px] text-slate-400 flex items-center gap-1">
               <Users className="w-3 h-3" />
