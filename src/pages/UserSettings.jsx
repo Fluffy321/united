@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import { captureError } from '@/lib/analytics';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 export default function UserSettings() {
   const { user, isLoadingAuth: loading } = useAuth();
@@ -164,7 +165,7 @@ export default function UserSettings() {
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              placeholder="Tell the community about yourself..."
+              placeholder="Tell neighbors a little about yourself..."
               maxLength={160}
               className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white resize-none"
               rows={4}
@@ -228,8 +229,8 @@ export default function UserSettings() {
 
           <div className="space-y-4">
             <NotificationToggle
-              label="New Posts in Your Communities"
-              description="Get notified when members post in communities you follow"
+              label={COMMUNITIES_ENABLED ? 'New Posts in Your Communities' : 'New Local Posts'}
+              description={COMMUNITIES_ENABLED ? 'Get notified when members post in communities you follow' : 'Get notified when neighbors post local updates'}
               enabled={notifications.email_on_post}
               onChange={() => toggleNotification('email_on_post')}
               icon={<Eye className="w-5 h-5" />}
@@ -263,8 +264,8 @@ export default function UserSettings() {
               icon={<Lock className="w-5 h-5" />}
             />
             <NotificationToggle
-              label="Weekly Community Digest"
-              description="Receive a weekly AI-generated summary of activity, events, and new members across your communities"
+              label={COMMUNITIES_ENABLED ? 'Weekly Community Digest' : 'Weekly Local Digest'}
+              description={COMMUNITIES_ENABLED ? 'Receive a weekly AI-generated summary of activity, events, and new members across your communities' : 'Receive a weekly AI-generated summary of local activity and events'}
               enabled={notifications.weekly_digest !== false}
               onChange={() => toggleNotification('weekly_digest')}
               icon={<Bell className="w-5 h-5" />}

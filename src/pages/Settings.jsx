@@ -43,6 +43,7 @@ import {
 } from '@/lib/pushSubscription';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
 import { forwardGeocode, PRESET_LOCATIONS } from '@/lib/shabbatLocation';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -54,7 +55,7 @@ const interestOptions = [
 
 const sections = [
   { id: 'profile',       label: 'Profile',        icon: UserRound },
-  { id: 'community',    label: 'Community',       icon: Users },
+  { id: 'community',    label: COMMUNITIES_ENABLED ? 'Community' : 'Local', icon: Users },
   { id: 'notifications', label: 'Notifications',  icon: Bell },
   { id: 'privacy',      label: 'Privacy',         icon: Shield },
   { id: 'app',          label: 'App',             icon: Moon },
@@ -447,9 +448,9 @@ export default function Settings() {
             </SettingsCard>
           )}
 
-          {/* ─── Community ────────────────────────────── */}
+          {/* ─── Community / Local ─────────────────────── */}
           {activeSection === 'community' && (
-            <SettingsCard title="Community Preferences" icon={Users}>
+            <SettingsCard title={COMMUNITIES_ENABLED ? 'Community Preferences' : 'Local Preferences'} icon={Users}>
               <div className="mb-4">
                 <TextField
                   label="Primary neighborhood"
@@ -459,15 +460,23 @@ export default function Settings() {
                 />
               </div>
               <div className="divide-y divide-slate-100">
-                <SettingsRow icon={Users} title="Show suggested communities" description="Recommend shuls, schools, chesed groups, and neighborhood boards.">
-                  <Toggle checked={form.community_settings.showSuggestedCommunities} onChange={v => updateNested('community_settings', 'showSuggestedCommunities', v)} label="Show suggested communities" />
-                </SettingsRow>
-                <SettingsRow icon={Search} title="Show profile to shared communities" description="Let members of your joined communities discover your profile.">
-                  <Toggle checked={form.community_settings.showPublicProfileToCommunities} onChange={v => updateNested('community_settings', 'showPublicProfileToCommunities', v)} label="Show profile to communities" />
-                </SettingsRow>
-                <SettingsRow icon={HeartHandshake} title="Follow joined communities automatically" description="Add new joined communities to your Feed and notifications.">
-                  <Toggle checked={form.community_settings.autoFollowJoinedCommunities} onChange={v => updateNested('community_settings', 'autoFollowJoinedCommunities', v)} label="Auto-follow joined communities" />
-                </SettingsRow>
+                {COMMUNITIES_ENABLED ? (
+                  <>
+                    <SettingsRow icon={Users} title="Show suggested communities" description="Recommend shuls, schools, chesed groups, and neighborhood boards.">
+                      <Toggle checked={form.community_settings.showSuggestedCommunities} onChange={v => updateNested('community_settings', 'showSuggestedCommunities', v)} label="Show suggested communities" />
+                    </SettingsRow>
+                    <SettingsRow icon={Search} title="Show profile to shared communities" description="Let members of your joined communities discover your profile.">
+                      <Toggle checked={form.community_settings.showPublicProfileToCommunities} onChange={v => updateNested('community_settings', 'showPublicProfileToCommunities', v)} label="Show profile to communities" />
+                    </SettingsRow>
+                    <SettingsRow icon={HeartHandshake} title="Follow joined communities automatically" description="Add new joined communities to your Feed and notifications.">
+                      <Toggle checked={form.community_settings.autoFollowJoinedCommunities} onChange={v => updateNested('community_settings', 'autoFollowJoinedCommunities', v)} label="Auto-follow joined communities" />
+                    </SettingsRow>
+                  </>
+                ) : (
+                  <SettingsRow icon={MapPin} title="Use local context" description="Keep nearby updates and reminders focused on your primary neighborhood.">
+                    <Toggle checked={form.community_settings.showSuggestedCommunities} onChange={v => updateNested('community_settings', 'showSuggestedCommunities', v)} label="Use local context" />
+                  </SettingsRow>
+                )}
               </div>
             </SettingsCard>
           )}

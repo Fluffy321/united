@@ -14,7 +14,7 @@ const SUGGESTIONS = [
   {
     emoji: '🕍',
     title: 'Join a Minyan near you',
-    subtitle: 'Shuls · Community',
+    subtitle: 'Shuls · Local',
     bg: 'bg-violet-50',
     border: 'border-violet-100',
   },
@@ -72,23 +72,22 @@ export default function StreakCard({ streak }) {
 
   /* ── Zero-streak: suggestion scroll ── */
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+    <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white">
       <div className="px-4 pt-4 pb-0">
         <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Start Your Journey</p>
         <h3 className="mt-0.5 text-[15px] font-black text-slate-900">One small mitzvah today?</h3>
       </div>
 
-      {/* Horizontal suggestion scroll */}
-      <div className="flex gap-2.5 overflow-x-auto px-4 py-3 scrollbar-hide">
+      <div className="grid min-w-0 grid-cols-2 gap-2.5 px-4 py-3 sm:grid-cols-4">
         {SUGGESTIONS.map((s, i) => (
           <button
             key={i}
             onClick={() => navigate(createPageUrl('MitzvahCircle'))}
-            className={`shrink-0 w-[138px] rounded-2xl border p-3 text-left transition active:scale-95 ${s.bg} ${s.border}`}
+            className={`min-w-0 rounded-2xl border p-3 text-left transition active:scale-95 ${s.bg} ${s.border}`}
           >
             <span className="text-2xl">{s.emoji}</span>
-            <p className="mt-2 text-[12px] font-black leading-snug text-slate-900">{s.title}</p>
-            <p className="mt-0.5 text-[10px] font-semibold text-slate-400">{s.subtitle}</p>
+            <p className="mt-2 break-words text-[12px] font-black leading-snug text-slate-900">{s.title}</p>
+            <p className="mt-0.5 break-words text-[10px] font-semibold text-slate-400">{s.subtitle}</p>
           </button>
         ))}
       </div>

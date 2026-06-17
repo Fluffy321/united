@@ -28,8 +28,8 @@ const DEFAULT_COMMUNITIES = [
 const SHUL_OPTIONS = ['Not sure yet', 'Young Israel', 'Chabad', 'Sephardic minyan', 'Yeshiva minyan', 'Other'];
 const SCHOOL_OPTIONS = ['No school connection', 'HAFTR', 'HALB', 'DRS', 'Shulamith', 'YOSS', 'TAG', 'Other'];
 const PRIVACY_OPTIONS = [
-  { key: 'public', label: 'Public community profile', body: 'People can see your name, interests, and public communities.' },
-  { key: 'friends', label: 'Friends first', body: 'Keep more personal info limited to friends and joined communities.' },
+  { key: 'public', label: COMMUNITIES_ENABLED ? 'Public community profile' : 'Public local profile', body: COMMUNITIES_ENABLED ? 'People can see your name, interests, and public communities.' : 'People can see your name and interests.' },
+  { key: 'friends', label: 'Friends first', body: COMMUNITIES_ENABLED ? 'Keep more personal info limited to friends and joined communities.' : 'Keep more personal info limited to friends.' },
   { key: 'private', label: 'More private', body: 'Hide sensitive memberships and prefer private posting controls.' },
 ];
 

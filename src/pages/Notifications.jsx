@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import QueryError from '@/components/common/QueryError';
 import { appParams } from '@/lib/app-params';
 import { getNotificationRoute } from '@/lib/notificationRoute';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 // ── Type configuration ──────────────────────────────────────────────────────
 
@@ -37,7 +38,7 @@ const TYPE_CONFIG = {
   mitzvah_offer:        { icon: HandHeart,     tone: 'bg-violet-50 text-violet-600',   label: 'Mitzvah offer' },
   mitzvah_accepted:     { icon: CheckCircle2,  tone: 'bg-emerald-50 text-emerald-600', label: 'Mitzvah accepted' },
   verification_request: { icon: CheckCircle2,  tone: 'bg-purple-50 text-purple-600',   label: 'Verification needed' },
-  community_activity:   { icon: Users,         tone: 'bg-amber-50 text-amber-600',     label: 'Community' },
+  community_activity:   { icon: Users,         tone: 'bg-amber-50 text-amber-600',     label: COMMUNITIES_ENABLED ? 'Community' : 'Local' },
   announcement:         { icon: Megaphone,     tone: 'bg-amber-50 text-amber-600',     label: 'Announcement' },
   community_removal:    { icon: ShieldAlert,   tone: 'bg-red-50 text-red-500',         label: 'Removed' },
   appeal_resolved:      { icon: Shield,        tone: 'bg-slate-50 text-slate-500',     label: 'Appeal' },
@@ -52,7 +53,7 @@ const FILTERS = [
   { id: 'unread',    label: 'Unread' },
   { id: 'replies',   label: 'Replies' },
   { id: 'mitzvah',   label: 'Mitzvah' },
-  { id: 'community', label: 'Community' },
+  ...(COMMUNITIES_ENABLED ? [{ id: 'community', label: 'Community' }] : []),
   { id: 'messages',  label: 'Messages' },
 ];
 

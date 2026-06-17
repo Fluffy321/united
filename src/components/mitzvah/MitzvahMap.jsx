@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import { divIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const PIN_TYPES = {
   shul: { label: 'Shuls', color: '#4f46e5', short: 'S' },
@@ -17,7 +18,7 @@ const PIN_TYPES = {
   help_needed: { label: 'Help Needed', color: '#dc2626', short: 'H' },
   mitzvah_available: { label: 'Mitzvahs Available', color: '#16a34a', short: 'M' },
   event: { label: 'Events', color: '#0891b2', short: 'E' },
-  community_post: { label: 'My Communities', color: '#0f5ed7', short: 'C' },
+  ...(COMMUNITIES_ENABLED ? { community_post: { label: 'My Communities', color: '#0f5ed7', short: 'C' } } : {}),
   other: { label: 'Other', color: '#64748b', short: 'O' },
 };
 
@@ -1182,6 +1183,7 @@ export default function MitzvahMap({
   }, [requests]);
 
   const personalizedPoints = useMemo(() => {
+    if (!COMMUNITIES_ENABLED) return [];
     return communityPoints.map((point) => ({
       ...point,
       type: point.type || 'community_post',
@@ -1338,7 +1340,9 @@ export default function MitzvahMap({
         <div className="border-b border-blue-100 bg-blue-50 px-3 py-2">
           <p className="text-[12px] font-black text-blue-900">Five Towns digital hub</p>
           <p className="text-[11px] font-semibold leading-5 text-blue-700">
-            A personalized local map for Lawrence, Cedarhurst, Woodmere, Hewlett, and Inwood, showing verified kosher food, shops, shuls, schools, posts, events, and mitzvah needs from communities you joined.
+            {COMMUNITIES_ENABLED
+              ? 'A personalized local map for Lawrence, Cedarhurst, Woodmere, Hewlett, and Inwood, showing verified kosher food, shops, shuls, schools, posts, events, and mitzvah needs from communities you joined.'
+              : 'A personalized local map for Lawrence, Cedarhurst, Woodmere, Hewlett, and Inwood, showing verified kosher food, shops, shuls, schools, events, and mitzvah needs.'}
           </p>
         </div>
       )}
@@ -1397,7 +1401,9 @@ export default function MitzvahMap({
           <div className="glass-toolbar absolute left-3 right-3 top-3 z-[500] rounded-2xl px-4 py-3">
             <p className="text-[13px] font-black text-slate-900">Pick a filter to show pins</p>
             <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">
-              Choose verified kosher food, shops, shuls, schools, community businesses, lost and found, help, mitzvahs, events, or community posts.
+              {COMMUNITIES_ENABLED
+                ? 'Choose verified kosher food, shops, shuls, schools, community businesses, lost and found, help, mitzvahs, events, or community posts.'
+                : 'Choose verified kosher food, shops, shuls, schools, local businesses, lost and found, help, mitzvahs, or events.'}
             </p>
           </div>
         )}

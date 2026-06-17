@@ -40,6 +40,7 @@ import { buildMapLiveNowItems } from '@/lib/liveNow';
 import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/api/supabaseClient';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const BusinessMap = lazy(() => import('@/components/business/BusinessMap'));
 const MitzvahMap = lazy(() => import('@/components/mitzvah/MitzvahMap'));
@@ -1152,19 +1153,21 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
   const { data: memberships = [] } = useQuery({
     queryKey: ['map-community-memberships', currentUser?.id],
     queryFn: () => dataService.entities.UserCommunity.filter({ user_id: currentUser.id }, '-created_date', 100),
-    enabled: Boolean(currentUser?.id),
+    enabled: COMMUNITIES_ENABLED && Boolean(currentUser?.id),
     staleTime: 120000,
   });
 
   const { data: communities = [] } = useQuery({
     queryKey: ['map-communities-directory'],
     queryFn: () => dataService.entities.Community.list('-follower_count', 200),
+    enabled: COMMUNITIES_ENABLED,
     staleTime: 300000,
   });
 
   const { data: communityPosts = [] } = useQuery({
     queryKey: ['map-community-posts'],
     queryFn: () => dataService.entities.UnifiedPost.list('-created_date', 180),
+    enabled: COMMUNITIES_ENABLED,
     staleTime: 120000,
   });
 
@@ -1267,7 +1270,7 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
         </section>
       )}
 
-      <section className="surface-panel-soft mb-3 rounded-[24px] p-3">
+      {COMMUNITIES_ENABLED && <section className="surface-panel-soft mb-3 rounded-[24px] p-3">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="flex items-center gap-2 text-sm font-black text-slate-950">
@@ -1352,14 +1355,14 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
             </div>
           </div>
         )}
-      </section>
+      </section>}
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
         <Suspense fallback={<MapModuleFallback label="Loading community map..." />}>
           <MitzvahMap
             requests={requests}
             userLocation={userLocation}
-            communityPoints={communityPoints}
+            communityPoints={COMMUNITIES_ENABLED ? communityPoints : []}
             personalized
             includeStaticPoints
             initialPrimaryFilter={categoryParam}
@@ -1377,7 +1380,7 @@ export default function MapPage() {
   const { user: currentUser } = useAuth();
   const [searchParams] = useSearchParams();
   const [activeView, setActiveView] = useState(() => (
-    searchParams.get('category') ? 'community' : 'businesses'
+    COMMUNITIES_ENABLED && searchParams.get('category') ? 'community' : 'businesses'
   ));
   const [userLocation, setUserLocation] = useState(null);
   const [locationStatus, setLocationStatus] = useState('idle');
@@ -1408,7 +1411,7 @@ export default function MapPage() {
   }, []);
 
   useEffect(() => {
-    if (searchParams.get('category') || searchParams.get('requestId')) {
+    if (COMMUNITIES_ENABLED && (searchParams.get('category') || searchParams.get('requestId'))) {
       setActiveView('community');
     }
   }, [searchParams]);
@@ -1426,7 +1429,7 @@ export default function MapPage() {
         toolbarClassName="relative"
         icon={Store}
         title="Our Businesses"
-        help={<PageHelp text="Discover trusted Jewish-owned businesses, kosher spots, and community services near you or online." />}
+        help={<PageHelp text="Discover trusted Jewish-owned businesses, kosher spots, and local services near you or online." />}
         actions={(
           <button
             onClick={handleUseMyLocation}
@@ -1439,7 +1442,7 @@ export default function MapPage() {
       />
 
       <div className="mobile-page-wide min-h-0 flex-1 overflow-y-auto px-3 pb-3 sm:px-4 sm:pb-4">
-        <div className="mb-3 grid grid-cols-2 gap-2 rounded-[20px] border border-slate-200 bg-white p-1 shadow-sm">
+        {COMMUNITIES_ENABLED && <div className="mb-3 grid grid-cols-2 gap-2 rounded-[20px] border border-slate-200 bg-white p-1 shadow-sm">
           <button
             type="button"
             onClick={() => setActiveView('businesses')}
@@ -1456,7 +1459,7 @@ export default function MapPage() {
             <Sparkles className="h-4 w-4" />
             Community Map
           </button>
-        </div>
+        </div>}
 
         <LiveNowRail
           className="mb-3"
@@ -1466,7 +1469,7 @@ export default function MapPage() {
           onItemClick={(item) => navigate(item.href || '/Map')}
         />
 
-        {activeView === 'businesses' ? (
+        {activeView === 'businesses' || !COMMUNITIES_ENABLED ? (
           <BusinessDirectoryExperience
             currentUser={currentUser}
             userLocation={userLocation}

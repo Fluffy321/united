@@ -48,7 +48,7 @@ export default function MessageRequestsTab({ currentUser, onAccepted }) {
           <span className="text-2xl">📬</span>
         </div>
         <p className="text-slate-700 font-semibold">No message requests</p>
-        <p className="text-[13px] text-slate-400 mt-1">Requests from people outside your communities appear here.</p>
+        <p className="text-[13px] text-slate-400 mt-1">Requests from people you have not messaged yet appear here.</p>
       </div>
     );
   }

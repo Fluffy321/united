@@ -3,6 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Calendar, Clock, MapPin, Users, Search, X } from 'lucide-react';
 import { dataService } from '@/services';
 import { format, isPast, parseISO } from 'date-fns';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, joinedCommunityIds = [] }) {
   const [events, setEvents] = useState([]);
@@ -19,8 +20,9 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
           if (!e.event_date) return false;
           try { return !isPast(parseISO(e.event_date)); } catch { return false; }
         });
-        // Prioritize community events the user has joined
+        // Prioritize community events the user has joined when Communities is enabled.
         const sorted = [...upcoming].sort((a, b) => {
+          if (!COMMUNITIES_ENABLED) return new Date(a.event_date) - new Date(b.event_date);
           const aInCommunity = joinedCommunityIds.includes(a.community_id);
           const bInCommunity = joinedCommunityIds.includes(b.community_id);
           if (aInCommunity && !bInCommunity) return -1;
@@ -35,7 +37,7 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
 
   const filtered = useMemo(() => {
     let list = events;
-    if (filter === 'mine') list = list.filter(e => joinedCommunityIds.includes(e.community_id));
+    if (COMMUNITIES_ENABLED && filter === 'mine') list = list.filter(e => joinedCommunityIds.includes(e.community_id));
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(e =>
@@ -84,7 +86,7 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
             )}
           </div>
           {/* Filter pills */}
-          {joinedCommunityIds.length > 0 && (
+          {COMMUNITIES_ENABLED && joinedCommunityIds.length > 0 && (
             <div className="flex gap-2 mt-2">
               {[{v:'all',l:'All Events'},{v:'mine',l:'My Communities'}].map(({v,l}) => (
                 <button key={v} onClick={() => setFilter(v)}
@@ -109,7 +111,7 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
             <div className="text-center py-16">
               <p className="text-4xl mb-3">📅</p>
               <p className="font-bold text-slate-800">No upcoming events</p>
-              <p className="text-[13px] text-slate-400 mt-1">Join communities to see their events here</p>
+              <p className="text-[13px] text-slate-400 mt-1">{COMMUNITIES_ENABLED ? 'Join communities to see their events here' : 'Local events will appear here'}</p>
             </div>
           )}
 

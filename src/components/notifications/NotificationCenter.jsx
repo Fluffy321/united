@@ -6,6 +6,7 @@ import { formatDistanceToNow, parseISO, isValid } from 'date-fns';
 import { Bell, CheckCheck, Heart, MessageCircle, HandHeart, CheckCircle2, UserRoundCheck, Users, Megaphone, Shield, AtSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getNotificationRoute } from '@/lib/notificationRoute';
+import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const TYPE_CONFIG = {
   new_message:          { icon: MessageCircle, tone: 'bg-blue-50 text-blue-600',       label: 'Message' },
@@ -17,7 +18,7 @@ const TYPE_CONFIG = {
   mitzvah_offer:        { icon: HandHeart,     tone: 'bg-violet-50 text-violet-600',   label: 'Mitzvah offer' },
   mitzvah_accepted:     { icon: CheckCircle2,  tone: 'bg-emerald-50 text-emerald-600', label: 'Mitzvah accepted' },
   verification_request: { icon: CheckCircle2,  tone: 'bg-purple-50 text-purple-600',   label: 'Verification needed' },
-  community_activity:   { icon: Users,         tone: 'bg-amber-50 text-amber-600',     label: 'Community' },
+  community_activity:   { icon: Users,         tone: 'bg-amber-50 text-amber-600',     label: COMMUNITIES_ENABLED ? 'Community' : 'Local' },
   announcement:         { icon: Megaphone,     tone: 'bg-amber-50 text-amber-600',     label: 'Announcement' },
   community_removal:    { icon: Shield,        tone: 'bg-red-50 text-red-500',         label: 'Removed' },
   appeal_resolved:      { icon: Shield,        tone: 'bg-slate-50 text-slate-500',     label: 'Appeal' },

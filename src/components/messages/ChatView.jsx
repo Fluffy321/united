@@ -387,12 +387,12 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
                     </span>
                   </div>
                   <p className="font-bold text-slate-800 text-[15px]">United AI Assistant</p>
-                  <p className="text-[13px] text-slate-500 mt-1 max-w-[260px]">Ask a Jewish question — Torah, the calendar, davening, or general knowledge.</p>
+                  <p className="text-[13px] text-slate-500 mt-1 max-w-[260px]">Ask a Jewish question — Torah, calendar, davening, concepts, or history.</p>
                   <div className="flex flex-wrap gap-2 justify-center mt-5">
                     {[
                       'What is the weekly parsha about?',
                       'What is Havdalah?',
-                      'What do I say before lighting candles?',
+                      'How does the Hebrew calendar work?',
                     ].map(s => (
                       <button
                         key={s}
