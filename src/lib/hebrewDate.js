@@ -58,11 +58,11 @@ export async function formatDualDate(dateInput) {
 /**
  * Get zmanim for a location on a given date.
  */
-export async function getZmanim(lat, lng, date = new Date()) {
+export async function getZmanim(lat, lng, date = new Date(), tzid = 'America/New_York') {
   const dateStr = date.toISOString().split('T')[0];
   try {
     const res = await fetch(
-      `${HEBCAL_BASE}/zmanim?cfg=json&latitude=${lat}&longitude=${lng}&date=${dateStr}&tzid=America/New_York`
+      `${HEBCAL_BASE}/zmanim?cfg=json&latitude=${lat}&longitude=${lng}&date=${dateStr}&tzid=${encodeURIComponent(tzid)}`
     );
     const data = await res.json();
     return data.times || null;

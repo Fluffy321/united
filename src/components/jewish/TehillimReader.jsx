@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, WifiOff } from 'lucide-react';
+import DailyJewishHome from './DailyJewishHome';
 
 const SEFARIA_TEXTS_URL = 'https://www.sefaria.org/api/v3/texts';
 const TOTAL_PERAKIM = 150;
@@ -229,34 +230,39 @@ export default function TehillimReader() {
   };
 
   return (
-    <div className="mobile-page min-h-screen px-3 pb-28 pt-4">
+    <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
       <Link
         to="/JewishHub"
-        className="motion-press mb-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-black text-slate-700 shadow-sm"
+        className="motion-press mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-black text-slate-700 shadow-sm"
       >
         <ArrowLeft className="h-4 w-4" />
         Jewish Hub
       </Link>
 
-      <section className="rounded-[24px] border border-slate-100 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-4 py-4">
+      <div className="space-y-4">
+        <DailyJewishHome compact />
+
+      <section className="overflow-hidden rounded-[30px] border border-slate-200/70 bg-white shadow-[0_18px_50px_rgba(15,28,46,0.07)]">
+        <div className="border-b border-slate-100 bg-[#FDFCF8] px-5 py-5">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wide text-rose-500">Tehillim</p>
-            <h1 className="mt-1 text-[24px] font-black leading-tight text-slate-950">Psalms Reader</h1>
-            <p className="mt-2 text-[13px] font-semibold leading-snug text-slate-500">
-              Choose a perek and take a quiet minute to say Tehillim. Hebrew and public-domain English load one perek at a time from Sefaria.
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-rose-600">Tehillim</p>
+            <h1 className="mt-2 text-[28px] font-black leading-none text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
+              Psalms Reader
+            </h1>
+            <p className="mt-3 text-[13px] font-semibold leading-6 text-slate-500">
+              Choose a perek and take a quiet minute. Hebrew and public-domain English load one perek at a time from Sefaria.
             </p>
           </div>
         </div>
 
-        <div className="space-y-3 p-3">
-          <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-3">
+        <div className="space-y-3 p-3 sm:p-4">
+          <div className="rounded-[24px] border border-slate-100 bg-slate-50/80 p-3">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => goToPerek(perek - 1)}
                 disabled={perek <= 1}
-                className="motion-press flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm disabled:opacity-40"
+                className="motion-press flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border border-slate-200 bg-white text-slate-700 shadow-sm disabled:opacity-40"
                 aria-label="Previous perek"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -267,7 +273,7 @@ export default function TehillimReader() {
                 <select
                   value={perek}
                   onChange={(event) => goToPerek(event.target.value)}
-                  className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-center text-[14px] font-black text-slate-950 shadow-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                  className="h-11 w-full rounded-[18px] border border-slate-200 bg-white px-3 text-center text-[14px] font-black text-slate-950 shadow-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                 >
                   {Array.from({ length: TOTAL_PERAKIM }, (_, index) => index + 1).map((number) => (
                     <option key={number} value={number}>
@@ -281,14 +287,14 @@ export default function TehillimReader() {
                 type="button"
                 onClick={() => goToPerek(perek + 1)}
                 disabled={perek >= TOTAL_PERAKIM}
-                className="motion-press flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm disabled:opacity-40"
+                className="motion-press flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border border-slate-200 bg-white text-slate-700 shadow-sm disabled:opacity-40"
                 aria-label="Next perek"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="mt-3 grid grid-cols-3 rounded-2xl border border-slate-200 bg-white p-1">
+            <div className="mt-3 grid grid-cols-3 rounded-[18px] border border-slate-200 bg-white p-1">
               {VIEW_MODES.map((mode) => (
                 <button
                   key={mode.id}
@@ -296,7 +302,7 @@ export default function TehillimReader() {
                   onClick={() => setViewMode(mode.id)}
                   className={`h-9 rounded-xl text-[12px] font-black transition-colors ${
                     viewMode === mode.id
-                      ? 'bg-blue-600 text-white shadow-sm'
+                      ? 'bg-slate-950 text-white shadow-sm'
                       : 'text-slate-500 active:bg-slate-100'
                   }`}
                 >
@@ -342,8 +348,8 @@ export default function TehillimReader() {
             <>
               <div className="space-y-3">
                 {verseRows.map((verse) => (
-                  <article key={verse.number} className="rounded-[20px] border border-slate-100 bg-white p-3 shadow-sm">
-                    <div className="mb-2 inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-slate-100 px-2 text-[11px] font-black text-slate-500">
+                  <article key={verse.number} className="rounded-[26px] border border-slate-100 bg-white px-4 py-4 shadow-sm sm:px-5">
+                    <div className="mb-3 inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-slate-100 px-2 text-[11px] font-black text-slate-500">
                       {verse.number}
                     </div>
 
@@ -351,14 +357,19 @@ export default function TehillimReader() {
                       <p
                         dir="rtl"
                         lang="he"
-                        className="text-right font-serif text-[21px] font-semibold leading-9 text-slate-950"
+                        className="text-right text-[23px] font-medium leading-[2.35] text-slate-950 sm:text-[25px]"
+                        style={{
+                          fontFamily: 'var(--font-hebrew)',
+                          fontKerning: 'normal',
+                          textRendering: 'optimizeLegibility',
+                        }}
                       >
                         {verse.hebrew}
                       </p>
                     )}
 
                     {(viewMode === 'both' || viewMode === 'english') && verse.english && (
-                      <p className={`${viewMode === 'both' && verse.hebrew ? 'mt-3 border-t border-slate-100 pt-3' : ''} text-[15px] font-semibold leading-7 text-slate-700`}>
+                      <p className={`${viewMode === 'both' && verse.hebrew ? 'mt-4 border-t border-slate-100 pt-4' : ''} text-[15px] font-semibold leading-8 text-slate-700`}>
                         {verse.english}
                       </p>
                     )}
@@ -371,7 +382,8 @@ export default function TehillimReader() {
           )}
         </div>
       </section>
-    </div>
+      </div>
+    </main>
   );
 }
 
