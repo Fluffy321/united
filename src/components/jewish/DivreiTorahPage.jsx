@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, LibraryBig, ScrollText } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
 import { getWeeklyParshaReading } from '@/lib/hebrewDate';
+import { findHumanDvarTorah } from '@/content/jewish/divreiTorah';
 
 function cleanParshaName(value) {
   return value?.replace(/^Parashat\s+/i, '') || 'This week’s parsha';
@@ -51,6 +52,7 @@ export default function DivreiTorahPage() {
 
   const reading = readingQuery.data;
   const links = commentaryLinks(reading);
+  const humanDvarTorah = findHumanDvarTorah(reading);
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
@@ -125,6 +127,30 @@ export default function DivreiTorahPage() {
                     </div>
                   </div>
                 </article>
+
+                {humanDvarTorah ? (
+                  <article className="rounded-[26px] border border-violet-100 bg-violet-50/60 px-4 py-5 shadow-sm sm:px-5">
+                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-violet-700">Human dvar Torah</p>
+                    <h2 className="mt-2 text-[24px] font-black leading-tight text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
+                      {humanDvarTorah.title}
+                    </h2>
+                    <p className="mt-2 text-[12px] font-bold leading-5 text-violet-800">
+                      By {humanDvarTorah.author}
+                      {humanDvarTorah.authorTitle ? ` · ${humanDvarTorah.authorTitle}` : ''}
+                    </p>
+                    <div className="mt-4 space-y-3 text-[14px] font-semibold leading-7 text-slate-700">
+                      {humanDvarTorah.paragraphs.map((paragraph) => (
+                        <p key={paragraph}>{paragraph}</p>
+                      ))}
+                    </div>
+                  </article>
+                ) : (
+                  <article className="rounded-[24px] border border-slate-100 bg-slate-50 px-4 py-4">
+                    <p className="text-[12px] font-semibold leading-5 text-slate-500">
+                      No human-written dvar Torah has been posted for this week yet. The team can add an attributed piece after review; no AI-generated Torah content is shown here.
+                    </p>
+                  </article>
+                )}
 
                 <div className="grid gap-3">
                   {links.map((item) => (
