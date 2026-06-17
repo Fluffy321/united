@@ -1,16 +1,25 @@
 import React, { useMemo, useState } from 'react';
-import { useQueries } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, BookMarked, RefreshCw } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
 
 const SEFARIA_TEXTS_URL = 'https://www.sefaria.org/api/v3/texts';
-const HEBREW_VERSION = {
+
+const DEFAULT_HEBREW_VERSION = {
   language: 'hebrew',
   responseLanguage: 'he',
   title: 'The Metsudah siddur, 1981',
   license: 'CC-BY',
 };
+
+const DAAT_HEBREW_VERSION = {
+  language: 'hebrew',
+  responseLanguage: 'he',
+  title: 'Daat Siddur Ashkenaz',
+  license: 'Public Domain',
+};
+
 const ENGLISH_VERSION = {
   language: 'english',
   responseLanguage: 'en',
@@ -18,62 +27,103 @@ const ENGLISH_VERSION = {
   license: 'CC0',
 };
 
-const PRAYERS = [
+const SIDDUR_SECTIONS = [
   {
-    id: 'modeh-ani',
-    title: 'Modeh Ani',
-    hebrewTitle: 'מודה אני',
-    group: 'Morning',
-    ref: 'Siddur Ashkenaz, Weekday, Shacharit, Preparatory Prayers, Modeh Ani',
-    english: false,
+    id: 'morning',
+    label: 'Birchos Hashachar',
+    items: [
+      prayer('modeh-ani', 'Modeh Ani', 'Siddur Ashkenaz, Weekday, Shacharit, Preparatory Prayers, Modeh Ani', { english: false }),
+      prayer('asher-yatzar', 'Asher Yatzar', 'Siddur Ashkenaz, Weekday, Shacharit, Preparatory Prayers, Asher Yatzar'),
+      prayer('elokai-neshama', 'Elokai Neshama', 'Siddur Ashkenaz, Weekday, Shacharit, Preparatory Prayers, Elokai Neshama', { english: false }),
+      prayer('torah-blessings', 'Torah Blessings', 'Siddur Ashkenaz, Weekday, Shacharit, Preparatory Prayers, Torah Blessings'),
+      prayer('morning-blessings', 'Morning Blessings', 'Siddur Ashkenaz, Weekday, Shacharit, Preparatory Prayers, Morning Blessings'),
+    ],
   },
   {
-    id: 'asher-yatzar',
-    title: 'Asher Yatzar',
-    hebrewTitle: 'אשר יצר',
-    group: 'Morning',
-    ref: 'Siddur Ashkenaz, Weekday, Shacharit, Preparatory Prayers, Asher Yatzar',
-    english: true,
-  },
-  {
-    id: 'elokai-neshama',
-    title: 'Elokai Neshama',
-    hebrewTitle: 'אלהי נשמה',
-    group: 'Morning',
-    ref: 'Siddur Ashkenaz, Weekday, Shacharit, Preparatory Prayers, Elokai Neshama',
-    english: false,
-  },
-  {
-    id: 'ashrei',
-    title: 'Ashrei',
-    hebrewTitle: 'אשרי',
-    group: 'Daily',
-    ref: 'Siddur Ashkenaz, Weekday, Shacharit, Pesukei Dezimra, Ashrei',
-    english: true,
+    id: 'pesukei',
+    label: "Pesukei D'zimra",
+    items: [
+      prayer('barukh-sheamar', "Barukh She'amar", "Siddur Ashkenaz, Weekday, Shacharit, Pesukei Dezimra, Barukh She'amar"),
+      prayer('hodu', 'Hodu', 'Siddur Ashkenaz, Weekday, Shacharit, Pesukei Dezimra, Hodu'),
+      prayer('mizmor-letoda', 'Mizmor Letoda', 'Siddur Ashkenaz, Weekday, Shacharit, Pesukei Dezimra, Mizmor Letoda'),
+      prayer('ashrei', 'Ashrei', 'Siddur Ashkenaz, Weekday, Shacharit, Pesukei Dezimra, Ashrei'),
+      prayer('psalm-146', 'Psalm 146', 'Siddur Ashkenaz, Weekday, Shacharit, Pesukei Dezimra, Psalm 146'),
+      prayer('psalm-147', 'Psalm 147', 'Siddur Ashkenaz, Weekday, Shacharit, Pesukei Dezimra, Psalm 147'),
+      prayer('psalm-148', 'Psalm 148', 'Siddur Ashkenaz, Weekday, Shacharit, Pesukei Dezimra, Psalm 148'),
+      prayer('psalm-149', 'Psalm 149', 'Siddur Ashkenaz, Weekday, Shacharit, Pesukei Dezimra, Psalm 149'),
+      prayer('psalm-150', 'Psalm 150', 'Siddur Ashkenaz, Weekday, Shacharit, Pesukei Dezimra, Psalm 150'),
+      prayer('vayevarech-david', 'Vayevarech David', 'Siddur Ashkenaz, Weekday, Shacharit, Pesukei Dezimra, Vayevarech David'),
+      prayer('az-yashir', 'Az Yashir', 'Siddur Ashkenaz, Weekday, Shacharit, Pesukei Dezimra, Az Yashir'),
+      prayer('yishtabach', 'Yishtabach', 'Siddur Ashkenaz, Weekday, Shacharit, Pesukei Dezimra, Yishtabach'),
+    ],
   },
   {
     id: 'shema',
-    title: 'Shema',
-    hebrewTitle: 'שמע',
-    group: 'Daily',
-    ref: 'Siddur Ashkenaz, Weekday, Shacharit, Blessings of the Shema, Shema',
-    english: true,
+    label: 'Shema and Brachos',
+    items: [
+      prayer('barchu', 'Barchu', 'Siddur Ashkenaz, Weekday, Shacharit, Blessings of the Shema, Barchu'),
+      prayer('yotzer-or', 'First Blessing before Shema', 'Siddur Ashkenaz, Weekday, Shacharit, Blessings of the Shema, First Blessing before Shema'),
+      prayer('ahavat-yisrael', 'Second Blessing before Shema', 'Siddur Ashkenaz, Weekday, Shacharit, Blessings of the Shema, Second Blessing before Shema'),
+      prayer('shema', 'Shema', 'Siddur Ashkenaz, Weekday, Shacharit, Blessings of the Shema, Shema'),
+      prayer('geulah', 'Blessing after Shema', 'Siddur Ashkenaz, Weekday, Shacharit, Blessings of the Shema, Blessing after Shema'),
+    ],
   },
   {
     id: 'amidah',
-    title: 'Shemoneh Esrei Structure',
-    hebrewTitle: 'עמידה',
-    group: 'Amidah',
-    structureOnly: true,
+    label: 'Weekday Shemoneh Esrei',
+    items: [
+      prayer('amidah-patriarchs', 'Patriarchs', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Patriarchs'),
+      prayer('amidah-might', 'Divine Might', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Divine Might'),
+      prayer('amidah-holiness', 'Holiness of God', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Holiness of God'),
+      prayer('amidah-knowledge', 'Knowledge', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Knowledge'),
+      prayer('amidah-repentance', 'Repentance', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Repentance'),
+      prayer('amidah-forgiveness', 'Forgiveness', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Forgiveness'),
+      prayer('amidah-redemption', 'Redemption', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Redemption'),
+      prayer('amidah-healing', 'Healing', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Healing'),
+      prayer('amidah-prosperity', 'Prosperity', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Prosperity'),
+      prayer('amidah-exiles', 'Gathering the Exiles', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Gathering the Exiles'),
+      prayer('amidah-justice', 'Justice', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Justice'),
+      prayer('amidah-enemies', 'Against Enemies', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Against Enemies'),
+      prayer('amidah-righteous', 'The Righteous', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, The Righteous'),
+      prayer('amidah-jerusalem', 'Rebuilding Jerusalem', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Rebuilding Jerusalem'),
+      prayer('amidah-david', 'Kingdom of David', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Kingdom of David'),
+      prayer('amidah-prayer', 'Response to Prayer', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Response to Prayer'),
+      prayer('amidah-service', 'Temple Service', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Temple Service'),
+      prayer('amidah-thanksgiving', 'Thanksgiving', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Thanksgiving'),
+      prayer('amidah-kohanim', 'Birkat Kohanim', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Birkat Kohanim'),
+      prayer('amidah-peace', 'Peace', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Peace'),
+      prayer('amidah-concluding', 'Concluding Passage', 'Siddur Ashkenaz, Weekday, Shacharit, Amidah, Concluding Passage'),
+    ],
+  },
+  {
+    id: 'closing',
+    label: 'Closing and Meals',
+    items: [
+      prayer('aleinu', 'Aleinu', 'Siddur Ashkenaz, Shabbat, Maariv, Aleinu', { english: false }),
+      prayer('birkat-hamazon', 'Birkas Hamazon', 'Siddur Ashkenaz, Berachot, Birkat HaMazon'),
+    ],
+  },
+  {
+    id: 'brachos',
+    label: 'Common Brachos',
+    items: [
+      prayer('brachos-rishonos', 'Brachos Rishonos', 'Siddur Ashkenaz, Berachot, Birkat Hanehenin, Eating, Barachot Rishonot', { hebrewVersion: DAAT_HEBREW_VERSION }),
+      prayer('al-hamichyah', 'Al Hamichyah', 'Siddur Ashkenaz, Berachot, Birkat Hanehenin, Eating, Brachot Achronot, Al Hamichyah', { hebrewVersion: DAAT_HEBREW_VERSION, english: false }),
+      prayer('borei-nefashot', 'Borei Nefashot', 'Siddur Ashkenaz, Berachot, Birkat Hanehenin, Eating, Brachot Achronot, Borei Nefashot', { hebrewVersion: DAAT_HEBREW_VERSION, english: false }),
+      prayer('tefillat-haderech', 'Tefillas Haderech', 'Siddur Ashkenaz, Berachot, Tefillat HaDerech', { hebrewVersion: DAAT_HEBREW_VERSION }),
+    ],
   },
 ];
 
-const AMIDAH_STRUCTURE = [
-  'Opening praise',
-  'Middle weekday requests',
-  'Thanksgiving',
-  'Peace',
-];
+function prayer(id, title, ref, options = {}) {
+  return {
+    id,
+    title,
+    ref,
+    english: options.english !== false,
+    hebrewVersion: options.hebrewVersion || DEFAULT_HEBREW_VERSION,
+  };
+}
 
 function isAllowedLicense(license) {
   if (!license || typeof license !== 'string') return false;
@@ -120,50 +170,46 @@ function getRequestedVersion(versions, expected, required = true) {
   };
 }
 
-async function fetchPrayer(prayer) {
-  if (prayer.structureOnly) return { structureOnly: true };
-
+async function fetchPrayer(item) {
   const params = new URLSearchParams();
-  params.append('version', `${HEBREW_VERSION.language}|${HEBREW_VERSION.title}`);
-  if (prayer.english) {
+  params.append('version', `${item.hebrewVersion.language}|${item.hebrewVersion.title}`);
+  if (item.english) {
     params.append('version', `${ENGLISH_VERSION.language}|${ENGLISH_VERSION.title}`);
   }
   params.set('return_format', 'text_only');
 
-  const response = await fetch(`${SEFARIA_TEXTS_URL}/${encodeURIComponent(prayer.ref)}?${params}`);
+  const response = await fetch(`${SEFARIA_TEXTS_URL}/${encodeURIComponent(item.ref)}?${params}`);
   if (!response.ok) {
-    throw new Error(`Sefaria returned ${response.status} for ${prayer.title}.`);
+    throw new Error(`Sefaria returned ${response.status} for ${item.title}.`);
   }
 
   const data = await response.json();
   const versions = Array.isArray(data?.versions) ? data.versions : [];
   return {
-    ref: data?.ref || prayer.ref,
-    hebrew: getRequestedVersion(versions, HEBREW_VERSION),
-    english: prayer.english ? getRequestedVersion(versions, ENGLISH_VERSION, false) : null,
+    ref: data?.ref || item.ref,
+    hebrew: getRequestedVersion(versions, item.hebrewVersion),
+    english: item.english ? getRequestedVersion(versions, ENGLISH_VERSION, false) : null,
   };
 }
 
 export default function SiddurPage() {
-  const [activeId, setActiveId] = useState(PRAYERS[0].id);
-  const prayerQueries = useQueries({
-    queries: PRAYERS.map((prayer) => ({
-      queryKey: ['jewish-hub-siddur-prayer', prayer.id],
-      queryFn: () => fetchPrayer(prayer),
-      staleTime: 24 * 60 * 60 * 1000,
-      retry: 1,
-    })),
+  const allItems = useMemo(() => SIDDUR_SECTIONS.flatMap((section) => section.items), []);
+  const [activeSectionId, setActiveSectionId] = useState(SIDDUR_SECTIONS[0].id);
+  const [activeId, setActiveId] = useState(SIDDUR_SECTIONS[0].items[0].id);
+  const activeItem = allItems.find((item) => item.id === activeId) || allItems[0];
+  const activeSection = SIDDUR_SECTIONS.find((section) => section.id === activeSectionId) || SIDDUR_SECTIONS[0];
+
+  const prayerQuery = useQuery({
+    queryKey: ['jewish-hub-siddur-prayer', activeItem.id, activeItem.ref, activeItem.hebrewVersion.title],
+    queryFn: () => fetchPrayer(activeItem),
+    staleTime: 24 * 60 * 60 * 1000,
+    retry: 1,
   });
 
-  const activeIndex = PRAYERS.findIndex((prayer) => prayer.id === activeId);
-  const activePrayer = PRAYERS[activeIndex] || PRAYERS[0];
-  const activeQuery = prayerQueries[activeIndex];
-  const groupedPrayers = useMemo(() => {
-    return PRAYERS.reduce((groups, prayer) => {
-      groups[prayer.group] = [...(groups[prayer.group] || []), prayer];
-      return groups;
-    }, {});
-  }, []);
+  const chooseSection = (section) => {
+    setActiveSectionId(section.id);
+    setActiveId(section.items[0].id);
+  };
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
@@ -187,47 +233,52 @@ export default function SiddurPage() {
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700">Siddur</p>
                 <h1 className="mt-2 text-[28px] font-black leading-none text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
-                  Daily Tefillos
+                  Weekday Siddur
                 </h1>
                 <p className="mt-3 text-[13px] font-semibold leading-6 text-slate-500">
-                  A scoped starter set. Hebrew loads from Sefaria; English appears only when the requested CC0 translation is available.
+                  Nusach Ashkenaz. Every tefillah line shown here is loaded from Sefaria at runtime.
                 </p>
               </div>
             </div>
           </div>
 
           <div className="space-y-3 p-3 sm:p-4">
-            {Object.entries(groupedPrayers).map(([group, prayers]) => (
-              <div key={group}>
-                <p className="mb-2 px-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{group}</p>
-                <div className="grid gap-2">
-                  {prayers.map((prayer) => (
-                    <button
-                      key={prayer.id}
-                      type="button"
-                      onClick={() => setActiveId(prayer.id)}
-                      className={`motion-press flex items-center justify-between rounded-[18px] border px-3 py-3 text-left transition-colors ${
-                        activeId === prayer.id
-                          ? 'border-emerald-200 bg-emerald-50 text-emerald-950'
-                          : 'border-slate-100 bg-white text-slate-800'
-                      }`}
-                    >
-                      <span className="text-[13px] font-black">{prayer.title}</span>
-                      <span
-                        dir="rtl"
-                        lang="he"
-                        className="text-[17px] font-semibold"
-                        style={{ fontFamily: 'var(--font-hebrew)', fontKerning: 'normal' }}
-                      >
-                        {prayer.hebrewTitle}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {SIDDUR_SECTIONS.map((section) => (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => chooseSection(section)}
+                  className={`motion-press shrink-0 rounded-[16px] border px-3 py-2 text-[12px] font-black transition-colors ${
+                    activeSectionId === section.id
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-950'
+                      : 'border-slate-100 bg-white text-slate-500'
+                  }`}
+                >
+                  {section.label}
+                </button>
+              ))}
+            </div>
 
-            <PrayerPanel prayer={activePrayer} query={activeQuery} />
+            <div className="grid gap-2">
+              {activeSection.items.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveId(item.id)}
+                  className={`motion-press rounded-[18px] border px-3 py-3 text-left transition-colors ${
+                    activeId === item.id
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-950'
+                      : 'border-slate-100 bg-white text-slate-800'
+                  }`}
+                >
+                  <span className="block text-[13px] font-black leading-tight">{item.title}</span>
+                  <span className="mt-1 block truncate text-[10px] font-bold text-slate-400">{item.ref}</span>
+                </button>
+              ))}
+            </div>
+
+            <PrayerPanel item={activeItem} query={prayerQuery} />
           </div>
         </section>
       </div>
@@ -235,28 +286,7 @@ export default function SiddurPage() {
   );
 }
 
-function PrayerPanel({ prayer, query }) {
-  if (prayer.structureOnly) {
-    return (
-      <article className="rounded-[26px] border border-slate-100 bg-white px-4 py-5 shadow-sm sm:px-5">
-        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Structure</p>
-        <h2 className="mt-2 text-[22px] font-black leading-tight text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
-          {prayer.title}
-        </h2>
-        <p className="mt-3 text-[13px] font-semibold leading-6 text-slate-500">
-          This is a practical orientation only, not a full Amidah text and not halachic instruction.
-        </p>
-        <div className="mt-4 grid gap-2">
-          {AMIDAH_STRUCTURE.map((item, index) => (
-            <div key={item} className="rounded-[18px] border border-slate-100 bg-slate-50 px-3 py-3">
-              <p className="text-[12px] font-black text-slate-900">{index + 1}. {item}</p>
-            </div>
-          ))}
-        </div>
-      </article>
-    );
-  }
-
+function PrayerPanel({ item, query }) {
   if (query?.isLoading) {
     return (
       <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm">
@@ -273,7 +303,7 @@ function PrayerPanel({ prayer, query }) {
         <div className="flex items-start gap-3">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-500" />
           <div className="min-w-0 flex-1">
-            <h2 className="text-[14px] font-black text-rose-900">Could not load {prayer.title}</h2>
+            <h2 className="text-[14px] font-black text-rose-900">Could not load {item.title}</h2>
             <p className="mt-1 text-[12px] font-semibold leading-snug text-rose-700">{query.error.message}</p>
             <button
               type="button"
@@ -294,13 +324,15 @@ function PrayerPanel({ prayer, query }) {
 
   return (
     <article className="rounded-[26px] border border-slate-100 bg-white px-4 py-5 shadow-sm sm:px-5">
-      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">{prayer.group}</p>
+      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Nusach Ashkenaz</p>
       <h2 className="mt-2 text-[22px] font-black leading-tight text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
-        {prayer.title}
+        {item.title}
       </h2>
+      <p className="mt-2 text-[11px] font-bold leading-5 text-slate-400">{query?.data?.ref || item.ref}</p>
+
       <div className="mt-4 space-y-4">
         {rows.map((line, index) => (
-          <div key={`${prayer.id}-${index}`} className="rounded-[22px] border border-slate-100 bg-[#FDFCF8] px-4 py-4">
+          <div key={`${item.id}-${index}`} className="rounded-[22px] border border-slate-100 bg-[#FDFCF8] px-4 py-4">
             <p
               dir="rtl"
               lang="he"
@@ -321,11 +353,13 @@ function PrayerPanel({ prayer, query }) {
           </div>
         ))}
       </div>
+
       {!query?.data?.english && (
         <p className="mt-4 rounded-[18px] border border-slate-100 bg-slate-50 px-3 py-3 text-[12px] font-semibold leading-5 text-slate-500">
-          Public-domain English is not available for this item in the selected Sefaria version, so only Hebrew is shown.
+          Open-licensed English is not available for this item in the selected Sefaria version, so only Hebrew is shown.
         </p>
       )}
+
       <p className="mt-4 px-1 text-[11px] font-semibold leading-snug text-slate-400">
         {query?.data?.hebrew?.title} ({query?.data?.hebrew?.license})
         {query?.data?.english ? ` · ${query.data.english.title} (${query.data.english.license})` : ''} · Source: Sefaria.
