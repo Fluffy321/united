@@ -1381,8 +1381,9 @@ export default function MapPage() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [searchParams] = useSearchParams();
+  const hasMapDeepLink = Boolean(searchParams.get('category') || searchParams.get('requestId') || searchParams.get('place'));
   const [activeView, setActiveView] = useState(() => (
-    COMMUNITIES_ENABLED && searchParams.get('category') ? 'community' : 'businesses'
+    hasMapDeepLink ? 'community' : 'businesses'
   ));
   const [userLocation, setUserLocation] = useState(null);
   const [locationStatus, setLocationStatus] = useState('idle');
@@ -1413,10 +1414,8 @@ export default function MapPage() {
   }, []);
 
   useEffect(() => {
-    if (COMMUNITIES_ENABLED && (searchParams.get('category') || searchParams.get('requestId'))) {
-      setActiveView('community');
-    }
-  }, [searchParams]);
+    if (hasMapDeepLink) setActiveView('community');
+  }, [hasMapDeepLink]);
 
   const handleUseMyLocation = () => requestUserLocation(true);
   const isDeepLinkedMap = searchParams.toString().length > 0;
@@ -1444,7 +1443,7 @@ export default function MapPage() {
       />
 
       <div className="mobile-page-wide min-h-0 flex-1 overflow-y-auto px-3 pb-3 sm:px-4 sm:pb-4">
-        {COMMUNITIES_ENABLED && <div className="mb-3 grid grid-cols-2 gap-2 rounded-[20px] border border-slate-200 bg-white p-1 shadow-sm">
+        <div className="mb-3 grid grid-cols-2 gap-2 rounded-[20px] border border-slate-200 bg-white p-1 shadow-sm">
           <button
             type="button"
             onClick={() => setActiveView('businesses')}
@@ -1459,9 +1458,9 @@ export default function MapPage() {
             className={`flex h-10 items-center justify-center gap-2 rounded-2xl text-xs font-black ${activeView === 'community' ? 'bg-slate-950 text-white' : 'text-slate-500'}`}
           >
             <Sparkles className="h-4 w-4" />
-            Community Map
+            {COMMUNITIES_ENABLED ? 'Community Map' : 'Local Map'}
           </button>
-        </div>}
+        </div>
 
         <LiveNowRail
           className="mb-3"
@@ -1471,7 +1470,7 @@ export default function MapPage() {
           onItemClick={(item) => navigate(item.href || '/Map')}
         />
 
-        {activeView === 'businesses' || !COMMUNITIES_ENABLED ? (
+        {activeView === 'businesses' ? (
           <BusinessDirectoryExperience
             currentUser={currentUser}
             userLocation={userLocation}
