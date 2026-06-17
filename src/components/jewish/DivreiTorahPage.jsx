@@ -1,10 +1,17 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, LibraryBig, ScrollText } from 'lucide-react';
+import { ArrowLeft, ExternalLink, LibraryBig, RefreshCw, ScrollText } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import { useAuth } from '@/lib/AuthContext';
 import { getWeeklyParshaReading } from '@/lib/hebrewDate';
-import { findHumanDvarTorah } from '@/content/jewish/divreiTorah';
+import {
+  approveDvarTorah,
+  canModerateDvarTorah,
+  listDvarTorahPosts,
+  rejectDvarTorah,
+  submitDvarTorah,
+} from '@/services/divreiTorahService';
 
 function cleanParshaName(value) {
   return value?.replace(/^Parashat\s+/i, '') || 'This week’s parsha';
@@ -43,6 +50,9 @@ function commentaryLinks(reading) {
 }
 
 export default function DivreiTorahPage() {
+  const { user: currentUser } = useAuth();
+  const queryClient = useQueryClient();
+  const [form, setForm] = React.useState({ title: '', body: '', authorTitle: '' });
   const readingQuery = useQuery({
     queryKey: ['jewish-hub-divrei-torah', new Date().toDateString()],
     queryFn: () => getWeeklyParshaReading(new Date(), 'America/New_York'),
@@ -52,7 +62,27 @@ export default function DivreiTorahPage() {
 
   const reading = readingQuery.data;
   const links = commentaryLinks(reading);
-  const humanDvarTorah = findHumanDvarTorah(reading);
+  const canModerate = canModerateDvarTorah(currentUser);
+  const dvarTorahQuery = useQuery({
+    queryKey: ['jewish-hub-human-divrei-torah', reading?.title, reading?.date, currentUser?.id, canModerate],
+    queryFn: () => listDvarTorahPosts(reading, { includePending: canModerate, currentUserId: currentUser?.id }),
+    enabled: Boolean(reading),
+    staleTime: 60 * 1000,
+    retry: 1,
+  });
+
+  const invalidatePosts = () => queryClient.invalidateQueries({ queryKey: ['jewish-hub-human-divrei-torah'] });
+  const submitMutation = useMutation({
+    mutationFn: () => submitDvarTorah({ reading, currentUser, ...form }),
+    onSuccess: () => {
+      setForm({ title: '', body: '', authorTitle: '' });
+      invalidatePosts();
+    },
+  });
+  const approveMutation = useMutation({ mutationFn: approveDvarTorah, onSuccess: invalidatePosts });
+  const rejectMutation = useMutation({ mutationFn: rejectDvarTorah, onSuccess: invalidatePosts });
+
+  const submitDisabled = !reading || !form.title.trim() || form.body.trim().length < 40 || submitMutation.isPending;
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
@@ -128,29 +158,115 @@ export default function DivreiTorahPage() {
                   </div>
                 </article>
 
-                {humanDvarTorah ? (
-                  <article className="rounded-[26px] border border-violet-100 bg-violet-50/60 px-4 py-5 shadow-sm sm:px-5">
-                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-violet-700">Human dvar Torah</p>
-                    <h2 className="mt-2 text-[24px] font-black leading-tight text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
-                      {humanDvarTorah.title}
-                    </h2>
-                    <p className="mt-2 text-[12px] font-bold leading-5 text-violet-800">
-                      By {humanDvarTorah.author}
-                      {humanDvarTorah.authorTitle ? ` · ${humanDvarTorah.authorTitle}` : ''}
-                    </p>
-                    <div className="mt-4 space-y-3 text-[14px] font-semibold leading-7 text-slate-700">
-                      {humanDvarTorah.paragraphs.map((paragraph) => (
-                        <p key={paragraph}>{paragraph}</p>
-                      ))}
-                    </div>
-                  </article>
+                {dvarTorahQuery.isLoading ? (
+                  <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm">
+                    <div className="skeleton h-6 w-40 rounded" />
+                    <div className="skeleton mt-3 h-4 w-full rounded" />
+                    <div className="skeleton mt-2 h-4 w-4/5 rounded" />
+                  </div>
+                ) : dvarTorahQuery.data?.length > 0 ? (
+                  <div className="grid gap-3">
+                    {dvarTorahQuery.data.map((post) => (
+                      <article key={post.id} className="rounded-[26px] border border-violet-100 bg-violet-50/60 px-4 py-5 shadow-sm sm:px-5">
+                        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-violet-700">
+                          {post.dvar_torah_status === 'pending' ? 'Pending review' : 'Human dvar Torah'}
+                        </p>
+                        <h2 className="mt-2 text-[24px] font-black leading-tight text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
+                          {post.title}
+                        </h2>
+                        <p className="mt-2 text-[12px] font-bold leading-5 text-violet-800">
+                          By {post.author_name || post.submitted_by_name || 'Community member'}
+                          {post.dvar_torah_author_title ? ` · ${post.dvar_torah_author_title}` : ''}
+                          {post.created_date ? ` · ${new Date(post.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
+                        </p>
+                        <div className="mt-4 space-y-3 text-[14px] font-semibold leading-7 text-slate-700">
+                          {String(post.body || post.content || '').split(/\n{2,}/).filter(Boolean).map((paragraph) => (
+                            <p key={paragraph}>{paragraph}</p>
+                          ))}
+                        </div>
+                        {canModerate && post.dvar_torah_status === 'pending' && (
+                          <div className="mt-4 flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => approveMutation.mutate(post.id)}
+                              className="motion-press rounded-[16px] bg-violet-700 px-3 py-2 text-[12px] font-black text-white"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => rejectMutation.mutate(post.id)}
+                              className="motion-press rounded-[16px] border border-violet-200 bg-white px-3 py-2 text-[12px] font-black text-violet-700"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
+                      </article>
+                    ))}
+                  </div>
                 ) : (
                   <article className="rounded-[24px] border border-slate-100 bg-slate-50 px-4 py-4">
                     <p className="text-[12px] font-semibold leading-5 text-slate-500">
-                      No human-written dvar Torah has been posted for this week yet. The team can add an attributed piece after review; no AI-generated Torah content is shown here.
+                      No human-written dvar Torah has been posted for this week yet. Be the first to share a short thought for review.
                     </p>
                   </article>
                 )}
+
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    if (!submitDisabled) submitMutation.mutate();
+                  }}
+                  className="rounded-[26px] border border-slate-100 bg-white px-4 py-5 shadow-sm sm:px-5"
+                >
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-violet-700">Share from a person</p>
+                  <h2 className="mt-2 text-[20px] font-black leading-tight text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
+                    Submit a dvar Torah
+                  </h2>
+                  <p className="mt-2 text-[12px] font-semibold leading-5 text-slate-500">
+                    Human-written submissions only. New posts are held for light review unless submitted by a designated contributor.
+                  </p>
+                  <div className="mt-4 grid gap-3">
+                    <input
+                      value={form.title}
+                      onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+                      placeholder="Title"
+                      className="h-11 rounded-[18px] border border-slate-200 bg-white px-3 text-[13px] font-bold text-slate-900 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                    />
+                    <input
+                      value={form.authorTitle}
+                      onChange={(event) => setForm((current) => ({ ...current, authorTitle: event.target.value }))}
+                      placeholder="Optional title, e.g. Rabbi, Morah, Contributor"
+                      className="h-11 rounded-[18px] border border-slate-200 bg-white px-3 text-[13px] font-bold text-slate-900 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                    />
+                    <textarea
+                      value={form.body}
+                      onChange={(event) => setForm((current) => ({ ...current, body: event.target.value }))}
+                      placeholder="Write the dvar Torah in your own words."
+                      rows={6}
+                      className="resize-none rounded-[18px] border border-slate-200 bg-white px-3 py-3 text-[13px] font-semibold leading-6 text-slate-900 outline-none focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                    />
+                    {submitMutation.error && (
+                      <p className="rounded-[16px] border border-rose-100 bg-rose-50 px-3 py-2 text-[12px] font-bold text-rose-700">
+                        {submitMutation.error.message}
+                      </p>
+                    )}
+                    {submitMutation.isSuccess && (
+                      <p className="rounded-[16px] border border-emerald-100 bg-emerald-50 px-3 py-2 text-[12px] font-bold text-emerald-700">
+                        Submitted for review.
+                      </p>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={submitDisabled}
+                      className="motion-press inline-flex items-center justify-center gap-2 rounded-[18px] bg-slate-950 px-4 py-3 text-[13px] font-black text-white disabled:opacity-40"
+                    >
+                      {submitMutation.isPending && <RefreshCw className="h-4 w-4 animate-spin" />}
+                      Submit for review
+                    </button>
+                  </div>
+                </form>
 
                 <div className="grid gap-3">
                   {links.map((item) => (
