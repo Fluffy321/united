@@ -182,6 +182,31 @@ export async function getWeeklyParshaReading(date = new Date(), tzid = 'America/
 }
 
 /**
+ * Get the Daf Yomi for a given date from Hebcal.
+ */
+export async function getDafYomi(date = new Date(), tzid = 'America/New_York') {
+  const dateStr = formatDateForTimeZone(date, tzid);
+  try {
+    const res = await fetch(
+      `${HEBCAL_BASE}/hebcal?v=1&cfg=json&F=on&maj=off&min=off&mod=off&nx=off&ss=off&mf=off&start=${dateStr}&end=${dateStr}`
+    );
+    const data = await res.json();
+    const daf = data.items?.find(i => i.category === 'dafyomi');
+    if (!daf) return null;
+
+    return {
+      title: daf.title,
+      hebrew: daf.hebrew,
+      date: daf.date,
+      hdate: daf.hdate,
+      link: daf.link,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Five Towns convenience wrapper — kept for backwards compatibility.
  * Prefer getShabbatTimes() for location-aware calls.
  */
