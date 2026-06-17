@@ -10,6 +10,7 @@ const SECTION_LABELS = {
   tehillim: 'Tehillim',
   tanakh: 'Tanakh',
   parsha: 'Parsha',
+  shiurim: 'Shiurim',
   'daily-learning': 'Daily Learning',
   siddur: 'Siddur',
   'divrei-torah': 'Divrei Torah',

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, BookMarked, BookOpenText, ChevronRight, LibraryBig, ScrollText, Settings2, Sparkles } from 'lucide-react';
+import { ArrowLeft, BookMarked, BookOpenText, ChevronRight, Headphones, LibraryBig, ScrollText, Settings2, Sparkles } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
 import DailyLearningPage from './DailyLearningPage';
 import DivreiTorahPage from './DivreiTorahPage';
@@ -9,6 +9,7 @@ import ParshaReader from './ParshaReader';
 import SiddurPage from './SiddurPage';
 import TanakhReader from './TanakhReader';
 import TehillimReader from './TehillimReader';
+import ShiurimPage from './ShiurimPage';
 import useJewishHubPreferences from '@/hooks/useJewishHubPreferences';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 
@@ -50,6 +51,15 @@ const HUB_ENTRIES = [
     tone: 'blue',
   },
   {
+    id: 'shiurim',
+    title: 'Shiurim',
+    eyebrow: 'Audio / video',
+    description: 'Curated Orthodox Torah media, linked to original sources.',
+    path: '/JewishHub/shiurim',
+    Icon: Headphones,
+    tone: 'cyan',
+  },
+  {
     id: 'siddur',
     title: 'Siddur',
     eyebrow: 'Daily tefillah',
@@ -76,7 +86,15 @@ const TONE_CLASSES = {
   emerald: 'border-emerald-100 bg-emerald-50 text-emerald-700',
   violet: 'border-violet-100 bg-violet-50 text-violet-700',
   indigo: 'border-indigo-100 bg-indigo-50 text-indigo-700',
+  cyan: 'border-cyan-100 bg-cyan-50 text-cyan-700',
 };
+
+const DAILY_ANCHORS = [
+  { title: 'Tehillim', detail: 'Open a perek', path: '/JewishHub/tehillim', tone: 'rose' },
+  { title: 'Parsha', detail: 'Read the week', path: '/JewishHub/parsha', tone: 'amber' },
+  { title: 'Learning', detail: 'Today’s cycle', path: '/JewishHub/daily-learning', tone: 'blue' },
+  { title: 'Shiurim', detail: 'Listen quietly', path: '/JewishHub/shiurim', tone: 'cyan' },
+];
 
 export default function JewishContentHub() {
   const { pathname } = useLocation();
@@ -97,6 +115,10 @@ export default function JewishContentHub() {
 
   if (normalizedPath === '/JewishHub/daily-learning' || normalizedPath === '/JewishHub/daf-yomi') {
     return <DailyLearningPage />;
+  }
+
+  if (normalizedPath === '/JewishHub/shiurim') {
+    return <ShiurimPage />;
   }
 
   if (normalizedPath === '/JewishHub/siddur') {
@@ -128,6 +150,28 @@ export default function JewishContentHub() {
 
       <div className="space-y-4">
         <DailyJewishHome />
+
+        <section className="motion-soft-in rounded-[30px] border border-slate-200/70 bg-white p-3 shadow-[0_18px_50px_rgba(15,28,46,0.06)]">
+          <div className="px-2 pb-3 pt-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Daily rhythm</p>
+            <h2 className="mt-1 text-[22px] font-black leading-tight text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
+              A little Torah for today
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {DAILY_ANCHORS.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className="motion-press rounded-[22px] border border-slate-100 bg-[#FDFCF8] px-3 py-4 transition-colors active:bg-slate-50"
+              >
+                <span className={`mb-3 block h-1.5 w-10 rounded-full ${TONE_CLASSES[item.tone].split(' ')[1]}`} />
+                <span className="block text-[14px] font-black leading-tight text-slate-950">{item.title}</span>
+                <span className="mt-1 block text-[11px] font-bold leading-4 text-slate-500">{item.detail}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         <section className="rounded-[30px] border border-slate-200/70 bg-white p-3 shadow-[0_18px_50px_rgba(15,28,46,0.06)]">
           <div className="flex items-start justify-between gap-3 px-2 pb-3 pt-1">
