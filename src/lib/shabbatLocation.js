@@ -13,7 +13,8 @@ export const DEFAULT_LOCATION = {
 };
 
 export const PRESET_LOCATIONS = [
-  { label: 'Five Towns, NY',    lat: 40.6157, lng: -73.7296, tzid: 'America/New_York' },
+  { label: 'Cedarhurst, NY',    lat: 40.6229, lng: -73.7243, tzid: 'America/New_York' },
+  { label: 'Five Towns, NY',    lat: 40.6229, lng: -73.7243, tzid: 'America/New_York' },
   { label: 'Brooklyn, NY',      lat: 40.6501, lng: -73.9496, tzid: 'America/New_York' },
   { label: 'Monsey, NY',        lat: 41.1112, lng: -74.0687, tzid: 'America/New_York' },
   { label: 'Teaneck, NJ',       lat: 40.8918, lng: -74.0143, tzid: 'America/New_York' },
@@ -44,22 +45,50 @@ export function clearCandleLocation() {
   storageService.removeItem(STORAGE_KEY);
 }
 
+const STATE_ABBREVIATIONS = {
+  'New York': 'NY',
+  'New Jersey': 'NJ',
+  Maryland: 'MD',
+  Florida: 'FL',
+  Illinois: 'IL',
+  California: 'CA',
+};
+
+export function isResolvedLocationLabel(label) {
+  if (!label || typeof label !== 'string') return false;
+  const normalized = label.trim().toLowerCase();
+  return Boolean(normalized) && normalized !== 'your location' && normalized !== 'location unavailable';
+}
+
+function cleanPlaceName(value) {
+  if (!value) return '';
+  return value
+    .replace(/^Village of\s+/i, '')
+    .replace(/^Town of\s+/i, '')
+    .replace(/^City of\s+/i, '')
+    .trim();
+}
+
+function formatState(value) {
+  return STATE_ABBREVIATIONS[value] || value || '';
+}
+
 export async function reverseGeocode(lat, lng) {
   try {
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`,
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=12&addressdetails=1`,
       { headers: { 'Accept-Language': 'en', 'User-Agent': 'JUnited App (junited.us)' } }
     );
-    if (!res.ok) return 'your location';
+    if (!res.ok) return null;
     const data = await res.json();
     const addr = data.address || {};
-    const city = addr.city || addr.town || addr.village || addr.suburb || addr.neighbourhood || '';
-    const state = addr.state || '';
+    const city = cleanPlaceName(addr.city || addr.town || addr.village || addr.suburb || addr.neighbourhood || '');
+    const state = formatState(addr.state || '');
     if (city && state) return `${city}, ${state}`;
     if (city) return city;
-    return 'your location';
+    return null;
   } catch {
-    return 'your location';
+    return null;
   }
 }
 

@@ -7,6 +7,7 @@ import {
   reverseGeocode,
   requestGPSLocation,
   DEFAULT_LOCATION,
+  isResolvedLocationLabel,
 } from '@/lib/shabbatLocation';
 
 function resolveInitialLocation() {
@@ -33,7 +34,8 @@ export default function useShabbatLocation({ autoRequest = false } = {}) {
       const { latitude: lat, longitude: lng } = pos.coords;
       const tzid = getBrowserTzid();
       const label = await reverseGeocode(lat, lng);
-      const pref = { type: 'gps', lat, lng, label, tzid };
+      const pref = { type: 'gps', lat, lng, label: label || 'Location unavailable', tzid };
+      if (!label) setError('unresolved');
       setCandleLocation(pref);
       setLocation(pref);
       return pref;
@@ -57,6 +59,29 @@ export default function useShabbatLocation({ autoRequest = false } = {}) {
     if (stored) return; // already have a preference, don't re-ask
     applyGPS();
   }, []); // intentionally runs once on mount
+
+  useEffect(() => {
+    if (!location?.lat || !location?.lng) return;
+    if (!['gps', 'manual'].includes(location.type)) return;
+    if (isResolvedLocationLabel(location.label)) return;
+
+    let cancelled = false;
+    reverseGeocode(location.lat, location.lng).then((label) => {
+      if (cancelled) return;
+      if (!label) {
+        setError('unresolved');
+        return;
+      }
+      const next = { ...location, label };
+      setCandleLocation(next);
+      setLocation(next);
+      setError(null);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location?.lat, location?.lng, location?.label, location?.type]);
 
   // Allow re-triggering GPS from Settings (clears any 'declined' flag first)
   const requestGPS = useCallback(() => {

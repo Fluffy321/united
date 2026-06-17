@@ -5,6 +5,17 @@
 
 const HEBCAL_BASE = 'https://www.hebcal.com';
 
+function formatDateForTimeZone(date = new Date(), timeZone = 'America/New_York') {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 /**
  * Convert a Gregorian date to Hebrew date string.
  * Returns e.g. "כ״ז בניסן תשפ״ו" or "27 Nisan 5786"
@@ -59,7 +70,7 @@ export async function formatDualDate(dateInput) {
  * Get zmanim for a location on a given date.
  */
 export async function getZmanim(lat, lng, date = new Date(), tzid = 'America/New_York') {
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = formatDateForTimeZone(date, tzid);
   try {
     const res = await fetch(
       `${HEBCAL_BASE}/zmanim?cfg=json&latitude=${lat}&longitude=${lng}&date=${dateStr}&tzid=${encodeURIComponent(tzid)}`
@@ -81,16 +92,29 @@ export const HAVDALAH_MINUTES = 50;
  * tzid should be an IANA timezone string (e.g. 'America/New_York').
  */
 export async function getShabbatTimes(lat, lng, tzid = 'America/New_York', date = new Date(), havdalahMinutes = HAVDALAH_MINUTES) {
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = formatDateForTimeZone(date, tzid);
   try {
     const res = await fetch(
       `${HEBCAL_BASE}/shabbat?cfg=json&geo=pos&latitude=${lat}&longitude=${lng}&tzid=${encodeURIComponent(tzid)}&m=${havdalahMinutes}&b=${CANDLE_LIGHTING_MINUTES}&date=${dateStr}`
     );
     const data = await res.json();
     const items = data.items || [];
+    const firstCandle = items
+      .filter(i => i.category === 'candles')
+      .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+    const candleDate = firstCandle?.date ? new Date(firstCandle.date) : null;
+    const candleZmanim = candleDate && !Number.isNaN(candleDate.getTime())
+      ? await getZmanim(lat, lng, candleDate, tzid)
+      : null;
+    const sunsetBasedCandleLighting = candleZmanim?.sunset
+      ? new Date(new Date(candleZmanim.sunset).getTime() - CANDLE_LIGHTING_MINUTES * 60 * 1000).toISOString()
+      : null;
 
     // All candles/havdalah items sorted chronologically — needed for multi-day Yom Tov
-    const allCandles  = items.filter(i => i.category === 'candles' ).sort((a, b) => new Date(a.date) - new Date(b.date));
+    const allCandles  = items
+      .filter(i => i.category === 'candles')
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .map((item, index) => index === 0 && sunsetBasedCandleLighting ? { ...item, date: sunsetBasedCandleLighting } : item);
     const allHavdalah = items.filter(i => i.category === 'havdalah').sort((a, b) => new Date(a.date) - new Date(b.date));
 
     // Major Yom Tov items for holiday labeling. Excludes "Erev X" (eve-of notices)
@@ -127,6 +151,31 @@ export async function getParsha() {
     const data = await res.json();
     const parsha = data.items?.find(i => i.category === 'parashat');
     return parsha ? { name: parsha.title, hebrew: parsha.hebrew, link: parsha.link } : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get this week's parsha with the Torah leyning range for Sefaria text lookup.
+ */
+export async function getWeeklyParshaReading(date = new Date(), tzid = 'America/New_York') {
+  const dateStr = formatDateForTimeZone(date, tzid);
+  try {
+    const res = await fetch(`${HEBCAL_BASE}/shabbat?cfg=json&geo=none&m=50&date=${dateStr}`);
+    const data = await res.json();
+    const parsha = data.items?.find(i => i.category === 'parashat');
+    if (!parsha) return null;
+
+    return {
+      title: parsha.title,
+      hebrew: parsha.hebrew,
+      date: parsha.date,
+      hdate: parsha.hdate,
+      torah: parsha.leyning?.torah || null,
+      aliyot: parsha.leyning || null,
+      link: parsha.link,
+    };
   } catch {
     return null;
   }

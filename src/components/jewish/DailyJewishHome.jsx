@@ -2,7 +2,8 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CalendarDays, Flame, MapPin, ScrollText, Sun } from 'lucide-react';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
-import { getShabbatTimes, getTodayHebrew, getZmanim } from '@/lib/hebrewDate';
+import { getParsha, getShabbatTimes, getTodayHebrew, getZmanim } from '@/lib/hebrewDate';
+import { isResolvedLocationLabel } from '@/lib/shabbatLocation';
 
 const DEFAULT_TIME_ZONE = 'America/New_York';
 
@@ -35,12 +36,17 @@ export default function DailyJewishHome({ compact = false }) {
   const {
     location,
     locationLoading,
-    locationError,
-    isDefault,
   } = useShabbatLocation({ autoRequest: true });
 
   const tzid = location?.tzid || DEFAULT_TIME_ZONE;
-  const locationLabel = location?.label || 'Five Towns, NY';
+  const locationLabel = isResolvedLocationLabel(location?.label) ? location.label : null;
+  const hasNamedLocation = Boolean(
+    location?.lat &&
+    location?.lng &&
+    locationLabel &&
+    location?.type !== 'default' &&
+    location?.type !== 'declined'
+  );
 
   const { data: hebrewDate } = useQuery({
     queryKey: ['jewish-hub-hebrew-date', today.toDateString()],
@@ -51,7 +57,14 @@ export default function DailyJewishHome({ compact = false }) {
   const { data: shabbatTimes, isLoading: shabbatLoading } = useQuery({
     queryKey: ['jewish-hub-shabbat-times', location?.lat, location?.lng, tzid, today.toDateString()],
     queryFn: () => getShabbatTimes(location.lat, location.lng, tzid, today),
-    enabled: Boolean(location?.lat && location?.lng),
+    enabled: hasNamedLocation,
+    staleTime: 6 * 60 * 60 * 1000,
+    retry: 1,
+  });
+
+  const { data: parshaFallback } = useQuery({
+    queryKey: ['jewish-hub-parsha', today.toDateString()],
+    queryFn: () => getParsha(),
     staleTime: 6 * 60 * 60 * 1000,
     retry: 1,
   });
@@ -59,18 +72,19 @@ export default function DailyJewishHome({ compact = false }) {
   const { data: zmanim, isLoading: zmanimLoading } = useQuery({
     queryKey: ['jewish-hub-zmanim', location?.lat, location?.lng, tzid, today.toDateString()],
     queryFn: () => getZmanim(location.lat, location.lng, today, tzid),
-    enabled: Boolean(location?.lat && location?.lng),
+    enabled: hasNamedLocation,
     staleTime: 6 * 60 * 60 * 1000,
     retry: 1,
   });
 
   const locationNote = locationLoading
     ? 'Locating'
-    : locationError === 'declined'
-      ? 'Five Towns default'
-      : isDefault
-        ? 'Five Towns default'
-        : locationLabel;
+    : hasNamedLocation
+      ? locationLabel
+      : 'Location not resolved';
+
+  const parshaTitle = shabbatTimes?.parsha || parshaFallback?.name;
+  const parshaHebrew = shabbatTimes?.hebrew || parshaFallback?.hebrew;
 
   const keyTimes = [
     { label: 'Sunrise', value: zmanim?.sunrise },
@@ -116,13 +130,23 @@ export default function DailyJewishHome({ compact = false }) {
               <ScrollText className="h-4 w-4 text-amber-700" />
               <p className="text-[11px] font-black uppercase tracking-wide text-amber-700">This week</p>
             </div>
-            {shabbatTimes?.parsha && (
+            {parshaTitle && (
               <span className="rounded-full border border-amber-100 bg-white px-2.5 py-1 text-[10px] font-black text-amber-700">
                 Parsha
               </span>
             )}
           </div>
-          <p className="text-[18px] font-black leading-tight text-slate-950">{cleanParshaName(shabbatTimes?.parsha)}</p>
+          <p className="text-[18px] font-black leading-tight text-slate-950">{cleanParshaName(parshaTitle)}</p>
+          {parshaHebrew && (
+            <p
+              dir="rtl"
+              lang="he"
+              className="mt-1 text-right text-[20px] font-semibold leading-8 text-amber-950"
+              style={{ fontFamily: 'var(--font-hebrew)', fontKerning: 'normal' }}
+            >
+              {parshaHebrew}
+            </p>
+          )}
           {shabbatTimes?.majorHolidays?.length > 0 && (
             <p className="mt-1 text-[12px] font-bold text-amber-800">
               {shabbatTimes.majorHolidays.map((item) => item.title).join(' · ')}
@@ -144,10 +168,18 @@ export default function DailyJewishHome({ compact = false }) {
             </div>
             {(locationLoading || shabbatLoading) && <span className="text-[11px] font-black text-slate-400">Loading</span>}
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <TimeCard label={shabbatTimes?.candleTitle || 'Candle lighting'} value={formatTime(shabbatTimes?.candleLighting, tzid)} />
-            <TimeCard label={shabbatTimes?.havdalahTitle || 'Havdalah'} value={formatTime(shabbatTimes?.havdalah, tzid)} />
-          </div>
+          {hasNamedLocation ? (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <TimeCard label={shabbatTimes?.candleTitle || 'Candle lighting'} value={formatTime(shabbatTimes?.candleLighting, tzid)} />
+              <TimeCard label={shabbatTimes?.havdalahTitle || 'Havdalah'} value={formatTime(shabbatTimes?.havdalah, tzid)} />
+            </div>
+          ) : (
+            <div className="mt-3 rounded-[18px] border border-blue-100 bg-white/80 px-3 py-3">
+              <p className="text-[12px] font-bold leading-5 text-slate-600">
+                Enable or choose a named location in Settings to show local candle lighting and Havdalah.
+              </p>
+            </div>
+          )}
           <p className="mt-3 text-[11px] font-semibold leading-5 text-slate-400">
             Times are reference only. Follow your local luach and ask your rav for practical halacha.
           </p>
@@ -161,7 +193,7 @@ export default function DailyJewishHome({ compact = false }) {
             </div>
             {(locationLoading || zmanimLoading) && <span className="text-[11px] font-black text-slate-400">Loading</span>}
           </div>
-          {keyTimes.length > 0 ? (
+          {hasNamedLocation && keyTimes.length > 0 ? (
             <div className="grid grid-cols-2 gap-2">
               {keyTimes.map((item) => (
                 <TimeCard key={item.label} label={item.label} value={formatTime(item.value, tzid)} muted />
@@ -169,7 +201,7 @@ export default function DailyJewishHome({ compact = false }) {
             </div>
           ) : (
             <p className="text-[12px] font-semibold leading-5 text-slate-500">
-              Zmanim will appear when the location-based Hebcal data is available.
+              Zmanim will appear after a named location is available.
             </p>
           )}
         </div>
