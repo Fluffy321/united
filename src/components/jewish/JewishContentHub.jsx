@@ -6,6 +6,7 @@ import DailyJewishHome from './DailyJewishHome';
 import DivreiTorahPage from './DivreiTorahPage';
 import ParshaReader from './ParshaReader';
 import SiddurPage from './SiddurPage';
+import TanakhReader from './TanakhReader';
 import TehillimReader from './TehillimReader';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 
@@ -17,6 +18,14 @@ const HUB_ENTRIES = [
     path: '/JewishHub/tehillim',
     Icon: ScrollText,
     tone: 'rose',
+  },
+  {
+    title: 'Tanakh',
+    eyebrow: 'Full reader',
+    description: 'Browse Torah, Neviim, and Ketuvim with Hebrew and JPS 1917 English.',
+    path: '/JewishHub/tanakh',
+    Icon: BookOpenText,
+    tone: 'indigo',
   },
   {
     title: 'Parsha',
@@ -58,6 +67,7 @@ const TONE_CLASSES = {
   blue: 'border-blue-100 bg-blue-50 text-blue-700',
   emerald: 'border-emerald-100 bg-emerald-50 text-emerald-700',
   violet: 'border-violet-100 bg-violet-50 text-violet-700',
+  indigo: 'border-indigo-100 bg-indigo-50 text-indigo-700',
 };
 
 export default function JewishContentHub() {
@@ -70,6 +80,10 @@ export default function JewishContentHub() {
 
   if (normalizedPath === '/JewishHub/parsha') {
     return <ParshaReader />;
+  }
+
+  if (normalizedPath === '/JewishHub/tanakh') {
+    return <TanakhReader />;
   }
 
   if (normalizedPath === '/JewishHub/daf-yomi') {
