@@ -1,9 +1,9 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, BookOpenText, ExternalLink, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ExternalLink, GraduationCap, RefreshCw } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
-import { getDafYomi } from '@/lib/hebrewDate';
+import { getDailyLearning } from '@/lib/hebrewDate';
 
 function formatCivilDate(date = new Date()) {
   return new Intl.DateTimeFormat('en-US', {
@@ -13,14 +13,16 @@ function formatCivilDate(date = new Date()) {
   }).format(date);
 }
 
-export default function DafYomiPage() {
+export default function DailyLearningPage() {
   const today = new Date();
-  const dafQuery = useQuery({
-    queryKey: ['jewish-hub-daf-yomi', today.toDateString()],
-    queryFn: () => getDafYomi(today, 'America/New_York'),
+  const learningQuery = useQuery({
+    queryKey: ['jewish-hub-daily-learning', today.toDateString()],
+    queryFn: () => getDailyLearning(today, 'America/New_York'),
     staleTime: 6 * 60 * 60 * 1000,
     retry: 1,
   });
+
+  const items = learningQuery.data?.filter((item) => item.title) || [];
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
@@ -39,37 +41,41 @@ export default function DafYomiPage() {
           <div className="border-b border-slate-100 bg-[#FDFCF8] px-5 py-5">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[20px] border border-blue-100 bg-white text-blue-700 shadow-sm">
-                <BookOpenText className="h-5 w-5" />
+                <GraduationCap className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-700">Daf Yomi</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-700">Daily Learning</p>
                 <h1 className="mt-2 text-[28px] font-black leading-none text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
-                  Today’s Daf
+                  Today’s Learning
                 </h1>
                 <p className="mt-3 text-[13px] font-semibold leading-6 text-slate-500">
-                  {formatCivilDate(today)} · Calendar data from Hebcal.
+                  {formatCivilDate(today)} · References from Hebcal, linked out to Sefaria.
                 </p>
               </div>
             </div>
           </div>
 
           <div className="space-y-3 p-3 sm:p-4">
-            {dafQuery.isLoading && (
-              <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm">
-                <div className="skeleton h-6 w-32 rounded" />
-                <div className="skeleton mt-3 h-4 w-48 rounded" />
+            {learningQuery.isLoading && (
+              <div className="space-y-3">
+                {[0, 1, 2].map((item) => (
+                  <div key={item} className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm">
+                    <div className="skeleton h-6 w-32 rounded" />
+                    <div className="skeleton mt-3 h-4 w-48 rounded" />
+                  </div>
+                ))}
               </div>
             )}
 
-            {!dafQuery.isLoading && dafQuery.error && (
+            {!learningQuery.isLoading && learningQuery.error && (
               <div className="rounded-[20px] border border-rose-100 bg-rose-50 p-4">
-                <h2 className="text-[14px] font-black text-rose-900">Could not load today’s daf</h2>
+                <h2 className="text-[14px] font-black text-rose-900">Could not load daily learning</h2>
                 <p className="mt-1 text-[12px] font-semibold leading-snug text-rose-700">
-                  {dafQuery.error.message || 'The Daf Yomi calendar is unavailable right now.'}
+                  {learningQuery.error.message || 'The daily learning calendar is unavailable right now.'}
                 </p>
                 <button
                   type="button"
-                  onClick={() => dafQuery.refetch()}
+                  onClick={() => learningQuery.refetch()}
                   className="motion-press mt-3 inline-flex items-center gap-2 rounded-2xl bg-rose-600 px-3 py-2 text-[12px] font-black text-white"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
@@ -78,28 +84,34 @@ export default function DafYomiPage() {
               </div>
             )}
 
-            {!dafQuery.isLoading && !dafQuery.error && dafQuery.data && (
-              <article className="rounded-[26px] border border-slate-100 bg-white px-4 py-5 shadow-sm sm:px-5">
-                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Today</p>
-                <h2 className="mt-2 text-[30px] font-black leading-none text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
-                  {dafQuery.data.title}
+            {!learningQuery.isLoading && !learningQuery.error && items.length === 0 && (
+              <p className="rounded-[20px] border border-slate-100 bg-slate-50 px-4 py-4 text-[12px] font-semibold leading-5 text-slate-500">
+                Daily learning references are unavailable right now.
+              </p>
+            )}
+
+            {!learningQuery.isLoading && !learningQuery.error && items.map((item) => (
+              <article key={item.id} className="rounded-[26px] border border-slate-100 bg-white px-4 py-5 shadow-sm sm:px-5">
+                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-blue-600">{item.label}</p>
+                <h2 className="mt-2 text-[26px] font-black leading-tight text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
+                  {item.title}
                 </h2>
-                {dafQuery.data.hebrew && (
+                {item.hebrew && (
                   <p
                     dir="rtl"
                     lang="he"
-                    className="mt-3 text-right text-[26px] font-semibold leading-9 text-slate-950"
+                    className="mt-3 text-right text-[24px] font-semibold leading-9 text-slate-950"
                     style={{ fontFamily: 'var(--font-hebrew)', fontKerning: 'normal' }}
                   >
-                    {dafQuery.data.hebrew}
+                    {item.hebrew}
                   </p>
                 )}
                 <p className="mt-4 text-[13px] font-semibold leading-6 text-slate-500">
-                  We link out for the daf text. The app does not embed Sefaria’s English Talmud translation because it is not public-domain.
+                  Text opens on Sefaria. The app does not embed copyrighted or noncommercial English translations.
                 </p>
-                {dafQuery.data.link && (
+                {item.link && (
                   <a
-                    href={dafQuery.data.link}
+                    href={item.link}
                     target="_blank"
                     rel="noreferrer"
                     className="motion-press mt-4 inline-flex items-center gap-2 rounded-[18px] bg-slate-950 px-4 py-3 text-[13px] font-black text-white"
@@ -109,7 +121,7 @@ export default function DafYomiPage() {
                   </a>
                 )}
               </article>
-            )}
+            ))}
           </div>
         </section>
       </div>

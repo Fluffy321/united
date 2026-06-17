@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, BookMarked, BookOpenText, ChevronRight, LibraryBig, ScrollText, Sparkles } from 'lucide-react';
-import DafYomiPage from './DafYomiPage';
 import DailyJewishHome from './DailyJewishHome';
+import DailyLearningPage from './DailyLearningPage';
 import DivreiTorahPage from './DivreiTorahPage';
 import ParshaReader from './ParshaReader';
 import SiddurPage from './SiddurPage';
@@ -36,10 +36,10 @@ const HUB_ENTRIES = [
     tone: 'amber',
   },
   {
-    title: 'Daf Yomi',
+    title: 'Daily Learning',
     eyebrow: 'Daily learning',
-    description: 'Today’s daf from Hebcal, with a direct link out to Sefaria.',
-    path: '/JewishHub/daf-yomi',
+    description: 'Daf Yomi, Mishnah Yomi, and Daily Rambam references with Sefaria links.',
+    path: '/JewishHub/daily-learning',
     Icon: Sparkles,
     tone: 'blue',
   },
@@ -86,8 +86,8 @@ export default function JewishContentHub() {
     return <TanakhReader />;
   }
 
-  if (normalizedPath === '/JewishHub/daf-yomi') {
-    return <DafYomiPage />;
+  if (normalizedPath === '/JewishHub/daily-learning' || normalizedPath === '/JewishHub/daf-yomi') {
+    return <DailyLearningPage />;
   }
 
   if (normalizedPath === '/JewishHub/siddur') {

@@ -207,6 +207,38 @@ export async function getDafYomi(date = new Date(), tzid = 'America/New_York') {
 }
 
 /**
+ * Get daily learning references from Hebcal without embedding source text.
+ */
+export async function getDailyLearning(date = new Date(), tzid = 'America/New_York') {
+  const dateStr = formatDateForTimeZone(date, tzid);
+  try {
+    const res = await fetch(
+      `${HEBCAL_BASE}/hebcal?v=1&cfg=json&F=on&myomi=on&dr1=on&maj=off&min=off&mod=off&nx=off&ss=off&mf=off&start=${dateStr}&end=${dateStr}`
+    );
+    const data = await res.json();
+    const items = data.items || [];
+    const byCategory = (category) => items.find(i => i.category === category) || null;
+
+    return [
+      { id: 'daf-yomi', label: 'Daf Yomi', item: byCategory('dafyomi') },
+      { id: 'mishnah-yomi', label: 'Mishnah Yomi', item: byCategory('mishnayomi') },
+      { id: 'daily-rambam', label: 'Daily Rambam', item: byCategory('dailyRambam1') },
+    ].map(({ id, label, item }) => ({
+      id,
+      label,
+      title: item?.title || null,
+      hebrew: item?.hebrew || null,
+      date: item?.date || dateStr,
+      hdate: item?.hdate || null,
+      link: item?.link || null,
+      category: item?.category || null,
+    }));
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Five Towns convenience wrapper — kept for backwards compatibility.
  * Prefer getShabbatTimes() for location-aware calls.
  */
