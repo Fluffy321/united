@@ -224,12 +224,12 @@ function SwipeableNotifCard({ notif, onRead, isLast }) {
 
 function EmptyState({ filter }) {
   const messages = {
-    all:       { headline: "You're all caught up!", sub: 'Notifications will appear here as activity happens.' },
-    unread:    { headline: 'No unread notifications', sub: 'Everything is read. Check back later.' },
-    replies:   { headline: 'No replies yet', sub: 'Replies and comments on your posts will appear here.' },
-    mitzvah:   { headline: 'No Mitzvah notifications', sub: 'Offers, acceptances, and verification requests show up here.' },
+    all:       { headline: "You're all caught up", sub: 'When someone replies, messages, or responds to a mitzvah request, it will land here.' },
+    unread:    { headline: 'Everything is read', sub: 'You are clear for now. New alerts will rise to the top.' },
+    replies:   { headline: 'No replies waiting', sub: 'Post a question or update and replies will collect here.' },
+    mitzvah:   { headline: 'No mitzvah alerts waiting', sub: 'Offers, acceptances, and verification requests will appear here.' },
     community: { headline: 'No community activity', sub: 'Posts and announcements from your communities will appear here.' },
-    messages:  { headline: 'No message notifications', sub: 'New message alerts will appear here.' },
+    messages:  { headline: 'No message alerts waiting', sub: 'Start a conversation and new replies will show up here.' },
   };
   const { headline, sub } = messages[filter] || messages.all;
 

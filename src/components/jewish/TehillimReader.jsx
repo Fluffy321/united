@@ -244,7 +244,7 @@ export default function TehillimReader() {
             <p className="text-[10px] font-black uppercase tracking-wide text-rose-500">Tehillim</p>
             <h1 className="mt-1 text-[24px] font-black leading-tight text-slate-950">Psalms Reader</h1>
             <p className="mt-2 text-[13px] font-semibold leading-snug text-slate-500">
-              Hebrew and public-domain English, loaded one perek at a time from Sefaria.
+              Choose a perek and take a quiet minute to say Tehillim. Hebrew and public-domain English load one perek at a time from Sefaria.
             </p>
           </div>
         </div>

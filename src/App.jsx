@@ -95,14 +95,12 @@ const ROUTER_FUTURE_FLAGS = {
 };
 const SPLASH_MIN_VISIBLE_MS = 720;
 const SPLASH_MAX_WAIT_MS = 4500;
+const SPLASH_SEEN_KEY = 'junited_splash_seen';
 const LEGACY_FEED_ROUTES = [
-  '/BusinessDirectory',
-  '/BusinessListing',
   '/CommunityCalendar',
   '/CommunityDiscover',
   '/CommunitiesDiscover',
   '/CommunityUpdates',
-  '/CreateBusinessListing',
   '/DiscoverCommunitiesFeed',
   '/Events',
   '/Groups',
@@ -113,10 +111,10 @@ const LEGACY_FEED_ROUTES = [
   '/News',
   '/Organization',
   '/ShulPage',
-  '/tehillim',
   '/UserSettings',
   '/yahrzeits',
 ];
+const LEGACY_MAP_ROUTES = ['/BusinessDirectory', '/CreateBusinessListing', '/BusinessListing'];
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -171,6 +169,10 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
           <Route path="/welcome" element={<PageTransition><Landing /></PageTransition>} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+          <Route path="/tehillim" element={<Navigate to="/JewishHub/tehillim" replace />} />
+          {LEGACY_MAP_ROUTES.map((path) => (
+            <Route key={path} path={path} element={<Navigate to="/Map" replace />} />
+          ))}
           <Route element={<ProtectedRoute />}>
             {/* Admin-only routes */}
             <Route element={<AdminRoute />}>
@@ -243,12 +245,17 @@ const AuthenticatedApp = () => {
 
 const InitialAppGate = ({ children }) => {
   const { isLoadingAuth } = useAuth();
-  const [minimumElapsed, setMinimumElapsed] = useState(false);
-  const [forceReady, setForceReady] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
+  const [hasSeenSplash] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.sessionStorage.getItem(SPLASH_SEEN_KEY) === '1';
+  });
+  const [minimumElapsed, setMinimumElapsed] = useState(hasSeenSplash);
+  const [forceReady, setForceReady] = useState(hasSeenSplash);
+  const [showSplash, setShowSplash] = useState(!hasSeenSplash);
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
+    if (hasSeenSplash) return undefined;
     const minimumTimer = window.setTimeout(() => setMinimumElapsed(true), SPLASH_MIN_VISIBLE_MS);
     const maxTimer = window.setTimeout(() => setForceReady(true), SPLASH_MAX_WAIT_MS);
 
@@ -256,13 +263,16 @@ const InitialAppGate = ({ children }) => {
       window.clearTimeout(minimumTimer);
       window.clearTimeout(maxTimer);
     };
-  }, []);
+  }, [hasSeenSplash]);
 
   useEffect(() => {
     if (!showSplash || !minimumElapsed || (isLoadingAuth && !forceReady)) return undefined;
 
     setIsExiting(true);
-    const exitTimer = window.setTimeout(() => setShowSplash(false), 320);
+    const exitTimer = window.setTimeout(() => {
+      if (typeof window !== 'undefined') window.sessionStorage.setItem(SPLASH_SEEN_KEY, '1');
+      setShowSplash(false);
+    }, 320);
     return () => window.clearTimeout(exitTimer);
   }, [forceReady, isLoadingAuth, minimumElapsed, showSplash]);
 

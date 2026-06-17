@@ -480,10 +480,16 @@ export default function Feed({ isActive = true }) {
           </div>
         )}
         {(isLoading && loadTimedOut && feedPosts.length === 0) && (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="text-4xl mb-3">🌿</div>
-            <p className="text-[15px] font-bold text-slate-700 mb-1">No posts yet — share a recommendation or ask the community for help.</p>
-            <p className="text-[13px] text-slate-400">Be the first to post something!</p>
+          <div className="rounded-[26px] border border-dashed border-blue-100 bg-white px-5 py-12 text-center shadow-sm">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-2xl">🌿</div>
+            <p className="text-[16px] font-black text-slate-900">Welcome to the Five Towns feed</p>
+            <p className="mx-auto mt-1 max-w-sm text-[13px] font-semibold leading-5 text-slate-500">
+              Start with something useful: a recommendation, a quick question, or a neighborly update.
+            </p>
+            <button onClick={openCreatePost} className="motion-press mt-4 inline-flex items-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-[13px] font-black text-white">
+              <Plus className="h-4 w-4" />
+              Write the first post
+            </button>
           </div>
         )}
         {(!isLoading || loadTimedOut) && feedPosts.length > 0 && (
@@ -873,7 +879,12 @@ function CommunityFeedSection({ section, dense = false, likedPostIds = [], onLik
       <section className="rounded-[24px] border border-dashed border-slate-200 bg-white/80 p-4 text-center">
         <Icon className="mx-auto h-5 w-5 text-slate-300" />
         <p className="mt-2 text-[14px] font-black text-slate-800">{section.title}</p>
-        <p className="mt-1 text-[12px] font-semibold text-slate-400">Nothing here yet. Start the first useful thread.</p>
+        <p className="mx-auto mt-1 max-w-xs text-[12px] font-semibold leading-5 text-slate-500">
+          This space is ready for a real local note people can use today.
+        </p>
+        <button type="button" onClick={onReply} className="motion-press mt-3 rounded-full bg-slate-950 px-4 py-2 text-[12px] font-black text-white">
+          Start a post
+        </button>
       </section>
     );
   }

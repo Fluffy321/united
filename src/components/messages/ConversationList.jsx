@@ -52,9 +52,9 @@ export default function ConversationList({ conversations, currentUser, selectedI
         <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
           <span className="text-2xl">💬</span>
         </div>
-        <p className="text-slate-700 font-semibold">No messages yet</p>
+        <p className="text-slate-700 font-semibold">Start with one real conversation</p>
         <p className="text-[13px] text-slate-400 mt-1 leading-relaxed">
-          Tap the message icon to start a conversation.
+          Search for someone you know, or open United AI for a Jewish-knowledge question.
         </p>
       </div>
     );

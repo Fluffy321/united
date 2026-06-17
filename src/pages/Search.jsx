@@ -274,7 +274,7 @@ export default function SearchPage() {
           <>
             <div className="flex items-center justify-between mb-4">
               <p className="text-[13px] text-slate-500">
-                {totalResults === 0 ? 'No results found' : `${totalResults} result${totalResults !== 1 ? 's' : ''} for "${debouncedQuery}"`}
+                {totalResults === 0 ? `No matches for "${debouncedQuery}"` : `${totalResults} result${totalResults !== 1 ? 's' : ''} for "${debouncedQuery}"`}
               </p>
               {query.trim().length >= 2 && user && (
                 <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-500">
@@ -284,10 +284,12 @@ export default function SearchPage() {
             </div>
 
             {totalResults === 0 && (
-              <div className="text-center py-12 text-slate-400">
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-10 text-center">
                 <p className="text-4xl mb-3">🔍</p>
-                <p className="font-semibold text-slate-600">No results for "{debouncedQuery}"</p>
-                <p className="text-[13px] mt-1">Try different keywords or remove filters</p>
+                <p className="font-black text-slate-800">Nothing matched "{debouncedQuery}"</p>
+                <p className="mx-auto mt-1 max-w-xs text-[13px] font-semibold leading-5 text-slate-500">
+                  Try a person, business, shul, mitzvah need, or a shorter keyword.
+                </p>
               </div>
             )}
 

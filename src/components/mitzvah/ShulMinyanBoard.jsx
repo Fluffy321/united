@@ -416,7 +416,7 @@ function ShulProfileSheet({ shul, onClose, onOpenMap, onFollow, showMinyanTimes 
             </div>
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-3 py-3 text-sm font-bold text-slate-500">
-                No verified shul posts yet.
+                Verified shul updates will appear here when they are available.
               </div>
             )}
           </div>
@@ -606,9 +606,9 @@ export default function ShulMinyanBoard({ currentUser }) {
 
       {requests.length === 0 && (
         <div className="rounded-[22px] border border-dashed border-slate-200 bg-white px-3 py-3 text-center shadow-sm">
-          <h3 className="text-[13px] font-black text-slate-950">No shul requests yet</h3>
+          <h3 className="text-[13px] font-black text-slate-950">Need minyan help or a shul ride?</h3>
           <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-500">
-            Post a real shul request when someone needs minyan help, a ride, hosting, or a lost-item notice.
+            Post one clear shul request so the right neighbor knows how to help.
           </p>
           <button onClick={() => setShowPostRequest(true)} className="motion-press mt-3 rounded-full bg-slate-950 px-4 py-2 text-[12px] font-black text-white">
             Post request

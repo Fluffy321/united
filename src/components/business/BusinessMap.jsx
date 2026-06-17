@@ -53,9 +53,9 @@ export default function BusinessMap({ businesses = [], userLocation }) {
     return (
       <div className="flex min-h-[360px] flex-col items-center justify-center rounded-[26px] border border-dashed border-slate-200 bg-white p-6 text-center">
         <MapPin className="h-10 w-10 text-slate-300" />
-        <p className="mt-3 text-base font-black text-slate-900">No public map pins yet</p>
+        <p className="mt-3 text-base font-black text-slate-900">No approved map pins for this view</p>
         <p className="mt-1 max-w-sm text-sm font-semibold leading-6 text-slate-500">
-          Physical businesses with approved public locations will appear here. Online and service-area businesses stay in the directory list.
+          Choose another category, or list a business with a public location so it can be reviewed for the map.
         </p>
       </div>
     );

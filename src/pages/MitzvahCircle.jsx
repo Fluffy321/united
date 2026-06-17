@@ -511,7 +511,7 @@ function RequestCard({
     ? `${firstHelperName} offered help`
     : visibleHelperCount > 0
       ? `${visibleHelperCount} people responding now`
-      : 'Be the first to help';
+      : 'Offer help';
 
   const submitComment = async (event) => {
     event.preventDefault();
@@ -1119,7 +1119,7 @@ function CreateCarpoolModal({ mode, onClose, onCreate, isLoading }) {
   );
 }
 
-function EmptyState({ title, text }) {
+function EmptyState({ title, text, actionLabel, onAction }) {
   return (
     <div className="app-card flex flex-col items-center gap-3 p-8 text-center">
       <HandHeart className="h-10 w-10 text-slate-300" />
@@ -1127,6 +1127,11 @@ function EmptyState({ title, text }) {
         <p className="font-black text-slate-950">{title}</p>
         {text && <p className="mt-1 text-[13px] text-slate-500">{text}</p>}
       </div>
+      {actionLabel && onAction && (
+        <button type="button" onClick={onAction} className="motion-press rounded-full bg-slate-950 px-5 py-2.5 text-[13px] font-black text-white">
+          {actionLabel}
+        </button>
+      )}
     </div>
   );
 }
@@ -1723,7 +1728,7 @@ export default function MitzvahCircle() {
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-blue-100 bg-white/75 px-3 py-2.5 text-[12px] font-bold text-slate-600">
-                    Be the first to post a mitzvah request or offer a ride.
+                    Start with one clear ask, or offer a ride before someone needs it.
                   </div>
                 )}
 
@@ -1933,10 +1938,12 @@ export default function MitzvahCircle() {
               </>
             ) : (
               <EmptyState
-                title={activeCategory === 'all' ? 'No open requests' : `No ${getCategoryGroup(activeCategory).shortLabel.toLowerCase()} requests`}
+                title={activeCategory === 'all' ? 'Ready for the first chesed request' : `${getCategoryGroup(activeCategory).shortLabel} requests will appear here`}
                 text={activeCategory === 'all'
-                  ? 'Be the first to post a chesed request in your community.'
-                  : `${getCategoryGroup(activeCategory).description} will appear here when someone posts one.`}
+                  ? 'Post a food, ride, errand, or care request with enough detail for someone to say yes.'
+                  : `${getCategoryGroup(activeCategory).description} belong here when a real need comes up.`}
+                actionLabel="Post a need"
+                onAction={() => setShowCreate(true)}
               />
             )
           )}
@@ -1966,8 +1973,10 @@ export default function MitzvahCircle() {
               ))
             ) : (
               <EmptyState
-                title="Nothing in your activity yet"
-                text="Requests you post and offers you make will appear together here."
+                title="Your mitzvah activity starts here"
+                text="Post a need you know about, or offer help on an open request and it will show here."
+                actionLabel="Offer help"
+                onAction={() => changeView('browse')}
               />
             )
           )}
@@ -1993,8 +2002,10 @@ export default function MitzvahCircle() {
               ))
             ) : (
               <EmptyState
-                title="No completed requests yet"
-                text="Completed and verified requests will appear here."
+                title="Completed mitzvahs will collect here"
+                text="When a request is helped and marked complete, this becomes the shared record of good done."
+                actionLabel="Find a request"
+                onAction={() => changeView('browse')}
               />
             )
           )}

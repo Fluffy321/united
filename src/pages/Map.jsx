@@ -1102,8 +1102,10 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
         ) : filteredBusinesses.length === 0 ? (
           <div className="rounded-[26px] border border-dashed border-slate-200 bg-white p-6 text-center">
             <Store className="mx-auto h-10 w-10 text-slate-300" />
-            <p className="mt-3 text-base font-black text-slate-900">No businesses match this filter</p>
-            <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">Try a different category, or list a business for review.</p>
+            <p className="mt-3 text-base font-black text-slate-900">No approved listings match this view</p>
+            <p className="mx-auto mt-1 max-w-sm text-sm font-semibold leading-6 text-slate-500">
+              Switch categories or submit a local business so it can be reviewed for the directory.
+            </p>
             <button type="button" onClick={() => setShowSubmit(true)} className="mt-4 rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white">List a Business</button>
           </div>
         ) : (
