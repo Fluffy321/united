@@ -1,17 +1,20 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, BookMarked, BookOpenText, ChevronRight, LibraryBig, ScrollText, Sparkles } from 'lucide-react';
+import { ArrowLeft, BookMarked, BookOpenText, ChevronRight, LibraryBig, ScrollText, Settings2, Sparkles } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
 import DailyLearningPage from './DailyLearningPage';
 import DivreiTorahPage from './DivreiTorahPage';
+import JewishHubSettings from './JewishHubSettings';
 import ParshaReader from './ParshaReader';
 import SiddurPage from './SiddurPage';
 import TanakhReader from './TanakhReader';
 import TehillimReader from './TehillimReader';
+import useJewishHubPreferences from '@/hooks/useJewishHubPreferences';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const HUB_ENTRIES = [
   {
+    id: 'tehillim',
     title: 'Tehillim',
     eyebrow: 'Text',
     description: 'A quiet Sefaria-backed reader with Hebrew and public-domain English.',
@@ -20,6 +23,7 @@ const HUB_ENTRIES = [
     tone: 'rose',
   },
   {
+    id: 'tanakh',
     title: 'Tanakh',
     eyebrow: 'Full reader',
     description: 'Browse Torah, Neviim, and Ketuvim with Hebrew and JPS 1917 English.',
@@ -28,6 +32,7 @@ const HUB_ENTRIES = [
     tone: 'indigo',
   },
   {
+    id: 'parsha',
     title: 'Parsha',
     eyebrow: 'Weekly reading',
     description: 'This week’s Torah reading in Hebrew and public-domain JPS 1917 English.',
@@ -36,6 +41,7 @@ const HUB_ENTRIES = [
     tone: 'amber',
   },
   {
+    id: 'daily-learning',
     title: 'Daily Learning',
     eyebrow: 'Daily learning',
     description: 'Daf Yomi, Mishnah Yomi, and Daily Rambam references with Sefaria links.',
@@ -44,6 +50,7 @@ const HUB_ENTRIES = [
     tone: 'blue',
   },
   {
+    id: 'siddur',
     title: 'Siddur',
     eyebrow: 'Daily tefillah',
     description: 'A scoped starter set of core weekday tefillos.',
@@ -52,6 +59,7 @@ const HUB_ENTRIES = [
     tone: 'emerald',
   },
   {
+    id: 'divrei-torah',
     title: 'Divrei Torah',
     eyebrow: 'Sources',
     description: 'Weekly source links for the parsha and classic commentaries.',
@@ -72,6 +80,7 @@ const TONE_CLASSES = {
 
 export default function JewishContentHub() {
   const { pathname } = useLocation();
+  const { preferences } = useJewishHubPreferences();
   const normalizedPath = pathname.replace(/\/$/, '');
 
   if (normalizedPath === '/JewishHub/tehillim') {
@@ -98,6 +107,15 @@ export default function JewishContentHub() {
     return <DivreiTorahPage />;
   }
 
+  if (normalizedPath === '/JewishHub/settings') {
+    return <JewishHubSettings />;
+  }
+
+  const visibleEntries = preferences.sectionOrder
+    .map((id) => HUB_ENTRIES.find((entry) => entry.id === id))
+    .filter(Boolean)
+    .filter((entry) => !preferences.hiddenSections.includes(entry.id));
+
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
       <Link
@@ -112,17 +130,34 @@ export default function JewishContentHub() {
         <DailyJewishHome />
 
         <section className="rounded-[30px] border border-slate-200/70 bg-white p-3 shadow-[0_18px_50px_rgba(15,28,46,0.06)]">
-          <div className="px-2 pb-3 pt-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Library</p>
-            <h2 className="mt-1 text-[22px] font-black leading-tight text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
-              Choose one thing
-            </h2>
+          <div className="flex items-start justify-between gap-3 px-2 pb-3 pt-1">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Library</p>
+              <h2 className="mt-1 text-[22px] font-black leading-tight text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
+                Choose one thing
+              </h2>
+            </div>
+            <Link
+              to="/JewishHub/settings"
+              className="motion-press flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] border border-slate-200 bg-white text-slate-600 shadow-sm"
+              aria-label="Jewish Hub settings"
+            >
+              <Settings2 className="h-4 w-4" />
+            </Link>
           </div>
 
           <div className="grid gap-2">
-            {HUB_ENTRIES.map((entry) => (
+            {visibleEntries.map((entry) => (
               <HubEntry key={entry.path} entry={entry} />
             ))}
+            {visibleEntries.length === 0 && (
+              <Link
+                to="/JewishHub/settings"
+                className="motion-press rounded-[22px] border border-slate-100 bg-[#FDFCF8] px-4 py-4 text-[13px] font-bold leading-6 text-slate-600"
+              >
+                Your home sections are hidden. Open settings to turn one back on.
+              </Link>
+            )}
           </div>
         </section>
       </div>

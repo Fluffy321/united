@@ -8,6 +8,7 @@ import {
   requestGPSLocation,
   DEFAULT_LOCATION,
   isResolvedLocationLabel,
+  subscribeCandleLocation,
 } from '@/lib/shabbatLocation';
 
 function resolveInitialLocation() {
@@ -59,6 +60,14 @@ export default function useShabbatLocation({ autoRequest = false } = {}) {
     if (stored) return; // already have a preference, don't re-ask
     applyGPS();
   }, []); // intentionally runs once on mount
+
+  useEffect(() => {
+    return subscribeCandleLocation((event) => {
+      const next = event.detail || resolveInitialLocation();
+      setLocation(next);
+      setError(null);
+    });
+  }, []);
 
   useEffect(() => {
     if (!location?.lat || !location?.lng) return;

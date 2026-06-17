@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, BookMarked, RefreshCw } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import useJewishHubPreferences from '@/hooks/useJewishHubPreferences';
 
 const SEFARIA_TEXTS_URL = 'https://www.sefaria.org/api/v3/texts';
 
@@ -27,7 +28,7 @@ const ENGLISH_VERSION = {
   license: 'CC0',
 };
 
-const SIDDUR_SECTIONS = [
+const ASHKENAZ_SECTIONS = [
   {
     id: 'morning',
     label: 'Birchos Hashachar',
@@ -115,6 +116,40 @@ const SIDDUR_SECTIONS = [
   },
 ];
 
+const SEFARD_SECTIONS = [
+  {
+    id: 'daily',
+    label: 'Daily',
+    items: [
+      prayer('modeh-ani', 'Modeh Ani', 'Siddur Sefard, Upon Arising, Modeh Ani', { english: false }),
+      prayer('morning-blessings', 'Morning Blessings', 'Siddur Sefard, Weekday Shacharit, Morning Blessings', { english: false }),
+      prayer('shema', 'The Shema', 'Siddur Sefard, Weekday Shacharit, The Shema', { english: false }),
+      prayer('amidah', 'Amidah', 'Siddur Sefard, Weekday Shacharit, Amidah', { english: false }),
+      prayer('ashrei', 'Ashrei', 'Siddur Sefard, Weekday Shacharit, Ashrei', { english: false }),
+      prayer('aleinu', 'Aleinu', 'Siddur Sefard, Weekday Shacharit, Aleinu', { english: false }),
+    ],
+  },
+];
+
+const EDOT_MIZRACH_SECTIONS = [
+  {
+    id: 'daily',
+    label: 'Daily',
+    items: [
+      prayer('modeh-ani', 'Modeh Ani', 'Siddur Edot HaMizrach, Preparatory Prayers, Modeh Ani', { english: false }),
+      prayer('morning-blessings', 'Morning Blessings', 'Siddur Edot HaMizrach, Preparatory Prayers, Morning Blessings', { english: false }),
+      prayer('shema', 'The Shema', 'Siddur Edot HaMizrach, Weekday Shacharit, The Shema', { english: false }),
+      prayer('ashrei', 'Ashrei', 'Siddur Edot HaMizrach, Weekday Shacharit, Ashrei', { english: false }),
+    ],
+  },
+];
+
+const NUSACH_CONFIG = {
+  ashkenaz: { label: 'Ashkenaz', sections: ASHKENAZ_SECTIONS },
+  sefard: { label: 'Sefard', sections: SEFARD_SECTIONS },
+  'edot-mizrach': { label: 'Edot Mizrach', sections: EDOT_MIZRACH_SECTIONS },
+};
+
 function prayer(id, title, ref, options = {}) {
   return {
     id,
@@ -193,11 +228,19 @@ async function fetchPrayer(item) {
 }
 
 export default function SiddurPage() {
-  const allItems = useMemo(() => SIDDUR_SECTIONS.flatMap((section) => section.items), []);
-  const [activeSectionId, setActiveSectionId] = useState(SIDDUR_SECTIONS[0].id);
-  const [activeId, setActiveId] = useState(SIDDUR_SECTIONS[0].items[0].id);
+  const { preferences } = useJewishHubPreferences();
+  const config = NUSACH_CONFIG[preferences.nusach] || NUSACH_CONFIG.ashkenaz;
+  const siddurSections = config.sections;
+  const allItems = useMemo(() => siddurSections.flatMap((section) => section.items), [siddurSections]);
+  const [activeSectionId, setActiveSectionId] = useState(siddurSections[0].id);
+  const [activeId, setActiveId] = useState(siddurSections[0].items[0].id);
   const activeItem = allItems.find((item) => item.id === activeId) || allItems[0];
-  const activeSection = SIDDUR_SECTIONS.find((section) => section.id === activeSectionId) || SIDDUR_SECTIONS[0];
+  const activeSection = siddurSections.find((section) => section.id === activeSectionId) || siddurSections[0];
+
+  React.useEffect(() => {
+    setActiveSectionId(siddurSections[0].id);
+    setActiveId(siddurSections[0].items[0].id);
+  }, [preferences.nusach, siddurSections]);
 
   const prayerQuery = useQuery({
     queryKey: ['jewish-hub-siddur-prayer', activeItem.id, activeItem.ref, activeItem.hebrewVersion.title],
@@ -236,7 +279,7 @@ export default function SiddurPage() {
                   Weekday Siddur
                 </h1>
                 <p className="mt-3 text-[13px] font-semibold leading-6 text-slate-500">
-                  Nusach Ashkenaz. Every tefillah line shown here is loaded from Sefaria at runtime.
+                  Nusach {config.label}. Every tefillah line shown here is loaded from Sefaria at runtime.
                 </p>
               </div>
             </div>
@@ -244,7 +287,7 @@ export default function SiddurPage() {
 
           <div className="space-y-3 p-3 sm:p-4">
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {SIDDUR_SECTIONS.map((section) => (
+              {siddurSections.map((section) => (
                 <button
                   key={section.id}
                   type="button"
@@ -324,7 +367,7 @@ function PrayerPanel({ item, query }) {
 
   return (
     <article className="rounded-[26px] border border-slate-100 bg-white px-4 py-5 shadow-sm sm:px-5">
-      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Nusach Ashkenaz</p>
+      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Siddur</p>
       <h2 className="mt-2 text-[22px] font-black leading-tight text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
         {item.title}
       </h2>

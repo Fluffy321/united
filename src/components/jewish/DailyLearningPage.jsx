@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, GraduationCap, RefreshCw } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import useJewishHubPreferences from '@/hooks/useJewishHubPreferences';
 import { getDailyLearning } from '@/lib/hebrewDate';
 
 function formatCivilDate(date = new Date()) {
@@ -15,6 +16,7 @@ function formatCivilDate(date = new Date()) {
 
 export default function DailyLearningPage() {
   const today = new Date();
+  const { preferences } = useJewishHubPreferences();
   const learningQuery = useQuery({
     queryKey: ['jewish-hub-daily-learning', today.toDateString()],
     queryFn: () => getDailyLearning(today, 'America/New_York'),
@@ -22,7 +24,7 @@ export default function DailyLearningPage() {
     retry: 1,
   });
 
-  const items = learningQuery.data?.filter((item) => item.title) || [];
+  const items = learningQuery.data?.filter((item) => item.title && preferences.learningCycles.includes(item.id)) || [];
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
@@ -86,7 +88,7 @@ export default function DailyLearningPage() {
 
             {!learningQuery.isLoading && !learningQuery.error && items.length === 0 && (
               <p className="rounded-[20px] border border-slate-100 bg-slate-50 px-4 py-4 text-[12px] font-semibold leading-5 text-slate-500">
-                Daily learning references are unavailable right now.
+                No daily learning cycles are selected. Open Jewish Hub settings to choose the cycles you want to follow.
               </p>
             )}
 

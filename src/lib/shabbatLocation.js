@@ -1,6 +1,7 @@
 import { storageService } from '@/services/storageService';
 
 const STORAGE_KEY = 'junited_candle_location';
+const LOCATION_UPDATED_EVENT = 'junited:candle-location-updated';
 
 // { type: 'gps' | 'manual' | 'default' | 'declined', lat, lng, label, tzid }
 
@@ -39,10 +40,17 @@ export function getStoredCandleLocation() {
 
 export function setCandleLocation(pref) {
   storageService.setJson(STORAGE_KEY, pref);
+  window.dispatchEvent(new CustomEvent(LOCATION_UPDATED_EVENT, { detail: pref }));
 }
 
 export function clearCandleLocation() {
   storageService.removeItem(STORAGE_KEY);
+  window.dispatchEvent(new CustomEvent(LOCATION_UPDATED_EVENT, { detail: null }));
+}
+
+export function subscribeCandleLocation(callback) {
+  window.addEventListener(LOCATION_UPDATED_EVENT, callback);
+  return () => window.removeEventListener(LOCATION_UPDATED_EVENT, callback);
 }
 
 const STATE_ABBREVIATIONS = {
