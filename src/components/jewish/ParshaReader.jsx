@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, BookOpenText, RefreshCw } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import SefariaAttribution from './SefariaAttribution';
 import { getWeeklyParshaReading } from '@/lib/hebrewDate';
 
 const SEFARIA_TEXTS_URL = 'https://www.sefaria.org/api/v3/texts';
@@ -192,11 +193,6 @@ function cleanParshaName(value) {
   return value?.replace(/^Parashat\s+/i, '') || 'This week’s parsha';
 }
 
-function attributionText(version) {
-  if (!version?.license) return null;
-  return `${version.title} (${version.license})`;
-}
-
 export default function ParshaReader() {
   const [viewMode, setViewMode] = useState('both');
 
@@ -344,7 +340,11 @@ export default function ParshaReader() {
                   ))}
                 </div>
 
-                <Credits hebrew={textQuery.data?.hebrew} english={textQuery.data?.english} />
+                <SefariaAttribution
+                  hebrew={textQuery.data?.hebrew}
+                  english={textQuery.data?.english}
+                  ref={textQuery.data?.ref}
+                />
               </>
             )}
           </div>
@@ -367,15 +367,5 @@ function ParshaLoading() {
         </div>
       ))}
     </div>
-  );
-}
-
-function Credits({ hebrew, english }) {
-  const credits = [attributionText(hebrew), attributionText(english)].filter(Boolean);
-
-  return (
-    <p className="px-1 pb-2 text-[11px] font-semibold leading-snug text-slate-400">
-      {credits.join(' · ')} · Source: Sefaria.
-    </p>
   );
 }

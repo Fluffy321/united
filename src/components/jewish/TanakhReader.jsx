@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, BookOpenText, RefreshCw } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import SefariaAttribution from './SefariaAttribution';
 
 const SEFARIA_TEXTS_URL = 'https://www.sefaria.org/api/v3/texts';
 const HEBREW_VERSION = {
@@ -343,9 +344,11 @@ export default function TanakhReader() {
                   ))}
                 </div>
 
-                <p className="px-1 pb-2 text-[11px] font-semibold leading-snug text-slate-400">
-                  {chapterQuery.data?.hebrew?.title} ({chapterQuery.data?.hebrew?.license}) · {chapterQuery.data?.english?.title} ({chapterQuery.data?.english?.license}) · Source: Sefaria.
-                </p>
+                <SefariaAttribution
+                  hebrew={chapterQuery.data?.hebrew}
+                  english={chapterQuery.data?.english}
+                  ref={chapterQuery.data?.ref}
+                />
               </>
             )}
           </div>

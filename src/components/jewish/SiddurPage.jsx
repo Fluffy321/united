@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, BookMarked, RefreshCw } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import SefariaAttribution from './SefariaAttribution';
 import useJewishHubPreferences from '@/hooks/useJewishHubPreferences';
 
 const SEFARIA_TEXTS_URL = 'https://www.sefaria.org/api/v3/texts';
@@ -403,10 +404,12 @@ function PrayerPanel({ item, query }) {
         </p>
       )}
 
-      <p className="mt-4 px-1 text-[11px] font-semibold leading-snug text-slate-400">
-        {query?.data?.hebrew?.title} ({query?.data?.hebrew?.license})
-        {query?.data?.english ? ` · ${query.data.english.title} (${query.data.english.license})` : ''} · Source: Sefaria.
-      </p>
+      <SefariaAttribution
+        className="mt-4"
+        hebrew={query?.data?.hebrew}
+        english={query?.data?.english}
+        ref={query?.data?.ref || item.ref}
+      />
     </article>
   );
 }

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, WifiOff } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import SefariaAttribution from './SefariaAttribution';
 
 const SEFARIA_TEXTS_URL = 'https://www.sefaria.org/api/v3/texts';
 const TOTAL_PERAKIM = 150;
@@ -160,17 +161,6 @@ function buildVerseRows(perekData) {
 function transformHebrewForDisplay(text) {
   if (!RENDER_SHEM_AS_HASHEM || !text) return text;
   return text.replace(/י[\u0591-\u05C7]*ה[\u0591-\u05C7]*ו[\u0591-\u05C7]*ה/g, 'ה׳');
-}
-
-function attributionText(version) {
-  if (!version?.license) return null;
-  const license = version.license.toLowerCase();
-
-  if (license.includes('cc-by')) {
-    return `${version.title} (${version.license})`;
-  }
-
-  return `${version.title} (${version.license})`;
 }
 
 export default function TehillimReader() {
@@ -377,7 +367,11 @@ export default function TehillimReader() {
                 ))}
               </div>
 
-              <Credits hebrew={perekData?.hebrew} english={perekData?.english} />
+              <SefariaAttribution
+                hebrew={perekData?.hebrew}
+                english={perekData?.english}
+                ref={perekData?.ref}
+              />
             </>
           )}
         </div>
@@ -400,15 +394,5 @@ function TehillimLoading() {
         </div>
       ))}
     </div>
-  );
-}
-
-function Credits({ hebrew, english }) {
-  const credits = [attributionText(hebrew), attributionText(english)].filter(Boolean);
-
-  return (
-    <p className="px-1 pb-2 text-[11px] font-semibold leading-snug text-slate-400">
-      {credits.join(' · ')} · Source: Sefaria.
-    </p>
   );
 }
