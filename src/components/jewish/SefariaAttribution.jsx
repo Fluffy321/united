@@ -16,7 +16,7 @@ function sefariaUrl(ref) {
   return ref ? `https://www.sefaria.org/${encodeURIComponent(ref)}` : 'https://www.sefaria.org';
 }
 
-function VersionCredit({ version, sefariaRef }) {
+function VersionCredit({ version, sefariaRef, modificationNote }) {
   const deed = deedFor(version.license);
 
   if (!deed) {
@@ -32,12 +32,12 @@ function VersionCredit({ version, sefariaRef }) {
       . <a href={sefariaUrl(sefariaRef)} target="_blank" rel="noopener noreferrer" className="underline">
         Source: Sefaria
       </a>
-      . Text shown unmodified.
+      . {modificationNote || 'Text shown unmodified.'}
     </>
   );
 }
 
-export default function SefariaAttribution({ hebrew, english, ref: sefariaRef, className = '' }) {
+export default function SefariaAttribution({ hebrew, english, ref: sefariaRef, className = '', modificationNote }) {
   const versions = [hebrew, english].filter((version) => version?.license);
   if (!versions.length) return null;
 
@@ -48,7 +48,7 @@ export default function SefariaAttribution({ hebrew, english, ref: sefariaRef, c
       {versions.map((version, index) => (
         <React.Fragment key={version.title}>
           {index > 0 && ' · '}
-          <VersionCredit version={version} sefariaRef={sefariaRef} />
+          <VersionCredit version={version} sefariaRef={sefariaRef} modificationNote={modificationNote} />
         </React.Fragment>
       ))}
       {!hasCcVersion && (

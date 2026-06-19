@@ -371,6 +371,7 @@ export default function TehillimReader() {
                 hebrew={perekData?.hebrew}
                 english={perekData?.english}
                 ref={perekData?.ref}
+                modificationNote={RENDER_SHEM_AS_HASHEM ? 'Divine Names shown as ה׳; text otherwise unchanged.' : undefined}
               />
             </>
           )}
