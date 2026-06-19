@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, ChevronLeft, ChevronRight, RefreshCw, WifiOff } from 'lucide-react';
-import DailyJewishHome from './DailyJewishHome';
 import JewishHubBackButton from './JewishHubBackButton';
 import SefariaAttribution from './SefariaAttribution';
 
@@ -223,8 +222,6 @@ export default function TehillimReader() {
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
       <JewishHubBackButton />
       <div className="space-y-4">
-        <DailyJewishHome compact />
-
       <section className="overflow-hidden rounded-[30px] border border-slate-200/70 bg-white shadow-[0_18px_50px_rgba(15,28,46,0.07)]">
         <div className="border-b border-slate-100 bg-[#FDFCF8] px-5 py-5">
           <div>

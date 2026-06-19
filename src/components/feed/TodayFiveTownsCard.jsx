@@ -64,6 +64,10 @@ export default function TodayFiveTownsCard() {
     location: candleLocation,
     locationLoading,
     locationError,
+    shouldAskLocation,
+    allowOnce,
+    allowAlways,
+    denyLocation,
     isDefault: isDefaultLocation,
   } = useShabbatLocation({ autoRequest: true });
 
@@ -152,6 +156,18 @@ export default function TodayFiveTownsCard() {
             <TimeBlock label="Candles" value={formatTime(candleLighting, timesTimeZone)} />
             <TimeBlock label="Havdalah" value={formatTime(havdalah, timesTimeZone)} />
           </div>
+          {shouldAskLocation && (
+            <div className="mt-3 rounded-2xl border border-amber-200 bg-white/85 p-3">
+              <p className="text-[12px] font-bold leading-5 text-slate-700">
+                Use your device location and timezone for local Shabbos times?
+              </p>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                <LocationChoiceButton label="Once" onClick={allowOnce} />
+                <LocationChoiceButton label="Always" onClick={allowAlways} />
+                <LocationChoiceButton label="Never" onClick={denyLocation} muted />
+              </div>
+            </div>
+          )}
         </div>
         {isError && (
           <p className="px-1 text-[11px] font-semibold text-slate-400">
@@ -176,6 +192,20 @@ function DailyItem({ icon: Icon, label, text, tone }) {
       </div>
       <p className="mt-1.5 text-[13px] font-bold leading-snug text-slate-800">{text}</p>
     </div>
+  );
+}
+
+function LocationChoiceButton({ label, onClick, muted = false }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`motion-press h-9 rounded-xl text-[11px] font-black ${
+        muted ? 'bg-slate-100 text-slate-500' : 'bg-slate-950 text-white'
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 

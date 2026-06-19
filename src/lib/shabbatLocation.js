@@ -1,9 +1,12 @@
 import { storageService } from '@/services/storageService';
 
 const STORAGE_KEY = 'junited_candle_location';
+const SESSION_LOCATION_KEY = 'junited_candle_location_session';
+const PERMISSION_KEY = 'junited_candle_location_permission';
 const LOCATION_UPDATED_EVENT = 'junited:candle-location-updated';
+const LOCATION_PERMISSION_UPDATED_EVENT = 'junited:candle-location-permission-updated';
 
-// { type: 'gps' | 'manual' | 'default' | 'declined', lat, lng, label, tzid }
+// { type: 'gps' | 'gps-once' | 'manual' | 'default' | 'declined', lat, lng, label, tzid }
 
 export const DEFAULT_LOCATION = {
   type: 'default',
@@ -35,6 +38,8 @@ export function getBrowserTzid() {
 }
 
 export function getStoredCandleLocation() {
+  const sessionLocation = getSessionCandleLocation();
+  if (sessionLocation) return sessionLocation;
   return storageService.getJson(STORAGE_KEY, null);
 }
 
@@ -43,9 +48,47 @@ export function setCandleLocation(pref) {
   window.dispatchEvent(new CustomEvent(LOCATION_UPDATED_EVENT, { detail: pref }));
 }
 
+export function getSessionCandleLocation() {
+  try {
+    const value = sessionStorage.getItem(SESSION_LOCATION_KEY);
+    return value ? JSON.parse(value) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setSessionCandleLocation(pref) {
+  try {
+    sessionStorage.setItem(SESSION_LOCATION_KEY, JSON.stringify(pref));
+  } catch {
+    // Ignore storage failures; the hook state still updates for this render tree.
+  }
+  window.dispatchEvent(new CustomEvent(LOCATION_UPDATED_EVENT, { detail: pref }));
+}
+
 export function clearCandleLocation() {
   storageService.removeItem(STORAGE_KEY);
+  try {
+    sessionStorage.removeItem(SESSION_LOCATION_KEY);
+  } catch {
+    // Ignore storage failures.
+  }
   window.dispatchEvent(new CustomEvent(LOCATION_UPDATED_EVENT, { detail: null }));
+}
+
+export function getCandleLocationPermission() {
+  return storageService.getItem(PERMISSION_KEY) || 'ask';
+}
+
+export function setCandleLocationPermission(value) {
+  const normalized = ['ask', 'always', 'never'].includes(value) ? value : 'ask';
+  storageService.setItem(PERMISSION_KEY, normalized);
+  window.dispatchEvent(new CustomEvent(LOCATION_PERMISSION_UPDATED_EVENT, { detail: normalized }));
+}
+
+export function subscribeCandleLocationPermission(callback) {
+  window.addEventListener(LOCATION_PERMISSION_UPDATED_EVENT, callback);
+  return () => window.removeEventListener(LOCATION_PERMISSION_UPDATED_EVENT, callback);
 }
 
 export function subscribeCandleLocation(callback) {

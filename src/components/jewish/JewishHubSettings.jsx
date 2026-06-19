@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ArrowDown, ArrowUp, Check, MapPin, Search, Settings2 } from 'lucide-react';
-import DailyJewishHome from './DailyJewishHome';
 import JewishHubBackButton from './JewishHubBackButton';
 import useJewishHubPreferences from '@/hooks/useJewishHubPreferences';
+import useShabbatLocation from '@/hooks/useShabbatLocation';
 import { forwardGeocode, PRESET_LOCATIONS } from '@/lib/shabbatLocation';
 import { LEARNING_CYCLE_IDS } from '@/services/jewishHubPreferences';
 
@@ -30,6 +30,15 @@ const NUSACH_OPTIONS = [
 
 export default function JewishHubSettings() {
   const { preferences, setPreferences } = useJewishHubPreferences();
+  const {
+    location: candleLocation,
+    locationLoading,
+    locationPermission,
+    allowOnce,
+    allowAlways,
+    denyLocation,
+    askLater,
+  } = useShabbatLocation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -87,8 +96,6 @@ export default function JewishHubSettings() {
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
       <JewishHubBackButton />
       <div className="space-y-4">
-        <DailyJewishHome compact />
-
         <section className="overflow-hidden rounded-[30px] border border-slate-200/70 bg-white shadow-[0_18px_50px_rgba(15,28,46,0.07)]">
           <div className="border-b border-slate-100 bg-[#FDFCF8] px-5 py-5">
             <div className="flex items-start gap-4">
@@ -109,11 +116,26 @@ export default function JewishHubSettings() {
 
           <div className="space-y-4 p-3 sm:p-4">
             <SettingsBlock title="Location" note="A named place is required before candle lighting and zmanim appear.">
-              {preferences.location?.label && (
+              {(preferences.location?.label || candleLocation?.label) && (
                 <div className="mb-3 rounded-[18px] border border-blue-100 bg-blue-50 px-3 py-3 text-[12px] font-bold text-blue-900">
-                  Current: {preferences.location.label}
+                  Current: {preferences.location?.label || candleLocation.label}
                 </div>
               )}
+              <div className="mb-3 rounded-[18px] border border-slate-100 bg-white px-3 py-3">
+                <p className="text-[12px] font-bold leading-5 text-slate-600">
+                  Device location uses your browser timezone and GPS only for candle lighting and zmanim.
+                </p>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <LocationChoiceButton label={locationLoading ? 'Locating' : 'Once'} onClick={allowOnce} disabled={locationLoading} />
+                  <LocationChoiceButton label="Always" onClick={allowAlways} disabled={locationLoading} />
+                  <LocationChoiceButton label="Never" onClick={denyLocation} muted disabled={locationLoading} />
+                </div>
+                {locationPermission === 'never' && (
+                  <button type="button" onClick={askLater} className="mt-3 text-[11px] font-black text-blue-700">
+                    Ask me again next time
+                  </button>
+                )}
+              </div>
               <div className="grid gap-2">
                 {PRESET_LOCATIONS.slice(0, 6).map((location) => (
                   <button
@@ -217,6 +239,21 @@ function SettingsBlock({ title, note, children }) {
       <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-500">{note}</p>
       <div className="mt-3">{children}</div>
     </div>
+  );
+}
+
+function LocationChoiceButton({ label, onClick, muted = false, disabled = false }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`motion-press h-10 rounded-xl text-[11px] font-black disabled:opacity-50 ${
+        muted ? 'bg-slate-100 text-slate-500' : 'bg-slate-950 text-white'
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 

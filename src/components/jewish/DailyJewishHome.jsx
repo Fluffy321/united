@@ -36,6 +36,10 @@ export default function DailyJewishHome({ compact = false }) {
   const {
     location,
     locationLoading,
+    shouldAskLocation,
+    allowOnce,
+    allowAlways,
+    denyLocation,
   } = useShabbatLocation({ autoRequest: true });
 
   const tzid = location?.tzid || DEFAULT_TIME_ZONE;
@@ -178,6 +182,13 @@ export default function DailyJewishHome({ compact = false }) {
               <p className="text-[12px] font-bold leading-5 text-slate-600">
                 Enable or choose a named location in Settings to show local candle lighting and Havdalah.
               </p>
+              {shouldAskLocation && (
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <LocationChoiceButton label="Once" onClick={allowOnce} />
+                  <LocationChoiceButton label="Always" onClick={allowAlways} />
+                  <LocationChoiceButton label="Never" onClick={denyLocation} muted />
+                </div>
+              )}
             </div>
           )}
           <p className="mt-3 text-[11px] font-semibold leading-5 text-slate-400">
@@ -207,6 +218,20 @@ export default function DailyJewishHome({ compact = false }) {
         </div>
       </div>
     </section>
+  );
+}
+
+function LocationChoiceButton({ label, onClick, muted = false }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`motion-press h-9 rounded-xl text-[11px] font-black ${
+        muted ? 'bg-slate-100 text-slate-500' : 'bg-slate-950 text-white'
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
