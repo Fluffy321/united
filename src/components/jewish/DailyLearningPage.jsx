@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ExternalLink, GraduationCap, RefreshCw } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import JewishHubBackButton from './JewishHubBackButton';
 import useJewishHubPreferences from '@/hooks/useJewishHubPreferences';
 import { getDailyLearning } from '@/lib/hebrewDate';
 
@@ -27,6 +28,7 @@ export default function DailyLearningPage() {
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
+      <JewishHubBackButton />
       <div className="space-y-4">
         <DailyJewishHome compact />
 

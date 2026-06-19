@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ExternalLink, Headphones, PlayCircle, Radio, RefreshCw } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import JewishHubBackButton from './JewishHubBackButton';
 import { getWeeklyParshaReading } from '@/lib/hebrewDate';
 import { CURATED_SHIURIM, parshaSearchLinks } from '@/content/jewish/shiurim';
 
@@ -23,6 +24,7 @@ export default function ShiurimPage() {
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
+      <JewishHubBackButton />
       <div className="space-y-4">
         <DailyJewishHome compact />
 

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, BookMarked, RefreshCw } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import JewishHubBackButton from './JewishHubBackButton';
 import SefariaAttribution from './SefariaAttribution';
 import useJewishHubPreferences from '@/hooks/useJewishHubPreferences';
 
@@ -256,6 +257,7 @@ export default function SiddurPage() {
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
+      <JewishHubBackButton />
       <div className="space-y-4">
         <DailyJewishHome compact />
 

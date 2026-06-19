@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, ChevronLeft, ChevronRight, RefreshCw, WifiOff } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import JewishHubBackButton from './JewishHubBackButton';
 import SefariaAttribution from './SefariaAttribution';
 
 const SEFARIA_TEXTS_URL = 'https://www.sefaria.org/api/v3/texts';
@@ -220,6 +221,7 @@ export default function TehillimReader() {
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
+      <JewishHubBackButton />
       <div className="space-y-4">
         <DailyJewishHome compact />
 

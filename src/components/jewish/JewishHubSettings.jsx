@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowDown, ArrowUp, Check, MapPin, Search, Settings2 } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import JewishHubBackButton from './JewishHubBackButton';
 import useJewishHubPreferences from '@/hooks/useJewishHubPreferences';
 import { forwardGeocode, PRESET_LOCATIONS } from '@/lib/shabbatLocation';
 import { LEARNING_CYCLE_IDS } from '@/services/jewishHubPreferences';
@@ -84,6 +85,7 @@ export default function JewishHubSettings() {
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
+      <JewishHubBackButton />
       <div className="space-y-4">
         <DailyJewishHome compact />
 

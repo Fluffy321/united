@@ -2,6 +2,7 @@ import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ExternalLink, LibraryBig, RefreshCw, ScrollText } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import JewishHubBackButton from './JewishHubBackButton';
 import { useAuth } from '@/lib/AuthContext';
 import { getWeeklyParshaReading } from '@/lib/hebrewDate';
 import {
@@ -85,6 +86,7 @@ export default function DivreiTorahPage() {
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
+      <JewishHubBackButton />
       <div className="space-y-4">
         <DailyJewishHome compact />
 

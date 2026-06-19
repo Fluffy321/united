@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, BookOpenText, RefreshCw } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
+import JewishHubBackButton from './JewishHubBackButton';
 import SefariaAttribution from './SefariaAttribution';
 import { getWeeklyParshaReading } from '@/lib/hebrewDate';
 
@@ -216,6 +217,7 @@ export default function ParshaReader() {
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
+      <JewishHubBackButton />
       <div className="space-y-4">
         <DailyJewishHome compact />
 
