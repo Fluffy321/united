@@ -11,6 +11,7 @@ import TanakhReader from './TanakhReader';
 import TehillimReader from './TehillimReader';
 import ShiurimPage from './ShiurimPage';
 import useJewishHubPreferences from '@/hooks/useJewishHubPreferences';
+import JewishHubBackButton from './JewishHubBackButton';
 
 const HUB_ENTRIES = [
   {
@@ -139,6 +140,8 @@ export default function JewishContentHub() {
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
+      <JewishHubBackButton to="/Feed" ariaLabel="Back to Feed" />
+
       <div className="space-y-4">
         <DailyJewishHome />
 
