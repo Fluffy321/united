@@ -37,7 +37,7 @@ function VersionCredit({ version, sefariaRef, modificationNote }) {
   );
 }
 
-export default function SefariaAttribution({ hebrew, english, ref: sefariaRef, className = '', modificationNote }) {
+export default function SefariaAttribution({ hebrew, english, sefariaRef, className = '', modificationNote }) {
   const versions = [hebrew, english].filter((version) => version?.license);
   if (!versions.length) return null;
 

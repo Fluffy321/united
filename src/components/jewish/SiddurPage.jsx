@@ -408,7 +408,7 @@ function PrayerPanel({ item, query }) {
         className="mt-4"
         hebrew={query?.data?.hebrew}
         english={query?.data?.english}
-        ref={query?.data?.ref || item.ref}
+        sefariaRef={query?.data?.ref || item.ref}
       />
     </article>
   );

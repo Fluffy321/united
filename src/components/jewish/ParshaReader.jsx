@@ -343,7 +343,7 @@ export default function ParshaReader() {
                 <SefariaAttribution
                   hebrew={textQuery.data?.hebrew}
                   english={textQuery.data?.english}
-                  ref={textQuery.data?.ref}
+                  sefariaRef={textQuery.data?.ref}
                 />
               </>
             )}

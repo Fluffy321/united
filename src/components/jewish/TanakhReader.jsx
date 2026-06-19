@@ -347,7 +347,7 @@ export default function TanakhReader() {
                 <SefariaAttribution
                   hebrew={chapterQuery.data?.hebrew}
                   english={chapterQuery.data?.english}
-                  ref={chapterQuery.data?.ref}
+                  sefariaRef={chapterQuery.data?.ref}
                 />
               </>
             )}
