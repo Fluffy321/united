@@ -170,6 +170,7 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
           <Route path="/welcome" element={<PageTransition><Landing /></PageTransition>} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+          <Route path="/Jewish" element={<Navigate to="/JewishHub" replace />} />
           <Route path="/tehillim" element={<Navigate to="/JewishHub/tehillim" replace />} />
           {LEGACY_MAP_ROUTES.map((path) => (
             <Route key={path} path={path} element={<Navigate to="/Map" replace />} />
