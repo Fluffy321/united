@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { captureError } from '@/lib/analytics';
+import { isChunkLoadError, recoverFromChunkError } from '@/lib/chunkErrorRecovery';
 
 export default class AppErrorBoundary extends React.Component {
   constructor(props) {
@@ -24,6 +25,10 @@ export default class AppErrorBoundary extends React.Component {
       componentStack: info?.componentStack,
       boundary: this.props.inline ? 'inline' : 'app',
     });
+
+    if (isChunkLoadError(error)) {
+      recoverFromChunkError();
+    }
   }
 
   handleGoHome = () => {
