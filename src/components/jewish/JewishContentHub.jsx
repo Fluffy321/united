@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, BookMarked, BookOpenText, ChevronRight, Headphones, LibraryBig, ScrollText, Settings2, Sparkles } from 'lucide-react';
+import { BookMarked, BookOpenText, ChevronRight, Headphones, LibraryBig, ScrollText, Settings2, Sparkles } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
 import DailyLearningPage from './DailyLearningPage';
 import DivreiTorahPage from './DivreiTorahPage';
@@ -11,7 +11,6 @@ import TanakhReader from './TanakhReader';
 import TehillimReader from './TehillimReader';
 import ShiurimPage from './ShiurimPage';
 import useJewishHubPreferences from '@/hooks/useJewishHubPreferences';
-import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const HUB_ENTRIES = [
   {
@@ -140,14 +139,6 @@ export default function JewishContentHub() {
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
-      <Link
-        to={COMMUNITIES_ENABLED ? '/Communities' : '/Feed'}
-        className="motion-press mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-black text-slate-700 shadow-sm"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {COMMUNITIES_ENABLED ? 'Communities' : 'Feed'}
-      </Link>
-
       <div className="space-y-4">
         <DailyJewishHome />
 

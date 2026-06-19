@@ -63,7 +63,6 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser, in
           setUserCommunities(communities);
         });
       });
-    }
     } else if (open && !COMMUNITIES_ENABLED) {
       setCommunityId('');
       setUserCommunities([]);

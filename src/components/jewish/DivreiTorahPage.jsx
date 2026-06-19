@@ -1,7 +1,6 @@
 import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, LibraryBig, RefreshCw, ScrollText } from 'lucide-react';
+import { ExternalLink, LibraryBig, RefreshCw, ScrollText } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
 import { useAuth } from '@/lib/AuthContext';
 import { getWeeklyParshaReading } from '@/lib/hebrewDate';
@@ -86,14 +85,6 @@ export default function DivreiTorahPage() {
 
   return (
     <main className="mobile-page min-h-screen px-3 pb-28 pt-4">
-      <Link
-        to="/JewishHub"
-        className="motion-press mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-black text-slate-700 shadow-sm"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Jewish Hub
-      </Link>
-
       <div className="space-y-4">
         <DailyJewishHome compact />
 
