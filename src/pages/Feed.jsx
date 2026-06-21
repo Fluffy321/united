@@ -475,7 +475,7 @@ export default function Feed({ isActive = true }) {
             </div>
           )}
 
-          <TodayFiveTownsCard />
+          {appParams.hasBackendConfig && <TodayFiveTownsCard />}
 
           <FiveTownsBrief
             brief={dailyBrief}
@@ -524,12 +524,11 @@ export default function Feed({ isActive = true }) {
               {isError && (
                 <p className="text-[12px] text-slate-400 text-center px-4 py-2">Showing cached posts — pull down to refresh.</p>
               )}
-              {feedSections.map((section) => (
-                <CommunityFeedSection
-                  key={section.key}
-                  section={section}
-                  dense={section.key !== 'today'}
-                  likedPostIds={userLikes}
+              {feedPosts.map((post) => (
+                <FeedPostCard
+                  key={post.id}
+                  post={post}
+                  liked={userLikes.includes(post.id)}
                   onLike={handleLike}
                   onReply={handleCardReply}
                   onOpen={handleCardOpen}
