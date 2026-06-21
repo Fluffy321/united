@@ -99,22 +99,12 @@ export async function getShabbatTimes(lat, lng, tzid = 'America/New_York', date 
     );
     const data = await res.json();
     const items = data.items || [];
-    const firstCandle = items
-      .filter(i => i.category === 'candles')
-      .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
-    const candleDate = firstCandle?.date ? new Date(firstCandle.date) : null;
-    const candleZmanim = candleDate && !Number.isNaN(candleDate.getTime())
-      ? await getZmanim(lat, lng, candleDate, tzid)
-      : null;
-    const sunsetBasedCandleLighting = candleZmanim?.sunset
-      ? new Date(new Date(candleZmanim.sunset).getTime() - CANDLE_LIGHTING_MINUTES * 60 * 1000).toISOString()
-      : null;
 
-    // All candles/havdalah items sorted chronologically — needed for multi-day Yom Tov
-    const allCandles  = items
-      .filter(i => i.category === 'candles')
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .map((item, index) => index === 0 && sunsetBasedCandleLighting ? { ...item, date: sunsetBasedCandleLighting } : item);
+    // All candles/havdalah items sorted chronologically — needed for multi-day Yom Tov.
+    // Hebcal's own b=18/m=havdalahMinutes params already compute these correctly
+    // server-side, so we use its values directly rather than re-deriving them from
+    // a second /zmanim call (which risks drift between the two endpoints).
+    const allCandles  = items.filter(i => i.category === 'candles').sort((a, b) => new Date(a.date) - new Date(b.date));
     const allHavdalah = items.filter(i => i.category === 'havdalah').sort((a, b) => new Date(a.date) - new Date(b.date));
 
     // Major Yom Tov items for holiday labeling. Excludes "Erev X" (eve-of notices)

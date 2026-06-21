@@ -2,9 +2,9 @@ import React from 'react';
 import { CalendarDays, Flame, HandHeart, ScrollText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/api/supabaseClient';
-import { getShabbosTimes } from '@/utils/shabbos';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
 import { getShabbatTimes } from '@/lib/hebrewDate';
+import { isResolvedLocationLabel } from '@/lib/shabbatLocation';
 
 const FIVE_TOWNS_TIME_ZONE = 'America/New_York';
 const DEFAULT_CONTENT = {
@@ -68,8 +68,17 @@ export default function TodayFiveTownsCard() {
     allowOnce,
     allowAlways,
     denyLocation,
-    isDefault: isDefaultLocation,
   } = useShabbatLocation({ autoRequest: true });
+
+  const timesTimeZone = candleLocation?.tzid || FIVE_TOWNS_TIME_ZONE;
+  const locationLabel = isResolvedLocationLabel(candleLocation?.label) ? candleLocation.label : null;
+  const hasNamedLocation = Boolean(
+    candleLocation?.lat &&
+    candleLocation?.lng &&
+    locationLabel &&
+    candleLocation?.type !== 'default' &&
+    candleLocation?.type !== 'declined'
+  );
 
   const { data, isError } = useQuery({
     queryKey: ['daily-content', dateKey],
@@ -89,31 +98,23 @@ export default function TodayFiveTownsCard() {
     queryFn: () => getShabbatTimes(
       candleLocation.lat,
       candleLocation.lng,
-      candleLocation.tzid || FIVE_TOWNS_TIME_ZONE,
+      timesTimeZone,
       today
     ),
-    enabled: Boolean(candleLocation?.lat && candleLocation?.lng),
+    enabled: hasNamedLocation,
     staleTime: 6 * 60 * 60 * 1000,
     retry: 1,
   });
 
   const content = data || DEFAULT_CONTENT;
-  const fallbackTimes = getShabbosTimes(content);
-  const candleLighting = liveTimes?.candleLighting
-    ? new Date(liveTimes.candleLighting)
-    : fallbackTimes.candleLighting;
-  const havdalah = liveTimes?.havdalah
-    ? new Date(liveTimes.havdalah)
-    : fallbackTimes.havdalah;
-  const timesTimeZone = candleLocation?.tzid || FIVE_TOWNS_TIME_ZONE;
-  const locationLabel = candleLocation?.label || 'Five Towns, NY';
+  const hasResolvedShabbosTimes = Boolean(liveTimes?.candleLighting && liveTimes?.havdalah);
   const locationNote = locationLoading || timesLoading
     ? 'Locating...'
-    : locationError === 'declined'
-      ? 'Five Towns fallback'
-      : isDefaultLocation
-        ? 'Five Towns default'
-        : locationLabel;
+    : hasNamedLocation
+      ? locationLabel
+      : locationError === 'declined'
+        ? 'Location declined'
+        : 'Location not resolved';
 
   return (
     <section className="mb-3 overflow-hidden rounded-[24px] border border-blue-100 bg-white shadow-sm">
@@ -152,10 +153,18 @@ export default function TodayFiveTownsCard() {
               {locationNote}
             </p>
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <TimeBlock label="Candles" value={formatTime(candleLighting, timesTimeZone)} />
-            <TimeBlock label="Havdalah" value={formatTime(havdalah, timesTimeZone)} />
-          </div>
+          {hasNamedLocation && hasResolvedShabbosTimes ? (
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <TimeBlock label={liveTimes?.candleTitle || 'Candles'} value={formatTime(liveTimes?.candleLighting, timesTimeZone)} />
+              <TimeBlock label={liveTimes?.havdalahTitle || 'Havdalah'} value={formatTime(liveTimes?.havdalah, timesTimeZone)} />
+            </div>
+          ) : (
+            <div className="mt-2 rounded-2xl bg-white px-3 py-3">
+              <p className="text-[12px] font-bold leading-5 text-slate-700">
+                {hasNamedLocation ? 'Loading accurate candle lighting and Havdalah.' : 'Choose a location to show accurate candle lighting and Havdalah.'}
+              </p>
+            </div>
+          )}
           {shouldAskLocation && (
             <div className="mt-3 rounded-2xl border border-amber-200 bg-white/85 p-3">
               <p className="text-[12px] font-bold leading-5 text-slate-700">
