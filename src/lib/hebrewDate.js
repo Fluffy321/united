@@ -5,6 +5,17 @@
 
 const HEBCAL_BASE = 'https://www.hebcal.com';
 
+function formatDateForTimeZone(date = new Date(), timeZone = 'America/New_York') {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 /**
  * Convert a Gregorian date to Hebrew date string.
  * Returns e.g. "כ״ז בניסן תשפ״ו" or "27 Nisan 5786"
@@ -59,7 +70,7 @@ export async function formatDualDate(dateInput) {
  * Get zmanim for a location on a given date.
  */
 export async function getZmanim(lat, lng, date = new Date(), tzid = 'America/New_York') {
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = formatDateForTimeZone(date, tzid);
   try {
     const res = await fetch(
       `${HEBCAL_BASE}/zmanim?cfg=json&latitude=${lat}&longitude=${lng}&date=${dateStr}&tzid=${encodeURIComponent(tzid)}`
@@ -81,7 +92,7 @@ export const HAVDALAH_MINUTES = 50;
  * tzid should be an IANA timezone string (e.g. 'America/New_York').
  */
 export async function getShabbatTimes(lat, lng, tzid = 'America/New_York', date = new Date(), havdalahMinutes = HAVDALAH_MINUTES) {
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = formatDateForTimeZone(date, tzid);
   try {
     const res = await fetch(
       `${HEBCAL_BASE}/shabbat?cfg=json&geo=pos&latitude=${lat}&longitude=${lng}&tzid=${encodeURIComponent(tzid)}&m=${havdalahMinutes}&b=${CANDLE_LIGHTING_MINUTES}&date=${dateStr}`
@@ -89,8 +100,11 @@ export async function getShabbatTimes(lat, lng, tzid = 'America/New_York', date 
     const data = await res.json();
     const items = data.items || [];
 
-    // All candles/havdalah items sorted chronologically — needed for multi-day Yom Tov
-    const allCandles  = items.filter(i => i.category === 'candles' ).sort((a, b) => new Date(a.date) - new Date(b.date));
+    // All candles/havdalah items sorted chronologically — needed for multi-day Yom Tov.
+    // Hebcal's own b=18/m=havdalahMinutes params already compute these correctly
+    // server-side, so we use its values directly rather than re-deriving them from
+    // a second /zmanim call (which risks drift between the two endpoints).
+    const allCandles  = items.filter(i => i.category === 'candles').sort((a, b) => new Date(a.date) - new Date(b.date));
     const allHavdalah = items.filter(i => i.category === 'havdalah').sort((a, b) => new Date(a.date) - new Date(b.date));
 
     // Major Yom Tov items for holiday labeling. Excludes "Erev X" (eve-of notices)
@@ -127,6 +141,88 @@ export async function getParsha() {
     const data = await res.json();
     const parsha = data.items?.find(i => i.category === 'parashat');
     return parsha ? { name: parsha.title, hebrew: parsha.hebrew, link: parsha.link } : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get this week's parsha with the Torah leyning range for Sefaria text lookup.
+ */
+export async function getWeeklyParshaReading(date = new Date(), tzid = 'America/New_York') {
+  const dateStr = formatDateForTimeZone(date, tzid);
+  try {
+    const res = await fetch(`${HEBCAL_BASE}/shabbat?cfg=json&geo=none&m=50&date=${dateStr}`);
+    const data = await res.json();
+    const parsha = data.items?.find(i => i.category === 'parashat');
+    if (!parsha) return null;
+
+    return {
+      title: parsha.title,
+      hebrew: parsha.hebrew,
+      date: parsha.date,
+      hdate: parsha.hdate,
+      torah: parsha.leyning?.torah || null,
+      aliyot: parsha.leyning || null,
+      link: parsha.link,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get the Daf Yomi for a given date from Hebcal.
+ */
+export async function getDafYomi(date = new Date(), tzid = 'America/New_York') {
+  const dateStr = formatDateForTimeZone(date, tzid);
+  try {
+    const res = await fetch(
+      `${HEBCAL_BASE}/hebcal?v=1&cfg=json&F=on&maj=off&min=off&mod=off&nx=off&ss=off&mf=off&start=${dateStr}&end=${dateStr}`
+    );
+    const data = await res.json();
+    const daf = data.items?.find(i => i.category === 'dafyomi');
+    if (!daf) return null;
+
+    return {
+      title: daf.title,
+      hebrew: daf.hebrew,
+      date: daf.date,
+      hdate: daf.hdate,
+      link: daf.link,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get daily learning references from Hebcal without embedding source text.
+ */
+export async function getDailyLearning(date = new Date(), tzid = 'America/New_York') {
+  const dateStr = formatDateForTimeZone(date, tzid);
+  try {
+    const res = await fetch(
+      `${HEBCAL_BASE}/hebcal?v=1&cfg=json&F=on&myomi=on&dr1=on&maj=off&min=off&mod=off&nx=off&ss=off&mf=off&start=${dateStr}&end=${dateStr}`
+    );
+    const data = await res.json();
+    const items = data.items || [];
+    const byCategory = (category) => items.find(i => i.category === category) || null;
+
+    return [
+      { id: 'daf-yomi', label: 'Daf Yomi', item: byCategory('dafyomi') },
+      { id: 'mishnah-yomi', label: 'Mishnah Yomi', item: byCategory('mishnayomi') },
+      { id: 'daily-rambam', label: 'Daily Rambam', item: byCategory('dailyRambam1') },
+    ].map(({ id, label, item }) => ({
+      id,
+      label,
+      title: item?.title || null,
+      hebrew: item?.hebrew || null,
+      date: item?.date || dateStr,
+      hdate: item?.hdate || null,
+      link: item?.link || null,
+      category: item?.category || null,
+    }));
   } catch {
     return null;
   }

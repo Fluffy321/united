@@ -1,5 +1,23 @@
+import { readFileSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+
+// Substitutes a fresh version into the service worker on every build so its
+// byte content always changes, guaranteeing browsers detect the update.
+const swVersionPlugin = () => ({
+  name: 'sw-version',
+  writeBundle(options) {
+    const swPath = resolve(options.dir || 'dist', 'sw.js')
+    let contents
+    try {
+      contents = readFileSync(swPath, 'utf8')
+    } catch {
+      return
+    }
+    writeFileSync(swPath, contents.replace('__SW_BUILD_VERSION__', `junited-${Date.now()}`))
+  },
+})
 
 const packageNameFromId = (id) => {
   const marker = 'node_modules/';
@@ -12,7 +30,7 @@ const packageNameFromId = (id) => {
 };
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), swVersionPlugin()],
   resolve: {
     alias: {
       '@': '/src',

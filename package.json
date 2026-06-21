@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/check-jewish-hub-regressions.cjs",
     "build": "vite build",
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",
     "check-prompts": "node scripts/check-roadmap-prompts.cjs",
+    "check-jewish-hub": "node scripts/check-jewish-hub-regressions.cjs",
     "preview": "vite preview"
   },
   "dependencies": {

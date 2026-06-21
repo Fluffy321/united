@@ -16,7 +16,7 @@
  * Old standalone feature pages are intentionally excluded from this registry.
  * App.jsx keeps those URLs alive as redirects so beta users do not hit 404s.
  */
-import { lazy } from 'react';
+import lazy from './lib/lazyWithRetry';
 import __Layout from './Layout.jsx';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 

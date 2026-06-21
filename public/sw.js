@@ -1,7 +1,8 @@
 // JUnited Service Worker — static asset caching + offline shell
-// Bump this whenever we ship a meaningful app update so Safari/PWA users do
-// not stay pinned to an older route chunk.
-const CACHE_NAME = 'junited-v2-live-now-2026-05-22';
+// CACHE_NAME is substituted with a fresh build version at build time (see
+// vite.config.js) so every deploy is guaranteed a byte-diff, which is what
+// makes browsers notice the update at all.
+const CACHE_NAME = '__SW_BUILD_VERSION__';
 const OFFLINE_URL = '/';
 
 // Assets to pre-cache on install
@@ -26,7 +27,7 @@ self.addEventListener('activate', (event) => {
       .then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
       .then((clients) => {
         clients.forEach((client) => {
-          client.postMessage({ type: 'JUNITED_APP_UPDATED' });
+          client.postMessage({ type: 'JUNITED_APP_UPDATED', version: CACHE_NAME });
         });
       })
   );

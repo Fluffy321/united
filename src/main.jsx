@@ -34,8 +34,9 @@ if ('serviceWorker' in navigator) {
 
   navigator.serviceWorker.addEventListener('message', (event) => {
     if (event.data?.type !== 'JUNITED_APP_UPDATED') return;
-    if (sessionStorage.getItem('junited-sw-refreshed') === '1') return;
-    sessionStorage.setItem('junited-sw-refreshed', '1');
+    const version = event.data.version || 'unknown';
+    if (sessionStorage.getItem('junited-sw-refreshed-version') === version) return;
+    sessionStorage.setItem('junited-sw-refreshed-version', version);
     window.location.reload();
   });
 }

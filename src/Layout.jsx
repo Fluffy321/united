@@ -25,7 +25,7 @@ const navItems = [
   { key: 'Mitzvah',    name: 'Mitzvah',     icon: null,      page: 'MitzvahCircle', to: '/MitzvahCircle', isMitzvah: true },
   COMMUNITIES_ENABLED
     ? { key: 'Communities', name: 'Communities', icon: Users, page: 'Communities' }
-    : { key: 'JewishHub', name: 'Jewish', icon: BookOpenText, page: 'JewishHub', to: '/JewishHub/tehillim' },
+    : { key: 'JewishHub', name: 'Jewish', icon: BookOpenText, page: 'JewishHub', to: '/JewishHub' },
   { key: 'Map',        name: 'Businesses',  icon: Store,     page: 'Map',          to: '/Map' },
   { key: 'Profile',    name: 'Profile',     icon: User,      page: 'Profile', isProfile: true },
 ];

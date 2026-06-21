@@ -3,12 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   BadgeCheck,
   BarChart3,
-  BookOpen,
-  Briefcase,
+  Baby,
+  Car,
   Edit3,
   ExternalLink,
   EyeOff,
   Globe2,
+  Gift,
   HeartPulse,
   Home as HomeIcon,
   LayoutGrid,
@@ -22,7 +23,6 @@ import {
   Save,
   Search,
   ShieldCheck,
-  ShoppingBag,
   Sparkles,
   Star,
   Store,
@@ -57,15 +57,61 @@ const COMMUNITY_LOCATION_FALLBACKS = {
 };
 
 const BUSINESS_CATEGORIES = [
-  { key: 'all',            label: 'All',          shortLabel: 'All',       icon: LayoutGrid,  iconBg: 'bg-slate-100',   iconColor: 'text-slate-500',   labelColor: 'text-slate-500',   barColor: 'bg-slate-300',   chipActive: 'bg-slate-950 text-white border-slate-950',   chipInactive: 'bg-white text-slate-600 border-slate-200' },
-  { key: 'kosher_food',    label: 'Kosher Food',  shortLabel: 'Kosher',    icon: Utensils,    iconBg: 'bg-amber-50',    iconColor: 'text-amber-600',   labelColor: 'text-amber-700',   barColor: 'bg-amber-400',   chipActive: 'bg-amber-600 text-white border-amber-600',   chipInactive: 'bg-white text-slate-600 border-slate-200' },
-  { key: 'services',       label: 'Services',     shortLabel: 'Services',  icon: Wrench,      iconBg: 'bg-blue-50',     iconColor: 'text-blue-600',    labelColor: 'text-blue-700',    barColor: 'bg-blue-500',    chipActive: 'bg-blue-600 text-white border-blue-600',     chipInactive: 'bg-white text-slate-600 border-slate-200' },
-  { key: 'retail',         label: 'Retail',       shortLabel: 'Retail',    icon: ShoppingBag, iconBg: 'bg-purple-50',   iconColor: 'text-purple-600',  labelColor: 'text-purple-700',  barColor: 'bg-purple-500',  chipActive: 'bg-purple-600 text-white border-purple-600', chipInactive: 'bg-white text-slate-600 border-slate-200' },
-  { key: 'judaica',        label: 'Judaica',      shortLabel: 'Judaica',   icon: BookOpen,    iconBg: 'bg-yellow-50',   iconColor: 'text-yellow-600',  labelColor: 'text-yellow-700',  barColor: 'bg-yellow-400',  chipActive: 'bg-yellow-500 text-white border-yellow-500', chipInactive: 'bg-white text-slate-600 border-slate-200' },
-  { key: 'health_wellness',label: 'Health',       shortLabel: 'Health',    icon: HeartPulse,  iconBg: 'bg-emerald-50',  iconColor: 'text-emerald-600', labelColor: 'text-emerald-700', barColor: 'bg-emerald-500', chipActive: 'bg-emerald-600 text-white border-emerald-600',chipInactive: 'bg-white text-slate-600 border-slate-200' },
-  { key: 'professional',   label: 'Professional', shortLabel: 'Pro',       icon: Briefcase,   iconBg: 'bg-indigo-50',   iconColor: 'text-indigo-600',  labelColor: 'text-indigo-700',  barColor: 'bg-indigo-500',  chipActive: 'bg-indigo-600 text-white border-indigo-600', chipInactive: 'bg-white text-slate-600 border-slate-200' },
-  { key: 'home_services',  label: 'Home',         shortLabel: 'Home',      icon: HomeIcon,    iconBg: 'bg-orange-50',   iconColor: 'text-orange-600',  labelColor: 'text-orange-700',  barColor: 'bg-orange-400',  chipActive: 'bg-orange-500 text-white border-orange-500', chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'all',              label: 'All',                         shortLabel: 'All',        icon: LayoutGrid,  iconBg: 'bg-slate-100',   iconColor: 'text-slate-500',   labelColor: 'text-slate-500',   barColor: 'bg-slate-300',   chipActive: 'bg-slate-950 text-white border-slate-950',   chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'attractions',      label: 'Attractions',                 shortLabel: 'Attract',    icon: Star,        iconBg: 'bg-sky-50',      iconColor: 'text-sky-600',     labelColor: 'text-sky-700',     barColor: 'bg-sky-400',     chipActive: 'bg-sky-600 text-white border-sky-600',       chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'childcare',        label: 'Babysitting / Childcare',     shortLabel: 'Childcare',  icon: Baby,        iconBg: 'bg-pink-50',     iconColor: 'text-pink-600',    labelColor: 'text-pink-700',    barColor: 'bg-pink-400',    chipActive: 'bg-pink-600 text-white border-pink-600',     chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'beauty_services',  label: 'Beauty Services',             shortLabel: 'Beauty',     icon: Sparkles,    iconBg: 'bg-fuchsia-50',  iconColor: 'text-fuchsia-600', labelColor: 'text-fuchsia-700', barColor: 'bg-fuchsia-400', chipActive: 'bg-fuchsia-600 text-white border-fuchsia-600', chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'car_services',     label: 'Car Services',                shortLabel: 'Cars',       icon: Car,         iconBg: 'bg-cyan-50',     iconColor: 'text-cyan-600',    labelColor: 'text-cyan-700',    barColor: 'bg-cyan-400',    chipActive: 'bg-cyan-600 text-white border-cyan-600',     chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'chessed',          label: 'Chessed',                     shortLabel: 'Chessed',    icon: HeartPulse,  iconBg: 'bg-rose-50',     iconColor: 'text-rose-600',    labelColor: 'text-rose-700',    barColor: 'bg-rose-400',    chipActive: 'bg-rose-600 text-white border-rose-600',     chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'food_dining',      label: 'Food & Dining',               shortLabel: 'Food',       icon: Utensils,    iconBg: 'bg-amber-50',    iconColor: 'text-amber-600',   labelColor: 'text-amber-700',   barColor: 'bg-amber-400',   chipActive: 'bg-amber-600 text-white border-amber-600',   chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'health',           label: 'Health',                      shortLabel: 'Health',     icon: HeartPulse,  iconBg: 'bg-emerald-50',  iconColor: 'text-emerald-600', labelColor: 'text-emerald-700', barColor: 'bg-emerald-500', chipActive: 'bg-emerald-600 text-white border-emerald-600',chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'home_improvement', label: 'Home Improvement Services',   shortLabel: 'Home',       icon: Wrench,      iconBg: 'bg-orange-50',   iconColor: 'text-orange-600',  labelColor: 'text-orange-700',  barColor: 'bg-orange-400',  chipActive: 'bg-orange-500 text-white border-orange-500', chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'hostess_gifts',    label: 'Hostess Gifts',               shortLabel: 'Gifts',      icon: Gift,        iconBg: 'bg-violet-50',   iconColor: 'text-violet-600',  labelColor: 'text-violet-700',  barColor: 'bg-violet-400',  chipActive: 'bg-violet-600 text-white border-violet-600', chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'local_businesses', label: 'Local Businesses',            shortLabel: 'Local',      icon: Store,       iconBg: 'bg-blue-50',     iconColor: 'text-blue-600',    labelColor: 'text-blue-700',    barColor: 'bg-blue-500',    chipActive: 'bg-blue-600 text-white border-blue-600',     chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'mikvahs',          label: 'Mikvahs',                     shortLabel: 'Mikvahs',    icon: MapPin,      iconBg: 'bg-teal-50',     iconColor: 'text-teal-600',    labelColor: 'text-teal-700',    barColor: 'bg-teal-400',    chipActive: 'bg-teal-600 text-white border-teal-600',     chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'eruv',             label: 'Eruv',                        shortLabel: 'Eruv',       icon: MapIcon,     iconBg: 'bg-indigo-50',   iconColor: 'text-indigo-600',  labelColor: 'text-indigo-700',  barColor: 'bg-indigo-500',  chipActive: 'bg-indigo-600 text-white border-indigo-600', chipInactive: 'bg-white text-slate-600 border-slate-200' },
+  { key: 'vacation_rentals', label: 'Vacation Rentals',            shortLabel: 'Rentals',    icon: HomeIcon,    iconBg: 'bg-lime-50',     iconColor: 'text-lime-700',    labelColor: 'text-lime-700',    barColor: 'bg-lime-400',    chipActive: 'bg-lime-600 text-white border-lime-600',     chipInactive: 'bg-white text-slate-600 border-slate-200' },
 ];
+
+const LEGACY_CATEGORY_ALIASES = {
+  kosher_food: 'food_dining',
+  food: 'food_dining',
+  restaurants: 'food_dining',
+  restaurant: 'food_dining',
+  food_meals: 'food_dining',
+  services: 'local_businesses',
+  retail: 'local_businesses',
+  judaica: 'local_businesses',
+  professional: 'local_businesses',
+  health_wellness: 'health',
+  home_services: 'home_improvement',
+  transportation: 'car_services',
+  car_service: 'car_services',
+  cars: 'car_services',
+  chesed: 'chessed',
+  mikvah: 'mikvahs',
+};
+
+function normalizeCategoryKey(value) {
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/\//g, ' ')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  return LEGACY_CATEGORY_ALIASES[normalized] || normalized || 'local_businesses';
+}
+
+function businessCategoryKey(value) {
+  const key = normalizeCategoryKey(value);
+  return BUSINESS_CATEGORIES.some((cat) => cat.key === key) ? key : 'local_businesses';
+}
+
+function businessCategory(value) {
+  return BUSINESS_CATEGORIES.find((cat) => cat.key === businessCategoryKey(value)) || BUSINESS_CATEGORIES[0];
+}
 
 const LISTING_TYPES = [
   { key: 'all', label: 'All' },
@@ -76,7 +122,7 @@ const LISTING_TYPES = [
 
 const emptyBusinessForm = {
   name: '',
-  category: 'services',
+  category: 'local_businesses',
   listing_type: 'physical',
   description: '',
   address: '',
@@ -189,7 +235,7 @@ function TrustBadges({ business }) {
 }
 
 function VerifiedBusinessChip({ business, onView }) {
-  const cat = BUSINESS_CATEGORIES.find((c) => c.key === business.category) || BUSINESS_CATEGORIES[0];
+  const cat = businessCategory(business.category);
   const CatIcon = cat.icon;
   return (
     <button
@@ -214,7 +260,7 @@ function VerifiedBusinessChip({ business, onView }) {
 function BusinessCard({ business, onView, onClaim }) {
   const isPhysical = business.listing_type === 'physical';
   const hasDirections = isPhysical && (business.address || (business.location_lat && business.location_lng)) && !business.hide_exact_address;
-  const cat = BUSINESS_CATEGORIES.find((c) => c.key === business.category) || BUSINESS_CATEGORIES[0];
+  const cat = businessCategory(business.category);
   const CatIcon = cat.icon;
   const isVerifiedOwner = business.verification_status === 'verified_owner' || business.is_claimed;
 
@@ -554,7 +600,7 @@ function BusinessDetailModal({ business, onClose, onClaim }) {
               <Store className="h-7 w-7" />
             </div>
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-blue-700">{badgeLabel(business.category)}</p>
+              <p className="text-xs font-black uppercase tracking-wide text-blue-700">{businessCategory(business.category).label}</p>
               <h2 className="mt-1 text-xl font-black text-slate-950">{business.name}</h2>
               <TrustBadges business={business} />
             </div>
@@ -933,9 +979,10 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
 
   const filteredBusinesses = useMemo(() => businesses.filter((business) => {
     const q = search.trim().toLowerCase();
-    const haystack = `${business.name || ''} ${business.description || ''} ${business.category || ''} ${business.neighborhood || ''} ${business.city || ''}`.toLowerCase();
+    const normalizedCategory = businessCategory(business.category);
+    const haystack = `${business.name || ''} ${business.description || ''} ${business.category || ''} ${normalizedCategory.label || ''} ${business.neighborhood || ''} ${business.city || ''}`.toLowerCase();
     if (q && !haystack.includes(q)) return false;
-    if (category !== 'all' && business.category !== category) return false;
+    if (category !== 'all' && businessCategoryKey(business.category) !== category) return false;
     if (type !== 'all' && business.listing_type !== type) return false;
     return true;
   }), [businesses, category, search, type]);
@@ -968,7 +1015,7 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
           Support Jewish<br />Business
         </h1>
         <p className="mt-2 text-[13px] font-semibold leading-5 text-slate-400">
-          <em className="not-italic text-slate-300">Kol Yisrael arevim zeh lazeh</em> — every Jew is responsible for one another. Shop with confidence from verified Jewish-owned businesses.
+          <em className="not-italic text-slate-300">Kol Yisrael arevim zeh lazeh</em> — Five Towns food, services, chessed, mikvahs, eruv info, rentals, and trusted local businesses in one place.
         </p>
         <div className="mt-4 grid grid-cols-3 gap-2">
           <div className="rounded-2xl bg-white/8 p-3 ring-1 ring-white/10">
@@ -1009,7 +1056,7 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
 
       {/* Category grid */}
       <section className="mt-3">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {BUSINESS_CATEGORIES.map((cat) => {
             const CatIcon = cat.icon;
             const isActive = category === cat.key;
@@ -1381,8 +1428,9 @@ export default function MapPage() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [searchParams] = useSearchParams();
+  const hasMapDeepLink = Boolean(searchParams.get('category') || searchParams.get('requestId') || searchParams.get('place'));
   const [activeView, setActiveView] = useState(() => (
-    COMMUNITIES_ENABLED && searchParams.get('category') ? 'community' : 'businesses'
+    hasMapDeepLink ? 'community' : 'businesses'
   ));
   const [userLocation, setUserLocation] = useState(null);
   const [locationStatus, setLocationStatus] = useState('idle');
@@ -1413,10 +1461,8 @@ export default function MapPage() {
   }, []);
 
   useEffect(() => {
-    if (COMMUNITIES_ENABLED && (searchParams.get('category') || searchParams.get('requestId'))) {
-      setActiveView('community');
-    }
-  }, [searchParams]);
+    if (hasMapDeepLink) setActiveView('community');
+  }, [hasMapDeepLink]);
 
   const handleUseMyLocation = () => requestUserLocation(true);
   const isDeepLinkedMap = searchParams.toString().length > 0;
@@ -1444,7 +1490,7 @@ export default function MapPage() {
       />
 
       <div className="mobile-page-wide min-h-0 flex-1 overflow-y-auto px-3 pb-3 sm:px-4 sm:pb-4">
-        {COMMUNITIES_ENABLED && <div className="mb-3 grid grid-cols-2 gap-2 rounded-[20px] border border-slate-200 bg-white p-1 shadow-sm">
+        <div className="mb-3 grid grid-cols-2 gap-2 rounded-[20px] border border-slate-200 bg-white p-1 shadow-sm">
           <button
             type="button"
             onClick={() => setActiveView('businesses')}
@@ -1459,9 +1505,9 @@ export default function MapPage() {
             className={`flex h-10 items-center justify-center gap-2 rounded-2xl text-xs font-black ${activeView === 'community' ? 'bg-slate-950 text-white' : 'text-slate-500'}`}
           >
             <Sparkles className="h-4 w-4" />
-            Community Map
+            {COMMUNITIES_ENABLED ? 'Community Map' : 'Local Map'}
           </button>
-        </div>}
+        </div>
 
         <LiveNowRail
           className="mb-3"
@@ -1471,7 +1517,7 @@ export default function MapPage() {
           onItemClick={(item) => navigate(item.href || '/Map')}
         />
 
-        {activeView === 'businesses' || !COMMUNITIES_ENABLED ? (
+        {activeView === 'businesses' ? (
           <BusinessDirectoryExperience
             currentUser={currentUser}
             userLocation={userLocation}
