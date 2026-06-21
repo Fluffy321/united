@@ -67,6 +67,7 @@ const PublicProfile           = lazy(() => import('@/pages/PublicProfile'));
 const AdminAnalyticsDashboard = lazy(() => import('@/pages/AdminAnalyticsDashboard'));
 const AdminModerationQueue    = lazy(() => import('@/pages/AdminModerationQueue'));
 const AdminSeedControl        = lazy(() => import('@/pages/AdminSeedControl'));
+const AdminBusinessImport     = lazy(() => import('@/pages/AdminBusinessImport'));
 const PostDetail              = lazy(() => import('@/pages/PostDetail'));
 const CommunityPage           = lazy(() => import('@/pages/CommunityPage'));
 const JoinByCommunityCode     = lazy(() => import('@/pages/JoinByCommunityCode'));
@@ -89,7 +90,7 @@ const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const mainPagePath = `/${mainPageKey || 'Feed'}`;
 
-const ADMIN_PAGE_KEYS = new Set(['AdminModerationQueue', 'AdminSeedControl']);
+const ADMIN_PAGE_KEYS = new Set(['AdminModerationQueue', 'AdminSeedControl', 'AdminBusinessImport']);
 const ROUTER_FUTURE_FLAGS = {
   v7_startTransition: true,
   v7_relativeSplatPath: true,
@@ -180,6 +181,7 @@ const AuthenticatedApp = () => {
             <Route element={<AdminRoute />}>
               <Route path="/AdminModerationQueue" element={<PageTransition><LayoutWrapper currentPageName="AdminModerationQueue"><AdminModerationQueue /></LayoutWrapper></PageTransition>} />
               <Route path="/AdminSeedControl" element={<PageTransition><LayoutWrapper currentPageName="AdminSeedControl"><AdminSeedControl /></LayoutWrapper></PageTransition>} />
+              <Route path="/AdminBusinessImport" element={<PageTransition><LayoutWrapper currentPageName="AdminBusinessImport"><AdminBusinessImport /></LayoutWrapper></PageTransition>} />
               <Route path="/AdminAnalyticsDashboard" element={<PageTransition><AdminAnalyticsDashboard /></PageTransition>} />
               <Route path="/AdminFeedbackInbox" element={<PageTransition><AdminFeedbackInbox /></PageTransition>} />
             </Route>
