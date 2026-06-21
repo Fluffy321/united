@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef, Component } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { dataService, feedRetentionService, shabbatReminderService, storageService, togglePostLike } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
@@ -474,6 +474,38 @@ export default function Feed({ isActive = true }) {
               </div>
             </div>
           )}
+
+          {appParams.hasBackendConfig && (
+            <WidgetBoundary>
+              <TodayFiveTownsCard />
+            </WidgetBoundary>
+          )}
+
+          <WidgetBoundary>
+            <FiveTownsBrief
+              brief={dailyBrief}
+              momentum={feedMomentum}
+              posts={feedPosts}
+              joinedCommunityIds={joinedCommunityIds}
+              communitiesEnabled={COMMUNITIES_ENABLED}
+              prompt={dailyPrompt}
+              onOpenMap={() => navigate('/Map')}
+              onOpenCommunities={() => navigate('/Communities')}
+              onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
+            />
+          </WidgetBoundary>
+
+          <WidgetBoundary>
+            <FiveTownsConversationHub
+              posts={feedPosts}
+              networkLabel={primaryNetwork.shortLabel || 'Five Towns'}
+              onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
+              onOpenMap={() => navigate('/Map')}
+              onOpenMitzvah={() => navigate('/MitzvahCircle')}
+              onOpenEvents={() => openComposer({ type: 'event', subtype: 'local_event', initialBody: '' })}
+              onOpenMarketplace={() => navigate('/Marketplace')}
+            />
+          </WidgetBoundary>
 
           {isLoading && !loadTimedOut && (
             <div className="motion-stagger space-y-2.5 tab-fade-in">
@@ -1355,4 +1387,10 @@ function FiveTownsConversationHub({ posts = [], networkLabel = 'Five Towns', onC
       </div>
     </section>
   );
+}
+
+class WidgetBoundary extends Component {
+  constructor(props) { super(props); this.state = { crashed: false }; }
+  static getDerivedStateFromError() { return { crashed: true }; }
+  render() { return this.state.crashed ? null : this.props.children; }
 }
