@@ -477,28 +477,6 @@ export default function Feed({ isActive = true }) {
 
           {appParams.hasBackendConfig && <TodayFiveTownsCard />}
 
-          <FiveTownsBrief
-            brief={dailyBrief}
-            momentum={feedMomentum}
-            posts={feedPosts}
-            joinedCommunityIds={joinedCommunityIds}
-            communitiesEnabled={COMMUNITIES_ENABLED}
-            prompt={dailyPrompt}
-            onOpenMap={() => navigate('/Map')}
-            onOpenCommunities={() => navigate('/Communities')}
-            onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
-          />
-
-          <FiveTownsConversationHub
-            posts={feedPosts}
-            networkLabel={primaryNetwork.shortLabel || 'Five Towns'}
-            onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
-            onOpenMap={() => navigate('/Map')}
-            onOpenMitzvah={() => navigate('/MitzvahCircle')}
-            onOpenEvents={() => openComposer({ type: 'event', subtype: 'local_event', initialBody: '' })}
-            onOpenMarketplace={() => navigate('/Marketplace')}
-          />
-
           {isLoading && !loadTimedOut && (
             <div className="motion-stagger space-y-2.5 tab-fade-in">
               {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
