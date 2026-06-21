@@ -475,8 +475,6 @@ export default function Feed({ isActive = true }) {
             </div>
           )}
 
-          {appParams.hasBackendConfig && <TodayFiveTownsCard />}
-
           {isLoading && !loadTimedOut && (
             <div className="motion-stagger space-y-2.5 tab-fade-in">
               {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
