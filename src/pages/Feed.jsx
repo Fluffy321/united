@@ -475,6 +475,30 @@ export default function Feed({ isActive = true }) {
             </div>
           )}
 
+          <TodayFiveTownsCard />
+
+          <FiveTownsBrief
+            brief={dailyBrief}
+            momentum={feedMomentum}
+            posts={feedPosts}
+            joinedCommunityIds={joinedCommunityIds}
+            communitiesEnabled={COMMUNITIES_ENABLED}
+            prompt={dailyPrompt}
+            onOpenMap={() => navigate('/Map')}
+            onOpenCommunities={() => navigate('/Communities')}
+            onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
+          />
+
+          <FiveTownsConversationHub
+            posts={feedPosts}
+            networkLabel={primaryNetwork.shortLabel || 'Five Towns'}
+            onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
+            onOpenMap={() => navigate('/Map')}
+            onOpenMitzvah={() => navigate('/MitzvahCircle')}
+            onOpenEvents={() => openComposer({ type: 'event', subtype: 'local_event', initialBody: '' })}
+            onOpenMarketplace={() => navigate('/Marketplace')}
+          />
+
           {isLoading && !loadTimedOut && (
             <div className="motion-stagger space-y-2.5 tab-fade-in">
               {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
@@ -500,11 +524,12 @@ export default function Feed({ isActive = true }) {
               {isError && (
                 <p className="text-[12px] text-slate-400 text-center px-4 py-2">Showing cached posts — pull down to refresh.</p>
               )}
-              {feedPosts.map(post => (
-                <FeedPostCard
-                  key={post.id}
-                  post={post}
-                  liked={userLikes.includes(post.id)}
+              {feedSections.map((section) => (
+                <CommunityFeedSection
+                  key={section.key}
+                  section={section}
+                  dense={section.key !== 'today'}
+                  likedPostIds={userLikes}
                   onLike={handleLike}
                   onReply={handleCardReply}
                   onOpen={handleCardOpen}
