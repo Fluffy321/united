@@ -64,6 +64,7 @@ export default function Feed({ isActive = true }) {
   const [dailyPrompt, setDailyPrompt] = useState(null);
   const [publishedBrief, setPublishedBrief] = useState(null);
   const [showNetworkBanner, setShowNetworkBanner] = useState(() => !storageService.getItem('junited_network_banner_v2_dismissed'));
+  const [feedTab, setFeedTab] = useState('general');
   const canShowPreviewContent = !import.meta.env.PROD;
 
   const openComposer = useCallback((options) => {
@@ -399,133 +400,142 @@ export default function Feed({ isActive = true }) {
         onClose={() => setShowLocationPicker(false)}
       />
 
-      <div className="mobile-page px-3 pt-2 mobile-safe-bottom">
-        <div className="flex items-center gap-1.5 mb-3">
-          <h1 className="text-[20px] font-black text-slate-950">Five Towns Feed</h1>
-          <PageHelp text="The main local thread for questions, plans, needs, businesses, carpools, events, and neighbor-to-neighbor help." />
-        </div>
-
-        <TodayFiveTownsCard />
-
-        <FiveTownsBrief
-          brief={dailyBrief}
-          momentum={feedMomentum}
-          posts={feedPosts}
-          joinedCommunityIds={joinedCommunityIds}
-          communitiesEnabled={COMMUNITIES_ENABLED}
-          prompt={dailyPrompt}
-          onOpenMap={() => navigate('/Map')}
-          onOpenCommunities={() => navigate('/Communities')}
-          onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
-        />
-
-        <FiveTownsConversationHub
-          posts={feedPosts}
-          networkLabel={primaryNetwork.shortLabel || 'Five Towns'}
-          onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
-          onOpenMap={() => navigate('/Map')}
-          onOpenMitzvah={() => navigate('/MitzvahCircle')}
-          onOpenEvents={() => openComposer({ type: 'event', subtype: 'local_event', initialBody: '' })}
-          onOpenMarketplace={() => navigate('/Marketplace')}
-        />
-
-        {/* One-time network banner for new users */}
-        {showNetworkBanner && (
-          <div className="graphic-stripes mb-3 flex items-center gap-2 rounded-[22px] bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-4 py-3 text-white text-[12px] font-medium shadow-[0_14px_30px_rgba(37,99,235,0.18)]">
-            <span className="text-lg">{primaryNetwork.emoji}</span>
-            <span className="flex-1">You're viewing <strong>{primaryNetwork.shortLabel}</strong> — tap the chip above to switch networks.</span>
-            <button onClick={() => { setShowNetworkBanner(false); storageService.setItem('junited_network_banner_v2_dismissed', '1'); }} className="text-white/70 hover:text-white text-lg leading-none font-bold flex-shrink-0">×</button>
-          </div>
-        )}
-
-        {isPreviewContent && (
-          <div className="mb-3 rounded-[20px] border border-amber-200 bg-amber-50 px-4 py-3 text-amber-950 shadow-sm">
-            <div className="flex items-start gap-2.5">
-              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-              <div className="min-w-0">
-                <p className="text-[12px] font-black uppercase tracking-wide">Preview content</p>
-                <p className="mt-0.5 text-[12px] font-semibold leading-snug text-amber-800">
-                  Showing sample Five Towns posts because no Supabase posts loaded in this non-production preview.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {COMMUNITIES_ENABLED && appParams.hasBackendConfig && communitiesFetched && communityGroups.length === 0 && (
-          <div className="mb-3 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
-                <Users className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-black text-slate-900">Join your first community</p>
-                <p className="mt-0.5 text-[13px] leading-snug text-slate-500">Your feed gets better once you follow a shul, neighborhood, chesed group, or local community.</p>
-                <button
-                  onClick={() => navigate('/Communities')}
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-[13px] font-bold text-white active:scale-95 transition-transform"
-                >
-                  Find communities <ArrowRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {isLoading && !loadTimedOut && (
-          <div key="loading-mainstream" className="motion-stagger space-y-3 tab-fade-in">
-            {[...Array(4)].map((_, i) => (
-              <SkeletonCard key={i} hasImage={i === 1} />
-            ))}
-          </div>
-        )}
-        {(isLoading && loadTimedOut && feedPosts.length === 0) && (
-          <div className="rounded-[26px] border border-dashed border-blue-100 bg-white px-5 py-12 text-center shadow-sm">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-2xl">🌿</div>
-            <p className="text-[16px] font-black text-slate-900">Welcome to the Five Towns feed</p>
-            <p className="mx-auto mt-1 max-w-sm text-[13px] font-semibold leading-5 text-slate-500">
-              Start with something useful: a recommendation, a quick question, or a neighborly update.
-            </p>
-            <button onClick={openCreatePost} className="motion-press mt-4 inline-flex items-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-[13px] font-black text-white">
-              <Plus className="h-4 w-4" />
-              Write the first post
+      {/* Feed / Communities tab switcher */}
+      <div className="sticky top-[56px] z-[50] bg-white/95 backdrop-blur-sm border-b border-slate-100 px-3 py-2">
+        <div className="mobile-page">
+          <div className="flex bg-[#E4E1D9] rounded-full p-[3px]">
+            <button
+              type="button"
+              onClick={() => setFeedTab('general')}
+              className={`flex-1 py-2 rounded-full text-[14px] transition-all ${
+                feedTab === 'general'
+                  ? 'bg-white text-slate-950 font-semibold shadow-[0_1px_4px_rgba(0,0,0,0.14),0_0_0_0.5px_rgba(0,0,0,0.06)]'
+                  : 'text-slate-400 font-normal'
+              }`}
+            >
+              Feed
+            </button>
+            <button
+              type="button"
+              onClick={() => setFeedTab('communities')}
+              className={`flex-1 py-2 rounded-full text-[14px] transition-all ${
+                feedTab === 'communities'
+                  ? 'bg-white text-slate-950 font-semibold shadow-[0_1px_4px_rgba(0,0,0,0.14),0_0_0_0.5px_rgba(0,0,0,0.06)]'
+                  : 'text-slate-400 font-normal'
+              }`}
+            >
+              Communities
             </button>
           </div>
-        )}
-        {(!isLoading || loadTimedOut) && feedPosts.length > 0 && (
-          <div key="feed-mainstream" className="motion-stagger tab-fade-in space-y-3">
-            {isError && (
-              <p className="text-[12px] text-slate-400 text-center px-4 py-2">Showing cached posts — pull down to refresh.</p>
-            )}
-
-            {feedSections.map((section, index) => (
-              <CommunityFeedSection
-                key={section.key}
-                section={section}
-                dense={section.key !== 'today'}
-                likedPostIds={userLikes}
-                onLike={handleLike}
-                onReply={handleCardReply}
-                onOpen={handleCardOpen}
-                onMap={() => navigate('/Map')}
-              />
-            ))}
-
-            {/* Load more */}
-            {hasNextPage && (
-              <div className="p-4 text-center">
-                <button
-                  onClick={() => fetchNextPage()}
-                  disabled={isLoading}
-                  className="motion-press px-6 py-2 rounded-full bg-slate-100 text-slate-700 text-[13px] font-semibold hover:bg-slate-200 transition-colors disabled:opacity-50"
-                >
-                  {isLoading ? 'Loading…' : 'Load more posts'}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+        </div>
       </div>
+
+      {feedTab === 'general' ? (
+        <div className="mobile-page px-3 pt-3 mobile-safe-bottom space-y-2.5 bg-[#F0EEE8] min-h-screen">
+          {/* One-time network banner */}
+          {showNetworkBanner && (
+            <div className="graphic-stripes flex items-center gap-2 rounded-[22px] bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-4 py-3 text-white text-[12px] font-medium shadow-[0_14px_30px_rgba(37,99,235,0.18)]">
+              <span className="text-lg">{primaryNetwork.emoji}</span>
+              <span className="flex-1">You're viewing <strong>{primaryNetwork.shortLabel}</strong> — tap the chip above to switch networks.</span>
+              <button onClick={() => { setShowNetworkBanner(false); storageService.setItem('junited_network_banner_v2_dismissed', '1'); }} className="text-white/70 hover:text-white text-lg leading-none font-bold flex-shrink-0">×</button>
+            </div>
+          )}
+
+          {isPreviewContent && (
+            <div className="rounded-[20px] border border-amber-200 bg-amber-50 px-4 py-3 text-amber-950 shadow-sm">
+              <div className="flex items-start gap-2.5">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                <div className="min-w-0">
+                  <p className="text-[12px] font-black uppercase tracking-wide">Preview content</p>
+                  <p className="mt-0.5 text-[12px] font-semibold leading-snug text-amber-800">
+                    Showing sample Five Towns posts because no Supabase posts loaded in this non-production preview.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {COMMUNITIES_ENABLED && appParams.hasBackendConfig && communitiesFetched && communityGroups.length === 0 && (
+            <div className="rounded-2xl border border-blue-100 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-black text-slate-900">Join your first community</p>
+                  <p className="mt-0.5 text-[13px] leading-snug text-slate-500">Your feed gets better once you follow a shul, neighborhood, chesed group, or local community.</p>
+                  <button
+                    onClick={() => navigate('/Communities')}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-[13px] font-bold text-white active:scale-95 transition-transform"
+                  >
+                    Find communities <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isLoading && !loadTimedOut && (
+            <div className="motion-stagger space-y-2.5 tab-fade-in">
+              {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+          )}
+
+          {isLoading && loadTimedOut && feedPosts.length === 0 && (
+            <div className="rounded-[26px] bg-white px-5 py-12 text-center shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-2xl">🌿</div>
+              <p className="text-[16px] font-black text-slate-900">Welcome to the Five Towns feed</p>
+              <p className="mx-auto mt-1 max-w-sm text-[13px] font-semibold leading-5 text-slate-500">
+                Start with something useful: a recommendation, a quick question, or a neighborly update.
+              </p>
+              <button onClick={openCreatePost} className="motion-press mt-4 inline-flex items-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-[13px] font-black text-white">
+                <Plus className="h-4 w-4" />
+                Write the first post
+              </button>
+            </div>
+          )}
+
+          {feedCanRender && feedPosts.length > 0 && (
+            <div className="motion-stagger tab-fade-in space-y-2.5">
+              {isError && (
+                <p className="text-[12px] text-slate-400 text-center px-4 py-2">Showing cached posts — pull down to refresh.</p>
+              )}
+              {feedPosts.map(post => (
+                <FeedPostCard
+                  key={post.id}
+                  post={post}
+                  liked={userLikes.includes(post.id)}
+                  onLike={handleLike}
+                  onReply={handleCardReply}
+                  onOpen={handleCardOpen}
+                  onMap={() => navigate('/Map')}
+                />
+              ))}
+              {hasNextPage && (
+                <div className="pb-4 text-center">
+                  <button
+                    onClick={() => fetchNextPage()}
+                    disabled={isLoading}
+                    className="motion-press px-6 py-2 rounded-full bg-white text-slate-700 text-[13px] font-semibold shadow-sm disabled:opacity-50"
+                  >
+                    {isLoading ? 'Loading…' : 'Load more posts'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+        <CommunitiesFeedView
+          communityGroups={communityGroups}
+          feedPosts={feedPosts}
+          communitiesFetched={communitiesFetched}
+          navigate={navigate}
+          likedPostIds={userLikes}
+          onLike={handleLike}
+          onReply={handleCardReply}
+        />
+      )}
 
       <FeedComposer
         ref={composerRef}
@@ -541,6 +551,198 @@ export default function Feed({ isActive = true }) {
         contentType={reportTarget.type}
         currentUser={currentUser}
       />
+    </div>
+  );
+}
+
+const AUTHOR_COLORS = ['#1B4FA8', '#2E7D52', '#8B3A8B', '#C45B12', '#1B7A8A', '#8B2030', '#7B6A00', '#0A6B5E'];
+function authorColor(str = '') {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xFFFFFF;
+  return AUTHOR_COLORS[Math.abs(h) % AUTHOR_COLORS.length];
+}
+
+function FeedPostCard({ post, liked = false, onLike, onReply, onOpen, onMap }) {
+  const intent = getCardIntent(post);
+  const tone = toneClasses[intent.tone] || toneClasses.slate;
+  const Icon = intent.icon || MessageCircle;
+  const title = feedText(post);
+  const body = feedBody(post);
+  const age = formatPostAge(postDate(post));
+  const replies = Number(post.comments_count || 0);
+  const reactions = Number(post.likes_count || 0);
+  const initials = (post.author_name || 'J').split(/\s+/).map(p => p[0]).join('').slice(0, 2).toUpperCase();
+  const avatarBg = authorColor(post.author_id || post.author_name || '');
+
+  return (
+    <article className="rounded-[16px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden">
+      <div className="p-4 pb-3">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold text-white shrink-0" style={{ background: avatarBg }}>
+            {initials}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[14px] font-bold text-slate-900 leading-tight truncate">{post.author_name || 'Neighbor'}</div>
+            <div className="text-[12px] text-slate-400">{age}</div>
+          </div>
+          <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border shrink-0 ${tone.pill}`}>
+            <Icon className="h-3 w-3 shrink-0" />
+            {intent.label}
+          </span>
+        </div>
+        <button type="button" onClick={onOpen} className="block w-full text-left">
+          <p className="text-[16px] leading-[1.55] text-slate-900 font-medium">{title}</p>
+          {body && body !== title && (
+            <p className="mt-1 text-[14px] leading-snug text-slate-500 line-clamp-2">{body}</p>
+          )}
+        </button>
+      </div>
+      <div className="flex border-t border-slate-100">
+        <button
+          type="button"
+          onClick={() => onLike(post.id)}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-medium transition-colors ${liked ? 'text-rose-500' : 'text-slate-400'}`}
+        >
+          <Heart className={`h-[17px] w-[17px] ${liked ? 'fill-rose-500' : ''}`} />
+          {reactions > 0 && <span>{reactions}</span>}
+        </button>
+        <button
+          type="button"
+          onClick={() => onReply(post)}
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-medium text-slate-400"
+        >
+          <MessageCircle className="h-[17px] w-[17px]" />
+          {replies > 0 ? <span>{replies}</span> : null}
+        </button>
+        <button
+          type="button"
+          className="flex-1 flex items-center justify-center py-3 text-slate-400"
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
+      </div>
+    </article>
+  );
+}
+
+const COMMUNITY_COLORS = ['#1B4FA8', '#2E7D52', '#8B3A8B', '#C45B12', '#1B7A8A', '#8B2030', '#7B6A00', '#0A6B5E'];
+function communityColor(id = '') {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) & 0xFFFFFF;
+  return COMMUNITY_COLORS[Math.abs(h) % COMMUNITY_COLORS.length];
+}
+
+function CommunitiesFeedView({ communityGroups, feedPosts, communitiesFetched, navigate, onLike, onReply, likedPostIds }) {
+  if (!communitiesFetched) {
+    return (
+      <div className="mobile-page mobile-safe-bottom px-3 pt-3 space-y-2.5 bg-[#F0EEE8] min-h-screen">
+        {[...Array(3)].map((_, i) => <SkeletonCard key={i} />)}
+      </div>
+    );
+  }
+
+  if (communityGroups.length === 0) {
+    return (
+      <div className="mobile-page mobile-safe-bottom px-4 pt-12 text-center">
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-2xl">🏘️</div>
+        <p className="text-[16px] font-black text-slate-900">No communities yet</p>
+        <p className="mx-auto mt-1 max-w-xs text-[13px] leading-5 text-slate-500">
+          Join a shul, neighborhood group, or chesed organization to see their posts here.
+        </p>
+        <button
+          onClick={() => navigate('/Communities')}
+          className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-slate-950 px-5 py-2.5 text-[13px] font-bold text-white"
+        >
+          Find communities <ArrowRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mobile-page mobile-safe-bottom bg-[#F0EEE8] min-h-screen pt-[1px]">
+      {communityGroups.map((community) => {
+        const communityPosts = feedPosts.filter(p => p.community_id === community.id).slice(0, 3);
+        const color = communityColor(community.id);
+        const hasActivity = communityPosts.length > 0;
+
+        return (
+          <div key={community.id} className="mb-2">
+            <div className={`bg-white ${hasActivity ? '' : 'opacity-40'}`}>
+              <button
+                type="button"
+                onClick={() => navigate(`/communities/${community.id}`)}
+                className="w-full flex items-center px-4 py-3 border-b border-slate-100"
+              >
+                <div className="w-1 h-7 rounded-full mr-3 shrink-0" style={{ background: hasActivity ? color : color, opacity: hasActivity ? 1 : 0.5 }} />
+                <span className="flex-1 text-left text-[11px] font-bold tracking-[0.07em] uppercase text-slate-900">
+                  {community.name}
+                </span>
+                {hasActivity ? (
+                  <ArrowRight className="h-4 w-4 text-slate-400" />
+                ) : (
+                  <span className="text-[11px] text-slate-400 italic font-normal">No recent activity</span>
+                )}
+              </button>
+              {communityPosts.map(post => (
+                <CommunityCompactPost
+                  key={post.id}
+                  post={post}
+                  liked={likedPostIds.includes(post.id)}
+                  onLike={onLike}
+                  onReply={onReply}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CommunityCompactPost({ post, liked = false, onLike, onReply }) {
+  const age = formatPostAge(postDate(post));
+  const replies = Number(post.comments_count || 0);
+  const reactions = Number(post.likes_count || 0);
+  const initials = (post.author_name || 'J').split(/\s+/).map(p => p[0]).join('').slice(0, 2).toUpperCase();
+
+  return (
+    <div className="flex items-start gap-3 px-4 py-3 border-b border-slate-100 bg-white">
+      <div
+        className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 mt-0.5"
+        style={{ background: authorColor(post.author_id || post.author_name || '') }}
+      >
+        {initials}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-1.5 mb-0.5">
+          <span className="text-[13px] font-semibold text-slate-900 truncate">{post.author_name || 'Neighbor'}</span>
+          <span className="text-[12px] text-slate-400 shrink-0">· {age}</span>
+        </div>
+        <p className="text-[14px] leading-snug text-slate-900 line-clamp-3">{feedText(post)}</p>
+        <div className="flex items-center gap-4 mt-2">
+          <button
+            type="button"
+            onClick={() => onLike(post.id)}
+            className={`flex items-center gap-1 text-[12px] ${liked ? 'text-rose-500' : 'text-slate-400'}`}
+          >
+            <Heart className={`h-3.5 w-3.5 ${liked ? 'fill-rose-500' : ''}`} />
+            {reactions > 0 && <span>{reactions}</span>}
+          </button>
+          <button
+            type="button"
+            onClick={() => onReply(post)}
+            className="flex items-center gap-1 text-[12px] text-slate-400"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+            {replies > 0 && <span>{replies}</span>}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
