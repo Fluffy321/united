@@ -1526,11 +1526,12 @@ Goals:
   {
     id: 'business-admin-verification',
     category: 'Businesses & Map',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.HIGH,
     title: 'Admin Business Verification Workflow',
     description: 'Admin UI to grant/revoke verified_owner and verified Jewish-owned status on business listings. The Verified strip on the Businesses page and trust badges on business cards depend on these fields being set.',
     why: 'The DB columns verification_status and jewish_owned_status exist but there is no admin workflow to set them — the Verified section in the redesigned Businesses page will remain empty until this is built.',
+    shippedNote: 'Shipped 2026-06-22. New AdminBusinessVerification.jsx page (route /AdminBusinessVerification, linked from Settings → Admin Tools) lists businesses with pending verification/jewish-owned/kosher status and lets admins verify owner, verify Jewish-owned, mark kosher certified, or reject. Backed by SECURITY DEFINER RPC admin_verify_business(p_business_id, p_verification_status, p_jewish_owned_status, p_kosher_status, p_review_note) in migration 20260622000000_admin_business_verification.sql — validates is_admin(), enforces the real check-constraint enum values, and inserts a business_verified / business_rejected notification to the owner (verified_owner_id, falling back to submitted_by). Invalidates the business-directory-published query so the Map verified strip refreshes.',
     prompt: `You are implementing the Admin Business Verification workflow for JUnited.
 
 Context:

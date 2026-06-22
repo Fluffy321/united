@@ -22,6 +22,8 @@ const TYPE_CONFIG = {
   announcement:         { icon: Megaphone,     tone: 'bg-amber-50 text-amber-600',     label: 'Announcement' },
   community_removal:    { icon: Shield,        tone: 'bg-red-50 text-red-500',         label: 'Removed' },
   appeal_resolved:      { icon: Shield,        tone: 'bg-slate-50 text-slate-500',     label: 'Appeal' },
+  business_verified:    { icon: CheckCircle2,  tone: 'bg-emerald-50 text-emerald-600', label: 'Verified' },
+  business_rejected:    { icon: Shield,        tone: 'bg-slate-50 text-slate-500',     label: 'Business' },
   // Legacy / kept for backwards compat with old notification rows
   like:                 { icon: Heart,         tone: 'bg-red-50 text-red-500',         label: 'Liked' },
   friend_added:         { icon: UserRoundCheck, tone: 'bg-emerald-50 text-emerald-600', label: 'Friend' },
