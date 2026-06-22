@@ -6,7 +6,6 @@ import { appParams } from '@/lib/app-params';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 import { toast } from 'sonner';
 import ReportModal from '@/components/common/ReportModal';
-import PageHelp from '@/components/common/PageHelp';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { Activity, ArrowRight, CalendarDays, Car, Handshake, Heart, MapPin, MessageCircle, Plus, RefreshCw, Search, Sparkles, Store, Users } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
@@ -66,6 +65,12 @@ export default function Feed({ isActive = true }) {
   const [showNetworkBanner, setShowNetworkBanner] = useState(() => !storageService.getItem('junited_network_banner_v2_dismissed'));
   const [feedTab, setFeedTab] = useState('general');
   const canShowPreviewContent = !import.meta.env.PROD;
+
+  useEffect(() => {
+    if (!COMMUNITIES_ENABLED && feedTab !== 'general') {
+      setFeedTab('general');
+    }
+  }, [feedTab]);
 
   const openComposer = useCallback((options) => {
     composerRef.current?.open(options);
@@ -400,35 +405,36 @@ export default function Feed({ isActive = true }) {
         onClose={() => setShowLocationPicker(false)}
       />
 
-      {/* Feed / Communities tab switcher */}
-      <div className="sticky top-[56px] z-[50] bg-white/95 backdrop-blur-sm border-b border-slate-100 px-3 py-2">
-        <div className="mobile-page">
-          <div className="flex bg-[#E4E1D9] rounded-full p-[3px]">
-            <button
-              type="button"
-              onClick={() => setFeedTab('general')}
-              className={`flex-1 py-2 rounded-full text-[14px] transition-all ${
-                feedTab === 'general'
-                  ? 'bg-white text-slate-950 font-semibold shadow-[0_1px_4px_rgba(0,0,0,0.14),0_0_0_0.5px_rgba(0,0,0,0.06)]'
-                  : 'text-slate-400 font-normal'
-              }`}
-            >
-              Feed
-            </button>
-            <button
-              type="button"
-              onClick={() => setFeedTab('communities')}
-              className={`flex-1 py-2 rounded-full text-[14px] transition-all ${
-                feedTab === 'communities'
-                  ? 'bg-white text-slate-950 font-semibold shadow-[0_1px_4px_rgba(0,0,0,0.14),0_0_0_0.5px_rgba(0,0,0,0.06)]'
-                  : 'text-slate-400 font-normal'
-              }`}
-            >
-              Communities
-            </button>
+      {COMMUNITIES_ENABLED && (
+        <div className="sticky top-[56px] z-[50] bg-white/95 backdrop-blur-sm border-b border-slate-100 px-3 py-2">
+          <div className="mobile-page">
+            <div className="flex bg-[#E4E1D9] rounded-full p-[3px]">
+              <button
+                type="button"
+                onClick={() => setFeedTab('general')}
+                className={`flex-1 py-2 rounded-full text-[14px] transition-all ${
+                  feedTab === 'general'
+                    ? 'bg-white text-slate-950 font-semibold shadow-[0_1px_4px_rgba(0,0,0,0.14),0_0_0_0.5px_rgba(0,0,0,0.06)]'
+                    : 'text-slate-400 font-normal'
+                }`}
+              >
+                Feed
+              </button>
+              <button
+                type="button"
+                onClick={() => setFeedTab('communities')}
+                className={`flex-1 py-2 rounded-full text-[14px] transition-all ${
+                  feedTab === 'communities'
+                    ? 'bg-white text-slate-950 font-semibold shadow-[0_1px_4px_rgba(0,0,0,0.14),0_0_0_0.5px_rgba(0,0,0,0.06)]'
+                    : 'text-slate-400 font-normal'
+                }`}
+              >
+                Communities
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {feedTab === 'general' ? (
         <div className="mobile-page px-3 pt-3 mobile-safe-bottom space-y-2.5 bg-[#F0EEE8] min-h-screen">
@@ -668,15 +674,7 @@ function communityColor(id = '') {
 }
 
 function CommunitiesFeedView({ communityGroups, feedPosts, communitiesFetched, navigate, onLike, onReply, likedPostIds }) {
-  if (!communitiesFetched) {
-    return (
-      <div className="mobile-page mobile-safe-bottom px-3 pt-3 space-y-2.5 bg-[#F0EEE8] min-h-screen">
-        {[...Array(3)].map((_, i) => <SkeletonCard key={i} />)}
-      </div>
-    );
-  }
-
-  if (communityGroups.length === 0) {
+  if (!COMMUNITIES_ENABLED || (communitiesFetched && communityGroups.length === 0)) {
     return (
       <div className="mobile-page mobile-safe-bottom px-4 pt-12 text-center">
         <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-2xl">🏘️</div>
@@ -690,6 +688,14 @@ function CommunitiesFeedView({ communityGroups, feedPosts, communitiesFetched, n
         >
           Find communities <ArrowRight className="h-3.5 w-3.5" />
         </button>
+      </div>
+    );
+  }
+
+  if (!communitiesFetched) {
+    return (
+      <div className="mobile-page mobile-safe-bottom px-3 pt-3 space-y-2.5 bg-[#F0EEE8] min-h-screen">
+        {[...Array(3)].map((_, i) => <SkeletonCard key={i} />)}
       </div>
     );
   }
