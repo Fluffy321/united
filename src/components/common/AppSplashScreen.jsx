@@ -17,7 +17,7 @@ export default function AppSplashScreen({ exiting = false }) {
           <div className="absolute inset-3 rounded-[32px] bg-white/55 shadow-[0_22px_70px_rgba(15,23,42,0.12)]" />
           <div className="relative flex h-[92px] w-[92px] items-center justify-center rounded-[30px] bg-gradient-to-br from-white via-blue-50 to-blue-100 shadow-[0_22px_44px_rgba(15,94,215,0.18)] ring-1 ring-white/90">
             <div className="absolute inset-0 rounded-[30px] bg-[radial-gradient(circle_at_32%_24%,rgba(255,255,255,0.95),transparent_38%),linear-gradient(145deg,rgba(15,94,215,0.06),rgba(15,23,42,0.08))]" />
-            <img src="/brand-mark.svg" alt="" className="relative h-16 w-16 drop-shadow-sm" />
+            <img src="/brand-mark.png" alt="" className="relative h-16 w-16 drop-shadow-sm" />
           </div>
         </div>
 

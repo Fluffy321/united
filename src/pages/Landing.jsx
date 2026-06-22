@@ -153,7 +153,7 @@ export default function Landing() {
           <header className="flex items-center justify-between gap-3">
             <button type="button" onClick={() => navigate('/welcome')} className="flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-slate-950 shadow-lg shadow-slate-950/15">
-                <img src="/brand-mark.svg" alt="JUnited" className="h-7 w-7" />
+                <img src="/brand-mark.png" alt="JUnited" className="h-7 w-7" />
               </span>
               <span>
                 <span className="block text-lg font-black leading-none">JUnited</span>
