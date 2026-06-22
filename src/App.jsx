@@ -68,6 +68,8 @@ const AdminAnalyticsDashboard = lazy(() => import('@/pages/AdminAnalyticsDashboa
 const AdminModerationQueue    = lazy(() => import('@/pages/AdminModerationQueue'));
 const AdminSeedControl        = lazy(() => import('@/pages/AdminSeedControl'));
 const AdminBusinessImport     = lazy(() => import('@/pages/AdminBusinessImport'));
+const AdminRoadmap            = lazy(() => import('@/pages/AdminRoadmap'));
+const AdminiOSReadiness       = lazy(() => import('@/pages/AdminiOSReadiness'));
 const PostDetail              = lazy(() => import('@/pages/PostDetail'));
 const CommunityPage           = lazy(() => import('@/pages/CommunityPage'));
 const JoinByCommunityCode     = lazy(() => import('@/pages/JoinByCommunityCode'));
@@ -184,6 +186,8 @@ const AuthenticatedApp = () => {
               <Route path="/AdminBusinessImport" element={<PageTransition><LayoutWrapper currentPageName="AdminBusinessImport"><AdminBusinessImport /></LayoutWrapper></PageTransition>} />
               <Route path="/AdminAnalyticsDashboard" element={<PageTransition><AdminAnalyticsDashboard /></PageTransition>} />
               <Route path="/AdminFeedbackInbox" element={<PageTransition><AdminFeedbackInbox /></PageTransition>} />
+              <Route path="/AdminRoadmap" element={<PageTransition><AdminRoadmap /></PageTransition>} />
+              <Route path="/AdminiOSReadiness" element={<PageTransition><AdminiOSReadiness /></PageTransition>} />
             </Route>
 
             {/* Main app routes */}
