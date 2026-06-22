@@ -18,8 +18,8 @@ Read it fully before starting any task.
 
 ## ⚠️ ROADMAP MAINTENANCE — TWO-PART RULE — READ THIS
 
-**The roadmap file is `src/config/roadmap.js`. It is the single source of truth for JUnited feature planning.**
-**`src/pages/FutureFeatures.jsx` renders it automatically — only edit the config, never the page.**
+**The roadmap file is `internal/roadmap.js`. It is the single source of truth for JUnited feature planning.**
+**`src/pages/AdminRoadmap.jsx` renders it automatically — only edit the config, never the page.**
 
 ---
 
@@ -49,7 +49,7 @@ Checklist (run mentally before writing `status: STATUS.SHIPPED`):
 
 ### Part A — Status updates for work you completed
 
-You MUST update `src/config/roadmap.js` in the same task whenever you:
+You MUST update `internal/roadmap.js` in the same task whenever you:
 
 | What you did | What to update |
 |---|---|
@@ -63,7 +63,7 @@ You MUST update `src/config/roadmap.js` in the same task whenever you:
 
 ### Prompt field rule — REQUIRED for AI-implementable items
 
-The `prompt` field in each roadmap entry powers the **Copy Prompt** button in `/FutureFeatures`. When present, admins can one-click-copy it into Claude Code or Codex to implement the feature. When absent, the button silently disappears — the entry becomes actionable only by someone who writes the prompt from scratch.
+The `prompt` field in each roadmap entry powers the **Copy Prompt** button in `/AdminRoadmap`. When present, admins can one-click-copy it into Claude Code or Codex to implement the feature. When absent, the button silently disappears — the entry becomes actionable only by someone who writes the prompt from scratch.
 
 **Any new roadmap entry that an AI agent could reasonably implement MUST include a `prompt` field.** This applies equally whether the entry is `planned`, `deferred`, `exploring`, or `blocked`.
 
@@ -75,7 +75,7 @@ Context: <point to the exact files, migrations, and existing code that are relev
 
 Goals:
 1. <specific, ordered implementation steps>
-N. Update src/config/roadmap.js: change this item's status to 'shipped'.`
+N. Update internal/roadmap.js: change this item's status to 'shipped'.`
 ```
 
 **When a prompt MAY be omitted:**
@@ -83,7 +83,7 @@ N. Update src/config/roadmap.js: change this item's status to 'shipped'.`
 - No code needs to be written at all
 - If omitting, you MUST add an explanatory comment in the entry's `why` or `description` field
 
-**Do not add incomplete shells.** A new entry without a prompt is not a complete entry — it is a placeholder that will silently break the FutureFeatures UI. Write the prompt at the same time as the entry.
+**Do not add incomplete shells.** A new entry without a prompt is not a complete entry — it is a placeholder that will silently break the AdminRoadmap UI. Write the prompt at the same time as the entry.
 
 Run `npm run check-prompts` to verify all applicable entries have prompts.
 
@@ -99,7 +99,7 @@ Run `npm run check-prompts` to verify all applicable entries have prompts.
    - gaps or limitations discovered during an audit
    - follow-up features that would naturally build on what was just shipped
    - recommended next steps
-2. Open `src/config/roadmap.js` and for each candidate determine:
+2. Open `internal/roadmap.js` and for each candidate determine:
    - **Already tracked** → no action; note it in the report
    - **Belongs under an existing item** → merge or update the existing entry
    - **Deserves its own entry** → add it with `status: 'planned'` or `'deferred'` and a `why`
@@ -221,8 +221,11 @@ npm run build
 
 | Purpose | File |
 |---|---|
-| Product roadmap | `src/config/roadmap.js` |
-| Roadmap UI | `src/pages/FutureFeatures.jsx` |
+| Product roadmap | `internal/roadmap.js` |
+| Roadmap UI | `src/pages/AdminRoadmap.jsx` |
+| App Store readiness data | `internal/iosReadiness.js` |
+| App Store readiness UI | `src/pages/AdminiOSReadiness.jsx` |
+| Copy Prompt button | `src/components/common/CopyPromptButton.jsx` |
 | Auth context | `src/lib/AuthContext.jsx` |
 | Community types / tab logic | `src/lib/communityTypes.js` |
 | Supabase client + auth helpers | `src/api/supabaseClient.js` |
