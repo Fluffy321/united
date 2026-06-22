@@ -25,8 +25,8 @@ async function showNotification(title, body) {
 
   const options = {
     body,
-    icon: '/icon-192.svg',
-    badge: '/icon-192.svg',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
     data: { url: '/MitzvahCircle?tab=log' },
     tag: 'daily-mitzvah-tracker',
   };

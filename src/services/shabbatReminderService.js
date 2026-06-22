@@ -37,8 +37,8 @@ async function showNotification({ title, body, url = '/Feed' }) {
     if (registration?.showNotification) {
       await registration.showNotification(title, {
         body,
-        icon: '/icon-192.svg',
-        badge: '/icon-192.svg',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
         data: { url },
         tag: title,
       });
@@ -46,7 +46,7 @@ async function showNotification({ title, body, url = '/Feed' }) {
     }
   }
 
-  new Notification(title, { body, icon: '/icon-192.svg', data: { url } });
+  new Notification(title, { body, icon: '/icon-192.png', data: { url } });
   return true;
 }
 

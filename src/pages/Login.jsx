@@ -50,7 +50,7 @@ function BrandMark({ compact = false }) {
   return (
     <div className={`flex items-center gap-3 ${compact ? '' : 'mb-0'}`}>
       <div className={`${compact ? 'h-12 w-12 rounded-[18px]' : 'h-14 w-14 rounded-[20px]'} flex shrink-0 items-center justify-center bg-gradient-to-br from-blue-600 via-[#0F5ED7] to-slate-950 shadow-xl shadow-blue-950/20 ring-1 ring-white/70`}>
-        <img src="/brand-mark.svg" alt="JUnited" className={compact ? 'h-8 w-8' : 'h-9 w-9'} />
+        <img src="/brand-mark.png" alt="JUnited" className={compact ? 'h-8 w-8' : 'h-9 w-9'} />
       </div>
       <div>
         <p className={`${compact ? 'text-[18px]' : 'text-[21px]'} font-black leading-none text-slate-950`}>JUnited</p>
