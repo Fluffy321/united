@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   ArrowLeft,
+  CheckCircle2,
   CircleDashed,
   Filter,
   Flag,
@@ -9,7 +10,10 @@ import {
   Search,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { ROADMAP, STATUS } from '../../internal/roadmap.js';
+import { CATEGORY_ORDER, PRIORITY, ROADMAP, STATUS } from '../../internal/roadmap.js';
+import CopyPromptButton from '../components/common/CopyPromptButton.jsx';
+
+const INACTIVE_STATUSES = [STATUS.SHIPPED, STATUS.DROPPED];
 
 // ─── Release Plan ordering ────────────────────────────────────────────────────
 // Single source: internal/release-plan.md — updated 2026-06-22
@@ -101,6 +105,14 @@ const STATUS_META = {
   [STATUS.SHIPPED]:   { label: 'Shipped',   className: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
   [STATUS.DROPPED]:   { label: 'Dropped',   className: 'bg-slate-100 text-slate-500 border-slate-200' },
 };
+
+const PRIORITY_META = {
+  [PRIORITY.HIGH]:   'High priority',
+  [PRIORITY.MEDIUM]: 'Medium priority',
+  [PRIORITY.LOW]:    'Low priority',
+};
+
+const TRACKED_STATUSES = [STATUS.PLANNED, STATUS.EXPLORING, STATUS.BLOCKED, STATUS.DEFERRED, STATUS.SHIPPED, STATUS.DROPPED];
 
 const TRACK_COLORS = {
   rose:  { header: 'bg-rose-50 border-rose-200',   badge: 'bg-rose-100 text-rose-700', dot: 'bg-rose-500'  },
@@ -194,7 +206,14 @@ function RoadmapView() {
         .map((item) => item.category)
         .filter(Boolean)
     );
-    return [...found].sort();
+    return [...found].sort((a, b) => {
+      const ai = CATEGORY_ORDER.indexOf(a);
+      const bi = CATEGORY_ORDER.indexOf(b);
+      if (ai === -1 && bi === -1) return a.localeCompare(b);
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
   }, []);
 
   const visibleItems = useMemo(() => {
@@ -210,6 +229,24 @@ function RoadmapView() {
       return true;
     });
   }, [category, query]);
+
+  const groupedItems = useMemo(() => {
+    const groups = new Map();
+    visibleItems.forEach((item) => {
+      const cat = item.category || 'Uncategorized';
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat).push(item);
+    });
+    const ordered = [];
+    categories.forEach((cat) => {
+      if (groups.has(cat)) {
+        ordered.push([cat, groups.get(cat)]);
+        groups.delete(cat);
+      }
+    });
+    groups.forEach((items, cat) => ordered.push([cat, items]));
+    return ordered;
+  }, [visibleItems, categories]);
 
   return (
     <div className="space-y-4">
@@ -238,12 +275,42 @@ function RoadmapView() {
         </div>
       </div>
 
-      <div className="space-y-3">
-        {visibleItems.map((item) => <RoadmapCard key={item.id} item={item} />)}
+      <div className="space-y-6">
+        {groupedItems.map(([cat, items]) => (
+          <div key={cat} className="space-y-3">
+            <div className="flex items-end justify-between gap-3 px-1">
+              <h2 className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">{cat}</h2>
+              <Badge>{items.length}</Badge>
+            </div>
+            {items.map((item) => (
+              <article key={item.id} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <h3 className="min-w-0 text-lg font-black leading-tight text-slate-950">{item.title}</h3>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    <Badge className={STATUS_META[item.status]?.className}>{STATUS_META[item.status]?.label ?? item.status}</Badge>
+                    <Badge>{PRIORITY_META[item.priority] ?? item.priority}</Badge>
+                  </div>
+                </div>
+                {item.description && <p className="mt-3 text-[13px] font-semibold leading-5 text-slate-600">{item.description}</p>}
+                {item.why && <p className="mt-2 text-[12px] font-medium leading-5 text-slate-500">{item.why}</p>}
+                {item.shippedNote && (
+                  <div className="mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3 text-[12px] font-semibold leading-5 text-emerald-800">
+                    <span className="inline-flex items-center gap-1 font-black"><CheckCircle2 className="h-3.5 w-3.5" /> Shipped note:</span> {item.shippedNote}
+                  </div>
+                )}
+                {item.prompt && !INACTIVE_STATUSES.includes(item.status) && (
+                  <div className="mt-3">
+                    <CopyPromptButton text={item.prompt} />
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        ))}
         {visibleItems.length === 0 && (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
             <CircleDashed className="mx-auto h-8 w-8 text-slate-300" />
-            <p className="mt-3 text-sm font-black text-slate-700">No items match these filters.</p>
+            <p className="mt-3 text-sm font-black text-slate-700">No roadmap items match these filters.</p>
           </div>
         )}
       </div>

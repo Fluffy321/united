@@ -70,6 +70,7 @@ const AdminSeedControl        = lazy(() => import('@/pages/AdminSeedControl'));
 const AdminBusinessImport     = lazy(() => import('@/pages/AdminBusinessImport'));
 const AdminRoadmap            = lazy(() => import('@/pages/AdminRoadmap'));
 const AdminiOSReadiness       = lazy(() => import('@/pages/AdminiOSReadiness'));
+const AdminBusinessVerification = lazy(() => import('@/pages/AdminBusinessVerification'));
 const PostDetail              = lazy(() => import('@/pages/PostDetail'));
 const CommunityPage           = lazy(() => import('@/pages/CommunityPage'));
 const JoinByCommunityCode     = lazy(() => import('@/pages/JoinByCommunityCode'));
@@ -188,6 +189,7 @@ const AuthenticatedApp = () => {
               <Route path="/AdminFeedbackInbox" element={<PageTransition><AdminFeedbackInbox /></PageTransition>} />
               <Route path="/AdminRoadmap" element={<PageTransition><AdminRoadmap /></PageTransition>} />
               <Route path="/AdminiOSReadiness" element={<PageTransition><AdminiOSReadiness /></PageTransition>} />
+              <Route path="/AdminBusinessVerification" element={<PageTransition><AdminBusinessVerification /></PageTransition>} />
             </Route>
 
             {/* Main app routes */}

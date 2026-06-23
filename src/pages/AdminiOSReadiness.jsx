@@ -2,6 +2,22 @@ import React, { useMemo, useState } from 'react';
 import { ArrowLeft, CheckCircle2, ClipboardList, Search, Smartphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ALL_TASKS, IOS_READINESS_CATEGORIES, TASK_TYPE, computeReadiness } from '../../internal/iosReadiness.js';
+import CopyPromptButton from '../components/common/CopyPromptButton.jsx';
+
+// Tasks have no stored prompt, so compose one from the task's own fields for
+// AI / Mixed tasks an agent could actually pick up and execute.
+function buildTaskPrompt(task, categoryLabel) {
+  const lines = ['You are completing an App Store readiness task for JUnited.', '', `Task: ${task.title}`];
+  if (categoryLabel) lines.push(`Area: ${categoryLabel}`);
+  if (task.description) lines.push(`Context: ${task.description}`);
+  if (task.whyItMatters) lines.push(`Why it matters: ${task.whyItMatters}`);
+  if (task.completionCriteria) lines.push(`Done when: ${task.completionCriteria}`);
+  if (task.manualSteps?.length) {
+    lines.push('Steps:');
+    task.manualSteps.forEach((step, index) => lines.push(`${index + 1}. ${step}`));
+  }
+  return lines.join('\n');
+}
 
 const TYPE_META = {
   [TASK_TYPE.AI]: { label: 'AI', className: 'bg-blue-50 text-blue-700 border-blue-100' },
@@ -144,6 +160,11 @@ export default function AdminiOSReadiness() {
                         {task.manualSteps.map((step) => <li key={step}>{step}</li>)}
                       </ol>
                     </details>
+                  )}
+                  {(task.taskType === TASK_TYPE.AI || task.taskType === TASK_TYPE.MIXED) && (
+                    <div className="mt-3">
+                      <CopyPromptButton text={buildTaskPrompt(task, category.label)} />
+                    </div>
                   )}
                 </article>
               ))}
