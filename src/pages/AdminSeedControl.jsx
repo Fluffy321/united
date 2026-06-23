@@ -1,10 +1,36 @@
 import React, { useState } from 'react';
 import { dataService } from '@/services';
 import { Button } from '@/components/ui/button';
-import { Loader2, Play, CheckCircle2 } from 'lucide-react';
+import { Loader2, Play, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 
+// Production guard — seeding demo communities/posts directly against the
+// production database is a data-integrity risk. This tool is dev/staging only.
+// See internal/roadmap.js: 'admin-seed-hardening'.
+function ProductionBlocked() {
+  return (
+    <div className="min-h-screen bg-[#F8FAFB] p-6">
+      <div className="mx-auto max-w-lg rounded-2xl border border-red-200 bg-white p-6 text-center shadow-sm">
+        <ShieldAlert className="mx-auto h-10 w-10 text-red-500" />
+        <h1 className="mt-3 text-lg font-black text-slate-900">Not available in production</h1>
+        <p className="mt-2 text-sm text-slate-500">
+          Seed Control can create or clear demo communities and posts directly in the database.
+          It's disabled in production to protect real user data. Run it from a local or staging
+          environment instead.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminSeedControl() {
+  if (import.meta.env.PROD) return <ProductionBlocked />;
+  return <SeedControlTool />;
+}
+
+// Split into its own component so the PROD early-return above never sits
+// between AdminSeedControl's render and any hook calls (react-hooks/rules-of-hooks).
+function SeedControlTool() {
   const [volumeCommunities, setVolumeCommunities] = useState(200);
   const [volumePosts, setVolumePosts] = useState(3);
   const [volumeEvents, setVolumeEvents] = useState(2);

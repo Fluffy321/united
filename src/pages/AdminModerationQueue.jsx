@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { dataService } from '@/services';
+import { dataService, notificationsService } from '@/services';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -207,6 +207,23 @@ export default function AdminModerationQueue() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-claims'] }); toast.success('Claim rejected'); },
   });
 
+  const notifyBusinessOwner = async ({ userId, title, body, type }) => {
+    if (!userId) return;
+    try {
+      await notificationsService.create({
+        userId,
+        actorId: currentUser?.id,
+        type,
+        title,
+        body,
+        linkUrl: '/Map',
+      });
+    } catch (err) {
+      // Notification delivery is best-effort — never block the moderation action on it.
+      console.error('Failed to notify business owner', err);
+    }
+  };
+
   const approveBusinessSubmissionMutation = useMutation({
     mutationFn: async (business) => {
       if (!supabase) throw new Error('Supabase is not configured');
@@ -216,10 +233,16 @@ export default function AdminModerationQueue() {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, business) => {
       queryClient.invalidateQueries({ queryKey: ['admin-business-submissions'] });
       queryClient.invalidateQueries({ queryKey: ['business-directory-published'] });
       toast.success('Business published');
+      notifyBusinessOwner({
+        userId: business.submitted_by,
+        type: 'business_verification',
+        title: 'Your business listing is live',
+        body: `"${business.name}" was approved and is now published in the JUnited business directory.`,
+      });
     },
     onError: (error) => toast.error(error.message || 'Could not approve business'),
   });
@@ -233,9 +256,15 @@ export default function AdminModerationQueue() {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, business) => {
       queryClient.invalidateQueries({ queryKey: ['admin-business-submissions'] });
       toast.success('Business rejected');
+      notifyBusinessOwner({
+        userId: business.submitted_by,
+        type: 'business_verification',
+        title: 'Your business listing needs changes',
+        body: `"${business.name}" was not approved for the business directory. Reply to this notification or contact support for details.`,
+      });
     },
     onError: (error) => toast.error(error.message || 'Could not reject business'),
   });
@@ -251,10 +280,16 @@ export default function AdminModerationQueue() {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { claim }) => {
       queryClient.invalidateQueries({ queryKey: ['admin-business-claims'] });
       queryClient.invalidateQueries({ queryKey: ['business-directory-published'] });
       toast.success('Business claim approved');
+      notifyBusinessOwner({
+        userId: claim.requester_id,
+        type: 'business_verification',
+        title: 'Your business claim was approved',
+        body: `You're now the verified owner of "${claim.business_name || 'your business'}" on JUnited.`,
+      });
     },
     onError: (error) => toast.error(error.message || 'Could not approve claim'),
   });
@@ -268,9 +303,15 @@ export default function AdminModerationQueue() {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, claim) => {
       queryClient.invalidateQueries({ queryKey: ['admin-business-claims'] });
       toast.success('Business claim rejected');
+      notifyBusinessOwner({
+        userId: claim.requester_id,
+        type: 'business_verification',
+        title: 'Your business claim was not approved',
+        body: `Your ownership claim for "${claim.business_name || 'this business'}" was not approved. Contact support if you believe this is a mistake.`,
+      });
     },
     onError: (error) => toast.error(error.message || 'Could not reject claim'),
   });

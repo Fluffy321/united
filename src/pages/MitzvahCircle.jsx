@@ -34,6 +34,7 @@ import LiveNowRail from '@/components/common/LiveNowRail';
 import DestinationHeader from '@/components/layout/DestinationHeader';
 import CarpoolBoard from '@/components/mitzvah/CarpoolBoard';
 import ShulMinyanBoard from '@/components/mitzvah/ShulMinyanBoard';
+import MealTrainsSection from '@/components/mitzvah/MealTrainsSection';
 import { buildMitzvahLiveNowItems } from '@/lib/liveNow';
 
 const CATEGORIES = [
@@ -172,16 +173,6 @@ const DB_TO_UI_STATUS = {
   Claimed:    STATUSES.ACCEPTED,
   Completed:  STATUSES.VERIFIED,
   Cancelled:  STATUSES.CANCELLED,
-};
-
-const UI_TO_DB_STATUS = {
-  [STATUSES.OPEN]:      'open',
-  [STATUSES.OFFERED]:   'offered',
-  [STATUSES.ACCEPTED]:  'accepted',
-  [STATUSES.IN_PROG]:   'in_progress',
-  [STATUSES.PENDING]:   'pending_verify',
-  [STATUSES.VERIFIED]:  'verified',
-  [STATUSES.CANCELLED]: 'cancelled',
 };
 
 const REQUEST_EXPIRY_DAYS = 7;
@@ -1275,7 +1266,7 @@ export default function MitzvahCircle() {
   const { user: currentUser, isLoadingAuth } = useAuth();
   const queryClient = useQueryClient();
 
-  const VALID_VIEWS = ['browse', 'shuls', 'mine', 'completed'];
+  const VALID_VIEWS = ['browse', 'mealtrains', 'shuls', 'mine', 'completed'];
   const [activeView, setActiveView] = React.useState(() => {
     const tab = searchParams.get('tab');
     if (tab === 'open' || tab === 'carpool') return 'browse';
@@ -1672,6 +1663,7 @@ export default function MitzvahCircle() {
 
   const workflowTabs = [
     { id: 'browse', label: 'Browse Needs' },
+    { id: 'mealtrains', label: 'Meal Trains' },
     { id: 'shuls', label: 'Shuls & Minyan' },
     { id: 'mine', label: 'Mine' },
     { id: 'completed', label: 'Completed' },
@@ -1812,7 +1804,7 @@ export default function MitzvahCircle() {
           </div>
         </div>
 
-        {activeView !== 'shuls' && (
+        {activeView !== 'shuls' && activeView !== 'mealtrains' && (
           <LiveNowRail
             className="mb-3"
             title="Needs help now"
@@ -1836,7 +1828,7 @@ export default function MitzvahCircle() {
         )}
 
         {/* Search/filter bar */}
-        {activeView !== 'shuls' && (
+        {activeView !== 'shuls' && activeView !== 'mealtrains' && (
           <div className="surface-panel-soft mb-3 space-y-3 rounded-[24px] p-3">
             {activeView === 'browse' && (
               <div>
@@ -1908,6 +1900,10 @@ export default function MitzvahCircle() {
         <div key={`${activeView}-${activeCategory}`} className="motion-stagger space-y-3">
           {activeView === 'shuls' && (
             <ShulMinyanBoard currentUser={currentUser} />
+          )}
+
+          {activeView === 'mealtrains' && (
+            <MealTrainsSection currentUser={currentUser} />
           )}
 
           {activeView === 'browse' && (

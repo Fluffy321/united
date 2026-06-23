@@ -80,6 +80,9 @@ const SUPABASE_ENTITY_TABLES = {
   InviteLink: 'invite_links',
   // Activity digest — migration 20260519000000_community_last_visits.sql
   CommunityLastVisit: 'community_last_visits',
+  // Meal trains — migration 20260622223000_meal_trains.sql
+  MealTrainRequest: 'meal_train_requests',
+  MealSlot: 'meal_slots',
   // All other entities (Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.
@@ -953,8 +956,6 @@ const normalizeRealtimeEvent = (event = {}) => {
 //   SavedSearch       → saved_searches
 //   Organization      → organizations
 //   RideRequest       → ride_requests
-//   MealSlot          → meal_slots
-//   MealTrainRequest  → meal_train_requests
 //   MinyanAttendance  → minyan_attendances
 //   RefuahDavening    → refuah_davenings
 //   RefuahRequest     → refuah_requests
