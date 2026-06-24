@@ -1,10 +1,11 @@
-import React from 'react';
-import { CalendarDays, Flame, HandHeart, ScrollText } from 'lucide-react';
+import React, { useState } from 'react';
+import { CalendarDays, Clock, Flame, HandHeart, ScrollText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/api/supabaseClient';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
 import { getShabbatTimes } from '@/lib/hebrewDate';
 import { isResolvedLocationLabel } from '@/lib/shabbatLocation';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 const FIVE_TOWNS_TIME_ZONE = 'America/New_York';
 const DEFAULT_CONTENT = {
@@ -58,6 +59,7 @@ async function loadDailyContent(dateKey) {
 }
 
 export default function TodayFiveTownsCard({ onCalendarClick }) {
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   const today = new Date();
   const dateKey = getFiveTownsDateKey(today);
   const {
@@ -117,6 +119,7 @@ export default function TodayFiveTownsCard({ onCalendarClick }) {
         : 'Location not resolved';
 
   return (
+    <>
     <section className="mb-3 overflow-hidden rounded-[24px] border border-blue-100 bg-white shadow-sm">
       <div className="bg-gradient-to-r from-blue-700 via-indigo-600 to-slate-800 px-4 py-3 text-white">
         <div className="flex items-center justify-between gap-3">
@@ -126,10 +129,10 @@ export default function TodayFiveTownsCard({ onCalendarClick }) {
           </div>
           <button
             type="button"
-            onClick={onCalendarClick}
+            onClick={() => setScheduleOpen(true)}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/15 transition-transform active:scale-95"
-            aria-label="Open saved and recommended events"
-            title="Open saved and recommended events"
+            aria-label="Open today's schedule"
+            title="Open today's schedule"
           >
             <CalendarDays className="h-5 w-5" />
           </button>
@@ -191,6 +194,78 @@ export default function TodayFiveTownsCard({ onCalendarClick }) {
         )}
       </div>
     </section>
+
+    <Sheet open={scheduleOpen} onOpenChange={setScheduleOpen}>
+      <SheetContent side="bottom" className="max-h-[86svh] overflow-y-auto rounded-t-[28px] bg-white p-0">
+        <SheetHeader className="sticky top-0 z-10 border-b border-slate-100 bg-white px-4 pb-3 pt-4 text-left">
+          <SheetTitle className="flex items-center gap-2 text-[17px] font-black text-slate-950">
+            <CalendarDays className="h-5 w-5 text-blue-600" />
+            Today's Schedule
+          </SheetTitle>
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-slate-400">{formatShortDate(today)} · Five Towns</p>
+        </SheetHeader>
+
+        <div className="space-y-3 px-4 py-4 pb-10">
+          <ScheduleRow
+            icon={HandHeart}
+            label="Daily mitzvah"
+            title={content.mitzvah_text}
+            tone="rose"
+          />
+          <ScheduleRow
+            icon={ScrollText}
+            label="Torah thought"
+            title={content.torah_text}
+            tone="blue"
+          />
+          <div className="rounded-[22px] border border-amber-100 bg-amber-50 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-amber-600">
+                  <Flame className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-black uppercase tracking-wide text-amber-700">Shabbos times</p>
+                  <p className="mt-1 text-[13px] font-bold leading-5 text-slate-800">{locationNote}</p>
+                </div>
+              </div>
+            </div>
+            {hasNamedLocation && hasResolvedShabbosTimes ? (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <TimeBlock label={liveTimes?.candleTitle || 'Candles'} value={formatTime(liveTimes?.candleLighting, timesTimeZone)} />
+                <TimeBlock label={liveTimes?.havdalahTitle || 'Havdalah'} value={formatTime(liveTimes?.havdalah, timesTimeZone)} />
+              </div>
+            ) : (
+              <div className="mt-3 rounded-2xl bg-white px-3 py-3">
+                <p className="text-[12px] font-bold leading-5 text-slate-700">
+                  {hasNamedLocation ? 'Loading accurate candle lighting and Havdalah.' : 'Choose a location to show accurate candle lighting and Havdalah.'}
+                </p>
+              </div>
+            )}
+            {shouldAskLocation && (
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                <LocationChoiceButton label="Once" onClick={allowOnce} />
+                <LocationChoiceButton label="Always" onClick={allowAlways} />
+                <LocationChoiceButton label="Never" onClick={denyLocation} muted />
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setScheduleOpen(false);
+              onCalendarClick?.();
+            }}
+            className="motion-press flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 text-[13px] font-black text-white"
+          >
+            <Clock className="h-4 w-4" />
+            Open events schedule
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
+    </>
   );
 }
 
@@ -206,6 +281,26 @@ function DailyItem({ icon: Icon, label, text, tone }) {
         <p className="text-[11px] font-black uppercase tracking-wide">{label}</p>
       </div>
       <p className="mt-1.5 text-[13px] font-bold leading-snug text-slate-800">{text}</p>
+    </div>
+  );
+}
+
+function ScheduleRow({ icon: Icon, label, title, tone }) {
+  const toneClasses = tone === 'rose'
+    ? 'bg-rose-50 text-rose-700 border-rose-100'
+    : 'bg-blue-50 text-blue-700 border-blue-100';
+
+  return (
+    <div className={`rounded-[22px] border p-4 ${toneClasses}`}>
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/80">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-black uppercase tracking-wide">{label}</p>
+          <p className="mt-1 text-[14px] font-black leading-5 text-slate-900">{title}</p>
+        </div>
+      </div>
     </div>
   );
 }
