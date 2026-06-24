@@ -36,7 +36,7 @@ async function fetchMonthCalData(year, month) {
   try {
     const res = await fetch(
       `${HEBCAL_BASE}/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&ss=on&mf=on&omer=on` +
-      `&c=off&geo=geoname&geonameid=5116025&M=on&s=on&dafyomi=on&start=${start}&end=${end}`
+      `&c=off&geo=geoname&geonameid=5116025&M=on&s=on&start=${start}&end=${end}`
     );
     const data = await res.json();
     const map = {};
@@ -410,15 +410,22 @@ function JewishCalendarPageInner() {
         </div>
 
         {/* Month navigator */}
-        <div className="mt-3 flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-          <button onClick={prevMonth} className="rounded-xl p-1.5 active:bg-slate-100">
-            <ChevronLeft className="h-5 w-5 text-slate-600" />
+        <div className="mt-3 flex items-center justify-between rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 px-4 py-3 shadow-md">
+          <button onClick={prevMonth} className="rounded-xl p-1.5 active:opacity-70">
+            <ChevronLeft className="h-5 w-5 text-white/70" />
           </button>
-          <p className="text-[17px] font-black text-slate-950">
-            {MONTH_NAMES[viewMonth - 1]} {viewYear}
-          </p>
-          <button onClick={nextMonth} className="rounded-xl p-1.5 active:bg-slate-100">
-            <ChevronRight className="h-5 w-5 text-slate-600" />
+          <div className="text-center">
+            <p className="text-[18px] font-black text-white tracking-tight">
+              {MONTH_NAMES[viewMonth - 1]} {viewYear}
+            </p>
+            {hebData[todayKey]?.hdate && viewYear === today.getFullYear() && viewMonth === today.getMonth() + 1 && (
+              <p className="text-[10px] text-indigo-300 font-semibold mt-0.5">
+                {hebData[todayKey].hdate}
+              </p>
+            )}
+          </div>
+          <button onClick={nextMonth} className="rounded-xl p-1.5 active:opacity-70">
+            <ChevronRight className="h-5 w-5 text-white/70" />
           </button>
         </div>
       </div>
@@ -452,20 +459,22 @@ function JewishCalendarPageInner() {
       {/* ── Month view ── */}
       {viewMode === 'month' && (
         <div className="px-3">
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            {/* Day headers */}
-            <div className="grid grid-cols-7 border-b border-slate-100">
+          <div className="rounded-3xl overflow-hidden shadow-md border border-slate-200 bg-white">
+            {/* Day-of-week header with gradient */}
+            <div className="grid grid-cols-7 bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900">
               {DAYS_SHORT.map((d, i) => (
-                <div key={d} className={`py-2 text-center text-[9px] font-black uppercase tracking-wide ${i === 6 ? 'text-indigo-500' : i === 5 ? 'text-blue-500' : 'text-slate-400'}`}>
+                <div key={d} className={`py-2.5 text-center text-[9px] font-black uppercase tracking-widest ${
+                  i === 6 ? 'text-indigo-300' : i === 5 ? 'text-blue-300' : 'text-slate-400'
+                }`}>
                   {d}
                 </div>
               ))}
             </div>
 
             {/* Cells */}
-            <div className="grid grid-cols-7">
+            <div className="grid grid-cols-7 divide-x divide-y divide-slate-100">
               {cells.map((day, idx) => {
-                if (!day) return <div key={`e-${idx}`} className="min-h-[72px] border-b border-r border-slate-50" />;
+                if (!day) return <div key={`e-${idx}`} className="min-h-[82px] bg-slate-50/50" />;
 
                 const dk       = isoDate(viewYear, viewMonth, day);
                 const dow      = new Date(viewYear, viewMonth - 1, day).getDay();
@@ -477,107 +486,100 @@ function JewishCalendarPageInner() {
                 const dayEvts  = (filter === 'jewish') ? [] : (eventsByDay[dk] || []);
                 const dayMitz  = mitzvahsByDay[dk] || [];
                 const isRoshChodesh = holidays.some(h => h.category === 'roshchodesh');
-                const isMajor  = holidays.some(h => h.subcat === 'major') || isRoshChodesh;
-                const isMinor  = !isMajor && holidays.some(h => h.subcat === 'minor' || h.subcat === 'modern' || h.subcat === 'fast' || h.subcat === 'shabbat');
+                const isMajorHol = holidays.some(h => h.subcat === 'major');
+                const isMajor  = isMajorHol || isRoshChodesh;
+                const isMinor  = !isMajor && holidays.some(h => ['minor','modern','fast','shabbat'].includes(h.subcat));
                 const usHoliday = usHolidays[dk] || null;
                 const omer     = hInfo.omer || null;
-
-                const hebNum   = hInfo.hdate ? hInfo.hdate.split(' ')[0] : '';
-
-                const bg = isMajor
-                  ? 'bg-amber-50'
-                  : isMinor ? 'bg-yellow-50/60'
-                  : usHoliday && !isShab ? 'bg-blue-50/30'
-                  : isShab ? 'bg-indigo-50/30'
-                  : isFri  ? 'bg-indigo-50/10'
-                  : '';
-
                 const parsha   = hInfo.parsha || null;
-
-                // What label/chip to show on the cell (priority order)
-                const chipText = (() => {
-                  if (filter === 'going' || filter === 'communities') return null;
-                  if (holidays.length > 0) {
-                    const h = holidays[0];
-                    if (h.category === 'roshchodesh') return h.title; // e.g. "Rosh Chodesh Tamuz"
-                    return h.title;
-                  }
-                  if (usHoliday) return usHoliday.replace(' 🇺🇸', '');
-                  return null;
-                })();
-                const chipColor = isRoshChodesh ? 'bg-blue-100 text-blue-800'
-                  : isMajor ? 'bg-amber-100 text-amber-800'
-                  : isMinor ? 'bg-yellow-100 text-yellow-700'
-                  : usHoliday ? 'bg-blue-50 text-blue-700'
-                  : '';
-
-                // Parsha shown below chip on Shabbat/Friday (abbreviated)
                 const parshaShort = parsha
                   ? parsha.replace('Parashat ', '').replace('Parasha ', '')
                   : null;
+
+                // Cell background
+                const bg = isMajorHol ? 'bg-gradient-to-b from-amber-50 to-orange-50'
+                  : isRoshChodesh ? 'bg-gradient-to-b from-blue-50 to-indigo-50/50'
+                  : isMinor ? 'bg-yellow-50/50'
+                  : isShab ? 'bg-gradient-to-b from-indigo-50/60 to-purple-50/30'
+                  : isFri  ? 'bg-indigo-50/20'
+                  : 'bg-white';
+
+                // Top label: holiday name or parsha (Shabbat) or US holiday
+                const topLabel = (() => {
+                  if (filter === 'going' || filter === 'communities') return null;
+                  if (isRoshChodesh) {
+                    const rc = holidays.find(h => h.category === 'roshchodesh');
+                    return { text: rc.title.replace('Rosh Chodesh ', '🌙 '), color: 'text-blue-700 font-black' };
+                  }
+                  if (isMajorHol) {
+                    return { text: holidays.find(h => h.subcat === 'major').title, color: 'text-amber-800 font-black' };
+                  }
+                  if (isMinor) {
+                    return { text: holidays[0].title, color: 'text-yellow-700 font-bold' };
+                  }
+                  if (isShab && parshaShort) {
+                    return { text: parshaShort, color: 'text-indigo-700 font-bold' };
+                  }
+                  if (usHoliday) {
+                    return { text: usHoliday.replace(' 🇺🇸',''), color: 'text-sky-700 font-bold' };
+                  }
+                  return null;
+                })();
 
                 return (
                   <button
                     key={dk}
                     onClick={() => openDay(dk)}
-                    className={`relative flex min-h-[72px] flex-col items-center border-b border-r border-slate-100 px-0.5 pt-1.5 pb-1 transition-colors active:bg-slate-100 ${bg}`}
+                    className={`relative flex min-h-[82px] flex-col px-1 pt-1.5 pb-1 transition-colors active:brightness-95 ${bg}`}
                   >
-                    {/* Civil day */}
-                    <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-bold ${
-                      isToday  ? 'bg-blue-600 text-white'
+                    {/* Civil day number */}
+                    <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-black self-center ${
+                      isToday  ? 'bg-blue-600 text-white shadow-md'
                       : isShab ? 'text-indigo-600'
                       : isFri  ? 'text-blue-500'
-                      : isMajor ? 'text-amber-700'
+                      : isMajorHol ? 'text-amber-800'
                       : 'text-slate-900'
                     }`}>
                       {day}
                     </div>
 
-                    {/* Hebrew day number */}
-                    {hebNum && (
-                      <span className={`text-[9px] font-semibold leading-none ${isMajor ? 'text-amber-600' : isRoshChodesh ? 'text-blue-500' : isShab ? 'text-indigo-400' : 'text-slate-400'}`}>
-                        {hebNum}
+                    {/* Hebrew date */}
+                    {hInfo.hdate && (
+                      <span className={`text-center text-[8px] font-semibold leading-none mt-0.5 self-center ${
+                        isMajor ? 'text-amber-500' : isRoshChodesh ? 'text-blue-400' : isShab ? 'text-indigo-400' : 'text-slate-300'
+                      }`}>
+                        {hInfo.hdate.split(' ')[0]}
                       </span>
                     )}
 
-                    {/* Shabbat label (only when no holiday chip) */}
-                    {isShab && !chipText && !parshaShort && (
-                      <span className="mt-0.5 rounded px-1 py-0 text-[8px] font-bold leading-tight bg-indigo-100 text-indigo-700">
-                        Shabbat
+                    {/* Top label: holiday / parsha / US */}
+                    {topLabel && (
+                      <span className={`mt-1 w-full text-center text-[7.5px] leading-tight ${topLabel.color} line-clamp-2 break-words`}>
+                        {topLabel.text}
                       </span>
                     )}
 
-                    {/* Holiday / US holiday chip */}
-                    {chipText && (
-                      <span className={`mt-0.5 max-w-full truncate rounded px-1 py-0 text-[8px] font-bold leading-tight ${chipColor}`}>
-                        {chipText}
-                      </span>
-                    )}
-
-                    {/* Parsha name on Shabbat (and Friday for Erev) */}
-                    {parshaShort && (isShab || isFri) && (
-                      <span className="mt-0.5 max-w-full truncate text-[8px] font-bold leading-tight text-indigo-500">
+                    {/* Erev Shabbos parsha on Friday */}
+                    {isFri && parshaShort && !topLabel && (
+                      <span className="mt-1 w-full text-center text-[7.5px] leading-tight text-indigo-400 font-semibold line-clamp-2">
                         {parshaShort}
                       </span>
                     )}
 
-                    {/* Omer count (tiny, only when no other chip shown) */}
-                    {omer && !chipText && !parshaShort && (
-                      <span className="mt-0.5 text-[8px] font-semibold leading-none text-indigo-400">
-                        {omer.n}°
+                    {/* Omer */}
+                    {omer && !topLabel && !isFri && (
+                      <span className="mt-1 text-center text-[7.5px] font-semibold leading-none text-indigo-400 self-center">
+                        {omer.n}° Omer
                       </span>
                     )}
 
-                    {/* Event dots */}
-                    <div className="mt-auto mb-0.5 flex flex-wrap justify-center gap-0.5 max-w-full">
-                      {dayEvts.slice(0, 3).map((e, i) => {
-                        const meta = CATEGORY_META[e.category] || CATEGORY_META.general;
-                        return (
-                          <span key={i} className="text-[9px] leading-none">{meta.emoji}</span>
-                        );
-                      })}
+                    {/* Bottom: event emojis + mitzvah dot */}
+                    <div className="mt-auto flex flex-wrap justify-center gap-0.5 pb-0.5">
+                      {dayEvts.slice(0, 3).map((e, i) => (
+                        <span key={i} className="text-[9px] leading-none">{(CATEGORY_META[e.category] || CATEGORY_META.general).emoji}</span>
+                      ))}
                       {dayMitz.length > 0 && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-rose-400 self-center" />
                       )}
                     </div>
                   </button>
@@ -587,15 +589,15 @@ function JewishCalendarPageInner() {
           </div>
 
           {/* Legend */}
-          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 px-1">
-            <LegendDot className="bg-amber-100 border border-amber-200 h-3 w-3 rounded-sm" label="Yom Tov" />
-            <LegendDot className="bg-blue-100 border border-blue-200 h-3 w-3 rounded-sm" label="Rosh Chodesh" />
-            <LegendDot className="bg-yellow-100 border border-yellow-200 h-3 w-3 rounded-sm" label="Minor holiday" />
-            <LegendDot className="bg-indigo-50 border border-indigo-200 h-3 w-3 rounded-sm" label="Shabbos" />
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 px-1">
+            <LegendDot className="bg-gradient-to-b from-amber-50 to-orange-50 border border-amber-200 h-3 w-3 rounded-sm" label="Yom Tov" />
+            <LegendDot className="bg-gradient-to-b from-blue-50 to-indigo-50 border border-blue-200 h-3 w-3 rounded-sm" label="Rosh Chodesh" />
+            <LegendDot className="bg-yellow-50 border border-yellow-200 h-3 w-3 rounded-sm" label="Minor holiday" />
+            <LegendDot className="bg-gradient-to-b from-indigo-50 to-purple-50 border border-indigo-200 h-3 w-3 rounded-sm" label="Shabbos" />
             <span className="flex items-center gap-1 text-[10px] font-semibold text-slate-400">
               <span className="text-[11px]">📖</span> Event
             </span>
-            <LegendDot className="bg-rose-500 h-2 w-2 rounded-full" label="Mitzvah" />
+            <LegendDot className="bg-rose-400 h-2 w-2 rounded-full" label="Mitzvah" />
           </div>
 
           {/* This month's events mini-list */}
