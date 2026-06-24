@@ -17,6 +17,8 @@ import useFeedData from '@/components/feed/useFeedData';
 import FeedFilters, { FeedFilterTrigger } from '@/components/feed/FeedFilters';
 import FeedComposer from '@/components/feed/FeedComposer';
 import TodayFiveTownsCard from '@/components/feed/TodayFiveTownsCard';
+import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
+import CommentsSheet from '@/components/feed/CommentsSheet';
 
 import { DEMO_POSTS } from '@/lib/feed/demoPosts';
 import { buildFeedSections } from '@/lib/feed/feedSections';
@@ -45,7 +47,8 @@ export default function Feed({ isActive = true }) {
   const [blockedIds, setBlockedIds] = useState([]);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const composerRef = useRef(null);
-  // CommentsSheet is now handled inside each UnifiedPostCard via createPortal
+  const [showEventsSheet, setShowEventsSheet] = useState(false);
+  const [replyPost, setReplyPost] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   useEffect(() => {
@@ -255,6 +258,25 @@ export default function Feed({ isActive = true }) {
     recordInterest(p);
   }, [recordInterest]);
 
+  useEffect(() => {
+    const postId = searchParams.get('postId');
+    const shouldOpenReply = searchParams.get('reply') === '1' || searchParams.get('comments') === '1';
+    if (!postId || !shouldOpenReply || replyPost?.id === postId) return;
+
+    const existingPost = postsRef.current.find(p => p.id === postId);
+    if (existingPost) {
+      setReplyPost(existingPost);
+      return;
+    }
+
+    if (!appParams.hasBackendConfig) return;
+    dataService.entities.UnifiedPost.get(postId)
+      .then(post => {
+        if (post) setReplyPost(post);
+      })
+      .catch(() => toast.error('Could not open that post'));
+  }, [searchParams, replyPost?.id, appParams.hasBackendConfig]);
+
   const handleDelete = useCallback((id) => deleteMutation.mutate(id), [deleteMutation.mutate]);
 
   const handleNetworkSelect = useCallback(async (net) => {
@@ -317,29 +339,8 @@ export default function Feed({ isActive = true }) {
 
   const handleCardReply = useCallback((post) => {
     recordInterest(post);
-    const intent = getCardIntent(post);
-    if (intent.label === 'Help needed') {
-      navigate('/MitzvahCircle');
-      return;
-    }
-    if (intent.label === 'Event') {
-      openComposer({
-        type: 'event',
-        subtype: 'reply',
-        initialBody: `I want to join: ${feedText(post)}`,
-      });
-      return;
-    }
-    if (intent.label === 'Local listing') {
-      navigate('/Marketplace');
-      return;
-    }
-    openComposer({
-      type: 'feed',
-      subtype: 'reply',
-      initialBody: `Replying to ${post.author_name || 'a neighbor'} about "${feedText(post)}"...`,
-    });
-  }, [navigate, openComposer, recordInterest]);
+    setReplyPost(post);
+  }, [recordInterest]);
 
   const handleCardOpen = useCallback((post) => {
     recordInterest(post);
@@ -483,7 +484,7 @@ export default function Feed({ isActive = true }) {
 
           {appParams.hasBackendConfig && (
             <WidgetBoundary>
-              <TodayFiveTownsCard />
+              <TodayFiveTownsCard onCalendarClick={() => setShowEventsSheet(true)} />
             </WidgetBoundary>
           )}
 
@@ -508,7 +509,7 @@ export default function Feed({ isActive = true }) {
               onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
               onOpenMap={() => navigate('/Map')}
               onOpenMitzvah={() => navigate('/MitzvahCircle')}
-              onOpenEvents={() => openComposer({ type: 'event', subtype: 'local_event', initialBody: '' })}
+              onOpenEvents={() => setShowEventsSheet(true)}
               onOpenMarketplace={() => navigate('/Marketplace')}
             />
           </WidgetBoundary>
@@ -588,6 +589,33 @@ export default function Feed({ isActive = true }) {
         contentId={reportTarget.id}
         contentType={reportTarget.type}
         currentUser={currentUser}
+      />
+
+      <UpcomingEventsSheet
+        open={showEventsSheet}
+        onOpenChange={setShowEventsSheet}
+        currentUser={currentUser}
+        joinedCommunityIds={COMMUNITIES_ENABLED ? communityGroups.map(c => c.id) : []}
+        onOpenEvent={(event) => setReplyPost(event)}
+      />
+
+      <CommentsSheet
+        open={Boolean(replyPost)}
+        onOpenChange={(open) => {
+          if (open) return;
+          setReplyPost(null);
+          if (searchParams.get('postId') || searchParams.get('reply') || searchParams.get('comments')) {
+            const next = new URLSearchParams(searchParams);
+            next.delete('postId');
+            next.delete('reply');
+            next.delete('comments');
+            setSearchParams(next, { replace: true });
+          }
+        }}
+        post={replyPost}
+        currentUser={currentUser}
+        blockedIds={blockedIds}
+        onCommentAdded={() => queryClient.invalidateQueries({ queryKey: ['unified-posts'] })}
       />
     </div>
   );

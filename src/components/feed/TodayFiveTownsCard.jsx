@@ -57,7 +57,7 @@ async function loadDailyContent(dateKey) {
   return data;
 }
 
-export default function TodayFiveTownsCard() {
+export default function TodayFiveTownsCard({ onCalendarClick }) {
   const today = new Date();
   const dateKey = getFiveTownsDateKey(today);
   const {
@@ -124,9 +124,15 @@ export default function TodayFiveTownsCard() {
             <p className="text-[10px] font-black uppercase tracking-wide text-white/70">{formatShortDate(today)}</p>
             <h2 className="mt-0.5 text-[18px] font-black leading-tight">Today in the Five Towns</h2>
           </div>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/15">
+          <button
+            type="button"
+            onClick={onCalendarClick}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/15 transition-transform active:scale-95"
+            aria-label="Open saved and recommended events"
+            title="Open saved and recommended events"
+          >
             <CalendarDays className="h-5 w-5" />
-          </div>
+          </button>
         </div>
       </div>
 

@@ -1,43 +1,65 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Calendar, Clock, MapPin, Users, Search, X } from 'lucide-react';
+import { Bookmark, Calendar, Clock, MapPin, MessageCircle, Users, Search, X } from 'lucide-react';
 import { dataService } from '@/services';
 import { format, isPast, parseISO } from 'date-fns';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 
-export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, joinedCommunityIds = [] }) {
+export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, joinedCommunityIds = [], onOpenEvent }) {
   const [events, setEvents] = useState([]);
+  const [savedEventIds, setSavedEventIds] = useState([]);
+  const [rsvpEventIds, setRsvpEventIds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all'); // 'all' | 'mine'
+  const [filter, setFilter] = useState('for_you'); // 'for_you' | 'mine' | 'saved' | 'all'
 
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    dataService.entities.UnifiedPost.filter({ type: 'event' }, '-event_date', 60)
-      .then(all => {
+    Promise.all([
+      dataService.entities.UnifiedPost.filter({ type: 'event' }, '-event_date', 60),
+      currentUser?.id ? dataService.entities.RSVP.filter({ user_id: currentUser.id }, '-created_date', 100) : Promise.resolve([]),
+      currentUser?.id ? dataService.entities.Bookmark.filter({ user_id: currentUser.id }, '-created_date', 100) : Promise.resolve([]),
+    ])
+      .then(([all, rsvps, bookmarks]) => {
+        const rsvpIds = rsvps.map(r => r.post_id).filter(Boolean);
+        const savedIds = bookmarks.map(b => b.post_id).filter(Boolean);
+        setRsvpEventIds(rsvpIds);
+        setSavedEventIds(savedIds);
         const upcoming = all.filter(e => {
           if (!e.event_date) return false;
           try { return !isPast(parseISO(e.event_date)); } catch { return false; }
         });
-        // Prioritize community events the user has joined when Communities is enabled.
         const sorted = [...upcoming].sort((a, b) => {
-          if (!COMMUNITIES_ENABLED) return new Date(a.event_date) - new Date(b.event_date);
-          const aInCommunity = joinedCommunityIds.includes(a.community_id);
-          const bInCommunity = joinedCommunityIds.includes(b.community_id);
-          if (aInCommunity && !bInCommunity) return -1;
-          if (!aInCommunity && bInCommunity) return 1;
+          const aRelevant = rsvpIds.includes(a.id) || savedIds.includes(a.id) || (COMMUNITIES_ENABLED && joinedCommunityIds.includes(a.community_id));
+          const bRelevant = rsvpIds.includes(b.id) || savedIds.includes(b.id) || (COMMUNITIES_ENABLED && joinedCommunityIds.includes(b.community_id));
+          if (aRelevant && !bRelevant) return -1;
+          if (!aRelevant && bRelevant) return 1;
           return new Date(a.event_date) - new Date(b.event_date);
         });
         setEvents(sorted.slice(0, 30));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [open, joinedCommunityIds.join(',')]);
+  }, [open, currentUser?.id, joinedCommunityIds.join(',')]);
 
   const filtered = useMemo(() => {
     let list = events;
-    if (COMMUNITIES_ENABLED && filter === 'mine') list = list.filter(e => joinedCommunityIds.includes(e.community_id));
+    if (filter === 'for_you') {
+      list = list.filter(e =>
+        rsvpEventIds.includes(e.id) ||
+        savedEventIds.includes(e.id) ||
+        (COMMUNITIES_ENABLED && joinedCommunityIds.includes(e.community_id))
+      );
+      if (list.length === 0) list = events;
+    }
+    if (filter === 'mine') {
+      list = list.filter(e =>
+        rsvpEventIds.includes(e.id) ||
+        (COMMUNITIES_ENABLED && joinedCommunityIds.includes(e.community_id))
+      );
+    }
+    if (filter === 'saved') list = list.filter(e => savedEventIds.includes(e.id));
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(e =>
@@ -48,7 +70,7 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
       );
     }
     return list;
-  }, [events, search, filter, joinedCommunityIds]);
+  }, [events, search, filter, joinedCommunityIds, rsvpEventIds, savedEventIds]);
 
   const groupByMonth = () => {
     const groups = {};
@@ -86,9 +108,14 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
             )}
           </div>
           {/* Filter pills */}
-          {COMMUNITIES_ENABLED && joinedCommunityIds.length > 0 && (
+          {(joinedCommunityIds.length > 0 || savedEventIds.length > 0 || rsvpEventIds.length > 0) && (
             <div className="flex gap-2 mt-2">
-              {[{v:'all',l:'All Events'},{v:'mine',l:'My Communities'}].map(({v,l}) => (
+              {[
+                {v:'for_you',l:'For You'},
+                {v:'mine',l:'Joined'},
+                {v:'saved',l:'Saved'},
+                {v:'all',l:'All'},
+              ].map(({v,l}) => (
                 <button key={v} onClick={() => setFilter(v)}
                   className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
                     filter === v ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200'
@@ -121,14 +148,21 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
               <div className="space-y-2">
                 {monthEvents.map(event => {
                   const inJoined = joinedCommunityIds.includes(event.community_id);
+                  const isSaved = savedEventIds.includes(event.id);
+                  const isRsvped = rsvpEventIds.includes(event.id);
                   const dayNum = format(parseISO(event.event_date), 'd');
                   const dayName = format(parseISO(event.event_date), 'EEE');
 
                   return (
-                    <div
+                    <button
                       key={event.id}
-                      className={`flex items-start gap-3 p-3 rounded-2xl border transition-all ${
-                        inJoined
+                      type="button"
+                      onClick={() => {
+                        onOpenEvent?.(event);
+                        onOpenChange(false);
+                      }}
+                      className={`flex w-full items-start gap-3 p-3 rounded-2xl border text-left transition-all active:scale-[0.99] ${
+                        inJoined || isSaved || isRsvped
                           ? 'bg-blue-50/60 border-blue-200'
                           : 'bg-white border-slate-200'
                       }`}
@@ -160,12 +194,25 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
                               <Users className="w-3 h-3" />{event.community_name}
                             </span>
                           )}
+                          {isRsvped && (
+                            <span className="flex items-center gap-1 text-[11px] text-green-600 font-semibold">
+                              <Users className="w-3 h-3" />Joined
+                            </span>
+                          )}
+                          {isSaved && (
+                            <span className="flex items-center gap-1 text-[11px] text-blue-600 font-semibold">
+                              <Bookmark className="w-3 h-3 fill-current" />Saved
+                            </span>
+                          )}
                         </div>
                         {event.body && event.title && (
                           <p className="text-[12px] text-slate-500 mt-0.5 line-clamp-2">{event.body}</p>
                         )}
+                        <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600">
+                          <MessageCircle className="w-3 h-3" /> Open replies
+                        </p>
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
