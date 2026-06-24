@@ -54,6 +54,7 @@ export default function CalendarDaySheet({
   events = [],
   mitzvahs = [],
   omer = null,       // { n, title, hebrew }
+  dafYomi = null,    // "Daf string e.g. Bava Kamma 42"
   usHoliday = null,  // "Independence Day 🇺🇸"
   onEventTap,
   onCreateEvent,
@@ -168,6 +169,17 @@ export default function CalendarDaySheet({
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Daf Yomi */}
+          {dafYomi && (
+            <div className="rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3">
+              <span className="text-[20px]">📚</span>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wide text-amber-600">Daf Yomi</p>
+                <p className="text-[14px] font-bold text-slate-900">{dafYomi}</p>
+              </div>
             </div>
           )}
 

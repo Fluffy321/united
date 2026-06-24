@@ -35,15 +35,15 @@ async function fetchMonthCalData(year, month) {
 
   try {
     const res = await fetch(
-      `${HEBCAL_BASE}/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&ss=on&mf=on&omer=on` +
-      `&c=off&geo=geoname&geonameid=5116025&M=on&s=on&d=on&start=${start}&end=${end}`
+      `${HEBCAL_BASE}/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&ss=on&mf=on&omer=on&F=on` +
+      `&c=off&geo=geoname&geonameid=5116025&M=on&s=on&d=on&dafyomi=on&start=${start}&end=${end}`
     );
     const data = await res.json();
     const map = {};
     (data.items || []).forEach(item => {
       const dk = item.date?.slice(0, 10);
       if (!dk) return;
-      if (!map[dk]) map[dk] = { hdate: '', holidays: [], parsha: null, omer: null, specialShabbat: null };
+      if (!map[dk]) map[dk] = { hdate: '', holidays: [], parsha: null, omer: null, specialShabbat: null, dafYomi: null };
       // Prefer the date-level hdate from the API envelope; fall back to item hdate
       if (item.hdate && !map[dk].hdate) map[dk].hdate = item.hdate;
       if (item.category === 'holiday' || item.category === 'roshchodesh') {
@@ -57,6 +57,7 @@ async function fetchMonthCalData(year, month) {
         if (item.subcat === 'shabbat') map[dk].specialShabbat = item.title;
       }
       if (item.category === 'parashat') map[dk].parsha = item.title;
+      if (item.category === 'dafyomi') map[dk].dafYomi = item.title;
       if (item.category === 'omer') {
         // e.g. "32nd day of the Omer"  →  store ordinal number for display
         const match = item.title.match(/^(\d+)/);
@@ -365,6 +366,7 @@ function JewishCalendarPageInner() {
       mitzvahs:   mitzvahsByDay[selectedDay] || [],
       hebrewDate: hInfo,
       omer:       hInfo.omer || null,
+      dafYomi:    hInfo.dafYomi || null,
       usHoliday:  usHolidays[selectedDay] || null,
     };
   }, [selectedDay, eventsByDay, mitzvahsByDay, hebData, usHolidays]);
@@ -484,7 +486,9 @@ function JewishCalendarPageInner() {
                   : isFri  ? 'bg-indigo-50/10'
                   : '';
 
-                // What label to show on the cell (priority order)
+                const parsha   = hInfo.parsha || null;
+
+                // What label/chip to show on the cell (priority order)
                 const chipText = (() => {
                   if (filter === 'going' || filter === 'communities') return null;
                   if (holidays.length > 0) {
@@ -500,6 +504,11 @@ function JewishCalendarPageInner() {
                   : isMinor ? 'bg-yellow-100 text-yellow-700'
                   : usHoliday ? 'bg-blue-50 text-blue-700'
                   : '';
+
+                // Parsha shown below chip on Shabbat/Friday (abbreviated)
+                const parshaShort = parsha
+                  ? parsha.replace('Parashat ', '').replace('Parasha ', '')
+                  : null;
 
                 return (
                   <button
@@ -520,8 +529,15 @@ function JewishCalendarPageInner() {
 
                     {/* Hebrew day number */}
                     {hebNum && (
-                      <span className={`text-[9px] font-semibold leading-none ${isMajor ? 'text-amber-600' : isRoshChodesh ? 'text-blue-500' : 'text-slate-400'}`}>
+                      <span className={`text-[9px] font-semibold leading-none ${isMajor ? 'text-amber-600' : isRoshChodesh ? 'text-blue-500' : isShab ? 'text-indigo-400' : 'text-slate-400'}`}>
                         {hebNum}
+                      </span>
+                    )}
+
+                    {/* Shabbat label (only when no holiday chip) */}
+                    {isShab && !chipText && !parshaShort && (
+                      <span className="mt-0.5 rounded px-1 py-0 text-[8px] font-bold leading-tight bg-indigo-100 text-indigo-700">
+                        Shabbat
                       </span>
                     )}
 
@@ -532,8 +548,15 @@ function JewishCalendarPageInner() {
                       </span>
                     )}
 
+                    {/* Parsha name on Shabbat (and Friday for Erev) */}
+                    {parshaShort && (isShab || isFri) && (
+                      <span className="mt-0.5 max-w-full truncate text-[8px] font-bold leading-tight text-indigo-500">
+                        {parshaShort}
+                      </span>
+                    )}
+
                     {/* Omer count (tiny, only when no other chip shown) */}
-                    {omer && !chipText && (
+                    {omer && !chipText && !parshaShort && (
                       <span className="mt-0.5 text-[8px] font-semibold leading-none text-indigo-400">
                         {omer.n}°
                       </span>
@@ -656,6 +679,7 @@ function JewishCalendarPageInner() {
           events={selectedDayData.events}
           mitzvahs={selectedDayData.mitzvahs}
           omer={selectedDayData.omer}
+          dafYomi={selectedDayData.dafYomi}
           usHoliday={selectedDayData.usHoliday}
           onEventTap={(e) => {
             setShowDaySheet(false);
