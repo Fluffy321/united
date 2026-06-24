@@ -29,12 +29,32 @@ const CATEGORY_META = {
 const DEFAULT_LAT = 40.6282;
 const DEFAULT_LNG = -73.7349;
 
+// Holiday subcat → badge label
+const SUBCAT_BADGE = {
+  major:  null,
+  minor:  'Minor holiday',
+  modern: 'Israeli holiday',
+  fast:   'Fast day',
+  shabbat:'Special Shabbat',
+};
+
+const HOLIDAY_ICON = {
+  major:  '✡️',
+  minor:  '🕎',
+  modern: '🇮🇱',
+  fast:   '⚠️',
+  shabbat:'📜',
+  roshchodesh: '🌙',
+};
+
 export default function CalendarDaySheet({
   open, onOpenChange,
   dateKey,       // "YYYY-MM-DD"
-  hebrewDate,    // { hdate, holidays, parsha }
+  hebrewDate,    // { hdate, holidays, parsha, omer, specialShabbat }
   events = [],
   mitzvahs = [],
+  omer = null,       // { n, title, hebrew }
+  usHoliday = null,  // "Independence Day 🇺🇸"
   onEventTap,
   onCreateEvent,
 }) {
@@ -42,7 +62,7 @@ export default function CalendarDaySheet({
   const [zmanim, setZmanim]         = useState(null);
   const [shabbatTimes, setShabbatTimes] = useState(null);
   const [zmanimExpanded, setZmanimExpanded] = useState(false);
-  const [loading, setLoading]       = useState(false);
+  const [_loading, setLoading]       = useState(false);
 
   const lat = shabbatLocation?.lat || DEFAULT_LAT;
   const lng = shabbatLocation?.lng || DEFAULT_LNG;
@@ -91,36 +111,74 @@ export default function CalendarDaySheet({
 
         <div className="px-5 py-4 space-y-5 pb-12">
 
-          {/* Holiday / Parsha banner */}
-          {(holidays.length > 0 || parsha || isShabbos || isFriday) && (
-            <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 p-4 space-y-2">
-              {holidays.map((h, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Star className="h-4 w-4 text-amber-500 shrink-0" />
-                  <div>
-                    <p className="text-[14px] font-bold text-slate-900">{h.title}</p>
-                    {h.hebrew && <p className="text-[11px] text-slate-500">{h.hebrew}</p>}
-                  </div>
-                </div>
-              ))}
-              {parsha && (
+          {/* Jewish context banner */}
+          {(holidays.length > 0 || parsha || isShabbos || isFriday || omer) && (
+            <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 p-4 space-y-2.5">
+              {/* Shabbos / Erev Shabbos greeting */}
+              {isShabbos && (
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-indigo-500 shrink-0" />
-                  <p className="text-[14px] font-bold text-slate-900">{parsha}</p>
+                  <p className="text-[15px] font-black text-slate-900">Shabbat Shalom ✨</p>
                 </div>
               )}
-              {isShabbos && !holidays.length && (
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-indigo-500 shrink-0" />
-                  <p className="text-[14px] font-bold text-slate-900">Shabbat Shalom ✨</p>
-                </div>
-              )}
-              {isFriday && !isShabbos && (
+              {isFriday && (
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-indigo-500 shrink-0" />
                   <p className="text-[14px] font-bold text-slate-900">Erev Shabbos</p>
                 </div>
               )}
+
+              {/* All holidays for this day */}
+              {holidays.map((h, i) => {
+                const isRC = h.category === 'roshchodesh';
+                const icon = isRC ? HOLIDAY_ICON.roshchodesh : (HOLIDAY_ICON[h.subcat] || '✡️');
+                const badge = isRC ? 'Rosh Chodesh' : SUBCAT_BADGE[h.subcat];
+                return (
+                  <div key={i} className="flex items-start gap-2.5">
+                    <span className="text-[18px] leading-none shrink-0 mt-0.5">{icon}</span>
+                    <div>
+                      <p className="text-[14px] font-bold text-slate-900 leading-snug">{h.title}</p>
+                      {h.hebrew && <p className="text-[12px] text-indigo-600 font-semibold">{h.hebrew}</p>}
+                      {badge && <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mt-0.5">{badge}</p>}
+                      {h.memo && <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{h.memo}</p>}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Parsha */}
+              {parsha && (
+                <div className="flex items-center gap-2">
+                  <Star className="h-4 w-4 text-amber-500 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Parsha</p>
+                    <p className="text-[14px] font-bold text-slate-900">{parsha}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Sefirat HaOmer */}
+              {omer && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[18px] leading-none shrink-0">🌾</span>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Sefirat HaOmer</p>
+                    <p className="text-[14px] font-bold text-slate-900">{omer.title}</p>
+                    {omer.hebrew && <p className="text-[12px] text-indigo-600 font-semibold">{omer.hebrew}</p>}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* US / civil holiday */}
+          {usHoliday && (
+            <div className="rounded-2xl bg-blue-50 border border-blue-100 px-4 py-3 flex items-center gap-3">
+              <span className="text-[20px]">🇺🇸</span>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wide text-blue-400">US Holiday</p>
+                <p className="text-[14px] font-bold text-slate-900">{usHoliday.replace(' 🇺🇸', '')}</p>
+              </div>
             </div>
           )}
 

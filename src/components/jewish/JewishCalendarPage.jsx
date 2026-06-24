@@ -35,27 +35,79 @@ async function fetchMonthCalData(year, month) {
 
   try {
     const res = await fetch(
-      `${HEBCAL_BASE}/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&ss=on&mf=on` +
-      `&c=off&geo=geoname&geonameid=5116025&M=on&s=on&start=${start}&end=${end}`
+      `${HEBCAL_BASE}/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&ss=on&mf=on&omer=on` +
+      `&c=off&geo=geoname&geonameid=5116025&M=on&s=on&d=on&start=${start}&end=${end}`
     );
     const data = await res.json();
     const map = {};
     (data.items || []).forEach(item => {
       const dk = item.date?.slice(0, 10);
       if (!dk) return;
-      if (!map[dk]) map[dk] = { hdate: item.hdate || '', holidays: [], parsha: null };
+      if (!map[dk]) map[dk] = { hdate: '', holidays: [], parsha: null, omer: null, specialShabbat: null };
+      // Prefer the date-level hdate from the API envelope; fall back to item hdate
+      if (item.hdate && !map[dk].hdate) map[dk].hdate = item.hdate;
       if (item.category === 'holiday' || item.category === 'roshchodesh') {
-        map[dk].holidays.push({ title: item.title, hebrew: item.hebrew, subcat: item.subcat });
+        map[dk].holidays.push({
+          title:    item.title,
+          hebrew:   item.hebrew,
+          subcat:   item.subcat,
+          category: item.category,
+          memo:     item.memo || null,
+        });
+        if (item.subcat === 'shabbat') map[dk].specialShabbat = item.title;
       }
-      if (item.category === 'parashat') {
-        map[dk].parsha = item.title;
+      if (item.category === 'parashat') map[dk].parsha = item.title;
+      if (item.category === 'omer') {
+        // e.g. "32nd day of the Omer"  →  store ordinal number for display
+        const match = item.title.match(/^(\d+)/);
+        map[dk].omer = match ? { n: parseInt(match[1], 10), title: item.title, hebrew: item.hebrew } : null;
       }
+      // Hebrew date from hebdate category items
+      if (item.category === 'hebdate' && !map[dk].hdate) map[dk].hdate = item.hdate || item.title || '';
     });
     hebCache[key] = map;
     return map;
   } catch {
     return {};
   }
+}
+
+// ─── US civil holidays ────────────────────────────────────────────────────────
+
+function getNthDow(year, month, dow, nth) {
+  // nth occurrence (1-based) of day-of-week (0=Sun) in month
+  let count = 0;
+  for (let d = 1; d <= 31; d++) {
+    const dt = new Date(year, month - 1, d);
+    if (dt.getMonth() !== month - 1) break;
+    if (dt.getDay() === dow && ++count === nth) return isoDate(year, month, d);
+  }
+  return null;
+}
+function getLastDow(year, month, dow) {
+  let last = null;
+  for (let d = 1; d <= 31; d++) {
+    const dt = new Date(year, month - 1, d);
+    if (dt.getMonth() !== month - 1) break;
+    if (dt.getDay() === dow) last = isoDate(year, month, d);
+  }
+  return last;
+}
+function buildUSHolidays(year) {
+  const h = {};
+  const set = (dk, name) => { if (dk) h[dk] = name; };
+  set(isoDate(year, 1, 1),   "New Year's Day 🇺🇸");
+  set(getNthDow(year, 1, 1, 3), 'MLK Day 🇺🇸');
+  set(getNthDow(year, 2, 1, 3), "Presidents' Day 🇺🇸");
+  set(getLastDow(year, 5, 1), 'Memorial Day 🇺🇸');
+  set(isoDate(year, 6, 19),  'Juneteenth 🇺🇸');
+  set(isoDate(year, 7, 4),   'Independence Day 🇺🇸');
+  set(getNthDow(year, 9, 1, 1), 'Labor Day 🇺🇸');
+  set(getNthDow(year, 10, 1, 2), 'Columbus Day 🇺🇸');
+  set(isoDate(year, 11, 11), 'Veterans Day 🇺🇸');
+  set(getNthDow(year, 11, 4, 4), 'Thanksgiving 🇺🇸');
+  set(isoDate(year, 12, 25), 'Christmas 🇺🇸');
+  return h;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -130,6 +182,9 @@ function JewishCalendarPageInner() {
   const [filter,    setFilter]    = useState('all');
   const [hebData,   setHebData]   = useState({});
 
+  // US civil holidays for the current view year (memoized)
+  const usHolidays = useMemo(() => buildUSHolidays(viewYear), [viewYear]);
+
   // Sheet / modal state
   const [selectedDay,        setSelectedDay]        = useState(null);
   const [showDaySheet,       setShowDaySheet]        = useState(false);
@@ -178,7 +233,7 @@ function JewishCalendarPageInner() {
   const monthStart  = `${isoDate(viewYear, viewMonth, 1)}`;
   const monthEnd    = `${isoDate(viewYear, viewMonth, daysInMonth)}`;
 
-  const { data: communityEvents = [], refetch: refetchEvents } = useQuery({
+  const { data: communityEvents = [], refetch: _refetchEvents } = useQuery({
     queryKey: ['calendar-events', viewYear, viewMonth],
     queryFn: async () => {
       if (!supabase) {
@@ -304,12 +359,15 @@ function JewishCalendarPageInner() {
 
   const selectedDayData = useMemo(() => {
     if (!selectedDay) return {};
+    const hInfo = hebData[selectedDay] || {};
     return {
-      events:   eventsByDay[selectedDay] || [],
-      mitzvahs: mitzvahsByDay[selectedDay] || [],
-      hebrewDate: hebData[selectedDay],
+      events:     eventsByDay[selectedDay] || [],
+      mitzvahs:   mitzvahsByDay[selectedDay] || [],
+      hebrewDate: hInfo,
+      omer:       hInfo.omer || null,
+      usHoliday:  usHolidays[selectedDay] || null,
     };
-  }, [selectedDay, eventsByDay, mitzvahsByDay, hebData]);
+  }, [selectedDay, eventsByDay, mitzvahsByDay, hebData, usHolidays]);
 
   return (
     <main className="mobile-page min-h-screen bg-[#F8F7F4] pb-28">
@@ -410,14 +468,37 @@ function JewishCalendarPageInner() {
                 const holidays = filter === 'going' ? [] : (hInfo.holidays || []);
                 const dayEvts  = (filter === 'jewish') ? [] : (eventsByDay[dk] || []);
                 const dayMitz  = mitzvahsByDay[dk] || [];
-                const isMajor  = holidays.some(h => h.subcat === 'major' || h.category === 'roshchodesh');
+                const isRoshChodesh = holidays.some(h => h.category === 'roshchodesh');
+                const isMajor  = holidays.some(h => h.subcat === 'major') || isRoshChodesh;
+                const isMinor  = !isMajor && holidays.some(h => h.subcat === 'minor' || h.subcat === 'modern' || h.subcat === 'fast' || h.subcat === 'shabbat');
+                const usHoliday = usHolidays[dk] || null;
+                const omer     = hInfo.omer || null;
 
                 const hebNum   = hInfo.hdate ? hInfo.hdate.split(' ')[0] : '';
 
                 const bg = isMajor
                   ? 'bg-amber-50'
+                  : isMinor ? 'bg-yellow-50/60'
+                  : usHoliday && !isShab ? 'bg-blue-50/30'
                   : isShab ? 'bg-indigo-50/30'
                   : isFri  ? 'bg-indigo-50/10'
+                  : '';
+
+                // What label to show on the cell (priority order)
+                const chipText = (() => {
+                  if (filter === 'going' || filter === 'communities') return null;
+                  if (holidays.length > 0) {
+                    const h = holidays[0];
+                    if (h.category === 'roshchodesh') return h.title.replace('Rosh Chodesh ', 'ר״ח ');
+                    return h.title;
+                  }
+                  if (usHoliday) return usHoliday.replace(' 🇺🇸', '');
+                  return null;
+                })();
+                const chipColor = isRoshChodesh ? 'bg-blue-100 text-blue-800'
+                  : isMajor ? 'bg-amber-100 text-amber-800'
+                  : isMinor ? 'bg-yellow-100 text-yellow-700'
+                  : usHoliday ? 'bg-blue-50 text-blue-700'
                   : '';
 
                 return (
@@ -431,22 +512,30 @@ function JewishCalendarPageInner() {
                       isToday  ? 'bg-blue-600 text-white'
                       : isShab ? 'text-indigo-600'
                       : isFri  ? 'text-blue-500'
+                      : isMajor ? 'text-amber-700'
                       : 'text-slate-900'
                     }`}>
                       {day}
                     </div>
 
-                    {/* Hebrew day */}
+                    {/* Hebrew day number */}
                     {hebNum && (
-                      <span className={`text-[9px] font-semibold leading-none ${isMajor ? 'text-amber-600' : 'text-slate-400'}`}>
+                      <span className={`text-[9px] font-semibold leading-none ${isMajor ? 'text-amber-600' : isRoshChodesh ? 'text-blue-500' : 'text-slate-400'}`}>
                         {hebNum}
                       </span>
                     )}
 
-                    {/* Holiday chip */}
-                    {holidays.length > 0 && filter !== 'going' && filter !== 'communities' && (
-                      <span className="mt-0.5 max-w-full truncate rounded px-1 py-0 text-[8px] font-bold leading-tight text-amber-700 bg-amber-100">
-                        {holidays[0].title.replace('Rosh Chodesh ', 'ר״ח ')}
+                    {/* Holiday / US holiday chip */}
+                    {chipText && (
+                      <span className={`mt-0.5 max-w-full truncate rounded px-1 py-0 text-[8px] font-bold leading-tight ${chipColor}`}>
+                        {chipText}
+                      </span>
+                    )}
+
+                    {/* Omer count (tiny, only when no other chip shown) */}
+                    {omer && !chipText && (
+                      <span className="mt-0.5 text-[8px] font-semibold leading-none text-indigo-400">
+                        {omer.n}°
                       </span>
                     )}
 
@@ -455,7 +544,7 @@ function JewishCalendarPageInner() {
                       {dayEvts.slice(0, 3).map((e, i) => {
                         const meta = CATEGORY_META[e.category] || CATEGORY_META.general;
                         return (
-                          <span key={i} className={`text-[9px] leading-none`}>{meta.emoji}</span>
+                          <span key={i} className="text-[9px] leading-none">{meta.emoji}</span>
                         );
                       })}
                       {dayMitz.length > 0 && (
@@ -469,11 +558,13 @@ function JewishCalendarPageInner() {
           </div>
 
           {/* Legend */}
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 px-1">
-            <LegendDot className="bg-amber-100 border border-amber-200 h-3 w-3 rounded-sm" label="Holiday" />
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 px-1">
+            <LegendDot className="bg-amber-100 border border-amber-200 h-3 w-3 rounded-sm" label="Yom Tov" />
+            <LegendDot className="bg-blue-100 border border-blue-200 h-3 w-3 rounded-sm" label="Rosh Chodesh" />
+            <LegendDot className="bg-yellow-100 border border-yellow-200 h-3 w-3 rounded-sm" label="Minor holiday" />
             <LegendDot className="bg-indigo-50 border border-indigo-200 h-3 w-3 rounded-sm" label="Shabbos" />
             <span className="flex items-center gap-1 text-[10px] font-semibold text-slate-400">
-              <span className="text-[11px]">📖</span> Event type
+              <span className="text-[11px]">📖</span> Event
             </span>
             <LegendDot className="bg-rose-500 h-2 w-2 rounded-full" label="Mitzvah" />
           </div>
@@ -564,6 +655,8 @@ function JewishCalendarPageInner() {
           hebrewDate={selectedDayData.hebrewDate}
           events={selectedDayData.events}
           mitzvahs={selectedDayData.mitzvahs}
+          omer={selectedDayData.omer}
+          usHoliday={selectedDayData.usHoliday}
           onEventTap={(e) => {
             setShowDaySheet(false);
             openEventDetail(e);
