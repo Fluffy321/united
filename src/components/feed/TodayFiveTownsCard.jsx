@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { CalendarDays, Clock, Flame, HandHeart, ScrollText } from 'lucide-react';
+import { CalendarDays, Flame, HandHeart, ScrollText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/api/supabaseClient';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
+import { useNavigate } from 'react-router-dom';
 import { getShabbatTimes } from '@/lib/hebrewDate';
 import { isResolvedLocationLabel } from '@/lib/shabbatLocation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -59,6 +60,7 @@ async function loadDailyContent(dateKey) {
 }
 
 export default function TodayFiveTownsCard({ onCalendarClick }) {
+  const navigate = useNavigate();
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const today = new Date();
   const dateKey = getFiveTownsDateKey(today);
@@ -255,12 +257,12 @@ export default function TodayFiveTownsCard({ onCalendarClick }) {
             type="button"
             onClick={() => {
               setScheduleOpen(false);
-              onCalendarClick?.();
+              navigate('/JewishHub/calendar');
             }}
             className="motion-press flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 text-[13px] font-black text-white"
           >
-            <Clock className="h-4 w-4" />
-            Open events schedule
+            <CalendarDays className="h-4 w-4" />
+            Open Jewish Calendar
           </button>
         </div>
       </SheetContent>

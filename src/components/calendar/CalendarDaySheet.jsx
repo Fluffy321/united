@@ -38,7 +38,7 @@ export default function CalendarDaySheet({
   onEventTap,
   onCreateEvent,
 }) {
-  const { location: shabbatLocation } = useShabbatLocation?.() || {};
+  const { location: shabbatLocation } = useShabbatLocation();
   const [zmanim, setZmanim]         = useState(null);
   const [shabbatTimes, setShabbatTimes] = useState(null);
   const [zmanimExpanded, setZmanimExpanded] = useState(false);
