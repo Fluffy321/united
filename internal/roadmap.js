@@ -2510,6 +2510,16 @@ Goals:
   },
 
   {
+    id: 'jewish-calendar',
+    category: 'Jewish Hub',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Full Interactive Jewish Calendar',
+    description: 'Month + list view calendar with Hebrew dates, holidays, parsha, Shabbos/zmanim, JUnited community events, event creation, RSVP, and day-detail bottom sheet.',
+    shippedNote: 'Shipped 2026-06-24. JewishCalendarPage.jsx (full rewrite at /JewishHub/calendar), CalendarDaySheet.jsx (day detail with zmanim + Shabbos times + events), CalendarEventDetailSheet.jsx (RSVP: going/maybe/not going + attendee list + share), CreateCalendarEventModal.jsx (event type picker: shiur/shul/chesed/youth/business/shabbos_meal/fundraiser/memorial/general, date/time/location/description/community/visibility). Month grid shows Hebrew day numbers, holiday chips (amber), Shabbos tint (indigo), event emoji dots, mitzvah dot. List view groups events by date with Hebrew annotation. Filters: All / My Communities / Going / Jewish Dates / Local Events. Wired into JewishContentHub as first HUB_ENTRY and first DAILY_ANCHOR tile.',
+  },
+
+  {
     id: 'admin-seed-hardening',
     category: 'Admin & Platform',
     status: STATUS.SHIPPED,
