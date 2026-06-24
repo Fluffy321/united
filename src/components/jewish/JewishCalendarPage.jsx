@@ -4,7 +4,7 @@
  * Month view + List view, Hebrew dates, holidays via Hebcal API,
  * JUnited community events, filter bar, day-detail sheet, event creation.
  */
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Component } from 'react';
 import {
   ChevronLeft, ChevronRight, Plus, CalendarDays, LayoutList,
   Star, Sparkles,
@@ -90,9 +90,34 @@ function isoDate(y, m, d) {
   return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
 
+// ─── Error boundary ───────────────────────────────────────────────────────────
+
+class CalendarErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <main className="mobile-page min-h-screen bg-[#F8F7F4] pb-28 px-4 pt-20 flex flex-col items-center text-center">
+          <CalendarDays className="h-12 w-12 text-slate-300 mb-4" />
+          <p className="text-[16px] font-bold text-slate-700">Calendar couldn't load</p>
+          <p className="text-[13px] text-slate-400 mt-1 mb-6">{String(this.state.error?.message || '')}</p>
+          <button
+            onClick={() => this.setState({ error: null })}
+            className="rounded-full bg-blue-600 px-5 py-2.5 text-[13px] font-bold text-white"
+          >
+            Try again
+          </button>
+        </main>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function JewishCalendarPage() {
+function JewishCalendarPageInner() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
 
@@ -530,33 +555,37 @@ export default function JewishCalendarPage() {
         </div>
       )}
 
-      {/* ── Day detail sheet ── */}
-      <CalendarDaySheet
-        open={showDaySheet}
-        onOpenChange={setShowDaySheet}
-        dateKey={selectedDay}
-        hebrewDate={selectedDayData.hebrewDate}
-        events={selectedDayData.events}
-        mitzvahs={selectedDayData.mitzvahs}
-        onEventTap={(e) => {
-          setShowDaySheet(false);
-          openEventDetail(e);
-        }}
-        onCreateEvent={() => {
-          setShowDaySheet(false);
-          openCreateModal(selectedDay);
-        }}
-      />
+      {/* ── Day detail sheet — only mount after first open ── */}
+      {(showDaySheet || selectedDay) && (
+        <CalendarDaySheet
+          open={showDaySheet}
+          onOpenChange={setShowDaySheet}
+          dateKey={selectedDay}
+          hebrewDate={selectedDayData.hebrewDate}
+          events={selectedDayData.events}
+          mitzvahs={selectedDayData.mitzvahs}
+          onEventTap={(e) => {
+            setShowDaySheet(false);
+            openEventDetail(e);
+          }}
+          onCreateEvent={() => {
+            setShowDaySheet(false);
+            openCreateModal(selectedDay);
+          }}
+        />
+      )}
 
-      {/* ── Event detail sheet ── */}
-      <CalendarEventDetailSheet
-        open={showEventDetail}
-        onOpenChange={setShowEventDetail}
-        event={selectedEvent}
-        onBack={() => {
-          if (selectedDay) setShowDaySheet(true);
-        }}
-      />
+      {/* ── Event detail sheet — only mount after first open ── */}
+      {(showEventDetail || selectedEvent) && (
+        <CalendarEventDetailSheet
+          open={showEventDetail}
+          onOpenChange={setShowEventDetail}
+          event={selectedEvent}
+          onBack={() => {
+            if (selectedDay) setShowDaySheet(true);
+          }}
+        />
+      )}
 
       {/* ── Create event modal ── */}
       <CreateCalendarEventModal
@@ -566,6 +595,14 @@ export default function JewishCalendarPage() {
         onCreated={handleEventCreated}
       />
     </main>
+  );
+}
+
+export default function JewishCalendarPage() {
+  return (
+    <CalendarErrorBoundary>
+      <JewishCalendarPageInner />
+    </CalendarErrorBoundary>
   );
 }
 
