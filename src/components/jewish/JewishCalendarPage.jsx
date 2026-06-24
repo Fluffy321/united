@@ -25,8 +25,8 @@ const HEBCAL_BASE = 'https://www.hebcal.com';
 const hebCache = {};
 
 async function fetchMonthCalData(year, month) {
-  const key = `${year}-${month}`;
-  if (hebCache[key]) return hebCache[key];
+  const key = `v3-${year}-${month}`;
+  if (hebCache[key] !== undefined) return hebCache[key];
 
   const daysInMonth = new Date(year, month, 0).getDate();
   const pad = (n) => String(n).padStart(2, '0');
@@ -35,8 +35,7 @@ async function fetchMonthCalData(year, month) {
 
   try {
     const res = await fetch(
-      `${HEBCAL_BASE}/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&ss=on&mf=on&omer=on` +
-      `&c=off&geo=geoname&geonameid=5116025&M=on&s=on&start=${start}&end=${end}`
+      `${HEBCAL_BASE}/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&ss=on&mf=on&omer=on&M=on&s=on&start=${start}&end=${end}`
     );
     const data = await res.json();
     const map = {};
