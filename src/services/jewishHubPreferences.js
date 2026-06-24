@@ -4,7 +4,7 @@ import { setCandleLocation } from '@/lib/shabbatLocation';
 const EVENT_NAME = 'junited:jewish-hub-preferences-updated';
 const STORAGE_PREFIX = 'junited:jewishHubPreferences';
 
-export const JEWISH_HUB_SECTION_IDS = ['tehillim', 'parsha', 'shiurim', 'daily-learning', 'siddur', 'tanakh', 'divrei-torah'];
+export const JEWISH_HUB_SECTION_IDS = ['calendar', 'tehillim', 'parsha', 'shiurim', 'daily-learning', 'siddur', 'tanakh', 'divrei-torah'];
 export const LEARNING_CYCLE_IDS = ['daf-yomi', 'mishnah-yomi', 'daily-rambam'];
 
 export const DEFAULT_JEWISH_HUB_PREFERENCES = {

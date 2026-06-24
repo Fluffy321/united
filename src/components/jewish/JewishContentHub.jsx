@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookMarked, BookOpenText, ChevronRight, Headphones, LibraryBig, ScrollText, Settings2, Sparkles } from 'lucide-react';
+import { BookMarked, BookOpenText, CalendarDays, ChevronRight, Headphones, LibraryBig, ScrollText, Settings2, Sparkles } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
 import DailyLearningPage from './DailyLearningPage';
 import DivreiTorahPage from './DivreiTorahPage';
 import JewishHubSettings from './JewishHubSettings';
+import JewishCalendarPage from './JewishCalendarPage';
 import ParshaReader from './ParshaReader';
 import SiddurPage from './SiddurPage';
 import TanakhReader from './TanakhReader';
@@ -14,6 +15,15 @@ import useJewishHubPreferences from '@/hooks/useJewishHubPreferences';
 import JewishHubBackButton from './JewishHubBackButton';
 
 const HUB_ENTRIES = [
+  {
+    id: 'calendar',
+    title: 'Jewish Calendar',
+    eyebrow: 'Events & Holidays',
+    description: 'Holidays, Shabbos, JUnited events, and mitzvahs in one interactive calendar.',
+    path: '/JewishHub/calendar',
+    Icon: CalendarDays,
+    tone: 'blue',
+  },
   {
     id: 'tehillim',
     title: 'Tehillim',
@@ -90,10 +100,10 @@ const TONE_CLASSES = {
 };
 
 const DAILY_ANCHORS = [
-  { title: 'Tehillim', detail: 'Open a perek', path: '/JewishHub/tehillim', tone: 'rose' },
-  { title: 'Parsha', detail: 'Read the week', path: '/JewishHub/parsha', tone: 'amber' },
-  { title: 'Learning', detail: 'Today’s cycle', path: '/JewishHub/daily-learning', tone: 'blue' },
-  { title: 'Shiurim', detail: 'Listen quietly', path: '/JewishHub/shiurim', tone: 'cyan' },
+  { title: "Calendar", detail: "Holidays & events", path: "/JewishHub/calendar", tone: "blue" },
+  { title: "Tehillim", detail: "Open a perek", path: "/JewishHub/tehillim", tone: "rose" },
+  { title: "Parsha", detail: "Read the week", path: "/JewishHub/parsha", tone: "amber" },
+  { title: "Learning", detail: "Today’s cycle", path: "/JewishHub/daily-learning", tone: "blue" },
 ];
 
 export default function JewishContentHub() {
@@ -131,6 +141,10 @@ export default function JewishContentHub() {
 
   if (normalizedPath === '/JewishHub/settings') {
     return <JewishHubSettings />;
+  }
+
+  if (normalizedPath === '/JewishHub/calendar') {
+    return <JewishCalendarPage />;
   }
 
   const visibleEntries = preferences.sectionOrder
