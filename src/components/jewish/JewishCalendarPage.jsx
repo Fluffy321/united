@@ -35,8 +35,8 @@ async function fetchMonthCalData(year, month) {
 
   try {
     const res = await fetch(
-      `${HEBCAL_BASE}/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&ss=on&mf=on&omer=on&F=on` +
-      `&c=off&geo=geoname&geonameid=5116025&M=on&s=on&d=on&dafyomi=on&start=${start}&end=${end}`
+      `${HEBCAL_BASE}/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&ss=on&mf=on&omer=on` +
+      `&c=off&geo=geoname&geonameid=5116025&M=on&s=on&dafyomi=on&start=${start}&end=${end}`
     );
     const data = await res.json();
     const map = {};
@@ -194,9 +194,15 @@ function JewishCalendarPageInner() {
   const [showCreateModal,    setShowCreateModal]     = useState(false);
   const [createInitialDate,  setCreateInitialDate]   = useState(null);
 
-  // Fetch Hebrew calendar data for current view month
+  // Fetch Hebrew calendar data: current month + adjacent months so parsha/RC always show
   useEffect(() => {
-    fetchMonthCalData(viewYear, viewMonth).then(setHebData);
+    const prev = viewMonth === 1  ? { y: viewYear - 1, m: 12 } : { y: viewYear, m: viewMonth - 1 };
+    const next = viewMonth === 12 ? { y: viewYear + 1, m: 1  } : { y: viewYear, m: viewMonth + 1 };
+    Promise.all([
+      fetchMonthCalData(prev.y, prev.m),
+      fetchMonthCalData(viewYear, viewMonth),
+      fetchMonthCalData(next.y, next.m),
+    ]).then(([a, b, c]) => setHebData({ ...a, ...b, ...c }));
   }, [viewYear, viewMonth]);
 
   // User's joined community IDs (for filter)
@@ -493,7 +499,7 @@ function JewishCalendarPageInner() {
                   if (filter === 'going' || filter === 'communities') return null;
                   if (holidays.length > 0) {
                     const h = holidays[0];
-                    if (h.category === 'roshchodesh') return h.title.replace('Rosh Chodesh ', 'ר״ח ');
+                    if (h.category === 'roshchodesh') return h.title; // e.g. "Rosh Chodesh Tamuz"
                     return h.title;
                   }
                   if (usHoliday) return usHoliday.replace(' 🇺🇸', '');
