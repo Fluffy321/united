@@ -591,32 +591,40 @@ export default function Feed({ isActive = true }) {
         currentUser={currentUser}
       />
 
-      <UpcomingEventsSheet
-        open={showEventsSheet}
-        onOpenChange={setShowEventsSheet}
-        currentUser={currentUser}
-        joinedCommunityIds={COMMUNITIES_ENABLED ? communityGroups.map(c => c.id) : []}
-        onOpenEvent={(event) => setReplyPost(event)}
-      />
+      {showEventsSheet && (
+        <WidgetBoundary>
+          <UpcomingEventsSheet
+            open={showEventsSheet}
+            onOpenChange={setShowEventsSheet}
+            currentUser={currentUser}
+            joinedCommunityIds={COMMUNITIES_ENABLED ? communityGroups.map(c => c.id) : []}
+            onOpenEvent={(event) => setReplyPost(event)}
+          />
+        </WidgetBoundary>
+      )}
 
-      <CommentsSheet
-        open={Boolean(replyPost)}
-        onOpenChange={(open) => {
-          if (open) return;
-          setReplyPost(null);
-          if (searchParams.get('postId') || searchParams.get('reply') || searchParams.get('comments')) {
-            const next = new URLSearchParams(searchParams);
-            next.delete('postId');
-            next.delete('reply');
-            next.delete('comments');
-            setSearchParams(next, { replace: true });
-          }
-        }}
-        post={replyPost}
-        currentUser={currentUser}
-        blockedIds={blockedIds}
-        onCommentAdded={() => queryClient.invalidateQueries({ queryKey: ['unified-posts'] })}
-      />
+      {replyPost && (
+        <WidgetBoundary>
+          <CommentsSheet
+            open={Boolean(replyPost)}
+            onOpenChange={(open) => {
+              if (open) return;
+              setReplyPost(null);
+              if (searchParams.get('postId') || searchParams.get('reply') || searchParams.get('comments')) {
+                const next = new URLSearchParams(searchParams);
+                next.delete('postId');
+                next.delete('reply');
+                next.delete('comments');
+                setSearchParams(next, { replace: true });
+              }
+            }}
+            post={replyPost}
+            currentUser={currentUser}
+            blockedIds={blockedIds}
+            onCommentAdded={() => queryClient.invalidateQueries({ queryKey: ['unified-posts'] })}
+          />
+        </WidgetBoundary>
+      )}
     </div>
   );
 }
