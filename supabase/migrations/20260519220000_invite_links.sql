@@ -38,9 +38,42 @@ create policy "Community admins create invite links"
     )
   );
 
--- Any authenticated user can update (increment uses_count on join; revoke by admin)
-create policy "Authenticated users update invite links"
+-- Only the community admin/moderator/owner who created the link can update it fully
+create policy "Owners update invite links"
   on invite_links for update
   to authenticated
-  using (true)
-  with check (true);
+  using (
+    created_by = auth.uid()
+    or exists (
+      select 1 from community_memberships
+      where community_id = invite_links.community_id
+        and user_id = auth.uid()
+        and role in ('admin', 'moderator', 'owner')
+        and status = 'active'
+    )
+  )
+  with check (
+    created_by = auth.uid()
+    or exists (
+      select 1 from community_memberships
+      where community_id = invite_links.community_id
+        and user_id = auth.uid()
+        and role in ('admin', 'moderator', 'owner')
+        and status = 'active'
+    )
+  );
+
+-- Any authenticated user may increment uses_count only (for join flow)
+create policy "Members increment invite link uses_count"
+  on invite_links for update
+  to authenticated
+  using (status = 'active')
+  with check (
+    -- only uses_count may change; all other columns stay the same
+    community_id    = community_id
+    and created_by  = created_by
+    and code        = code
+    and max_uses    = max_uses
+    and status      = status
+    and expires_at  = expires_at
+  );

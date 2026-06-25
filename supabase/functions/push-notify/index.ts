@@ -19,15 +19,51 @@ const TYPE_TO_PREF: Record<string, string> = {
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
+const CRON_SECRET = Deno.env.get('CRON_SECRET') ?? '';
+
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+/** Verify the caller is either:
+ *  (a) an internal server-side call carrying the CRON_SECRET, OR
+ *  (b) a signed-in admin user (role = 'admin' in profiles)
+ */
+async function isAuthorized(req: Request): Promise<boolean> {
+  // Option A: secret header (used by Edge Functions / cron / server calls)
+  const secret = req.headers.get('x-cron-secret') ?? req.headers.get('x-internal-secret');
+  if (CRON_SECRET && secret === CRON_SECRET) return true;
+
+  // Option B: valid JWT belonging to an admin user
+  const authHeader = req.headers.get('authorization') ?? '';
+  const token = authHeader.replace(/^Bearer\s+/i, '');
+  if (!token) return false;
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return false;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  return profile?.role === 'admin';
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret, x-internal-secret',
       },
+    });
+  }
+
+  // ── Auth gate ──────────────────────────────────────────────────────────────
+  if (!(await isAuthorized(req))) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
