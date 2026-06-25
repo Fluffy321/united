@@ -294,6 +294,7 @@ export default function Feed({ isActive = true }) {
   const visiblePosts = feedSourcePosts.filter(p => {
     if (p.type === 'dating') return false;
     if (p.type === 'prompt') return false;
+    if (p.type === 'daily_greeting') return false; // shown via FiveTownsConversationHub, not individual cards
     if (blockedIds.includes(p.user_id)) return false;
     // Sub-neighborhood filter within the selected network
     if (selectedNeighborhood !== 'All') {
@@ -504,7 +505,7 @@ export default function Feed({ isActive = true }) {
 
           <WidgetBoundary>
             <FiveTownsConversationHub
-              posts={feedPosts}
+              posts={posts}
               networkLabel={primaryNetwork.shortLabel || 'Five Towns'}
               onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
               onOpenMap={() => navigate('/Map')}
@@ -1299,13 +1300,17 @@ function HeartbeatPostCard({ post, horizontal = false, liked = false, onLike, on
 }
 
 function FiveTownsConversationHub({ posts = [], networkLabel = 'Five Towns', onCreate, onOpenMap, onOpenMitzvah, onOpenEvents, onOpenMarketplace }) {
-  const recentPosts = posts
-    .filter((post) => post.type !== 'prompt')
+  // Include daily_greeting posts so the "updated" timestamp always reflects today's auto-post
+  const allPosts = [...posts];
+  const recentPosts = allPosts
+    .filter((post) => post.type !== 'prompt' && post.type !== 'daily_greeting')
     .slice(0, 4);
-  const activeThreads = posts.filter((post) => Number(post.comments_count || 0) > 0).length;
-  const needsToday = posts.filter((post) => /need|help|ride|meal|tonight|today|urgent/i.test(`${post.title || ''} ${post.body || ''}`)).length;
-  const latest = recentPosts[0];
-  const latestDate = latest?.updated_date || latest?.created_date || latest?.created_at;
+  const activeThreads = allPosts.filter((post) => Number(post.comments_count || 0) > 0).length;
+  const needsToday = allPosts.filter((post) => /need|help|ride|meal|tonight|today|urgent/i.test(`${post.title || ''} ${post.body || ''}`)).length;
+  // Prefer daily_greeting post's timestamp so the hub always shows "updated today"
+  const greetingPost = allPosts.find((post) => post.type === 'daily_greeting');
+  const latest = greetingPost || recentPosts[0];
+  const latestDate = latest?.updated_date || latest?.created_date || latest?.created_at || new Date().toISOString();
   const updatedText = latestDate
     ? (() => {
       const minutes = Math.max(1, Math.round((Date.now() - new Date(latestDate).getTime()) / 60000));
