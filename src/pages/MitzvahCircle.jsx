@@ -1678,7 +1678,7 @@ export default function MitzvahCircle() {
   }
 
   return (
-    <main className="app-page mobile-safe-bottom">
+    <div className="app-page mobile-safe-bottom">
       <DestinationHeader
         icon={HandHeart}
         title="Mitzvah Circle"
@@ -2033,6 +2033,6 @@ export default function MitzvahCircle() {
           onOpenMap={openRequestOnMap}
         />
       )}
-    </main>
+    </div>
   );
 }
