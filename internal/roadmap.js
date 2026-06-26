@@ -2520,6 +2520,16 @@ Goals:
   },
 
   {
+    id: 'daily-feed-refresh',
+    category: 'Feed',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Daily Auto-Refresh: Feed + Daily Content',
+    description: 'Automated daily refresh so "Today in the Five Towns" always has fresh content and "Talk to the Five Towns" hub always shows "Updated today."',
+    shippedNote: 'Shipped 2026-06-25. supabase/functions/daily-refresh/index.ts: Edge Function (CRON_SECRET-gated) that upserts today\'s daily_content row (52 rotating mitzvahs + Torah thoughts keyed by day-of-year) and inserts a daily_greeting post so the hub timestamp always reflects today. supabase/migrations/20260625000000_daily_refresh_cron.sql: pg_cron schedules daily-refresh at 12:00 UTC (8 AM ET) and seed-daily-content at 12:05 UTC as SQL fallback seeding 30 days ahead. src/pages/Feed.jsx: daily_greeting excluded from visible feed cards, FiveTownsConversationHub receives raw posts and prefers greeting post timestamp for "Updated" label.',
+  },
+
+  {
     id: 'admin-seed-hardening',
     category: 'Admin & Platform',
     status: STATUS.SHIPPED,
