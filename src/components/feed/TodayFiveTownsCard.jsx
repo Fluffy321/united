@@ -5,7 +5,7 @@ import { supabase } from '@/api/supabaseClient';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
 import { useNavigate } from 'react-router-dom';
 import { getShabbatTimes } from '@/lib/hebrewDate';
-import { isResolvedLocationLabel } from '@/lib/shabbatLocation';
+import { DEFAULT_LOCATION, isResolvedLocationLabel } from '@/lib/shabbatLocation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 const FIVE_TOWNS_TIME_ZONE = 'America/New_York';
@@ -74,13 +74,18 @@ export default function TodayFiveTownsCard({ onCalendarClick }) {
     denyLocation,
   } = useShabbatLocation({ autoRequest: true });
 
-  const timesTimeZone = candleLocation?.tzid || FIVE_TOWNS_TIME_ZONE;
-  const locationLabel = isResolvedLocationLabel(candleLocation?.label) ? candleLocation.label : null;
-  const hasNamedLocation = Boolean(
+  const effectiveLocation = (
     candleLocation?.lat &&
     candleLocation?.lng &&
-    locationLabel &&
     candleLocation?.type !== 'declined'
+  ) ? candleLocation : DEFAULT_LOCATION;
+  const timesTimeZone = effectiveLocation?.tzid || FIVE_TOWNS_TIME_ZONE;
+  const locationLabel = isResolvedLocationLabel(effectiveLocation?.label) ? effectiveLocation.label : DEFAULT_LOCATION.label;
+  const hasNamedLocation = Boolean(
+    effectiveLocation?.lat &&
+    effectiveLocation?.lng &&
+    locationLabel &&
+    effectiveLocation?.type !== 'declined'
   );
 
   const { data, isError } = useQuery({
@@ -93,14 +98,14 @@ export default function TodayFiveTownsCard({ onCalendarClick }) {
   const { data: liveTimes, isLoading: timesLoading } = useQuery({
     queryKey: [
       'live-shabbos-times',
-      candleLocation?.lat,
-      candleLocation?.lng,
-      candleLocation?.tzid,
+      effectiveLocation?.lat,
+      effectiveLocation?.lng,
+      effectiveLocation?.tzid,
       dateKey,
     ],
     queryFn: () => getShabbatTimes(
-      candleLocation.lat,
-      candleLocation.lng,
+      effectiveLocation.lat,
+      effectiveLocation.lng,
       timesTimeZone,
       today
     ),
@@ -116,8 +121,8 @@ export default function TodayFiveTownsCard({ onCalendarClick }) {
     : hasNamedLocation
       ? locationLabel
       : locationError === 'declined'
-        ? 'Location declined'
-        : 'Location not resolved';
+        ? DEFAULT_LOCATION.label
+        : DEFAULT_LOCATION.label;
 
   return (
     <>
