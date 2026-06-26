@@ -1569,6 +1569,16 @@ Goals:
   },
 
   {
+    id: 'kosher-certifying-agency-disclosure',
+    category: 'Businesses & Map',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Kosher Badge Requires a Named Certifying Agency',
+    description: 'The "Kosher Certified" trust badge previously could be set by an admin or via a free-text claim with no real kashrus agency named anywhere — a legal/authenticity risk, since JUnited is not a kashrus authority and the badge read as an unqualified guarantee. Businesses and claimants now must name the certifying agency, and the badge discloses it (e.g. "Kosher — per OU") with a self-reported/not-independently-verified disclaimer.',
+    shippedNote: 'Shipped 2026-06-26. Migration 20260626140000_kosher_certifying_agency.sql adds business_listings.kosher_certifying_agency and business_claim_requests.kosher_certifying_agency_claim, plus a check constraint that blocks kosher_status = \'certified\' without a non-empty agency name. admin_verify_business RPC gained p_kosher_certifying_agency and now raises an exception if certified is requested with no agency on file. approve_business_claim_request RPC now requires v_claim.kosher_certifying_agency_claim before p_verify_kosher can set certified. UI: src/pages/Map.jsx SubmitBusinessModal and ClaimBusinessModal both gained a required "Certifying agency" field that appears once a kosher claim is entered, and TrustBadges renders "Kosher — per [Agency]" (or "Kosher (agency not on file)" for any pre-existing row without one) plus a showDisclaimer paragraph in BusinessDetailModal explaining JUnited does not verify kashrus claims independently. src/pages/AdminBusinessVerification.jsx now shows the submitted claim text and an editable required agency field, and disables the "Kosher certified" button until it is filled in. src/pages/AdminModerationQueue.jsx Businesses tab now only shows "Approve + Kosher" when the claim has a named agency. Reachable today via Map → Submit a Business / Claim a Business (agency field appears under the kosher claim field), Map business detail card (disclaimer + agency-disclosing badge), and admin → /AdminBusinessVerification or /AdminModerationQueue → Businesses tab.',
+  },
+
+  {
     id: 'organization-pages',
     category: 'Businesses & Map',
     status: STATUS.DEFERRED,

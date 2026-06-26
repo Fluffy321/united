@@ -139,6 +139,7 @@ const emptyBusinessForm = {
   jewish_owned_claim: false,
   serves_jewish_community: false,
   kosher_claim: '',
+  kosher_certifying_agency: '',
 };
 
 const emptyClaimForm = {
@@ -150,6 +151,7 @@ const emptyClaimForm = {
   jewish_owned_claim: false,
   serves_jewish_community_claim: false,
   kosher_claim: '',
+  kosher_certifying_agency: '',
 };
 
 function MapModuleFallback({ label = 'Loading map...' }) {
@@ -202,7 +204,7 @@ function badgeLabel(value) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function TrustBadges({ business }) {
+function TrustBadges({ business, showDisclaimer = false }) {
   const badges = [];
   if (business.verification_status === 'verified_owner' || business.is_claimed) {
     badges.push({ label: 'Verified Owner', icon: BadgeCheck, className: 'bg-blue-50 text-blue-700 border-blue-100' });
@@ -211,7 +213,12 @@ function TrustBadges({ business }) {
     badges.push({ label: 'Verified Jewish-Owned', icon: ShieldCheck, className: 'bg-indigo-50 text-indigo-700 border-indigo-100' });
   }
   if (business.kosher_status === 'certified') {
-    badges.push({ label: 'Kosher Certified', icon: ShieldCheck, className: 'bg-emerald-50 text-emerald-700 border-emerald-100' });
+    const agency = String(business.kosher_certifying_agency || '').trim();
+    badges.push({
+      label: agency ? `Kosher — per ${agency}` : 'Kosher (agency not on file)',
+      icon: ShieldCheck,
+      className: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    });
   }
   if (business.listing_type === 'online') {
     badges.push({ label: 'Online', icon: Globe2, className: 'bg-slate-50 text-slate-700 border-slate-200' });
@@ -223,13 +230,20 @@ function TrustBadges({ business }) {
   if (badges.length === 0) return null;
 
   return (
-    <div className="mt-2 flex flex-wrap gap-1.5">
-      {badges.map(({ label, icon: Icon, className }) => (
-        <span key={label} className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black ${className}`}>
-          <Icon className="h-3 w-3" />
-          {label}
-        </span>
-      ))}
+    <div className="mt-2">
+      <div className="flex flex-wrap gap-1.5">
+        {badges.map(({ label, icon: Icon, className }) => (
+          <span key={label} className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black ${className}`}>
+            <Icon className="h-3 w-3" />
+            {label}
+          </span>
+        ))}
+      </div>
+      {showDisclaimer && business.kosher_status === 'certified' && (
+        <p className="mt-1.5 text-[10px] font-medium text-slate-400">
+          Kosher status is self-reported by the business and reviewed by JUnited staff for plausibility only. JUnited is not a kashrus authority and does not independently verify certifications — contact the listed agency directly to confirm.
+        </p>
+      )}
     </div>
   );
 }
@@ -345,6 +359,7 @@ function SubmitBusinessModal({ open, onClose, currentUser }) {
       if (!name) throw new Error('Business name is required.');
       if (form.listing_type === 'online' && !form.website.trim()) throw new Error('Online businesses need a website or public link.');
       if (form.listing_type === 'service_area' && !form.service_area_text.trim()) throw new Error('Service-area businesses need a service area.');
+      if (form.kosher_claim.trim() && !form.kosher_certifying_agency.trim()) throw new Error('Name the certifying agency for your kosher claim.');
 
       return dataService.entities.BusinessListing.create({
         name,
@@ -369,6 +384,7 @@ function SubmitBusinessModal({ open, onClose, currentUser }) {
         serves_jewish_community: Boolean(form.serves_jewish_community),
         kosher_status: form.kosher_claim.trim() ? 'pending' : 'none',
         kosher_certification: form.kosher_claim.trim() || null,
+        kosher_certifying_agency: form.kosher_claim.trim() ? form.kosher_certifying_agency.trim() || null : null,
       });
     },
     onSuccess: () => {
@@ -472,6 +488,12 @@ function SubmitBusinessModal({ open, onClose, currentUser }) {
         <Field label="Kosher claim or certification info">
           <input className="app-input" value={form.kosher_claim} onChange={(e) => setForm({ ...form, kosher_claim: e.target.value })} placeholder="Optional, reviewed before any badge appears" />
         </Field>
+        {form.kosher_claim.trim() && (
+          <Field label="Certifying agency" required>
+            <input className="app-input" value={form.kosher_certifying_agency} onChange={(e) => setForm({ ...form, kosher_certifying_agency: e.target.value })} placeholder="Example: OU, Star-K, a local vaad" />
+            <p className="mt-1 text-[11px] font-semibold text-slate-400">A certified badge can't be shown without naming the agency. JUnited does not verify kashrus claims independently.</p>
+          </Field>
+        )}
 
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className="h-11 rounded-full border border-slate-200 bg-white px-5 text-sm font-black text-slate-700">Cancel</button>
@@ -506,6 +528,7 @@ function ClaimBusinessModal({ business, onClose, currentUser }) {
       if (!business?.id) throw new Error('Choose a business to claim.');
       if (!form.claimant_name.trim()) throw new Error('Your name is required.');
       if (!form.claimant_email.trim()) throw new Error('Your email is required.');
+      if (form.kosher_claim.trim() && !form.kosher_certifying_agency.trim()) throw new Error('Name the certifying agency for your kosher claim.');
 
       return dataService.entities.BusinessClaimRequest.create({
         business_id: business.id,
@@ -521,6 +544,7 @@ function ClaimBusinessModal({ business, onClose, currentUser }) {
         jewish_owned_claim: Boolean(form.jewish_owned_claim),
         serves_jewish_community_claim: Boolean(form.serves_jewish_community_claim),
         kosher_claim: form.kosher_claim.trim() || null,
+        kosher_certifying_agency_claim: form.kosher_claim.trim() ? form.kosher_certifying_agency.trim() || null : null,
       });
     },
     onSuccess: () => {
@@ -571,6 +595,12 @@ function ClaimBusinessModal({ business, onClose, currentUser }) {
         <Field label="Kosher certification or claim">
           <input className="app-input" value={form.kosher_claim} onChange={(e) => setForm({ ...form, kosher_claim: e.target.value })} placeholder="Optional, reviewed by admins" />
         </Field>
+        {form.kosher_claim.trim() && (
+          <Field label="Certifying agency" required>
+            <input className="app-input" value={form.kosher_certifying_agency} onChange={(e) => setForm({ ...form, kosher_certifying_agency: e.target.value })} placeholder="Example: OU, Star-K, a local vaad" />
+            <p className="mt-1 text-[11px] font-semibold text-slate-400">A certified badge can't be shown without naming the agency. JUnited does not verify kashrus claims independently.</p>
+          </Field>
+        )}
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className="h-11 rounded-full border border-slate-200 bg-white px-5 text-sm font-black text-slate-700">Cancel</button>
           <button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending} className="h-11 rounded-full bg-slate-950 px-5 text-sm font-black text-white disabled:opacity-60">
@@ -602,7 +632,7 @@ function BusinessDetailModal({ business, onClose, onClaim }) {
             <div>
               <p className="text-xs font-black uppercase tracking-wide text-blue-700">{businessCategory(business.category).label}</p>
               <h2 className="mt-1 text-xl font-black text-slate-950">{business.name}</h2>
-              <TrustBadges business={business} />
+              <TrustBadges business={business} showDisclaimer />
             </div>
           </div>
         </div>

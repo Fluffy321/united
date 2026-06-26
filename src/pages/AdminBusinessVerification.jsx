@@ -67,6 +67,7 @@ export default function AdminBusinessVerification() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [query, setQuery] = useState('');
+  const [agencyDrafts, setAgencyDrafts] = useState({});
 
   const { data: businesses = [], isLoading } = useQuery({
     queryKey: ['admin-business-verification'],
@@ -74,7 +75,7 @@ export default function AdminBusinessVerification() {
       if (!supabase) throw new Error('Supabase is not configured');
       const { data, error } = await supabase
         .from('business_listings')
-        .select('id, name, category, city, neighborhood, status, claim_status, is_claimed, verification_status, jewish_owned_status, kosher_status, kosher_certification, verified_owner_id, submitted_by, submitted_by_name, created_at')
+        .select('id, name, category, city, neighborhood, status, claim_status, is_claimed, verification_status, jewish_owned_status, kosher_status, kosher_certification, kosher_certifying_agency, verified_owner_id, submitted_by, submitted_by_name, created_at')
         .or('verification_status.eq.pending,jewish_owned_status.eq.pending,kosher_status.eq.pending')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -83,7 +84,7 @@ export default function AdminBusinessVerification() {
   });
 
   const verifyMutation = useMutation({
-    mutationFn: async ({ businessId, verification_status = null, jewish_owned_status = null, kosher_status = null }) => {
+    mutationFn: async ({ businessId, verification_status = null, jewish_owned_status = null, kosher_status = null, kosher_certifying_agency = null }) => {
       if (!supabase) throw new Error('Supabase is not configured');
       const { error } = await supabase.rpc('admin_verify_business', {
         p_business_id: businessId,
@@ -91,6 +92,7 @@ export default function AdminBusinessVerification() {
         p_jewish_owned_status: jewish_owned_status,
         p_kosher_status: kosher_status,
         p_review_note: null,
+        p_kosher_certifying_agency: kosher_certifying_agency,
       });
       if (error) throw error;
     },
@@ -101,6 +103,10 @@ export default function AdminBusinessVerification() {
     },
     onError: (error) => toast.error(error.message || 'Could not update business'),
   });
+
+  function agencyFor(item) {
+    return agencyDrafts[item.id] ?? item.kosher_certifying_agency ?? '';
+  }
 
   const visibleItems = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -172,6 +178,23 @@ export default function AdminBusinessVerification() {
                 <Badge className={KOSHER_META[item.kosher_status]?.className}>{KOSHER_META[item.kosher_status]?.label ?? item.kosher_status}</Badge>
               </div>
 
+              {(item.kosher_status === 'pending' || item.kosher_status === 'certified' || item.kosher_certification) && (
+                <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                  {item.kosher_certification && (
+                    <p className="text-[12px] font-semibold text-slate-600">Claim: &ldquo;{item.kosher_certification}&rdquo;</p>
+                  )}
+                  <label className="mt-2 block text-[11px] font-black uppercase tracking-wide text-slate-400">
+                    Certifying agency (required to mark certified)
+                  </label>
+                  <input
+                    value={agencyFor(item)}
+                    onChange={(event) => setAgencyDrafts((prev) => ({ ...prev, [item.id]: event.target.value }))}
+                    placeholder="Example: OU, Star-K, a local vaad"
+                    className="mt-1 h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] font-semibold text-slate-800 outline-none placeholder:text-slate-400"
+                  />
+                </div>
+              )}
+
               <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
                 <ActionButton
                   tone="approve"
@@ -189,8 +212,8 @@ export default function AdminBusinessVerification() {
                 </ActionButton>
                 <ActionButton
                   tone="approve"
-                  disabled={isBusy || item.kosher_status === 'certified'}
-                  onClick={() => verifyMutation.mutate({ businessId: item.id, kosher_status: 'certified' })}
+                  disabled={isBusy || item.kosher_status === 'certified' || !agencyFor(item).trim()}
+                  onClick={() => verifyMutation.mutate({ businessId: item.id, kosher_status: 'certified', kosher_certifying_agency: agencyFor(item).trim() })}
                 >
                   <BadgeCheck className="h-3.5 w-3.5" /> Kosher certified
                 </ActionButton>

@@ -603,7 +603,12 @@ export default function AdminModerationQueue() {
                             <p className="mt-2 rounded-lg bg-slate-50 p-2 text-sm italic text-slate-500">{claim.proof_notes}</p>
                           )}
                           {claim.kosher_claim && (
-                            <p className="mt-2 text-xs font-bold text-slate-500">Kosher claim: {claim.kosher_claim}</p>
+                            <p className="mt-2 text-xs font-bold text-slate-500">
+                              Kosher claim: {claim.kosher_claim}
+                              {claim.kosher_certifying_agency_claim
+                                ? ` (agency: ${claim.kosher_certifying_agency_claim})`
+                                : ' (no certifying agency named — cannot approve as kosher)'}
+                            </p>
                           )}
                           <div className="mt-3 flex flex-wrap gap-2">
                             <Button
@@ -624,7 +629,7 @@ export default function AdminModerationQueue() {
                                 <BadgeCheck className="w-4 h-4 mr-1.5" /> Approve + Jewish-Owned
                               </Button>
                             )}
-                            {claim.kosher_claim && (
+                            {claim.kosher_claim && claim.kosher_certifying_agency_claim && (
                               <Button
                                 size="sm"
                                 className="bg-emerald-600 hover:bg-emerald-700"
