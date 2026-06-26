@@ -1579,6 +1579,44 @@ Goals:
   },
 
   {
+    id: 'kosher-certification-expiration-tracking',
+    category: 'Businesses & Map',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Kosher Certification Expiration / Renewal Tracking',
+    description: 'Real kashrus certifications lapse or get revoked. Right now once a business is marked kosher_status = "certified" with an agency name (see kosher-certifying-agency-disclosure), there is no expiration date and no periodic re-confirmation, so a badge could keep showing long after a certification ended.',
+    why: 'Surfaced as a follow-up while fixing the unqualified "Kosher Certified" badge. Out of scope for that fix (which only required naming the agency), but a real risk for a badge that is meant to be trustworthy over time.',
+    prompt: `You are adding kosher-certification expiration tracking for JUnited.
+
+Context: business_listings.kosher_certifying_agency and the 'certified' kosher_status path are defined in supabase/migrations/20260626140000_kosher_certifying_agency.sql. Admin review UI is src/pages/AdminBusinessVerification.jsx and src/pages/AdminModerationQueue.jsx (Businesses tab). Public badge is TrustBadges in src/pages/Map.jsx.
+
+Goals:
+1. Add a migration with business_listings.kosher_certification_expires_at (date, nullable) and require admins to set it (or explicitly mark "no expiration provided") when setting kosher_status = 'certified', mirroring the agency-name requirement pattern already in admin_verify_business.
+2. Add a scheduled job (Supabase cron, see supabase/migrations/20260625000000_daily_refresh_cron.sql for the existing cron pattern) that flips kosher_status from 'certified' to 'pending' once kosher_certification_expires_at has passed, and notifies the owner to renew.
+3. Surface the expiration date (or "no expiration on file") in the TrustBadges disclaimer and in the admin review UI.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'map-listing-endorsement-framing-review',
+    category: 'Businesses & Map',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Review "Featured" / Directory Framing for Real-World Businesses & Shuls',
+    description: 'src/pages/Communities.jsx hardcodes a FEATURED_SHULS list of real synagogue names (Young Israel Woodmere, Chabad of Woodmere, Beth Shalom, Shaaray Tefila), and src/components/mitzvah/MitzvahMap.jsx hardcodes real kosher businesses with addresses/source_url (e.g. Gourmet Glatt Cedarhurst). The factual citation itself (Yelp-style directory entries pointing at public sources) is fine, but the word "Featured" implies an endorsement or partnership that does not exist, and none of these real-world organizations have opted in or been asked.',
+    why: 'Surfaced during the legal/authenticity audit that produced kosher-certifying-agency-disclosure. Lower severity than the kosher badge (no certification claim is being made), but the same root issue — making a claim about a real third party without their involvement — so it is worth a deliberate decision rather than leaving the copy as-is by default.',
+    prompt: `You are reviewing "Featured" framing for real-world organizations on JUnited.
+
+Context: const FEATURED_SHULS in src/pages/Communities.jsx (near the top of the file) lists real synagogue names with no opt-in mechanism. src/components/mitzvah/MitzvahMap.jsx has hardcoded real business listings (e.g. 'shop-gourmet-glatt-cedarhurst') with source_url citations.
+
+Goals:
+1. Decide and document (in this roadmap entry's why field) whether "Featured" implies endorsement that requires consent, vs. is read as neutral directory placement like Yelp/Google Maps.
+2. If consent is required: replace FEATURED_SHULS with data driven from real opted-in/claimed community or business records (e.g. communities.featured_on_directory boolean set by an admin only after the organization is contacted), rather than a static hardcoded array.
+3. If neutral directory framing is acceptable: rename "Featured" to non-endorsing language (e.g. "Nearby" or "In the directory") in both files, and ensure every hardcoded factual entry keeps its source_url citation.
+4. Update internal/roadmap.js: change this item's status to 'shipped' once a decision is implemented.`,
+  },
+
+  {
     id: 'organization-pages',
     category: 'Businesses & Map',
     status: STATUS.DEFERRED,
