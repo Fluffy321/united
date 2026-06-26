@@ -80,7 +80,6 @@ export default function TodayFiveTownsCard({ onCalendarClick }) {
     candleLocation?.lat &&
     candleLocation?.lng &&
     locationLabel &&
-    candleLocation?.type !== 'default' &&
     candleLocation?.type !== 'declined'
   );
 
