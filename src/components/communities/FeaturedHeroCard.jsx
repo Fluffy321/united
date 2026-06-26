@@ -11,7 +11,7 @@ export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, 
       <div className="p-5">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-semibold backdrop-blur-sm">
           <span>⚡</span>
-          <span>🔥 Featured</span>
+          <span>Directory pick</span>
         </div>
 
         <div className="flex items-center justify-between gap-4">
@@ -31,7 +31,7 @@ export default function FeaturedHeroCard({ community, onOpen, onJoin, isJoined, 
             <div className="min-w-0 flex-1">
               <h2 className="text-2xl font-bold leading-tight line-clamp-2">{community.name}</h2>
               <p className="mt-2 line-clamp-2 text-sm text-white/85">
-                {community.featured_tagline || community.description_short || 'Featured community'}
+                {community.featured_tagline || community.description_short || 'Listed community'}
               </p>
               <div className="mt-3 flex items-center gap-5 text-sm text-white/80">
                 <span>👥 {(community.follower_count || 0).toLocaleString()}</span>

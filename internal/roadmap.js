@@ -1460,6 +1460,29 @@ Goals:
 6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
+  {
+    id: 'siddur-nusach-tefillin-source',
+    category: 'Jewish Life',
+    status: STATUS.BLOCKED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Siddur — Verify Per-Nusach Tefillin Brachos Source',
+    description: 'SiddurPage.jsx previously hardcoded the Sefaria ref for "Tefillin Brachos" to the Ashkenaz text even under the Nusach Sefard and Edot HaMizrach tabs, so Sephardic/Mizrahi users would have seen Ashkenazi-rite blessing text silently mislabeled as their own nusach. Fixed 2026-06-26 by removing the item from the Sefard and Edot HaMizrach "Weekday Basics" sections rather than shipping an unverified ref guess.',
+    why: 'Content-accuracy audit requested by the user found this mislabeling. This sandbox cannot reach sefaria.org to confirm the correct per-nusach ref strings (network policy blocks the domain), so a real fix needs someone with live Sefaria access to find the correct Siddur Sefard / Siddur Edot HaMizrach refs for the Tefillin section and re-add the item with the right source — until then it is correctly omitted rather than wrong.',
+    needs: ['Live access to sefaria.org to look up the exact ref strings (e.g. via the Sefaria API table-of-contents for "Siddur Sefard" and "Siddur Edot HaMizrach") for their Tefillin/preparatory-prayers sections.'],
+    prompt: `You are restoring the Tefillin Brachos item to the Nusach Sefard and Edot HaMizrach siddur sections in JUnited, with a correctly sourced Sefaria reference.
+
+Context: src/components/jewish/SiddurPage.jsx
+  - SEFARD_SECTIONS 'basics' section and EDOT_MIZRACH_SECTIONS 'basics' section each have a comment where a 'tefillin-brachos' prayer() entry used to be (it was removed because it incorrectly hardcoded the Ashkenaz ref 'Siddur Ashkenaz, Weekday, Shacharit, Preparatory Prayers, Tefillin').
+  - The ASHKENAZ_SECTIONS version of this item is still correct for the Ashkenaz tab and should not change.
+  - Prayers are fetched live from Sefaria's text API (SEFARIA_TEXTS_URL) using the 'ref' string — the ref must exactly match a real Sefaria text node or the fetch throws and the UI shows a "Could not load" error.
+
+Goals:
+1. Look up Sefaria's table of contents for "Siddur Sefard" and "Siddur Edot HaMizrach" (e.g. https://www.sefaria.org/api/v2/raw/index/Siddur%20Sefard) to find the exact node title for their Tefillin / preparatory-prayers blessing section.
+2. Add back a prayer('tefillin-brachos', 'Tefillin Brachos', '<verified Sefaria ref>', { english: false, sourceLinks: [CHABAD_SOURCES.tefillin] }) entry to SEFARD_SECTIONS basics and a separate one with the Edot HaMizrach ref to EDOT_MIZRACH_SECTIONS basics. Drop the lineIndexes filter unless the verified ref's line layout matches the Ashkenaz one.
+3. Manually load the Siddur page with each nusach selected and confirm the Tefillin Brachos item renders real Hebrew text (not a load error) and that it is genuinely the Sefard/Edot HaMizrach nusach wording, not Ashkenaz text reused under a different ref.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
   // ── Businesses & Map ──────────────────────────────────────────────────────
 
   {
@@ -1543,6 +1566,54 @@ Goals:
     title: 'Admin Business Verification Workflow',
     description: 'Admin UI to grant/revoke verified_owner and verified Jewish-owned status on business listings. The Verified strip on the Businesses page and trust badges on business cards depend on these fields being set.',
     shippedNote: 'Shipped 2026-06-22, two complementary paths merged from parallel work. (1) src/pages/AdminModerationQueue.jsx "Businesses" tab — the pre-existing review UI/RPCs (approve/reject_business_listing_submission, approve/reject_business_claim_request from supabase/migrations/20260517034050_business_owner_tools.sql + 20260516011532_business_directory_mvp.sql) now has a notifyBusinessOwner() helper wired into the onSuccess handler of all four mutations, so owners get an in-app notification ("business_verification", linking to /Map) on publish/reject/claim-approve/claim-reject. (2) New dedicated src/pages/AdminBusinessVerification.jsx page (route /AdminBusinessVerification, linked from Settings → Admin Tools) lists businesses with pending verification/jewish-owned/kosher status and lets admins verify owner, verify Jewish-owned, mark kosher certified, or reject — backed by SECURITY DEFINER RPC admin_verify_business(p_business_id, p_verification_status, p_jewish_owned_status, p_kosher_status, p_review_note) in migration 20260622213239_admin_business_verification.sql, which validates is_admin(), enforces the real check-constraint enum values, inserts a business_verified/business_rejected notification (verified_owner_id, falling back to submitted_by), and invalidates business-directory-published so the Map verified strip refreshes. Reachable today via either admin → /AdminModerationQueue → "Businesses" tab, or admin → /AdminBusinessVerification.',
+  },
+
+  {
+    id: 'kosher-certifying-agency-disclosure',
+    category: 'Businesses & Map',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Kosher Badge Requires a Named Certifying Agency',
+    description: 'The "Kosher Certified" trust badge previously could be set by an admin or via a free-text claim with no real kashrus agency named anywhere — a legal/authenticity risk, since JUnited is not a kashrus authority and the badge read as an unqualified guarantee. Businesses and claimants now must name the certifying agency, and the badge discloses it (e.g. "Kosher — per OU") with a self-reported/not-independently-verified disclaimer.',
+    shippedNote: 'Shipped 2026-06-26. Migration 20260626140000_kosher_certifying_agency.sql adds business_listings.kosher_certifying_agency and business_claim_requests.kosher_certifying_agency_claim, plus a check constraint that blocks kosher_status = \'certified\' without a non-empty agency name. admin_verify_business RPC gained p_kosher_certifying_agency and now raises an exception if certified is requested with no agency on file. approve_business_claim_request RPC now requires v_claim.kosher_certifying_agency_claim before p_verify_kosher can set certified. UI: src/pages/Map.jsx SubmitBusinessModal and ClaimBusinessModal both gained a required "Certifying agency" field that appears once a kosher claim is entered, and TrustBadges renders "Kosher — per [Agency]" (or "Kosher (agency not on file)" for any pre-existing row without one) plus a showDisclaimer paragraph in BusinessDetailModal explaining JUnited does not verify kashrus claims independently. src/pages/AdminBusinessVerification.jsx now shows the submitted claim text and an editable required agency field, and disables the "Kosher certified" button until it is filled in. src/pages/AdminModerationQueue.jsx Businesses tab now only shows "Approve + Kosher" when the claim has a named agency. Reachable today via Map → Submit a Business / Claim a Business (agency field appears under the kosher claim field), Map business detail card (disclaimer + agency-disclosing badge), and admin → /AdminBusinessVerification or /AdminModerationQueue → Businesses tab.',
+  },
+
+  {
+    id: 'kosher-certification-expiration-tracking',
+    category: 'Businesses & Map',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Kosher Certification Expiration / Renewal Tracking',
+    description: 'Real kashrus certifications lapse or get revoked. Right now once a business is marked kosher_status = "certified" with an agency name (see kosher-certifying-agency-disclosure), there is no expiration date and no periodic re-confirmation, so a badge could keep showing long after a certification ended.',
+    why: 'Surfaced as a follow-up while fixing the unqualified "Kosher Certified" badge. Out of scope for that fix (which only required naming the agency), but a real risk for a badge that is meant to be trustworthy over time.',
+    prompt: `You are adding kosher-certification expiration tracking for JUnited.
+
+Context: business_listings.kosher_certifying_agency and the 'certified' kosher_status path are defined in supabase/migrations/20260626140000_kosher_certifying_agency.sql. Admin review UI is src/pages/AdminBusinessVerification.jsx and src/pages/AdminModerationQueue.jsx (Businesses tab). Public badge is TrustBadges in src/pages/Map.jsx.
+
+Goals:
+1. Add a migration with business_listings.kosher_certification_expires_at (date, nullable) and require admins to set it (or explicitly mark "no expiration provided") when setting kosher_status = 'certified', mirroring the agency-name requirement pattern already in admin_verify_business.
+2. Add a scheduled job (Supabase cron, see supabase/migrations/20260625000000_daily_refresh_cron.sql for the existing cron pattern) that flips kosher_status from 'certified' to 'pending' once kosher_certification_expires_at has passed, and notifies the owner to renew.
+3. Surface the expiration date (or "no expiration on file") in the TrustBadges disclaimer and in the admin review UI.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'map-listing-endorsement-framing-review',
+    category: 'Businesses & Map',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Review "Featured" / Directory Framing for Real-World Businesses & Shuls',
+    description: 'src/pages/Communities.jsx hardcodes a FEATURED_SHULS list of real synagogue names (Young Israel Woodmere, Chabad of Woodmere, Beth Shalom, Shaaray Tefila), and src/components/mitzvah/MitzvahMap.jsx hardcodes real kosher businesses with addresses/source_url (e.g. Gourmet Glatt Cedarhurst). The factual citation itself (Yelp-style directory entries pointing at public sources) is fine, but the word "Featured" implies an endorsement or partnership that does not exist, and none of these real-world organizations have opted in or been asked.',
+    why: 'Surfaced during the legal/authenticity audit that produced kosher-certifying-agency-disclosure. Lower severity than the kosher badge (no certification claim is being made), but the same root issue — making a claim about a real third party without their involvement — so it is worth a deliberate decision rather than leaving the copy as-is by default.',
+    prompt: `You are reviewing "Featured" framing for real-world organizations on JUnited.
+
+Context: const FEATURED_SHULS in src/pages/Communities.jsx (near the top of the file) lists real synagogue names with no opt-in mechanism. src/components/mitzvah/MitzvahMap.jsx has hardcoded real business listings (e.g. 'shop-gourmet-glatt-cedarhurst') with source_url citations.
+
+Goals:
+1. Decide and document (in this roadmap entry's why field) whether "Featured" implies endorsement that requires consent, vs. is read as neutral directory placement like Yelp/Google Maps.
+2. If consent is required: replace FEATURED_SHULS with data driven from real opted-in/claimed community or business records (e.g. communities.featured_on_directory boolean set by an admin only after the organization is contacted), rather than a static hardcoded array.
+3. If neutral directory framing is acceptable: rename "Featured" to non-endorsing language (e.g. "Nearby" or "In the directory") in both files, and ensure every hardcoded factual entry keeps its source_url citation.
+4. Update internal/roadmap.js: change this item's status to 'shipped' once a decision is implemented.`,
   },
 
   {

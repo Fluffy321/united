@@ -1255,7 +1255,7 @@ export default function Communities() {
           <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
         </button>
 
-        {/* Featured Communities - 1 Hero + up to 4 Secondary */}
+        {/* Directory picks - 1 hero + up to 4 secondary */}
         {mainFeatured || secondaryFeatured.length > 0 ? (
           <div className="mb-8 space-y-4">
             {mainFeatured && (
@@ -1479,7 +1479,7 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
 }
 
 function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory, sizeFilter, setSizeFilter, activityFilter, setActivityFilter, currentUser, allCommunities, onJoinCommunity }) {
-  // Apply extra filters then sort: featured first, then by follower count
+  // Apply extra filters then sort: directory picks first, then by follower count
   const filtered = applyExtraFilters(communities, sizeFilter, activityFilter);
   const sortedCommunities = [...filtered].sort((a, b) => {
     if (a.isFeatured && !b.isFeatured) return -1;

@@ -43,7 +43,7 @@ create policy "Owners update invite links"
   on invite_links for update
   to authenticated
   using (
-    created_by = auth.uid()
+    inviter_id = auth.uid()
     or exists (
       select 1 from community_memberships
       where community_id = invite_links.community_id
@@ -53,7 +53,7 @@ create policy "Owners update invite links"
     )
   )
   with check (
-    created_by = auth.uid()
+    inviter_id = auth.uid()
     or exists (
       select 1 from community_memberships
       where community_id = invite_links.community_id
@@ -71,9 +71,9 @@ create policy "Members increment invite link uses_count"
   with check (
     -- only uses_count may change; all other columns stay the same
     community_id    = community_id
-    and created_by  = created_by
+    and inviter_id  = inviter_id
     and code        = code
     and max_uses    = max_uses
-    and status      = status
+    and is_active   = is_active
     and expires_at  = expires_at
   );
