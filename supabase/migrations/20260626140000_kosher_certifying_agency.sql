@@ -13,6 +13,16 @@ alter table public.business_listings
 alter table public.business_claim_requests
   add column if not exists kosher_certifying_agency_claim text;
 
+-- This feature has been live since 2026-06-22 (admin_verify_business), so
+-- production may already have real "certified" rows with no agency on file.
+-- Downgrade those to "pending" before adding the constraint below, so the
+-- migration can never fail on existing data and an admin has to re-confirm
+-- the agency name rather than the badge silently disappearing.
+update public.business_listings
+set kosher_status = 'pending'
+where kosher_status = 'certified'
+  and nullif(trim(coalesce(kosher_certifying_agency, '')), '') is null;
+
 -- A business cannot be "certified" without naming the agency it claims
 -- certifies it. Other kosher_status values are unaffected.
 alter table public.business_listings
