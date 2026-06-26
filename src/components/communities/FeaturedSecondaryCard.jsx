@@ -11,7 +11,7 @@ export default function FeaturedSecondaryCard({ community, onOpen, onJoin, isJoi
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-[11px] font-semibold text-blue-700">
-            Featured
+            Directory pick
           </div>
           <div className="text-sm font-bold text-slate-900 line-clamp-2 leading-snug">{community.name}</div>
           <div className="mt-1 text-xs text-slate-500">

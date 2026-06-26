@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dataService, incrementCounter } from '@/services';
+import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Users, MapPin, CheckCircle2, ArrowRight, Shield, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -87,12 +88,20 @@ export default function JoinByCommunityCode() {
           invited_by: invite.inviter_id,
           invited_by_name: invite.inviter_name,
         });
-        // Increment follower count and uses count
+        const incrementInviteUse = async () => {
+          if (shouldUseSupabase && supabase) {
+            const { error } = await supabase.rpc('increment_invite_link_use', { p_invite_id: invite.id });
+            if (error) throw error;
+            return;
+          }
+          await dataService.entities.InviteLink.update(invite.id, {
+            uses_count: (invite.uses_count || 0) + 1,
+          });
+        };
+
         await Promise.all([
           incrementCounter('communities', 'follower_count', invite.community_id, 1),
-          dataService.entities.InviteLink.update(invite.id, {
-            uses_count: (invite.uses_count || 0) + 1
-          }),
+          incrementInviteUse(),
         ]);
       }
       navigate(chatPath(invite.community_id), { replace: true });

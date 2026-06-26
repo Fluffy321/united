@@ -140,6 +140,8 @@ const emptyBusinessForm = {
   serves_jewish_community: false,
   kosher_claim: '',
   kosher_certifying_agency: '',
+  kosher_certification_expires_at: '',
+  kosher_certification_no_expiration: false,
 };
 
 const emptyClaimForm = {
@@ -152,6 +154,8 @@ const emptyClaimForm = {
   serves_jewish_community_claim: false,
   kosher_claim: '',
   kosher_certifying_agency: '',
+  kosher_certification_expires_at: '',
+  kosher_certification_no_expiration: false,
 };
 
 function MapModuleFallback({ label = 'Loading map...' }) {
@@ -214,8 +218,16 @@ function TrustBadges({ business, showDisclaimer = false }) {
   }
   if (business.kosher_status === 'certified') {
     const agency = String(business.kosher_certifying_agency || '').trim();
+    const expiresAt = business.kosher_certification_expires_at
+      ? new Date(`${business.kosher_certification_expires_at}T00:00:00`)
+      : null;
+    const expiryLabel = expiresAt && !Number.isNaN(expiresAt.getTime())
+      ? `, through ${expiresAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`
+      : business.kosher_certification_no_expiration
+        ? ', no expiration provided'
+        : '';
     badges.push({
-      label: agency ? `Kosher — per ${agency}` : 'Kosher (agency not on file)',
+      label: agency ? `Kosher — per ${agency}${expiryLabel}` : 'Kosher (agency not on file)',
       icon: ShieldCheck,
       className: 'bg-emerald-50 text-emerald-700 border-emerald-100',
     });
@@ -360,6 +372,9 @@ function SubmitBusinessModal({ open, onClose, currentUser }) {
       if (form.listing_type === 'online' && !form.website.trim()) throw new Error('Online businesses need a website or public link.');
       if (form.listing_type === 'service_area' && !form.service_area_text.trim()) throw new Error('Service-area businesses need a service area.');
       if (form.kosher_claim.trim() && !form.kosher_certifying_agency.trim()) throw new Error('Name the certifying agency for your kosher claim.');
+      if (form.kosher_claim.trim() && !form.kosher_certification_no_expiration && !form.kosher_certification_expires_at) {
+        throw new Error('Add a kosher certification expiration date, or mark that no expiration was provided.');
+      }
 
       return dataService.entities.BusinessListing.create({
         name,
@@ -385,6 +400,8 @@ function SubmitBusinessModal({ open, onClose, currentUser }) {
         kosher_status: form.kosher_claim.trim() ? 'pending' : 'none',
         kosher_certification: form.kosher_claim.trim() || null,
         kosher_certifying_agency: form.kosher_claim.trim() ? form.kosher_certifying_agency.trim() || null : null,
+        kosher_certification_expires_at: form.kosher_claim.trim() && !form.kosher_certification_no_expiration ? form.kosher_certification_expires_at || null : null,
+        kosher_certification_no_expiration: form.kosher_claim.trim() ? Boolean(form.kosher_certification_no_expiration) : false,
       });
     },
     onSuccess: () => {
@@ -489,10 +506,35 @@ function SubmitBusinessModal({ open, onClose, currentUser }) {
           <input className="app-input" value={form.kosher_claim} onChange={(e) => setForm({ ...form, kosher_claim: e.target.value })} placeholder="Optional, reviewed before any badge appears" />
         </Field>
         {form.kosher_claim.trim() && (
-          <Field label="Certifying agency" required>
-            <input className="app-input" value={form.kosher_certifying_agency} onChange={(e) => setForm({ ...form, kosher_certifying_agency: e.target.value })} placeholder="Example: OU, Star-K, a local vaad" />
-            <p className="mt-1 text-[11px] font-semibold text-slate-400">A certified badge can't be shown without naming the agency. JUnited does not verify kashrus claims independently.</p>
-          </Field>
+          <>
+            <Field label="Certifying agency" required>
+              <input className="app-input" value={form.kosher_certifying_agency} onChange={(e) => setForm({ ...form, kosher_certifying_agency: e.target.value })} placeholder="Example: OU, Star-K, a local vaad" />
+              <p className="mt-1 text-[11px] font-semibold text-slate-400">A certified badge can't be shown without naming the agency. JUnited does not verify kashrus claims independently.</p>
+            </Field>
+            <Field label="Certification expiration" required>
+              <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                <input
+                  type="date"
+                  className="app-input"
+                  value={form.kosher_certification_expires_at}
+                  disabled={form.kosher_certification_no_expiration}
+                  onChange={(e) => setForm({ ...form, kosher_certification_expires_at: e.target.value })}
+                />
+                <label className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={form.kosher_certification_no_expiration}
+                    onChange={(e) => setForm({
+                      ...form,
+                      kosher_certification_no_expiration: e.target.checked,
+                      kosher_certification_expires_at: e.target.checked ? '' : form.kosher_certification_expires_at,
+                    })}
+                  />
+                  No expiration provided
+                </label>
+              </div>
+            </Field>
+          </>
         )}
 
         <div className="flex justify-end gap-2 pt-2">
@@ -529,6 +571,9 @@ function ClaimBusinessModal({ business, onClose, currentUser }) {
       if (!form.claimant_name.trim()) throw new Error('Your name is required.');
       if (!form.claimant_email.trim()) throw new Error('Your email is required.');
       if (form.kosher_claim.trim() && !form.kosher_certifying_agency.trim()) throw new Error('Name the certifying agency for your kosher claim.');
+      if (form.kosher_claim.trim() && !form.kosher_certification_no_expiration && !form.kosher_certification_expires_at) {
+        throw new Error('Add a kosher certification expiration date, or mark that no expiration was provided.');
+      }
 
       return dataService.entities.BusinessClaimRequest.create({
         business_id: business.id,
@@ -545,6 +590,8 @@ function ClaimBusinessModal({ business, onClose, currentUser }) {
         serves_jewish_community_claim: Boolean(form.serves_jewish_community_claim),
         kosher_claim: form.kosher_claim.trim() || null,
         kosher_certifying_agency_claim: form.kosher_claim.trim() ? form.kosher_certifying_agency.trim() || null : null,
+        kosher_certification_expires_at_claim: form.kosher_claim.trim() && !form.kosher_certification_no_expiration ? form.kosher_certification_expires_at || null : null,
+        kosher_certification_no_expiration_claim: form.kosher_claim.trim() ? Boolean(form.kosher_certification_no_expiration) : false,
       });
     },
     onSuccess: () => {
@@ -596,10 +643,35 @@ function ClaimBusinessModal({ business, onClose, currentUser }) {
           <input className="app-input" value={form.kosher_claim} onChange={(e) => setForm({ ...form, kosher_claim: e.target.value })} placeholder="Optional, reviewed by admins" />
         </Field>
         {form.kosher_claim.trim() && (
-          <Field label="Certifying agency" required>
-            <input className="app-input" value={form.kosher_certifying_agency} onChange={(e) => setForm({ ...form, kosher_certifying_agency: e.target.value })} placeholder="Example: OU, Star-K, a local vaad" />
-            <p className="mt-1 text-[11px] font-semibold text-slate-400">A certified badge can't be shown without naming the agency. JUnited does not verify kashrus claims independently.</p>
-          </Field>
+          <>
+            <Field label="Certifying agency" required>
+              <input className="app-input" value={form.kosher_certifying_agency} onChange={(e) => setForm({ ...form, kosher_certifying_agency: e.target.value })} placeholder="Example: OU, Star-K, a local vaad" />
+              <p className="mt-1 text-[11px] font-semibold text-slate-400">A certified badge can't be shown without naming the agency. JUnited does not verify kashrus claims independently.</p>
+            </Field>
+            <Field label="Certification expiration" required>
+              <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                <input
+                  type="date"
+                  className="app-input"
+                  value={form.kosher_certification_expires_at}
+                  disabled={form.kosher_certification_no_expiration}
+                  onChange={(e) => setForm({ ...form, kosher_certification_expires_at: e.target.value })}
+                />
+                <label className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={form.kosher_certification_no_expiration}
+                    onChange={(e) => setForm({
+                      ...form,
+                      kosher_certification_no_expiration: e.target.checked,
+                      kosher_certification_expires_at: e.target.checked ? '' : form.kosher_certification_expires_at,
+                    })}
+                  />
+                  No expiration provided
+                </label>
+              </div>
+            </Field>
+          </>
         )}
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className="h-11 rounded-full border border-slate-200 bg-white px-5 text-sm font-black text-slate-700">Cancel</button>

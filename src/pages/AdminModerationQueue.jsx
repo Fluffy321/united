@@ -608,6 +608,11 @@ export default function AdminModerationQueue() {
                               {claim.kosher_certifying_agency_claim
                                 ? ` (agency: ${claim.kosher_certifying_agency_claim})`
                                 : ' (no certifying agency named — cannot approve as kosher)'}
+                              {claim.kosher_certification_expires_at_claim
+                                ? ` · expires ${claim.kosher_certification_expires_at_claim}`
+                                : claim.kosher_certification_no_expiration_claim
+                                  ? ' · no expiration provided'
+                                  : ' · no expiration info — cannot approve as kosher'}
                             </p>
                           )}
                           <div className="mt-3 flex flex-wrap gap-2">
@@ -629,7 +634,9 @@ export default function AdminModerationQueue() {
                                 <BadgeCheck className="w-4 h-4 mr-1.5" /> Approve + Jewish-Owned
                               </Button>
                             )}
-                            {claim.kosher_claim && claim.kosher_certifying_agency_claim && (
+                            {claim.kosher_claim
+                              && claim.kosher_certifying_agency_claim
+                              && (claim.kosher_certification_expires_at_claim || claim.kosher_certification_no_expiration_claim) && (
                               <Button
                                 size="sm"
                                 className="bg-emerald-600 hover:bg-emerald-700"

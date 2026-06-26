@@ -1146,7 +1146,7 @@ function getMapLinks(point, userLocation) {
 
 function getTrustLabel(point) {
   if (!point) return '';
-  if (point.verification) return point.verification;
+  if (point.verification) return point.verification.replace(/^Verified kosher$/i, 'Source-backed kosher listing');
   if (point.source_url) return 'Source-backed listing';
   if (point.isCommunityPoint) return 'Community post';
   if (point.isRequest) return 'Member request';
@@ -1341,8 +1341,8 @@ export default function MitzvahMap({
           <p className="text-[12px] font-black text-blue-900">Five Towns digital hub</p>
           <p className="text-[11px] font-semibold leading-5 text-blue-700">
             {COMMUNITIES_ENABLED
-              ? 'A personalized local map for Lawrence, Cedarhurst, Woodmere, Hewlett, and Inwood, showing verified kosher food, shops, shuls, schools, posts, events, and mitzvah needs from communities you joined.'
-              : 'A personalized local map for Lawrence, Cedarhurst, Woodmere, Hewlett, and Inwood, showing verified kosher food, shops, shuls, schools, events, and mitzvah needs.'}
+              ? 'A personalized local map for Lawrence, Cedarhurst, Woodmere, Hewlett, and Inwood, showing source-backed kosher food, shops, shuls, schools, posts, events, and mitzvah needs from communities you joined.'
+              : 'A personalized local map for Lawrence, Cedarhurst, Woodmere, Hewlett, and Inwood, showing source-backed kosher food, shops, shuls, schools, events, and mitzvah needs.'}
           </p>
         </div>
       )}
@@ -1402,8 +1402,8 @@ export default function MitzvahMap({
             <p className="text-[13px] font-black text-slate-900">Pick a filter to show pins</p>
             <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">
               {COMMUNITIES_ENABLED
-                ? 'Choose verified kosher food, shops, shuls, schools, community businesses, lost and found, help, mitzvahs, events, or community posts.'
-                : 'Choose verified kosher food, shops, shuls, schools, local businesses, lost and found, help, mitzvahs, or events.'}
+                ? 'Choose source-backed kosher food, shops, shuls, schools, community businesses, lost and found, help, mitzvahs, events, or community posts.'
+                : 'Choose source-backed kosher food, shops, shuls, schools, local businesses, lost and found, help, mitzvahs, or events.'}
             </p>
           </div>
         )}
@@ -1568,7 +1568,7 @@ export default function MitzvahMap({
                   rel="noreferrer"
                   className="motion-press mt-2 inline-flex w-full items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-[11px] font-black text-emerald-700"
                 >
-                  Open verification source
+                  Open listing source
                 </a>
               )}
             </div>
@@ -1619,7 +1619,7 @@ export default function MitzvahMap({
                     </span>
                     {getTrustLabel(point) && (
                       <span className="truncate text-[10px] font-black text-emerald-700">
-                        {point.source_url ? 'Source-backed' : 'Verified'}
+                        {point.source_url ? 'Source-backed' : 'Member-added'}
                       </span>
                     )}
                   </div>

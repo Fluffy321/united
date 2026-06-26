@@ -154,8 +154,10 @@ const SEFARD_SECTIONS = [
     id: 'basics',
     label: 'Weekday Basics',
     items: [
-      // Tefillin Brachos omitted here: Sefaria has no verified Nusach Sefard ref for it,
-      // and the Ashkenaz ref must not be shown under a different nusach's tab.
+      prayer('tefillin-brachos', 'Tefillin Brachos', 'Siddur Sefard, Upon Arising, Tefilin', {
+        english: false,
+        sourceLinks: [CHABAD_SOURCES.tefillin],
+      }),
       prayerGroup('beginning-brachos', 'Beginning Brachos', [
         prayer('modeh-ani', 'Modeh Ani', 'Siddur Sefard, Upon Arising, Modeh Ani', { english: false }),
         prayer('morning-blessings', 'Morning Blessings', 'Siddur Sefard, Weekday Shacharit, Morning Blessings', { english: false }),

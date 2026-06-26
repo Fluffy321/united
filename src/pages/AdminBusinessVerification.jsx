@@ -68,6 +68,8 @@ export default function AdminBusinessVerification() {
   const queryClient = useQueryClient();
   const [query, setQuery] = useState('');
   const [agencyDrafts, setAgencyDrafts] = useState({});
+  const [expirationDrafts, setExpirationDrafts] = useState({});
+  const [noExpirationDrafts, setNoExpirationDrafts] = useState({});
 
   const { data: businesses = [], isLoading } = useQuery({
     queryKey: ['admin-business-verification'],
@@ -75,7 +77,7 @@ export default function AdminBusinessVerification() {
       if (!supabase) throw new Error('Supabase is not configured');
       const { data, error } = await supabase
         .from('business_listings')
-        .select('id, name, category, city, neighborhood, status, claim_status, is_claimed, verification_status, jewish_owned_status, kosher_status, kosher_certification, kosher_certifying_agency, verified_owner_id, submitted_by, submitted_by_name, created_at')
+        .select('id, name, category, city, neighborhood, status, claim_status, is_claimed, verification_status, jewish_owned_status, kosher_status, kosher_certification, kosher_certifying_agency, kosher_certification_expires_at, kosher_certification_no_expiration, verified_owner_id, submitted_by, submitted_by_name, created_at')
         .or('verification_status.eq.pending,jewish_owned_status.eq.pending,kosher_status.eq.pending')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -84,7 +86,15 @@ export default function AdminBusinessVerification() {
   });
 
   const verifyMutation = useMutation({
-    mutationFn: async ({ businessId, verification_status = null, jewish_owned_status = null, kosher_status = null, kosher_certifying_agency = null }) => {
+    mutationFn: async ({
+      businessId,
+      verification_status = null,
+      jewish_owned_status = null,
+      kosher_status = null,
+      kosher_certifying_agency = null,
+      kosher_certification_expires_at = null,
+      kosher_certification_no_expiration = false,
+    }) => {
       if (!supabase) throw new Error('Supabase is not configured');
       const { error } = await supabase.rpc('admin_verify_business', {
         p_business_id: businessId,
@@ -93,6 +103,8 @@ export default function AdminBusinessVerification() {
         p_kosher_status: kosher_status,
         p_review_note: null,
         p_kosher_certifying_agency: kosher_certifying_agency,
+        p_kosher_certification_expires_at: kosher_certification_expires_at,
+        p_kosher_certification_no_expiration: kosher_certification_no_expiration,
       });
       if (error) throw error;
     },
@@ -106,6 +118,18 @@ export default function AdminBusinessVerification() {
 
   function agencyFor(item) {
     return agencyDrafts[item.id] ?? item.kosher_certifying_agency ?? '';
+  }
+
+  function expirationFor(item) {
+    return expirationDrafts[item.id] ?? item.kosher_certification_expires_at ?? '';
+  }
+
+  function noExpirationFor(item) {
+    return noExpirationDrafts[item.id] ?? Boolean(item.kosher_certification_no_expiration);
+  }
+
+  function canCertifyKosher(item) {
+    return agencyFor(item).trim() && (expirationFor(item) || noExpirationFor(item));
   }
 
   const visibleItems = useMemo(() => {
@@ -192,6 +216,29 @@ export default function AdminBusinessVerification() {
                     placeholder="Example: OU, Star-K, a local vaad"
                     className="mt-1 h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] font-semibold text-slate-800 outline-none placeholder:text-slate-400"
                   />
+                  <label className="mt-3 block text-[11px] font-black uppercase tracking-wide text-slate-400">
+                    Certification expiration
+                  </label>
+                  <div className="mt-1 grid gap-2 sm:grid-cols-[1fr_auto]">
+                    <input
+                      type="date"
+                      value={expirationFor(item)}
+                      disabled={noExpirationFor(item)}
+                      onChange={(event) => setExpirationDrafts((prev) => ({ ...prev, [item.id]: event.target.value }))}
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] font-semibold text-slate-800 outline-none disabled:bg-slate-100 disabled:text-slate-400"
+                    />
+                    <label className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] font-bold text-slate-600">
+                      <input
+                        type="checkbox"
+                        checked={noExpirationFor(item)}
+                        onChange={(event) => {
+                          setNoExpirationDrafts((prev) => ({ ...prev, [item.id]: event.target.checked }));
+                          if (event.target.checked) setExpirationDrafts((prev) => ({ ...prev, [item.id]: '' }));
+                        }}
+                      />
+                      No expiration provided
+                    </label>
+                  </div>
                 </div>
               )}
 
@@ -212,8 +259,14 @@ export default function AdminBusinessVerification() {
                 </ActionButton>
                 <ActionButton
                   tone="approve"
-                  disabled={isBusy || item.kosher_status === 'certified' || !agencyFor(item).trim()}
-                  onClick={() => verifyMutation.mutate({ businessId: item.id, kosher_status: 'certified', kosher_certifying_agency: agencyFor(item).trim() })}
+                  disabled={isBusy || item.kosher_status === 'certified' || !canCertifyKosher(item)}
+                  onClick={() => verifyMutation.mutate({
+                    businessId: item.id,
+                    kosher_status: 'certified',
+                    kosher_certifying_agency: agencyFor(item).trim(),
+                    kosher_certification_expires_at: noExpirationFor(item) ? null : expirationFor(item),
+                    kosher_certification_no_expiration: noExpirationFor(item),
+                  })}
                 >
                   <BadgeCheck className="h-3.5 w-3.5" /> Kosher certified
                 </ActionButton>
