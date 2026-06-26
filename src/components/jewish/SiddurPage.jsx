@@ -154,11 +154,8 @@ const SEFARD_SECTIONS = [
     id: 'basics',
     label: 'Weekday Basics',
     items: [
-      prayer('tefillin-brachos', 'Tefillin Brachos', 'Siddur Ashkenaz, Weekday, Shacharit, Preparatory Prayers, Tefillin', {
-        english: false,
-        lineIndexes: [1, 2, 3, 4, 5, 6],
-        sourceLinks: [CHABAD_SOURCES.tefillin],
-      }),
+      // Tefillin Brachos omitted here: Sefaria has no verified Nusach Sefard ref for it,
+      // and the Ashkenaz ref must not be shown under a different nusach's tab.
       prayerGroup('beginning-brachos', 'Beginning Brachos', [
         prayer('modeh-ani', 'Modeh Ani', 'Siddur Sefard, Upon Arising, Modeh Ani', { english: false }),
         prayer('morning-blessings', 'Morning Blessings', 'Siddur Sefard, Weekday Shacharit, Morning Blessings', { english: false }),
@@ -192,11 +189,8 @@ const EDOT_MIZRACH_SECTIONS = [
     id: 'basics',
     label: 'Weekday Basics',
     items: [
-      prayer('tefillin-brachos', 'Tefillin Brachos', 'Siddur Ashkenaz, Weekday, Shacharit, Preparatory Prayers, Tefillin', {
-        english: false,
-        lineIndexes: [1, 2, 3, 4, 5, 6],
-        sourceLinks: [CHABAD_SOURCES.tefillin],
-      }),
+      // Tefillin Brachos omitted here: Sefaria has no verified Edot HaMizrach ref for it,
+      // and the Ashkenaz ref must not be shown under a different nusach's tab.
       prayerGroup('beginning-brachos', 'Beginning Brachos', [
         prayer('modeh-ani', 'Modeh Ani', 'Siddur Edot HaMizrach, Preparatory Prayers, Modeh Ani', { english: false }),
         prayer('morning-blessings', 'Morning Blessings', 'Siddur Edot HaMizrach, Preparatory Prayers, Morning Blessings', { english: false }),

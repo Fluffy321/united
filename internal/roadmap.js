@@ -1460,6 +1460,29 @@ Goals:
 6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
+  {
+    id: 'siddur-nusach-tefillin-source',
+    category: 'Jewish Life',
+    status: STATUS.BLOCKED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Siddur — Verify Per-Nusach Tefillin Brachos Source',
+    description: 'SiddurPage.jsx previously hardcoded the Sefaria ref for "Tefillin Brachos" to the Ashkenaz text even under the Nusach Sefard and Edot HaMizrach tabs, so Sephardic/Mizrahi users would have seen Ashkenazi-rite blessing text silently mislabeled as their own nusach. Fixed 2026-06-26 by removing the item from the Sefard and Edot HaMizrach "Weekday Basics" sections rather than shipping an unverified ref guess.',
+    why: 'Content-accuracy audit requested by the user found this mislabeling. This sandbox cannot reach sefaria.org to confirm the correct per-nusach ref strings (network policy blocks the domain), so a real fix needs someone with live Sefaria access to find the correct Siddur Sefard / Siddur Edot HaMizrach refs for the Tefillin section and re-add the item with the right source — until then it is correctly omitted rather than wrong.',
+    needs: ['Live access to sefaria.org to look up the exact ref strings (e.g. via the Sefaria API table-of-contents for "Siddur Sefard" and "Siddur Edot HaMizrach") for their Tefillin/preparatory-prayers sections.'],
+    prompt: `You are restoring the Tefillin Brachos item to the Nusach Sefard and Edot HaMizrach siddur sections in JUnited, with a correctly sourced Sefaria reference.
+
+Context: src/components/jewish/SiddurPage.jsx
+  - SEFARD_SECTIONS 'basics' section and EDOT_MIZRACH_SECTIONS 'basics' section each have a comment where a 'tefillin-brachos' prayer() entry used to be (it was removed because it incorrectly hardcoded the Ashkenaz ref 'Siddur Ashkenaz, Weekday, Shacharit, Preparatory Prayers, Tefillin').
+  - The ASHKENAZ_SECTIONS version of this item is still correct for the Ashkenaz tab and should not change.
+  - Prayers are fetched live from Sefaria's text API (SEFARIA_TEXTS_URL) using the 'ref' string — the ref must exactly match a real Sefaria text node or the fetch throws and the UI shows a "Could not load" error.
+
+Goals:
+1. Look up Sefaria's table of contents for "Siddur Sefard" and "Siddur Edot HaMizrach" (e.g. https://www.sefaria.org/api/v2/raw/index/Siddur%20Sefard) to find the exact node title for their Tefillin / preparatory-prayers blessing section.
+2. Add back a prayer('tefillin-brachos', 'Tefillin Brachos', '<verified Sefaria ref>', { english: false, sourceLinks: [CHABAD_SOURCES.tefillin] }) entry to SEFARD_SECTIONS basics and a separate one with the Edot HaMizrach ref to EDOT_MIZRACH_SECTIONS basics. Drop the lineIndexes filter unless the verified ref's line layout matches the Ashkenaz one.
+3. Manually load the Siddur page with each nusach selected and confirm the Tefillin Brachos item renders real Hebrew text (not a load error) and that it is genuinely the Sefard/Edot HaMizrach nusach wording, not Ashkenaz text reused under a different ref.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
   // ── Businesses & Map ──────────────────────────────────────────────────────
 
   {
