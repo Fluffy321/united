@@ -850,18 +850,18 @@ function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/45 p-3 motion-soft-in"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/45 p-2 motion-soft-in sm:p-3"
       onClick={onClose}
     >
       <form
         onSubmit={submit}
-        className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl motion-page-enter"
+        className="flex max-h-[calc(100dvh-1rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl motion-page-enter"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-3">
           <div>
-            <p className="text-[12px] font-black uppercase text-blue-600">New request</p>
-            <h2 className="text-xl font-black text-slate-950">Post help needed</h2>
+            <p className="text-[11px] font-black uppercase text-blue-600">New help request</p>
+            <h2 className="text-lg font-black text-slate-950">What is needed?</h2>
           </div>
           <button
             type="button"
@@ -872,63 +872,63 @@ function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
           </button>
         </div>
 
-        <div className="motion-stagger flex-1 space-y-3 overflow-y-auto overscroll-contain p-4">
+        <div className="motion-stagger flex-1 space-y-2.5 overflow-y-auto overscroll-contain px-4 py-3">
           <label className="block">
-            <span className="mb-1 block text-[13px] font-bold text-slate-700">Title</span>
+            <span className="mb-1 block text-[12px] font-bold text-slate-700">Title</span>
             <input
               autoFocus
               required
               value={form.title}
               onChange={(e) => update('title', e.target.value)}
-              className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              placeholder="Example: Pick up groceries for elderly neighbor"
+              className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="Example: Pick up groceries"
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-[13px] font-bold text-slate-700">Description</span>
+            <span className="mb-1 block text-[12px] font-bold text-slate-700">Details</span>
             <textarea
               required
               value={form.description}
               onChange={(e) => update('description', e.target.value)}
-              className="min-h-24 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              placeholder="Describe what help is needed and any relevant details"
+              className="min-h-20 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="What should helpers know?"
             />
           </label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <label className="block">
-              <span className="mb-1 block text-[13px] font-bold text-slate-700">Category</span>
+              <span className="mb-1 block text-[12px] font-bold text-slate-700">Category</span>
               <select
                 value={form.category}
                 onChange={(e) => update('category', e.target.value)}
-                className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none"
+                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none"
               >
                 {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-[13px] font-bold text-slate-700">Neighborhood</span>
+              <span className="mb-1 block text-[12px] font-bold text-slate-700">Area</span>
               <input
                 value={form.neighborhood}
                 onChange={(e) => update('neighborhood', e.target.value)}
-                className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none"
+                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none"
               />
             </label>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <label className="block">
-              <span className="mb-1 block text-[13px] font-bold text-slate-700">Est. hours</span>
+              <span className="mb-1 block text-[12px] font-bold text-slate-700">Hours</span>
               <input
                 type="number"
                 min="0.5"
                 step="0.5"
                 value={form.estimatedHours}
                 onChange={(e) => update('estimatedHours', parseFloat(e.target.value))}
-                className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none"
+                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none"
               />
             </label>
             <div className="block">
-              <span className="mb-1 block text-[13px] font-bold text-slate-700">Urgency</span>
-              <div className="grid h-11 grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+              <span className="mb-1 block text-[12px] font-bold text-slate-700">When</span>
+              <div className="grid h-10 grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
                 {[
                   ['Urgent', 'border-red-500 bg-red-600 text-white', 'border-red-200 bg-red-50 text-red-700'],
                   ['Today', 'border-orange-500 bg-orange-500 text-white', 'border-orange-200 bg-orange-50 text-orange-700'],
@@ -938,7 +938,7 @@ function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
                     key={level}
                     type="button"
                     onClick={() => update('urgency', level)}
-                    className={`motion-press rounded-lg border text-[12px] font-black transition ${
+                    className={`motion-press rounded-lg border text-[11px] font-black transition ${
                       form.urgency === level ? activeClass : idleClass
                     }`}
                     aria-pressed={form.urgency === level}
@@ -949,16 +949,16 @@ function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
               </div>
             </div>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
-            <p className="text-[12px] font-black text-slate-800">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+            <p className="text-[11px] font-black text-slate-800">
               {form.urgency === 'Urgent'
-                ? 'Happening soon. Shows red with a 2-hour action window.'
+                ? 'ASAP. Shows red.'
                 : form.urgency === 'Today'
-                  ? 'Needed by tonight. Shows orange so people know to act today.'
-                  : 'Flexible timing. Shows gray with no rush.'}
+                  ? 'Needed today. Shows orange.'
+                  : 'Flexible timing. Shows gray.'}
             </p>
           </div>
-          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50 px-3 py-3">
+          <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2.5">
             <input
               type="checkbox"
               checked={form.postToMap}
@@ -966,28 +966,28 @@ function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
               className="mt-0.5 h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
             />
             <span className="min-w-0">
-              <span className="block text-[13px] font-black text-blue-900">Post this request to the map</span>
-              <span className="mt-0.5 block text-[12px] font-semibold leading-5 text-blue-700">
-                People nearby can discover it on the map and tap in to help.
+              <span className="block text-[12px] font-black text-blue-900">Show on map</span>
+              <span className="mt-0.5 block text-[11px] font-semibold leading-4 text-blue-700">
+                Nearby people can find it faster.
               </span>
             </span>
           </label>
         </div>
 
-        <div className="flex shrink-0 gap-2 border-t border-slate-100 p-4">
+        <div className="flex shrink-0 gap-2 border-t border-slate-100 px-4 py-3">
           <button
             type="button"
             onClick={onClose}
-            className="h-11 flex-1 rounded-xl border border-slate-200 text-[13px] font-black text-slate-700 hover:bg-slate-50"
+            className="h-10 flex-1 rounded-xl border border-slate-200 text-[12px] font-black text-slate-700 hover:bg-slate-50"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isLoading}
-            className="app-button-primary h-11 flex-1 text-[13px]"
+            className="app-button-primary h-10 flex-1 text-[12px]"
           >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post Request'}
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post'}
           </button>
         </div>
       </form>
