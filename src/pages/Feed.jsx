@@ -483,12 +483,6 @@ export default function Feed({ isActive = true }) {
             </div>
           )}
 
-          {appParams.hasBackendConfig && (
-            <WidgetBoundary>
-              <TodayFiveTownsCard onCalendarClick={() => setShowEventsSheet(true)} />
-            </WidgetBoundary>
-          )}
-
           <WidgetBoundary>
             <FiveTownsBrief
               brief={dailyBrief}
@@ -502,6 +496,12 @@ export default function Feed({ isActive = true }) {
               onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
             />
           </WidgetBoundary>
+
+          {appParams.hasBackendConfig && (
+            <WidgetBoundary>
+              <TodayFiveTownsCard onCalendarClick={() => setShowEventsSheet(true)} />
+            </WidgetBoundary>
+          )}
 
           <WidgetBoundary>
             <FiveTownsConversationHub
@@ -827,31 +827,79 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
   const briefScrollerRef = useRef(null);
   const safeBrief = brief || {};
 
-  const curatedNewsItems = safeBrief.verifiedLocalBrief ? (safeBrief.topLocalUpdates || []).map((item, index) => ({
+  const curatedNewsItems = (safeBrief.topLocalUpdates || []).map((item, index) => ({
     id: item.id || `curated-local-${index}`,
     title: item.title || 'Verified local update',
     body: item.summary || item.detail || '',
     community_name: item.source_label || item.source || 'Verified local source',
     location_text: item.location || 'Five Towns',
-  })) : [];
+  }));
+  const fallbackNewsItems = posts
+    .filter((post) => post.type === 'news' || /update|brief|eruv|traffic|school|notice|local/i.test(`${post.title || ''} ${post.body || ''}`))
+    .slice(0, 3);
+  const defaultNewsItems = [
+    {
+      id: 'default-brief-mitzvah',
+      title: 'Look for one small way to help a neighbor today.',
+      community_name: 'Daily mitzvah',
+      location_text: 'Five Towns',
+    },
+    {
+      id: 'default-brief-torah',
+      title: 'A Jewish community is built one thoughtful action at a time.',
+      community_name: 'Torah thought',
+      location_text: 'Five Towns',
+    },
+    {
+      id: 'default-brief-shabbos',
+      title: 'Check today’s schedule for local times, events, and community moments.',
+      community_name: 'Today’s schedule',
+      location_text: 'Five Towns',
+    },
+  ];
+  const newsItems = curatedNewsItems.length ? curatedNewsItems : fallbackNewsItems.length ? fallbackNewsItems : defaultNewsItems;
   const trendingPosts = [...posts]
     .sort((a, b) => ((b.comments_count || 0) * 2 + (b.likes_count || 0)) - ((a.comments_count || 0) * 2 + (a.likes_count || 0)))
     .filter((post) => Number(post.comments_count || 0) > 0 || Number(post.likes_count || 0) > 0)
     .slice(0, 3);
+  const trendingItems = trendingPosts.length ? trendingPosts : [
+    {
+      id: 'default-trending-ask',
+      title: 'Ask neighbors, offer help, or share a useful local update.',
+      community_name: 'Main community thread',
+      location_text: 'Five Towns',
+    },
+  ];
   const mitzvahNeeds = posts
     .filter((post) => post.type === 'help' || /help|chesed|meal|ride|offer|volunteer/i.test(`${post.title || ''} ${post.body || ''}`))
     .slice(0, 3);
+  const mitzvahItems = mitzvahNeeds.length ? mitzvahNeeds : [
+    {
+      id: 'default-mitzvah-help',
+      title: 'Post a meal, ride, errand, or small favor someone nearby can answer.',
+      community_name: 'Mitzvah Circle',
+      location_text: 'Five Towns',
+    },
+  ];
   const communityEvents = communitiesEnabled ? posts
     .filter((post) => post.type === 'event' && (!joinedCommunityIds?.size || joinedCommunityIds.has(post.community_id)))
     .slice(0, 3) : [];
+  const eventItems = communityEvents.length ? communityEvents : [
+    {
+      id: 'default-event-calendar',
+      title: 'Save local events and open today’s schedule from the feed.',
+      community_name: 'Community calendar',
+      location_text: 'Five Towns',
+    },
+  ];
 
   const slideCandidates = [
     {
       key: 'news',
       eyebrow: 'Five Towns News',
-      title: safeBrief.title || 'Today in the Five Towns',
+      title: 'Today in the Five Towns',
       subtitle: 'Curated local updates worth knowing today.',
-      items: curatedNewsItems,
+      items: newsItems,
       tone: 'from-slate-950 via-blue-900 to-cyan-800',
       actionLabel: 'Open map',
       onAction: onOpenMap,
@@ -861,7 +909,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
       eyebrow: 'Trending Posts',
       title: 'What neighbors are talking about',
       subtitle: `${momentum.activeThreads} active conversations are pulling people in.`,
-      items: trendingPosts,
+      items: trendingItems,
       tone: 'from-indigo-950 via-blue-800 to-violet-700',
       actionLabel: 'Open communities',
       onAction: onOpenCommunities,
@@ -871,7 +919,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
       eyebrow: 'Mitzvahs Near You',
       title: 'Help that needs a real person',
       subtitle: 'Meals, rides, favors, and chesed that should not sit unanswered.',
-      items: mitzvahNeeds,
+      items: mitzvahItems,
       tone: 'from-emerald-950 via-emerald-800 to-teal-700',
       actionLabel: 'Post help',
       onAction: () => onCreate('help', 'chesed', ''),
@@ -881,7 +929,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
       eyebrow: 'Events In Your Communities',
       title: 'What is coming up',
       subtitle: 'Shiurim, meetups, school moments, and local plans that belong on your radar.',
-      items: communityEvents,
+      items: eventItems,
       tone: 'from-rose-950 via-fuchsia-800 to-orange-700',
       actionLabel: 'Share event',
       onAction: () => onCreate('event', 'local_event', ''),
@@ -901,7 +949,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
     if (activeSlide >= slides.length) setActiveSlide(0);
   }, [activeSlide, slides.length]);
 
-  if (!brief || !slides.length) return null;
+  if (!slides.length) return null;
   const visibleActiveSlide = Math.min(activeSlide, slides.length - 1);
 
   return (
