@@ -932,27 +932,34 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         : 0,
   }));
 
+  const heroRef = useRef(null);
+
   return (
     <div className="min-h-screen bg-[#F8FAFB] flex flex-col">
-      <CommunityHero
-        community={community}
-        isFollowing={isFollowing}
-        isAdmin={isAdmin}
-        isCreator={isCreator}
-        onFollow={handleFollow}
-        onManage={() => openAdminCenter('overview')}
-        onClaim={() => setShowClaim(true)}
-        onBack={onBack}
-        onOpenDrawer={() => setShowDrawer(true)}
-        actualMemberCount={actualMemberCount}
-        members={members}
-        currentUser={currentUser}
-        onTabChange={setTab}
-        typeConfig={typeConfig}
-        inAppShell
-      />
-      {/* AppBar sits AFTER the hero so it sticks at top only once the hero scrolls away */}
+      {/* Wrapper gives CommunityAppBar a real element to observe (non-zero area) */}
+      <div ref={heroRef}>
+        <CommunityHero
+          community={community}
+          isFollowing={isFollowing}
+          isAdmin={isAdmin}
+          isCreator={isCreator}
+          onFollow={handleFollow}
+          onManage={() => openAdminCenter('overview')}
+          onClaim={() => setShowClaim(true)}
+          onBack={onBack}
+          onOpenDrawer={() => setShowDrawer(true)}
+          actualMemberCount={actualMemberCount}
+          members={members}
+          currentUser={currentUser}
+          onTabChange={setTab}
+          typeConfig={typeConfig}
+          inAppShell
+        />
+      </div>
+      {/* key=communityId forces remount on navigation — prevents stale visible state */}
       <CommunityAppBar
+        key={communityId}
+        heroRef={heroRef}
         community={community}
         typeConfig={typeConfig}
         isAdmin={isAdmin}
@@ -1192,13 +1199,31 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   );
 }
 
-function CommunityAppBar({ community, typeConfig, isAdmin, accentHex, onBack, onManage, onShare, onOpenDrawer }) {
-  // Sticky — placed after the hero in the DOM, so it sits below the hero at rest
-  // and only "sticks" at the top of the viewport once the hero has scrolled away.
-  return (
+function CommunityAppBar({ heroRef, community, typeConfig, isAdmin, accentHex, onBack, onManage, onShare, onOpenDrawer }) {
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = heroRef.current;
+    if (!el) return;
+    // Observe the hero container itself (non-zero area, reliable).
+    // isIntersecting = true while ANY part of hero is in viewport → keep AppBar hidden.
+    // isIntersecting = false when hero is completely scrolled away → show AppBar.
+    const obs = new IntersectionObserver(
+      ([entry]) => setVisible(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [heroRef]);
+
+  return createPortal(
     <div
-      className="sticky top-0 z-40 h-12 flex items-center justify-between px-3"
-      style={{ background: accentHex }}
+      className="fixed top-0 left-0 right-0 z-40 h-12 flex items-center justify-between px-3 transition-opacity duration-150"
+      style={{
+        background: accentHex,
+        opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
+      }}
     >
       <button
         onClick={onBack}
@@ -1220,7 +1245,8 @@ function CommunityAppBar({ community, typeConfig, isAdmin, accentHex, onBack, on
       >
         <span className="font-black text-[18px] leading-none tracking-[2px] text-white">≡</span>
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }
 
