@@ -25,7 +25,7 @@ export default function CommunityHero({
   community, isFollowing, isAdmin, isCreator = false, onBack, onFollow, onManage,
   actualMemberCount,
   members = [], currentUser, onTabChange, typeConfig: providedTypeConfig,
-  inAppShell = false,
+  inAppShell = false, onOpenDrawer,
 }) {
   const [stickyVisible, setStickyVisible]   = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -108,7 +108,7 @@ export default function CommunityHero({
         <>
           {/* Twitter-style compact header */}
 
-          {/* 100px banner */}
+          {/* 100px banner with floating nav buttons */}
           <div className="relative overflow-hidden" style={{ height: 100 }}>
             <div className="absolute inset-0 w-full">
               {(community.cover_url || community.cover_image_url) ? (
@@ -117,6 +117,26 @@ export default function CommunityHero({
                 <div className="w-full h-full" style={{ background: gradient }} />
               )}
             </div>
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center active:scale-95 transition-all"
+                style={{ background: 'rgba(0,0,0,0.28)' }}
+                aria-label="Back"
+              >
+                <ArrowLeft className="w-4 h-4 text-white" />
+              </button>
+            )}
+            {onOpenDrawer && (
+              <button
+                onClick={onOpenDrawer}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center active:scale-95 transition-all"
+                style={{ background: 'rgba(0,0,0,0.28)' }}
+                aria-label="Community menu"
+              >
+                <span className="font-black text-[18px] leading-none tracking-[2px] text-white">≡</span>
+              </button>
+            )}
           </div>
 
           {/* Profile row: overlapping logo + join button */}

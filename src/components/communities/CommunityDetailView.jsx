@@ -934,16 +934,6 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
   return (
     <div className="min-h-screen bg-[#F8FAFB] flex flex-col">
-      <CommunityAppBar
-        community={community}
-        typeConfig={typeConfig}
-        isAdmin={isAdmin}
-        accentHex={accentHex}
-        onBack={onBack}
-        onManage={() => openAdminCenter('overview')}
-        onShare={handleShare}
-        onOpenDrawer={() => setShowDrawer(true)}
-      />
       <CommunityHero
         community={community}
         isFollowing={isFollowing}
@@ -953,12 +943,24 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         onManage={() => openAdminCenter('overview')}
         onClaim={() => setShowClaim(true)}
         onBack={onBack}
+        onOpenDrawer={() => setShowDrawer(true)}
         actualMemberCount={actualMemberCount}
         members={members}
         currentUser={currentUser}
         onTabChange={setTab}
         typeConfig={typeConfig}
         inAppShell
+      />
+      {/* AppBar sits AFTER the hero so it sticks at top only once the hero scrolls away */}
+      <CommunityAppBar
+        community={community}
+        typeConfig={typeConfig}
+        isAdmin={isAdmin}
+        accentHex={accentHex}
+        onBack={onBack}
+        onManage={() => openAdminCenter('overview')}
+        onShare={handleShare}
+        onOpenDrawer={() => setShowDrawer(true)}
       />
 
       {/* Appeal banner — shown when user was removed and hasn't yet appealed */}
@@ -1191,44 +1193,29 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 }
 
 function CommunityAppBar({ community, typeConfig, isAdmin, accentHex, onBack, onManage, onShare, onOpenDrawer }) {
-  const [scrolled, setScrolled] = React.useState(false);
-
-  React.useEffect(() => {
-    // 100 = banner height; after that the banner has scrolled out and AppBar goes solid
-    const handler = () => setScrolled(window.scrollY > 100);
-    window.addEventListener('scroll', handler, { passive: true });
-    handler();
-    return () => window.removeEventListener('scroll', handler);
-  }, []);
-
+  // Sticky — placed after the hero in the DOM, so it sits below the hero at rest
+  // and only "sticks" at the top of the viewport once the hero has scrolled away.
   return (
-    // fixed so it overlays the banner instead of sitting above it in the flow,
-    // keeping the total header height at 100px (just the banner) rather than 148px
     <div
-      className="fixed top-0 left-0 right-0 z-40 h-12 flex items-center justify-between px-3 transition-all duration-200"
-      style={{ background: scrolled ? accentHex : 'transparent' }}
+      className="sticky top-0 z-40 h-12 flex items-center justify-between px-3"
+      style={{ background: accentHex }}
     >
       <button
         onClick={onBack}
         className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
-        style={{ background: 'rgba(0,0,0,0.28)' }}
+        style={{ background: 'rgba(255,255,255,0.2)' }}
       >
         <ChevronLeft className="w-5 h-5 text-white" />
       </button>
 
-      {scrolled && (
-        <p className="font-black text-[15px] text-white tracking-tight truncate px-2 flex-1 text-center">
-          {community.name}
-        </p>
-      )}
-      {!scrolled && (
-        <div className="flex-1" />
-      )}
+      <p className="font-black text-[15px] text-white tracking-tight truncate px-2 flex-1 text-center">
+        {community.name}
+      </p>
 
       <button
         onClick={onOpenDrawer}
         className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
-        style={{ background: 'rgba(0,0,0,0.28)' }}
+        style={{ background: 'rgba(255,255,255,0.2)' }}
         aria-label="Community menu"
       >
         <span className="font-black text-[18px] leading-none tracking-[2px] text-white">≡</span>
