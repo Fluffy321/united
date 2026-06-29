@@ -174,8 +174,8 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
           <Route path="/welcome" element={<PageTransition><Landing /></PageTransition>} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-          <Route path="/Jewish" element={<Navigate to="/JewishHub" replace />} />
-          <Route path="/tehillim" element={<Navigate to="/JewishHub/tehillim" replace />} />
+          <Route path="/Jewish" element={<Navigate to="/Feed" replace />} />
+          <Route path="/tehillim" element={<Navigate to="/Feed" replace />} />
           {LEGACY_MAP_ROUTES.map((path) => (
             <Route key={path} path={path} element={<Navigate to="/Map" replace />} />
           ))}
@@ -214,7 +214,7 @@ const AuthenticatedApp = () => {
             <Route path="/join" element={<CommunityRouteGuard><PageTransition><JoinByCommunityCode /></PageTransition></CommunityRouteGuard>} />
             <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
             <Route path="/Search" element={<Navigate to="/search" replace />} />
-            <Route path="/JewishHub/*" element={<PageTransition><LayoutWrapper currentPageName="JewishHub"><JewishHub /></LayoutWrapper></PageTransition>} />
+            <Route path="/JewishHub/*" element={<Navigate to="/Feed" replace />} />
             <Route path="/Notifications" element={<PageTransition><LayoutWrapper currentPageName="Notifications"><Notifications /></LayoutWrapper></PageTransition>} />
             <Route path="/SupportJUnited" element={<PageTransition><LayoutWrapper currentPageName="SupportJUnited"><SupportJUnited /></LayoutWrapper></PageTransition>} />
 
