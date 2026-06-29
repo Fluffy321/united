@@ -1204,10 +1204,9 @@ function CommunityAppBar({ community, typeConfig, isAdmin, accentHex, onBack, on
     <div
       className="sticky top-0 z-40 h-12 flex items-center justify-between px-3 transition-all duration-200"
       style={{
-        background: scrolled ? accentHex : 'rgba(255,255,255,0.97)',
+        background: scrolled ? accentHex : '#ffffff',
         borderBottom: scrolled ? 'none' : '1px solid #f1f5f9',
         boxShadow: scrolled ? 'none' : '0 1px 3px rgba(0,0,0,0.05)',
-        backdropFilter: scrolled ? 'none' : 'blur(12px)',
       }}
     >
       <button
