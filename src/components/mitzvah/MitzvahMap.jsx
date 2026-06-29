@@ -1203,6 +1203,17 @@ const STATIC_POINTS = [
     source_url: 'https://www.mikvah.org/',
   },
   {
+    id: 'food-elite-caterers',
+    title: 'Elite Caterers',
+    description: 'Kosher catering hall and event venue in Inwood. Available for weddings, bar/bat mitzvahs, and private events.',
+    type: 'restaurant',
+    location_text: '433 Doughty Blvd, Inwood',
+    location_lat: 40.6231600,
+    location_lng: -73.7470931,
+    verification: 'Verified kosher',
+    source_url: 'https://www.elitecaterers.com/',
+  },
+  {
     id: 'shop-oppen-scrolls',
     title: 'Oppen Scrolls',
     description: 'Judaica shop and sofer services for mezuzah, tefillin, shofars, kippot, and more.',
