@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { CheckCircle2, Loader2, X } from 'lucide-react';
-import { supabase } from '@/api/supabaseClient';
+import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import { captureError } from '@/lib/analytics';
@@ -85,7 +85,7 @@ export default function FeedbackModal({ open, onClose }) {
     if (!trimmed || submitting) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase.from('app_feedback').insert({
+      await dataService.entities.AppFeedback.create({
         user_id: currentUser?.id ?? null,
         submitter_name: currentUser?.display_name || currentUser?.full_name || null,
         feedback_type: feedbackType,
@@ -98,7 +98,6 @@ export default function FeedbackModal({ open, onClose }) {
         user_agent: capturedContext?.userAgent ?? null,
         viewport: capturedContext?.viewport ?? null,
       });
-      if (error) throw error;
       setSubmitted(true);
       setTimeout(handleClose, 2000);
     } catch (err) {

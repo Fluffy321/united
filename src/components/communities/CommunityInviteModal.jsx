@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Copy, Share2, RefreshCw, Check, Link2, Loader2, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/api/supabaseClient';
+import { dataService } from '@/services';
 
 const INVITE_NOUN = {
   neighborhood: 'neighbors',
@@ -72,8 +72,7 @@ export default function CommunityInviteModal({ open, onClose, community, current
     const payload = { community_id: community.id, inviter_id: currentUser.id, inviter_name: name };
     if (expiresAt) payload.expires_at = new Date(expiresAt).toISOString();
     if (maxUses)   payload.max_uses   = Math.max(1, parseInt(maxUses, 10));
-    const { data, error } = await supabase.from('invite_links').insert(payload).select().single();
-    if (error) throw error;
+    const data = await dataService.entities.InviteLink.create(payload);
     return data;
   }
 
@@ -103,7 +102,7 @@ export default function CommunityInviteModal({ open, onClose, community, current
     if (!link) return;
     setWorking(true);
     try {
-      await supabase.from('invite_links').update({ is_active: false }).eq('id', link.id);
+      await dataService.entities.InviteLink.update(link.id, { is_active: false });
       setLink(null);
       const fresh = await createNewLink();
       setLink(fresh);

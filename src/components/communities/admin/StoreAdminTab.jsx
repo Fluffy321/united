@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
+import { dataService } from '@/services';
 
 // ── Store Admin Tab ───────────────────────────────────────────────────────────
 
@@ -234,8 +235,9 @@ export default function StoreAdminTab({ community, communityId, currentUser }) {
 
   const handleDelete = async (id) => {
     if (!confirm('Permanently delete this listing?')) return;
-    const { error } = await supabase.from('community_listings').delete().eq('id', id);
-    if (error) { toast.error('Could not delete listing'); return; }
+    try {
+      await dataService.entities.CommunityListing.delete(id);
+    } catch { toast.error('Could not delete listing'); return; }
     qc.setQueryData(['admin-community-listings', communityId], prev => (prev || []).filter(l => l.id !== id));
     qc.invalidateQueries({ queryKey: ['community-listings', communityId] });
     toast.success('Listing deleted');
