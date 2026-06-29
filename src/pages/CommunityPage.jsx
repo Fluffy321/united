@@ -16,6 +16,10 @@ export default function CommunityPage() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [communityId]);
+
+  useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 

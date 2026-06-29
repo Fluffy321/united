@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity, BookOpen, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Globe, Hash, Heart,
   HeartHandshake, HelpCircle, Home, Info, Loader2, Lock, MapPin,
-  Megaphone, MessageCircle, MoreHorizontal, Phone, Send, Settings, Share2,
+  Megaphone, MessageCircle, MoreHorizontal, Phone, Send,
   Shield, ShoppingBag, Sparkles, Users, Vote, Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -668,6 +668,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   const [showAppealModal, setShowAppealModal] = useState(false);
   const [composeText, setComposeText] = useState('');
   const [posting, setPosting] = useState(false);
+  const [showDrawer, setShowDrawer] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: community, isLoading } = useQuery({
@@ -933,15 +934,6 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
   return (
     <div className="min-h-screen bg-[#F8FAFB] flex flex-col">
-      <CommunityAppBar
-        community={community}
-        typeConfig={typeConfig}
-        isAdmin={isAdmin}
-        accentHex={accentHex}
-        onBack={onBack}
-        onManage={() => openAdminCenter('overview')}
-        onShare={handleShare}
-      />
       <CommunityHero
         community={community}
         isFollowing={isFollowing}
@@ -951,12 +943,24 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         onManage={() => openAdminCenter('overview')}
         onClaim={() => setShowClaim(true)}
         onBack={onBack}
+        onOpenDrawer={() => setShowDrawer(true)}
         actualMemberCount={actualMemberCount}
         members={members}
         currentUser={currentUser}
         onTabChange={setTab}
         typeConfig={typeConfig}
         inAppShell
+      />
+      {/* AppBar sits AFTER the hero so it sticks at top only once the hero scrolls away */}
+      <CommunityAppBar
+        community={community}
+        typeConfig={typeConfig}
+        isAdmin={isAdmin}
+        accentHex={accentHex}
+        onBack={onBack}
+        onManage={() => openAdminCenter('overview')}
+        onShare={handleShare}
+        onOpenDrawer={() => setShowDrawer(true)}
       />
 
       {/* Appeal banner — shown when user was removed and hasn't yet appealed */}
@@ -1125,6 +1129,20 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         )}
       </div>
 
+      {showDrawer && community && (
+        <CommunityNavDrawer
+          community={community}
+          visibleTabs={visibleTabs}
+          activeTab={activeTab}
+          tabsWithCounts={tabsWithCounts}
+          onTabChange={(tab) => { setTab(tab); setShowDrawer(false); }}
+          onClose={() => setShowDrawer(false)}
+          accentHex={accentHex}
+          isAdmin={isAdmin}
+          onManage={() => { setShowDrawer(false); openAdminCenter('overview'); }}
+        />
+      )}
+
       <ClaimModal
         open={showClaim}
         onOpenChange={setShowClaim}
@@ -1174,44 +1192,172 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   );
 }
 
-function CommunityAppBar({ community, typeConfig, isAdmin, accentHex, onBack, onManage, onShare }) {
-  const TypeIcon = typeConfig.icon;
+function CommunityAppBar({ community, typeConfig, isAdmin, accentHex, onBack, onManage, onShare, onOpenDrawer }) {
+  // Sticky — placed after the hero in the DOM, so it sits below the hero at rest
+  // and only "sticks" at the top of the viewport once the hero has scrolled away.
   return (
-    <div className="sticky top-0 z-40 h-12 bg-white/95 backdrop-blur-sm border-b border-slate-100 flex items-center gap-2 px-3 shadow-sm">
+    <div
+      className="sticky top-0 z-40 h-12 flex items-center justify-between px-3"
+      style={{ background: accentHex }}
+    >
       <button
         onClick={onBack}
-        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all flex-shrink-0"
+        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
+        style={{ background: 'rgba(255,255,255,0.2)' }}
       >
-        <ChevronLeft className="w-5 h-5 text-slate-700" />
+        <ChevronLeft className="w-5 h-5 text-white" />
       </button>
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        <div
-          className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ background: accentHex }}
-        >
-          <TypeIcon className="w-3.5 h-3.5 text-white" />
-        </div>
-        <p className="font-bold text-slate-900 text-[14px] truncate">{community.name}</p>
-      </div>
-      <div className="flex items-center gap-0.5 flex-shrink-0">
-        {isAdmin && (
-          <button
-            onClick={onManage}
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all"
-            aria-label="Admin center"
-          >
-            <Settings className="w-4 h-4 text-slate-500" />
-          </button>
-        )}
-        <button
-          onClick={onShare}
-          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all"
-          aria-label="Share"
-        >
-          <Share2 className="w-4 h-4 text-slate-500" />
-        </button>
-      </div>
+
+      <p className="font-black text-[15px] text-white tracking-tight truncate px-2 flex-1 text-center">
+        {community.name}
+      </p>
+
+      <button
+        onClick={onOpenDrawer}
+        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
+        style={{ background: 'rgba(255,255,255,0.2)' }}
+        aria-label="Community menu"
+      >
+        <span className="font-black text-[18px] leading-none tracking-[2px] text-white">≡</span>
+      </button>
     </div>
+  );
+}
+
+function CommunityNavDrawer({ community, visibleTabs, activeTab, tabsWithCounts, onTabChange, onClose, accentHex, isAdmin, onManage }) {
+  return createPortal(
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 60,
+        opacity: 1,
+        pointerEvents: 'all',
+      }}
+    >
+      {/* Backdrop */}
+      <div
+        style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(0,0,0,0.45)',
+          backdropFilter: 'blur(2px)',
+        }}
+        onClick={onClose}
+      />
+
+      {/* Drawer panel — slides in from right */}
+      <div
+        style={{
+          position: 'absolute', top: 0, right: 0, bottom: 0, width: '72%', maxWidth: 320,
+          background: '#fff',
+          display: 'flex', flexDirection: 'column',
+          boxShadow: '-8px 0 32px rgba(0,0,0,0.18)',
+          animation: 'communityDrawerIn .28s cubic-bezier(.32,.72,0,1) both',
+        }}
+      >
+        <style>{`
+          @keyframes communityDrawerIn {
+            from { transform: translateX(102%); }
+            to { transform: translateX(0); }
+          }
+          @keyframes communityDrawerOut {
+            from { transform: translateX(0); }
+            to { transform: translateX(102%); }
+          }
+        `}</style>
+
+        {/* Drawer header */}
+        <div style={{ padding: '52px 20px 16px', borderBottom: '1px solid #f1f5f9' }}>
+          {community.logo_url ? (
+            <img
+              src={community.logo_url}
+              alt=""
+              style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover', marginBottom: 10 }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 42, height: 42, borderRadius: 12, background: accentHex,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 18, fontWeight: 900, color: '#fff', marginBottom: 10,
+              }}
+            >
+              {(community.name || '?')[0].toUpperCase()}
+            </div>
+          )}
+          <p style={{ fontSize: 16, fontWeight: 900, color: '#0d0d0b', letterSpacing: '-0.02em', marginBottom: 2 }}>
+            {community.name}
+          </p>
+          <p style={{ fontSize: 12, color: '#8c8884', fontWeight: 500 }}>
+            {community.type}{community.follower_count ? ` · ${community.follower_count.toLocaleString()} members` : ''}
+          </p>
+        </div>
+
+        {/* Nav items */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+          {visibleTabs.map((tabKey) => {
+            const TabIcon = TAB_ICON_MAP[tabKey] || Home;
+            const isActive = activeTab === tabKey;
+            const tabInfo = tabsWithCounts.find((t) => t.key === tabKey);
+            return (
+              <button
+                key={tabKey}
+                onClick={() => onTabChange(tabKey)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '13px 20px', width: '100%', textAlign: 'left',
+                  background: isActive ? '#f9f8f6' : 'transparent',
+                  border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'background 0.1s',
+                }}
+              >
+                <div
+                  style={{
+                    width: 36, height: 36, borderRadius: 11, flexShrink: 0,
+                    background: isActive ? `${accentHex}22` : '#f4f4f2',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  <TabIcon style={{ width: 18, height: 18, color: isActive ? accentHex : '#6b7280' }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: '#0d0d0b' }}>{getCommunityTabLabel(tabKey)}</p>
+                  {tabInfo?.count > 0 && (
+                    <p style={{ fontSize: 12, color: '#8c8884', marginTop: 1 }}>
+                      {tabInfo.count} {tabKey === 'events' ? 'upcoming' : tabKey === 'announcements' ? 'updates' : ''}
+                    </p>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+
+          <div style={{ height: 1, background: '#ece9e4', margin: '6px 20px' }} />
+
+          {isAdmin && (
+            <button
+              onClick={onManage}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: '13px 20px', width: '100%', textAlign: 'left',
+                background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              <div
+                style={{
+                  width: 36, height: 36, borderRadius: 11, flexShrink: 0,
+                  background: '#f4f4f2',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 18,
+                }}
+              >
+                ⚙️
+              </div>
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#0d0d0b' }}>Admin Center</p>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 

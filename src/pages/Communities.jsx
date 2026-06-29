@@ -550,24 +550,26 @@ function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOp
         </div>
         )}
 
-        <div className="mt-auto grid grid-cols-[1fr_auto] gap-2">
+        <div className={`mt-auto ${isJoined ? '' : 'grid grid-cols-[1fr_auto]'} gap-2`}>
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); isJoined ? onOpen(room.id) : onJoin(room); }}
             disabled={isJoining}
-            className={`rounded-full px-4 py-2.5 text-[13px] font-black transition-all active:scale-95 disabled:opacity-60 ${
+            className={`w-full rounded-full px-4 py-2.5 text-[13px] font-black transition-all active:scale-95 disabled:opacity-60 ${
               isJoined ? 'bg-slate-950 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
             {isJoining ? 'Joining...' : isJoined ? 'Open room' : 'Join room'}
           </button>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onOpen(room.id); }}
-            className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-black text-blue-600 transition-all active:scale-95"
-          >
-            {room.roomPrompt}
-          </button>
+          {!isJoined && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpen(room.id); }}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-black text-blue-600 transition-all active:scale-95"
+            >
+              {room.roomPrompt}
+            </button>
+          )}
         </div>
       </div>
     </article>
