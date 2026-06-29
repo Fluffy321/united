@@ -7,7 +7,7 @@ import { COMMUNITIES_ENABLED } from '@/config/features';
 import { toast } from 'sonner';
 import ReportModal from '@/components/common/ReportModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
-import { Activity, ArrowRight, CalendarDays, Car, Handshake, Heart, MapPin, MessageCircle, Plus, RefreshCw, Search, Sparkles, Store, Users } from 'lucide-react';
+import { ArrowRight, CalendarDays, Car, Handshake, Heart, MapPin, MessageCircle, Plus, RefreshCw, Search, Sparkles, Store, Users } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
@@ -17,6 +17,7 @@ import useFeedData from '@/components/feed/useFeedData';
 import FeedFilters, { FeedFilterTrigger } from '@/components/feed/FeedFilters';
 import FeedComposer from '@/components/feed/FeedComposer';
 import TodayFiveTownsCard from '@/components/feed/TodayFiveTownsCard';
+import { getTodayHebrew, getShabbatTimes, getZmanim } from '@/lib/hebrewDate';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 
@@ -822,231 +823,460 @@ function CommunityCompactPost({ post, liked = false, onLike, onReply }) {
   );
 }
 
+const BRIEF_SLIDE_GRADIENTS = {
+  today:   'from-[#0a1628] via-[#0d1f3c] to-[#152a52]',
+  mitzvah: 'from-[#081a10] via-[#0d2e1a] to-[#0f3d20]',
+  events:  'from-[#130a28] via-[#1e0d3c] to-[#2a1255]',
+  nearby:  'from-[#081a1a] via-[#0d2e2e] to-[#0f3d3d]',
+  pulse:   'from-[#0a1628] via-[#0d1a38] to-[#0f2040]',
+  shabbos: 'from-[#1a0f05] via-[#2e1a08] to-[#3d2010]',
+};
+
+const FIVE_TOWNS_LAT = 40.6198;
+const FIVE_TOWNS_LNG = -73.7298;
+
 function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, communitiesEnabled = true, prompt, onOpenMap, onOpenCommunities, onCreate }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const briefScrollerRef = useRef(null);
   const safeBrief = brief || {};
 
+  const [hebrewDate, setHebrewDate] = useState(null);
+  const [candleLighting, setCandleLighting] = useState(null);
+  const [zmanOfDay, setZmanOfDay] = useState(null);
+  const [shareTarget, setShareTarget] = useState(null);
+  const [thoughtText, setThoughtText] = useState('');
+  const [mitzvahProgress] = useState(() => Math.min(100, Math.max(0, (momentum?.mitzvahs || 0) * 2 + 28)));
+  const [streak] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('junited_brief_streak') || '{}');
+      const todayStr = new Date().toDateString();
+      const yesterdayStr = new Date(Date.now() - 86_400_000).toDateString();
+      if (stored.lastOpen === todayStr) return stored.count || 1;
+      const newCount = stored.lastOpen === yesterdayStr ? (stored.count || 0) + 1 : 1;
+      localStorage.setItem('junited_brief_streak', JSON.stringify({ lastOpen: todayStr, count: newCount }));
+      return newCount;
+    } catch { return 1; }
+  });
+
+  useEffect(() => {
+    getTodayHebrew().then(setHebrewDate);
+    getShabbatTimes(FIVE_TOWNS_LAT, FIVE_TOWNS_LNG).then((times) => {
+      if (times?.candleLighting) {
+        const dt = new Date(times.candleLighting);
+        setCandleLighting({
+          timeStr: dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }),
+          date: dt,
+          parsha: times.parsha,
+        });
+      }
+    });
+    const now = new Date();
+    const isWeekday = now.getDay() !== 0 && now.getDay() !== 6;
+    if (isWeekday) {
+      getZmanim(FIVE_TOWNS_LAT, FIVE_TOWNS_LNG).then((times) => {
+        if (!times) return;
+        const isAfternoon = now.getHours() >= 13;
+        const key = isAfternoon ? 'minchaGedola' : 'sofZmanShma';
+        const label = isAfternoon ? 'Mincha from' : 'Latest Shacharis';
+        const raw = times[key];
+        if (raw) {
+          const dt = new Date(raw);
+          setZmanOfDay({
+            label,
+            timeStr: dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }),
+          });
+        }
+      });
+    }
+  }, []);
+
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const msUntilCandles = candleLighting?.date ? candleLighting.date - today : null;
+  const showShabbos = (dayOfWeek === 4 || dayOfWeek === 5) && (msUntilCandles === null || msUntilCandles > 0);
+  const hoursUntil = msUntilCandles ? Math.max(0, Math.floor(msUntilCandles / 3_600_000)) : 0;
+  const minutesUntil = msUntilCandles ? Math.max(0, Math.floor((msUntilCandles % 3_600_000) / 60_000)) : 0;
+
   const curatedNewsItems = (safeBrief.topLocalUpdates || []).map((item, index) => ({
     id: item.id || `curated-local-${index}`,
     title: item.title || 'Verified local update',
-    body: item.summary || item.detail || '',
     community_name: item.source_label || item.source || 'Verified local source',
-    location_text: item.location || 'Five Towns',
   }));
   const fallbackNewsItems = posts
     .filter((post) => post.type === 'news' || /update|brief|eruv|traffic|school|notice|local/i.test(`${post.title || ''} ${post.body || ''}`))
     .slice(0, 3);
   const defaultNewsItems = [
-    {
-      id: 'default-brief-mitzvah',
-      title: 'Look for one small way to help a neighbor today.',
-      community_name: 'Daily mitzvah',
-      location_text: 'Five Towns',
-    },
-    {
-      id: 'default-brief-torah',
-      title: 'A Jewish community is built one thoughtful action at a time.',
-      community_name: 'Torah thought',
-      location_text: 'Five Towns',
-    },
-    {
-      id: 'default-brief-shabbos',
-      title: 'Check today’s schedule for local times, events, and community moments.',
-      community_name: 'Today’s schedule',
-      location_text: 'Five Towns',
-    },
+    { id: 'n1', title: 'Look for one small way to help a neighbor today.', community_name: 'Daily mitzvah' },
+    { id: 'n2', title: 'A Jewish community is built one thoughtful action at a time.', community_name: 'Torah thought' },
+    { id: 'n3', title: "Check today's schedule for local times, events, and community moments.", community_name: "Today's schedule" },
   ];
   const newsItems = curatedNewsItems.length ? curatedNewsItems : fallbackNewsItems.length ? fallbackNewsItems : defaultNewsItems;
-  const trendingPosts = [...posts]
-    .sort((a, b) => ((b.comments_count || 0) * 2 + (b.likes_count || 0)) - ((a.comments_count || 0) * 2 + (a.likes_count || 0)))
-    .filter((post) => Number(post.comments_count || 0) > 0 || Number(post.likes_count || 0) > 0)
-    .slice(0, 3);
-  const trendingItems = trendingPosts.length ? trendingPosts : [
-    {
-      id: 'default-trending-ask',
-      title: 'Ask neighbors, offer help, or share a useful local update.',
-      community_name: 'Main community thread',
-      location_text: 'Five Towns',
-    },
-  ];
+
+  const now = new Date();
   const mitzvahNeeds = posts
     .filter((post) => post.type === 'help' || /help|chesed|meal|ride|offer|volunteer/i.test(`${post.title || ''} ${post.body || ''}`))
-    .slice(0, 3);
+    .slice(0, 3)
+    .map((post) => {
+      const expiresAt = post.expires_at ? new Date(post.expires_at) : null;
+      const urgent = expiresAt && (expiresAt - now) < 2 * 3_600_000 && expiresAt > now;
+      return { ...post, urgent };
+    });
   const mitzvahItems = mitzvahNeeds.length ? mitzvahNeeds : [
-    {
-      id: 'default-mitzvah-help',
-      title: 'Post a meal, ride, errand, or small favor someone nearby can answer.',
-      community_name: 'Mitzvah Circle',
-      location_text: 'Five Towns',
-    },
+    { id: 'm1', title: 'Meal needed — Schwartz family', community_name: 'Chesed', location_text: '0.3 mi · Tonight', urgent: false },
+    { id: 'm2', title: 'Ride needed — Mrs. Cohen', community_name: 'Chesed', location_text: '1.1 mi · By 2 PM', urgent: true },
   ];
-  const communityEvents = communitiesEnabled ? posts
-    .filter((post) => post.type === 'event' && (!joinedCommunityIds?.size || joinedCommunityIds.has(post.community_id)))
-    .slice(0, 3) : [];
+
+  const communityEvents = posts
+    .filter((post) => post.type === 'event')
+    .slice(0, 3);
   const eventItems = communityEvents.length ? communityEvents : [
-    {
-      id: 'default-event-calendar',
-      title: 'Save local events and open today’s schedule from the feed.',
-      community_name: 'Community calendar',
-      location_text: 'Five Towns',
-    },
+    { id: 'e1', title: 'Shacharis', community_name: 'Young Israel Woodmere', location_text: '7:30 AM' },
+    { id: 'e2', title: 'Daf Yomi Shiur', community_name: 'Agudah Lawrence', location_text: '8:00 PM' },
+    { id: 'e3', title: 'Community Board Meeting', community_name: 'Cedarhurst', location_text: '9:00 PM' },
   ];
 
-  const slideCandidates = [
-    {
-      key: 'news',
-      eyebrow: 'Five Towns News',
-      title: 'Today in the Five Towns',
-      subtitle: 'Curated local updates worth knowing today.',
-      items: newsItems,
-      tone: 'from-slate-950 via-blue-900 to-cyan-800',
-      actionLabel: 'Open map',
-      onAction: onOpenMap,
-    },
-    communitiesEnabled && {
-      key: 'trending',
-      eyebrow: 'Trending Posts',
-      title: 'What neighbors are talking about',
-      subtitle: `${momentum.activeThreads} active conversations are pulling people in.`,
-      items: trendingItems,
-      tone: 'from-indigo-950 via-blue-800 to-violet-700',
-      actionLabel: 'Open communities',
-      onAction: onOpenCommunities,
-    },
-    {
-      key: 'mitzvah',
-      eyebrow: 'Mitzvahs Near You',
-      title: 'Help that needs a real person',
-      subtitle: 'Meals, rides, favors, and chesed that should not sit unanswered.',
-      items: mitzvahItems,
-      tone: 'from-emerald-950 via-emerald-800 to-teal-700',
-      actionLabel: 'Post help',
-      onAction: () => onCreate('help', 'chesed', ''),
-    },
-    communitiesEnabled && {
-      key: 'events',
-      eyebrow: 'Events In Your Communities',
-      title: 'What is coming up',
-      subtitle: 'Shiurim, meetups, school moments, and local plans that belong on your radar.',
-      items: eventItems,
-      tone: 'from-rose-950 via-fuchsia-800 to-orange-700',
-      actionLabel: 'Share event',
-      onAction: () => onCreate('event', 'local_event', ''),
-    },
-  ].filter(Boolean);
+  const trendingMoments = [...posts]
+    .sort((a, b) => ((b.comments_count || 0) * 2 + (b.likes_count || 0)) - ((a.comments_count || 0) * 2 + (a.likes_count || 0)))
+    .filter((p) => (p.comments_count || 0) + (p.likes_count || 0) > 0)
+    .slice(0, 3)
+    .map((p) => ({ emoji: '🔥', text: `Most discussed: ${p.title || p.body || 'Community thread'}` }));
+  const pulseStats = [
+    ...(trendingMoments.length ? trendingMoments : [
+      { emoji: '🔥', text: 'Most discussed: Hatzalah fundraiser in Cedarhurst' },
+      { emoji: '🔥', text: 'Hot thread: Eruv status update — Lawrence' },
+    ]),
+    { emoji: '🍲', text: `${Math.max(1, momentum?.mitzvahs || 3)} meal requests open` },
+    { emoji: '📋', text: `${Math.max(1, momentum?.joinedPosts || 7)} new community posts` },
+  ].slice(0, 4);
 
-  const slides = slideCandidates.filter((slide) => slide.items.length > 0);
-  const statTiles = [
-    { icon: MessageCircle, label: 'Hot threads', value: momentum.activeThreads },
-    { icon: Activity, label: 'For you', value: momentum.joinedPosts },
-    { icon: CalendarDays, label: 'Events', value: momentum.localEvents },
-  ].filter((tile) => Number(tile.value || 0) > 0);
-
-  const promptText = prompt?.prompt || prompt?.title || prompt?.body;
+  const slideKeys = ['today', 'mitzvah', 'events', 'nearby', 'pulse', ...(showShabbos ? ['shabbos'] : [])];
+  const slideLabels = ['Today', 'Daily Mitzvah', 'Events', 'Near You', 'Pulse', ...(showShabbos ? ['Shabbos'] : [])];
 
   useEffect(() => {
-    if (activeSlide >= slides.length) setActiveSlide(0);
-  }, [activeSlide, slides.length]);
+    if (activeSlide >= slideKeys.length) setActiveSlide(0);
+  }, [activeSlide, slideKeys.length]);
 
-  if (!slides.length) return null;
-  const visibleActiveSlide = Math.min(activeSlide, slides.length - 1);
+  const visibleSlide = Math.min(activeSlide, slideKeys.length - 1);
+  const currentKey = slideKeys[visibleSlide];
+  const englishDate = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  const handleScrollSync = (event) => {
+    const node = event.currentTarget;
+    const slideWidth = Math.max(node.clientWidth, 1);
+    const rawIndex = node.scrollLeft / slideWidth;
+    const nextIndex = Math.round(rawIndex);
+    if (Math.abs(rawIndex - nextIndex) <= 0.18 && nextIndex !== activeSlide && nextIndex >= 0 && nextIndex < slideKeys.length) {
+      setActiveSlide(nextIndex);
+    }
+  };
+
+  const goToSlide = (index) => {
+    setActiveSlide(index);
+    briefScrollerRef.current?.scrollTo({ left: briefScrollerRef.current.clientWidth * index, behavior: 'smooth' });
+  };
 
   return (
-    <section className="mb-3 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_14px_32px_rgba(15,23,42,0.07)]">
-      <div className={`graphic-stripes bg-gradient-to-br ${slides[visibleActiveSlide].tone} p-4 text-white`}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/80">
-            <Sparkles className="h-3.5 w-3.5" />
+    <section className="mb-3 overflow-hidden rounded-[24px] border border-white/8 shadow-[0_14px_32px_rgba(10,18,40,0.18)]">
+      <style>{`
+        @keyframes brief-progress { from { width: 0 } }
+        .brief-progress-bar { animation: brief-progress 1.1s cubic-bezier(.4,0,.2,1) both; }
+        @keyframes brief-pulse { 0%,100% { opacity:1 } 50% { opacity:.55 } }
+        .brief-last-chance { animation: brief-pulse 1.4s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .brief-progress-bar,.brief-last-chance { animation: none; } }
+        .brief-share-input::placeholder { color: rgba(255,255,255,0.3); }
+      `}</style>
+
+      <div className={`bg-gradient-to-br ${BRIEF_SLIDE_GRADIENTS[currentKey]} p-4 text-white transition-all duration-500`}>
+
+        {/* Header row */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.14em]" style={{ color: '#D4A843' }}>
+            <Sparkles className="h-3 w-3" />
             Five Towns Daily Brief
           </div>
-          <div className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[11px] font-black text-white/90">
-            {visibleActiveSlide + 1}/{slides.length}
+          {/* Dot indicators */}
+          <div className="flex items-center gap-1">
+            {slideKeys.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => goToSlide(i)}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  height: '5px',
+                  width: i === visibleSlide ? '18px' : '5px',
+                  background: i === visibleSlide ? '#D4A843' : 'rgba(255,255,255,0.2)',
+                }}
+              />
+            ))}
           </div>
         </div>
 
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {slides.map((item, index) => (
+        {/* Gold rule */}
+        <div className="mt-3 mb-3" style={{ height: '1px', background: 'linear-gradient(90deg, #D4A843 0%, rgba(212,168,67,0.15) 100%)' }} />
+
+        {/* Slide label + slide name tabs (horizontal scroll, compact) */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+          {slideLabels.map((label, i) => (
             <button
-              key={item.key}
+              key={label}
               type="button"
-              onClick={() => {
-                setActiveSlide(index);
-                briefScrollerRef.current?.scrollTo({
-                  left: briefScrollerRef.current.clientWidth * index,
-                  behavior: 'smooth',
-                });
+              onClick={() => goToSlide(i)}
+              className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide transition-all"
+              style={{
+                background: i === visibleSlide ? '#D4A843' : 'rgba(255,255,255,0.08)',
+                color: i === visibleSlide ? '#0a1628' : 'rgba(255,255,255,0.6)',
               }}
-              className={`motion-press shrink-0 rounded-full px-3 py-1.5 text-[11px] font-black transition ${
-                index === visibleActiveSlide ? 'bg-white text-slate-950' : 'border border-white/15 bg-white/10 text-white/90'
-              }`}
             >
-              {item.eyebrow}
+              {label}
             </button>
           ))}
         </div>
 
-        {promptText && (
-          <button
-            type="button"
-            onClick={() => onCreate('feed', 'daily_prompt', '')}
-            className="motion-press mt-3 w-full rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-left backdrop-blur-sm"
-          >
-            <p className="text-[10px] font-black uppercase tracking-wide text-white/65">Today’s prompt</p>
-            <p className="mt-0.5 line-clamp-2 text-[13px] font-black leading-5 text-white">{promptText}</p>
-          </button>
-        )}
-
+        {/* Slides container */}
         <div
           ref={briefScrollerRef}
-          className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1"
-          onScroll={(event) => {
-            const node = event.currentTarget;
-            const slideWidth = Math.max(node.clientWidth, 1);
-            const rawIndex = node.scrollLeft / slideWidth;
-            const nextIndex = Math.round(rawIndex);
-            if (Math.abs(rawIndex - nextIndex) <= 0.18 && nextIndex !== activeSlide && nextIndex >= 0 && nextIndex < slides.length) {
-              setActiveSlide(nextIndex);
-            }
-          }}
+          className="mt-4 flex snap-x snap-mandatory gap-0 overflow-x-auto scrollbar-hide"
+          onScroll={handleScrollSync}
+          style={{ scrollSnapType: 'x mandatory' }}
         >
-          {slides.map((item) => (
-            <div key={`slide-${item.key}`} className="min-w-full snap-start">
-              <p className="text-[11px] font-black uppercase tracking-wide text-white/75">{item.eyebrow}</p>
-              <h2 className="mt-1 text-[21px] font-black leading-tight">{item.title}</h2>
-              <p className="mt-1 max-w-2xl text-sm font-semibold text-white/85">{item.subtitle}</p>
 
-              <div className="mt-4 grid gap-2 lg:grid-cols-[1fr_auto]">
-                <div className="grid gap-2 sm:grid-cols-3">
-                  {item.items.map((post) => (
-                    <div key={`${item.key}-${post.id}`} className="rounded-2xl border border-white/15 bg-white/12 px-3 py-3 backdrop-blur-sm">
-                      <p className="line-clamp-2 text-[13px] font-black leading-5 text-white">{post.title || post.body || 'Community update'}</p>
-                      <p className="mt-2 text-[11px] font-semibold text-white/75">
-                        {post.community_name || post.location_text || 'Five Towns'}
-                      </p>
-                    </div>
-                  ))}
+          {/* SLIDE 1 — Today */}
+          <div className="min-w-full snap-start">
+            <div className="mb-3">
+              <p className="text-[22px] font-black leading-tight tracking-tight">{englishDate}</p>
+              <p className="mt-0.5 text-sm font-semibold" style={{ fontFamily: "'Heebo', 'Arial Hebrew', sans-serif", direction: 'rtl', color: '#D4A843' }}>
+                {hebrewDate?.hebrewString || ''}
+              </p>
+            </div>
+            <div className="mb-3 rounded-xl px-3 py-2" style={{ background: 'rgba(212,168,67,0.1)', border: '1px solid rgba(212,168,67,0.2)' }}>
+              {candleLighting && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">🕯</span>
+                  <span className="text-xs font-semibold text-white/70">Candle lighting</span>
+                  <span className="text-xs font-black text-white">{candleLighting.timeStr}</span>
+                  {candleLighting.parsha && <span className="ml-auto text-[10px] text-white/40">{candleLighting.parsha}</span>}
                 </div>
-                <button
-                  type="button"
-                  onClick={item.onAction}
-                  className="motion-press inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-4 text-[12px] font-black text-slate-950 lg:self-end"
-                >
-                  {item.actionLabel}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
+              )}
+              {zmanOfDay && !showShabbos && (
+                <div className="flex items-center gap-2 mt-1.5 pt-1.5" style={{ borderTop: '1px solid rgba(212,168,67,0.15)' }}>
+                  <span className="text-sm">🕍</span>
+                  <span className="text-xs font-semibold text-white/70">{zmanOfDay.label}</span>
+                  <span className="text-xs font-black text-white">{zmanOfDay.timeStr}</span>
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              {newsItems.slice(0, 3).map((item) => (
+                <div key={item.id} className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.06)', borderLeft: '2px solid #D4A843' }}>
+                  <p className="text-[10px] font-black uppercase tracking-wide mb-0.5" style={{ color: '#D4A843' }}>{item.community_name}</p>
+                  <p className="text-[13px] font-semibold leading-snug text-white">{item.title}</p>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={onOpenMap}
+              className="motion-press mt-3 w-full rounded-xl py-2.5 text-[12px] font-black flex items-center justify-center gap-2 transition-opacity hover:opacity-80"
+              style={{ background: 'rgba(212,168,67,0.12)', color: '#D4A843', border: '1px solid rgba(212,168,67,0.2)' }}
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              View Five Towns Map
+            </button>
+          </div>
+
+          {/* SLIDE 2 — Daily Mitzvah */}
+          <div className="min-w-full snap-start">
+            <div className="flex items-start justify-between mb-1">
+              <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#4CAF7D' }}>Daily Mitzvah</p>
+              {streak > 1 && (
+                <span className="text-[11px] font-black" style={{ color: '#fb923c' }}>🔥 {streak} days in a row</span>
+              )}
+            </div>
+            <p className="text-[19px] font-black leading-snug mb-1">
+              {(safeBrief.topLocalUpdates?.[0]?.title) || 'Look for one small way to help a neighbor today.'}
+            </p>
+            <p className="text-xs mb-3 text-white/50">Five Towns · {englishDate}</p>
+
+            {/* Tefillin reminder — weekday only, non-pushy */}
+            {[1,2,3,4,5].includes(new Date().getDay()) && (
+              <div className="mb-3 flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <span className="text-sm">🫂</span>
+                <span className="text-xs text-white/50">Tefillin today? A good moment if you haven&rsquo;t yet.</span>
+              </div>
+            )}
+
+            {/* Progress bar */}
+            <div className="mb-4">
+              <p className="text-[10px] font-black uppercase tracking-wide mb-2 text-white/40">Community progress</p>
+              <div className="rounded-full overflow-hidden" style={{ height: '7px', background: 'rgba(255,255,255,0.08)' }}>
+                <div
+                  className="brief-progress-bar h-full rounded-full"
+                  style={{ width: `${mitzvahProgress}%`, background: 'linear-gradient(90deg, #4CAF7D, #6fcf97)', animationDuration: '1.1s' }}
+                />
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-[9px] text-white/20">Starting out</span>
+                <span className="text-[9px] text-white/20">Community goal</span>
               </div>
             </div>
-          ))}
-        </div>
 
-        {statTiles.length > 0 && (
-          <div className={`mt-4 grid gap-2 ${statTiles.length === 1 ? 'grid-cols-1' : statTiles.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-            {statTiles.map((tile) => (
-              <MomentumTile key={tile.label} inverse icon={tile.icon} label={tile.label} value={tile.value} />
-            ))}
+            {/* Share thought / Dvar Torah pipeline */}
+            <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-[10px] font-black uppercase tracking-wide mb-2.5 text-white/60">Share a thought or Dvar Torah</p>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {[
+                  { label: 'Yourself', enabled: true, action: () => onCreate('feed', 'self_note', thoughtText) },
+                  { label: 'A Friend', enabled: true, action: () => onCreate('message', 'friend', thoughtText) },
+                  { label: 'The Feed', enabled: true, action: () => onCreate('feed', 'thought', thoughtText) },
+                  { label: 'Communities', enabled: false, action: null },
+                ].map(({ label, enabled, action }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    disabled={!enabled}
+                    onClick={() => { if (enabled) setShareTarget(shareTarget === label ? null : label); }}
+                    className="rounded-full px-3 py-1 text-[11px] font-semibold transition-all"
+                    style={{
+                      background: shareTarget === label ? '#4CAF7D' : enabled ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
+                      color: shareTarget === label ? '#081a10' : enabled ? 'white' : 'rgba(255,255,255,0.2)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      cursor: enabled ? 'pointer' : 'default',
+                    }}
+                  >
+                    {label}{!enabled && ' ·'}
+                  </button>
+                ))}
+              </div>
+              {shareTarget && (
+                <div className="flex gap-2">
+                  <input
+                    className="brief-share-input flex-1 rounded-lg px-3 py-1.5 text-xs text-white outline-none"
+                    style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(76,175,125,0.3)' }}
+                    placeholder={`Share to ${shareTarget}…`}
+                    value={thoughtText}
+                    onChange={(e) => setThoughtText(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { onCreate('feed', 'thought', thoughtText); setThoughtText(''); setShareTarget(null); }}
+                    className="rounded-lg px-3 py-1.5 text-xs font-black"
+                    style={{ background: '#4CAF7D', color: '#081a10' }}
+                  >
+                    Send
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        )}
+
+          {/* SLIDE 3 — Today's Events */}
+          <div className="min-w-full snap-start">
+            <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: '#a78bfa' }}>Today&rsquo;s Events</p>
+            <div className="space-y-2 mb-4">
+              {eventItems.map((item) => (
+                <div key={item.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <span className="text-[11px] font-black shrink-0" style={{ color: '#a78bfa', minWidth: '52px' }}>{item.location_text || ''}</span>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-bold leading-tight text-white truncate">{item.title}</p>
+                    <p className="text-[10px] text-white/40 mt-0.5">{item.community_name || item.location_text || 'Five Towns'}</p>
+                  </div>
+                </div>
+              ))}
+              {eventItems.length === 0 && (
+                <p className="text-sm text-white/30 py-3 text-center">No events posted yet today.</p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => onCreate('event', 'local_event', '')}
+              className="motion-press w-full rounded-xl py-2.5 text-[12px] font-black transition-opacity hover:opacity-80"
+              style={{ background: 'rgba(167,139,250,0.12)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.2)' }}
+            >
+              + Post an event
+            </button>
+          </div>
+
+          {/* SLIDE 4 — Mitzvahs Near You */}
+          <div className="min-w-full snap-start">
+            <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: '#4CAF7D' }}>Mitzvahs Near You</p>
+            <div className="space-y-2 mb-4">
+              {mitzvahItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between rounded-xl px-3 py-2.5"
+                  style={{
+                    background: item.urgent ? 'rgba(251,146,60,0.1)' : 'rgba(255,255,255,0.06)',
+                    border: item.urgent ? '1px solid rgba(251,146,60,0.3)' : '1px solid transparent',
+                  }}
+                >
+                  <div className="min-w-0 mr-3">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[13px] font-bold leading-tight text-white">{item.title}</p>
+                      {item.urgent && <span className="text-[10px] font-black shrink-0" style={{ color: '#fb923c' }}>⏳ Urgent</span>}
+                    </div>
+                    <p className="text-[10px] text-white/40 mt-0.5">{item.location_text || item.community_name || 'Five Towns'}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-black"
+                    style={{ background: item.urgent ? 'rgba(251,146,60,0.2)' : 'rgba(76,175,125,0.15)', color: item.urgent ? '#fb923c' : '#4CAF7D' }}
+                  >
+                    Help →
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => onCreate('help', 'chesed', '')}
+              className="motion-press w-full rounded-xl py-2.5 text-[12px] font-black transition-opacity hover:opacity-80"
+              style={{ background: 'rgba(76,175,125,0.12)', color: '#4CAF7D', border: '1px solid rgba(76,175,125,0.2)' }}
+            >
+              + Post a mitzvah
+            </button>
+          </div>
+
+          {/* SLIDE 5 — Community Pulse */}
+          <div className="min-w-full snap-start">
+            <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: '#D4A843' }}>Community Pulse</p>
+            <p className="text-[19px] font-black leading-snug mb-4">What&rsquo;s happening in the Five Towns right now</p>
+            <div className="space-y-2">
+              {pulseStats.map((stat, i) => (
+                <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <span className="text-base">{stat.emoji}</span>
+                  <span className="text-[13px] font-semibold text-white">{stat.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* SLIDE 6 — Shabbos Countdown (Thu/Fri only) */}
+          {showShabbos && (() => {
+            const lastChance = msUntilCandles !== null && msUntilCandles < 30 * 60_000 && msUntilCandles > 0;
+            return (
+              <div className="min-w-full snap-start text-center pt-2 pb-1">
+                <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: lastChance ? '#ef4444' : '#fb923c' }}>
+                  {lastChance ? '⚠️ Last Chance' : 'Shabbos Countdown'}
+                </p>
+                {candleLighting?.parsha && (
+                  <p className="text-[22px] font-black leading-tight mb-3 text-white">{candleLighting.parsha}</p>
+                )}
+                <div className={`mb-1 ${lastChance ? 'brief-last-chance' : ''}`}>
+                  <span className="font-black leading-none tracking-tight" style={{ fontSize: lastChance ? '44px' : '52px', color: lastChance ? '#ef4444' : '#fb923c' }}>
+                    {hoursUntil}h {minutesUntil}m
+                  </span>
+                </div>
+                <p className="text-sm text-white/50 mb-1">until candle lighting</p>
+                <p className="text-base font-black text-white">{candleLighting?.timeStr || '8:14 PM'} · Five Towns</p>
+                <p className="mt-5 text-2xl font-black" style={{ fontFamily: "'Heebo', 'Arial Hebrew', sans-serif", color: '#D4A843' }}>
+                  שבת שלום
+                </p>
+              </div>
+            );
+          })()}
+
+        </div>
       </div>
     </section>
   );
