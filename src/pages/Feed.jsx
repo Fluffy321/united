@@ -863,11 +863,13 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
     getShabbatTimes(FIVE_TOWNS_LAT, FIVE_TOWNS_LNG).then((times) => {
       if (times?.candleLighting) {
         const dt = new Date(times.candleLighting);
-        setCandleLighting({
-          timeStr: dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }),
-          date: dt,
-          parsha: times.parsha,
-        });
+        if (!isNaN(dt.getTime())) {
+          setCandleLighting({
+            timeStr: dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }),
+            date: dt,
+            parsha: times.parsha,
+          });
+        }
       }
     });
     const now = new Date();
@@ -881,10 +883,12 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
         const raw = times[key];
         if (raw) {
           const dt = new Date(raw);
-          setZmanOfDay({
-            label,
-            timeStr: dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }),
-          });
+          if (!isNaN(dt.getTime())) {
+            setZmanOfDay({
+              label,
+              timeStr: dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }),
+            });
+          }
         }
       });
     }
