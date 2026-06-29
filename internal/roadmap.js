@@ -1372,10 +1372,18 @@ Goals:
 Context: ShulPage.jsx exists. The communities system already serves as an informal shul directory.
         Only build this if you want structured minyan time data separate from community posts.
 
+        Unwired scaffolding already exists from an earlier pass at src/components/shul/ — RideBoard.jsx,
+        VolunteerBoard.jsx, MinyanStatusWidget.jsx, WeeklyScheduleWidget.jsx, CreateShulPostModal.jsx,
+        AdminBroadcastModal.jsx, MediaTab.jsx — none currently imported by any page. They reference
+        Shul, ShulPost, ShulSchedule, RideRequest, MinyanAttendance, VolunteerOpportunity, and
+        VolunteerSignup entities, none of which have SUPABASE_ENTITY_TABLES mappings or migrations yet
+        (base44Client.js documents them in its "Required DB tables" comment). Reuse these components
+        instead of rebuilding from scratch — read each one before writing new UI.
+
 Goals:
-1. Create shuls migration (name, address, rabbi_name, phone, website, logo_url, schedule_json, minyan_times_json).
-2. Wire Shul entity in base44Client.js.
-3. Connect ShulPage.jsx (/ShulPage) to real data.
+1. Create shuls migration (name, address, rabbi_name, phone, website, logo_url, schedule_json, minyan_times_json) plus tables for the other unmapped entities above as needed.
+2. Wire Shul, ShulPost, ShulSchedule, RideRequest, MinyanAttendance, VolunteerOpportunity, VolunteerSignup entities in base44Client.js.
+3. Connect ShulPage.jsx (/ShulPage) to real data, wiring in the existing src/components/shul/ components.
 4. Add shul search to the Search page.
 5. Link shul pages to corresponding community pages if they exist.
 6. Re-add /ShulPage route to App.jsx.
@@ -2608,6 +2616,33 @@ Goals:
     title: 'Admin Seed Control: Harden or Remove',
     description: 'AdminSeedControl.jsx must be hardened with a production safety check or removed before public launch.',
     shippedNote: 'Shipped 2026-06-22. Chose harden-and-keep over removal. src/pages/AdminSeedControl.jsx now splits into a thin wrapper that checks import.meta.env.PROD and renders a "Not available in production" card, and a SeedControlTool component holding the actual tool (split this way, rather than an early return before hooks, to stay compliant with react-hooks/rules-of-hooks). Still behind AdminRoute in dev/staging as before.',
+  },
+
+  {
+    id: 'orphaned-feature-scaffolding-cleanup',
+    category: 'Infrastructure',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Decide Fate of Orphaned Component Scaffolding',
+    description: 'A 2026-06-29 self-check found ~20 entities referenced via dataService.entities.<Name> with no SUPABASE_ENTITY_TABLES mapping. Almost all trace back to components that are never imported by any page or parent component, so they are not reachable by real users and pose no current production risk — but they are dead weight and a few duplicate functionality already shipped elsewhere.',
+    why: 'Not a live bug (createUnmappedEntityApi in base44Client.js already falls back to localStorage in dev and throws a clear error in prod, so nothing silently breaks), but the roadmap had no record of this scaffolding existing, and CLAUDE.md requires tracking known gaps surfaced during an audit. Two buckets: (1) src/components/shul/* (RideBoard, VolunteerBoard, MinyanStatusWidget, WeeklyScheduleWidget, CreateShulPostModal, AdminBroadcastModal, MediaTab) — already folded into the shul-directory prompt as reusable scaffolding, build it out there. (2) Components superseded or never wired in: src/components/chalkboard/CreateChalkboardModal.jsx + EventCard.jsx + EventRSVPSection.jsx + SavedEventsSection.jsx (legacy RSVP/EventAttendee entities, superseded by the shipped events-system which uses CommunityEvent/CommunityEventRSVP instead), src/components/feed/CommunityAlertBanner.jsx (CommunityAlert), src/components/feed/WeeklyImpactCard.jsx (WeeklyStats), src/components/communities/NewsletterSubscribeBox.jsx + src/components/groups/NewsletterHistoryModal.jsx + GroupAnalyticsDashboard.jsx (NewsletterSubscriber/NewsletterLog — newsletter-system above already covers building this out), and src/components/groups/GroupDiscussionTab.jsx + GroupResourcesTab.jsx + src/components/communities/CommunityDiscussionsTab.jsx (already covered by the group-events-discussion-resources entry above). Also overlaps Check 8 dead-component findings: src/components/communities/CommunityHubDetail.jsx, DiscoverCommunityCard.jsx, ColorfulCommunityCard.jsx, RichCommunityCard.jsx are unused and should be deleted in the same pass.',
+    prompt: `You are cleaning up orphaned/unwired component scaffolding in JUnited surfaced by the 2026-06-29 self-check.
+
+Context: These files exist but are imported nowhere outside themselves (verified via grep for their import statements):
+  - src/components/chalkboard/CreateChalkboardModal.jsx
+  - src/components/feed/EventCard.jsx, src/components/events/EventRSVPSection.jsx, src/components/profile/SavedEventsSection.jsx (use legacy RSVP/EventAttendee entities — superseded by CommunityEvent/CommunityEventRSVP, see events-system entry)
+  - src/components/feed/CommunityAlertBanner.jsx
+  - src/components/feed/WeeklyImpactCard.jsx
+  - src/components/communities/NewsletterSubscribeBox.jsx, src/components/groups/NewsletterHistoryModal.jsx, src/components/groups/GroupAnalyticsDashboard.jsx
+  - src/components/communities/CommunityHubDetail.jsx, DiscoverCommunityCard.jsx, ColorfulCommunityCard.jsx, RichCommunityCard.jsx (dead duplicates of CommunityDetailView.jsx / CommunityCard.jsx)
+  None of these are imported by any page or by App.jsx.
+
+Goals:
+1. For each file, confirm via grep that it truly has zero importers (re-check, things may have changed).
+2. For the legacy chalkboard/RSVP files and the dead community-card duplicates: delete the files (they are superseded by shipped functionality).
+3. For CommunityAlertBanner, WeeklyImpactCard, NewsletterSubscribeBox/NewsletterHistoryModal/GroupAnalyticsDashboard: these look like real unfinished features rather than dead code — either wire them into a real page with proper entity mappings + migrations, or delete them if there's no near-term plan to ship them. Use judgment per-component; don't leave a half-wired state.
+4. Run npm run lint && npm run build after deletions to confirm nothing else imports the removed files.
+5. Update internal/roadmap.js: change this item's status to 'shipped' (if cleaned up) or 'dropped' (if decided not worth doing) with a why.`,
   },
 
 ];
