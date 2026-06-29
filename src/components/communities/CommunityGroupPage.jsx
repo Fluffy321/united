@@ -6,6 +6,7 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import FileAttachmentButton from '@/components/common/FileAttachmentButton';
 import { AttachmentPreview, PendingAttachmentChip } from '@/components/common/FileAttachmentPreview';
+import GroupEventsTab from '@/components/groups/GroupEventsTab';
 
 const CATEGORY_EMOJIS = {
   'Torah Learning': '📚', Shabbat: '🕯️', Chesed: '🤝', Events: '🎉',
@@ -14,10 +15,9 @@ const CATEGORY_EMOJIS = {
   Business: '💼', Learning: '📚', Social: '🎉', Other: '🌍',
 };
 
-// Events, Forum, and Resources tabs require additional migrations (group_discussions,
-// group_resources). They are deferred — wire them back once those tables ship.
 const TABS = [
   { id: 'posts', label: 'Posts', icon: Send },
+  { id: 'events', label: 'Events', icon: Clock },
   { id: 'members', label: 'Members', icon: UserPlus },
   { id: 'announcements', label: 'Announce', icon: Megaphone },
   { id: 'requests', label: 'Requests', icon: UserCheck, adminOnly: true },
@@ -353,6 +353,11 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
                   </>
                 )}
               </div>
+            )}
+
+            {/* Events Tab */}
+            {tab === 'events' && (
+              <GroupEventsTab group={group} currentUser={currentUser} isMember={isMember} />
             )}
 
             {/* Announcements Tab */}
