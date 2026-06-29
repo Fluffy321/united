@@ -1208,37 +1208,41 @@ function CommunityAppBar({ community, typeConfig, isAdmin, accentHex, onBack, on
 
   return (
     <>
-      {/* Zero-height sentinel marks the hero/content boundary in the document flow */}
+      {/* Zero-height sentinel marks the hero/content boundary — stays in document flow */}
       <div ref={sentinelRef} style={{ height: 0 }} />
-      <div
-        className="fixed top-0 left-0 right-0 z-40 h-12 flex items-center justify-between px-3 transition-opacity duration-150"
-        style={{
-          background: accentHex,
-          opacity: visible ? 1 : 0,
-          pointerEvents: visible ? 'auto' : 'none',
-        }}
-      >
-        <button
-          onClick={onBack}
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
-          style={{ background: 'rgba(255,255,255,0.2)' }}
+      {/* Portal to document.body so position:fixed isn't broken by PageTransition's transform context */}
+      {createPortal(
+        <div
+          className="fixed top-0 left-0 right-0 z-40 h-12 flex items-center justify-between px-3 transition-opacity duration-150"
+          style={{
+            background: accentHex,
+            opacity: visible ? 1 : 0,
+            pointerEvents: visible ? 'auto' : 'none',
+          }}
         >
-          <ChevronLeft className="w-5 h-5 text-white" />
-        </button>
+          <button
+            onClick={onBack}
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
+            style={{ background: 'rgba(255,255,255,0.2)' }}
+          >
+            <ChevronLeft className="w-5 h-5 text-white" />
+          </button>
 
-        <p className="font-black text-[15px] text-white tracking-tight truncate px-2 flex-1 text-center">
-          {community.name}
-        </p>
+          <p className="font-black text-[15px] text-white tracking-tight truncate px-2 flex-1 text-center">
+            {community.name}
+          </p>
 
-        <button
-          onClick={onOpenDrawer}
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
-          style={{ background: 'rgba(255,255,255,0.2)' }}
-          aria-label="Community menu"
-        >
-          <span className="font-black text-[18px] leading-none tracking-[2px] text-white">≡</span>
-        </button>
-      </div>
+          <button
+            onClick={onOpenDrawer}
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
+            style={{ background: 'rgba(255,255,255,0.2)' }}
+            aria-label="Community menu"
+          >
+            <span className="font-black text-[18px] leading-none tracking-[2px] text-white">≡</span>
+          </button>
+        </div>,
+        document.body
+      )}
     </>
   );
 }
