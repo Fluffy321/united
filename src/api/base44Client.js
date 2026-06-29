@@ -39,6 +39,7 @@ const SUPABASE_ENTITY_TABLES = {
   // Community feature backbone — migration 020_community_feature_backbone.sql
   CommunityEvent: 'community_events',
   CommunityEventRSVP: 'community_event_rsvps',
+  RSVP: 'community_event_rsvps',
   CommunityResource: 'community_resources',
   CommunityListing: 'community_listings',
   CommunityGroupChat: 'community_group_chats',
