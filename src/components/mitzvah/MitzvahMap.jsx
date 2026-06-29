@@ -532,17 +532,6 @@ const STATIC_POINTS = [
     source_url: 'https://sunflowercafe.com/sunflower-cafe-lawrence-dairy-cafe-coffee-catering/',
   },
   {
-    id: 'food-wok-tov',
-    title: 'Wok Tov',
-    description: 'Verified kosher Chinese restaurant. KosherPo lists Vaad Hakashrus of Five Towns.',
-    type: 'restaurant',
-    location_text: '594 Central Ave, Cedarhurst',
-    location_lat: 40.6233613,
-    location_lng: -73.7216898,
-    verification: 'Verified kosher',
-    source_url: 'https://kosherpo.com/id/wok-tov',
-  },
-  {
     id: 'food-smash-house',
     title: 'Smash House Burger',
     description: 'Verified kosher burger restaurant. Great Kosher Restaurants lists Vaad of the Five Towns supervision.',
