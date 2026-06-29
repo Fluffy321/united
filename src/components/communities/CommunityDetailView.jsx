@@ -1194,27 +1194,26 @@ function CommunityAppBar({ community, typeConfig, isAdmin, accentHex, onBack, on
   const [scrolled, setScrolled] = React.useState(false);
 
   React.useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 160);
+    // 100 = banner height; after that the banner has scrolled out and AppBar goes solid
+    const handler = () => setScrolled(window.scrollY > 100);
     window.addEventListener('scroll', handler, { passive: true });
     handler();
     return () => window.removeEventListener('scroll', handler);
   }, []);
 
   return (
+    // fixed so it overlays the banner instead of sitting above it in the flow,
+    // keeping the total header height at 100px (just the banner) rather than 148px
     <div
-      className="sticky top-0 z-40 h-12 flex items-center justify-between px-3 transition-all duration-200"
-      style={{
-        background: scrolled ? accentHex : '#ffffff',
-        borderBottom: scrolled ? 'none' : '1px solid #f1f5f9',
-        boxShadow: scrolled ? 'none' : '0 1px 3px rgba(0,0,0,0.05)',
-      }}
+      className="fixed top-0 left-0 right-0 z-40 h-12 flex items-center justify-between px-3 transition-all duration-200"
+      style={{ background: scrolled ? accentHex : 'transparent' }}
     >
       <button
         onClick={onBack}
         className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
-        style={{ background: scrolled ? 'rgba(255,255,255,0.2)' : 'transparent' }}
+        style={{ background: 'rgba(0,0,0,0.28)' }}
       >
-        <ChevronLeft className="w-5 h-5" style={{ color: scrolled ? '#fff' : '#374151' }} />
+        <ChevronLeft className="w-5 h-5 text-white" />
       </button>
 
       {scrolled && (
@@ -1229,15 +1228,10 @@ function CommunityAppBar({ community, typeConfig, isAdmin, accentHex, onBack, on
       <button
         onClick={onOpenDrawer}
         className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
-        style={{ background: scrolled ? 'rgba(255,255,255,0.2)' : 'transparent' }}
+        style={{ background: 'rgba(0,0,0,0.28)' }}
         aria-label="Community menu"
       >
-        <span
-          className="font-black text-[18px] leading-none tracking-[2px]"
-          style={{ color: scrolled ? '#fff' : '#374151' }}
-        >
-          ≡
-        </span>
+        <span className="font-black text-[18px] leading-none tracking-[2px] text-white">≡</span>
       </button>
     </div>
   );
