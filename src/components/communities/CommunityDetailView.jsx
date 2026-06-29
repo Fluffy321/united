@@ -771,6 +771,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   };
 
   // Tab button refs for scrolling active pill into view after swipe
+  const heroRef = useRef(null);
   const tabButtonRefs = useRef({});
   useEffect(() => {
     tabButtonRefs.current[activeTab]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
@@ -931,8 +932,6 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
           ? events.length
         : 0,
   }));
-
-  const heroRef = useRef(null);
 
   return (
     <div className="min-h-screen bg-[#F8FAFB] flex flex-col">
