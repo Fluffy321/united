@@ -932,27 +932,34 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
         : 0,
   }));
 
+  const heroRef = useRef(null);
+
   return (
     <div className="min-h-screen bg-[#F8FAFB] flex flex-col">
-      <CommunityHero
-        community={community}
-        isFollowing={isFollowing}
-        isAdmin={isAdmin}
-        isCreator={isCreator}
-        onFollow={handleFollow}
-        onManage={() => openAdminCenter('overview')}
-        onClaim={() => setShowClaim(true)}
-        onBack={onBack}
-        onOpenDrawer={() => setShowDrawer(true)}
-        actualMemberCount={actualMemberCount}
-        members={members}
-        currentUser={currentUser}
-        onTabChange={setTab}
-        typeConfig={typeConfig}
-        inAppShell
-      />
-      {/* AppBar sits AFTER the hero so it sticks at top only once the hero scrolls away */}
+      {/* Wrapper gives CommunityAppBar a real element to observe (non-zero area) */}
+      <div ref={heroRef}>
+        <CommunityHero
+          community={community}
+          isFollowing={isFollowing}
+          isAdmin={isAdmin}
+          isCreator={isCreator}
+          onFollow={handleFollow}
+          onManage={() => openAdminCenter('overview')}
+          onClaim={() => setShowClaim(true)}
+          onBack={onBack}
+          onOpenDrawer={() => setShowDrawer(true)}
+          actualMemberCount={actualMemberCount}
+          members={members}
+          currentUser={currentUser}
+          onTabChange={setTab}
+          typeConfig={typeConfig}
+          inAppShell
+        />
+      </div>
+      {/* key=communityId forces remount on navigation — prevents stale visible state */}
       <CommunityAppBar
+        key={communityId}
+        heroRef={heroRef}
         community={community}
         typeConfig={typeConfig}
         isAdmin={isAdmin}
@@ -1192,58 +1199,54 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   );
 }
 
-function CommunityAppBar({ community, typeConfig, isAdmin, accentHex, onBack, onManage, onShare, onOpenDrawer }) {
+function CommunityAppBar({ heroRef, community, typeConfig, isAdmin, accentHex, onBack, onManage, onShare, onOpenDrawer }) {
   const [visible, setVisible] = React.useState(false);
-  const sentinelRef = React.useRef(null);
 
   React.useEffect(() => {
-    const el = sentinelRef.current;
+    const el = heroRef.current;
     if (!el) return;
-    // Fires when the sentinel (placed at the hero/content boundary) leaves the viewport
-    // upward — meaning the hero has completely scrolled off. That's when we show the bar.
-    const obs = new IntersectionObserver(([entry]) => setVisible(!entry.isIntersecting), { threshold: 0 });
+    // Observe the hero container itself (non-zero area, reliable).
+    // isIntersecting = true while ANY part of hero is in viewport → keep AppBar hidden.
+    // isIntersecting = false when hero is completely scrolled away → show AppBar.
+    const obs = new IntersectionObserver(
+      ([entry]) => setVisible(!entry.isIntersecting),
+      { threshold: 0 }
+    );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [heroRef]);
 
-  return (
-    <>
-      {/* Zero-height sentinel marks the hero/content boundary — stays in document flow */}
-      <div ref={sentinelRef} style={{ height: 0 }} />
-      {/* Portal to document.body so position:fixed isn't broken by PageTransition's transform context */}
-      {createPortal(
-        <div
-          className="fixed top-0 left-0 right-0 z-40 h-12 flex items-center justify-between px-3 transition-opacity duration-150"
-          style={{
-            background: accentHex,
-            opacity: visible ? 1 : 0,
-            pointerEvents: visible ? 'auto' : 'none',
-          }}
-        >
-          <button
-            onClick={onBack}
-            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
-            style={{ background: 'rgba(255,255,255,0.2)' }}
-          >
-            <ChevronLeft className="w-5 h-5 text-white" />
-          </button>
+  return createPortal(
+    <div
+      className="fixed top-0 left-0 right-0 z-40 h-12 flex items-center justify-between px-3 transition-opacity duration-150"
+      style={{
+        background: accentHex,
+        opacity: visible ? 1 : 0,
+        pointerEvents: visible ? 'auto' : 'none',
+      }}
+    >
+      <button
+        onClick={onBack}
+        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
+        style={{ background: 'rgba(255,255,255,0.2)' }}
+      >
+        <ChevronLeft className="w-5 h-5 text-white" />
+      </button>
 
-          <p className="font-black text-[15px] text-white tracking-tight truncate px-2 flex-1 text-center">
-            {community.name}
-          </p>
+      <p className="font-black text-[15px] text-white tracking-tight truncate px-2 flex-1 text-center">
+        {community.name}
+      </p>
 
-          <button
-            onClick={onOpenDrawer}
-            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
-            style={{ background: 'rgba(255,255,255,0.2)' }}
-            aria-label="Community menu"
-          >
-            <span className="font-black text-[18px] leading-none tracking-[2px] text-white">≡</span>
-          </button>
-        </div>,
-        document.body
-      )}
-    </>
+      <button
+        onClick={onOpenDrawer}
+        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-all"
+        style={{ background: 'rgba(255,255,255,0.2)' }}
+        aria-label="Community menu"
+      >
+        <span className="font-black text-[18px] leading-none tracking-[2px] text-white">≡</span>
+      </button>
+    </div>,
+    document.body
   );
 }
 
