@@ -686,17 +686,6 @@ const STATIC_POINTS = [
     source_url: 'https://mgcraftkitchen.com/',
   },
   {
-    id: 'food-gottlieb-fish',
-    title: "Gottlieb's Fish",
-    description: 'Kosher fish and takeout shop serving Lawrence/Cedarhurst. Public listings identify kosher offerings.',
-    type: 'grocery',
-    location_text: '314 Central Ave, Lawrence',
-    location_lat: 40.6175713,
-    location_lng: -73.7301516,
-    verification: 'Kosher shop listing',
-    source_url: 'https://www.gottliebsfish.com/',
-  },
-  {
     id: 'food-woodro-hearth',
     title: 'Woodro Kosher Delicatessen & Restaurant',
     description: 'Verified kosher deli/restaurant in Hewlett. Public site and listings identify it as kosher.',
@@ -919,12 +908,12 @@ const STATIC_POINTS = [
   {
     id: 'shop-jerusalem-mini-market',
     title: 'Jerusalem Mini Market',
-    description: 'Israeli specialty grocery and prepared-food market listed publicly on Central Avenue.',
+    description: 'Israeli specialty grocery and prepared-food market. Under Mehadrin hashgacha of Rabbi Shalom Silverberg. Stocks Israeli products, deli, baked goods, and prepared foods.',
     type: 'grocery',
     location_text: '698 Central Ave, Cedarhurst',
     location_lat: 40.6256299,
     location_lng: -73.7187292,
-    verification: 'Community shop listing',
+    verification: 'Verified kosher',
     source_url: 'https://www.mapquest.com/us/new-york/jerusalem-minimarket-413822744',
   },
   {
