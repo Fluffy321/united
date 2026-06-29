@@ -1,7 +1,7 @@
 ---
 name: junited-self-check
 description: >
-  JUnited codebase consistency checker. Use this skill automatically after implementing any feature, fix, migration, or roadmap change in the JUnited repo at /Users/aryehkohn/Documents/GitHub/united. Also invoke it whenever the user asks to "check the code", "self-check", "make sure nothing is broken", "verify consistency", or "audit the codebase". This skill is JUnited-specific and knows the exact conventions of the stack (React + Supabase + roadmap.js). Run it proactively — don't wait to be asked if you just shipped something.
+  JUnited codebase consistency checker. Use this skill automatically after implementing any feature, fix, migration, or roadmap change in the JUnited repo. Also invoke it whenever the user asks to "check the code", "self-check", "make sure nothing is broken", "verify consistency", or "audit the codebase". This skill is JUnited-specific and knows the exact conventions of the stack (React + Supabase + roadmap.js). Run it proactively — don't wait to be asked if you just shipped something.
 ---
 
 # JUnited Self-Check
@@ -54,7 +54,7 @@ Every tab ID in the `workflowTabs` array (or equivalent) must also appear in `VA
 
 **File:** `src/api/base44Client.js` (the `SUPABASE_ENTITY_TABLES` object)
 
-Scan the codebase for `dataService.entities.<Name>` usage patterns. Every `<Name>` used must have a corresponding key in `SUPABASE_ENTITY_TABLES`. A missing mapping means the call silently hits the wrong table or throws at runtime. Flag any unmapped entity as FAIL.
+Scan application source files for `dataService.entities.<Name>` and `base44.entities.<Name>` usage patterns, excluding `src/docs/`. Every `<Name>` used must have a corresponding key in `SUPABASE_ENTITY_TABLES`. A missing mapping throws at runtime in production. Flag any unmapped entity in production-reachable code as FAIL; flag references confined to confirmed unimported scaffolding as WARN.
 
 Conversely, check for entity names in `SUPABASE_ENTITY_TABLES` that are never referenced in any component or service — flag as WARN (dead mapping, not harmful but noisy).
 
@@ -86,7 +86,7 @@ Flag any mismatch between migration column name and code usage as FAIL.
 
 **File:** `src/config/features.js`
 
-`COMMUNITIES_ENABLED` is currently `false` (intentional for beta). Any code path that renders community-specific UI to end users should be gated behind this flag. Spot-check `src/pages/Communities.jsx` and `src/App.jsx` to confirm the gate is still in place and hasn't been accidentally removed. Flag removal as FAIL.
+`COMMUNITIES_ENABLED` must remain `true`: Communities is a live production feature. Spot-check `src/pages.config.js` and `src/App.jsx` to confirm the Communities page, community detail routes, invite route, and post-onboarding navigation remain enabled. Flag a false value, removed route, or redirect that prevents users from reaching Communities as FAIL.
 
 ---
 
@@ -110,10 +110,13 @@ If you didn't edit any files in this session, skip this check.
 
 ## Check 10 — Build + Lint
 
+Run these commands from the repository root. Determine it with `git rev-parse --show-toplevel`; do not assume a machine-specific absolute path.
+
 Run:
 ```bash
-cd /Users/aryehkohn/Documents/GitHub/united
+cd "$(git rev-parse --show-toplevel)"
 npm run lint 2>&1 | tail -20
+npm run build
 ```
 
 Report lint errors as FAIL and warnings as WARN. If the user's environment blocks a full `npm run build` (e.g., native binary mismatch in sandbox), note that and recommend the user run it locally — do not mark this as FAIL due to environment limitations.

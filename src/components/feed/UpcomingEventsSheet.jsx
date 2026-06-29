@@ -8,7 +8,6 @@ import { COMMUNITIES_ENABLED } from '@/config/features';
 export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, joinedCommunityIds = [], onOpenEvent }) {
   const [events, setEvents] = useState([]);
   const [savedEventIds, setSavedEventIds] = useState([]);
-  const [rsvpEventIds, setRsvpEventIds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('for_you'); // 'for_you' | 'mine' | 'saved' | 'all'
@@ -18,21 +17,18 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
     setLoading(true);
     Promise.all([
       dataService.entities.UnifiedPost.filter({ type: 'event' }, '-event_date', 60),
-      currentUser?.id ? dataService.entities.RSVP.filter({ user_id: currentUser.id }, '-created_date', 100) : Promise.resolve([]),
       currentUser?.id ? dataService.entities.Bookmark.filter({ user_id: currentUser.id }, '-created_date', 100) : Promise.resolve([]),
     ])
-      .then(([all, rsvps, bookmarks]) => {
-        const rsvpIds = rsvps.map(r => r.post_id).filter(Boolean);
+      .then(([all, bookmarks]) => {
         const savedIds = bookmarks.map(b => b.post_id).filter(Boolean);
-        setRsvpEventIds(rsvpIds);
         setSavedEventIds(savedIds);
         const upcoming = all.filter(e => {
           if (!e.event_date) return false;
           try { return !isPast(parseISO(e.event_date)); } catch { return false; }
         });
         const sorted = [...upcoming].sort((a, b) => {
-          const aRelevant = rsvpIds.includes(a.id) || savedIds.includes(a.id) || (COMMUNITIES_ENABLED && joinedCommunityIds.includes(a.community_id));
-          const bRelevant = rsvpIds.includes(b.id) || savedIds.includes(b.id) || (COMMUNITIES_ENABLED && joinedCommunityIds.includes(b.community_id));
+          const aRelevant = savedIds.includes(a.id) || (COMMUNITIES_ENABLED && joinedCommunityIds.includes(a.community_id));
+          const bRelevant = savedIds.includes(b.id) || (COMMUNITIES_ENABLED && joinedCommunityIds.includes(b.community_id));
           if (aRelevant && !bRelevant) return -1;
           if (!aRelevant && bRelevant) return 1;
           return new Date(a.event_date) - new Date(b.event_date);
@@ -47,17 +43,13 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
     let list = events;
     if (filter === 'for_you') {
       list = list.filter(e =>
-        rsvpEventIds.includes(e.id) ||
         savedEventIds.includes(e.id) ||
         (COMMUNITIES_ENABLED && joinedCommunityIds.includes(e.community_id))
       );
       if (list.length === 0) list = events;
     }
     if (filter === 'mine') {
-      list = list.filter(e =>
-        rsvpEventIds.includes(e.id) ||
-        (COMMUNITIES_ENABLED && joinedCommunityIds.includes(e.community_id))
-      );
+      list = list.filter(e => COMMUNITIES_ENABLED && joinedCommunityIds.includes(e.community_id));
     }
     if (filter === 'saved') list = list.filter(e => savedEventIds.includes(e.id));
     if (search.trim()) {
@@ -70,7 +62,7 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
       );
     }
     return list;
-  }, [events, search, filter, joinedCommunityIds, rsvpEventIds, savedEventIds]);
+  }, [events, search, filter, joinedCommunityIds, savedEventIds]);
 
   const groupByMonth = () => {
     const groups = {};
