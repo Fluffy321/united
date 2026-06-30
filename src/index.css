@@ -688,6 +688,21 @@
     }
   }
 
+  @media (min-width: 1024px) {
+    :root {
+      --app-content-max: 900px;
+      --app-floating-gutter: 28px;
+    }
+
+    .app-shell {
+      max-width: 900px;
+    }
+
+    .mobile-page,
+    .mobile-page-wide {
+      max-width: 900px;
+    }
+  }
 
   /* Bottom-nav pages intentionally share one width so tabs do not jump sizes. */
 
