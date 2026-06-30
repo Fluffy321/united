@@ -905,8 +905,14 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
 
   const today = new Date();
   const dayOfWeek = today.getDay();
+  const todayHour = today.getHours();
   const msUntilCandles = candleLighting?.date ? candleLighting.date - today : null;
-  const showShabbos = (dayOfWeek === 4 || dayOfWeek === 5) && (msUntilCandles === null || msUntilCandles > 0);
+  // Wed afternoon (≥13:00) through Friday before candle lighting
+  const isWedAfternoon = dayOfWeek === 3 && todayHour >= 13;
+  const isThuOrFri = (dayOfWeek === 4 || dayOfWeek === 5) && (msUntilCandles === null || msUntilCandles > 0);
+  const showShabbos = isWedAfternoon || isThuOrFri;
+  // 'prep' = Wed; 'countdown' = Thu/Fri
+  const shabbosMode = isThuOrFri ? 'countdown' : 'prep';
   const hoursUntil = msUntilCandles ? Math.max(0, Math.floor(msUntilCandles / 3_600_000)) : 0;
   const minutesUntil = msUntilCandles ? Math.max(0, Math.floor((msUntilCandles % 3_600_000) / 60_000)) : 0;
 
@@ -970,7 +976,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
   ].slice(0, 4);
 
   const slideKeys = ['today', 'mitzvah', 'events', 'nearby', 'pulse', ...(showShabbos ? ['shabbos'] : [])];
-  const slideLabels = ['Today', 'Daily Mitzvah', 'Events', 'Near You', 'Pulse', ...(showShabbos ? ['Shabbos'] : [])];
+  const slideLabels = ['Today', 'Daily Mitzvah', 'Events', 'Near You', 'Pulse', ...(showShabbos ? [shabbosMode === 'prep' ? 'Shabbos Prep' : 'Shabbos'] : [])];
 
   useEffect(() => {
     if (activeSlide >= slideKeys.length) setActiveSlide(0);
@@ -1306,9 +1312,45 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
             </div>
           </div>
 
-          {/* SLIDE 6 — Shabbos Countdown (Thu/Fri only) */}
+          {/* SLIDE 6 — Shabbos (Wed prep / Thu–Fri countdown) */}
           {showShabbos && (() => {
             const lastChance = msUntilCandles !== null && msUntilCandles < 30 * 60_000 && msUntilCandles > 0;
+
+            if (shabbosMode === 'prep') {
+              const prepChecklist = [
+                { emoji: '🛒', label: 'Groceries & Shabbos shopping' },
+                { emoji: '🍲', label: 'Meal prep — check what you need' },
+                { emoji: '🚗', label: 'Post ride needs or offers' },
+                { emoji: '👥', label: 'Confirm Shabbos guests' },
+                { emoji: '🕯️', label: `Candles: ${candleLighting?.timeStr || '—'} · Five Towns` },
+              ];
+              return (
+                <div className="min-w-full snap-start pt-1 pb-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-2 text-center" style={{ color: '#fb923c' }}>
+                    Shabbos Prep
+                  </p>
+                  {candleLighting?.parsha && (
+                    <p className="text-[15px] font-black leading-tight mb-3 text-white text-center">{candleLighting.parsha}</p>
+                  )}
+                  <ul className="space-y-1.5">
+                    {prepChecklist.map(({ emoji, label }) => (
+                      <li key={label} className="flex items-center gap-2 rounded-xl bg-white/8 px-3 py-2">
+                        <span className="text-base leading-none">{emoji}</span>
+                        <span className="text-[12px] font-semibold text-white/90 leading-tight">{label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    onClick={onCreate}
+                    className="mt-3 w-full rounded-xl py-2 text-[12px] font-black text-white/80 border border-white/15 hover:bg-white/10 transition-colors"
+                  >
+                    + Post a Shabbos need
+                  </button>
+                </div>
+              );
+            }
+
             return (
               <div className="min-w-full snap-start text-center pt-2 pb-1">
                 <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: lastChance ? '#ef4444' : '#fb923c' }}>
