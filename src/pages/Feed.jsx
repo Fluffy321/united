@@ -1128,18 +1128,34 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
             {/* Share thought / Dvar Torah pipeline */}
             <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <p className="text-[10px] font-black uppercase tracking-wide mb-2.5 text-white/60">Share a thought or Dvar Torah</p>
-              <div className="flex flex-wrap gap-1.5 mb-2">
+              <input
+                className="brief-share-input w-full rounded-lg px-3 py-2 text-xs text-white outline-none mb-2.5"
+                style={{ background: 'rgba(255,255,255,0.07)', border: `1px solid ${thoughtText ? 'rgba(76,175,125,0.5)' : 'rgba(255,255,255,0.1)'}` }}
+                placeholder="Write a thought or Dvar Torah…"
+                value={thoughtText}
+                onChange={(e) => setThoughtText(e.target.value)}
+              />
+              <div className="flex flex-wrap gap-1.5">
                 {[
-                  { label: 'Yourself', enabled: true, action: () => onCreate('feed', 'self_note', thoughtText) },
-                  { label: 'A Friend', enabled: true, action: () => onCreate('message', 'friend', thoughtText) },
-                  { label: 'The Feed', enabled: true, action: () => onCreate('feed', 'thought', thoughtText) },
-                  { label: 'Communities', enabled: false, action: null },
-                ].map(({ label, enabled, action }) => (
+                  { label: 'Yourself',    enabled: true,  type: 'feed',    subtype: 'self_note' },
+                  { label: 'A Friend',    enabled: true,  type: 'message', subtype: 'friend'    },
+                  { label: 'The Feed',    enabled: true,  type: 'feed',    subtype: 'thought'   },
+                  { label: 'Communities', enabled: false, type: null,      subtype: null        },
+                ].map(({ label, enabled, type, subtype }) => (
                   <button
                     key={label}
                     type="button"
                     disabled={!enabled}
-                    onClick={() => { if (enabled) setShareTarget(shareTarget === label ? null : label); }}
+                    onClick={() => {
+                      if (!enabled) return;
+                      if (shareTarget === label) { setShareTarget(null); return; }
+                      setShareTarget(label);
+                      if (thoughtText.trim()) {
+                        onCreate(type, subtype, thoughtText);
+                        setThoughtText('');
+                        setShareTarget(null);
+                      }
+                    }}
                     className="rounded-full px-3 py-1 text-[11px] font-semibold transition-all"
                     style={{
                       background: shareTarget === label ? '#4CAF7D' : enabled ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
@@ -1151,26 +1167,26 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
                     {label}{!enabled && ' ·'}
                   </button>
                 ))}
-              </div>
-              {shareTarget && (
-                <div className="flex gap-2">
-                  <input
-                    className="brief-share-input flex-1 rounded-lg px-3 py-1.5 text-xs text-white outline-none"
-                    style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(76,175,125,0.3)' }}
-                    placeholder={`Share to ${shareTarget}…`}
-                    value={thoughtText}
-                    onChange={(e) => setThoughtText(e.target.value)}
-                  />
+                {thoughtText.trim() && shareTarget && (
                   <button
                     type="button"
-                    onClick={() => { onCreate('feed', 'thought', thoughtText); setThoughtText(''); setShareTarget(null); }}
-                    className="rounded-lg px-3 py-1.5 text-xs font-black"
-                    style={{ background: '#4CAF7D', color: '#081a10' }}
+                    onClick={() => {
+                      const t = [
+                        { label: 'Yourself', type: 'feed', subtype: 'self_note' },
+                        { label: 'A Friend', type: 'message', subtype: 'friend' },
+                        { label: 'The Feed', type: 'feed', subtype: 'thought' },
+                      ].find(x => x.label === shareTarget);
+                      if (t) onCreate(t.type, t.subtype, thoughtText);
+                      setThoughtText('');
+                      setShareTarget(null);
+                    }}
+                    className="rounded-full px-3 py-1 text-[11px] font-black transition-all"
+                    style={{ background: '#4CAF7D', color: '#081a10', border: '1px solid rgba(255,255,255,0.08)' }}
                   >
-                    Send
+                    Send →
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
 
