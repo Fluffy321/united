@@ -1391,8 +1391,13 @@ function MomentumTile({ icon: Icon, label, value, inverse = false }) {
 }
 
 function FiveTownsThreadChain({ posts = [], likedPostIds = [], onLike, onReply, onOpen, onMap, onCreate }) {
+  const sevenDaysAgo = Date.now() - 7 * 24 * 3_600_000;
   const chainPosts = posts
     .filter((post) => post.type !== 'prompt')
+    .filter((post) => {
+      const ts = post.updated_date || post.created_date;
+      return !ts || new Date(ts).getTime() > sevenDaysAgo;
+    })
     .slice(0, 8);
 
   if (!chainPosts.length) return (

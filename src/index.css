@@ -688,6 +688,30 @@
     }
   }
 
+  /* Desktop framing — make the centered column look intentional on wide screens */
+  @media (min-width: 1024px) {
+    body {
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 10%, rgba(37,99,235,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(212,168,67,0.05) 0%, transparent 55%),
+        url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='1' fill='%2394a3b8' fill-opacity='0.12'/%3E%3C/svg%3E"),
+        linear-gradient(180deg, #EBF1FF 0%, #F1F5FD 40%, #F4F7FC 100%) !important;
+    }
+
+    .app-page {
+      display: flex;
+      justify-content: center;
+    }
+
+    .app-page > * {
+      width: 100%;
+      max-width: 672px;
+      box-shadow: 0 0 0 1px rgba(226,232,240,0.6), 0 32px 80px rgba(15,23,42,0.10);
+      border-radius: 0;
+      background: linear-gradient(180deg, rgba(239,246,255,0.95) 0%, rgba(248,250,252,0.99) 30%, #F8FAFC 100%);
+    }
+  }
+
   /* Bottom-nav pages intentionally share one width so tabs do not jump sizes. */
 
   .motion-page-enter {

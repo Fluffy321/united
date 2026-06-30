@@ -29,6 +29,7 @@ export default function ModernStatsRow({
   onImpactClick,
   onFollowingClick,
   showFollowing = true,
+  isOwnProfile = false,
 }) {
   const tier = getNextTier(impact);
 
@@ -68,8 +69,17 @@ export default function ModernStatsRow({
             <div className="mx-auto mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-purple-50">
               <FileText className="h-3.5 w-3.5 text-purple-600" />
             </div>
-            <p className="text-[19px] font-black leading-none text-slate-950">{posts}</p>
-            <p className="mt-1 text-[10px] font-black uppercase leading-tight text-slate-400">Posts</p>
+            {posts === 0 && isOwnProfile ? (
+              <>
+                <p className="text-[13px] font-black leading-none text-purple-400">+</p>
+                <p className="mt-1 text-[9px] font-black uppercase leading-tight text-purple-500">First post</p>
+              </>
+            ) : (
+              <>
+                <p className="text-[19px] font-black leading-none text-slate-950">{posts}</p>
+                <p className="mt-1 text-[10px] font-black uppercase leading-tight text-slate-400">Posts</p>
+              </>
+            )}
           </button>
 
           {/* ── Impact ── */}
@@ -80,8 +90,17 @@ export default function ModernStatsRow({
             <div className="mx-auto mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-[#EEF6DF]">
               <HeartHandshake className="h-3.5 w-3.5 text-[#6B8C42]" />
             </div>
-            <p className="text-[19px] font-black leading-none text-slate-950">{impact}</p>
-            <p className="mt-1 text-[10px] font-black uppercase leading-tight text-slate-400">Impact</p>
+            {impact === 0 && isOwnProfile ? (
+              <>
+                <p className="text-[13px] font-black leading-none text-[#6B8C42]">+</p>
+                <p className="mt-1 text-[9px] font-black uppercase leading-tight text-[#6B8C42]">Do a mitzvah</p>
+              </>
+            ) : (
+              <>
+                <p className="text-[19px] font-black leading-none text-slate-950">{impact}</p>
+                <p className="mt-1 text-[10px] font-black uppercase leading-tight text-slate-400">Impact</p>
+              </>
+            )}
             {tier ? (
               <div className="mt-1.5 w-full px-1">
                 <div className="h-[3px] overflow-hidden rounded-full bg-slate-100">

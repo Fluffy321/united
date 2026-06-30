@@ -348,6 +348,7 @@ export default function Profile() {
               posts={unifiedPosts.length}
               impact={mitzvahPoints}
               showFollowing={COMMUNITIES_ENABLED}
+              isOwnProfile={isOwnProfile}
               onFriendsClick={isOwnProfile ? () => setShowFriendsHub(true) : undefined}
               onPostsClick={() => scrollTo('recent-posts-section')}
               onImpactClick={() => scrollTo('impact-section')}
