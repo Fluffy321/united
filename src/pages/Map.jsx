@@ -1287,7 +1287,7 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
   const [selectedCommunityIds, setSelectedCommunityIds] = useState(() => new Set());
   const [{ hiddenCommunityIds, hiddenPosterIds }, setMapFilterState] = useState(readMapFilterState);
   const [showMapFilters, setShowMapFilters] = useState(false);
-  const categoryParam = searchParams.get('category') || '';
+  const categoryParam = searchParams.get('category') || 'kosher_food';
   const placeParam = searchParams.get('place') || '';
 
   const { data: requests = [] } = useQuery({
