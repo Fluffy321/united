@@ -845,6 +845,8 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
   const [zmanOfDay, setZmanOfDay] = useState(null);
   const [shareTarget, setShareTarget] = useState(null);
   const [thoughtText, setThoughtText] = useState('');
+  const [mitzvahText, setMitzvahText] = useState('');
+  const [mitzvahShareTarget, setMitzvahShareTarget] = useState(null);
   const [mitzvahProgress] = useState(() => Math.min(100, Math.max(0, (momentum?.mitzvahs || 0) * 2 + 28)));
   const [streak] = useState(() => {
     try {
@@ -1102,14 +1104,6 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
             </p>
             <p className="text-xs mb-3 text-white/50">Five Towns · {englishDate}</p>
 
-            {/* Tefillin reminder — weekday only, non-pushy */}
-            {[1,2,3,4,5].includes(new Date().getDay()) && (
-              <div className="mb-3 flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <span className="text-sm">🫂</span>
-                <span className="text-xs text-white/50">Tefillin today? A good moment if you haven&rsquo;t yet.</span>
-              </div>
-            )}
-
             {/* Progress bar */}
             <div className="mb-4">
               <p className="text-[10px] font-black uppercase tracking-wide mb-2 text-white/40">Community progress</p>
@@ -1125,69 +1119,105 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
               </div>
             </div>
 
-            {/* Share thought / Dvar Torah pipeline */}
-            <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <p className="text-[10px] font-black uppercase tracking-wide mb-2.5 text-white/60">Share a thought or Dvar Torah</p>
-              <input
-                className="brief-share-input w-full rounded-lg px-3 py-2 text-xs text-white outline-none mb-2.5"
-                style={{ background: 'rgba(255,255,255,0.07)', border: `1px solid ${thoughtText ? 'rgba(76,175,125,0.5)' : 'rgba(255,255,255,0.1)'}` }}
-                placeholder="Write a thought or Dvar Torah…"
-                value={thoughtText}
-                onChange={(e) => setThoughtText(e.target.value)}
-              />
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  { label: 'Yourself',    enabled: true,  type: 'feed',    subtype: 'self_note' },
-                  { label: 'A Friend',    enabled: true,  type: 'message', subtype: 'friend'    },
-                  { label: 'The Feed',    enabled: true,  type: 'feed',    subtype: 'thought'   },
-                  { label: 'Communities', enabled: false, type: null,      subtype: null        },
-                ].map(({ label, enabled, type, subtype }) => (
-                  <button
-                    key={label}
-                    type="button"
-                    disabled={!enabled}
-                    onClick={() => {
-                      if (!enabled) return;
-                      if (shareTarget === label) { setShareTarget(null); return; }
-                      setShareTarget(label);
-                      if (thoughtText.trim()) {
-                        onCreate(type, subtype, thoughtText);
-                        setThoughtText('');
-                        setShareTarget(null);
-                      }
-                    }}
-                    className="rounded-full px-3 py-1 text-[11px] font-semibold transition-all"
-                    style={{
-                      background: shareTarget === label ? '#4CAF7D' : enabled ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
-                      color: shareTarget === label ? '#081a10' : enabled ? 'white' : 'rgba(255,255,255,0.2)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      cursor: enabled ? 'pointer' : 'default',
-                    }}
-                  >
-                    {label}{!enabled && ' ·'}
-                  </button>
-                ))}
-                {thoughtText.trim() && shareTarget && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const t = [
-                        { label: 'Yourself', type: 'feed', subtype: 'self_note' },
-                        { label: 'A Friend', type: 'message', subtype: 'friend' },
-                        { label: 'The Feed', type: 'feed', subtype: 'thought' },
-                      ].find(x => x.label === shareTarget);
-                      if (t) onCreate(t.type, t.subtype, thoughtText);
-                      setThoughtText('');
-                      setShareTarget(null);
-                    }}
-                    className="rounded-full px-3 py-1 text-[11px] font-black transition-all"
-                    style={{ background: '#4CAF7D', color: '#081a10', border: '1px solid rgba(255,255,255,0.08)' }}
-                  >
-                    Send →
-                  </button>
-                )}
-              </div>
-            </div>
+            {/* Composer box 1 — Mitzvah / act of kindness */}
+            {(() => {
+              const TARGETS = [
+                { label: 'Yourself',    type: 'feed',    subtype: 'self_note' },
+                { label: 'A Friend',    type: 'message', subtype: 'friend'    },
+                { label: 'The Feed',    type: 'feed',    subtype: 'thought'   },
+              ];
+              const send = () => {
+                const t = TARGETS.find(x => x.label === mitzvahShareTarget);
+                if (t) onCreate(t.type, t.subtype, mitzvahText);
+                setMitzvahText(''); setMitzvahShareTarget(null);
+              };
+              return (
+                <div className="rounded-2xl p-4 mb-3" style={{ background: 'rgba(76,175,125,0.08)', border: '1px solid rgba(76,175,125,0.2)' }}>
+                  <p className="text-[11px] font-black uppercase tracking-widest mb-3" style={{ color: '#4CAF7D' }}>✦ Share a mitzvah or act of kindness you did today</p>
+                  <textarea
+                    className="brief-share-input w-full rounded-xl px-4 py-3 text-sm text-white outline-none resize-none mb-3"
+                    style={{ background: 'rgba(255,255,255,0.07)', border: `1.5px solid ${mitzvahText ? 'rgba(76,175,125,0.6)' : 'rgba(255,255,255,0.1)'}`, minHeight: '72px', lineHeight: '1.5' }}
+                    placeholder="I helped a neighbor carry groceries today…"
+                    value={mitzvahText}
+                    onChange={e => setMitzvahText(e.target.value)}
+                  />
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {TARGETS.map(({ label }) => (
+                      <button key={label} type="button"
+                        onClick={() => { setMitzvahShareTarget(mitzvahShareTarget === label ? null : label); }}
+                        className="rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all"
+                        style={{
+                          background: mitzvahShareTarget === label ? '#4CAF7D' : 'rgba(255,255,255,0.09)',
+                          color: mitzvahShareTarget === label ? '#081a10' : 'white',
+                          border: `1px solid ${mitzvahShareTarget === label ? '#4CAF7D' : 'rgba(255,255,255,0.12)'}`,
+                        }}
+                      >{label}</button>
+                    ))}
+                    <button type="button" disabled className="rounded-full px-3 py-1.5 text-[12px] font-semibold"
+                      style={{ background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      Communities ·
+                    </button>
+                    {mitzvahText.trim() && mitzvahShareTarget && (
+                      <button type="button" onClick={send}
+                        className="ml-auto rounded-full px-4 py-1.5 text-[12px] font-black transition-all"
+                        style={{ background: '#4CAF7D', color: '#081a10' }}>
+                        Share →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Composer box 2 — Thought or Dvar Torah */}
+            {(() => {
+              const TARGETS = [
+                { label: 'Yourself',    type: 'feed',    subtype: 'self_note' },
+                { label: 'A Friend',    type: 'message', subtype: 'friend'    },
+                { label: 'The Feed',    type: 'feed',    subtype: 'thought'   },
+              ];
+              const send = () => {
+                const t = TARGETS.find(x => x.label === shareTarget);
+                if (t) onCreate(t.type, t.subtype, thoughtText);
+                setThoughtText(''); setShareTarget(null);
+              };
+              return (
+                <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                  <p className="text-[11px] font-black uppercase tracking-widest mb-3 text-white/60">📖 Share a thought or Dvar Torah</p>
+                  <textarea
+                    className="brief-share-input w-full rounded-xl px-4 py-3 text-sm text-white outline-none resize-none mb-3"
+                    style={{ background: 'rgba(255,255,255,0.07)', border: `1.5px solid ${thoughtText ? 'rgba(76,175,125,0.6)' : 'rgba(255,255,255,0.1)'}`, minHeight: '72px', lineHeight: '1.5' }}
+                    placeholder="This week's parsha teaches us…"
+                    value={thoughtText}
+                    onChange={e => setThoughtText(e.target.value)}
+                  />
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {TARGETS.map(({ label }) => (
+                      <button key={label} type="button"
+                        onClick={() => { setShareTarget(shareTarget === label ? null : label); }}
+                        className="rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all"
+                        style={{
+                          background: shareTarget === label ? '#4CAF7D' : 'rgba(255,255,255,0.09)',
+                          color: shareTarget === label ? '#081a10' : 'white',
+                          border: `1px solid ${shareTarget === label ? '#4CAF7D' : 'rgba(255,255,255,0.12)'}`,
+                        }}
+                      >{label}</button>
+                    ))}
+                    <button type="button" disabled className="rounded-full px-3 py-1.5 text-[12px] font-semibold"
+                      style={{ background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      Communities ·
+                    </button>
+                    {thoughtText.trim() && shareTarget && (
+                      <button type="button" onClick={send}
+                        className="ml-auto rounded-full px-4 py-1.5 text-[12px] font-black transition-all"
+                        style={{ background: '#4CAF7D', color: '#081a10' }}>
+                        Share →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* SLIDE 3 — Today's Events */}
