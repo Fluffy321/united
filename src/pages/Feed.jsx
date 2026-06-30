@@ -966,19 +966,8 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
   const currentKey = slideKeys[visibleSlide];
   const englishDate = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  const handleScrollSync = (event) => {
-    const node = event.currentTarget;
-    const slideWidth = Math.max(node.clientWidth, 1);
-    const rawIndex = node.scrollLeft / slideWidth;
-    const nextIndex = Math.round(rawIndex);
-    if (Math.abs(rawIndex - nextIndex) <= 0.18 && nextIndex !== activeSlide && nextIndex >= 0 && nextIndex < slideKeys.length) {
-      setActiveSlide(nextIndex);
-    }
-  };
-
   const goToSlide = (index) => {
     setActiveSlide(index);
-    briefScrollerRef.current?.scrollTo({ left: briefScrollerRef.current.clientWidth * index, behavior: 'smooth' });
   };
 
   return (
@@ -1040,20 +1029,22 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
         </div>
 
         {/* Slides container */}
+        <div className="mt-4 overflow-hidden">
         <div
-          ref={briefScrollerRef}
-          className="mt-4 flex snap-x snap-mandatory gap-0 overflow-x-auto scrollbar-hide"
-          onScroll={handleScrollSync}
-          style={{ scrollSnapType: 'x mandatory' }}
+          className="flex transition-transform duration-300 ease-in-out"
+          style={{ transform: `translateX(-${visibleSlide * 100}%)` }}
         >
 
           {/* SLIDE 1 — Today */}
-          <div className="min-w-full snap-start">
+          <div className="min-w-full shrink-0">
             <div className="mb-3">
               <p className="text-[22px] font-black leading-tight tracking-tight">{englishDate}</p>
               <p className="mt-0.5 text-sm font-semibold" style={{ fontFamily: "'Heebo', 'Arial Hebrew', sans-serif", direction: 'rtl', color: '#D4A843' }}>
                 {hebrewDate?.hebrewString || ''}
               </p>
+              {hebrewDate?.display && (
+                <p className="text-[11px] font-semibold" style={{ color: 'rgba(212,168,67,0.6)' }}>{hebrewDate.display}</p>
+              )}
             </div>
             <div className="mb-3 rounded-xl px-3 py-2" style={{ background: 'rgba(212,168,67,0.1)', border: '1px solid rgba(212,168,67,0.2)' }}>
               {candleLighting && (
@@ -1092,7 +1083,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
           </div>
 
           {/* SLIDE 2 — Daily Mitzvah */}
-          <div className="min-w-full snap-start">
+          <div className="min-w-full shrink-0">
             <div className="flex items-start justify-between mb-1">
               <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#4CAF7D' }}>Daily Mitzvah</p>
               {streak > 1 && (
@@ -1221,7 +1212,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
           </div>
 
           {/* SLIDE 3 — Today's Events */}
-          <div className="min-w-full snap-start">
+          <div className="min-w-full shrink-0">
             <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: '#a78bfa' }}>Today&rsquo;s Events</p>
             <div className="space-y-2 mb-4">
               {eventItems.map((item) => (
@@ -1248,7 +1239,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
           </div>
 
           {/* SLIDE 4 — Mitzvahs Near You */}
-          <div className="min-w-full snap-start">
+          <div className="min-w-full shrink-0">
             <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: '#4CAF7D' }}>Mitzvahs Near You</p>
             <div className="space-y-2 mb-4">
               {mitzvahItems.map((item) => (
@@ -1288,7 +1279,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
           </div>
 
           {/* SLIDE 5 — Community Pulse */}
-          <div className="min-w-full snap-start">
+          <div className="min-w-full shrink-0">
             <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: '#D4A843' }}>Community Pulse</p>
             <p className="text-[19px] font-black leading-snug mb-4">What&rsquo;s happening in the Five Towns right now</p>
             <div className="space-y-2">
@@ -1327,6 +1318,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
           })()}
 
         </div>
+        </div>
       </div>
     </section>
   );
@@ -1347,7 +1339,22 @@ function FiveTownsThreadChain({ posts = [], likedPostIds = [], onLike, onReply, 
     .filter((post) => post.type !== 'prompt')
     .slice(0, 8);
 
-  if (!chainPosts.length) return null;
+  if (!chainPosts.length) return (
+    <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
+      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-slate-300" />
+            </span>
+            <h2 className="text-[14px] font-black uppercase tracking-wide text-slate-950">Community Thread</h2>
+          </div>
+          <p className="mt-1 text-[12px] font-semibold leading-4 text-slate-400">Be the first to post something for the Five Towns today.</p>
+        </div>
+        <button type="button" onClick={onCreate} className="motion-press shrink-0 rounded-full bg-slate-950 px-3 py-2 text-[12px] font-black text-white">Post now</button>
+      </div>
+    </section>
+  );
 
   return (
     <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_12px_28px_rgba(15,23,42,0.06)]">

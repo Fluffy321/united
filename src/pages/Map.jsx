@@ -1286,6 +1286,7 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
   const { user: currentUser } = useAuth();
   const [selectedCommunityIds, setSelectedCommunityIds] = useState(() => new Set());
   const [{ hiddenCommunityIds, hiddenPosterIds }, setMapFilterState] = useState(readMapFilterState);
+  const [showMapFilters, setShowMapFilters] = useState(false);
   const categoryParam = searchParams.get('category') || '';
   const placeParam = searchParams.get('place') || '';
 
@@ -1458,52 +1459,64 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
         </div>
 
         {(joinedCommunities.length > 0 || mapPosters.length > 0) && (
-          <div className="mt-3 grid gap-2 lg:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-3">
-              <p className="flex items-center gap-2 text-[12px] font-black uppercase tracking-wide text-slate-500">
-                <EyeOff className="h-3.5 w-3.5" />
-                Block communities from map
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {joinedCommunities.map((community) => {
-                  const blocked = hiddenCommunityIds.has(community.id);
-                  return (
-                    <button
-                      key={`hide-community-${community.id}`}
-                      type="button"
-                      onClick={() => toggleHiddenCommunity(community.id)}
-                      className={`motion-press rounded-full border px-2.5 py-1.5 text-[11px] font-black ${blocked ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-slate-200 bg-slate-50 text-slate-600'}`}
-                    >
-                      {blocked ? `Hidden: ${community.name}` : community.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() => setShowMapFilters(v => !v)}
+              className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <EyeOff className="h-3 w-3" />
+              {showMapFilters ? 'Hide filters' : 'Filter / block from map'}
+            </button>
+            {showMapFilters && (
+              <div className="mt-2 grid gap-2 lg:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                  <p className="flex items-center gap-2 text-[12px] font-black uppercase tracking-wide text-slate-500">
+                    <EyeOff className="h-3.5 w-3.5" />
+                    Block communities from map
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {joinedCommunities.map((community) => {
+                      const blocked = hiddenCommunityIds.has(community.id);
+                      return (
+                        <button
+                          key={`hide-community-${community.id}`}
+                          type="button"
+                          onClick={() => toggleHiddenCommunity(community.id)}
+                          className={`motion-press rounded-full border px-2.5 py-1.5 text-[11px] font-black ${blocked ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-slate-200 bg-slate-50 text-slate-600'}`}
+                        >
+                          {blocked ? `Hidden: ${community.name}` : community.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-3">
-              <p className="flex items-center gap-2 text-[12px] font-black uppercase tracking-wide text-slate-500">
-                <EyeOff className="h-3.5 w-3.5" />
-                Block people from map
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {mapPosters.length > 0 ? mapPosters.map((poster) => {
-                  const blocked = hiddenPosterIds.has(poster.id);
-                  return (
-                    <button
-                      key={`hide-poster-${poster.id}`}
-                      type="button"
-                      onClick={() => toggleHiddenPoster(poster.id)}
-                      className={`motion-press rounded-full border px-2.5 py-1.5 text-[11px] font-black ${blocked ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-slate-200 bg-slate-50 text-slate-600'}`}
-                    >
-                      {blocked ? `Hidden: ${poster.name}` : poster.name}
-                    </button>
-                  );
-                }) : (
-                  <span className="text-[12px] font-bold text-slate-400">Posters appear here when their map posts load.</span>
-                )}
+                <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                  <p className="flex items-center gap-2 text-[12px] font-black uppercase tracking-wide text-slate-500">
+                    <EyeOff className="h-3.5 w-3.5" />
+                    Block people from map
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {mapPosters.length > 0 ? mapPosters.map((poster) => {
+                      const blocked = hiddenPosterIds.has(poster.id);
+                      return (
+                        <button
+                          key={`hide-poster-${poster.id}`}
+                          type="button"
+                          onClick={() => toggleHiddenPoster(poster.id)}
+                          className={`motion-press rounded-full border px-2.5 py-1.5 text-[11px] font-black ${blocked ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-slate-200 bg-slate-50 text-slate-600'}`}
+                        >
+                          {blocked ? `Hidden: ${poster.name}` : poster.name}
+                        </button>
+                      );
+                    }) : (
+                      <span className="text-[12px] font-bold text-slate-400">Posters appear here when their map posts load.</span>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </section>}
@@ -1531,9 +1544,7 @@ export default function MapPage() {
   const { user: currentUser } = useAuth();
   const [searchParams] = useSearchParams();
   const hasMapDeepLink = Boolean(searchParams.get('category') || searchParams.get('requestId') || searchParams.get('place'));
-  const [activeView, setActiveView] = useState(() => (
-    hasMapDeepLink ? 'community' : 'businesses'
-  ));
+  const [activeView, setActiveView] = useState('community');
   const [userLocation, setUserLocation] = useState(null);
   const [locationStatus, setLocationStatus] = useState('idle');
 

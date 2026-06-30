@@ -163,7 +163,8 @@
 
   body {
     background:
-      linear-gradient(180deg, #F8FBFF 0%, #F7F8FD 34%, #F8FAFC 100%) !important;
+      radial-gradient(ellipse 120% 60% at 50% -10%, rgba(37,99,235,0.07) 0%, transparent 65%),
+      linear-gradient(180deg, #F0F4FF 0%, #F4F6FD 40%, #F5F7FC 100%) !important;
     color: #0F172A;
     min-height: 100dvh;
     /* No explicit overflow-y — document scroll works naturally at the viewport level.

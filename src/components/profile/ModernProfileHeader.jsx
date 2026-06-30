@@ -28,7 +28,7 @@ function getActivityLabel(user) {
   return { label: `Last seen ${days}d ago`, color: 'bg-slate-100 text-slate-400' };
 }
 
-export default function ModernProfileHeader({ user, isOwnProfile, onLocationClick }) {
+export default function ModernProfileHeader({ user, isOwnProfile = false, onLocationClick }) {
   const since = memberSince(user.created_date);
   const neighborhood = user.cityPreset || user.location_text;
   const bio = user.bio;
@@ -133,7 +133,7 @@ export default function ModernProfileHeader({ user, isOwnProfile, onLocationClic
               Community Member
             </span>
           )}
-          {(() => {
+          {!isOwnProfile && (() => {
             const a = getActivityLabel(user);
             return a ? (
               <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${a.color}`}>
