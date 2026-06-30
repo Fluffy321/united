@@ -7,7 +7,7 @@ import { COMMUNITIES_ENABLED } from '@/config/features';
 import { toast } from 'sonner';
 import ReportModal from '@/components/common/ReportModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
-import { ArrowRight, CalendarDays, Car, Handshake, Heart, MapPin, MessageCircle, Plus, RefreshCw, Search, Sparkles, Store, Users } from 'lucide-react';
+import { ArrowRight, CalendarDays, Car, ChevronLeft, ChevronRight, Handshake, Heart, MapPin, MessageCircle, Plus, RefreshCw, Search, Sparkles, Store, Users } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
@@ -1013,21 +1013,40 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
             <Sparkles className="h-3 w-3" />
             Five Towns Daily Brief
           </div>
-          {/* Dot indicators */}
-          <div className="flex items-center gap-1">
-            {slideKeys.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => goToSlide(i)}
-                className="rounded-full transition-all duration-300"
-                style={{
-                  height: '5px',
-                  width: i === visibleSlide ? '18px' : '5px',
-                  background: i === visibleSlide ? '#D4A843' : 'rgba(255,255,255,0.2)',
-                }}
-              />
-            ))}
+          {/* Dot indicators + desktop prev/next */}
+          <div className="flex items-center gap-2">
+            {/* Prev/next arrows — hidden on touch devices, visible on desktop */}
+            <button
+              type="button"
+              onClick={() => goToSlide((visibleSlide - 1 + slideKeys.length) % slideKeys.length)}
+              className="hidden sm:flex h-6 w-6 items-center justify-center rounded-full transition hover:bg-white/15 active:scale-90"
+              aria-label="Previous slide"
+            >
+              <ChevronLeft className="h-3.5 w-3.5 text-white/60" />
+            </button>
+            <div className="flex items-center gap-1">
+              {slideKeys.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => goToSlide(i)}
+                  className="rounded-full transition-all duration-300"
+                  style={{
+                    height: '5px',
+                    width: i === visibleSlide ? '18px' : '5px',
+                    background: i === visibleSlide ? '#D4A843' : 'rgba(255,255,255,0.2)',
+                  }}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => goToSlide((visibleSlide + 1) % slideKeys.length)}
+              className="hidden sm:flex h-6 w-6 items-center justify-center rounded-full transition hover:bg-white/15 active:scale-90"
+              aria-label="Next slide"
+            >
+              <ChevronRight className="h-3.5 w-3.5 text-white/60" />
+            </button>
           </div>
         </div>
 
