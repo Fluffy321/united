@@ -130,7 +130,7 @@ export default function ModernProfileHeader({ user, isOwnProfile = false, onLoca
           {(user.communities_joined_count || 0) > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2.5 py-1 text-[11px] font-semibold text-purple-700">
               <Home className="h-3 w-3" />
-              Community Member
+              {user.communities_joined_count} {user.communities_joined_count === 1 ? 'Community' : 'Communities'}
             </span>
           )}
           {!isOwnProfile && (() => {
