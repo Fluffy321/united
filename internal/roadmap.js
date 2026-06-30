@@ -2624,9 +2624,9 @@ Goals:
     status: STATUS.PLANNED,
     priority: PRIORITY.LOW,
     title: 'Decide Fate of Orphaned Component Scaffolding',
-    description: 'A 2026-06-29 self-check found ~20 entities referenced via dataService.entities.<Name> with no SUPABASE_ENTITY_TABLES mapping. Almost all trace back to components that are never imported by any page or parent component, so they are not reachable by real users and pose no current production risk — but they are dead weight and a few duplicate functionality already shipped elsewhere.',
-    why: 'Not a live bug (createUnmappedEntityApi in base44Client.js already falls back to localStorage in dev and throws a clear error in prod, so nothing silently breaks), but the roadmap had no record of this scaffolding existing, and CLAUDE.md requires tracking known gaps surfaced during an audit. Two buckets: (1) src/components/shul/* (RideBoard, VolunteerBoard, MinyanStatusWidget, WeeklyScheduleWidget, CreateShulPostModal, AdminBroadcastModal, MediaTab) — already folded into the shul-directory prompt as reusable scaffolding, build it out there. (2) Components superseded or never wired in: src/components/chalkboard/CreateChalkboardModal.jsx + EventCard.jsx + EventRSVPSection.jsx + SavedEventsSection.jsx (legacy RSVP/EventAttendee entities, superseded by the shipped events-system which uses CommunityEvent/CommunityEventRSVP instead), src/components/feed/CommunityAlertBanner.jsx (CommunityAlert), src/components/feed/WeeklyImpactCard.jsx (WeeklyStats), src/components/communities/NewsletterSubscribeBox.jsx + src/components/groups/NewsletterHistoryModal.jsx + GroupAnalyticsDashboard.jsx (NewsletterSubscriber/NewsletterLog — newsletter-system above already covers building this out), and src/components/groups/GroupDiscussionTab.jsx + GroupResourcesTab.jsx + src/components/communities/CommunityDiscussionsTab.jsx (already covered by the group-events-discussion-resources entry above). Also overlaps Check 8 dead-component findings: src/components/communities/CommunityHubDetail.jsx, DiscoverCommunityCard.jsx, ColorfulCommunityCard.jsx, RichCommunityCard.jsx are unused and should be deleted in the same pass.',
-    prompt: `You are cleaning up orphaned/unwired component scaffolding in JUnited surfaced by the 2026-06-29 self-check.
+    description: 'A 2026-06-29 self-check found ~20 entities referenced via dataService.entities.<Name> with no SUPABASE_ENTITY_TABLES mapping. Almost all trace back to components that are never imported by any page or parent component, so they are not reachable by real users and pose no current production risk — but they are dead weight and a few duplicate functionality already shipped elsewhere. Updated 2026-06-30: same self-check pattern found CommunityDetailHeader.jsx and CommunityHubHeader.jsx are also unimported dead code, same bucket as CommunityHubDetail.jsx.',
+    why: 'Not a live bug (createUnmappedEntityApi in base44Client.js already falls back to localStorage in dev and throws a clear error in prod, so nothing silently breaks), but the roadmap had no record of this scaffolding existing, and CLAUDE.md requires tracking known gaps surfaced during an audit. Two buckets: (1) src/components/shul/* (RideBoard, VolunteerBoard, MinyanStatusWidget, WeeklyScheduleWidget, CreateShulPostModal, AdminBroadcastModal, MediaTab) — already folded into the shul-directory prompt as reusable scaffolding, build it out there. (2) Components superseded or never wired in: src/components/chalkboard/CreateChalkboardModal.jsx + EventCard.jsx + EventRSVPSection.jsx + SavedEventsSection.jsx (legacy RSVP/EventAttendee entities, superseded by the shipped events-system which uses CommunityEvent/CommunityEventRSVP instead), src/components/feed/CommunityAlertBanner.jsx (CommunityAlert), src/components/feed/WeeklyImpactCard.jsx (WeeklyStats), src/components/communities/NewsletterSubscribeBox.jsx + src/components/groups/NewsletterHistoryModal.jsx + GroupAnalyticsDashboard.jsx (NewsletterSubscriber/NewsletterLog — newsletter-system above already covers building this out), and src/components/groups/GroupDiscussionTab.jsx + GroupResourcesTab.jsx + src/components/communities/CommunityDiscussionsTab.jsx (already covered by the group-events-discussion-resources entry above). Also overlaps Check 8 dead-component findings: src/components/communities/CommunityHubDetail.jsx, DiscoverCommunityCard.jsx, ColorfulCommunityCard.jsx, RichCommunityCard.jsx, CommunityDetailHeader.jsx, and src/components/shul/CommunityHubHeader.jsx are unused and should be deleted in the same pass.',
+    prompt: `You are cleaning up orphaned/unwired component scaffolding in JUnited surfaced by the 2026-06-29 and 2026-06-30 self-checks.
 
 Context: These files exist but are imported nowhere outside themselves (verified via grep for their import statements):
   - src/components/chalkboard/CreateChalkboardModal.jsx
@@ -2635,14 +2635,38 @@ Context: These files exist but are imported nowhere outside themselves (verified
   - src/components/feed/WeeklyImpactCard.jsx
   - src/components/communities/NewsletterSubscribeBox.jsx, src/components/groups/NewsletterHistoryModal.jsx, src/components/groups/GroupAnalyticsDashboard.jsx
   - src/components/communities/CommunityHubDetail.jsx, DiscoverCommunityCard.jsx, ColorfulCommunityCard.jsx, RichCommunityCard.jsx (dead duplicates of CommunityDetailView.jsx / CommunityCard.jsx)
+  - src/components/communities/CommunityDetailHeader.jsx, src/components/shul/CommunityHubHeader.jsx (dead, unimported header duplicates found 2026-06-30)
   None of these are imported by any page or by App.jsx.
 
 Goals:
 1. For each file, confirm via grep that it truly has zero importers (re-check, things may have changed).
-2. For the legacy chalkboard/RSVP files and the dead community-card duplicates: delete the files (they are superseded by shipped functionality).
+2. For the legacy chalkboard/RSVP files and the dead community-card/header duplicates: delete the files (they are superseded by shipped functionality).
 3. For CommunityAlertBanner, WeeklyImpactCard, NewsletterSubscribeBox/NewsletterHistoryModal/GroupAnalyticsDashboard: these look like real unfinished features rather than dead code — either wire them into a real page with proper entity mappings + migrations, or delete them if there's no near-term plan to ship them. Use judgment per-component; don't leave a half-wired state.
 4. Run npm run lint && npm run build after deletions to confirm nothing else imports the removed files.
 5. Update internal/roadmap.js: change this item's status to 'shipped' (if cleaned up) or 'dropped' (if decided not worth doing) with a why.`,
+  },
+
+  {
+    id: 'dataservice-bypass-cleanup',
+    category: 'Infrastructure',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Replace Direct supabase.from() CRUD Calls With dataService',
+    description: 'A 2026-06-30 self-check found 14 direct supabase.from() calls in component files doing plain single-table CRUD (not joins/RPCs/storage), which violates the CLAUDE.md rule that basic CRUD should go through dataService.',
+    why: 'Not a live bug today, but it bypasses the dataService abstraction (cache invalidation, consistent error handling, future RLS/query changes in one place) and CLAUDE.md explicitly calls this out as a rule. Found via Check 5 of the self-check: src/components/feed/BookmarkButton.jsx:15-20,35,38-40 (plain select/delete/insert on bookmarks — a Bookmark dataService entity already exists per the bookmarks-feature shippedNote, so this should just call it); src/components/communities/AdminFormsTab.jsx:65-78,92,106,284,320,328 (insert/select/update/delete on community_forms, community_form_fields, community_form_submissions, community_volunteer_slots with no service wrapper); src/components/communities/CommunityAdminCenter.jsx:790,823,825,841 (.update({is_pinned}) on posts — should use postsService.updatePost() per the rule).',
+    prompt: `You are removing direct supabase.from() CRUD calls from JUnited components, surfaced by the 2026-06-30 self-check (Check 5).
+
+Context: CLAUDE.md requires that plain single-table CRUD use dataService (src/services/), reserving direct supabase.from()/rpc() calls for joins, RPCs, admin endpoints, storage, and auth. These files violate that:
+  - src/components/feed/BookmarkButton.jsx:15-20 (select), :35 (delete), :38-40 (insert) on the bookmarks table — check whether dataService.entities.Bookmark already covers this (it should, per the bookmarks-feature roadmap entry) and switch to it.
+  - src/components/communities/AdminFormsTab.jsx:65-78, :92, :106 (inserts on community_forms / community_form_fields / community_form_volunteer_slots), :284 (select on community_form_submissions), :320 (update on community_forms), :328 (delete on community_forms) — add named functions to a communitiesService.js-style service file per CLAUDE.md's "new RPC or complex join" rule, or a new formsService.js, and call those instead.
+  - src/components/communities/CommunityAdminCenter.jsx:790,823,825,841 (.update({ is_pinned }) on posts) — replace with postsService.updatePost() if it exists, or add an updatePost helper to postsService.js if it doesn't.
+
+Goals:
+1. For each file, confirm dataService already has (or add) an equivalent method.
+2. Replace the direct supabase.from() calls with the dataService/service call, preserving existing optimistic-update and error-handling behavior.
+3. Run npm run lint && npm run build to confirm nothing breaks.
+4. Manually verify bookmarking a post, submitting/managing a community form, and pinning/unpinning a post still work.
+5. Update internal/roadmap.js: change this item's status to 'shipped' with a shippedNote of what was migrated.`,
   },
 
 ];
