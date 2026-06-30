@@ -250,6 +250,44 @@ export function formatZmanTime(timeStr) {
 }
 
 /**
+ * Get a short English summary for the weekly parsha from Sefaria's topics API.
+ * Returns null if the request fails or no description is available.
+ */
+export async function getParshaDescription(parshaTitle) {
+  if (!parshaTitle) return null;
+  // Convert "Parashat Pinchas" → "parashat-pinchas"
+  const slug = parshaTitle.toLowerCase().replace(/\s+/g, '-');
+  try {
+    const res = await fetch(`https://www.sefaria.org/api/v2/topics/${slug}?with_html=0`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const desc = data?.description?.en || data?.categoryDescription?.en || null;
+    if (!desc) return null;
+    // Trim to ~180 chars, end on a word boundary
+    if (desc.length <= 180) return desc;
+    return desc.slice(0, desc.lastIndexOf(' ', 180)) + '…';
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get today's special Jewish calendar events (holidays, fasts, Rosh Chodesh, etc.)
+ */
+export async function getTodayEvents(date = new Date(), tzid = 'America/New_York') {
+  const dateStr = formatDateForTimeZone(date, tzid);
+  try {
+    const res = await fetch(
+      `${HEBCAL_BASE}/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&ss=on&mf=on&start=${dateStr}&end=${dateStr}&tzid=${encodeURIComponent(tzid)}`
+    );
+    const data = await res.json();
+    return (data.items || []).filter(i => i.category !== 'dafyomi' && i.category !== 'mishnayomi');
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Hebrew month names (Tishrei=1 … Adar II=13)
  */
 export const HEBREW_MONTHS = [

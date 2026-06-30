@@ -17,7 +17,7 @@ import useFeedData from '@/components/feed/useFeedData';
 import FeedFilters, { FeedFilterTrigger } from '@/components/feed/FeedFilters';
 import FeedComposer from '@/components/feed/FeedComposer';
 import TodayFiveTownsCard from '@/components/feed/TodayFiveTownsCard';
-import { getTodayHebrew, getShabbatTimes, getZmanim } from '@/lib/hebrewDate';
+import { getTodayHebrew, getShabbatTimes, getZmanim, getDafYomi, getParshaDescription, getTodayEvents } from '@/lib/hebrewDate';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 
@@ -843,6 +843,9 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
   const [hebrewDate, setHebrewDate] = useState(null);
   const [candleLighting, setCandleLighting] = useState(null);
   const [zmanOfDay, setZmanOfDay] = useState(null);
+  const [parshaDescription, setParshaDescription] = useState(null);
+  const [dafYomi, setDafYomi] = useState(null);
+  const [todayJewishEvents, setTodayJewishEvents] = useState([]);
   const [shareTarget, setShareTarget] = useState(null);
   const [thoughtText, setThoughtText] = useState('');
   const [mitzvahText, setMitzvahText] = useState('');
@@ -866,14 +869,18 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
       if (times?.candleLighting) {
         const dt = new Date(times.candleLighting);
         if (!isNaN(dt.getTime())) {
+          const parshaTitle = times.parsha;
           setCandleLighting({
             timeStr: dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }),
             date: dt,
-            parsha: times.parsha,
+            parsha: parshaTitle,
           });
+          if (parshaTitle) getParshaDescription(parshaTitle).then(setParshaDescription);
         }
       }
     });
+    getDafYomi().then(setDafYomi);
+    getTodayEvents().then(setTodayJewishEvents);
     const now = new Date();
     const isWeekday = now.getDay() !== 0 && now.getDay() !== 6;
     if (isWeekday) {
@@ -911,10 +918,17 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
   const fallbackNewsItems = posts
     .filter((post) => post.type === 'news' || /update|brief|eruv|traffic|school|notice|local/i.test(`${post.title || ''} ${post.body || ''}`))
     .slice(0, 3);
+  const parshaName = candleLighting?.parsha?.replace(/^Parashat\s+/i, '') || null;
   const defaultNewsItems = [
-    { id: 'n1', title: 'Look for one small way to help a neighbor today.', community_name: 'Daily mitzvah' },
-    { id: 'n2', title: 'A Jewish community is built one thoughtful action at a time.', community_name: 'Torah thought' },
-    { id: 'n3', title: "Check today's schedule for local times, events, and community moments.", community_name: "Today's schedule" },
+    parshaName
+      ? { id: 'n1', title: parshaDescription || `This week's parsha: ${parshaName}`, community_name: `Parashat ${parshaName}` }
+      : { id: 'n1', title: 'Look for one small way to help a neighbor today.', community_name: 'Daily mitzvah' },
+    dafYomi
+      ? { id: 'n2', title: `Today's Daf Yomi: ${dafYomi.title}`, community_name: 'Daf Yomi' }
+      : { id: 'n2', title: 'A Jewish community is built one thoughtful action at a time.', community_name: 'Torah thought' },
+    todayJewishEvents.length
+      ? { id: 'n3', title: todayJewishEvents[0].title, community_name: todayJewishEvents[0].category || 'Jewish calendar' }
+      : { id: 'n3', title: "Check today's schedule for local times, events, and community moments.", community_name: "Today's schedule" },
   ];
   const newsItems = curatedNewsItems.length ? curatedNewsItems : fallbackNewsItems.length ? fallbackNewsItems : defaultNewsItems;
 
