@@ -292,11 +292,15 @@ export default function Feed({ isActive = true }) {
   const isPreviewContent = canShowPreviewContent && feedCanRender && posts.length === 0;
   const feedSourcePosts = isPreviewContent ? DEMO_POSTS : posts;
 
+  const FEED_TTL = 14 * 24 * 3_600_000; // posts older than 14 days are hidden from feed
   const visiblePosts = feedSourcePosts.filter(p => {
     if (p.type === 'dating') return false;
     if (p.type === 'prompt') return false;
     if (p.type === 'daily_greeting') return false; // shown via FiveTownsConversationHub, not individual cards
     if (blockedIds.includes(p.user_id)) return false;
+    // Age gate — hide posts older than 14 days
+    const ts = p.updated_date || p.created_date;
+    if (ts && Date.now() - new Date(ts).getTime() > FEED_TTL) return false;
     // Sub-neighborhood filter within the selected network
     if (selectedNeighborhood !== 'All') {
       const loc = (p.location_text || p.city || '').toLowerCase();
@@ -1391,12 +1395,12 @@ function MomentumTile({ icon: Icon, label, value, inverse = false }) {
 }
 
 function FiveTownsThreadChain({ posts = [], likedPostIds = [], onLike, onReply, onOpen, onMap, onCreate }) {
-  const sevenDaysAgo = Date.now() - 7 * 24 * 3_600_000;
+  const twoWeeksAgo = Date.now() - 14 * 24 * 3_600_000;
   const chainPosts = posts
     .filter((post) => post.type !== 'prompt')
     .filter((post) => {
       const ts = post.updated_date || post.created_date;
-      return !ts || new Date(ts).getTime() > sevenDaysAgo;
+      return !ts || new Date(ts).getTime() > twoWeeksAgo;
     })
     .slice(0, 8);
 
