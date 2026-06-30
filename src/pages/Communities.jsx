@@ -577,7 +577,11 @@ function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOp
 }
 
 function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, onJoin }) {
-  const rooms = getCoreFiveTownsRooms(communities);
+  const blueprintRooms = getCoreFiveTownsRooms(communities);
+  // Fall back to all communities (as viewmodels) when blueprint matching yields too few
+  const rooms = blueprintRooms.length >= 2
+    ? blueprintRooms
+    : communities.filter(c => c?.id && c?.name).map((c, i) => buildRoomViewModel(c, i));
   const roomStats = getRealRoomStats(rooms);
   const leadRooms = rooms.slice(0, 3);
   const remainingRooms = rooms.slice(3);
@@ -617,7 +621,7 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
         )}
       </section>
 
-      <section className="space-y-3">
+      {leadRooms.length > 0 && <section className="space-y-3">
         <div>
           <h2 className="text-[18px] font-black tracking-tight text-slate-950">Start Here</h2>
           <p className="text-[12px] font-semibold text-slate-500">The rooms most likely to create a real conversation today.</p>
@@ -636,9 +640,9 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
             </div>
           ))}
         </div>
-      </section>
+      </section>}
 
-      <section className="space-y-3">
+      {remainingRooms.length > 0 && <section className="space-y-3">
         <div>
           <h2 className="text-[18px] font-black tracking-tight text-slate-950">All Five Towns Rooms</h2>
           <p className="text-[12px] font-semibold text-slate-500">Built around local action, not generic categories.</p>
@@ -657,7 +661,7 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
             />
           ))}
         </div>
-      </section>
+      </section>}
     </div>
   );
 }

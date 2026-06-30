@@ -1651,7 +1651,11 @@ function FiveTownsConversationHub({ posts = [], networkLabel = 'Five Towns', onC
       const minutes = Math.max(1, Math.round((Date.now() - new Date(latestDate).getTime()) / 60000));
       if (minutes < 60) return `Updated ${minutes} min ago`;
       const hours = Math.round(minutes / 60);
-      return `Updated ${hours} hr${hours === 1 ? '' : 's'} ago`;
+      if (hours < 24) return `Updated ${hours} hr${hours === 1 ? '' : 's'} ago`;
+      const days = Math.round(hours / 24);
+      if (days < 7) return `Updated ${days}d ago`;
+      const weeks = Math.round(days / 7);
+      return `Updated ${weeks}w ago`;
     })()
     : 'Ready for the first useful post';
 
