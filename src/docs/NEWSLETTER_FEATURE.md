@@ -117,14 +117,14 @@ Premium feature allowing group admins to draft and send periodic email newslette
 ### Backend Processing
 ```javascript
 // Fetch member emails from User entity
-const allUsers = await base44.entities.User.list();
+const allUsers = await listUser();
 const memberEmails = allUsers
   .filter(u => memberUserIds.includes(u.id))
   .map(u => u.email);
 
 // Send individually for better deliverability
 for (const email of memberEmails) {
-  await base44.integrations.Core.SendEmail({...});
+  await sendEmail({...});
 }
 ```
 

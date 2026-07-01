@@ -28,13 +28,13 @@ export function MyComponent({ post, currentUser }) {
       },
       mutationFn: async () => {
         if (liked) {
-          const likes = await base44.entities.Like.filter({
+          const likes = await filterLike({
             post_id: post.id,
             user_id: currentUser.id
           });
-          if (likes[0]) await base44.entities.Like.delete(likes[0].id);
+          if (likes[0]) await deleteLike(likes[0].id);
         } else {
-          await base44.entities.Like.create({
+          await createLike({
             post_id: post.id,
             user_id: currentUser.id
           });
@@ -112,7 +112,7 @@ mutate({
       : [...prev, deletedItem] // Restore
     );
   },
-  mutationFn: async () => await base44.entities.Item.delete(id),
+  mutationFn: async () => await deleteItem(id),
   onError: () => toast.error('Could not delete')
 });
 ```

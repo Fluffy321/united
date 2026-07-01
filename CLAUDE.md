@@ -10,7 +10,7 @@ Read it fully before starting any task.
 - **Frontend**: React 18, Vite, Tailwind CSS, shadcn/ui, Radix UI, React Router v6
 - **Data fetching**: TanStack Query (React Query)
 - **Backend**: Supabase (Postgres + Auth + Edge Functions + Storage)
-- **Auth bridge**: `src/api/base44Client.js` is a compatibility shim — new code should call `src/api/supabaseClient.js` and `src/services/` directly
+- **Data services**: named operations in `src/services/entityServices.js` provide the app's Supabase entity access
 - **Email**: Resend (transactional), configured in Supabase Edge Functions
 - **Payments**: Stripe (not yet live — see roadmap)
 
@@ -144,8 +144,8 @@ Do not omit this section from applicable final reports, even if the result is "n
 - New OAuth users land on `OnboardingFlow` because `onboarding_complete` defaults to false.
 
 ### Data Access
-- Use `dataService` from `src/services/` for all entity reads/writes.
-- Entity tables are mapped in `src/api/base44Client.js` under `SUPABASE_ENTITY_TABLES`.
+- Use named functions from `src/services/` for all entity reads and writes.
+- Entity tables and shared query behavior live in `src/services/supabaseRepository.js`.
 - For direct Supabase queries (joins, RPCs), import `supabase` from `src/api/supabaseClient.js`.
 - React Query keys follow the pattern `['entity-name', id]`. Invalidate after mutations.
 
@@ -161,7 +161,7 @@ Direct `supabase.from()` / `supabase.rpc()` calls outside of `src/services/` are
 | Storage uploads | `supabase.storage.from(...).upload(...)` | Storage API not wrapped in dataService |
 | Auth-level operations in service files | `supabase.auth.getUser()` | Auth calls belong at the service layer |
 
-**Do not** add direct calls for basic CRUD that dataService already handles. If you find yourself writing `supabase.from('posts').select(...)` in a component, use `dataService.entities.Post.filter(...)` instead.
+**Do not** add direct calls for basic CRUD in components. Add or reuse a named function in the appropriate service module.
 
 **If adding a new RPC or complex join**, add it as a named function in the appropriate `src/services/` file (e.g., `communitiesService.js`) so it's reusable and testable rather than inlining it in a component.
 
@@ -229,7 +229,8 @@ npm run build
 | Auth context | `src/lib/AuthContext.jsx` |
 | Community types / tab logic | `src/lib/communityTypes.js` |
 | Supabase client + auth helpers | `src/api/supabaseClient.js` |
-| Entity / data service bridge | `src/api/base44Client.js` |
+| Named entity operations | `src/services/entityServices.js` |
+| Shared Supabase repository behavior | `src/services/supabaseRepository.js` |
 | App routing | `src/App.jsx` |
 | Page registry | `src/pages.config.js` |
 | DB migrations | `supabase/migrations/` |

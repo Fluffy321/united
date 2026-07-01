@@ -64,6 +64,16 @@ export const CATEGORY_ORDER = [
 
 export const ROADMAP = [
 
+  {
+    id: 'remove-base44-shim',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Remove Base44 shim',
+    description: 'Move legacy entity access behind named Supabase service operations and remove the compatibility client.',
+    shippedNote: 'All dataService.entities.* calls replaced with typed functions in src/services/. base44Client.js deleted.',
+  },
+
   // ── Growth & Activation ─────────────────────────────────────────────────
 
   {
