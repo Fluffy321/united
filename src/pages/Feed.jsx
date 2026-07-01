@@ -1091,7 +1091,14 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
           </div>
         </div>
 
-        {isOpen && (<>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateRows: isOpen ? '1fr' : '0fr',
+            transition: 'grid-template-rows 0.32s cubic-bezier(0.4,0,0.2,1)',
+          }}
+        >
+        <div style={{ overflow: 'hidden' }}>
         {/* Gold rule */}
         <div className="mt-3 mb-3" style={{ height: '1px', background: 'linear-gradient(90deg, #D4A843 0%, rgba(212,168,67,0.15) 100%)' }} />
 
@@ -1435,7 +1442,8 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
           })()}
 
         </div>
-        </>)}
+        </div>
+        </div>
       </div>
     </section>
   );
