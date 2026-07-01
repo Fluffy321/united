@@ -27,7 +27,7 @@ const LIVE_ITEMS = [
 
 const DIFFERENTIATORS = [
   'One local feed instead of 40 disappearing chats',
-  'Map, shuls, events, businesses, and needs are connected',
+  'Map, events, businesses, and needs are connected',
   'Posts stay searchable so people can find answers later',
   'Trust signals show who posted, where it belongs, and what needs review',
 ];
@@ -46,7 +46,7 @@ const USE_CASES = [
   {
     icon: MapPin,
     title: 'Find what is nearby',
-    text: 'See shuls, schools, kosher food, Jewish businesses, events, and live activity on the map.',
+    text: 'See kosher food, Jewish-owned businesses, local services, and live activity on the map.',
   },
   {
     icon: CalendarDays,
@@ -241,7 +241,7 @@ export default function Landing() {
               <h2 className="mt-2 text-3xl font-black text-slate-950">Everything points back to real connection.</h2>
             </div>
             <p className="max-w-md text-[14px] font-semibold leading-6 text-slate-500">
-              Feed, Mitzvah, Map, Shuls, Events, Businesses, Marketplace, and Messages work
+              Feed, Mitzvah Circle, Map, Events, Businesses, Marketplace, and Messages work
               together instead of living in separate silos.
             </p>
           </div>

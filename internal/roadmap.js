@@ -2948,6 +2948,16 @@ Goals:
   },
 
   {
+    id: 'landing-honesty-dead-links',
+    category: 'Growth & Monetization',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Landing Honesty Pass + Dead-Link Fixes',
+    description: 'Landing.jsx marketed features that do not exist as described: "Shuls" as a daily-use surface (shul directory is deferred), and map copy promising shuls/schools/events on a map that only has business categories. Two live links pointed at dead legacy redirects: PrivacyRights "Go to Settings" → /UserSettings and the FriendsHub app-invite URL → /InviteJoin (both silently redirect to /Feed).',
+    shippedNote: 'Shipped 2026-07-01 (master plan Phase 1, item 3). Landing.jsx: differentiator line and "What people use daily" paragraph no longer list Shuls; map use-case copy now describes what the Map actually shows (kosher food, Jewish-owned businesses, local services, live activity). Marketplace stays listed — it became real in marketplace-real-persistence. PrivacyRights.jsx now links to /Settings; FriendsHub invite URL now lands on /welcome.',
+  },
+
+  {
     id: 'master-plan-production-push',
     category: 'Admin & Platform',
     status: STATUS.PLANNED,

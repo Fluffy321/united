@@ -59,7 +59,7 @@ Start with the first unchecked item in internal/master-plan.md. Report progress 
 ### Phase 1 — Trust & Correctness
 - [x] 1. Marketplace: fix persistence or pull from production — fixed (chose fix over pull). Migration `20260701210331` + Marketplace.jsx rewrite: React Query, photo upload, ?listing= deep links, real Save/Message, mark-as-sold. Also fixed the Feed composer's silent marketplace-field drop and the dead universalSearch marketplace filter.
 - [x] 2. Fake AI DM agent: remove or label — removed (InvokeLLM is a stub; every reply was one canned sentence). All AI branches stripped from Messages/ConversationList/ChatView/UserSearchPanel/MessagesDrawer; aiAgent.js and AIChatBubble.jsx deleted. Real assistant stays tracked as ai-community-assistant (exploring).
-- [ ] 3. Landing honesty pass + dead links
+- [x] 3. Landing honesty pass + dead links — Landing no longer markets Shuls/schools-on-map (deferred features); Marketplace stays (now real). PrivacyRights → /Settings; FriendsHub invite → /welcome.
 - [ ] 4. Hide deleted accounts; retroactive block enforcement
 - [ ] 5. Low-severity RLS follow-ups + dead-code purge
 
