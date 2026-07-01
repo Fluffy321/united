@@ -1787,8 +1787,8 @@ export default function MitzvahMap({
         )}
       </div>
 
-      {/* Preview cards strip */}
-      {visiblePoints.length > 0 && (
+      {/* Preview cards strip — only when a filter is active so the default "show all" state isn't buried under 200 cards */}
+      {hasActiveFilters && visiblePoints.length > 0 && (
         <div className="border-t border-slate-200 bg-white px-3 py-3">
           <div className="mb-2 flex items-center justify-between gap-3">
             <div>
