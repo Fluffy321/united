@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+// Display labels only — NOT safe to use as Hebcal hm index (leap-year hm=7 is Adar II, not Nisan)
 const HEBREW_MONTHS = [
   'Tishrei','Cheshvan','Kislev','Tevet','Shevat','Adar','Adar II',
   'Nisan','Iyar','Sivan','Tammuz','Av','Elul',
@@ -111,25 +112,30 @@ export default function YahrzeitManager() {
     });
   };
 
-  // Sort: upcoming anniversary first
+  // Sort: upcoming anniversary first (year-wraparound safe)
   const today = new Date();
   const todayMonth = today.getMonth() + 1;
   const todayDay = today.getDate();
+
+  // Returns days until next anniversary (0–365), wrapping across year boundary
+  const daysUntil = (month, day) => {
+    if (!month || !day) return 999;
+    const now = new Date(today.getFullYear(), todayMonth - 1, todayDay);
+    let next = new Date(today.getFullYear(), month - 1, day);
+    if (next < now) next.setFullYear(next.getFullYear() + 1);
+    return Math.round((next - now) / 86400000);
+  };
+
   const sorted = [...yahrzeits].sort((a, b) => {
-    const am = a.anniversary_month || 13, ad = a.anniversary_day || 32;
-    const bm = b.anniversary_month || 13, bd = b.anniversary_day || 32;
-    const aFuture = am > todayMonth || (am === todayMonth && ad >= todayDay);
-    const bFuture = bm > todayMonth || (bm === todayMonth && bd >= todayDay);
-    if (aFuture && !bFuture) return -1;
-    if (!aFuture && bFuture) return 1;
-    if (am !== bm) return am - bm;
-    return ad - bd;
+    const da = daysUntil(a.anniversary_month || 0, a.anniversary_day || 0);
+    const db = daysUntil(b.anniversary_month || 0, b.anniversary_day || 0);
+    return da - db;
   });
 
   const isUpcoming = (y) => {
     if (!y.anniversary_month || !y.anniversary_day) return false;
-    const diff = (y.anniversary_month - todayMonth) * 31 + (y.anniversary_day - todayDay);
-    return diff >= 0 && diff <= 30;
+    const d = daysUntil(y.anniversary_month, y.anniversary_day);
+    return d >= 0 && d <= 30;
   };
 
   return (

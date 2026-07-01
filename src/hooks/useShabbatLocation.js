@@ -117,8 +117,16 @@ export default function useShabbatLocation({ autoRequest = false } = {}) {
   }, [location?.lat, location?.lng, location?.label, location?.type]);
 
   const requestGPS = useCallback((mode = 'once') => {
+    const previous = getStoredCandleLocation();
     clearCandleLocation();
-    return applyGPS({ mode });
+    return applyGPS({ mode }).then((result) => {
+      if (result === DEFAULT_LOCATION && previous && previous.type !== 'declined') {
+        // GPS failed — restore the prior preference so the user doesn't lose their location
+        setCandleLocation(previous);
+        setLocation(previous);
+      }
+      return result;
+    });
   }, [applyGPS]);
 
   const allowOnce = useCallback(() => requestGPS('once'), [requestGPS]);

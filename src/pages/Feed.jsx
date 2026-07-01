@@ -19,6 +19,7 @@ import FeedComposer from '@/components/feed/FeedComposer';
 import TodayFiveTownsCard from '@/components/feed/TodayFiveTownsCard';
 import { getTodayHebrew, getShabbatTimes, getZmanim, getDafYomi, getParshaDescription, getTodayEvents } from '@/lib/hebrewDate';
 import { getStoredCandleOffset } from '@/lib/shabbatLocation';
+import useShabbatLocation from '@/hooks/useShabbatLocation';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 
@@ -59,7 +60,7 @@ export default function Feed({ isActive = true }) {
       && currentUser?.app_settings?.quietMode !== true;
     shabbatReminderService.start({ enabled });
     return () => shabbatReminderService.stop();
-  }, [currentUser?.notification_settings?.shabbatReminders, currentUser?.app_settings?.quietMode]);
+  }, [currentUser?.id, currentUser?.notification_settings?.shabbatReminders, currentUser?.app_settings?.quietMode]);
   const [interestSignals, setInterestSignals] = useState({ types: {}, subtypes: {}, keywords: [] }); // track user interactions
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -646,7 +647,7 @@ function FeedPostCard({ post, liked = false, onLike, onReply, onOpen, onMap }) {
             {intent.label}
           </span>
         </div>
-        <button type="button" onClick={onOpen} className="block w-full text-left">
+        <button type="button" onClick={() => onOpen?.(post)} className="block w-full text-left">
           <p className="text-[16px] leading-[1.55] text-slate-900 font-medium">{title}</p>
           {body && body !== title && (
             <p className="mt-1 text-[14px] leading-snug text-slate-500 line-clamp-2">{body}</p>
@@ -821,6 +822,7 @@ const FIVE_TOWNS_LAT = 40.6198;
 const FIVE_TOWNS_LNG = -73.7298;
 
 function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, communitiesEnabled = true, prompt, onOpenMap, onOpenCommunities, onCreate }) {
+  const { location: candleLocation } = useShabbatLocation();
   const [activeSlide, setActiveSlide] = useState(0);
   const briefScrollerRef = useRef(null);
   const carouselRef = useRef(null);
@@ -852,7 +854,8 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
 
   useEffect(() => {
     getTodayHebrew().then(setHebrewDate);
-    getShabbatTimes(FIVE_TOWNS_LAT, FIVE_TOWNS_LNG, 'America/New_York', new Date(), undefined, getStoredCandleOffset()).then((times) => {
+    const loc = (candleLocation && candleLocation.type !== 'default') ? candleLocation : { lat: FIVE_TOWNS_LAT, lng: FIVE_TOWNS_LNG, tzid: 'America/New_York' };
+    getShabbatTimes(loc.lat, loc.lng, loc.tzid || 'America/New_York', new Date(), undefined, getStoredCandleOffset()).then((times) => {
       if (times?.candleLighting) {
         const dt = new Date(times.candleLighting);
         if (!isNaN(dt.getTime())) {
@@ -871,7 +874,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
     const now = new Date();
     const isWeekday = now.getDay() !== 0 && now.getDay() !== 6;
     if (isWeekday) {
-      getZmanim(FIVE_TOWNS_LAT, FIVE_TOWNS_LNG).then((times) => {
+      getZmanim(loc.lat, loc.lng).then((times) => {
         if (!times) return;
         const isAfternoon = now.getHours() >= 13;
         const key = isAfternoon ? 'minchaGedola' : 'sofZmanShma';
@@ -888,7 +891,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
         }
       });
     }
-  }, []);
+  }, [candleLocation?.lat, candleLocation?.lng, candleLocation?.tzid]);
 
   const today = new Date();
   const dayOfWeek = today.getDay();
@@ -1510,7 +1513,7 @@ function ThreadChainItem({ post, first = false, liked = false, onLike, onReply, 
       )}
 
       <div className="rounded-[20px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-sm">
-        <button type="button" onClick={onOpen} className="block w-full text-left">
+        <button type="button" onClick={() => onOpen?.(post)} className="block w-full text-left">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black ${tone.pill}`}>
               <Icon className="h-3 w-3" />
@@ -1656,7 +1659,7 @@ function HeartbeatPostCard({ post, horizontal = false, liked = false, onLike, on
       }`}
     >
       <div className={`absolute inset-y-3 left-0 w-1 rounded-r-full bg-gradient-to-b ${tone.bar}`} />
-      <button type="button" onClick={onOpen} className="block w-full text-left">
+      <button type="button" onClick={() => onOpen?.(post)} className="block w-full text-left">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black ${tone.pill}`}>

@@ -18,6 +18,7 @@ export default function RefuahList() {
     queryKey: ['refuah-requests'],
     queryFn: () => dataService.entities.RefuahRequest.filter({ is_active: true }, 'name', 300),
     staleTime: 60000,
+    enabled: !!user,
   });
 
   const add = useMutation({
