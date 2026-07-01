@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  JUnited — Info.plist additions
+  ──────────────────────────────
+  When Capacitor is initialized (`npx cap add ios`), it creates
+  ios/App/App/Info.plist. Merge the keys below into that file inside the
+  root <dict> element.
+
+  Run `npx cap sync` after editing Info.plist to keep the Capacitor bridge
+  in sync. Verify in Xcode: select the Info.plist file, then Product →
+  Scheme → Edit Scheme to confirm no warnings in the plist editor.
+-->
+
+<!--
+  ══════════════════════════════════════════════════════════════════
+  USAGE DESCRIPTION STRINGS (NSUsageDescription keys)
+  Required for every capability that triggers an iOS permission dialog.
+  App Store Review rejects or crashes any app that accesses a protected
+  API without the matching key present in Info.plist.
+  ══════════════════════════════════════════════════════════════════
+-->
+
+<!-- Camera — required by @capacitor/camera when source is CAMERA -->
+<key>NSCameraUsageDescription</key>
+<string>JUnited uses your camera so you can take a profile photo.</string>
+
+<!-- Photo library (read) — required when picking an existing photo -->
+<key>NSPhotoLibraryUsageDescription</key>
+<string>JUnited accesses your photo library so you can choose a profile photo.</string>
+
+<!-- Photo library (write) — required if the app ever saves an image to the
+     camera roll. @capacitor/camera may request this even for read-only
+     flows on older iOS versions; include it to avoid a runtime crash. -->
+<key>NSPhotoLibraryAddUsageDescription</key>
+<string>JUnited saves photos to your library when you download community images.</string>
+
+<!--
+  ══════════════════════════════════════════════════════════════════
+  EXPORT COMPLIANCE
+  Declaring NO encryption avoids the annual export-compliance
+  questionnaire in App Store Connect. JUnited uses only standard
+  HTTPS/TLS provided by the OS — Apple classifies this as exempt.
+  ══════════════════════════════════════════════════════════════════
+-->
+<key>ITSAppUsesNonExemptEncryption</key>
+<false/>
+
+<!--
+  ══════════════════════════════════════════════════════════════════
+  BACKGROUND MODES
+  Enables silent / background push notifications for community
+  updates and Mitzvah reminders. Required by @capacitor/push-notifications
+  when you call PushNotifications.register().
+  ══════════════════════════════════════════════════════════════════
+-->
+<key>UIBackgroundModes</key>
+<array>
+  <string>remote-notification</string>
+</array>
+
+<!--
+  ══════════════════════════════════════════════════════════════════
+  CAPACITOR-SPECIFIC KEYS
+  These are injected automatically by `npx cap sync` but are listed
+  here for reference so you can verify they are present after syncing.
+  ══════════════════════════════════════════════════════════════════
+
+  Capacitor injects at sync time — DO NOT add these manually:
+    NSAppTransportSecurity / NSAllowsArbitraryLoads  (dev-only; not for prod)
+    CFBundleURLTypes                                 (OAuth deep-link schemes)
+    UIMainStoryboardFile                             (Capacitor launch screen)
+    UILaunchStoryboardName                           (set to "LaunchScreen")
+
+  Keys you may need to add manually after `npx cap add ios`:
+    CFBundleDisplayName  — the human-readable app name shown under the icon
+    CFBundleShortVersionString  — marketing version (e.g. "1.0")
+    CFBundleVersion             — build number (e.g. "1")
+  These are typically set in Xcode under the project's General tab and
+  written back to Info.plist automatically.
+-->
+
+<!--
+  ══════════════════════════════════════════════════════════════════
+  KEYS NOT NEEDED
+  JUnited does not use the following capabilities, so their
+  NSUsageDescription keys must NOT be added (their presence implies
+  the capability is in use and may cause App Review questions).
+    NSLocationWhenInUseUsageDescription   — no location access
+    NSLocationAlwaysUsageDescription      — no background location
+    NSMicrophoneUsageDescription          — no audio recording
+    NSContactsUsageDescription            — no contacts access
+    NSBluetoothPeripheralUsageDescription — no Bluetooth
+    NSFaceIDUsageDescription              — no biometric auth
+  ══════════════════════════════════════════════════════════════════
+-->

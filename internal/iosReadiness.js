@@ -214,6 +214,7 @@ The descriptions should be user-friendly and explain the concrete benefit to the
 
 Also list any Info.plist keys required specifically for Capacitor iOS apps.`,
         completionCriteria: 'All required NSUsageDescription keys present; app passes App Store validation.',
+        deliverableNote: 'Keys generated and saved to internal/ios-info-plist-additions.xml. Merge into ios/App/App/Info.plist after running `npx cap add ios`. Covers: NSCameraUsageDescription, NSPhotoLibraryUsageDescription, NSPhotoLibraryAddUsageDescription, ITSAppUsesNonExemptEncryption, UIBackgroundModes (remote-notification).',
       },
       {
         id: 'testflight-setup',
