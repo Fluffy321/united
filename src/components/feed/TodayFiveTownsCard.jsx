@@ -44,11 +44,13 @@ function formatShortDate(date = new Date()) {
 function formatTime(date, timeZone = FIVE_TOWNS_TIME_ZONE) {
   if (!date) return 'TBD';
   try {
+    const d = date instanceof Date ? date : new Date(date);
+    if (isNaN(d.getTime())) return 'TBD';
     return new Intl.DateTimeFormat('en-US', {
       timeZone,
       hour: 'numeric',
       minute: '2-digit',
-    }).format(date);
+    }).format(d);
   } catch {
     return 'TBD';
   }
