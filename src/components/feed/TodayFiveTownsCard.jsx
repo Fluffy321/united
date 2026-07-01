@@ -29,21 +29,29 @@ function getFiveTownsDateKey(date = new Date()) {
 }
 
 function formatShortDate(date = new Date()) {
-  return new Intl.DateTimeFormat('en-US', {
-    timeZone: FIVE_TOWNS_TIME_ZONE,
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  }).format(date);
+  try {
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone: FIVE_TOWNS_TIME_ZONE,
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    }).format(date);
+  } catch {
+    return '';
+  }
 }
 
 function formatTime(date, timeZone = FIVE_TOWNS_TIME_ZONE) {
   if (!date) return 'TBD';
-  return new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(date);
+  try {
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(date);
+  } catch {
+    return 'TBD';
+  }
 }
 
 async function loadDailyContent(dateKey) {
