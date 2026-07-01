@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Loader2, MessageCircle, Users, Bot } from 'lucide-react';
+import { Search, Loader2, MessageCircle, Users } from 'lucide-react';
 import { findOrCreateDirectConversation, checkRateLimit, RateLimitError } from '@/services';
 import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 import { canMessage } from '@/lib/messagingPermissions';
-import { AI_AGENT, buildAIConversation } from '@/lib/aiAgent';
 import { toast } from 'sonner';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 import { filterUserCommunity, listUser } from '@/services/entityServices';
@@ -93,15 +92,6 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
     if (actionLoading) return;
     setActionLoading(recipient.id);
     try {
-      // AI agent — open directly without DB conversation
-      if (recipient.id === AI_AGENT.id) {
-        onConversationOpened(buildAIConversation(currentUser));
-        setQuery('');
-        setResults([]);
-        setActionLoading(null);
-        return;
-      }
-
       // Server-side rate limit check for new conversations
       await checkRateLimit('new_conversation');
 
@@ -167,10 +157,9 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
 
 function UserResultRow({ user, currentUserCommunities, loading, onClick }) {
   const [mutualCount, setMutualCount] = useState(null);
-  const isAI = user.id === AI_AGENT.id;
 
   React.useEffect(() => {
-    if (isAI || !COMMUNITIES_ENABLED || !currentUserCommunities) return;
+    if (!COMMUNITIES_ENABLED || !currentUserCommunities) return;
     filterUserCommunity({ user_id: user.id }).then(memberships => {
       const theirCommunities = new Set(memberships.map(m => m.community_id));
       const count = [...currentUserCommunities].filter(id => theirCommunities.has(id)).length;
@@ -182,31 +171,26 @@ function UserResultRow({ user, currentUserCommunities, loading, onClick }) {
     <button
       onClick={onClick}
       disabled={loading}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-left disabled:opacity-50 ${isAI ? 'bg-indigo-50 border border-indigo-100' : ''}`}
+      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-left disabled:opacity-50"
     >
-      <div className={`w-9 h-9 rounded-full flex-shrink-0 overflow-hidden flex items-center justify-center ${isAI ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-blue-100'}`}>
-        {isAI
-          ? <Bot className="w-5 h-5 text-white" />
-          : user.avatar_url
+      <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden flex items-center justify-center bg-blue-100">
+        {user.avatar_url
           ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
           : <span className="text-blue-600 font-bold text-[14px]">{user.full_name?.charAt(0)}</span>
         }
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[14px] font-semibold text-slate-900 truncate">{user.full_name}</p>
-        {isAI
-          ? <p className="text-[11px] text-indigo-500 font-medium">AI • Jewish knowledge helper</p>
-          : COMMUNITIES_ENABLED && mutualCount !== null && mutualCount > 0 && (
-            <p className="text-[11px] text-slate-400 flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              {mutualCount} mutual communit{mutualCount === 1 ? 'y' : 'ies'}
-            </p>
-          )
-        }
+        {COMMUNITIES_ENABLED && mutualCount !== null && mutualCount > 0 && (
+          <p className="text-[11px] text-slate-400 flex items-center gap-1">
+            <Users className="w-3 h-3" />
+            {mutualCount} mutual communit{mutualCount === 1 ? 'y' : 'ies'}
+          </p>
+        )}
       </div>
       {loading
         ? <Loader2 className="w-4 h-4 animate-spin text-slate-400 flex-shrink-0" />
-        : <MessageCircle className={`w-4 h-4 flex-shrink-0 ${isAI ? 'text-indigo-400' : 'text-slate-300'}`} />
+        : <MessageCircle className="w-4 h-4 flex-shrink-0 text-slate-300" />
       }
     </button>
   );

@@ -13,7 +13,6 @@ import NewMessageComposer from '@/components/messages/NewMessageComposer';
 import MessageRequestsTab from '@/components/messages/MessageRequestsTab';
 import ReportModal from '@/components/common/ReportModal';
 import BackButton from '@/components/common/BackButton';
-import { buildAIConversation } from '@/lib/aiAgent';
 import { captureError } from '@/lib/analytics';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 import { createBlock, filterConversation, filterMessageRequest, filterUserCommunity, listCommunity, listConversation, subscribeMessage, updateConversation } from '@/services/entityServices';
@@ -77,8 +76,6 @@ export default function Messages() {
     }
   };
 
-  const aiConversation = currentUser ? buildAIConversation(currentUser) : null;
-
   const { data: communityConversations = [] } = useQuery({
     queryKey: ['community-convs', currentUser?.id],
     queryFn: async () => {
@@ -132,7 +129,6 @@ export default function Messages() {
   });
 
   const allConversations = [
-    ...(aiConversation ? [aiConversation] : []),
     ...conversations,
     ...(COMMUNITIES_ENABLED ? communityConversations : []),
   ];

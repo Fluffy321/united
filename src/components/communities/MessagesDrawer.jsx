@@ -3,7 +3,6 @@ import { ArrowRight, Loader2, MessageCircle, Plus, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { batchFetchByIds } from '@/services';
-import { buildAIConversation } from '@/lib/aiAgent';
 import ConversationList from '@/components/messages/ConversationList';
 import { listConversation } from '@/services/entityServices';
 
@@ -28,8 +27,7 @@ export default function MessagesDrawer({ currentUser, open, onClose }) {
     staleTime: 60000,
   });
 
-  const aiConversation = currentUser ? buildAIConversation(currentUser) : null;
-  const allConversations = [...(aiConversation ? [aiConversation] : []), ...conversations];
+  const allConversations = conversations;
 
   const handleSelect = (conv) => {
     onClose();
