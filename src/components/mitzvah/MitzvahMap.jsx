@@ -1415,7 +1415,11 @@ export default function MitzvahMap({
     () => [...requestPoints, ...personalizedPoints, ...(includeStaticPoints ? VERIFIED_STATIC_POINTS : [])],
     [includeStaticPoints, personalizedPoints, requestPoints]
   );
-  const visiblePoints = useMemo(() => allPoints.filter((point) => activeTypes.has(point.type)), [activeTypes, allPoints]);
+  // No filters selected = show everything; the map should never be empty
+  const visiblePoints = useMemo(
+    () => (activeTypes.size === 0 ? allPoints : allPoints.filter((point) => activeTypes.has(point.type))),
+    [activeTypes, allPoints]
+  );
   const spreadVisiblePoints = useMemo(() => {
     const buckets = new Map();
 
@@ -1559,17 +1563,27 @@ export default function MitzvahMap({
       {/* Five Towns hub banner */}
       {personalized && (
         <div className="border-b border-blue-100 bg-blue-50 px-3 py-2">
-          <p className="text-[12px] font-black text-blue-900">Five Towns digital hub</p>
-          <p className="text-[11px] font-semibold leading-5 text-blue-700">
-            {COMMUNITIES_ENABLED
-              ? 'A personalized local map for Lawrence, Cedarhurst, Woodmere, Hewlett, and Inwood, showing source-backed kosher food, shops, shuls, schools, posts, events, and mitzvah needs from communities you joined.'
-              : 'A personalized local map for Lawrence, Cedarhurst, Woodmere, Hewlett, and Inwood, showing source-backed kosher food, shops, shuls, schools, events, and mitzvah needs.'}
+          <p className="text-[12px] font-black text-blue-900">
+            Five Towns map
+            <span className="ml-2 font-medium text-blue-700">
+              {COMMUNITIES_ENABLED
+                ? 'Kosher food, shuls, schools, events, mitzvahs, and community posts'
+                : 'Kosher food, shuls, schools, events, and mitzvah needs'}
+            </span>
           </p>
         </div>
       )}
 
       {/* Primary filter chips — horizontal scroll, matches Communities chip pattern */}
       <div className="mobile-scroll-x flex gap-2 border-b border-slate-200 bg-white px-2 py-2">
+        <button
+          onClick={() => setActiveTypes(new Set())}
+          className={`motion-press shrink-0 rounded-full px-3.5 py-2 text-[12px] font-black transition ${
+            activeTypes.size === 0 ? 'bg-slate-950 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+          }`}
+        >
+          All
+        </button>
         {PRIMARY_FILTERS.map((filter) => {
           const active = activePrimaryFilter === filter.key;
           return (
@@ -1628,17 +1642,6 @@ export default function MitzvahMap({
 
       {/* Map canvas */}
       <div className="relative">
-        {!hasActiveFilters && (
-          <div className="glass-toolbar absolute left-3 right-3 top-3 z-[500] rounded-2xl px-4 py-3">
-            <p className="text-[13px] font-black text-slate-900">Pick a filter to show pins</p>
-            <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">
-              {COMMUNITIES_ENABLED
-                ? 'Choose source-backed kosher food, shops, shuls, schools, community businesses, lost and found, help, mitzvahs, events, or community posts.'
-                : 'Choose source-backed kosher food, shops, shuls, schools, local businesses, lost and found, help, mitzvahs, or events.'}
-            </p>
-          </div>
-        )}
-
         <MapContainer
           center={mapCenter}
           zoom={13}
@@ -1667,7 +1670,7 @@ export default function MitzvahMap({
             }}
           />
 
-          {userLocation && hasActiveFilters && (
+          {userLocation && (
             <Marker
               position={[userLocation.lat, userLocation.lng]}
               icon={divIcon({
@@ -1808,7 +1811,7 @@ export default function MitzvahMap({
       </div>
 
       {/* Preview cards strip */}
-      {hasActiveFilters && visiblePoints.length > 0 && (
+      {visiblePoints.length > 0 && (
         <div className="border-t border-slate-200 bg-white px-3 py-3">
           <div className="mb-2 flex items-center justify-between gap-3">
             <div>
@@ -1823,7 +1826,8 @@ export default function MitzvahMap({
           </div>
 
           <div className="mobile-scroll-x flex gap-2 pb-1">
-            {visiblePoints.map((point) => {
+            {/* Cap the strip — in the unfiltered default all ~200 points are visible */}
+            {visiblePoints.slice(0, 30).map((point) => {
               const config = PIN_TYPES[point.type] || PIN_TYPES.other;
               const active = selectedPoint?.id === point.id;
               const distanceLabel = formatDistance(getDistanceMiles(userLocation, point));

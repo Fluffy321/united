@@ -1427,10 +1427,10 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
           <div>
             <p className="flex items-center gap-2 text-sm font-black text-slate-950">
               <UsersRound className="h-4 w-4 text-blue-600" />
-              Community posts on my map
+              My communities
             </p>
-            <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-500">
-              Pick joined communities one by one, or leave all unselected to show posts from every joined community.
+            <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">
+              Tap to filter posts on the map.
             </p>
           </div>
           {communityPoints.length > 0 && (

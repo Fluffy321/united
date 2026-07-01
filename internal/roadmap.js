@@ -2810,6 +2810,25 @@ Goals:
   },
 
   {
+    id: 'map-marker-clustering',
+    category: 'Businesses & Map',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Cluster map markers in the default all-pins view',
+    description: 'The map now shows all points by default (~114 static + up to 80 community posts + requests) as individual Leaflet divIcon markers with only a manual ring-spread for overlaps. Add real marker clustering (react-leaflet-cluster is already a dependency) so the default view stays fast and readable on low-end phones.',
+    why: 'Surfaced by the 2026-07-01 code review of the show-all-by-default map change: 200 marker DOM nodes at zoom 13 is measurable jank on mobile.',
+    prompt: `You are adding marker clustering to the JUnited map.
+
+Context: src/components/mitzvah/MitzvahMap.jsx renders visiblePoints (all points when no filter selected) as individual react-leaflet Markers with divIcons, plus a manual spreadVisiblePoints ring-fan for overlapping pins. react-leaflet-cluster is already in package.json.
+
+Goals:
+1. Wrap the point markers in MarkerClusterGroup from react-leaflet-cluster; style cluster icons to match the app's pin design.
+2. Remove or simplify spreadVisiblePoints once clustering handles overlap.
+3. Verify tapping a cluster zooms in and individual pins still open the preview card.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'orphaned-feature-scaffolding-cleanup',
     category: 'Infrastructure',
     status: STATUS.PLANNED,
