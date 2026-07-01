@@ -182,14 +182,14 @@ const AuthenticatedApp = () => {
           <Route element={<ProtectedRoute />}>
             {/* Admin-only routes */}
             <Route element={<AdminRoute />}>
-              <Route path="/AdminModerationQueue" element={<PageTransition><LayoutWrapper currentPageName="AdminModerationQueue"><AdminModerationQueue /></LayoutWrapper></PageTransition>} />
-              <Route path="/AdminSeedControl" element={<PageTransition><LayoutWrapper currentPageName="AdminSeedControl"><AdminSeedControl /></LayoutWrapper></PageTransition>} />
-              <Route path="/AdminBusinessImport" element={<PageTransition><LayoutWrapper currentPageName="AdminBusinessImport"><AdminBusinessImport /></LayoutWrapper></PageTransition>} />
-              <Route path="/AdminAnalyticsDashboard" element={<PageTransition><AdminAnalyticsDashboard /></PageTransition>} />
-              <Route path="/AdminFeedbackInbox" element={<PageTransition><AdminFeedbackInbox /></PageTransition>} />
-              <Route path="/AdminRoadmap" element={<PageTransition><AdminRoadmap /></PageTransition>} />
-              <Route path="/AdminiOSReadiness" element={<PageTransition><AdminiOSReadiness /></PageTransition>} />
-              <Route path="/AdminBusinessVerification" element={<PageTransition><AdminBusinessVerification /></PageTransition>} />
+              <Route path="/AdminModerationQueue" element={<PageTransition><LayoutWrapper currentPageName="AdminModerationQueue"><AppErrorBoundary inline><AdminModerationQueue /></AppErrorBoundary></LayoutWrapper></PageTransition>} />
+              <Route path="/AdminSeedControl" element={<PageTransition><LayoutWrapper currentPageName="AdminSeedControl"><AppErrorBoundary inline><AdminSeedControl /></AppErrorBoundary></LayoutWrapper></PageTransition>} />
+              <Route path="/AdminBusinessImport" element={<PageTransition><LayoutWrapper currentPageName="AdminBusinessImport"><AppErrorBoundary inline><AdminBusinessImport /></AppErrorBoundary></LayoutWrapper></PageTransition>} />
+              <Route path="/AdminAnalyticsDashboard" element={<PageTransition><AppErrorBoundary inline><AdminAnalyticsDashboard /></AppErrorBoundary></PageTransition>} />
+              <Route path="/AdminFeedbackInbox" element={<PageTransition><AppErrorBoundary inline><AdminFeedbackInbox /></AppErrorBoundary></PageTransition>} />
+              <Route path="/AdminRoadmap" element={<PageTransition><AppErrorBoundary inline><AdminRoadmap /></AppErrorBoundary></PageTransition>} />
+              <Route path="/AdminiOSReadiness" element={<PageTransition><AppErrorBoundary inline><AdminiOSReadiness /></AppErrorBoundary></PageTransition>} />
+              <Route path="/AdminBusinessVerification" element={<PageTransition><AppErrorBoundary inline><AdminBusinessVerification /></AppErrorBoundary></PageTransition>} />
             </Route>
 
             {/* Main app routes */}
@@ -199,32 +199,32 @@ const AuthenticatedApp = () => {
                 <Route
                   key={path}
                   path={`/${path}`}
-                  element={<PageTransition><LayoutWrapper currentPageName={path}><Page /></LayoutWrapper></PageTransition>}
+                  element={<PageTransition><LayoutWrapper currentPageName={path}><AppErrorBoundary inline resetKey={path}><Page /></AppErrorBoundary></LayoutWrapper></PageTransition>}
                 />
               ))}
             {!COMMUNITIES_ENABLED && <Route path="/Communities" element={<Navigate to="/Feed" replace />} />}
 
             {/* MVP utility routes */}
-            <Route path="/PublicProfile" element={<PageTransition><PublicProfile /></PageTransition>} />
-            <Route path="/PostDetail" element={<PageTransition><PostDetail /></PageTransition>} />
+            <Route path="/PublicProfile" element={<PageTransition><AppErrorBoundary inline><PublicProfile /></AppErrorBoundary></PageTransition>} />
+            <Route path="/PostDetail" element={<PageTransition><AppErrorBoundary inline><PostDetail /></AppErrorBoundary></PageTransition>} />
             <Route path="/Discover" element={<Navigate to={COMMUNITIES_ENABLED ? '/Communities' : '/Feed'} replace />} />
             <Route path="/discover" element={<Navigate to={COMMUNITIES_ENABLED ? '/Communities' : '/Feed'} replace />} />
-            <Route path="/community/:communityId" element={<CommunityRouteGuard><PageTransition><LayoutWrapper currentPageName="CommunityDetail"><CommunityPage /></LayoutWrapper></PageTransition></CommunityRouteGuard>} />
-            <Route path="/communities/:communityId" element={<CommunityRouteGuard><PageTransition><LayoutWrapper currentPageName="CommunityDetail"><CommunityPage /></LayoutWrapper></PageTransition></CommunityRouteGuard>} />
-            <Route path="/join" element={<CommunityRouteGuard><PageTransition><JoinByCommunityCode /></PageTransition></CommunityRouteGuard>} />
-            <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
+            <Route path="/community/:communityId" element={<CommunityRouteGuard><PageTransition><LayoutWrapper currentPageName="CommunityDetail"><AppErrorBoundary inline><CommunityPage /></AppErrorBoundary></LayoutWrapper></PageTransition></CommunityRouteGuard>} />
+            <Route path="/communities/:communityId" element={<CommunityRouteGuard><PageTransition><LayoutWrapper currentPageName="CommunityDetail"><AppErrorBoundary inline><CommunityPage /></AppErrorBoundary></LayoutWrapper></PageTransition></CommunityRouteGuard>} />
+            <Route path="/join" element={<CommunityRouteGuard><PageTransition><AppErrorBoundary inline><JoinByCommunityCode /></AppErrorBoundary></PageTransition></CommunityRouteGuard>} />
+            <Route path="/search" element={<PageTransition><AppErrorBoundary inline><SearchPage /></AppErrorBoundary></PageTransition>} />
             <Route path="/Search" element={<Navigate to="/search" replace />} />
             <Route path="/JewishHub/*" element={<Navigate to="/Feed" replace />} />
-            <Route path="/Notifications" element={<PageTransition><LayoutWrapper currentPageName="Notifications"><Notifications /></LayoutWrapper></PageTransition>} />
-            <Route path="/SupportJUnited" element={<PageTransition><LayoutWrapper currentPageName="SupportJUnited"><SupportJUnited /></LayoutWrapper></PageTransition>} />
+            <Route path="/Notifications" element={<PageTransition><LayoutWrapper currentPageName="Notifications"><AppErrorBoundary inline><Notifications /></AppErrorBoundary></LayoutWrapper></PageTransition>} />
+            <Route path="/SupportJUnited" element={<PageTransition><LayoutWrapper currentPageName="SupportJUnited"><AppErrorBoundary inline><SupportJUnited /></AppErrorBoundary></LayoutWrapper></PageTransition>} />
 
             {/* Legal & policy pages */}
-            <Route path="/MinorSafetyPolicy" element={<PageTransition><MinorSafetyPolicy /></PageTransition>} />
-            <Route path="/terms" element={<PageTransition><TermsOfService /></PageTransition>} />
-            <Route path="/privacy" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
-            <Route path="/guidelines" element={<PageTransition><CommunityGuidelines /></PageTransition>} />
-            <Route path="/dmca" element={<PageTransition><DMCAPolicy /></PageTransition>} />
-            <Route path="/privacy-rights" element={<PageTransition><PrivacyRights /></PageTransition>} />
+            <Route path="/MinorSafetyPolicy" element={<PageTransition><AppErrorBoundary inline><MinorSafetyPolicy /></AppErrorBoundary></PageTransition>} />
+            <Route path="/terms" element={<PageTransition><AppErrorBoundary inline><TermsOfService /></AppErrorBoundary></PageTransition>} />
+            <Route path="/privacy" element={<PageTransition><AppErrorBoundary inline><PrivacyPolicy /></AppErrorBoundary></PageTransition>} />
+            <Route path="/guidelines" element={<PageTransition><AppErrorBoundary inline><CommunityGuidelines /></AppErrorBoundary></PageTransition>} />
+            <Route path="/dmca" element={<PageTransition><AppErrorBoundary inline><DMCAPolicy /></AppErrorBoundary></PageTransition>} />
+            <Route path="/privacy-rights" element={<PageTransition><AppErrorBoundary inline><PrivacyRights /></AppErrorBoundary></PageTransition>} />
 
             <Route path="/CommunityMap" element={<Navigate to="/Map" replace />} />
 
@@ -232,7 +232,7 @@ const AuthenticatedApp = () => {
             {LEGACY_FEED_ROUTES.map((path) => (
               <Route key={path} path={path} element={<Navigate to={mainPagePath} replace />} />
             ))}
-            <Route path="/ThankYou" element={<PageTransition><ThankYou /></PageTransition>} />
+            <Route path="/ThankYou" element={<PageTransition><AppErrorBoundary inline><ThankYou /></AppErrorBoundary></PageTransition>} />
           </Route>
           <Route path="*" element={<PageNotFound />} />
         </Routes>

@@ -2546,7 +2546,8 @@ Goals:
   {
     id: 'page-level-error-boundaries',
     category: 'Infrastructure',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'All routes in App.jsx wrapped with <AppErrorBoundary inline>. Pages with LayoutWrapper get the boundary inside it so the nav survives a crash. Shipped 2026-07-01.',
     priority: PRIORITY.LOW,
     title: 'Add Page-Level Error Boundaries',
     description: 'Currently only one global AppErrorBoundary catches all React errors. Adding per-page boundaries means a single page crash doesn\'t wipe the whole shell — the nav stays intact and only the failing page shows an error card.',
