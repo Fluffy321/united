@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>JUnited Feed UI Playground</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f3efe7;
+      --surface: #ffffff;
+      --ink: #0f1c2e;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --blue: #2563eb;
+      --gold: #d4af37;
+      --olive: #556b2f;
+      --radius: 22px;
+      --density: 1;
+      --shadow: 0 14px 32px rgba(15, 28, 46, .08);
+    }
+    * { box-sizing: border-box; letter-spacing: 0; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at 20% 0%, rgba(212,175,55,.18), transparent 28%), var(--bg);
+    }
+    button, input, select { font: inherit; }
+    .shell { display: grid; grid-template-columns: minmax(290px, 360px) minmax(360px, 1fr); gap: 28px; padding: 28px; align-items: start; }
+    .panel { position: sticky; top: 24px; background: rgba(255,255,255,.82); backdrop-filter: blur(18px); border: 1px solid rgba(226,232,240,.9); border-radius: 24px; box-shadow: var(--shadow); padding: 18px; }
+    .eyebrow { color: #7a6b52; font-size: 11px; font-weight: 900; text-transform: uppercase; }
+    h1, h2 { font-family: Fraunces, Georgia, serif; margin: 0; line-height: .98; }
+    h1 { font-size: 30px; margin-top: 8px; }
+    .panel p { color: var(--muted); font-size: 13px; line-height: 1.45; font-weight: 600; }
+    .control { border-top: 1px solid var(--line); padding-top: 14px; margin-top: 14px; }
+    .control label { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; font-weight: 900; color: var(--ink); }
+    .control input[type="range"], .control select { width: 100%; margin-top: 10px; }
+    .swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+    .swatch { height: 42px; border: 0; border-radius: 14px; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(15,28,46,.12); }
+    .note { margin-top: 14px; border-radius: 18px; background: #f8fafc; padding: 12px; font-size: 12px; color: var(--muted); font-weight: 650; line-height: 1.45; }
+
+    .replay-intro { width: 100%; margin-top: 12px; border: 0; border-radius: 16px; background: var(--ink); color: white; padding: 12px 14px; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 12px 24px rgba(15,28,46,.16); transition: transform .18s ease, box-shadow .18s ease; }
+    .replay-intro:hover { transform: translateY(-1px); box-shadow: 0 16px 30px rgba(15,28,46,.2); }
+    .app-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #ffffff;
+      transition: opacity .18s ease, visibility .18s ease;
+    }
+    .app-loader.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .app-loader::before,
+    .app-loader::after { display: none; }
+    .loader-card { position: relative; width: min(220px, calc(100vw - 48px)); display: grid; justify-items: center; text-align: center; color: #0f172a; padding: 8px 8px 0; background: transparent; animation: loaderCardExit .58s cubic-bezier(.72, 0, .13, 1) .74s both; }
+    .loader-inner { position: relative; z-index: 1; display: grid; justify-items: center; gap: 0; width: 100%; }
+    .loader-mark {
+      position: relative;
+      width: 112px;
+      height: 112px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      overflow: visible;
+      animation: logoCardDive .3s cubic-bezier(.22, 1, .2, 1) both;
+    }
+    .loader-mark::before { display: none; }
+    .loader-mark::after { display: none; }
+    .loader-logo { position: relative; z-index: 1; width: 102px; height: 102px; object-fit: contain; filter: none; animation: starBounceExpand 1.04s cubic-bezier(.7, 0, .13, 1) .34s both; transform-origin: 50% 50%; }
+    .loader-brand, .loader-tagline, .loader-status, .loader-progress { display: none; }
+    body.is-intro-running .phone { animation: phoneEnter .8s cubic-bezier(.16, 1, .3, 1) .92s both; }
+    body.is-intro-running .header { animation: slideDown .46s cubic-bezier(.16, 1, .3, 1) 1.16s both; }
+    body.is-intro-running .tabs { animation: softPop .42s cubic-bezier(.16, 1, .3, 1) 1.24s both; }
+    body.is-intro-running .hero { animation: cardRise .46s cubic-bezier(.16, 1, .3, 1) 1.32s both; }
+    body.is-intro-running .snapshot { animation: cardRise .46s cubic-bezier(.16, 1, .3, 1) 1.39s both; }
+    body.is-intro-running .post { animation: cardRise .58s cubic-bezier(.16, 1, .3, 1) both; }
+    body.is-intro-running .post:nth-of-type(1) { animation-delay: 1.46s; }
+    body.is-intro-running .post:nth-of-type(2) { animation-delay: 1.54s; }
+    body.is-intro-running .post:nth-of-type(3) { animation-delay: 1.62s; }
+    body.is-intro-running .fab { animation: fabBloom .52s cubic-bezier(.16, 1, .3, 1) 1.76s both; }
+    @keyframes logoCardDive { from { opacity: 0; transform: scale(.92); filter: blur(6px); } to { opacity: 1; transform: scale(1); filter: blur(0); } }
+    @keyframes starBounceExpand { 0% { transform: scale(1); opacity: 1; } 26% { transform: scale(.86); opacity: 1; } 40% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(18); opacity: 0; } }
+    @keyframes loaderCardExit { 0%, 52% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.42); } }
+    @keyframes phoneEnter { from { opacity: 0; transform: translateY(24px) scale(1.055); filter: blur(8px); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes softPop { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
+    @keyframes cardRise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fabBloom { from { opacity: 0; transform: translateY(10px) scale(.78); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } .app-loader { display: none; } }
+    .stage { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+    .phone { width: 430px; min-height: 932px; overflow: hidden; border-radius: 36px; background: var(--bg); border: 1px solid rgba(15,28,46,.12); box-shadow: 0 26px 70px rgba(15,28,46,.2); position: relative; transform-origin: 50% 70%; }
+    .header { height: 64px; display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: rgba(255,255,255,.94); border-bottom: 1px solid rgba(226,232,240,.9); position: sticky; top: 0; z-index: 2; }
+    .network { flex: 1; display: flex; align-items: center; gap: 9px; background: #f8fafc; border: 1px solid var(--line); border-radius: 20px; padding: 7px; }
+    .mark { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--blue); color: white; font-size: 11px; font-weight: 900; }
+    .network strong { display: block; font-size: 13px; }
+    .network span { display: block; font-size: 10px; color: var(--muted); font-weight: 800; }
+    .icon { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 18px; background: #f1f5f9; color: #475569; font-weight: 900; }
+    .tabs { margin: 8px 12px; display: flex; gap: 4px; background: color-mix(in srgb, var(--gold) 24%, white); padding: 4px; border-radius: 999px; }
+    .tab { flex: 1; border: 0; border-radius: 999px; padding: 10px 0; color: #776d5c; background: transparent; font-size: 14px; font-weight: 800; }
+    .tab.active { background: white; color: var(--ink); box-shadow: 0 1px 5px rgba(0,0,0,.16); }
+    .content { padding: 12px; display: grid; gap: calc(12px * var(--density)); padding-bottom: 96px; }
+    .hero { border-radius: calc(var(--radius) + 4px); padding: calc(16px * var(--density)); background: var(--ink); color: white; box-shadow: var(--shadow); }
+    .hero[data-mode="soft"] { background: linear-gradient(135deg, #ffffff, #f8fafc); color: var(--ink); border: 1px solid var(--line); }
+    .hero[data-mode="bulletin"] { background: linear-gradient(135deg, #0f1c2e, #23324b); color: white; }
+    .pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 6px 10px; background: rgba(255,255,255,.12); color: inherit; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+    .hero[data-mode="soft"] .pill { background: #eff6ff; color: #1d4ed8; }
+    .hero h2 { margin-top: 12px; font-size: 29px; }
+    .hero p { margin: 7px 0 0; color: color-mix(in srgb, currentColor 72%, transparent); font-size: 13px; line-height: 1.45; font-weight: 700; }
+    .quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+    .quick button { border: 0; border-radius: 16px; background: white; color: var(--ink); text-align: left; padding: 10px; font-weight: 900; }
+    .quick span { display: block; color: var(--blue); font-size: 17px; }
+    .snapshot, .post { border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); box-shadow: 0 8px 20px rgba(15,28,46,.05); padding: calc(14px * var(--density)); }
+    .snapshot { display: flex; gap: 10px; background: #fff8e7; border-color: #f1d894; }
+    .snapshot .mark { background: var(--gold); color: var(--ink); }
+    .snapshot strong, .post strong { display: block; font-size: 14px; }
+    .snapshot p, .post p { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.42; font-weight: 650; }
+    .post { display: grid; gap: 10px; }
+    .meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .tag { border-radius: 999px; padding: 6px 9px; background: #eef3e5; color: #3d4f22; font-size: 10px; font-weight: 900; }
+    .age { color: #94a3b8; font-size: 11px; font-weight: 900; }
+    .author { display: flex; gap: 9px; align-items: center; }
+    .author .mark { background: var(--blue); }
+    .post h3 { margin: 0; font-size: calc(17px * var(--density)); line-height: 1.16; }
+    .actions { display: flex; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 9px; }
+    .actions button { border: 0; border-radius: 999px; background: #f1f5f9; padding: 8px 11px; color: #334155; font-size: 12px; font-weight: 900; }
+    .actions button.primary { margin-left: auto; background: var(--blue); color: white; }
+    .fab { position: absolute; right: 28px; bottom: 28px; width: 58px; height: 58px; border-radius: 50%; border: 0; background: linear-gradient(135deg, var(--blue), #4f46e5); color: white; font-size: 30px; font-weight: 800; box-shadow: 0 18px 34px rgba(37,99,235,.35); }
+    .brief { width: min(430px, 100%); background: rgba(255,255,255,.78); border: 1px solid var(--line); border-radius: 24px; padding: 18px; box-shadow: var(--shadow); }
+    .brief ul { padding-left: 18px; color: var(--muted); font-size: 13px; font-weight: 650; line-height: 1.55; }
+    @media (max-width: 900px) { .shell { grid-template-columns: 1fr; padding: 16px; } .panel { position: relative; top: 0; } .stage { justify-content: center; } .phone { width: min(430px, 100%); } }
+  </style>
+</head>
+<body class="is-intro-running">
+  <div class="app-loader" id="appLoader" aria-live="polite" aria-label="Loading JUnited">
+    <div class="loader-card">
+      <div class="loader-inner">
+        <div class="loader-mark"><img class="loader-logo" src="brand-star-loader.png" alt="" /></div>
+        <h2 class="loader-brand">JUnited</h2>
+        <p class="loader-tagline">Community, chesed, connection.</p>
+        <p class="loader-status">Preparing your community...</p>
+        <div class="loader-progress"><span></span></div>
+      </div>
+    </div>
+  </div>
+  <main class="shell">
+    <aside class="panel">
+      <div class="eyebrow">JUnited Feed</div>
+      <h1>Interactive UI playground</h1>
+      <p>Tune the Feed direction before we touch the React code. This is a lightweight design sandbox for mood, density, and hierarchy.</p>
+      <div class="control">
+        <label for="mood">Hero mood <span id="moodLabel">bulletin</span></label>
+        <select id="mood">
+          <option value="bulletin">Bulletin board</option>
+          <option value="soft">Soft utility</option>
+          <option value="classic">Current dark hub</option>
+        </select>
+      </div>
+      <div class="control">
+        <label for="density">Density <span id="densityLabel">1.00</span></label>
+        <input id="density" type="range" min="0.86" max="1.14" step="0.02" value="1" />
+      </div>
+      <div class="control">
+        <label>Accent palette</label>
+        <div class="swatches">
+          <button class="swatch" data-palette="blue" style="background:#2563eb" aria-label="Blue"></button>
+          <button class="swatch" data-palette="olive" style="background:#556b2f" aria-label="Olive"></button>
+          <button class="swatch" data-palette="gold" style="background:#d4af37" aria-label="Gold"></button>
+        </div>
+      </div>
+      <div class="control">
+        <label for="radius">Roundness <span id="radiusLabel">22</span></label>
+        <input id="radius" type="range" min="10" max="28" step="1" value="22" />
+      </div>
+      <div class="note">Play with this, then tell me what feels closer: calmer, warmer, denser, more app-like, more community-board, etc. I’ll translate the chosen direction into the real Feed components.</div>
+      <button class="replay-intro" id="replayIntro" type="button">Replay app loading animation</button>
+    </aside>
+
+    <section class="stage">
+      <div class="phone" id="phone">
+        <div class="header">
+          <div class="network"><div class="mark">FT</div><div><strong>Five Towns</strong><span>Local pulse</span></div></div>
+          <button class="icon">♥</button><button class="icon">⌕</button><button class="icon">•</button>
+        </div>
+        <div class="tabs"><button class="tab active">Feed</button><button class="tab">Communities</button></div>
+        <div class="content">
+          <section class="hero" id="hero" data-mode="bulletin">
+            <span class="pill">Live local thread</span>
+            <h2>Talk to the Five Towns</h2>
+            <p>Questions, rides, meals, events, and useful updates in one calmer stream.</p>
+            <div class="quick"><button><span>?</span>Ask</button><button><span>+</span>Help</button><button><span>→</span>Ride</button></div>
+          </section>
+          <section class="snapshot"><div class="mark">☼</div><div><strong>Today in Cedarhurst</strong><p>2 rides, 3 events, 1 urgent meal train, updated 8 min ago.</p></div></section>
+          <article class="post"><div class="meta"><span class="tag">Mitzvah need</span><span class="age">8 min</span></div><div class="author"><div class="mark">AR</div><div><strong>Ari Rosen · Lawrence</strong><p>Near Central Ave</p></div></div><h3>Can someone pick up soup before 5?</h3><p>Pickup is near Central Ave. Delivery is two blocks away.</p><div class="actions"><button>Reply</button><button>Map</button><button class="primary">I can help</button></div></article>
+          <article class="post"><div class="meta"><span class="tag" style="background:#eff6ff;color:#1d4ed8">Happening</span><span class="age">24 min</span></div><div class="author"><div class="mark">SL</div><div><strong>Shira L · Woodmere</strong><p>Community event</p></div></div><h3>Women’s tehillim tonight at 8:15</h3><p>Small living room group, message for address.</p><div class="actions"><button>Reply</button><button class="primary">Open</button></div></article>
+          <article class="post"><div class="meta"><span class="tag" style="background:#f8fafc;color:#334155">Question</span><span class="age">42 min</span></div><div class="author"><div class="mark">YD</div><div><strong>Yael D · Inwood</strong><p>Local advice</p></div></div><h3>Best place for kids shoes before Shabbos?</h3><p>Looking for local, not online. Bonus if open late.</p><div class="actions"><button>Reply</button><button class="primary">Answer</button></div></article>
+        </div>
+        <button class="fab">+</button>
+      </div>
+      <aside class="brief">
+        <div class="eyebrow">Edit targets</div>
+        <h1>What we are testing</h1>
+        <ul>
+          <li>Feed as a calmer local bulletin board, not a generic social feed.</li>
+          <li>Hero as the main action anchor: Ask, Help, Ride.</li>
+          <li>Snapshot card for “what matters today.”</li>
+          <li>Post cards that make urgency and next action obvious.</li>
+          <li>Same mobile shell constraints as the real app: 430px content, sticky header, bottom-safe floating action.</li>
+        </ul>
+      </aside>
+    </section>
+  </main>
+  <script>
+    const root = document.documentElement;
+    const hero = document.getElementById('hero');
+    const mood = document.getElementById('mood');
+    const density = document.getElementById('density');
+    const radius = document.getElementById('radius');
+    mood.addEventListener('change', () => { hero.dataset.mode = mood.value === 'classic' ? 'bulletin' : mood.value; document.getElementById('moodLabel').textContent = mood.value; });
+    density.addEventListener('input', () => { root.style.setProperty('--density', density.value); document.getElementById('densityLabel').textContent = Number(density.value).toFixed(2); });
+    radius.addEventListener('input', () => { root.style.setProperty('--radius', radius.value + 'px'); document.getElementById('radiusLabel').textContent = radius.value; });
+    document.querySelectorAll('[data-palette]').forEach(btn => btn.addEventListener('click', () => {
+      const p = btn.dataset.palette;
+      const palettes = { blue: ['#2563eb', '#f3efe7'], olive: ['#556b2f', '#f4f1e8'], gold: ['#d4af37', '#f6f0df'] };
+      root.style.setProperty('--blue', palettes[p][0]);
+      root.style.setProperty('--bg', palettes[p][1]);
+    }));
+    const loader = document.getElementById('appLoader');
+    const replay = document.getElementById('replayIntro');
+    const runIntro = () => {
+      document.body.classList.remove('is-intro-running');
+      loader.classList.remove('is-hidden');
+      void document.body.offsetWidth;
+      document.body.classList.add('is-intro-running');
+      window.setTimeout(() => loader.classList.add('is-hidden'), 1540);
+    };
+    replay.addEventListener('click', runIntro);
+    window.setTimeout(() => loader.classList.add('is-hidden'), 1540);
+  </script>
+</body>
+</html>

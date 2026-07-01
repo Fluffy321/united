@@ -294,6 +294,9 @@ export default function Feed({ isActive = true }) {
     if (p.type === 'dating') return false;
     if (p.type === 'prompt') return false;
     if (p.type === 'daily_greeting') return false; // shown via FiveTownsConversationHub, not individual cards
+    // Sold/closed marketplace listings leave the feed (they stay on /Marketplace with a Sold badge)
+    if ((p.activity_kind === 'marketplace_listing' || p.type === 'marketplace')
+      && p.listing_status && p.listing_status !== 'available') return false;
     if (blockedIds.includes(p.user_id)) return false;
     // Age gate — hide posts older than 14 days
     const ts = p.updated_date || p.created_date;

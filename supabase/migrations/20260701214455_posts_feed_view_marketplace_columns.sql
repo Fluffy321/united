@@ -2,8 +2,6 @@
 -- columns; `select p.*` is expanded at view-creation time, so the feed could
 -- not see price / listing_status / image_urls etc. Recreate with the same
 -- security posture as 20260701204247.
--- (Recovered from remote schema_migrations on 2026-07-01: applied via MCP but
--- the local file was never committed.)
 
 drop view if exists public.posts_feed_view;
 

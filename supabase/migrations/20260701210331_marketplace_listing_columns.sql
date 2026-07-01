@@ -3,8 +3,6 @@
 -- produce activity_kind='marketplace_listing' posts, but the posts table had
 -- no commerce columns — price/marketplace_category/pickup_option/image_urls
 -- were being silently dropped by the client's schema-retry loop.
--- (Recovered from remote schema_migrations on 2026-07-01: this was applied via
--- MCP but the local file was never committed.)
 
 alter table public.posts
   add column if not exists price text,

@@ -743,6 +743,9 @@ const toDbPatch = (data = {}, entityName) => {
     }
     if (patch.author_user_id && !patch.user_id) patch.user_id = patch.author_user_id;
     if (patch.user_id && !patch.author_user_id) patch.author_user_id = patch.user_id;
+    // posts counts likes via likes_count; normalizeUnifiedActivity's
+    // reactions_count has no posts column and costs a failed-insert retry
+    delete patch.reactions_count;
   }
 
   if (entityName === 'CommunityEvent') {
@@ -1168,7 +1171,9 @@ const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
 
     const postMatches = allPosts
       .filter((post) => {
-        if (filters.post_type && post.type !== filters.post_type) return false;
+        if (filters.post_type === 'marketplace_listing') {
+          if (post.activity_kind !== 'marketplace_listing' && post.type !== 'marketplace') return false;
+        } else if (filters.post_type && post.type !== filters.post_type) return false;
         if (filters.community_id && post.community_id !== filters.community_id) return false;
         if (filters.date_from && post.created_date < filters.date_from) return false;
         if (filters.date_to && post.created_date > filters.date_to) return false;
@@ -1217,7 +1222,12 @@ const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
     .order('created_at', { ascending: false })
     .limit(30);
 
-  if (filters.post_type) postsQuery = postsQuery.eq('type', filters.post_type);
+  if (filters.post_type === 'marketplace_listing') {
+    // Marketplace rows carry type 'marketplace' with activity_kind 'marketplace_listing'
+    postsQuery = postsQuery.or('activity_kind.eq.marketplace_listing,type.eq.marketplace');
+  } else if (filters.post_type) {
+    postsQuery = postsQuery.eq('type', filters.post_type);
+  }
   if (filters.community_id) postsQuery = postsQuery.eq('community_id', filters.community_id);
   if (filters.date_from) postsQuery = postsQuery.gte('created_at', filters.date_from);
   if (filters.date_to) postsQuery = postsQuery.lte('created_at', `${filters.date_to}T23:59:59.999Z`);
