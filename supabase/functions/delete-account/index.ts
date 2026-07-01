@@ -60,7 +60,7 @@ Deno.serve(async (req: Request) => {
     // Data is already anonymized at this point; the auth record is the only
     // thing left dangling. Log loudly so an admin can finish it manually.
     console.error('auth.admin.deleteUser failed after successful data anonymization:', deleteAuthError.message, 'userId:', userId);
-    return errorResponse(500, 'Account data was deleted but sign-in could not be fully revoked. Please contact support@junited.org.');
+    return errorResponse(500, 'Account data was deleted but sign-in could not be fully revoked. Please contact support@junited.us.');
   }
 
   return new Response(JSON.stringify({ success: true }), {

@@ -393,32 +393,6 @@ Also explain where to place this file in an Xcode/Capacitor project.`,
         completionCriteria: 'App Privacy section is complete in App Store Connect. No data types are missing.',
       },
       {
-        id: 'third-party-sdk-privacy',
-        title: 'Document required reasons for all third-party SDKs',
-        description: 'Every third-party SDK in your app that accesses required-reason APIs must include a privacy manifest. Full audit done — internal/app-store/third-party-sdk-privacy.md: no action needed today (Sentry/PostHog are used via their web SDKs only, which run in the WebView and touch zero native APIs); re-audit if a native plugin is added later.',
-        whyItMatters: 'If a dependency accesses user data without a declared reason, Apple rejects the build.',
-        required: true,
-        taskType: TASK_TYPE.AI,
-        copyPrompt: `You are auditing the third-party SDK privacy requirements for JUnited (iOS app built with Capacitor + React).
-
-The app's package.json dependencies include the typical React/Vite stack plus:
-- @supabase/supabase-js
-- @tanstack/react-query
-- react-router-dom
-- lucide-react
-- date-fns
-- sonner (toast notifications)
-- @capacitor/core, @capacitor/ios, @capacitor/push-notifications
-- Various Radix UI components
-
-Please:
-1. List which of these SDKs are known to access "required reason APIs" per Apple's policy
-2. For any that do, explain what privacy manifest or NSPrivacyAccessedAPITypeReasons entry is needed
-3. Explain how to check if a CocoaPod or npm package includes its own PrivacyInfo.xcprivacy
-4. Flag any SDKs that are known to NOT include a privacy manifest (requiring a workaround)`,
-        completionCriteria: 'All third-party SDKs either have their own privacy manifest or are covered by the app\'s manifest.',
-      },
-      {
         id: 'coppa-compliance',
         title: 'COPPA compliance review',
         description: 'If the app allows users under 13, COPPA (Children\'s Online Privacy Protection Act) applies. Analysis done — internal/app-store/coppa-and-export-compliance.md: TermsOfService.jsx and PrivacyPolicy.jsx already state a 13+ minimum age and cover COPPA; MinorSafetyPolicy.jsx exists for the 13-17 band. Remaining step is manual: submit the age-rating questionnaire (12+ or 15+ recommended) in App Store Connect.',
@@ -564,28 +538,15 @@ Also explain your reasoning for the top 5 keyword choices.`,
       },
       {
         id: 'support-url',
-        title: 'Create a help/contact page and set support URL',
-        description: '/SupportJUnited is a donations page, not a help page. App Store Connect needs a real support URL with a contact email and FAQ. This page does not exist yet.',
+        title: 'Set support URL in App Store Connect',
+        description: 'src/pages/Support.jsx is built and routed at /support — real contact email (support@junited.us), FAQ (join a community, report content, delete account), and links to guidelines/privacy. The old /SupportJUnited donations page was left untouched. Remaining step is entering the live URL in App Store Connect.',
         whyItMatters: 'REQUIRED. Submissions without a support URL are rejected. The support URL must actually help users with problems, not redirect them to donations.',
         required: true,
-        taskType: TASK_TYPE.AI,
-        copyPrompt: `You are creating a public support/help page for JUnited at the route /support.
-
-JUnited is a Jewish community platform (React/Vite). The existing /SupportJUnited route is a donations page — it is NOT suitable as a support URL.
-
-Goals:
-1. Create src/pages/Support.jsx — a simple static page with:
-   - "Get Help" heading
-   - Contact email: support@junited.us
-   - Link to community guidelines: /guidelines
-   - Two or three common FAQ items (how to join a community, how to report content, how to delete your account)
-   - Link to privacy policy: /privacy
-2. Add the route to App.jsx (no auth required — it must be publicly accessible)
-3. The page should use the same design language as TermsOfService.jsx (prose-style, no LayoutWrapper needed)
-
-Do NOT modify the existing /SupportJUnited donations page.
-
-Update internal/iosReadiness.js: change this item to reflect completion after the page is live.`,
+        taskType: TASK_TYPE.MANUAL,
+        manualSteps: [
+          'Verify https://www.junited.us/support is live and loads correctly after deploy',
+          'In App Store Connect → App Information → Support URL: enter https://www.junited.us/support',
+        ],
         completionCriteria: 'https://www.junited.us/support loads a public help page with a contact email. URL set in App Store Connect.',
       },
     ],

@@ -333,7 +333,7 @@ export default function Settings() {
       await logout();
       window.location.href = createPageUrl('login');
     } catch (err) {
-      toast.error(err?.message || 'Could not delete account. Please try again or email support@junited.org.');
+      toast.error(err?.message || 'Could not delete account. Please try again or email support@junited.us.');
       setIsDeletingAccount(false);
     }
   };
@@ -938,8 +938,8 @@ export default function Settings() {
             </div>
             <p className="mt-3 text-center text-[11px] text-slate-400">
               Problems deleting your account? Email{' '}
-              <a href="mailto:support@junited.org" className="font-semibold text-blue-600 underline">
-                support@junited.org
+              <a href="mailto:support@junited.us" className="font-semibold text-blue-600 underline">
+                support@junited.us
               </a>
             </p>
           </div>

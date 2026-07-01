@@ -205,7 +205,17 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'In-App Account Deletion UI (App Store Guideline 5.1.1(v))',
     description: 'Client-side "Delete my account" flow in Settings, wired to the delete_my_account() RPC and a new Edge Function that also revokes the auth session.',
-    shippedNote: 'Shipped 2026-07-01. Settings.jsx: replaced the old email-based "email support@... we process within 30 days" danger-zone flow with a real two-step in-app flow — a confirmation sheet requiring the user to type DELETE, then handleDeleteAccount() calls the new supabase/functions/delete-account Edge Function, signs out, and redirects to /login. The Edge Function authenticates the caller from their bearer token, calls public.delete_my_account() AS that user (so the RPC\'s auth.uid() check is real, not bypassable), and only on success calls auth.admin.deleteUser() with the service-role key to remove the auth.users row — ordered so a failed data-anonymization step never leaves the login revoked with the data still attached. Removed the iosReadiness.js in-app-account-deletion / data-deletion-backend tasks as complete.',
+    shippedNote: 'Shipped 2026-07-01. Settings.jsx: replaced the old email-based "email support@... we process within 30 days" danger-zone flow with a real two-step in-app flow — a confirmation sheet requiring the user to type DELETE, then handleDeleteAccount() calls the new supabase/functions/delete-account Edge Function, signs out, and redirects to /login. The Edge Function authenticates the caller from their bearer token, calls public.delete_my_account() AS that user (so the RPC\'s auth.uid() check is real, not bypassable), and only on success calls auth.admin.deleteUser() with the service-role key to remove the auth.users row — ordered so a failed data-anonymization step never leaves the login revoked with the data still attached. Removed the iosReadiness.js in-app-account-deletion / data-deletion-backend tasks as complete. Follow-up 2026-07-01: PrivacyRights.jsx still had the stale email-and-wait-30-days copy for account deletion — updated it to point at the real Settings flow. Also found and fixed a wrong-TLD bug: several places (PrivacyRights.jsx, Settings.jsx, the delete-account Edge Function) emailed support@junited.org instead of the actual domain support@junited.us (CLAUDE.md confirms junited.us is production) — fixed all of them and redeployed the Edge Function.',
+  },
+
+  {
+    id: 'support-help-page',
+    category: 'Auth & Identity',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Public Support/Help Page (App Store support URL requirement)',
+    description: 'App Store Connect requires a Support URL that actually helps users, not a donation page. /SupportJUnited was donations-only.',
+    shippedNote: 'Shipped 2026-07-01. New src/pages/Support.jsx routed at /support (App.jsx), public/no-auth, matching TermsOfService.jsx\'s prose styling: contact email (support@junited.us), 3 FAQ items (join a community, report content, delete account), and links to /guidelines and /privacy. Did not touch the existing /SupportJUnited donations page. Removed the iosReadiness.js support-url task\'s AI portion (re-typed to manual — only the App Store Connect URL field entry remains).',
   },
 
   {

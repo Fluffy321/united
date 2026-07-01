@@ -78,6 +78,7 @@ const MinorSafetyPolicy       = lazy(() => import('@/pages/MinorSafetyPolicy'));
 const TermsOfService          = lazy(() => import('@/pages/TermsOfService'));
 const PrivacyPolicy           = lazy(() => import('@/pages/PrivacyPolicy'));
 const CommunityGuidelines     = lazy(() => import('@/pages/CommunityGuidelines'));
+const Support                 = lazy(() => import('@/pages/Support'));
 const DMCAPolicy              = lazy(() => import('@/pages/DMCAPolicy'));
 const PrivacyRights           = lazy(() => import('@/pages/PrivacyRights'));
 const SearchPage              = lazy(() => import('@/pages/Search'));
@@ -223,6 +224,7 @@ const AuthenticatedApp = () => {
             <Route path="/terms" element={<PageTransition><AppErrorBoundary inline><TermsOfService /></AppErrorBoundary></PageTransition>} />
             <Route path="/privacy" element={<PageTransition><AppErrorBoundary inline><PrivacyPolicy /></AppErrorBoundary></PageTransition>} />
             <Route path="/guidelines" element={<PageTransition><AppErrorBoundary inline><CommunityGuidelines /></AppErrorBoundary></PageTransition>} />
+            <Route path="/support" element={<PageTransition><AppErrorBoundary inline><Support /></AppErrorBoundary></PageTransition>} />
             <Route path="/dmca" element={<PageTransition><AppErrorBoundary inline><DMCAPolicy /></AppErrorBoundary></PageTransition>} />
             <Route path="/privacy-rights" element={<PageTransition><AppErrorBoundary inline><PrivacyRights /></AppErrorBoundary></PageTransition>} />
 

@@ -179,16 +179,20 @@ export default function PrivacyRights() {
               <div className="flex-1">
                 <h2 className="font-bold text-slate-900 mb-1">Delete My Account</h2>
                 <p className="text-[13px] text-slate-500 mb-3 leading-relaxed">
-                  To permanently delete your account and all associated data, email us at{' '}
-                  <a href="mailto:support@junited.org" className="text-blue-600 font-medium underline">support@junited.org</a>{' '}
-                  from your registered address with the subject line "Delete my account". We process all deletion requests within 30 days.
+                  You can permanently delete your account and all associated data directly in the app —
+                  no email or waiting period required. Go to Settings → Account, scroll to the Danger
+                  Zone, and select "Delete my account."
                 </p>
-                <a
-                  href="mailto:support@junited.org?subject=Delete%20my%20account"
+                <Link
+                  to="/Settings"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-[13px] font-semibold hover:bg-red-700 active:scale-95 transition-all"
                 >
-                  <Trash2 className="w-3.5 h-3.5" /> Email Support to Delete Account
-                </a>
+                  <Trash2 className="w-3.5 h-3.5" /> Go to Settings
+                </Link>
+                <p className="mt-3 text-[12px] text-slate-400">
+                  Problems deleting your account? Email{' '}
+                  <a href="mailto:support@junited.us" className="text-blue-600 font-medium underline">support@junited.us</a>.
+                </p>
               </div>
             </div>
           </div>
