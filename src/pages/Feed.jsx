@@ -494,14 +494,12 @@ export default function Feed({ isActive = true }) {
             />
           </WidgetBoundary>
 
-          {feedCanRender && feedPosts.length === 0 && !isLoading && (
-            <>
-              <PostingPrompts
-                onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
-                onOpenMinyan={() => setShowMinyanSheet(true)}
-              />
-            </>
-          )}
+          <WidgetBoundary>
+            <PostingPrompts
+              onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
+              onOpenMinyan={() => setShowMinyanSheet(true)}
+            />
+          </WidgetBoundary>
 
           {isLoading && !loadTimedOut && (
             <div className="motion-stagger space-y-2.5 tab-fade-in">
