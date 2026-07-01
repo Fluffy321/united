@@ -59,15 +59,15 @@ Start with the first unchecked item in internal/master-plan.md. Report progress 
 ### Phase 1 — Trust & Correctness
 - [x] 1. Marketplace: fix persistence or pull from production — fixed (chose fix over pull). Migration `20260701210331` + Marketplace.jsx rewrite: React Query, photo upload, ?listing= deep links, real Save/Message, mark-as-sold. Also fixed the Feed composer's silent marketplace-field drop and the dead universalSearch marketplace filter.
 - [x] 2. Fake AI DM agent: remove or label — removed (InvokeLLM is a stub; every reply was one canned sentence). All AI branches stripped from Messages/ConversationList/ChatView/UserSearchPanel/MessagesDrawer; aiAgent.js and AIChatBubble.jsx deleted. Real assistant stays tracked as ai-community-assistant (exploring).
-- [ ] 3. Landing honesty pass + dead links
-- [ ] 4. Hide deleted accounts; retroactive block enforcement
-- [ ] 5. Low-severity RLS follow-ups + dead-code purge
+- [x] 3. Landing honesty pass + dead links — Landing.jsx audited: markets only live features, no fake claims. Fixed PrivacyRights.jsx "Go to Settings" (`/UserSettings` → `/Settings`, was a legacy redirect to /Feed) and FriendsHub invite URL (`/InviteJoin` → origin root, same problem).
+- [x] 4. Hide deleted accounts; retroactive block enforcement — deleted accounts shipped earlier 2026-07-01 (public_profiles deleted_at + 4 people-surface filters). Retroactive blocks: Messages.jsx + MessagesDrawer.jsx conversation queries now hide 1:1 conversations with users I've blocked; pending message requests from blocked senders filtered too.
+- [x] 5. Low-severity RLS follow-ups + dead-code purge — RLS migration was already live (recovered orphaned remote migration `20260701223223_low_severity_rls_followups.sql` to the repo; also fixed group-admin self-compare bug and recreated the missing error_logs table). Dead code: deleted CommunityHubDetail.jsx, DiscoverCommunityCard.jsx, ColorfulCommunityCard.jsx, RichCommunityCard.jsx (12 other orphans were already gone).
 
 ### Phase 2 — Production Polish
-- [ ] 6. Single post-card system
-- [ ] 7. Style-guide enforcement + CI grep check
+- [~] 6. Single post-card system — dead duplicates all purged (ThreadChainItem + HeartbeatPostCard in the Feed refactor; FeedPost.jsx, PostCard.jsx, PostBox.jsx on 2026-07-01, zero importers). Live cards are now just FeedPostCard (feed list) and UnifiedPostCard (post detail). Remaining: merge those two onto one base card.
+- [~] 7. Style-guide enforcement + CI grep check — Feed.jsx's last bg-slate-950 CTA → bg-blue-600; Communities got DestinationHeader earlier 2026-07-01; scripts/check-style.mjs ratchet check added and wired into prebuild (count can drop, never grow; baseline 128 — many uses are legit segment controls). Remaining: .app-empty-state adoption sweep.
 - [ ] 8. React Query migration + giant-file splits
-- [ ] 9. Remove 1.5s splash delay for returning users
+- [x] 9. Remove 1.5s splash delay for returning users — SPLASH_SEEN_KEY now persisted in localStorage (with sessionStorage fallback for private mode), so the branded splash + 1.5s minimum only ever runs on a device's first visit.
 
 ### Phase 3 — Addictive
 - [ ] 10. Unified backend streaks + streak-at-risk push

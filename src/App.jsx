@@ -259,7 +259,14 @@ const InitialAppGate = ({ children }) => {
   const { isLoadingAuth } = useAuth();
   const [hasSeenSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return window.sessionStorage.getItem(SPLASH_SEEN_KEY) === '1';
+    // localStorage so returning users skip the branded splash across sessions,
+    // not just within one tab. sessionStorage kept for pre-change visitors.
+    try {
+      return window.localStorage.getItem(SPLASH_SEEN_KEY) === '1'
+        || window.sessionStorage.getItem(SPLASH_SEEN_KEY) === '1';
+    } catch {
+      return window.sessionStorage.getItem(SPLASH_SEEN_KEY) === '1';
+    }
   });
   const [minimumElapsed, setMinimumElapsed] = useState(hasSeenSplash);
   const [forceReady, setForceReady] = useState(hasSeenSplash);
@@ -282,7 +289,10 @@ const InitialAppGate = ({ children }) => {
 
     setIsExiting(true);
     const exitTimer = window.setTimeout(() => {
-      if (typeof window !== 'undefined') window.sessionStorage.setItem(SPLASH_SEEN_KEY, '1');
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(SPLASH_SEEN_KEY, '1');
+        try { window.localStorage.setItem(SPLASH_SEEN_KEY, '1'); } catch { /* private mode */ }
+      }
       setShowSplash(false);
     }, 320);
     return () => window.clearTimeout(exitTimer);

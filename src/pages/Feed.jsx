@@ -505,7 +505,7 @@ export default function Feed({ isActive = true }) {
               <p className="mx-auto mt-1 max-w-sm text-[13px] font-semibold leading-5 text-slate-500">
                 Start with something useful: a recommendation, a quick question, or a neighborly update.
               </p>
-              <button onClick={openCreatePost} className="motion-press mt-4 inline-flex items-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-[13px] font-black text-white">
+              <button onClick={openCreatePost} className="motion-press mt-4 inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-[13px] font-black text-white">
                 <Plus className="h-4 w-4" />
                 Write the first post
               </button>

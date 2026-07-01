@@ -140,7 +140,7 @@ export default function PrivacyRights() {
               <div className="flex-1">
                 <h2 className="font-bold text-slate-900 mb-1">Correct My Data</h2>
                 <p className="text-[13px] text-slate-500 mb-3">Update your profile information, name, bio, avatar, and location at any time.</p>
-                <Link to="/UserSettings"
+                <Link to="/Settings"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-600 text-white text-[13px] font-semibold hover:bg-green-700 active:scale-95 transition-all">
                   Go to Settings
                 </Link>

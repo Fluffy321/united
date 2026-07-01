@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/check-jewish-hub-regressions.cjs",
+    "prebuild": "node scripts/check-jewish-hub-regressions.cjs && node scripts/check-style.mjs",
     "build": "vite build",
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",
     "check-prompts": "node scripts/check-roadmap-prompts.cjs",
     "check-jewish-hub": "node scripts/check-jewish-hub-regressions.cjs",
+    "check-style": "node scripts/check-style.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview"

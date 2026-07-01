@@ -2871,7 +2871,8 @@ Goals:
   {
     id: 'orphaned-feature-scaffolding-cleanup',
     category: 'Infrastructure',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'Shipped 2026-07-01 (master plan Phase 1, item 5). Deleted the last four dead files: CommunityHubDetail.jsx, DiscoverCommunityCard.jsx, ColorfulCommunityCard.jsx, RichCommunityCard.jsx (zero importers verified via grep for both quote styles). The other 12 orphans listed in this entry (chalkboard modal, legacy RSVP/event components, newsletter scaffolding, group discussion/resources tabs) had already been removed in earlier cleanups. Lint + build clean after deletion.',
     priority: PRIORITY.LOW,
     title: 'Decide Fate of Orphaned Component Scaffolding',
     description: 'A 2026-06-29 self-check found ~20 entities referenced via dataService.entities.<Name> with no SUPABASE_ENTITY_TABLES mapping. Almost all trace back to components that are never imported by any page or parent component, so they are not reachable by real users and pose no current production risk — but they are dead weight and a few duplicate functionality already shipped elsewhere.',
@@ -2908,7 +2909,8 @@ Goals:
   {
     id: 'low-severity-rls-followups',
     category: 'Admin & Platform',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'Shipped 2026-07-01, migration 20260701223223_low_severity_rls_followups.sql (was applied to production in an earlier session but the local file was orphaned — recovered from remote schema_migrations on 2026-07-01). group_members SELECT scoped via is_group_member/is_active_community_member definer helpers; chesed_challenge_completions restricted to authenticated; error_logs recreated hardened (table had vanished from live — all client error logging was silently failing) with authenticated-only INSERT + size caps; storage.objects gained owner-scoped DELETE for the public image buckets. Bonus fixes: community_groups_update self-compare bug (group admins could never edit), group join-request approval flow unblocked via manager INSERT policy.',
     priority: PRIORITY.MEDIUM,
     title: 'Low-Severity RLS & Abuse-Surface Follow-ups',
     description: 'Remaining low-severity findings from the 2026-07-01 security review, deferred from the main hardening batch: group_members SELECT is USING (true) (any authenticated user can enumerate all group memberships, even in communities they do not belong to); chesed_challenge_completions SELECT is anon-readable (exposes per-user completion history); error_logs allows anon INSERT with no rate limit (admin inbox flooding vector); storage.objects INSERT policies have no per-user path scoping or MIME/size constraints and there are no UPDATE/DELETE policies for user cleanup.',

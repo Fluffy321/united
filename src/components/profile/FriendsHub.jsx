@@ -299,7 +299,8 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
     }
   };
 
-  const inviteUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://www.junited.us'}/InviteJoin`;
+  // /InviteJoin is a legacy route that just redirects to /Feed — send invitees to the public landing page instead.
+  const inviteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.junited.us';
   const inviteText = `Join me on JUnited, the Jewish community app for local updates, mitzvahs, communities, and friends: ${inviteUrl}`;
 
   const openSmsInvite = (phone = '') => {

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { batchFetchByIds } from '@/services';
 import ConversationList from '@/components/messages/ConversationList';
-import { listConversation } from '@/services/entityServices';
+import { filterBlock, listConversation } from '@/services/entityServices';
 
 export default function MessagesDrawer({ currentUser, open, onClose }) {
   const navigate = useNavigate();
@@ -12,8 +12,18 @@ export default function MessagesDrawer({ currentUser, open, onClose }) {
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ['conversations', currentUser?.id],
     queryFn: async () => {
-      const allConvs = await listConversation('-updated_date', 50);
-      const userConvs = allConvs.filter((c) => c.participant_ids?.includes(currentUser.id));
+      const [allConvs, myBlocks] = await Promise.all([
+        listConversation('-updated_date', 50),
+        filterBlock({ blocker_id: currentUser.id }).catch(() => []),
+      ]);
+      const blockedIds = new Set(myBlocks.map((b) => b.blocked_id));
+      const userConvs = allConvs.filter((c) => {
+        if (!c.participant_ids?.includes(currentUser.id)) return false;
+        // Retroactive block enforcement: hide direct conversations with anyone I've blocked.
+        const others = (c.participant_ids || []).filter((id) => id !== currentUser.id);
+        if (others.length === 1 && blockedIds.has(others[0])) return false;
+        return true;
+      });
       const requestIds = [...new Set(userConvs.map((c) => c.request_id).filter(Boolean))];
       const requests = await batchFetchByIds('MitzvahRequest', requestIds);
       const requestTitleMap = Object.fromEntries(requests.map((r) => [r.id, r.title]));
