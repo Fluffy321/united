@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 import SwipeableTabs from '@/components/common/SwipeableTabs';
 import PWAInstallPrompt from '@/components/common/PWAInstallPrompt';
 import CookieConsentBanner from '@/components/common/CookieConsentBanner';
+import OfflineBanner from '@/components/common/OfflineBanner';
 import { mitzvahReminderService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import AppErrorBoundary from '@/components/common/AppErrorBoundary';
@@ -104,6 +105,7 @@ function LayoutContent({ children, currentPageName }) {
   return (
     <div className="app-page">
       <Toaster position="top-center" richColors />
+      <OfflineBanner />
       <PWAInstallPrompt />
       <CookieConsentBanner />
 
@@ -175,6 +177,8 @@ function LayoutContent({ children, currentPageName }) {
                 return (
                   <button
                     key={item.key}
+                    aria-label={item.name}
+                    aria-current={isActive ? 'page' : undefined}
                     onClick={() => {
                       const pageIndex = swipeablePages.indexOf(item.page);
                       if (item.page !== currentPageName) {

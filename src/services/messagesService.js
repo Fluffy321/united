@@ -1,5 +1,5 @@
 import notificationsService from './notificationsService';
-import { createConversation, createMessage, createMessageRequest, filterConversation, filterMessage, filterMessageRequest, listConversation, subscribeMessage, updateConversation, updateMessageRequest } from '@/services/entityServices';
+import { createConversation, createMessage, createMessageRequest, filterBlock, filterConversation, filterMessage, filterMessageRequest, listConversation, subscribeMessage, updateConversation, updateMessageRequest } from '@/services/entityServices';
 
 export const messagesService = {
   listConversations(sort = '-updated_date', limit = 100) {
@@ -86,6 +86,13 @@ export async function findOrCreateDirectConversation(currentUser, recipient, opt
   if (!currentUser?.id) throw new Error('Please log in to message.');
   if (!recipient?.id) throw new Error('This member is missing a profile id.');
   if (currentUser.id === recipient.id) throw new Error("You can't message yourself.");
+
+  const [blockedByMe, blockedByThem] = await Promise.all([
+    filterBlock({ blocker_id: currentUser.id, blocked_id: recipient.id }),
+    filterBlock({ blocker_id: recipient.id, blocked_id: currentUser.id }),
+  ]);
+  if (blockedByMe.length > 0) throw new Error("You've blocked this person. Unblock them in Settings to message them.");
+  if (blockedByThem.length > 0) throw new Error("You can't message this person.");
 
   const conversations = await listConversation('-updated_date', 100);
   const existing = findDirectConversation(currentUser.id, recipient.id, conversations);

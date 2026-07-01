@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Send, Loader2, MessageCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { X, Send, Loader2, MessageCircle, AlertCircle, RefreshCw, Flag } from 'lucide-react';
 import { dataService, notificationsService, postsService } from '@/services';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import ReportModal from '@/components/common/ReportModal';
 
 export default function CommentsSheet({
   post,
@@ -32,6 +33,7 @@ export default function CommentsSheet({
   const [newComment,  setNewComment]  = useState('');
   const [posting,     setPosting]     = useState(false);
   const [replyingTo,  setReplyingTo]  = useState(null);
+  const [reportTarget, setReportTarget] = useState(null);
 
   // Load comments whenever sheet opens
   useEffect(() => {
@@ -256,13 +258,30 @@ export default function CommentsSheet({
               </p>
             </div>
 
-            {/* Reply action */}
-            <button
-              onClick={() => { setReplyingTo(comment.id); inputRef.current?.focus(); }}
-              className={`mt-1.5 text-[11px] font-semibold ${isMine ? 'text-slate-400 hover:text-slate-600' : 'text-blue-500 hover:text-blue-700'}`}
-            >
-              Reply
-            </button>
+            {/* Reply / Report actions */}
+            <div className="mt-1.5 flex items-center gap-3">
+              <button
+                onClick={() => { setReplyingTo(comment.id); inputRef.current?.focus(); }}
+                className={`text-[11px] font-semibold ${isMine ? 'text-slate-400 hover:text-slate-600' : 'text-blue-500 hover:text-blue-700'}`}
+              >
+                Reply
+              </button>
+              {!isMine && (
+                <button
+                  onClick={() => setReportTarget({
+                    id: comment.id,
+                    type: 'comment',
+                    targetUserId: comment.author_id,
+                    targetUserName: comment.author_name,
+                    preview: comment.body,
+                  })}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-red-600"
+                >
+                  <Flag className="h-3 w-3" />
+                  Report
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -429,6 +448,17 @@ export default function CommentsSheet({
           </button>
         </div>
       </div>
+
+      <ReportModal
+        open={Boolean(reportTarget)}
+        onOpenChange={(open) => { if (!open) setReportTarget(null); }}
+        contentId={reportTarget?.id}
+        contentType={reportTarget?.type}
+        targetUserId={reportTarget?.targetUserId}
+        targetUserName={reportTarget?.targetUserName}
+        contentPreview={reportTarget?.preview}
+        currentUser={currentUser}
+      />
     </div>,
     document.body
   );

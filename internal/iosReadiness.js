@@ -41,6 +41,28 @@ export function computeReadiness(progressMap, tasks) {
   return { done: done.length, total: required.length, pct, state };
 }
 
+// Snapshot of how many *required* tasks this catalog held on 2026-07-01, before
+// an AI-completion pass started removing finished entries below. There is no
+// live per-task progress store wired up (see AdminiOSReadiness.jsx), so instead
+// of tracking "done" status separately, finished tasks are deleted from
+// IOS_READINESS_CATEGORIES outright. That means the *current* required count
+// already tells us how much work remains — comparing it against this frozen
+// baseline is what turns "tasks removed" into a real percentage.
+// If you add brand-new required tasks later, bump this number up by the same
+// amount so completed-work percentage doesn't retroactively drop.
+export const ORIGINAL_REQUIRED_TASK_COUNT = 38;
+
+export function computeCatalogReadiness(tasks) {
+  const remainingRequired = tasks.filter(t => t.required).length;
+  const doneRequired = Math.max(0, ORIGINAL_REQUIRED_TASK_COUNT - remainingRequired);
+  const pct = ORIGINAL_REQUIRED_TASK_COUNT === 0 ? 100 : (doneRequired / ORIGINAL_REQUIRED_TASK_COUNT) * 100;
+  let state;
+  if (pct < 40) state = READINESS_STATE.NOT_READY;
+  else if (pct < 85) state = READINESS_STATE.GETTING_CLOSE;
+  else state = READINESS_STATE.READY;
+  return { done: doneRequired, total: ORIGINAL_REQUIRED_TASK_COUNT, remaining: remainingRequired, pct, state };
+}
+
 // ─── Task catalog ──────────────────────────────────────────────────────────────
 
 export const IOS_READINESS_CATEGORIES = [
@@ -143,7 +165,7 @@ export const IOS_READINESS_CATEGORIES = [
       {
         id: 'app-icons',
         title: 'Generate app icons (all required sizes)',
-        description: 'iOS requires a single 1024×1024 icon for App Store Connect plus icons for various device sizes.',
+        description: 'iOS requires a single 1024×1024 icon for App Store Connect plus icons for various device sizes. Concept brief + required sizes + LaunchScreen-adjacent brand color drafted at internal/app-store/ios-native-prep/launch-screen-and-icon-brief.md — the 1024×1024 artwork itself still needs a human designer/tool.',
         whyItMatters: 'Missing or wrong-size icons cause build validation failure.',
         required: true,
         taskType: TASK_TYPE.MIXED,
@@ -169,7 +191,7 @@ Note: The actual icon design must be done in a design tool (Figma, Canva, Sketch
       {
         id: 'launch-screen',
         title: 'Create launch screen / splash screen',
-        description: 'The launch screen appears instantly while the app loads — it must match your app\'s look.',
+        description: 'The launch screen appears instantly while the app loads — it must match your app\'s look. Ready-to-paste LaunchScreen.storyboard XML (matches the app\'s #F6F8FB background) drafted at internal/app-store/ios-native-prep/launch-screen-and-icon-brief.md — blocked on the ios/ project existing (see setup-capacitor).',
         whyItMatters: 'Apple requires a launch screen; a blank or missing one looks unpolished and may trigger rejection.',
         required: true,
         taskType: TASK_TYPE.MIXED,
@@ -292,81 +314,7 @@ Please write only the Login.jsx changes for the native/web branch. Explain the S
     ],
   },
 
-  // ── 3. In-App Account Management ────────────────────────────────────────────
-  {
-    id: 'account-management',
-    label: 'In-App Account Management',
-    description: 'Apple Guideline 5.1.1(v) requires apps with accounts to allow users to delete their account from within the app.',
-    tasks: [
-      {
-        id: 'in-app-account-deletion',
-        title: 'In-app account deletion (Guideline 5.1.1(v))',
-        description: 'Settings.jsx currently shows "email support@junited.org to delete your account" — this email-based flow is not compliant. Users must be able to delete their account directly in the app with no external steps.',
-        whyItMatters: 'REQUIRED. One of the most common rejection reasons. The email flow in Settings.jsx must be replaced with a real in-app delete button backed by a server-side RPC.',
-        required: true,
-        taskType: TASK_TYPE.AI,
-        copyPrompt: `You are implementing in-app account deletion for JUnited, a Jewish community platform using React + Supabase.
-
-Current state:
-- Settings page is at src/pages/UserSettings.jsx
-- Auth context is at src/lib/AuthContext.jsx (useAuth() hook, user object, supabase client)
-- User profile is in public.profiles table (id references auth.users)
-- Users have created posts, comments, community memberships, and possibly community events
-
-Goals:
-1. Add a "Delete My Account" section to UserSettings.jsx (bottom of page, in a danger zone)
-2. Show a confirmation dialog (two-step: first button opens modal, modal requires typing "DELETE" to confirm)
-3. On confirmation, call a Supabase Edge Function (or RPC) that:
-   a. Soft-deletes or anonymizes all user content (posts, comments) — do not hard-delete content that others have responded to
-   b. Removes the user from all community_memberships
-   c. Deletes profile data (name, avatar, bio)
-   d. Calls supabase.auth.admin.deleteUser(userId) to delete the auth record
-4. After deletion, call supabase.auth.signOut() and redirect to /login
-5. The entire flow must complete within the app — no emails, no support tickets
-
-Please also write the SQL RPC or Edge Function that handles the server-side deletion logic.
-Include proper error handling for each step.`,
-        completionCriteria: 'User can delete their account from within the app in under 3 taps. Auth session is invalidated. Data is anonymized.',
-      },
-      {
-        id: 'data-deletion-backend',
-        title: 'Supabase Edge Function / RPC for account deletion',
-        description: 'The backend logic to safely anonymize user data when an account is deleted.',
-        whyItMatters: 'Client-side deletion can be interrupted or bypassed. Server-side ensures data is actually cleaned up.',
-        required: true,
-        taskType: TASK_TYPE.AI,
-        copyPrompt: `You are writing the server-side account deletion handler for JUnited.
-
-Database schema (relevant tables):
-- public.profiles (id uuid PK → auth.users)
-- public.posts (user_id uuid → auth.users, body text, ...)
-- public.post_comments (user_id uuid → auth.users)
-- public.community_memberships (user_id, community_id, role, status)
-- public.community_events (created_by uuid → auth.users)
-- public.community_event_rsvps (user_id uuid → auth.users)
-- public.reactions (user_id uuid → auth.users)
-- public.app_feedback (user_id uuid → auth.users, submitter_name text)
-- public.mitzvah_requests (user_id uuid → auth.users)
-
-Please write a Supabase PostgreSQL RPC function called delete_my_account() that:
-1. Verifies auth.uid() matches the account being deleted (security check)
-2. Anonymizes posts: set body to '[deleted]', set user_id to NULL
-3. Anonymizes comments: same pattern
-4. Deletes community_memberships for this user
-5. Deletes event RSVPs for this user
-6. Deletes reactions for this user
-7. Anonymizes app_feedback: set user_id to NULL, set submitter_name to 'Anonymous'
-8. Deletes the profile row
-9. Does NOT delete the auth.users row (auth deletion happens separately via admin API)
-
-Also write the migration SQL to create this function.
-The function must use SECURITY DEFINER so it can delete across tables.`,
-        completionCriteria: 'RPC exists in Supabase; calling it anonymizes all user data correctly.',
-      },
-    ],
-  },
-
-  // ── 4. Content Safety & Moderation ──────────────────────────────────────────
+  // ── 3. Content Safety & Moderation ──────────────────────────────────────────
   {
     id: 'content-safety',
     label: 'Content Safety & Moderation',
@@ -399,7 +347,7 @@ The function must use SECURITY DEFINER so it can delete across tables.`,
       {
         id: 'privacy-manifest',
         title: 'Create PrivacyInfo.xcprivacy (required since May 2024)',
-        description: 'Apple requires a privacy manifest file that declares all APIs the app uses that can access user data.',
+        description: 'Apple requires a privacy manifest file that declares all APIs the app uses that can access user data. Complete PrivacyInfo.xcprivacy drafted at internal/app-store/ios-native-prep/PrivacyInfo.xcprivacy, ready to drop into ios/App/App/ once the Capacitor project exists (see setup-capacitor).',
         whyItMatters: 'REQUIRED. Without this file, App Store submission is rejected. This is one of the most-missed requirements.',
         required: true,
         taskType: TASK_TYPE.AI,
@@ -429,7 +377,7 @@ Also explain where to place this file in an Xcode/Capacitor project.`,
       {
         id: 'app-privacy-labels',
         title: 'Complete App Privacy labels in App Store Connect',
-        description: 'The "App Privacy" section on your App Store listing must accurately reflect all data your app collects.',
+        description: 'The "App Privacy" section on your App Store listing must accurately reflect all data your app collects. Note: package.json includes @sentry/react (error tracking) and posthog-js (product analytics) — see internal/app-store/third-party-sdk-privacy.md for what that means for these labels (both collect linked, non-tracking analytics data; neither is used for third-party advertising).',
         whyItMatters: 'REQUIRED. False or missing privacy labels can lead to rejection and App Store removal.',
         required: true,
         taskType: TASK_TYPE.MANUAL,
@@ -447,7 +395,7 @@ Also explain where to place this file in an Xcode/Capacitor project.`,
       {
         id: 'third-party-sdk-privacy',
         title: 'Document required reasons for all third-party SDKs',
-        description: 'Every third-party SDK in your app that accesses required-reason APIs must include a privacy manifest.',
+        description: 'Every third-party SDK in your app that accesses required-reason APIs must include a privacy manifest. Full audit done — internal/app-store/third-party-sdk-privacy.md: no action needed today (Sentry/PostHog are used via their web SDKs only, which run in the WebView and touch zero native APIs); re-audit if a native plugin is added later.',
         whyItMatters: 'If a dependency accesses user data without a declared reason, Apple rejects the build.',
         required: true,
         taskType: TASK_TYPE.AI,
@@ -473,7 +421,7 @@ Please:
       {
         id: 'coppa-compliance',
         title: 'COPPA compliance review',
-        description: 'If the app allows users under 13, COPPA (Children\'s Online Privacy Protection Act) applies.',
+        description: 'If the app allows users under 13, COPPA (Children\'s Online Privacy Protection Act) applies. Analysis done — internal/app-store/coppa-and-export-compliance.md: TermsOfService.jsx and PrivacyPolicy.jsx already state a 13+ minimum age and cover COPPA; MinorSafetyPolicy.jsx exists for the 13-17 band. Remaining step is manual: submit the age-rating questionnaire (12+ or 15+ recommended) in App Store Connect.',
         whyItMatters: 'The age rating questionnaire will ask about this. Incorrect answers can cause rejection or legal liability.',
         required: true,
         taskType: TASK_TYPE.MIXED,
@@ -512,7 +460,7 @@ Please recommend:
       {
         id: 'app-name-subtitle',
         title: 'Finalize app name and subtitle',
-        description: 'App name is max 30 characters. Subtitle is max 30 characters and appears below the name on the store listing.',
+        description: 'App name is max 30 characters. Subtitle is max 30 characters and appears below the name on the store listing. Recommendations ready to paste — internal/app-store/app-store-listing.md.',
         whyItMatters: 'Name and subtitle are the first thing users see. They also affect App Store search ranking.',
         required: true,
         taskType: TASK_TYPE.AI,
@@ -533,7 +481,7 @@ The audience is English-speaking Jewish communities, primarily in the US.`,
       {
         id: 'app-store-description',
         title: 'Write App Store description',
-        description: 'The full description is 4000 characters max and appears on your App Store listing. The first 3 lines are visible without tapping "more".',
+        description: 'The full description is 4000 characters max and appears on your App Store listing. The first 3 lines are visible without tapping "more". Full description + promotional text drafted and ready to paste — internal/app-store/app-store-listing.md.',
         whyItMatters: 'Good descriptions drive downloads. The first paragraph is critical — it\'s shown before the "more" fold.',
         required: true,
         taskType: TASK_TYPE.AI,
@@ -562,7 +510,7 @@ Also write a shorter "promotional text" version (max 170 characters) for the top
       {
         id: 'keywords',
         title: 'Research and select App Store keywords',
-        description: 'Keywords field is 100 characters total, comma-separated. Do not repeat words from your app name.',
+        description: 'Keywords field is 100 characters total, comma-separated. Do not repeat words from your app name. 99-char keyword string with reasoning drafted and ready to paste — internal/app-store/app-store-listing.md.',
         whyItMatters: 'Keywords determine which searches your app appears in. Good keyword research directly impacts organic downloads.',
         required: true,
         taskType: TASK_TYPE.AI,
@@ -701,7 +649,7 @@ Update internal/iosReadiness.js: change this item to reflect completion after th
       {
         id: 'export-compliance',
         title: 'Export compliance / encryption declaration',
-        description: 'ITSAppUsesNonExemptEncryption = false is already in internal/ios-info-plist-additions.xml — it just needs to be merged into the Xcode project. This skips the annual questionnaire automatically.',
+        description: 'ITSAppUsesNonExemptEncryption = false is already in internal/ios-info-plist-additions.xml (and analyzed further in internal/app-store/coppa-and-export-compliance.md) — it just needs to be merged into the Xcode project once it exists. This skips the annual questionnaire automatically.',
         whyItMatters: 'REQUIRED. Using HTTPS counts as encryption under US export law. The Info.plist key is already generated; apply it when Capacitor is set up.',
         required: true,
         taskType: TASK_TYPE.MANUAL,
@@ -722,62 +670,6 @@ Update internal/iosReadiness.js: change this item to reflect completion after th
     label: 'iOS UI & Accessibility',
     description: 'The app must handle iOS-specific UI requirements: safe areas, status bar, and basic accessibility.',
     tasks: [
-      {
-        id: 'viewport-fit-cover',
-        title: 'Add viewport-fit=cover to index.html',
-        description: 'The meta viewport tag in index.html must include viewport-fit=cover so that env(safe-area-inset-*) CSS variables work on iPhones with a notch or Dynamic Island.',
-        whyItMatters: 'Without this, safe-area CSS insets are always 0 and the bottom nav will be hidden behind the home indicator on modern iPhones. Can be done now, before Capacitor is set up.',
-        required: true,
-        taskType: TASK_TYPE.AI,
-        copyPrompt: `You are adding viewport-fit=cover to JUnited's index.html for iOS safe area support.
-
-The file is at index.html in the project root.
-
-Find the existing <meta name="viewport" ...> tag and add viewport-fit=cover to it.
-The result should be: <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-
-Also check src/index.css and Layout.jsx (wherever the bottom nav bar is defined) to confirm that
-env(safe-area-inset-bottom) padding is being applied to the bottom navigation bar.
-If it is not, add: padding-bottom: env(safe-area-inset-bottom) to the bottom nav container.
-
-This must work on: iPhone SE (no notch), iPhone 12–14 (notch), iPhone 15–16 (Dynamic Island).
-
-Update internal/iosReadiness.js: change this item's status-related fields to reflect completion.`,
-        completionCriteria: 'viewport-fit=cover is in index.html. Bottom nav clears the home indicator on iPhone 16 Pro Max simulator.',
-      },
-      {
-        id: 'safe-area-handling',
-        title: 'Verify safe area insets (notch, Dynamic Island, home indicator)',
-        description: 'Content must not be hidden behind the notch, Dynamic Island, or home indicator bar.',
-        whyItMatters: 'REQUIRED. Apps that render content under system chrome are rejected or given poor reviews.',
-        required: true,
-        taskType: TASK_TYPE.MIXED,
-        copyPrompt: `You are auditing safe area handling for JUnited on iOS.
-
-JUnited is a React/Vite PWA wrapped with Capacitor. The UI uses a fixed bottom navigation bar.
-
-Current patterns in Layout.jsx:
-- Bottom nav uses: class="fixed inset-x-0 bottom-0 z-50"
-- Content uses: class="min-h-screen"
-
-Please:
-1. Explain what CSS env(safe-area-inset-bottom) is and why it matters for iPhone with home indicator
-2. Show the Capacitor configuration needed to handle safe areas correctly
-3. Write the Tailwind CSS / inline style changes needed so the bottom nav clears the home indicator
-4. Check if the app header clears the status bar (top safe area)
-5. Recommend whether to use viewport-fit=cover in the Capacitor config
-
-The fix should work on iPhone SE (no notch), iPhone 12-14 (notch), and iPhone 15-16 (Dynamic Island).`,
-        manualSteps: [
-          'Test the app on iPhone 16 Pro Max simulator (Dynamic Island)',
-          'Check: is the top header hidden behind the Dynamic Island or status bar?',
-          'Check: is the bottom nav bar hidden behind the home indicator?',
-          'If yes, add env(safe-area-inset-bottom) padding to the nav bar',
-          'In capacitor.config.ts, set: iosScheme: "https", overrideUserAgent: optional',
-          'Add to index.html: <meta name="viewport" content="viewport-fit=cover">',
-        ],
-        completionCriteria: 'App content is fully visible and not hidden by system chrome on all modern iPhone sizes.',
-      },
       {
         id: 'status-bar-config',
         title: 'Configure iOS status bar style',
@@ -805,34 +697,9 @@ Reference: @capacitor/status-bar plugin`,
         completionCriteria: 'Status bar is readable (correct text color) on all pages.',
       },
       {
-        id: 'pull-to-refresh',
-        title: 'Implement native pull-to-refresh (recommended)',
-        description: 'iOS users expect pull-to-refresh on scrollable content like the Feed.',
-        whyItMatters: 'Recommended. Not implementing it is not a rejection reason, but significantly degrades the native feel.',
-        required: false,
-        taskType: TASK_TYPE.AI,
-        copyPrompt: `You are implementing pull-to-refresh for the JUnited Feed page on iOS.
-
-JUnited uses React + Capacitor. The Feed is a scrollable list of posts loaded via TanStack Query.
-
-The Feed page is at src/pages/Feed.jsx. It uses:
-- useQuery with queryKey ['posts', ...filters]
-- refetch() to reload data
-
-Please:
-1. Install and configure @capacitor/haptics for haptic feedback on refresh
-2. Add pull-to-refresh to the Feed using either:
-   a. @capacitor/push-notifications (wrong — don't use this)
-   b. A CSS-based pull-to-refresh implementation that works in WKWebView
-   c. The PullToRefresh component pattern for Capacitor WebView apps
-3. Show how to call refetch() when the user pulls down far enough
-4. Ensure it doesn't conflict with the existing scroll behavior in Layout.jsx`,
-        completionCriteria: 'Pull-to-refresh works on the Feed. Haptic feedback on trigger.',
-      },
-      {
         id: 'voiceover-basics',
         title: 'Basic VoiceOver accessibility audit',
-        description: 'VoiceOver is the iOS screen reader. Apps with major accessibility gaps may be rejected or given lower ratings.',
+        description: 'VoiceOver is the iOS screen reader. Apps with major accessibility gaps may be rejected or given lower ratings. Partial progress: the 5 main bottom-nav buttons in Layout.jsx were missing aria-label and have been fixed (2026-07-01). A full app-wide pass (forms, remaining icon-only buttons across less-trafficked pages) has not been done — do not mark this shipped until that broader pass happens.',
         whyItMatters: 'Recommended. Apple values accessibility. Severe issues (e.g. all images without alt text) can cause rejection.',
         required: false,
         taskType: TASK_TYPE.MIXED,
@@ -913,34 +780,6 @@ Start with the simplest viable approach (e.g. OneSignal free tier) rather than b
         completionCriteria: 'App runs for 30+ minutes on real device with zero crashes.',
       },
       {
-        id: 'network-offline',
-        title: 'Test and handle offline / poor network behavior',
-        description: 'iOS users expect graceful degradation when there\'s no internet connection.',
-        whyItMatters: 'Apps that crash or show blank screens offline get 1-star reviews and may be flagged in App Review.',
-        required: true,
-        taskType: TASK_TYPE.MIXED,
-        copyPrompt: `You are adding offline/poor network handling to JUnited.
-
-JUnited uses TanStack Query for data fetching. Currently, if there's no internet:
-- Queries fail silently or show loading spinners forever
-- Users don't know if the app is broken or just loading
-
-Please:
-1. Add a global "No Internet Connection" banner using react-router-dom and the browser's navigator.onLine API
-2. Configure TanStack Query's retry and staleTime settings to be offline-friendly (serve cached data)
-3. For the Feed page specifically, show cached posts when offline with a "Showing cached results" notice
-4. Show user-friendly error messages (not "Network error" — something like "Can't load posts — check your connection")
-
-The banner should auto-dismiss when connectivity is restored.`,
-        manualSteps: [
-          'In iOS Simulator: Hardware → Network Condition → 100% packet loss',
-          'Open the app and navigate to the Feed',
-          'Verify a helpful message appears — not a blank screen or infinite spinner',
-          'Restore network and verify the app recovers automatically',
-        ],
-        completionCriteria: 'Offline state shows a helpful message. App recovers when connectivity returns.',
-      },
-      {
         id: 'memory-performance',
         title: 'Memory and performance profiling',
         description: 'Heavy JavaScript in a WebView can cause jank and memory warnings on older iPhones.',
@@ -988,7 +827,7 @@ The banner should auto-dismiss when connectivity is restored.`,
       {
         id: 'review-notes',
         title: 'Write App Review notes',
-        description: 'Review notes tell Apple reviewers what the app does and how to test it. Max 4000 characters.',
+        description: 'Review notes tell Apple reviewers what the app does and how to test it. Max 4000 characters. Full draft ready to paste — internal/app-store/review-notes.md (fill in the demo account password once that task is done).',
         whyItMatters: 'REQUIRED. Missing notes lead to "we couldn\'t evaluate your app" rejections. Good notes speed up review.',
         required: true,
         taskType: TASK_TYPE.AI,

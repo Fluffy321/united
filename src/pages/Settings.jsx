@@ -31,7 +31,8 @@ import {
   Flag,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { dataService, paymentsService } from '@/services';
+import { dataService, paymentsService, batchFetchByIds } from '@/services';
+import { filterBlock, deleteBlock } from '@/services/entityServices';
 import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
 import { createPageUrl } from '@/utils';
 import { useAuth } from '@/lib/AuthContext';
@@ -110,6 +111,8 @@ export default function Settings() {
   const [activeSection, setActiveSection] = useState('profile');
   const [isSaving, setIsSaving]           = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [analyticsConsent, setAnalyticsConsent]   = useState(
     () => getStoredConsent()?.analytics ?? false,
   );
@@ -319,6 +322,21 @@ export default function Settings() {
   };
 
   const handleLogout = async () => { await logout(); toast.success('Logged out'); };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText.trim().toUpperCase() !== 'DELETE') return;
+    setIsDeletingAccount(true);
+    try {
+      const { error } = await supabase.functions.invoke('delete-account', { body: {} });
+      if (error) throw error;
+      toast.success('Your account has been deleted.');
+      await logout();
+      window.location.href = createPageUrl('login');
+    } catch (err) {
+      toast.error(err?.message || 'Could not delete account. Please try again or email support@junited.org.');
+      setIsDeletingAccount(false);
+    }
+  };
 
   if (!currentUser) return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -860,6 +878,8 @@ export default function Settings() {
                 Sign out
               </button>
 
+              <BlockedUsersCard currentUserId={currentUser.id} />
+
               {/* Danger zone */}
               <div className="rounded-2xl border border-red-100 bg-red-50 p-4">
                 <p className="mb-1 text-[11px] font-black uppercase tracking-wide text-red-500">Danger Zone</p>
@@ -884,18 +904,44 @@ export default function Settings() {
           <div className="w-full rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-md sm:rounded-3xl">
             <h2 className="text-lg font-bold text-slate-950">Delete account</h2>
             <p className="mt-2 text-[13px] leading-6 text-slate-500">
-              To permanently delete your account and all associated data, email{' '}
+              This permanently deletes your account. Your posts and comments will be anonymized
+              (shown as "Deleted User"), you'll be removed from all communities, and your profile,
+              messages, and personal data will be erased. This cannot be undone.
+            </p>
+            <label className="mt-4 block text-[12px] font-bold text-slate-600">
+              Type DELETE to confirm
+            </label>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="DELETE"
+              disabled={isDeletingAccount}
+              className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-[14px] font-semibold uppercase tracking-wide text-slate-800 outline-none focus:border-red-300 focus:bg-white"
+            />
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
+                disabled={isDeletingAccount}
+                className="h-11 flex-1 rounded-xl bg-slate-100 text-sm font-bold text-slate-700 transition hover:bg-slate-200 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={isDeletingAccount || deleteConfirmText.trim().toUpperCase() !== 'DELETE'}
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {isDeletingAccount ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                {isDeletingAccount ? 'Deleting…' : 'Delete my account'}
+              </button>
+            </div>
+            <p className="mt-3 text-center text-[11px] text-slate-400">
+              Problems deleting your account? Email{' '}
               <a href="mailto:support@junited.org" className="font-semibold text-blue-600 underline">
                 support@junited.org
-              </a>{' '}
-              from the address you used to sign up. We process deletion requests within 30 days.
+              </a>
             </p>
-            <button
-              onClick={() => setShowDeleteConfirm(false)}
-              className="mt-5 h-11 w-full rounded-xl bg-slate-100 text-sm font-bold text-slate-700 transition hover:bg-slate-200"
-            >
-              Close
-            </button>
           </div>
         </div>
       )}
@@ -933,6 +979,71 @@ function ProfileSummary({ form, onAvatarChange }) {
 }
 
 /** White card with a header row (icon + title) and padded content below */
+/** Lists users the current account has blocked, with an unblock action.
+ *  Lives in the Account tab, above the danger zone. */
+function BlockedUsersCard({ currentUserId }) {
+  const [blocks, setBlocks] = useState(null); // null = loading
+  const [unblockingId, setUnblockingId] = useState(null);
+
+  const loadBlocks = useCallback(async () => {
+    try {
+      const rows = await filterBlock({ blocker_id: currentUserId });
+      const blockedIds = rows.map(r => r.blocked_id).filter(Boolean);
+      const profiles = blockedIds.length ? await batchFetchByIds('Profile', blockedIds) : [];
+      const profileById = new Map(profiles.map(p => [p.id, p]));
+      setBlocks(rows.map(r => ({ ...r, profile: profileById.get(r.blocked_id) })));
+    } catch {
+      setBlocks([]);
+    }
+  }, [currentUserId]);
+
+  useEffect(() => { loadBlocks(); }, [loadBlocks]);
+
+  const handleUnblock = async (blockRow) => {
+    setUnblockingId(blockRow.id);
+    try {
+      await deleteBlock(blockRow.id);
+      setBlocks(prev => prev.filter(b => b.id !== blockRow.id));
+      toast.success('User unblocked');
+    } catch {
+      toast.error('Could not unblock. Please try again.');
+    }
+    setUnblockingId(null);
+  };
+
+  if (blocks === null || blocks.length === 0) return null;
+
+  return (
+    <SettingsCard title="Blocked Users" icon={Shield}>
+      <div className="divide-y divide-slate-100">
+        {blocks.map((block) => (
+          <div key={block.id} className="flex items-center justify-between gap-3 py-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              {block.profile?.avatar_url ? (
+                <img src={block.profile.avatar_url} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+              ) : (
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-black text-slate-500">
+                  {(block.profile?.display_name || '?')[0]?.toUpperCase()}
+                </div>
+              )}
+              <p className="min-w-0 truncate text-[13.5px] font-semibold text-slate-800">
+                {block.profile?.display_name || 'Deleted User'}
+              </p>
+            </div>
+            <button
+              onClick={() => handleUnblock(block)}
+              disabled={unblockingId === block.id}
+              className="shrink-0 rounded-lg bg-slate-100 px-3 py-1.5 text-[12px] font-bold text-slate-700 transition hover:bg-slate-200 disabled:opacity-50"
+            >
+              {unblockingId === block.id ? 'Unblocking…' : 'Unblock'}
+            </button>
+          </div>
+        ))}
+      </div>
+    </SettingsCard>
+  );
+}
+
 function SettingsCard({ title, icon: Icon, children }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
