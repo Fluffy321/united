@@ -1,1 +1,1 @@
-export const COMMUNITIES_ENABLED = true;
+export const COMMUNITIES_ENABLED = false;
