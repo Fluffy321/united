@@ -14,7 +14,7 @@ export function useFeedData() {
       if (!appParams.hasBackendConfig) return [];
       try {
         const posts = await withFeedTimeout(
-          dataService.entities.UnifiedPost.list('-updated_date', PAGE_SIZE, pageParam * PAGE_SIZE)
+          dataService.entities.PostFeedView.list('-updated_date', PAGE_SIZE, pageParam * PAGE_SIZE)
         );
         return Array.isArray(posts) ? posts : [];
       } catch (error) {

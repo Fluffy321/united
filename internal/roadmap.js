@@ -1660,7 +1660,8 @@ Goals:
   {
     id: 'feed-author-enrichment',
     category: 'Automation & AI',
-    status: STATUS.DEFERRED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'posts_feed_view Postgres view joins posts + profiles + communities. PostFeedView entity in SUPABASE_ENTITY_TABLES. useFeedData.js queries PostFeedView. toAppRow prefers profile_display_name, profile_avatar_url, community_name_fresh. Feed card components render avatar_url img when present.',
     priority: PRIORITY.LOW,
     title: 'Feed Post Author Enrichment via JOIN',
     description: 'Replace author denormalization with a Supabase view (posts + profiles + communities JOIN) so feed cards always reflect current author/community name even after renames.',

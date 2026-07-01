@@ -623,14 +623,19 @@ function FeedPostCard({ post, liked = false, onLike, onReply, onOpen, onMap }) {
   const reactions = Number(post.likes_count || 0);
   const initials = (post.author_name || 'J').split(/\s+/).map(p => p[0]).join('').slice(0, 2).toUpperCase();
   const avatarBg = authorColor(post.author_id || post.author_name || '');
+  const avatarUrl = post.author_avatar_url;
 
   return (
     <article className="rounded-[16px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden">
       <div className="p-4 pb-3">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold text-white shrink-0" style={{ background: avatarBg }}>
-            {initials}
-          </div>
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={post.author_name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+          ) : (
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold text-white shrink-0" style={{ background: avatarBg }}>
+              {initials}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <div className="text-[14px] font-bold text-slate-900 leading-tight truncate">{post.author_name || 'Neighbor'}</div>
             <div className="text-[12px] text-slate-400">{age}</div>
@@ -759,15 +764,20 @@ function CommunityCompactPost({ post, liked = false, onLike, onReply }) {
   const replies = Number(post.comments_count || 0);
   const reactions = Number(post.likes_count || 0);
   const initials = (post.author_name || 'J').split(/\s+/).map(p => p[0]).join('').slice(0, 2).toUpperCase();
+  const avatarUrl = post.author_avatar_url;
 
   return (
     <div className="flex items-start gap-3 px-4 py-3 border-b border-slate-100 bg-white">
-      <div
-        className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 mt-0.5"
-        style={{ background: authorColor(post.author_id || post.author_name || '') }}
-      >
-        {initials}
-      </div>
+      {avatarUrl ? (
+        <img src={avatarUrl} alt={post.author_name} className="w-[30px] h-[30px] rounded-full object-cover shrink-0 mt-0.5" />
+      ) : (
+        <div
+          className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 mt-0.5"
+          style={{ background: authorColor(post.author_id || post.author_name || '') }}
+        >
+          {initials}
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-1.5 mb-0.5">
           <span className="text-[13px] font-semibold text-slate-900 truncate">{post.author_name || 'Neighbor'}</span>
@@ -1490,9 +1500,13 @@ function ThreadChainItem({ post, first = false, liked = false, onLike, onReply, 
 
   return (
     <article className="relative pl-12">
-      <div className={`absolute left-0 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border-4 border-white text-[11px] font-black text-white shadow-sm ${first ? 'bg-emerald-600' : 'bg-blue-600'}`}>
-        {(post.author_name || 'J').split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
-      </div>
+      {post.author_avatar_url ? (
+        <img src={post.author_avatar_url} alt={post.author_name} className={`absolute left-0 top-3 z-10 h-9 w-9 rounded-full object-cover border-4 border-white shadow-sm`} />
+      ) : (
+        <div className={`absolute left-0 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border-4 border-white text-[11px] font-black text-white shadow-sm ${first ? 'bg-emerald-600' : 'bg-blue-600'}`}>
+          {(post.author_name || 'J').split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
+        </div>
+      )}
 
       <div className="rounded-[20px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-sm">
         <button type="button" onClick={onOpen} className="block w-full text-left">

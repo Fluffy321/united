@@ -8,6 +8,7 @@ const SUPABASE_ENTITY_TABLES = {
   Community: 'communities',
   UnifiedPost: 'posts',
   Post: 'posts',
+  PostFeedView: 'posts_feed_view',
   // Messaging — migration 002_messages.sql
   Conversation: 'conversations',
   Message: 'messages',
@@ -660,6 +661,10 @@ const toAppRow = (row = {}) => ({
   updated_date: row.updated_date || row.updated_at,
   full_name: row.full_name || row.display_name || 'User',
   user_name: row.user_name || row.author_name,
+  // Prefer fresh JOIN data from posts_feed_view when available
+  author_name: row.profile_display_name || row.author_name,
+  author_avatar_url: row.profile_avatar_url || row.author_avatar_url,
+  community_name: row.community_name_fresh || row.community_name,
   cityPreset: row.cityPreset || row.city,
   locationLabel: row.locationLabel || row.location_label || row.location_label_legacy,
   approxLat: firstPresent(row.approxLat, row.approx_lat),
