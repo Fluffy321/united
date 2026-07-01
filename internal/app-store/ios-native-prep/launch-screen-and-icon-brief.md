@@ -50,25 +50,19 @@ Replace the contents of `ios/App/App/Base.lproj/LaunchScreen.storyboard` with:
 - "JUnited" wordmark, bold, centered — no logo image needed unless a mark exists at 1024×1024 already; a text-only launch screen is fully compliant with Apple guidelines and avoids needing a second asset.
 - Uses Auto Layout + safe area guide, so it centers correctly on iPhone SE through iPhone 16 Pro Max without per-device sizing.
 
-## App icon — concept brief (design work itself needs a human/design tool)
+## App icon — generated 2026-07-01
 
-**Concept:** Simple, high-contrast mark that reads at 60×60px — avoid fine detail or small text.
-Given the brand is "JUnited," a strong option is a rounded/six-pointed star motif (Star of David,
-simplified to clean geometric lines) on the brand blue background (`#2563EB`, matching the primary
-button/accent color used throughout the app), with no wordmark on the icon itself (App Store already
-shows the app name below the icon).
+**Update:** the actual artwork now exists — see `internal/app-store/ios-native-prep/app-icons/`.
+No image-generation tool or library was available in this environment, so `scripts/generate-app-icons.cjs`
+hand-rolls both the raster (a supersampled six-pointed star / Magen David, in white, on the brand
+blue `#2563EB` background — the primary button/accent color used throughout the app) and the PNG
+encoder itself using only Node's built-in `zlib`. All 12 required sizes are pre-generated (8-bit
+RGB, no alpha channel) — see that folder's README for the exact drop-in mapping.
 
-**Required sizes (generate all from one 1024×1024 source, no alpha channel):**
-- 1024×1024 (App Store Connect marketing icon)
-- 180×180 (iPhone @3x, Home Screen)
-- 120×120 (iPhone @2x, Home Screen)
-- 167×167 (iPad Pro @2x)
-- 152×152 (iPad @2x)
-- 87×87, 80×80, 58×58, 60×60, 40×40, 29×29, 20×20 (Settings, Spotlight, Notification icons at various scales)
+This is real, presentable placeholder artwork, not a mockup — it reads clearly down to 40×40px.
+Treat it as a first pass: swap in a professionally designed mark whenever one exists (regenerate
+sizes the same way by editing and rerunning the script), and reconsider whether Magen David is the
+right icon-level mark for the brand vs. a wordmark-adjacent monogram.
 
-**Recommended free tool:** [appicon.co](https://appicon.co) or Xcode's own "Single Size" asset catalog
-mode (Xcode 14+) — upload one 1024×1024 PNG and it outputs (or Xcode auto-generates) every required size.
-
-**Action needed from a human:** design or commission the actual 1024×1024 artwork (Figma/Canva/a
-designer), then run it through the sizing tool and drop the set into
-`ios/App/App/Assets.xcassets/AppIcon.appiconset/` in Xcode.
+**What's still blocked:** actually dropping these into Xcode's asset catalog and confirming "no
+icon-related warnings" on build requires the `ios/` project to exist (`setup-capacitor`, manual).

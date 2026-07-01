@@ -165,7 +165,7 @@ export const IOS_READINESS_CATEGORIES = [
       {
         id: 'app-icons',
         title: 'Generate app icons (all required sizes)',
-        description: 'iOS requires a single 1024×1024 icon for App Store Connect plus icons for various device sizes. Concept brief + required sizes + LaunchScreen-adjacent brand color drafted at internal/app-store/ios-native-prep/launch-screen-and-icon-brief.md — the 1024×1024 artwork itself still needs a human designer/tool.',
+        description: 'iOS requires a single 1024×1024 icon for App Store Connect plus icons for various device sizes. Real artwork now generated (no design tool was available, so scripts/generate-app-icons.cjs hand-rolls a raster + PNG encoder) — all 12 sizes at internal/app-store/ios-native-prep/app-icons/, ready to drop into Xcode. Treat as a first-pass placeholder pending a professionally designed mark. Remaining step is applying it once setup-capacitor exists and confirming no Xcode build warnings.',
         whyItMatters: 'Missing or wrong-size icons cause build validation failure.',
         required: true,
         taskType: TASK_TYPE.MIXED,

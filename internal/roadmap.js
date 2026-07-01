@@ -2346,6 +2346,16 @@ Goals:
   // ── Admin & Platform ──────────────────────────────────────────────────────
 
   {
+    id: 'app-icon-placeholder-artwork',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.LOW,
+    title: 'Generated App Icon Set (Placeholder Artwork)',
+    description: 'iOS App Store submission requires a 1024x1024 icon plus derived sizes; nothing existed and no design tool/image library was available in this environment.',
+    shippedNote: 'Shipped 2026-07-01. scripts/generate-app-icons.cjs hand-rolls both the raster (a supersampled, anti-aliased six-pointed star / Magen David in white on the brand blue #2563EB background) and a from-scratch PNG encoder (manual IHDR/IDAT/IEND chunks, zlib.deflateSync for compression) using only Node built-ins — no npm dependency needed. Generates all 12 required sizes directly (re-rasterized per size, not downsampled, so edges stay crisp at 20x20) into internal/app-store/ios-native-prep/app-icons/, each 8-bit RGB with no alpha channel per Apple\'s requirement. This is real, presentable placeholder artwork (verified legible down to 40x40 by visual inspection), not a mockup, but should be swapped for a professionally designed mark when one exists. Did not mark the iosReadiness.js app-icons task as done — applying it in Xcode and confirming no build warnings is still blocked on setup-capacitor (no ios/ project exists yet).',
+  },
+
+  {
     id: 'ios-readiness-polish',
     category: 'Admin & Platform',
     status: STATUS.SHIPPED,
