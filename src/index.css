@@ -595,6 +595,12 @@
     padding-bottom: calc(var(--app-bottom-nav-height) + var(--app-bottom-safe) + 16px);
   }
 
+  /* Soft fade behind sticky headers so scrolling content doesn't show
+     hard-clipped against the transparent area around the toolbar pill. */
+  .app-header-veil {
+    background: linear-gradient(to bottom, rgba(246, 248, 251, 0.96) 55%, rgba(246, 248, 251, 0));
+  }
+
   /* For pages with a floating action button: clears the 56px FAB + gap so the
      last list item is never hidden underneath it. */
   .mobile-safe-bottom-fab {

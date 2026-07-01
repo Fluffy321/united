@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/AuthContext';
-import BackButton from '@/components/common/BackButton';
+import DestinationHeader from '@/components/layout/DestinationHeader';
 import LiveNowRail from '@/components/common/LiveNowRail';
 import { buildMarketplaceLiveNowItems } from '@/lib/liveNow';
 
@@ -374,40 +374,31 @@ export default function Marketplace() {
 
   return (
     <main className="min-h-screen bg-[#F6F8FB] pb-28">
-      <section className="mobile-page px-3 pt-3">
-        <div className="rounded-[28px] border border-blue-100 bg-white p-4 shadow-sm">
-          <BackButton fallbackTo="/Feed" className="mb-2 -ml-1" />
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-blue-700">
-                <ShoppingBag className="h-3.5 w-3.5" />
-                Trusted local marketplace
-              </div>
-              <h1 className="mt-3 text-[28px] font-black leading-8 text-slate-950">Marketplace</h1>
-              <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
-                Buy, sell, request, and give away useful things through people connected to your Jewish community.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowPost(true)}
-              className="motion-press flex h-12 shrink-0 items-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-black text-white"
-            >
-              <ShoppingBag className="h-4 w-4" />
-              Post
-            </button>
-          </div>
-
-          {listingStats.length > 0 && (
-          <div className="mt-4 grid grid-cols-3 gap-2">
+      <DestinationHeader
+        showBack
+        icon={ShoppingBag}
+        title="Marketplace"
+        actions={(
+          <button
+            onClick={() => setShowPost(true)}
+            className="motion-press flex shrink-0 items-center gap-1.5 rounded-full bg-slate-950 px-3.5 py-2 text-[12px] font-bold text-white"
+          >
+            <ShoppingBag className="h-3.5 w-3.5" />
+            Post
+          </button>
+        )}
+      />
+      <section className="mobile-page px-3">
+        {listingStats.length > 0 && (
+          <div className="grid grid-cols-3 gap-2">
             {listingStats.map(([value, label]) => (
-              <div key={label} className="rounded-2xl bg-slate-50 px-3 py-2">
+              <div key={label} className="rounded-2xl border border-slate-200 bg-white px-3 py-2">
                 <p className="text-lg font-black text-slate-950">{value}</p>
                 <p className="text-[11px] font-bold text-slate-400">{label}</p>
               </div>
             ))}
           </div>
-          )}
-        </div>
+        )}
 
         <LiveNowRail
           className="mt-3"
@@ -445,7 +436,7 @@ export default function Marketplace() {
               <button
                 key={item}
                 onClick={() => setCategory(item)}
-                className={classNames('motion-press shrink-0 rounded-full px-3 py-1.5 text-[12px] font-black ring-1', category === item ? 'bg-blue-600 text-white ring-blue-600' : 'bg-white text-slate-600 ring-slate-200')}
+                className={classNames('motion-press shrink-0 rounded-full px-3 py-1.5 text-[12px] font-bold ring-1', category === item ? 'bg-slate-950 text-white ring-slate-950' : 'bg-white text-slate-600 ring-slate-200')}
               >
                 {item}
               </button>
@@ -457,13 +448,13 @@ export default function Marketplace() {
               <button
                 key={filter.id}
                 onClick={() => toggleFilter(filter.id)}
-                className={classNames('motion-press inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-black ring-1', activeFilters.has(filter.id) ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : 'bg-white text-slate-500 ring-slate-200')}
+                className={classNames('motion-press inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-bold ring-1', activeFilters.has(filter.id) ? 'bg-slate-950 text-white ring-slate-950' : 'bg-white text-slate-500 ring-slate-200')}
               >
                 {filter.label}
                 {filter.id === 'nearby' && <MapPin className="h-3 w-3" />}
               </button>
             ))}
-            <button className="motion-press ml-auto inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[12px] font-black text-slate-500 ring-1 ring-slate-200">
+            <button className="motion-press inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[12px] font-bold text-slate-500 ring-1 ring-slate-200">
               Shul / school
               <ChevronDown className="h-3 w-3" />
             </button>

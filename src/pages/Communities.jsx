@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, Search, X, AlertCircle, Map, Calendar, Compass, ArrowUpRight, MessageCircleMore, Sparkles, BookOpenText, ChevronRight } from 'lucide-react';
+import { Loader2, Search, X, AlertCircle, Map, Compass, ArrowUpRight, MessageCircleMore, Sparkles, BookOpenText, ChevronRight, UsersRound } from 'lucide-react';
+import DestinationHeader from '@/components/layout/DestinationHeader';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import ProfileSetup from '@/components/profile/ProfileSetup';
@@ -1131,41 +1132,30 @@ export default function Communities() {
         @keyframes heroEnter { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .hero-enter { animation: heroEnter 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
       `}</style>
-      <div className="max-w-2xl mx-auto px-4 pt-6">
-
-        {/* Header */}
-        <div className="mb-5 flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold uppercase text-blue-600">Rooms around the main thread</p>
-            <h1 className="text-3xl font-bold text-slate-900">Communities</h1>
-          </div>
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+      <DestinationHeader
+        icon={UsersRound}
+        title="Communities"
+        actions={(
+          <>
             <button
               onClick={() => navigate('/Map')}
-              className="surface-tile-hover hidden rounded-full border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-150 active:scale-90 sm:inline-flex"
-              title="Map"
+              className="app-icon-button surface-tile-hover hidden touch-manipulation sm:inline-flex"
+              aria-label="Map"
             >
-              <Map className="w-4 h-4 text-slate-600" />
-            </button>
-            <button
-              onClick={() => navigate('/Feed')}
-              className="surface-tile-hover hidden rounded-full border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-150 active:scale-90 sm:inline-flex"
-              title="Main feed"
-            >
-              <Calendar className="w-4 h-4 text-slate-600" />
+              <Map className="h-[18px] w-[18px] text-slate-500" />
             </button>
             <button
               onClick={() => setActiveTab('discover')}
-              className="surface-tile-hover hidden rounded-full border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-150 active:scale-90 sm:inline-flex"
-              title="Discover communities"
+              className="app-icon-button surface-tile-hover hidden touch-manipulation sm:inline-flex"
+              aria-label="Discover communities"
             >
-              <Compass className="w-4 h-4 text-slate-600" />
+              <Compass className="h-[18px] w-[18px] text-slate-500" />
             </button>
             {currentUser?.role === 'admin' && (
               <button
                 onClick={reseedFeatured}
                 disabled={reseedingFeatured}
-                className="rounded-full bg-amber-600 text-white px-4 py-2.5 text-[13px] font-semibold shadow-sm hover:bg-amber-700 disabled:opacity-50 active:scale-95 transition-all duration-150"
+                className="rounded-full bg-amber-600 px-3 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-amber-700 disabled:opacity-50 active:scale-95 transition-all duration-150"
                 title="Reseed featured communities (admin only)"
               >
                 {reseedingFeatured ? '⟳ ...' : '⟳ Reseed'}
@@ -1173,12 +1163,14 @@ export default function Communities() {
             )}
             <button
               onClick={() => setShowCreateModal(true)}
-              className="graphic-stripes shrink-0 rounded-full bg-blue-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm transition-all duration-150 hover:bg-blue-700 active:scale-95"
+              className="shrink-0 rounded-full bg-blue-600 px-3.5 py-2 text-[12px] font-bold text-white shadow-sm transition-all duration-150 hover:bg-blue-700 active:scale-95"
             >
               + Create
             </button>
-          </div>
-        </div>
+          </>
+        )}
+      />
+      <div className="max-w-2xl mx-auto px-4 pt-2">
 
         <div className="mb-5 overflow-hidden rounded-[28px] border border-slate-200 bg-slate-950 p-4 text-white shadow-sm">
           <div className="flex items-start justify-between gap-3">

@@ -2792,9 +2792,10 @@ Goals:
   {
     id: 'purge-production-test-data',
     category: 'Admin & Platform',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.HIGH,
     title: 'Purge test/demo communities from production',
+    shippedNote: 'Shipped 2026-07-01. Deleted "Cucumber apples🥒🍎" (4 memberships, 0 posts) from production via supabase db query --linked. "Hollywood FL" kept per owner decision. Remaining communities verified real.',
     description: 'Test communities (e.g. "Cucumber apples 🥒🍎 / Daily pickle ball") are visible on the live Communities page and as Map filter chips. First-time visitors read the whole site as fake. Delete or archive all seed/test communities and their posts from the production database.',
     why: 'Surfaced by the 2026-07-01 multi-persona UX review: test data was the single most credibility-damaging thing a new visitor sees.',
     prompt: `You are removing test/demo data from the JUnited production database.

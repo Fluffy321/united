@@ -87,7 +87,7 @@ export default function FiveTownsConversationHub({ posts = [], networkLabel = 'F
           )}
         </div>
         {/* Never surface zero-counts — an empty stat line reads as "this app is dead". */}
-        <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-wide text-white/65">
+        <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-wide text-white/65">
           {recentPosts.length > 0 && <span>{recentPosts.length} recent posts</span>}
           {recentPosts.length > 0 && needsToday > 0 && <span>•</span>}
           {needsToday > 0 && <span>{needsToday} needs today</span>}
@@ -98,18 +98,20 @@ export default function FiveTownsConversationHub({ posts = [], networkLabel = 'F
 
       <div className="space-y-2 p-3">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-          {actions.map((action) => {
+          {actions.map((action, index) => {
             const Icon = action.icon;
+            // 5 tiles in a 2-col mobile grid leaves an orphan cell; let the last tile span the row
+            const isOrphan = index === actions.length - 1 && actions.length % 2 === 1;
             return (
               <button
                 key={action.label}
                 type="button"
                 onClick={action.onClick}
-                className="motion-press rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:border-blue-200 hover:bg-blue-50"
+                className={`motion-press rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:border-blue-200 hover:bg-blue-50 ${isOrphan ? 'col-span-2 sm:col-span-1' : ''}`}
               >
                 <Icon className="h-4 w-4 text-blue-600" />
-                <p className="mt-1.5 text-[13px] font-black text-slate-950">{action.label}</p>
-                <p className="mt-0.5 text-[11px] font-bold text-slate-500">{action.detail}</p>
+                <p className="mt-1.5 text-[13px] font-bold text-slate-950">{action.label}</p>
+                <p className="mt-0.5 text-[11px] font-medium text-slate-500">{action.detail}</p>
               </button>
             );
           })}
@@ -123,7 +125,7 @@ export default function FiveTownsConversationHub({ posts = [], networkLabel = 'F
                 key={link.label}
                 type="button"
                 onClick={link.onClick}
-                className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-black text-slate-700"
+                className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-700"
               >
                 <Icon className="h-3.5 w-3.5 text-blue-600" />
                 {link.label}
@@ -133,7 +135,7 @@ export default function FiveTownsConversationHub({ posts = [], networkLabel = 'F
           <button
             type="button"
             onClick={() => onCreate('feed', 'carpool', '')}
-            className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-black text-slate-700"
+            className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-700"
           >
             <Car className="h-3.5 w-3.5 text-blue-600" />
             Carpool
