@@ -34,6 +34,8 @@ import LiveNowRail from '@/components/common/LiveNowRail';
 import DestinationHeader from '@/components/layout/DestinationHeader';
 import CarpoolBoard from '@/components/mitzvah/CarpoolBoard';
 import MinyanBoard from '@/components/feed/MinyanBoard';
+import ParshaCard from '@/components/feed/ParshaCard';
+import ChesedChallenge from '@/components/feed/ChesedChallenge';
 import MealTrainsSection from '@/components/mitzvah/MealTrainsSection';
 import { buildMitzvahLiveNowItems } from '@/lib/liveNow';
 
@@ -1899,7 +1901,11 @@ export default function MitzvahCircle() {
         {/* Tab content */}
         <div key={`${activeView}-${activeCategory}`} className="motion-stagger space-y-3">
           {activeView === 'shuls' && (
-            <MinyanBoard />
+            <>
+              <ParshaCard />
+              <ChesedChallenge />
+              <MinyanBoard />
+            </>
           )}
 
           {activeView === 'mealtrains' && (

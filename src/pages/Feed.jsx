@@ -7,7 +7,7 @@ import { COMMUNITIES_ENABLED } from '@/config/features';
 import { toast } from 'sonner';
 import ReportModal from '@/components/common/ReportModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
-import { ArrowRight, CalendarDays, Car, ChevronLeft, ChevronRight, Handshake, Heart, MapPin, MessageCircle, Plus, RefreshCw, Search, Sparkles, Store, Users } from 'lucide-react';
+import { ArrowRight, CalendarDays, Car, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Handshake, Heart, MapPin, MessageCircle, Plus, RefreshCw, Search, Sparkles, Store, Users, X } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
@@ -18,9 +18,7 @@ import FeedFilters, { FeedFilterTrigger } from '@/components/feed/FeedFilters';
 import FeedComposer from '@/components/feed/FeedComposer';
 import PostingPrompts from '@/components/feed/PostingPrompts';
 import MinyanBoard from '@/components/feed/MinyanBoard';
-import ParshaCard from '@/components/feed/ParshaCard';
 import JewishCountdown from '@/components/feed/JewishCountdown';
-import ChesedChallenge from '@/components/feed/ChesedChallenge';
 import { getTodayHebrew, getShabbatTimes, getZmanim, getDafYomi, getParshaDescription, getTodayEvents } from '@/lib/hebrewDate';
 import { getStoredCandleOffset } from '@/lib/shabbatLocation';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
@@ -56,6 +54,8 @@ export default function Feed({ isActive = true }) {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const composerRef = useRef(null);
   const [showEventsSheet, setShowEventsSheet] = useState(false);
+  const [showCalendarSheet, setShowCalendarSheet] = useState(false);
+  const [showMinyanSheet, setShowMinyanSheet] = useState(false);
   const [replyPost, setReplyPost] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const [reportTarget, setReportTarget] = useState({ id: null, type: null });
@@ -396,6 +396,9 @@ export default function Feed({ isActive = true }) {
         )}
         actions={(
           <>
+            <button onClick={() => setShowCalendarSheet(true)} className="app-icon-button surface-tile-hover touch-manipulation" aria-label="Jewish Calendar">
+              <CalendarDays className="h-[18px] w-[18px] text-blue-500" />
+            </button>
             <button onClick={() => navigate('/SupportJUnited')} className="app-icon-button surface-tile-hover touch-manipulation" aria-label="Donate">
               <Heart className="h-[18px] w-[18px] text-rose-400" />
             </button>
@@ -493,13 +496,10 @@ export default function Feed({ isActive = true }) {
 
           {feedCanRender && feedPosts.length === 0 && !isLoading && (
             <>
-              <ParshaCard />
-              <JewishCountdown />
-              <ChesedChallenge />
               <PostingPrompts
                 onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
+                onOpenMinyan={() => setShowMinyanSheet(true)}
               />
-              <MinyanBoard />
             </>
           )}
 
@@ -579,6 +579,40 @@ export default function Feed({ isActive = true }) {
         contentType={reportTarget.type}
         currentUser={currentUser}
       />
+
+      {/* Jewish Calendar popup */}
+      {showCalendarSheet && (
+        <div className="fixed inset-0 z-[60] flex items-end" onClick={() => setShowCalendarSheet(false)}>
+          <div className="w-full rounded-t-[28px] bg-white pb-safe shadow-[0_-4px_40px_rgba(0,0,0,0.15)] max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="sticky top-0 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
+              <p className="text-[16px] font-black text-slate-950">Jewish Calendar</p>
+              <button onClick={() => setShowCalendarSheet(false)} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-3">
+              <JewishCountdown />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Minyan Times popup */}
+      {showMinyanSheet && (
+        <div className="fixed inset-0 z-[60] flex items-end" onClick={() => setShowMinyanSheet(false)}>
+          <div className="w-full rounded-t-[28px] bg-white pb-safe shadow-[0_-4px_40px_rgba(0,0,0,0.15)] max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="sticky top-0 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
+              <p className="text-[16px] font-black text-slate-950">Minyan Times</p>
+              <button onClick={() => setShowMinyanSheet(false)} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-3">
+              <MinyanBoard compact />
+            </div>
+          </div>
+        </div>
+      )}
 
       {showEventsSheet && (
         <WidgetBoundary>
@@ -849,6 +883,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
   const [thoughtText, setThoughtText] = useState('');
   const [mitzvahText, setMitzvahText] = useState('');
   const [mitzvahShareTarget, setMitzvahShareTarget] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
   const [mitzvahProgress] = useState(() => Math.min(100, Math.max(0, (momentum?.mitzvahs || 0) * 2 + 28)));
   const [streak] = useState(() => {
     try {
@@ -1004,12 +1039,23 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
 
       <div className={`bg-gradient-to-br ${BRIEF_SLIDE_GRADIENTS[currentKey]} p-4 text-white transition-all duration-500`}>
 
-        {/* Header row */}
+        {/* Header row — always visible, toggles open/close */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.14em]" style={{ color: '#D4A843' }}>
+          <button
+            type="button"
+            onClick={() => setIsOpen(o => !o)}
+            className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.14em]"
+            style={{ color: '#D4A843' }}
+          >
             <Sparkles className="h-3 w-3" />
             Five Towns Daily Brief
-          </div>
+            {isOpen
+              ? <ChevronUp className="h-3 w-3 ml-0.5 opacity-70" />
+              : <ChevronDown className="h-3 w-3 ml-0.5 opacity-70" />}
+          </button>
+          {!isOpen && hebrewDate?.hebrewDate && (
+            <span className="text-[11px] font-semibold text-white/60">{hebrewDate.hebrewDate}</span>
+          )}
           {/* Dot indicators + desktop prev/next */}
           <div className="flex items-center gap-2">
             {/* Prev/next arrows — hidden on touch devices, visible on desktop */}
@@ -1047,6 +1093,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
           </div>
         </div>
 
+        {isOpen && (<>
         {/* Gold rule */}
         <div className="mt-3 mb-3" style={{ height: '1px', background: 'linear-gradient(90deg, #D4A843 0%, rgba(212,168,67,0.15) 100%)' }} />
 
@@ -1390,6 +1437,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
           })()}
 
         </div>
+        </>)}
       </div>
     </section>
   );

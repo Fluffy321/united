@@ -249,17 +249,25 @@ const SERVICE_TABS = [
   { id: 'maariv', label: 'Maariv' },
 ];
 
-export default function MinyanBoard() {
+// Core shuls shown in compact/popup mode — most useful for quick lookup
+const CORE_SHUL_IDS = ['hachaim-vehashalom', 'yilc', 'heichal-dovid', 'shaaray-tefila', 'bostoner', 'yiw', 'aish-kodesh', 'agudah-five-towns', 'yi-north-woodmere', 'yi-hewlett'];
+
+export default function MinyanBoard({ compact = false }) {
   const [area, setArea] = useState('All');
   const [service, setService] = useState('shacharis');
+  const [showAll, setShowAll] = useState(false);
 
   const visible = useMemo(() => {
-    return SHULS.filter(s => {
+    const base = SHULS.filter(s => {
       if (area !== 'All' && s.area !== area) return false;
       const times = s[service] || [];
       return times.length > 0;
     });
-  }, [area, service]);
+    if (compact && !showAll) {
+      return base.filter(s => CORE_SHUL_IDS.includes(s.id));
+    }
+    return base;
+  }, [area, service, compact, showAll]);
 
   return (
     <section className="mb-3 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
@@ -381,6 +389,18 @@ export default function MinyanBoard() {
           );
         })}
       </div>
+
+      {compact && (
+        <div className="border-t border-slate-100 px-4 py-2.5">
+          <button
+            type="button"
+            onClick={() => setShowAll(v => !v)}
+            className="text-[12px] font-black text-blue-600"
+          >
+            {showAll ? 'Show fewer shuls' : `Show all ${SHULS.length} shuls`}
+          </button>
+        </div>
+      )}
 
       <div className="border-t border-slate-100 px-4 py-3">
         <p className="text-[11px] font-semibold leading-5 text-slate-400">
