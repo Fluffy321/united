@@ -1529,7 +1529,6 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
             requests={requests}
             userLocation={userLocation}
             communityPoints={COMMUNITIES_ENABLED ? communityPoints : []}
-            personalized
             includeStaticPoints
             initialPrimaryFilter={categoryParam}
             highlightedPlace={placeParam}
