@@ -44,13 +44,13 @@ export default function DailyJewishHome({ compact = false }) {
 
   const tzid = location?.tzid || DEFAULT_TIME_ZONE;
   const locationLabel = isResolvedLocationLabel(location?.label) ? location.label : null;
-  const hasNamedLocation = Boolean(
+  const hasCoords = Boolean(
     location?.lat &&
     location?.lng &&
-    locationLabel &&
     location?.type !== 'default' &&
     location?.type !== 'declined'
   );
+  const hasNamedLocation = hasCoords;
 
   const { data: hebrewDate } = useQuery({
     queryKey: ['jewish-hub-hebrew-date', today.toDateString()],
@@ -83,9 +83,9 @@ export default function DailyJewishHome({ compact = false }) {
 
   const locationNote = locationLoading
     ? 'Locating'
-    : hasNamedLocation
-      ? locationLabel
-      : 'Location not resolved';
+    : hasCoords
+      ? (locationLabel || 'Your location')
+      : 'Five Towns (default)';
 
   const parshaTitle = shabbatTimes?.parsha || parshaFallback?.name;
   const parshaHebrew = shabbatTimes?.hebrew || parshaFallback?.hebrew;
