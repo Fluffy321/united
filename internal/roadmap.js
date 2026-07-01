@@ -138,7 +138,7 @@ Goals:
   {
     id: 'apple-signin',
     category: 'Auth & Identity',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.HIGH,
     title: 'Apple Sign-In',
     description: 'Sign in with Apple ID. Required for App Store compliance when a native iOS app is released.',
@@ -155,6 +155,7 @@ Goals:
 5. Bootstrap profile from user_metadata (full_name, email) if present.
 6. Test: sign in fresh, verify onboarding fires, verify profile is created in profiles table.
 7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+    shippedNote: 'Shipped 2026-07-01. Login.jsx adds Continue with Apple via Supabase OAuth using getAuthRedirectUrl(); src/api/base44Client.js bootstraps new OAuth profiles from user_metadata full_name/name/display_name and email, leaves onboarding_complete false so OnboardingFlow runs, and stores account_private email from OAuth metadata when present. Supabase Authentication > Providers must have Apple enabled with the Apple credentials for the live provider handshake.',
   },
 
   {

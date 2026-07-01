@@ -98,7 +98,7 @@ const ROUTER_FUTURE_FLAGS = {
   v7_startTransition: true,
   v7_relativeSplatPath: true,
 };
-const SPLASH_MIN_VISIBLE_MS = 720;
+const SPLASH_MIN_VISIBLE_MS = 1500;
 const SPLASH_MAX_WAIT_MS = 4500;
 const SPLASH_SEEN_KEY = 'junited_splash_seen';
 const LEGACY_FEED_ROUTES = [

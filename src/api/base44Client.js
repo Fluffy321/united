@@ -1311,15 +1311,22 @@ const getSupabaseUser = async () => {
     });
   }
 
-  // Prefer the real name and avatar from OAuth providers (e.g. Google).
-  const metaAvatarUrl = data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture;
+  // Prefer the real name, email, and avatar from OAuth providers (Google, Apple, etc.).
+  const userMetadata = data.user.user_metadata || {};
+  const metaEmail = userMetadata.email || data.user.email;
+  const metaDisplayName =
+    userMetadata.full_name ||
+    userMetadata.name ||
+    userMetadata.display_name ||
+    metaEmail?.split('@')[0] ||
+    'User';
+  const metaAvatarUrl = userMetadata.avatar_url || userMetadata.picture;
   const createdProfile = {
     id: data.user.id,
-    display_name:
-      data.user.user_metadata?.full_name ||
-      data.user.user_metadata?.name ||
-      data.user.email?.split('@')[0] ||
-      'User',
+    email: metaEmail,
+    display_name: metaDisplayName,
+    onboarding_complete: false,
+    is_profile_complete: false,
     ...(metaAvatarUrl ? { avatar_url: metaAvatarUrl } : {}),
   };
 
@@ -1333,13 +1340,13 @@ const getSupabaseUser = async () => {
 
   await supabase.from('account_private').upsert({
     id: data.user.id,
-    email: data.user.email,
+    email: metaEmail,
     updated_at: new Date().toISOString(),
   });
 
   return toAppRow({
     ...created,
-    email: data.user.email,
+    email: metaEmail,
   });
 };
 

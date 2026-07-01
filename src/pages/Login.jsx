@@ -71,6 +71,17 @@ function GoogleIcon() {
   );
 }
 
+function AppleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M16.55 13.08c-.03-2.16 1.77-3.2 1.85-3.25-1.01-1.47-2.57-1.67-3.11-1.69-1.31-.14-2.58.78-3.25.78-.68 0-1.71-.76-2.82-.74-1.43.02-2.77.85-3.5 2.15-1.51 2.62-.38 6.47 1.06 8.59.72 1.03 1.56 2.18 2.66 2.14 1.08-.04 1.48-.69 2.78-.69 1.29 0 1.66.69 2.79.67 1.16-.02 1.89-1.03 2.58-2.07.83-1.18 1.16-2.35 1.17-2.41-.03-.01-2.18-.84-2.21-3.48ZM14.43 6.75c.58-.72.97-1.69.86-2.67-.84.04-1.9.58-2.51 1.28-.54.62-1.03 1.63-.9 2.57.95.07 1.95-.48 2.55-1.18Z"
+      />
+    </svg>
+  );
+}
+
 const LOGIN_STYLES = `
   .login-screen, .login-screen input, .login-screen button {
     letter-spacing: 0;
@@ -122,6 +133,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
 
   const target = useMemo(() => {
     const fromUrl = searchParams.get('from_url');
@@ -138,21 +150,33 @@ export default function Login() {
   // Detect Supabase auth callback (email verification or OAuth PKCE return)
   const isAuthCallback = searchParams.get('type') === 'email' || Boolean(searchParams.get('code'));
 
-  const signInWithGoogle = async () => {
+  const signInWithOAuthProvider = async ({ provider, setLoading, providerLabel }) => {
     if (!supabase) return;
     setError('');
-    setIsGoogleLoading(true);
+    setLoading(true);
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider,
         options: { redirectTo: getAuthRedirectUrl() },
       });
       if (oauthError) throw oauthError;
     } catch (err) {
-      setError(err?.message || 'Could not connect to Google. Please try again.');
-      setIsGoogleLoading(false);
+      setError(err?.message || `Could not connect to ${providerLabel}. Please try again.`);
+      setLoading(false);
     }
   };
+
+  const signInWithGoogle = () => signInWithOAuthProvider({
+    provider: 'google',
+    setLoading: setIsGoogleLoading,
+    providerLabel: 'Google',
+  });
+
+  const signInWithApple = () => signInWithOAuthProvider({
+    provider: 'apple',
+    setLoading: setIsAppleLoading,
+    providerLabel: 'Apple',
+  });
 
   useEffect(() => {
     if (!isLoadingAuth && isAuthenticated) {
@@ -317,7 +341,7 @@ export default function Login() {
             <button
               type="button"
               onClick={signInWithGoogle}
-              disabled={isGoogleLoading || isSubmitting}
+              disabled={isGoogleLoading || isAppleLoading || isSubmitting}
               className="motion-press mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white text-[14px] font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"
             >
               {isGoogleLoading
@@ -325,6 +349,19 @@ export default function Login() {
                 : <GoogleIcon />
               }
               Continue with Google
+            </button>
+
+            <button
+              type="button"
+              onClick={signInWithApple}
+              disabled={isGoogleLoading || isAppleLoading || isSubmitting}
+              className="motion-press mt-3 flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-950 bg-slate-950 text-[14px] font-black text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
+            >
+              {isAppleLoading
+                ? <Loader2 className="h-4 w-4 animate-spin text-slate-300" />
+                : <AppleIcon />
+              }
+              Continue with Apple
             </button>
 
             <div className="my-5 flex items-center gap-3">

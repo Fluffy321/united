@@ -836,6 +836,17 @@
   50% { opacity: 1; transform: scale(1.04); }
 }
 
+@keyframes splashStarBounceExpand {
+  0% { opacity: 1; transform: scale(1); }
+  26% { opacity: 1; transform: scale(0.86); }
+  40% { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 0; transform: scale(18); }
+}
+
+.splash-star-loader--active {
+  animation: splashStarBounceExpand 1180ms cubic-bezier(0.7, 0, 0.13, 1) 260ms both;
+}
+
 @keyframes splashProgress {
   from { transform: translateX(-105%); }
   to { transform: translateX(235%); }
@@ -893,6 +904,7 @@
   .nav-icon-active,
   .tab-fade-in,
   .skeleton,
+  .splash-star-loader,
   .splash-progress-bar {
     animation: none !important;
     will-change: auto !important;
