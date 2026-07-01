@@ -842,6 +842,8 @@ const FIVE_TOWNS_LNG = -73.7298;
 function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, communitiesEnabled = true, prompt, onOpenMap, onOpenCommunities, onCreate }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const briefScrollerRef = useRef(null);
+  const carouselRef = useRef(null);
+  const [carouselWidth, setCarouselWidth] = useState(0);
   const safeBrief = brief || {};
 
   const [hebrewDate, setHebrewDate] = useState(null);
@@ -986,9 +988,21 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
     if (activeSlide >= slideKeys.length) setActiveSlide(0);
   }, [activeSlide, slideKeys.length]);
 
+  // Measure carousel container width for pixel-accurate slide translation
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const update = () => setCarouselWidth(el.offsetWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const visibleSlide = Math.min(activeSlide, slideKeys.length - 1);
   const currentKey = slideKeys[visibleSlide];
   const englishDate = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const slideStyle = carouselWidth ? { width: carouselWidth, minWidth: carouselWidth, maxWidth: carouselWidth } : { minWidth: '100%' };
 
   const goToSlide = (index) => {
     setActiveSlide(index);
@@ -1072,14 +1086,14 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
         </div>
 
         {/* Slides container */}
-        <div className="mt-4 overflow-hidden">
+        <div className="mt-4 overflow-hidden" ref={carouselRef}>
         <div
           className="flex transition-transform duration-300 ease-in-out"
-          style={{ transform: `translateX(-${visibleSlide * 100}%)` }}
+          style={{ transform: `translateX(-${visibleSlide * carouselWidth}px)` }}
         >
 
           {/* SLIDE 1 — Today */}
-          <div className="min-w-full shrink-0">
+          <div className="shrink-0" style={slideStyle}>
             <div className="mb-3">
               <p className="text-[22px] font-black leading-tight tracking-tight">{englishDate}</p>
               <p className="mt-0.5 text-sm font-semibold" style={{ fontFamily: "'Heebo', 'Arial Hebrew', sans-serif", direction: 'rtl', color: '#D4A843' }}>
@@ -1126,7 +1140,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
           </div>
 
           {/* SLIDE 2 — Daily Mitzvah */}
-          <div className="min-w-full shrink-0">
+          <div className="shrink-0" style={slideStyle}>
             <div className="flex items-start justify-between mb-1">
               <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#4CAF7D' }}>Daily Mitzvah</p>
               {streak > 1 && (
@@ -1255,7 +1269,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
           </div>
 
           {/* SLIDE 3 — Today's Events */}
-          <div className="min-w-full shrink-0">
+          <div className="shrink-0" style={slideStyle}>
             <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: '#a78bfa' }}>Today&rsquo;s Events</p>
             <div className="space-y-2 mb-4">
               {eventItems.map((item) => (
@@ -1282,7 +1296,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
           </div>
 
           {/* SLIDE 4 — Mitzvahs Near You */}
-          <div className="min-w-full shrink-0">
+          <div className="shrink-0" style={slideStyle}>
             <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: '#4CAF7D' }}>Mitzvahs Near You</p>
             <div className="space-y-2 mb-4">
               {mitzvahItems.map((item) => (
@@ -1322,7 +1336,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
           </div>
 
           {/* SLIDE 5 — Community Pulse */}
-          <div className="min-w-full shrink-0">
+          <div className="shrink-0" style={slideStyle}>
             <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: '#D4A843' }}>Community Pulse</p>
             <p className="text-[19px] font-black leading-snug mb-4">What&rsquo;s happening in the Five Towns right now</p>
             <div className="space-y-2">
@@ -1348,7 +1362,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
                 { emoji: '🕯️', label: `Candles: ${candleLighting?.timeStr || '—'} · Five Towns` },
               ];
               return (
-                <div className="min-w-full snap-start pt-1 pb-1">
+                <div className="shrink-0 pt-1 pb-1" style={slideStyle}>
                   <p className="text-[10px] font-black uppercase tracking-widest mb-2 text-center" style={{ color: '#fb923c' }}>
                     Shabbos Prep
                   </p>
@@ -1375,7 +1389,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
             }
 
             return (
-              <div className="min-w-full snap-start text-center pt-2 pb-1">
+              <div className="shrink-0 text-center pt-2 pb-1" style={slideStyle}>
                 <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: lastChance ? '#ef4444' : '#fb923c' }}>
                   {lastChance ? '⚠️ Last Chance' : 'Shabbos Countdown'}
                 </p>
