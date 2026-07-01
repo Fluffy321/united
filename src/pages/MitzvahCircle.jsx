@@ -1266,7 +1266,7 @@ export default function MitzvahCircle() {
   const { user: currentUser, isLoadingAuth } = useAuth();
   const queryClient = useQueryClient();
 
-  const VALID_VIEWS = ['browse', 'mealtrains', 'shuls', 'mine', 'completed'];
+  const VALID_VIEWS = ['browse', 'rides', 'mealtrains', 'shuls', 'mine', 'completed'];
   const [activeView, setActiveView] = React.useState(() => {
     const tab = searchParams.get('tab');
     if (tab === 'open' || tab === 'carpool') return 'browse';
@@ -1465,12 +1465,14 @@ export default function MitzvahCircle() {
 	        urgency: 'medium',
 	        status: 'open',
 	        request_kind: 'carpool',
+	        ride_direction: mode === 'offer' ? 'offering' : 'needed',
+	        pickup_window: formData.pickup,
 	        expires_at: new Date(Date.now() + REQUEST_EXPIRY_MS).toISOString(),
 	        created_by_user_id: currentUser.id,
 	        created_by_name: currentUser.display_name || currentUser.full_name,
 	      });
       setCarpoolCreateMode(null);
-      changeBrowseCategory('rides');
+      changeView('rides');
       toast.success(mode === 'offer' ? 'Carpool offer posted.' : 'Ride request posted.');
     } catch (err) {
       toast.error(err.message || 'Could not post carpool.');
@@ -1663,6 +1665,7 @@ export default function MitzvahCircle() {
 
   const workflowTabs = [
     { id: 'browse', label: 'Browse Needs' },
+    { id: 'rides', label: 'Rides' },
     { id: 'mealtrains', label: 'Meal Trains' },
     { id: 'shuls', label: 'Shuls & Minyan' },
     { id: 'mine', label: 'Mine' },
@@ -1748,10 +1751,7 @@ export default function MitzvahCircle() {
 	                      label: 'Carpool safely',
 	                      detail: 'Rides in one place',
                       icon: Car,
-                      onClick: () => {
-                        changeView('browse');
-                        changeBrowseCategory('rides');
-                      },
+                      onClick: () => changeView('rides'),
 	                    },
 	                    {
 	                      label: 'Jewish business',
@@ -1814,7 +1814,7 @@ export default function MitzvahCircle() {
           />
         )}
 
-        {activeView === 'browse' && (
+        {(activeView === 'browse' && activeCategory === 'rides') || activeView === 'rides' ? (
           <div className="mb-3">
             <CarpoolBoard
               rideRequests={carpoolRequests}
@@ -1825,10 +1825,10 @@ export default function MitzvahCircle() {
               isClaiming={isOffering}
             />
           </div>
-        )}
+        ) : null}
 
         {/* Search/filter bar */}
-        {activeView !== 'shuls' && activeView !== 'mealtrains' && (
+        {activeView !== 'shuls' && activeView !== 'mealtrains' && activeView !== 'rides' && (
           <div className="surface-panel-soft mb-3 space-y-3 rounded-[24px] p-3">
             {activeView === 'browse' && (
               <div>

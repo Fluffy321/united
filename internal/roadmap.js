@@ -1271,7 +1271,8 @@ Goals:
   {
     id: 'ride-requests',
     category: 'Chesed & Mitzvah',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'CarpoolBoard.jsx is fully built. Rides tab added to MitzvahCircle workflowTabs. Create flow posts to mitzvah_requests with request_kind=carpool + ride_direction + pickup_window. CarpoolBoard renders offering/needed split, coordinate button, checklist, and planner.',
     priority: PRIORITY.MEDIUM,
     title: 'Ride Requests & Carpool Board',
     description: 'Community carpool coordination — request a ride, offer a ride, match within the community.',
@@ -1288,6 +1289,29 @@ Goals:
 5. Add create-ride-offer and request-ride flows within the carpool board.
 6. Show ride requests on MitzvahMap.
 7. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'carpool-map-pins',
+    category: 'Chesed & Mitzvah',
+    status: STATUS.DEFERRED,
+    priority: PRIORITY.LOW,
+    title: 'Carpool Requests on MitzvahMap',
+    description: 'Plot open carpool ride requests as pins on MitzvahMap — same approach as meal-train-map-pins.',
+    why: 'Not shipped with Carpool Board because ride request pickup location is stored as a text label (e.g., "Cedarhurst to Woodmere"), not lat/lng. Would need reverse-geocoding on submit or a dedicated ride_requests table with coordinates.',
+    prompt: `You are adding carpool ride pins to MitzvahMap for JUnited.
+
+Context:
+- Carpool requests live in mitzvah_requests table (request_kind='carpool', map_visible=true when postToMap checked)
+- src/components/mitzvah/MitzvahMap.jsx renders pins from a flat "requests" prop (each needs location_lat, location_lng — see getRequestPinType() and PIN_TYPES)
+- src/pages/MitzvahCircle.jsx fetches requests and currently passes them to MitzvahMap; carpoolRequests are filtered from this same list
+- meal-train-map-pins (id above) has a similar deferred constraint; look at its entry for the same approach
+
+Goals:
+1. For carpool requests where postToMap=true AND location_lat/lng are set, ensure they appear in the requests prop passed to MitzvahMap
+2. Add a 'carpool' entry to PIN_TYPES in MitzvahMap.jsx (sky-blue, 'Ride' label)
+3. Confirm that the create flow in handleCreateCarpoolRide passes coords correctly
+4. Update internal/roadmap.js: change carpool-map-pins status to 'shipped'`,
   },
 
   {
