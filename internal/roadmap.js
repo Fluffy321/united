@@ -1339,7 +1339,8 @@ Goals:
   {
     id: 'yahrzeit-refuah',
     category: 'Jewish Life',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'yahrzeits + refuah_requests DB tables with RLS. Yahrzeit, RefuahRequest entities in base44Client. YahrzeitManager.jsx and RefuahList.jsx built as JewishHub sub-pages. Both wired into JewishContentHub at /JewishHub/yahrzeits and /JewishHub/refuah with hub card entries. /JewishHub/* route restored in App.jsx.',
     priority: PRIORITY.MEDIUM,
     title: 'Yahrzeit Manager & Tehillim Lists',
     description: 'Track yahrzeits with Hebrew calendar reminders, and maintain community refuah/tehillim lists.',

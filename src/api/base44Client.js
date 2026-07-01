@@ -84,6 +84,9 @@ const SUPABASE_ENTITY_TABLES = {
   CommunityLastVisit: 'community_last_visits',
   // Meal trains — migration 20260622223000_meal_trains.sql
   MealTrainRequest: 'meal_train_requests',
+  // Yahrzeits & refuah — migration 20260701130000_yahrzeits_refuah.sql
+  Yahrzeit: 'yahrzeits',
+  RefuahRequest: 'refuah_requests',
   MealSlot: 'meal_slots',
   // All other entities (Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped

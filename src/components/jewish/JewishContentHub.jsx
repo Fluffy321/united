@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookMarked, BookOpenText, CalendarDays, ChevronRight, Headphones, LibraryBig, ScrollText, Settings2, Sparkles } from 'lucide-react';
+import { BookMarked, BookOpenText, CalendarDays, ChevronRight, Headphones, Heart, LibraryBig, ScrollText, Settings2, Sparkles, Star } from 'lucide-react';
 import DailyJewishHome from './DailyJewishHome';
 import DailyLearningPage from './DailyLearningPage';
 import DivreiTorahPage from './DivreiTorahPage';
@@ -11,6 +11,8 @@ import SiddurPage from './SiddurPage';
 import TanakhReader from './TanakhReader';
 import TehillimReader from './TehillimReader';
 import ShiurimPage from './ShiurimPage';
+import YahrzeitManager from './YahrzeitManager';
+import RefuahList from './RefuahList';
 import useJewishHubPreferences from '@/hooks/useJewishHubPreferences';
 import JewishHubBackButton from './JewishHubBackButton';
 
@@ -87,6 +89,24 @@ const HUB_ENTRIES = [
     Icon: LibraryBig,
     tone: 'violet',
   },
+  {
+    id: 'yahrzeits',
+    title: 'Yahrzeits',
+    eyebrow: 'Memory',
+    description: 'Track loved ones\' yahrzeits with Hebrew dates and annual reminders.',
+    path: '/JewishHub/yahrzeits',
+    Icon: Star,
+    tone: 'amber',
+  },
+  {
+    id: 'refuah',
+    title: 'Refuah List',
+    eyebrow: 'Community',
+    description: 'Daven for community members who need a refuah sheleimah.',
+    path: '/JewishHub/refuah',
+    Icon: Heart,
+    tone: 'rose',
+  },
 ];
 
 const TONE_CLASSES = {
@@ -145,6 +165,14 @@ export default function JewishContentHub() {
 
   if (normalizedPath === '/JewishHub/calendar') {
     return <JewishCalendarPage />;
+  }
+
+  if (normalizedPath === '/JewishHub/yahrzeits') {
+    return <YahrzeitManager />;
+  }
+
+  if (normalizedPath === '/JewishHub/refuah') {
+    return <RefuahList />;
   }
 
   const visibleEntries = preferences.sectionOrder

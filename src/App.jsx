@@ -214,7 +214,7 @@ const AuthenticatedApp = () => {
             <Route path="/join" element={<CommunityRouteGuard><PageTransition><AppErrorBoundary inline><JoinByCommunityCode /></AppErrorBoundary></PageTransition></CommunityRouteGuard>} />
             <Route path="/search" element={<PageTransition><AppErrorBoundary inline><SearchPage /></AppErrorBoundary></PageTransition>} />
             <Route path="/Search" element={<Navigate to="/search" replace />} />
-            <Route path="/JewishHub/*" element={<Navigate to="/Feed" replace />} />
+            <Route path="/JewishHub/*" element={<PageTransition><LayoutWrapper currentPageName="JewishHub"><AppErrorBoundary inline><JewishHub /></AppErrorBoundary></LayoutWrapper></PageTransition>} />
             <Route path="/Notifications" element={<PageTransition><LayoutWrapper currentPageName="Notifications"><AppErrorBoundary inline><Notifications /></AppErrorBoundary></LayoutWrapper></PageTransition>} />
             <Route path="/SupportJUnited" element={<PageTransition><LayoutWrapper currentPageName="SupportJUnited"><AppErrorBoundary inline><SupportJUnited /></AppErrorBoundary></LayoutWrapper></PageTransition>} />
 
