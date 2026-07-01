@@ -18,6 +18,9 @@ import FeedFilters, { FeedFilterTrigger } from '@/components/feed/FeedFilters';
 import FeedComposer from '@/components/feed/FeedComposer';
 import PostingPrompts from '@/components/feed/PostingPrompts';
 import MinyanBoard from '@/components/feed/MinyanBoard';
+import ParshaCard from '@/components/feed/ParshaCard';
+import JewishCountdown from '@/components/feed/JewishCountdown';
+import ChesedChallenge from '@/components/feed/ChesedChallenge';
 import { getTodayHebrew, getShabbatTimes, getZmanim, getDafYomi, getParshaDescription, getTodayEvents } from '@/lib/hebrewDate';
 import { getStoredCandleOffset } from '@/lib/shabbatLocation';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
@@ -490,6 +493,9 @@ export default function Feed({ isActive = true }) {
 
           {feedCanRender && feedPosts.length === 0 && !isLoading && (
             <>
+              <ParshaCard />
+              <JewishCountdown />
+              <ChesedChallenge />
               <PostingPrompts
                 onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
               />
