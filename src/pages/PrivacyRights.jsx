@@ -4,6 +4,7 @@ import { ChevronLeft, Download, Trash2, Loader2, CheckCircle, ShieldCheck } from
 import { dataService, storageService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
+import { filterComment, filterMitzvahLog, filterUnifiedPost, filterUserCommunity } from '@/services/entityServices';
 
 export default function PrivacyRights() {
   const { user, isLoadingAuth: loadingUser } = useAuth();
@@ -20,10 +21,10 @@ export default function PrivacyRights() {
     try {
       // Collect all user data
       const [posts, comments, communities, mitzvahLogs] = await Promise.all([
-        dataService.entities.UnifiedPost.filter({ user_id: user.id }, '-created_date', 200),
-        dataService.entities.Comment.filter({ author_id: user.id }, '-created_date', 200),
-        dataService.entities.UserCommunity.filter({ user_id: user.id }),
-        dataService.entities.MitzvahLog ? dataService.entities.MitzvahLog.filter({ user_id: user.id }, '-created_date', 200) : Promise.resolve([]),
+        filterUnifiedPost({ user_id: user.id }, '-created_date', 200),
+        filterComment({ author_id: user.id }, '-created_date', 200),
+        filterUserCommunity({ user_id: user.id }),
+        filterMitzvahLog({ user_id: user.id }, '-created_date', 200),
       ]);
 
       const exportData = {

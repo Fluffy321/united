@@ -3,6 +3,7 @@ import { dataService, incrementCounter } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Users, MapPin, CheckCircle2, ArrowRight } from 'lucide-react';
 import { createPageUrl } from '@/utils';
+import { createUserCommunity, filterCommunity, filterUserCommunity } from '@/services/entityServices';
 
 export default function InviteJoin() {
   const params = new URLSearchParams(window.location.search);
@@ -20,14 +21,14 @@ export default function InviteJoin() {
 
     const loadResource = async () => {
       try {
-        const res = await dataService.entities.Community.filter({ id }).then(r => r[0]);
+        const res = await filterCommunity({ id }).then(r => r[0]);
 
         if (!res) { setStatus('error'); return; }
         setResource(res);
 
         if (currentUser) {
           // Check if already member
-          const existing = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: id });
+          const existing = await filterUserCommunity({ user_id: currentUser.id, community_id: id });
           if (existing.length > 0) { setAlreadyMember(true); }
         }
         setStatus('preview');
@@ -46,9 +47,9 @@ export default function InviteJoin() {
       return;
     }
     setStatus('joining');
-    const existing = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id, community_id: id });
+    const existing = await filterUserCommunity({ user_id: currentUser.id, community_id: id });
     if (existing.length === 0) {
-      await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: id, role: 'Member' });
+      await createUserCommunity({ user_id: currentUser.id, community_id: id, role: 'Member' });
       await incrementCounter('communities', 'follower_count', id, 1);
     }
     setStatus('joined');

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Clock, MapPin, Users, X, CheckCircle2, Loader2 } from 'lucide-react';
-import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { format, parseISO, isPast } from 'date-fns';
+import { createCommunityEvent, createRSVP, deleteRSVP, filterCommunityEvent, filterRSVP, updateRSVP } from '@/services/entityServices';
 
 function EventDetailModal({ event, currentUser, onClose, onRSVPChange }) {
   const [rsvps, setRsvps] = useState([]);
@@ -11,7 +11,7 @@ function EventDetailModal({ event, currentUser, onClose, onRSVPChange }) {
   const [marking, setMarking] = useState(null);
 
   useEffect(() => {
-    dataService.entities.RSVP.filter({ post_id: event.id }).then(r => {
+    filterRSVP({ post_id: event.id }).then(r => {
       setRsvps(r);
       setMyRsvp(r.find(x => x.user_id === currentUser?.id) || null);
       setLoading(false);
@@ -20,13 +20,13 @@ function EventDetailModal({ event, currentUser, onClose, onRSVPChange }) {
 
   const handleRSVP = async () => {
     if (myRsvp) {
-      await dataService.entities.RSVP.delete(myRsvp.id);
+      await deleteRSVP(myRsvp.id);
       setMyRsvp(null);
       setRsvps(r => r.filter(x => x.id !== myRsvp.id));
       onRSVPChange(event.id, -1);
       toast.success('RSVP removed');
     } else {
-      const created = await dataService.entities.RSVP.create({
+      const created = await createRSVP({
         post_id: event.id,
         user_id: currentUser.id,
         user_name: currentUser.full_name,
@@ -42,7 +42,7 @@ function EventDetailModal({ event, currentUser, onClose, onRSVPChange }) {
 
   const toggleAttended = async (rsvp) => {
     setMarking(rsvp.id);
-    const updated = await dataService.entities.RSVP.update(rsvp.id, { attended: !rsvp.attended });
+    const updated = await updateRSVP(rsvp.id, { attended: !rsvp.attended });
     setRsvps(r => r.map(x => x.id === rsvp.id ? updated : x));
     setMarking(null);
   };
@@ -150,7 +150,7 @@ function CreateEventModal({ groupId, currentUser, onClose, onCreated }) {
     e.preventDefault();
     if (!form.title.trim() || !form.date) return;
     setSaving(true);
-    const event = await dataService.entities.CommunityEvent.create({
+    const event = await createCommunityEvent({
       community_id: groupId,
       title: form.title.trim(),
       description: form.description.trim() || undefined,
@@ -245,7 +245,7 @@ export default function GroupEventsTab({ group, currentUser, isMember }) {
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
-    dataService.entities.CommunityEvent.filter({ community_id: group.id }, 'start_date', 50).then(e => {
+    filterCommunityEvent({ community_id: group.id }, 'start_date', 50).then(e => {
       setEvents(e);
       setLoading(false);
     });

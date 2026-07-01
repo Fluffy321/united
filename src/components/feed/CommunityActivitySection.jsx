@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, Heart, MessageCircle, HandHeart, Calendar } from 'lucide-react';
-import { dataService } from '@/services';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { filterGroupMember, listCommunityGroup, listGroupPost } from '@/services/entityServices';
 
 const CATEGORY_EMOJI = {
   'Torah Learning': '📚', Shabbat: '🕯️', Chesed: '🤝', Events: '🎉',
@@ -118,7 +118,7 @@ export default function CommunityActivitySection({ currentUser, onNavigateToComm
 
   const load = async () => {
     setLoading(true);
-    const memberships = await dataService.entities.GroupMember.filter({ user_id: currentUser.id });
+    const memberships = await filterGroupMember({ user_id: currentUser.id });
 
     if (memberships.length === 0) {
       setHasMemberships(false);
@@ -129,8 +129,8 @@ export default function CommunityActivitySection({ currentUser, onNavigateToComm
     const groupIds = memberships.map(m => m.group_id);
 
     const [allGroups, recentPosts] = await Promise.all([
-      dataService.entities.CommunityGroup.list('-created_date', 200),
-      dataService.entities.GroupPost.list('-created_date', 80),
+      listCommunityGroup('-created_date', 200),
+      listGroupPost('-created_date', 80),
     ]);
 
     const gMap = {};

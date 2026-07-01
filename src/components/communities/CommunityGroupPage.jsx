@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Users, MapPin, Send, Loader2, Check, X, Clock, Megaphone, UserPlus, UserCheck } from 'lucide-react';
-import { dataService, incrementCounter } from '@/services';
+import { incrementCounter } from '@/services';
 import InviteLinkButton from './InviteLinkButton';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import FileAttachmentButton from '@/components/common/FileAttachmentButton';
 import { AttachmentPreview, PendingAttachmentChip } from '@/components/common/FileAttachmentPreview';
 import GroupEventsTab from '@/components/groups/GroupEventsTab';
+import { createGroupMember, createGroupPost, filterGroupJoinRequest, filterGroupMember, filterGroupPost, updateGroupJoinRequest } from '@/services/entityServices';
 
 const CATEGORY_EMOJIS = {
   'Torah Learning': '📚', Shabbat: '🕯️', Chesed: '🤝', Events: '🎉',
@@ -41,10 +42,10 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
     if (!group) return;
     setLoading(true);
     Promise.all([
-      dataService.entities.GroupPost.filter({ group_id: group.id, post_type: 'post' }, '-created_date', 30),
-      dataService.entities.GroupPost.filter({ group_id: group.id, post_type: 'announcement' }, '-created_date', 30),
-      dataService.entities.GroupMember.filter({ group_id: group.id }, '-created_date', 100),
-      dataService.entities.GroupJoinRequest.filter({ group_id: group.id, status: 'pending' }, '-created_date', 50),
+      filterGroupPost({ group_id: group.id, post_type: 'post' }, '-created_date', 30),
+      filterGroupPost({ group_id: group.id, post_type: 'announcement' }, '-created_date', 30),
+      filterGroupMember({ group_id: group.id }, '-created_date', 100),
+      filterGroupJoinRequest({ group_id: group.id, status: 'pending' }, '-created_date', 50),
     ]).then(([p, a, m, r]) => {
       setPosts(p);
       setAnnouncements(a);
@@ -57,7 +58,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
   const handlePost = async () => {
     if (!newPost.trim() && !postAttachment) return;
     setPosting(true);
-    const post = await dataService.entities.GroupPost.create({
+    const post = await createGroupPost({
       group_id: group.id,
       user_id: currentUser.id,
       user_name: currentUser.full_name,
@@ -76,7 +77,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
   const handleAnnouncement = async () => {
     if (!newAnnouncement.trim()) return;
     setPostingAnnouncement(true);
-    const ann = await dataService.entities.GroupPost.create({
+    const ann = await createGroupPost({
       group_id: group.id,
       user_id: currentUser.id,
       user_name: currentUser.full_name,
@@ -92,8 +93,8 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
   const handleApprove = async (req) => {
     setProcessingRequest(req.id);
     try {
-      await dataService.entities.GroupMember.create({ group_id: group.id, user_id: req.user_id, user_name: req.user_name, role: 'member' });
-      await dataService.entities.GroupJoinRequest.update(req.id, { status: 'approved' });
+      await createGroupMember({ group_id: group.id, user_id: req.user_id, user_name: req.user_name, role: 'member' });
+      await updateGroupJoinRequest(req.id, { status: 'approved' });
       await incrementCounter('community_groups', 'member_count', group.id, 1);
       setJoinRequests(prev => prev.filter(r => r.id !== req.id));
       setMembers(prev => [...prev, { id: req.id, user_id: req.user_id, user_name: req.user_name, role: 'member' }]);
@@ -109,7 +110,7 @@ export default function CommunityGroupPage({ group, currentUser, isMember, isPen
   const handleDeny = async (req) => {
     setProcessingRequest(req.id);
     try {
-      await dataService.entities.GroupJoinRequest.update(req.id, { status: 'denied' });
+      await updateGroupJoinRequest(req.id, { status: 'denied' });
       setJoinRequests(prev => prev.filter(r => r.id !== req.id));
       toast.success('Request denied');
     } catch {

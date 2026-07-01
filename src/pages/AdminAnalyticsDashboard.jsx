@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { dataService } from '@/services';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +7,7 @@ import { Heart, Loader2, TrendingUp, Users, MessageSquare, Calendar, Activity, A
 import { toast } from 'sonner';
 import { captureError } from '@/lib/analytics';
 import { subDays, format, startOfDay } from 'date-fns';
+import { listBusinessListing, listComment, listCommunity, listCommunityEvent, listMitzvahRequest, listNotification, listReport, listRetentionEvent, listUnifiedPost, listUser, listUserCommunity } from '@/services/entityServices';
 
 const COLORS = ['#2563EB', '#7C3AED', '#EC4899', '#F59E0B', '#10B981', '#06B6D4', '#EF4444', '#84CC16'];
 
@@ -243,17 +243,17 @@ export default function AdminAnalyticsDashboard() {
   const loadData = async () => {
     try {
       const [communities, posts, users, reports, events, userCommunities, commentsResult, mitzvahRequestsResult, notificationsResult, businessesResult, retentionResult, subsResult, communityPlansResult] = await Promise.all([
-        dataService.entities.Community.list('-follower_count', 200),
-        dataService.entities.UnifiedPost.list('-created_date', 500),
-        dataService.entities.User.list('-created_date', 500),
-        dataService.entities.Report.list('-created_date', 200),
-        dataService.entities.CommunityEvent.list('-created_date', 200),
-        dataService.entities.UserCommunity.list('-created_date', 500),
-        dataService.entities.Comment.list('-created_date', 500).catch(() => []),
-        dataService.entities.MitzvahRequest.list('-created_date', 300).catch(() => []),
-        dataService.entities.Notification.list('-created_date', 500).catch(() => []),
-        dataService.entities.BusinessListing.list('-updated_date', 300).catch(() => []),
-        dataService.entities.RetentionEvent.list('-created_date', 500).catch(() => []),
+        listCommunity('-follower_count', 200),
+        listUnifiedPost('-created_date', 500),
+        listUser('-created_date', 500),
+        listReport('-created_date', 200),
+        listCommunityEvent('-created_date', 200),
+        listUserCommunity('-created_date', 500),
+        listComment('-created_date', 500).catch(() => []),
+        listMitzvahRequest('-created_date', 300).catch(() => []),
+        listNotification('-created_date', 500).catch(() => []),
+        listBusinessListing('-updated_date', 300).catch(() => []),
+        listRetentionEvent('-created_date', 500).catch(() => []),
         supabase
           .from('subscriptions')
           .select('id, tier, interval, status, created_at')

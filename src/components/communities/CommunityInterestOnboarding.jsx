@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Loader2, Check, Sparkles } from 'lucide-react';
-import { dataService, incrementCounter } from '@/services';
+import { incrementCounter } from '@/services';
 import { toast } from 'sonner';
+import { createUserCommunity } from '@/services/entityServices';
 
 const INTERESTS = [
   { key: 'School',  emoji: '🏫', label: 'School',  types: ['School', 'Yeshiva', 'Seminary'], categories: ['School'] },
@@ -57,7 +58,7 @@ export default function CommunityInterestOnboarding({ currentUser, allCommunitie
     }
 
     const results = await Promise.allSettled(finalJoin.map(async (community) => {
-      await dataService.entities.UserCommunity.create({
+      await createUserCommunity({
         user_id: currentUser.id,
         community_id: community.id,
         role: 'Member',

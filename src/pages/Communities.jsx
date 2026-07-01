@@ -15,6 +15,7 @@ import DiscoverFilters, { applyExtraFilters } from '@/components/communities/Dis
 import { toast } from 'sonner';
 import LiveNowPanel from '@/components/common/LiveNowPanel';
 import { buildCommunityActionItems, getCommunityActionCopy } from '@/lib/liveNow';
+import { createGroupMember, createUserCommunity, deleteGroupMember, filterGroupMember, filterUserCommunity, listCommunity, listCommunityGroup, updateCommunity, updateCommunityGroup } from '@/services/entityServices';
 
 const CACHE_KEY = 'communities_v3_cache';
 const FEATURED_SHULS = ["Young Israel Woodmere", "Chabad of Woodmere", "Beth Shalom", "Shaaray Tefila"];
@@ -954,10 +955,10 @@ export default function Communities() {
     setLoadingPhase('loading');
     try {
       const results = await Promise.allSettled([
-        user ? base44.entities.UserCommunity.filter({ user_id: user.id }) : Promise.resolve([]),
-        user ? base44.entities.GroupMember.filter({ user_id: user.id }) : Promise.resolve([]),
-        base44.entities.Community.list('-follower_count', 80),
-        base44.entities.CommunityGroup.list('-member_count', 50),
+        user ? filterUserCommunity({ user_id: user.id }) : Promise.resolve([]),
+        user ? filterGroupMember({ user_id: user.id }) : Promise.resolve([]),
+        listCommunity('-follower_count', 80),
+        listCommunityGroup('-member_count', 50),
       ]);
 
       const [memberships, groupMembers, comms, groups] = results;
@@ -1053,8 +1054,8 @@ export default function Communities() {
     if (!currentUser) { toast.error('Sign in to join communities'); return; }
     setJoiningId(community.id);
     try {
-      await base44.entities.UserCommunity.create({ user_id: currentUser.id, community_id: community.id, role: 'Member' });
-      await base44.entities.Community.update(community.id, {
+      await createUserCommunity({ user_id: currentUser.id, community_id: community.id, role: 'Member' });
+      await updateCommunity(community.id, {
         follower_count: (community.follower_count || 0) + 1,
         joins_this_week: (community.joins_this_week || 0) + 1
       });
@@ -1067,8 +1068,8 @@ export default function Communities() {
   const joinGroup = async (group) => {
     if (!currentUser) { toast.error('Sign in to join groups'); return; }
     try {
-      await base44.entities.GroupMember.create({ group_id: group.id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
-      await base44.entities.CommunityGroup.update(group.id, { member_count: (group.member_count || 0) + 1 });
+      await createGroupMember({ group_id: group.id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
+      await updateCommunityGroup(group.id, { member_count: (group.member_count || 0) + 1 });
       setMemberGroupIds(prev => new Set([...prev, group.id]));
       toast.success(`Joined ${group.name}!`);
     } catch { toast.error('Something went wrong'); }
@@ -1082,7 +1083,7 @@ export default function Communities() {
     const communities = allCommunitiesRef.current;
     const community = communities.find(c => c.id === id);
     if (community) {
-      base44.entities.Community.update(id, { views_count: (community.views_count || 0) + 1 }).catch(() => {});
+      updateCommunity(id, { views_count: (community.views_count || 0) + 1 }).catch(() => {});
     }
     navigate(`/communities/${id}`);
   }, [navigate]); // navigate is stable; communities come from ref
@@ -1100,7 +1101,7 @@ export default function Communities() {
       toast.success(`Reseeded featured communities: ${result?.data?.main_featured || 'done'}`);
       setFeaturedError(false);
       // Silently refresh communities without resetting loading state
-      const comms = await base44.entities.Community.list('-follower_count', 80);
+      const comms = await listCommunity('-follower_count', 80);
       if (comms?.length > 0) {
         allCommunitiesRef.current = comms;
         setAllCommunities(comms);
@@ -1129,8 +1130,8 @@ export default function Communities() {
         isPendingRequest={false}
         onJoin={joinGroup}
         onLeave={async (g) => {
-          const members = await base44.entities.GroupMember.filter({ group_id: g.id, user_id: currentUser.id });
-          if (members[0]) await base44.entities.GroupMember.delete(members[0].id);
+          const members = await filterGroupMember({ group_id: g.id, user_id: currentUser.id });
+          if (members[0]) await deleteGroupMember(members[0].id);
           setMemberGroupIds(prev => { const s = new Set(prev); s.delete(g.id); return s; });
         }}
         onBack={() => setSelectedGroup(null)}

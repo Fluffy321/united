@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Loader2, Heart, MessageCircle } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { dataService, notificationsService, togglePostLike, loadUserPostLikes } from '@/services';
+import { notificationsService, togglePostLike, loadUserPostLikes } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { createPageUrl } from '@/utils';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
@@ -9,6 +9,7 @@ import CommentsSheet from '@/components/feed/CommentsSheet';
 import ReportModal from '@/components/common/ReportModal';
 import { toast } from 'sonner';
 import { captureError } from '@/lib/analytics';
+import { createBlock, deleteUnifiedPost, filterUnifiedPost } from '@/services/entityServices';
 
 
 
@@ -30,7 +31,7 @@ export default function PostDetail() {
 
   const loadPost = async () => {
     try {
-      const posts = await dataService.entities.UnifiedPost.filter({ id: postId });
+      const posts = await filterUnifiedPost({ id: postId });
       if (posts[0]) {
         setPost(posts[0]);
       } else {
@@ -79,13 +80,13 @@ export default function PostDetail() {
   };
 
   const handleDelete = async () => {
-    await dataService.entities.UnifiedPost.delete(post.id);
+    await deleteUnifiedPost(post.id);
     toast.success('Post deleted');
     navigate(createPageUrl('Feed'));
   };
 
   const handleBlock = async (userId) => {
-    await dataService.entities.Block.create({ blocker_id: currentUser.id, blocked_id: userId });
+    await createBlock({ blocker_id: currentUser.id, blocked_id: userId });
     toast.success('User blocked');
     navigate(createPageUrl('Feed'));
   };

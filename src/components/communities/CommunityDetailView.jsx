@@ -43,6 +43,7 @@ import {
 } from './CommunityOperatingSystem';
 import CommunityPersonalizationHub from './CommunityPersonalizationHub';
 import CommunityPostLaunchPanel from './CommunityPostLaunchPanel';
+import { createUserCommunity, deleteUserCommunity, filterCommunity, filterCommunityEvent, filterCommunityResource, filterMitzvahRequest, filterUnifiedPost, filterUserCommunity, getCommunity } from '@/services/entityServices';
 
 const CLAIM_COPY = {
   School: { question: 'Is this your school?', cta: 'Claim this school' },
@@ -676,10 +677,10 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
     queryFn: async () => {
       if (fallbackCommunity) return fallbackCommunity;
       try {
-        const result = await dataService.entities.Community.get(communityId);
+        const result = await getCommunity(communityId);
         if (result) return result;
       } catch {}
-      const results = await dataService.entities.Community.filter({ id: communityId });
+      const results = await filterCommunity({ id: communityId });
       return results[0] || null;
     },
     enabled: !!communityId,
@@ -689,19 +690,19 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
   const { data: membershipRecord = [] } = useQuery({
     queryKey: ['community-membership', communityId, currentUser?.id],
-    queryFn: () => dataService.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id }),
+    queryFn: () => filterUserCommunity({ community_id: communityId, user_id: currentUser.id }),
     enabled: !!currentUser && !!communityId,
   });
 
   const { data: posts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['community-posts', communityId],
-    queryFn: () => dataService.entities.UnifiedPost.filter({ community_id: communityId }, '-created_date', 50),
+    queryFn: () => filterUnifiedPost({ community_id: communityId }, '-created_date', 50),
     enabled: !!communityId,
   });
 
   const { data: members = [] } = useQuery({
     queryKey: ['community-members', communityId],
-    queryFn: () => dataService.entities.UserCommunity.filter({ community_id: communityId }, '-created_date', 100),
+    queryFn: () => filterUserCommunity({ community_id: communityId }, '-created_date', 100),
     enabled: !!communityId,
   });
 
@@ -726,7 +727,7 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
   const { data: openNeeds = [] } = useQuery({
     queryKey: ['community-open-needs', communityId],
-    queryFn: () => dataService.entities.MitzvahRequest.filter({ community_id: communityId }, '-created_date', 50),
+    queryFn: () => filterMitzvahRequest({ community_id: communityId }, '-created_date', 50),
     enabled: !!communityId && typeConfig.key === 'chesed',
   });
 
@@ -781,13 +782,13 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
 
   const { data: events = [] } = useQuery({
     queryKey: ['community-events', communityId],
-    queryFn: () => dataService.entities.CommunityEvent.filter({ community_id: communityId }, 'start_date', 50),
+    queryFn: () => filterCommunityEvent({ community_id: communityId }, 'start_date', 50),
     enabled: !!communityId && featureCapabilities.events,
   });
 
   const { data: resources = [] } = useQuery({
     queryKey: ['community-resources', communityId],
-    queryFn: () => dataService.entities.CommunityResource.filter({ community_id: communityId }, '-created_date', 50),
+    queryFn: () => filterCommunityResource({ community_id: communityId }, '-created_date', 50),
     enabled: !!communityId && featureCapabilities.resources,
   });
 
@@ -852,11 +853,11 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
           toast.info('Community owners manage their community instead of leaving it.');
           return;
         }
-        await dataService.entities.UserCommunity.delete(membershipRecord[0].id);
+        await deleteUserCommunity(membershipRecord[0].id);
         if (community) await incrementCounter('communities', 'follower_count', communityId, -1);
         toast.success('Left community');
       } else {
-        await dataService.entities.UserCommunity.create({ user_id: currentUser.id, community_id: communityId, role: 'member' });
+        await createUserCommunity({ user_id: currentUser.id, community_id: communityId, role: 'member' });
         if (community) await incrementCounter('communities', 'follower_count', communityId, 1);
         toast.success('Joined!');
       }

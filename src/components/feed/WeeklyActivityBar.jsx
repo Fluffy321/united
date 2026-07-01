@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { dataService } from '@/services';
 import { startOfWeek } from 'date-fns';
+import { listMitzvahAction, listMitzvahRequest } from '@/services/entityServices';
 
 export default function WeeklyActivityBar() {
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 0 }).toISOString();
@@ -10,8 +10,8 @@ export default function WeeklyActivityBar() {
     queryKey: ['weekly-activity-bar'],
     queryFn: async () => {
       const [requests, actions] = await Promise.all([
-        dataService.entities.MitzvahRequest.list('-created_date', 200),
-        dataService.entities.MitzvahAction.list('-created_date', 200),
+        listMitzvahRequest('-created_date', 200),
+        listMitzvahAction('-created_date', 200),
       ]);
       const thisWeek = (arr) => arr.filter(r => r.created_date >= weekStart);
       const weekRequests = thisWeek(requests);

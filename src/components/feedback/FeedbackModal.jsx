@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { CheckCircle2, Loader2, X } from 'lucide-react';
-import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import { captureError } from '@/lib/analytics';
+import { createAppFeedback } from '@/services/entityServices';
 
 const FEEDBACK_TYPES = [
   { value: 'bug',       label: '🐛 Bug' },
@@ -85,7 +85,7 @@ export default function FeedbackModal({ open, onClose }) {
     if (!trimmed || submitting) return;
     setSubmitting(true);
     try {
-      await dataService.entities.AppFeedback.create({
+      await createAppFeedback({
         user_id: currentUser?.id ?? null,
         submitter_name: currentUser?.display_name || currentUser?.full_name || null,
         feedback_type: feedbackType,

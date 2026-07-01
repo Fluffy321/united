@@ -2,8 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Save, Settings, ShieldCheck, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { dataService } from '@/services';
 import { COMMUNITY_TYPE_OPTIONS, getCommunityTypeKey } from '@/lib/communityTypes';
+import { updateCommunity } from '@/services/entityServices';
 
 const PRIVACY_OPTIONS = ['Public', 'Community-only', 'Private', 'Private / Anonymous'];
 
@@ -49,7 +49,7 @@ export default function CommunityManagePanel({ community, open, onClose, onSaved
 
     setSaving(true);
     try {
-      const updated = await dataService.entities.Community.update(community.id, {
+      const updated = await updateCommunity(community.id, {
         name,
         description,
         description_short: description,

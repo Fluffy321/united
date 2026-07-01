@@ -4,6 +4,7 @@ import { MessageSquare, Send, X, Image, ArrowUp, ChevronDown } from 'lucide-reac
 import { motion, AnimatePresence } from 'framer-motion';
 import { dataService, checkRateLimit, RateLimitError } from '@/services';
 import { toast } from 'sonner';
+import { createComment, createCommunityPost, createReaction, deleteReaction, filterComment, filterReaction } from '@/services/entityServices';
 
 const AVATAR_COLORS = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899','#0891B2'];
 
@@ -42,10 +43,10 @@ function ReactionBar({ postId, currentUser, initialCounts = {} }) {
     // Persist via Reaction entity
     try {
       await checkRateLimit('react');
-      const existing = await dataService.entities.Reaction.filter({ post_id: postId, user_id: currentUser.id });
-      for (const r of existing) await dataService.entities.Reaction.delete(r.id);
+      const existing = await filterReaction({ post_id: postId, user_id: currentUser.id });
+      for (const r of existing) await deleteReaction(r.id);
       if (myReaction !== emoji) {
-        await dataService.entities.Reaction.create({ post_id: postId, user_id: currentUser.id, emoji });
+        await createReaction({ post_id: postId, user_id: currentUser.id, emoji });
       }
     } catch (err) {
       if (err instanceof RateLimitError) toast.error(err.message);
@@ -105,7 +106,7 @@ function CommentThread({ postId, currentUser, members = [] }) {
   const [suggestions, setSuggestions] = useState([]);
 
   useEffect(() => {
-    dataService.entities.Comment.filter({ post_id: postId }, 'created_date', 30)
+    filterComment({ post_id: postId }, 'created_date', 30)
       .then(setComments).catch(() => {}).finally(() => setLoading(false));
   }, [postId]);
 
@@ -131,7 +132,7 @@ function CommentThread({ postId, currentUser, members = [] }) {
   const submit = async () => {
     if (!text.trim() || !currentUser) return;
     setSubmitting(true);
-    const c = await dataService.entities.Comment.create({
+    const c = await createComment({
       post_id: postId,
       author_id: currentUser.id,
       author_name: currentUser.display_name || currentUser.full_name || 'Member',
@@ -302,7 +303,7 @@ function NewPostComposer({ community, currentUser, onNewPost, members, isAdmin }
     if (!body.trim() && !imageUrl) return;
     if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setSubmitting(true);
-    const post = await dataService.entities.CommunityPost.create({
+    const post = await createCommunityPost({
       community_id: community.id,
       author_name: currentUser.display_name || currentUser.full_name || 'Member',
       author_user_id: currentUser.id,

@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Lock, Plus, Users } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
-import { dataService, incrementCounter } from '@/services';
+import { incrementCounter } from '@/services';
 import { toast } from 'sonner';
 import CreateGroupModal from '@/components/groups/CreateGroupModal';
+import { createGroupJoinRequest, createGroupMember } from '@/services/entityServices';
 
 const CATEGORY_EMOJI = {
   'Torah Learning': '📖', Shabbat: '🕯️', Chesed: '🤝', Events: '📅',
@@ -54,14 +55,14 @@ export default function CommunityGroupsTab({ communityId, currentUser, isAdmin }
     if (!currentUser) return;
     try {
       if (group.is_private) {
-        await dataService.entities.GroupJoinRequest.create({
+        await createGroupJoinRequest({
           group_id: group.id,
           user_id: currentUser.id,
           user_name: currentUser.full_name || currentUser.display_name,
         });
         toast.success('Join request sent');
       } else {
-        await dataService.entities.GroupMember.create({
+        await createGroupMember({
           group_id: group.id,
           user_id: currentUser.id,
           user_name: currentUser.full_name || currentUser.display_name,

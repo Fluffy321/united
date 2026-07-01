@@ -9,13 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { dataService, notificationsService } from '@/services';
+import { notificationsService } from '@/services';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { formatDistanceToNow, format } from 'date-fns';
 import ActionModal from '@/components/moderation/ActionModal';
+import { createModerationAuditLog, filterBusinessClaimRequest, filterBusinessListing, filterClaimRequest, filterReport, listMitzvahRequest, listModerationAuditLog, updateClaimRequest, updateCommunity, updateMitzvahRequest, updateReport } from '@/services/entityServices';
 
 const PRIORITY_CONFIG = {
   critical: { label: 'Critical', color: 'bg-red-100 text-red-800 border border-red-300' },
@@ -123,39 +124,39 @@ export default function AdminModerationQueue() {
 
   const { data: reports = [], isLoading: reportsLoading, refetch: refetchReports } = useQuery({
     queryKey: ['admin-reports'],
-    queryFn: () => dataService.entities.Report.filter({ resolved: false }, '-created_date', 200),
+    queryFn: () => filterReport({ resolved: false }, '-created_date', 200),
     enabled: !!currentUser,
     refetchInterval: 60000,
   });
 
   const { data: claimRequests = [], isLoading: claimsLoading } = useQuery({
     queryKey: ['admin-claims'],
-    queryFn: () => dataService.entities.ClaimRequest.filter({ status: 'pending' }, '-created_date', 50),
+    queryFn: () => filterClaimRequest({ status: 'pending' }, '-created_date', 50),
     enabled: !!currentUser,
   });
 
   const { data: businessSubmissions = [], isLoading: businessSubmissionsLoading } = useQuery({
     queryKey: ['admin-business-submissions'],
-    queryFn: () => dataService.entities.BusinessListing.filter({ status: 'pending' }, '-created_date', 100),
+    queryFn: () => filterBusinessListing({ status: 'pending' }, '-created_date', 100),
     enabled: !!currentUser,
   });
 
   const { data: businessClaims = [], isLoading: businessClaimsLoading } = useQuery({
     queryKey: ['admin-business-claims'],
-    queryFn: () => dataService.entities.BusinessClaimRequest.filter({ status: 'pending' }, '-created_date', 100),
+    queryFn: () => filterBusinessClaimRequest({ status: 'pending' }, '-created_date', 100),
     enabled: !!currentUser,
   });
 
   const { data: auditLogs = [], isLoading: auditLoading } = useQuery({
     queryKey: ['admin-audit'],
-    queryFn: () => dataService.entities.ModerationAuditLog.list('-created_date', 100),
+    queryFn: () => listModerationAuditLog('-created_date', 100),
     enabled: !!currentUser,
   });
 
   const { data: flaggedRequests = [], isLoading: requestsLoading } = useQuery({
     queryKey: ['admin-flagged-requests'],
     queryFn: async () => {
-      const requests = await dataService.entities.MitzvahRequest.list('-created_date', 100);
+      const requests = await listMitzvahRequest('-created_date', 100);
       return requests.filter(r => r.is_hidden);
     },
     enabled: !!currentUser,
@@ -163,12 +164,12 @@ export default function AdminModerationQueue() {
 
   const resolveReportMutation = useMutation({
     mutationFn: async (reportId) => {
-      await dataService.entities.Report.update(reportId, {
+      await updateReport(reportId, {
         resolved: true,
         resolved_at: new Date().toISOString(),
         resolved_by: currentUser.id,
       });
-      await dataService.entities.ModerationAuditLog.create({
+      await createModerationAuditLog({
         admin_id: currentUser.id,
         admin_name: currentUser.full_name || currentUser.email,
         action: 'dismiss',
@@ -185,9 +186,9 @@ export default function AdminModerationQueue() {
 
   const approveClaimMutation = useMutation({
     mutationFn: async (claim) => {
-      await dataService.entities.ClaimRequest.update(claim.id, { status: 'approved', reviewed_by: currentUser.id, reviewed_at: new Date().toISOString() });
-      await dataService.entities.Community.update(claim.community_id, { is_claimed: true, is_verified: true, claimed_org_id: claim.requester_id });
-      await dataService.entities.ModerationAuditLog.create({
+      await updateClaimRequest(claim.id, { status: 'approved', reviewed_by: currentUser.id, reviewed_at: new Date().toISOString() });
+      await updateCommunity(claim.community_id, { is_claimed: true, is_verified: true, claimed_org_id: claim.requester_id });
+      await createModerationAuditLog({
         admin_id: currentUser.id, admin_name: currentUser.full_name || currentUser.email,
         action: 'approve_claim', community_id: claim.community_id,
         target_user_id: claim.requester_id, performed_at: new Date().toISOString(),
@@ -198,8 +199,8 @@ export default function AdminModerationQueue() {
 
   const rejectClaimMutation = useMutation({
     mutationFn: async (claim) => {
-      await dataService.entities.ClaimRequest.update(claim.id, { status: 'rejected', reviewed_by: currentUser.id, reviewed_at: new Date().toISOString() });
-      await dataService.entities.ModerationAuditLog.create({
+      await updateClaimRequest(claim.id, { status: 'rejected', reviewed_by: currentUser.id, reviewed_at: new Date().toISOString() });
+      await createModerationAuditLog({
         admin_id: currentUser.id, admin_name: currentUser.full_name || currentUser.email,
         action: 'reject_claim', community_id: claim.community_id, performed_at: new Date().toISOString(),
       });
@@ -317,7 +318,7 @@ export default function AdminModerationQueue() {
   });
 
   const unhideRequestMutation = useMutation({
-    mutationFn: (requestId) => dataService.entities.MitzvahRequest.update(requestId, { is_hidden: false }),
+    mutationFn: (requestId) => updateMitzvahRequest(requestId, { is_hidden: false }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-flagged-requests'] }); toast.success('Request restored'); },
   });
 

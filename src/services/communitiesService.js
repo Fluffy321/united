@@ -1,32 +1,32 @@
-import dataService from './dataService';
+import { createCommunity, createUserCommunity, deleteUserCommunity, filterCommunity, filterUserCommunity, getCommunity, listCommunity, updateCommunity, updateUserCommunity } from '@/services/entityServices';
 
 export const communitiesService = {
   listCommunities(sort = '-follower_count', limit = 100) {
-    return dataService.entities.Community.list(sort, limit);
+    return listCommunity(sort, limit);
   },
   filterCommunities(filter = {}, sort = '-follower_count', limit = 100) {
-    return dataService.entities.Community.filter(filter, sort, limit);
+    return filterCommunity(filter, sort, limit);
   },
   getCommunity(id) {
-    return dataService.entities.Community.get(id);
+    return getCommunity(id);
   },
   createCommunity(payload) {
-    return dataService.entities.Community.create(payload);
+    return createCommunity(payload);
   },
   updateCommunity(id, patch) {
-    return dataService.entities.Community.update(id, patch);
+    return updateCommunity(id, patch);
   },
   listMemberships(filter = {}, sort = '-created_date', limit = 100) {
-    return dataService.entities.UserCommunity.filter(filter, sort, limit);
+    return filterUserCommunity(filter, sort, limit);
   },
   joinCommunity(payload) {
-    return dataService.entities.UserCommunity.create(payload);
+    return createUserCommunity(payload);
   },
   updateMembership(id, patch) {
-    return dataService.entities.UserCommunity.update(id, patch);
+    return updateUserCommunity(id, patch);
   },
   leaveCommunity(id) {
-    return dataService.entities.UserCommunity.delete(id);
+    return deleteUserCommunity(id);
   },
 };
 

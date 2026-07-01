@@ -1,6 +1,6 @@
 import React from 'react';
 import { TrendingUp, Users, Eye, Star } from 'lucide-react';
-import { dataService } from '@/services';
+import { updateCommunity } from '@/services/entityServices';
 
 const DEFAULT_GRADIENTS = [
   'from-blue-600 via-indigo-600 to-violet-700',
@@ -23,7 +23,7 @@ export default function FeaturedCommunityCard({ community, index = 0, isJoined, 
 
   const handleOpen = () => {
     // Track view
-    dataService.entities.Community.update(community.id, {
+    updateCommunity(community.id, {
       views_count: (community.views_count || 0) + 1
     }).catch(() => {});
     onOpen(community.id);

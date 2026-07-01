@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
-import { dataService, notificationsService } from '@/services';
+import { notificationsService } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { subscribeNotification } from '@/services/entityServices';
 
 export default function NotificationBell({ userId }) {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function NotificationBell({ userId }) {
   // Real-time subscription for instant bell updates
   useEffect(() => {
     if (!userId || !appParams.hasBackendConfig) return;
-    const unsubscribe = dataService.entities.Notification.subscribe((event) => {
+    const unsubscribe = subscribeNotification((event) => {
       if (event.type === 'create' && event.data?.user_id === userId) {
         queryClient.invalidateQueries({ queryKey: ['notification-count', userId] });
         queryClient.invalidateQueries({ queryKey: ['notifications-page', userId] });

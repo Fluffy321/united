@@ -1,4 +1,4 @@
-import dataService from './dataService';
+import { createFeedEngagementEvent, createFeedUserPreference, filterDailyFeedPrompt, filterFeedUserPreference, filterFiveTownsBrief, updateFeedUserPreference } from '@/services/entityServices';
 
 const PROMPT_LIBRARY = [
   {
@@ -62,20 +62,20 @@ function classifyPost(post) {
 export const feedRetentionService = {
   async getPreferences(userId) {
     if (!userId) return null;
-    const existing = await dataService.entities.FeedUserPreference.filter({ user_id: userId }, '-updated_date', 1);
+    const existing = await filterFeedUserPreference({ user_id: userId }, '-updated_date', 1);
     return existing?.[0] || null;
   },
 
   async savePreferences(userId, patch) {
     if (!userId) return null;
     const existing = await this.getPreferences(userId);
-    if (existing?.id) return dataService.entities.FeedUserPreference.update(existing.id, patch);
-    return dataService.entities.FeedUserPreference.create({ user_id: userId, ...patch });
+    if (existing?.id) return updateFeedUserPreference(existing.id, patch);
+    return createFeedUserPreference({ user_id: userId, ...patch });
   },
 
   async recordEvent({ userId, post, eventType, metadata = {} }) {
     if (!eventType) return null;
-    return dataService.entities.FeedEngagementEvent.create({
+    return createFeedEngagementEvent({
       user_id: userId || null,
       post_id: post?.id || null,
       community_id: post?.community_id || null,
@@ -90,7 +90,7 @@ export const feedRetentionService = {
   async getDailyPrompt({ network = 'Five Towns', userId } = {}) {
     const promptDate = todayKey();
     try {
-      const prompts = await dataService.entities.DailyFeedPrompt.filter({ prompt_date: promptDate, network, active: true }, 'prompt_type', 10);
+      const prompts = await filterDailyFeedPrompt({ prompt_date: promptDate, network, active: true }, 'prompt_type', 10);
       if (prompts?.length) return prompts[stableIndex(`${promptDate}-${userId || 'guest'}`, prompts.length)];
     } catch {
       // Fall through to local prompt library.
@@ -101,7 +101,7 @@ export const feedRetentionService = {
   async getPublishedBrief({ network = 'Five Towns' } = {}) {
     const briefDate = todayKey();
     try {
-      const briefs = await dataService.entities.FiveTownsBrief.filter({ brief_date: briefDate, network }, '-updated_at', 1);
+      const briefs = await filterFiveTownsBrief({ brief_date: briefDate, network }, '-updated_at', 1);
       return briefs?.[0] || null;
     } catch {
       return null;

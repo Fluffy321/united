@@ -37,10 +37,10 @@ import PageHelp from '@/components/common/PageHelp';
 import DestinationHeader from '@/components/layout/DestinationHeader';
 import LiveNowRail from '@/components/common/LiveNowRail';
 import { buildMapLiveNowItems } from '@/lib/liveNow';
-import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/api/supabaseClient';
 import { COMMUNITIES_ENABLED } from '@/config/features';
+import { createBusinessClaimRequest, createBusinessListing, filterBusinessClaimRequest, filterBusinessListing, filterBusinessManager, filterUserCommunity, listBusinessListing, listBusinessReview, listCommunity, listMitzvahRequest, listUnifiedPost } from '@/services/entityServices';
 
 const BusinessMap = lazy(() => import('@/components/business/BusinessMap'));
 const MitzvahMap = lazy(() => import('@/components/mitzvah/MitzvahMap'));
@@ -376,7 +376,7 @@ function SubmitBusinessModal({ open, onClose, currentUser }) {
         throw new Error('Add a kosher certification expiration date, or mark that no expiration was provided.');
       }
 
-      return dataService.entities.BusinessListing.create({
+      return createBusinessListing({
         name,
         category: form.category,
         listing_type: form.listing_type,
@@ -575,7 +575,7 @@ function ClaimBusinessModal({ business, onClose, currentUser }) {
         throw new Error('Add a kosher certification expiration date, or mark that no expiration was provided.');
       }
 
-      return dataService.entities.BusinessClaimRequest.create({
+      return createBusinessClaimRequest({
         business_id: business.id,
         business_name: business.name,
         requester_id: currentUser?.id,
@@ -1028,13 +1028,13 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
 
   const { data: businesses = [], isLoading } = useQuery({
     queryKey: ['business-directory-published'],
-    queryFn: () => dataService.entities.BusinessListing.filter({ status: 'published' }, '-created_date', 200),
+    queryFn: () => filterBusinessListing({ status: 'published' }, '-created_date', 200),
     staleTime: 120000,
   });
 
   const { data: managerRows = [] } = useQuery({
     queryKey: ['business-manager-rows', currentUser?.id],
-    queryFn: () => dataService.entities.BusinessManager.filter({ user_id: currentUser.id }, '-created_date', 100),
+    queryFn: () => filterBusinessManager({ user_id: currentUser.id }, '-created_date', 100),
     enabled: Boolean(currentUser?.id),
     staleTime: 120000,
   });
@@ -1050,7 +1050,7 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
 
   const { data: ownerReadableListings = [] } = useQuery({
     queryKey: ['business-owner-listings', currentUser?.id],
-    queryFn: () => dataService.entities.BusinessListing.list('-updated_date', 300),
+    queryFn: () => listBusinessListing('-updated_date', 300),
     enabled: Boolean(currentUser?.id && ownerManagerRows.length),
     staleTime: 120000,
   });
@@ -1062,14 +1062,14 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
 
   const { data: claimRequests = [] } = useQuery({
     queryKey: ['business-claim-status', currentUser?.id],
-    queryFn: () => dataService.entities.BusinessClaimRequest.filter({ requester_id: currentUser.id }, '-created_date', 100),
+    queryFn: () => filterBusinessClaimRequest({ requester_id: currentUser.id }, '-created_date', 100),
     enabled: Boolean(currentUser?.id),
     staleTime: 120000,
   });
 
   const { data: allBusinessReviews = [] } = useQuery({
     queryKey: ['business-owner-reviews', currentUser?.id],
-    queryFn: () => dataService.entities.BusinessReview.list('-created_date', 300),
+    queryFn: () => listBusinessReview('-created_date', 300),
     enabled: Boolean(currentUser?.id && ownerManagerRows.length),
     staleTime: 120000,
   });
@@ -1292,7 +1292,7 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
 
   const { data: requests = [] } = useQuery({
     queryKey: ['mitzvah-requests-map'],
-    queryFn: () => dataService.entities.MitzvahRequest.list('-created_date', 100),
+    queryFn: () => listMitzvahRequest('-created_date', 100),
     staleTime: 120000,
   });
 
@@ -1304,21 +1304,21 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
 
   const { data: memberships = [] } = useQuery({
     queryKey: ['map-community-memberships', currentUser?.id],
-    queryFn: () => dataService.entities.UserCommunity.filter({ user_id: currentUser.id }, '-created_date', 100),
+    queryFn: () => filterUserCommunity({ user_id: currentUser.id }, '-created_date', 100),
     enabled: COMMUNITIES_ENABLED && Boolean(currentUser?.id),
     staleTime: 120000,
   });
 
   const { data: communities = [] } = useQuery({
     queryKey: ['map-communities-directory'],
-    queryFn: () => dataService.entities.Community.list('-follower_count', 200),
+    queryFn: () => listCommunity('-follower_count', 200),
     enabled: COMMUNITIES_ENABLED,
     staleTime: 300000,
   });
 
   const { data: communityPosts = [] } = useQuery({
     queryKey: ['map-community-posts'],
-    queryFn: () => dataService.entities.UnifiedPost.list('-created_date', 180),
+    queryFn: () => listUnifiedPost('-created_date', 180),
     enabled: COMMUNITIES_ENABLED,
     staleTime: 120000,
   });

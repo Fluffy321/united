@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, MapPin, Clock, Calendar, Loader2, ChevronLeft, Share2 } from 'lucide-react';
-import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { createCommunityEventRSVP, deleteCommunityEventRSVP, filterCommunityEventRSVP, updateCommunityEventRSVP } from '@/services/entityServices';
 
 const EVENT_CATEGORY_META = {
   shiur:        { label: 'Shiur / Class',      emoji: '📖', color: 'bg-indigo-100 text-indigo-700' },
@@ -37,9 +37,9 @@ export default function CalendarEventDetailSheet({ event, open, onOpenChange, on
     if (!open || !event) return;
     setLoading(true);
     Promise.all([
-      dataService.entities.CommunityEventRSVP.filter({ event_id: event.id }),
+      filterCommunityEventRSVP({ event_id: event.id }),
       currentUser?.id
-        ? dataService.entities.CommunityEventRSVP.filter({ event_id: event.id, user_id: currentUser.id })
+        ? filterCommunityEventRSVP({ event_id: event.id, user_id: currentUser.id })
         : Promise.resolve([]),
     ]).then(([all, mine]) => {
       setCounts({
@@ -64,13 +64,13 @@ export default function CalendarEventDetailSheet({ event, open, onOpenChange, on
       if (rsvpId) {
         if (rsvp === status) {
           // Toggle off
-          await dataService.entities.CommunityEventRSVP.delete(rsvpId);
+          await deleteCommunityEventRSVP(rsvpId);
           setRsvp(null); setRsvpId(null);
           if (status === 'going') setCounts(c => ({ ...c, going: Math.max(0, c.going - 1) }));
           if (status === 'maybe') setCounts(c => ({ ...c, maybe: Math.max(0, c.maybe - 1) }));
           toast.success('RSVP removed');
         } else {
-          await dataService.entities.CommunityEventRSVP.update(rsvpId, { status });
+          await updateCommunityEventRSVP(rsvpId, { status });
           const prev = rsvp;
           setRsvp(status);
           setCounts(c => ({
@@ -80,7 +80,7 @@ export default function CalendarEventDetailSheet({ event, open, onOpenChange, on
           toast.success(status === 'going' ? "You're going! 🎉" : 'Updated');
         }
       } else {
-        const record = await dataService.entities.CommunityEventRSVP.create({
+        const record = await createCommunityEventRSVP({
           event_id:   event.id,
           user_id:    currentUser.id,
           user_name:  currentUser.full_name || currentUser.email,

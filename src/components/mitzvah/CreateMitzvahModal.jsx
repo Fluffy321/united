@@ -16,6 +16,7 @@ import {
 import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { COMMUNITIES_ENABLED } from '@/config/features';
+import { createMitzvahRequest, filterCommunity, filterUserCommunity } from '@/services/entityServices';
 
 const CATEGORIES = ['Ride', 'Errand', 'Lost & Found', 'Quick Favor', 'Tutoring', 'Shabbat Help', 'Other'];
 
@@ -56,9 +57,9 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser, in
 
   useEffect(() => {
     if (open && currentUser?.id && COMMUNITIES_ENABLED) {
-      dataService.entities.UserCommunity.filter({ user_id: currentUser.id }).then(memberships => {
+      filterUserCommunity({ user_id: currentUser.id }).then(memberships => {
         const communityIds = memberships.map(m => m.community_id);
-        Promise.all(communityIds.map(id => dataService.entities.Community.filter({ id }))).then(results => {
+        Promise.all(communityIds.map(id => filterCommunity({ id }))).then(results => {
           const communities = results.filter(r => r.length > 0).map(r => r[0]);
           setUserCommunities(communities);
         });
@@ -98,7 +99,7 @@ export default function CreateMitzvahModal({ open, onOpenChange, currentUser, in
         requestData.approxLng = currentUser.location_lng;
       }
 
-      const newRequest = await dataService.entities.MitzvahRequest.create(requestData);
+      const newRequest = await createMitzvahRequest(requestData);
 
       if (visibility === 'community') {
         try {

@@ -6,10 +6,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UtensilsCrossed, Plus } from 'lucide-react';
-import { dataService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { format, addDays, parseISO } from 'date-fns';
+import { bulkCreateMealSlot, createMealTrainRequest, filterMealSlot, filterMealTrainRequest, updateMealSlot } from '@/services/entityServices';
 
 export default function MealTrainBoard({ shulId, currentUser, isAdmin }) {
   const [showCreate, setShowCreate] = useState(false);
@@ -18,13 +18,13 @@ export default function MealTrainBoard({ shulId, currentUser, isAdmin }) {
   const { data: mealTrains = [] } = useQuery({
     queryKey: ['meal-trains', shulId],
     queryFn: async () => {
-      return await dataService.entities.MealTrainRequest.filter({ shul_id: shulId, is_active: true });
+      return await filterMealTrainRequest({ shul_id: shulId, is_active: true });
     }
   });
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      const train = await dataService.entities.MealTrainRequest.create({
+      const train = await createMealTrainRequest({
         ...data,
         shul_id: shulId,
         created_by: currentUser.id
@@ -43,7 +43,7 @@ export default function MealTrainBoard({ shulId, currentUser, isAdmin }) {
         });
       }
       
-      await dataService.entities.MealSlot.bulkCreate(slots);
+      await bulkCreateMealSlot(slots);
       return train;
     },
     onSuccess: () => {
@@ -149,13 +149,13 @@ function MealTrainCard({ train, currentUser }) {
   const { data: slots = [] } = useQuery({
     queryKey: ['meal-slots', train.id],
     queryFn: async () => {
-      return await dataService.entities.MealSlot.filter({ meal_train_id: train.id });
+      return await filterMealSlot({ meal_train_id: train.id });
     }
   });
 
   const claimMutation = useMutation({
     mutationFn: async (slotId) => {
-      await dataService.entities.MealSlot.update(slotId, {
+      await updateMealSlot(slotId, {
         is_claimed: true,
         claimed_by: currentUser.id,
         claimed_by_name: currentUser.full_name

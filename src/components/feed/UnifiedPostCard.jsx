@@ -19,11 +19,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { dataService, findOrCreateDirectConversation } from '@/services';
+import { findOrCreateDirectConversation } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { toast } from 'sonner';
 import { HELP_REQUEST_CATEGORIES } from '@/components/feed/RequestHelpModal';
 import PollCard from './PollCard';
+import { createComment, createMessage, filterComment, updateUnifiedPost } from '@/services/entityServices';
 
 // Short-circuit for community prompts — thin wrapper, no memo needed
 function PromptWrapper({ post, currentUser }) {
@@ -77,7 +78,7 @@ const InterestedButton = React.memo(function InterestedButton({ post, currentUse
       }, {
         request_title: post.title || post.body?.substring(0, 50),
       });
-      await dataService.entities.Message.create({
+      await createMessage({
         conversation_id: conv.id,
         sender_id: currentUser.id,
         sender_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],
@@ -130,7 +131,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
   // Always fetch 2 most recent comments — seeded posts may have real comments even with count=0
   useEffect(() => {
     if (!appParams.hasBackendConfig) return;
-    dataService.entities.Comment.filter({ post_id: post.id }, '-created_date', 2)
+    filterComment({ post_id: post.id }, '-created_date', 2)
       .then(comments => setRecentComments(comments))
       .catch(() => {});
   }, [post.id, commentCount]);
@@ -222,7 +223,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
       toast.success('Marked fulfilled locally for this demo session');
       return;
     }
-    await dataService.entities.UnifiedPost.update(post.id, { help_status: 'fulfilled' });
+    await updateUnifiedPost(post.id, { help_status: 'fulfilled' });
     setHelpStatus('fulfilled');
     setFulfilling(false);
     toast.success('Marked as fulfilled! 🎉');
@@ -246,7 +247,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
       return;
     }
     try {
-      await dataService.entities.Comment.create({
+      await createComment({
         post_id: post.id,
         author_id: currentUser.id,
         author_name: currentUser.display_name || currentUser.full_name?.split(' ')[0] || 'User',

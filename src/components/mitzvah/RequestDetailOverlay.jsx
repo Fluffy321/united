@@ -3,11 +3,11 @@ import { X, MapPin, Clock, Hand, MessageCircle, CheckCircle2, AlertCircle, Flag,
 import StatusPipeline from './StatusPipeline';
 import ThankYouBanner from './ThankYouBanner';
 import { formatDistanceToNow } from 'date-fns';
-import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import LogHoursFromMitzvahModal from './LogHoursFromMitzvahModal';
+import { createConversation, createMessage, createMitzvahSignup, createReport, filterConversation, filterMitzvahSignup, filterUser, updateConversation, updateMitzvahRequest, updateMitzvahSignup } from '@/services/entityServices';
 
 const CATEGORY_COLORS = {
   'Errand': 'bg-blue-100 text-blue-700',
@@ -34,7 +34,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
   // Load the current user's signup for this request
   useEffect(() => {
     if (!request?.id || !currentUser?.id) return;
-    dataService.entities.MitzvahSignup.filter({ request_id: request.id, user_id: currentUser.id })
+    filterMitzvahSignup({ request_id: request.id, user_id: currentUser.id })
       .then(results => setSignup(results[0] || null));
   }, [request?.id, currentUser?.id]);
 
@@ -46,7 +46,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
       // Upsert signup
       let existingSignup = signup;
       if (!existingSignup) {
-        existingSignup = await dataService.entities.MitzvahSignup.create({
+        existingSignup = await createMitzvahSignup({
           request_id: request.id,
           user_id: currentUser.id,
           user_name: currentUser.display_name,
@@ -57,7 +57,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
       }
 
       // Set up conversation
-      const convs = await dataService.entities.Conversation.filter({
+      const convs = await filterConversation({
         participant_ids: { $all: [currentUser.id, request.created_by_user_id] },
         request_id: request.id
       });
@@ -66,8 +66,8 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
       if (convs.length > 0) {
         conversation = convs[0];
       } else {
-        const [requester] = await dataService.entities.User.filter({ id: request.created_by_user_id });
-        conversation = await dataService.entities.Conversation.create({
+        const [requester] = await filterUser({ id: request.created_by_user_id });
+        conversation = await createConversation({
           participant_ids: [currentUser.id, request.created_by_user_id],
           participant_names: [currentUser.display_name, requester?.display_name],
           participant_ages: [currentUser.age_range, requester?.age_range],
@@ -77,13 +77,13 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
         });
       }
 
-      await dataService.entities.MitzvahRequest.update(request.id, {
+      await updateMitzvahRequest(request.id, {
         status: 'in_progress',
         claimed_by_user_id: currentUser.id,
         claimed_by_name: currentUser.display_name
       });
 
-      await dataService.entities.Message.create({
+      await createMessage({
         conversation_id: conversation.id,
         sender_id: currentUser.id,
         sender_name: currentUser.display_name,
@@ -93,7 +93,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
         is_read: false
       });
 
-      await dataService.entities.Conversation.update(conversation.id, {
+      await updateConversation(conversation.id, {
         last_message: `Hi! I'm available to help...`,
         last_message_at: new Date().toISOString()
       });
@@ -110,7 +110,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
 
   const handleOpenChat = async () => {
     const otherUserId = isRequester ? request.claimed_by_user_id : request.created_by_user_id;
-    const [conv] = await dataService.entities.Conversation.filter({
+    const [conv] = await filterConversation({
       participant_ids: { $all: [currentUser.id, otherUserId] },
       request_id: request.id
     });
@@ -120,8 +120,8 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
   const handleCancel = async () => {
     setIsProcessing(true);
     try {
-      await dataService.entities.MitzvahRequest.update(request.id, { status: 'cancelled' });
-      if (signup) await dataService.entities.MitzvahSignup.update(signup.id, { status: 'CANCELED' });
+      await updateMitzvahRequest(request.id, { status: 'cancelled' });
+      if (signup) await updateMitzvahSignup(signup.id, { status: 'CANCELED' });
       toast.success('Request cancelled');
       onRefresh?.();
       onClose();
@@ -131,7 +131,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
 
   const handleReport = async () => {
     try {
-      await dataService.entities.Report.create({
+      await createReport({
         reporter_id: currentUser.id,
         reported_content_id: request.id,
         content_type: 'request',
@@ -285,7 +285,7 @@ export default function RequestDetailOverlay({ request, currentUser, onClose, on
               onClick={async () => {
                 setIsProcessing(true);
                 try {
-                  await dataService.entities.MitzvahRequest.update(request.id, { status: 'completed', completed_at: new Date().toISOString() });
+                  await updateMitzvahRequest(request.id, { status: 'completed', completed_at: new Date().toISOString() });
                   toast.success('Mitzvah confirmed completed! ✨');
                   onRefresh?.();
                   onClose();

@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { dataService, messagesService, checkRateLimit, RateLimitError } from '@/services';
+import { messagesService, checkRateLimit, RateLimitError } from '@/services';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import FileAttachmentButton from '@/components/common/FileAttachmentButton';
@@ -14,6 +14,7 @@ import { AttachmentPreview, PendingAttachmentChip } from '@/components/common/Fi
 import { AI_AGENT, isAIConversation, loadAIMessages, saveAIMessages, getAIReply } from '@/lib/aiAgent';
 import UserAvatar from '@/components/common/UserAvatar';
 import { captureError } from '@/lib/analytics';
+import { createMitzvahAction, createMitzvahPoints, filterHelpOffer, filterMitzvahPoints, filterMitzvahRequest, updateHelpOffer, updateMitzvahPoints, updateMitzvahRequest } from '@/services/entityServices';
 
 export default function ChatView({ conversation, currentUser, onBack, onReport, onBlock }) {
   const [messages, setMessages] = useState([]);
@@ -108,11 +109,11 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const loadMitzvahContext = async () => {
     if (conversation.request_id) {
       try {
-        const [request] = await dataService.entities.MitzvahRequest.filter({ id: conversation.request_id });
+        const [request] = await filterMitzvahRequest({ id: conversation.request_id });
         setMitzvahRequest(request || null);
 
         if (request) {
-          const [offer] = await dataService.entities.HelpOffer.filter({ request_id: request.id });
+          const [offer] = await filterHelpOffer({ request_id: request.id });
           setHelpOffer(offer || null);
         }
       } catch (error) {
@@ -126,7 +127,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     
     setIsProcessing(true);
     try {
-      await dataService.entities.HelpOffer.update(helpOffer.id, {
+      await updateHelpOffer(helpOffer.id, {
         completed_by_helper: true
       });
       
@@ -144,13 +145,13 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     setIsProcessing(true);
     try {
       // Update request status
-      await dataService.entities.MitzvahRequest.update(mitzvahRequest.id, {
+      await updateMitzvahRequest(mitzvahRequest.id, {
         status: 'Completed',
         completed_at: new Date().toISOString()
       });
 
       // Award points
-      await dataService.entities.MitzvahAction.create({
+      await createMitzvahAction({
         user_id: mitzvahRequest.claimed_by_user_id,
         user_name: mitzvahRequest.claimed_by_name,
         request_id: mitzvahRequest.id,
@@ -158,13 +159,13 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         points_awarded: 10
       });
 
-      const [points] = await dataService.entities.MitzvahPoints.filter({ user_id: mitzvahRequest.claimed_by_user_id });
+      const [points] = await filterMitzvahPoints({ user_id: mitzvahRequest.claimed_by_user_id });
       if (points) {
-        await dataService.entities.MitzvahPoints.update(points.id, {
+        await updateMitzvahPoints(points.id, {
           total_points: points.total_points + 10
         });
       } else {
-        await dataService.entities.MitzvahPoints.create({
+        await createMitzvahPoints({
           user_id: mitzvahRequest.claimed_by_user_id,
           user_name: mitzvahRequest.claimed_by_name,
           total_points: 10
@@ -172,7 +173,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       }
 
       // Update offer
-      await dataService.entities.HelpOffer.update(helpOffer.id, { status: 'completed' });
+      await updateHelpOffer(helpOffer.id, { status: 'completed' });
 
       toast.success('Mitzvah completed! Helper earned 10 points ✨');
       loadMitzvahContext();

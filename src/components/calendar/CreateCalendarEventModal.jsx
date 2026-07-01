@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, X, CalendarDays, Clock, MapPin, Users, Tag, Globe, Lock, ChevronDown } from 'lucide-react';
-import { dataService } from '@/services';
 import { supabase } from '@/api/supabaseClient';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/AuthContext';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { createCommunityEvent } from '@/services/entityServices';
 
 const EVENT_CATEGORIES = [
   { id: 'shiur',        label: 'Shiur / Class',      emoji: '📖' },
@@ -78,7 +78,7 @@ export default function CreateCalendarEventModal({ open, onOpenChange, initialDa
 
     setSaving(true);
     try {
-      const event = await dataService.entities.CommunityEvent.create({
+      const event = await createCommunityEvent({
         title:        form.title.trim(),
         description:  form.description.trim() || null,
         start_date:   form.start_date,

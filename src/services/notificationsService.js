@@ -1,7 +1,7 @@
-import dataService from './dataService';
 import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 import { captureError } from '@/lib/analytics';
 import { COMMUNITIES_ENABLED } from '@/config/features';
+import { createNotification, filterNotification, updateNotification } from '@/services/entityServices';
 
 async function sendPush({ userId, title, body, url, notificationType }) {
   if (!shouldUseSupabase || !supabase) return;
@@ -74,7 +74,7 @@ export const notificationsService = {
       if (error) throw error;
       return (data || []).map(normalizeNotification);
     }
-    const notifications = await dataService.entities.Notification.filter({ user_id: userId }, '-created_date', limit);
+    const notifications = await filterNotification({ user_id: userId }, '-created_date', limit);
     return notifications.map(normalizeNotification);
   },
 
@@ -89,7 +89,7 @@ export const notificationsService = {
       if (error) throw error;
       return count ?? 0;
     }
-    const notifications = await dataService.entities.Notification.filter(
+    const notifications = await filterNotification(
       { user_id: userId, is_read: false },
       '-created_date',
       200
@@ -123,7 +123,7 @@ export const notificationsService = {
       if (!data) return null; // RPC returned null (self-notification guard in the function)
       notification = data;
     } else {
-      notification = await dataService.entities.Notification.create(payload);
+      notification = await createNotification(payload);
     }
 
     sendPush({
@@ -138,7 +138,7 @@ export const notificationsService = {
 
   async markRead(notificationId) {
     if (!notificationId) return null;
-    const updated = await dataService.entities.Notification.update(notificationId, {
+    const updated = await updateNotification(notificationId, {
       is_read: true,
       read_at: nowISO(),
     });

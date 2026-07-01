@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { dataService } from '@/services';
 import { toast } from 'sonner';
+import { createPost } from '@/services/entityServices';
 
 const INTERESTS = [
   "Torah & Learning", "Sports", "Music", "Art", "Tech", 
@@ -50,7 +51,7 @@ export default function CreatePostModal({ open, onOpenChange, currentUser, promp
         imageUrl = file_url;
       }
 
-      await dataService.entities.Post.create({
+      await createPost({
         content: content.trim(),
         image_url: imageUrl,
         author_name: currentUser.display_name || currentUser.full_name?.split(' ')[0],

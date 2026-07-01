@@ -2,9 +2,10 @@ import { createPortal } from 'react-dom';
 import { ArrowRight, Loader2, MessageCircle, Plus, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { dataService, batchFetchByIds } from '@/services';
+import { batchFetchByIds } from '@/services';
 import { buildAIConversation } from '@/lib/aiAgent';
 import ConversationList from '@/components/messages/ConversationList';
+import { listConversation } from '@/services/entityServices';
 
 export default function MessagesDrawer({ currentUser, open, onClose }) {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ export default function MessagesDrawer({ currentUser, open, onClose }) {
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ['conversations', currentUser?.id],
     queryFn: async () => {
-      const allConvs = await dataService.entities.Conversation.list('-updated_date', 50);
+      const allConvs = await listConversation('-updated_date', 50);
       const userConvs = allConvs.filter((c) => c.participant_ids?.includes(currentUser.id));
       const requestIds = [...new Set(userConvs.map((c) => c.request_id).filter(Boolean))];
       const requests = await batchFetchByIds('MitzvahRequest', requestIds);

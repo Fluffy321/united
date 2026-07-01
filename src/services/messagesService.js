@@ -1,27 +1,27 @@
-import dataService from './dataService';
 import notificationsService from './notificationsService';
+import { createConversation, createMessage, createMessageRequest, filterConversation, filterMessage, filterMessageRequest, listConversation, subscribeMessage, updateConversation, updateMessageRequest } from '@/services/entityServices';
 
 export const messagesService = {
   listConversations(sort = '-updated_date', limit = 100) {
-    return dataService.entities.Conversation.list(sort, limit);
+    return listConversation(sort, limit);
   },
   filterConversations(filter = {}, sort = '-updated_date', limit = 100) {
-    return dataService.entities.Conversation.filter(filter, sort, limit);
+    return filterConversation(filter, sort, limit);
   },
   createConversation(payload) {
-    return dataService.entities.Conversation.create(payload);
+    return createConversation(payload);
   },
   updateConversation(id, patch) {
-    return dataService.entities.Conversation.update(id, patch);
+    return updateConversation(id, patch);
   },
   subscribeToMessages(callback) {
-    return dataService.entities.Message.subscribe(callback);
+    return subscribeMessage(callback);
   },
   listMessages(conversationId, sort = 'created_date') {
-    return dataService.entities.Message.filter({ conversation_id: conversationId }, sort);
+    return filterMessage({ conversation_id: conversationId }, sort);
   },
   async createMessage(payload) {
-    const message = await dataService.entities.Message.create({
+    const message = await createMessage({
       ...payload,
       sender_avatar_url: payload.sender_avatar_url || payload.sender_avatar || null,
     });
@@ -35,13 +35,13 @@ export const messagesService = {
     return message;
   },
   listMessageRequests(filter = {}, sort = '-created_date', limit = 50) {
-    return dataService.entities.MessageRequest.filter(filter, sort, limit);
+    return filterMessageRequest(filter, sort, limit);
   },
   createMessageRequest(payload) {
-    return dataService.entities.MessageRequest.create(payload);
+    return createMessageRequest(payload);
   },
   updateMessageRequest(id, patch) {
-    return dataService.entities.MessageRequest.update(id, patch);
+    return updateMessageRequest(id, patch);
   },
 };
 
@@ -79,7 +79,7 @@ export async function createDirectConversation(currentUser, recipient, options =
     request_title: options.request_title || undefined,
     request_type: options.request_type ?? 'general',
   });
-  return dataService.entities.Conversation.create(payload);
+  return createConversation(payload);
 }
 
 export async function findOrCreateDirectConversation(currentUser, recipient, options = {}) {
@@ -87,7 +87,7 @@ export async function findOrCreateDirectConversation(currentUser, recipient, opt
   if (!recipient?.id) throw new Error('This member is missing a profile id.');
   if (currentUser.id === recipient.id) throw new Error("You can't message yourself.");
 
-  const conversations = await dataService.entities.Conversation.list('-updated_date', 100);
+  const conversations = await listConversation('-updated_date', 100);
   const existing = findDirectConversation(currentUser.id, recipient.id, conversations);
   if (existing) return existing;
   return createDirectConversation(currentUser, recipient, options);

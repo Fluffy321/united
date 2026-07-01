@@ -4,8 +4,9 @@ import ZmanimWidget from '@/components/jewish/ZmanimWidget';
 import ParshaWidget from '@/components/jewish/ParshaWidget';
 import { isSunday } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { createCommunityEventRSVP, filterCommunityEventRSVP } from '@/services/entityServices';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { getCommunityActionCopy, timeAgo } from '@/lib/liveNow';
 
 // ─── Skeleton loader ────────────────────────────────────────────────────────
@@ -393,6 +394,7 @@ function PinnedCarousel({ announcements }) {
 
 // ─── Upcoming events (upgraded) ──────────────────────────────────────────────
 function UpcomingEventsModule({ events, communityId, currentUser, onTabChange }) {
+  const navigate = useNavigate();
   const upcoming = events
     .filter(e => !e.start_date || new Date(e.start_date + 'T00:00:00') >= new Date(new Date().toDateString()))
     .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
@@ -400,7 +402,7 @@ function UpcomingEventsModule({ events, communityId, currentUser, onTabChange })
 
   const { data: myRSVPs = [] } = useQuery({
     queryKey: ['community-rsvps', communityId, currentUser?.id],
-    queryFn: () => base44.entities.CommunityEventRSVP.filter({ community_id: communityId, user_id: currentUser.id }),
+    queryFn: () => filterCommunityEventRSVP({ community_id: communityId, user_id: currentUser.id }),
     enabled: !!currentUser,
     staleTime: 60000,
   });
@@ -411,7 +413,7 @@ function UpcomingEventsModule({ events, communityId, currentUser, onTabChange })
     e.stopPropagation();
     if (!currentUser) { navigate('/login'); return; }
     if (rsvpedIds.has(ev.id)) return;
-    await base44.entities.CommunityEventRSVP.create({
+    await createCommunityEventRSVP({
       event_id: ev.id,
       community_id: communityId,
       user_id: currentUser.id,

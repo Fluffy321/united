@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Edit2, X, Check, Star } from 'lucide-react';
-import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import JewishHubBackButton from './JewishHubBackButton';
 import { toast } from 'sonner';
+import { createYahrzeit, deleteYahrzeit, filterYahrzeit, updateYahrzeit } from '@/services/entityServices';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -47,7 +47,7 @@ export default function YahrzeitManager() {
 
   const { data: yahrzeits = [], isLoading } = useQuery({
     queryKey: ['yahrzeits', user?.id],
-    queryFn: () => dataService.entities.Yahrzeit.filter({ user_id: user.id }, 'name', 200),
+    queryFn: () => filterYahrzeit({ user_id: user.id }, 'name', 200),
     enabled: Boolean(user?.id),
     staleTime: 60000,
   });
@@ -55,9 +55,9 @@ export default function YahrzeitManager() {
   const save = useMutation({
     mutationFn: async (data) => {
       if (editing) {
-        return dataService.entities.Yahrzeit.update(editing.id, data);
+        return updateYahrzeit(editing.id, data);
       }
-      return dataService.entities.Yahrzeit.create({ ...data, user_id: user.id });
+      return createYahrzeit({ ...data, user_id: user.id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['yahrzeits'] });
@@ -70,7 +70,7 @@ export default function YahrzeitManager() {
   });
 
   const remove = useMutation({
-    mutationFn: (id) => dataService.entities.Yahrzeit.delete(id),
+    mutationFn: (id) => deleteYahrzeit(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['yahrzeits'] });
       toast.success('Removed');

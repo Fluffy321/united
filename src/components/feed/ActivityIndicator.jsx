@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles } from 'lucide-react';
-import { dataService, storageService } from '@/services';
+import { storageService } from '@/services';
+import { listPost } from '@/services/entityServices';
 
 export default function ActivityIndicator({ currentUser }) {
   const [newPostsCount, setNewPostsCount] = useState(0);
@@ -12,7 +13,7 @@ export default function ActivityIndicator({ currentUser }) {
       const lastCheck = storageService.getItem('lastPostCheck');
       const lastCheckTime = lastCheck ? new Date(lastCheck) : new Date(Date.now() - 3600000);
       
-      const allPosts = await dataService.entities.Post.list('-created_date', 50);
+      const allPosts = await listPost('-created_date', 50);
       const newPosts = allPosts.filter(p => new Date(p.created_date) > lastCheckTime);
       
       setNewPostsCount(newPosts.length);

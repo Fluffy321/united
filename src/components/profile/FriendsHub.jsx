@@ -7,7 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Loader2, UserRound, UserRoundX, UserRoundPlus, UserRoundCheck, X, Check, Clock, Search, ContactRound, MessageCircle, Mail, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { dataService, findOrCreateDirectConversation } from '@/services';
+import { findOrCreateDirectConversation } from '@/services';
+import { listUser } from '@/services/entityServices';
 
 const TABS = [
   { key: 'find',     label: 'Find' },
@@ -125,7 +126,7 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
           if (error) throw error;
           people = data || [];
         } else {
-          const users = await dataService.entities.User.list('-created_date', 50);
+          const users = await listUser('-created_date', 50);
           people = users.filter((user) => user.id !== uid).slice(0, 25);
         }
         if (!cancelled) setSuggestedPeople(people);
@@ -181,7 +182,7 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
         if (error) throw error;
         results = data || [];
       } else {
-        const users = await dataService.entities.User.list('-created_date', 200);
+        const users = await listUser('-created_date', 200);
         const needle = q.toLowerCase();
         results = users
           .filter((user) => user.id !== uid)
@@ -233,7 +234,7 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
         if (error) throw error;
         matches = data || [];
       } else {
-        const users = await dataService.entities.User.list('-created_date', 500);
+        const users = await listUser('-created_date', 500);
         matches = users.filter((candidate) => {
           if (candidate.id === uid) return false;
           const candidateValues = [candidate.email, candidate.phone, candidate.phone_number]

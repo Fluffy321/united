@@ -1,39 +1,40 @@
 import dataService from './dataService';
 import { ACTIVITY_KIND, normalizeUnifiedActivity } from '@/lib/productInfrastructure';
+import { createReaction, createUnifiedPost, deleteComment, deleteReaction, deleteUnifiedPost, filterComment, filterReaction, filterUnifiedPost, getUnifiedPost, listUnifiedPost, updateComment, updateUnifiedPost } from '@/services/entityServices';
 
 export const postsService = {
   listPosts(sort = '-created_date', limit = 100) {
-    return dataService.entities.UnifiedPost.list(sort, limit);
+    return listUnifiedPost(sort, limit);
   },
   filterPosts(filter = {}, sort = '-created_date', limit = 100) {
-    return dataService.entities.UnifiedPost.filter(filter, sort, limit);
+    return filterUnifiedPost(filter, sort, limit);
   },
   getPost(id) {
-    return dataService.entities.UnifiedPost.get(id);
+    return getUnifiedPost(id);
   },
   createPost(payload) {
-    return dataService.entities.UnifiedPost.create(normalizeUnifiedActivity(payload));
+    return createUnifiedPost(normalizeUnifiedActivity(payload));
   },
   createCommunityPost(payload) {
-    return dataService.entities.UnifiedPost.create(normalizeUnifiedActivity(payload, { kind: ACTIVITY_KIND.COMMUNITY_POST }));
+    return createUnifiedPost(normalizeUnifiedActivity(payload, { kind: ACTIVITY_KIND.COMMUNITY_POST }));
   },
   createMapPost(payload) {
-    return dataService.entities.UnifiedPost.create(normalizeUnifiedActivity({ ...payload, post_to_map: true }, { kind: ACTIVITY_KIND.MAP_POST }));
+    return createUnifiedPost(normalizeUnifiedActivity({ ...payload, post_to_map: true }, { kind: ACTIVITY_KIND.MAP_POST }));
   },
   createMarketplaceListing(payload) {
-    return dataService.entities.UnifiedPost.create(normalizeUnifiedActivity(payload, { kind: ACTIVITY_KIND.MARKETPLACE_LISTING }));
+    return createUnifiedPost(normalizeUnifiedActivity(payload, { kind: ACTIVITY_KIND.MARKETPLACE_LISTING }));
   },
   createMitzvahRequestPost(payload) {
-    return dataService.entities.UnifiedPost.create(normalizeUnifiedActivity(payload, { kind: ACTIVITY_KIND.MITZVAH_REQUEST }));
+    return createUnifiedPost(normalizeUnifiedActivity(payload, { kind: ACTIVITY_KIND.MITZVAH_REQUEST }));
   },
   updatePost(id, patch) {
-    return dataService.entities.UnifiedPost.update(id, patch);
+    return updateUnifiedPost(id, patch);
   },
   deletePost(id) {
-    return dataService.entities.UnifiedPost.delete(id);
+    return deleteUnifiedPost(id);
   },
   listComments(postId, sort = 'created_date', limit = 100) {
-    return dataService.entities.Comment.filter({ post_id: postId }, sort, limit);
+    return filterComment({ post_id: postId }, sort, limit);
   },
   createComment(payload) {
     return dataService.functions.invoke('createFeedReply', {
@@ -43,22 +44,22 @@ export const postsService = {
     }).then((response) => response.data);
   },
   updateComment(id, patch) {
-    return dataService.entities.Comment.update(id, patch);
+    return updateComment(id, patch);
   },
   deleteComment(id) {
-    return dataService.entities.Comment.delete(id);
+    return deleteComment(id);
   },
   listReactions(postId, limit = 100) {
-    return dataService.entities.Reaction.filter({ post_id: postId }, '-created_date', limit);
+    return filterReaction({ post_id: postId }, '-created_date', limit);
   },
   listUserReactions(postId, userId, limit = 100) {
-    return dataService.entities.Reaction.filter({ post_id: postId, user_id: userId }, undefined, limit);
+    return filterReaction({ post_id: postId, user_id: userId }, undefined, limit);
   },
   createReaction(payload) {
-    return dataService.entities.Reaction.create(payload);
+    return createReaction(payload);
   },
   deleteReaction(id) {
-    return dataService.entities.Reaction.delete(id);
+    return deleteReaction(id);
   },
   search(payload) {
     return dataService.functions.invoke('universalSearch', payload);

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2, MessageCircle } from 'lucide-react';
-import { dataService, incrementCounter, findDirectConversation, createDirectConversation } from '@/services';
+import { incrementCounter, findDirectConversation, createDirectConversation } from '@/services';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
+import { createComment, filterComment, filterUser, listConversation } from '@/services/entityServices';
 
 export default function PromptResponsesSheet({ post, currentUser, open, onOpenChange, onResponseAdded }) {
   const [responses, setResponses] = useState([]);
@@ -19,7 +20,7 @@ export default function PromptResponsesSheet({ post, currentUser, open, onOpenCh
   const loadResponses = async () => {
     setLoading(true);
     try {
-      const data = await dataService.entities.Comment.filter({ post_id: post.id }, '-created_date', 50);
+      const data = await filterComment({ post_id: post.id }, '-created_date', 50);
       setResponses(data);
     } catch (e) {}
     setLoading(false);
@@ -29,7 +30,7 @@ export default function PromptResponsesSheet({ post, currentUser, open, onOpenCh
     if (!reply.trim() || !currentUser) return;
     setSubmitting(true);
     try {
-      await dataService.entities.Comment.create({
+      await createComment({
         post_id: post.id,
         author_id: currentUser.id,
         author_name: currentUser.display_name || currentUser.full_name,
@@ -49,10 +50,10 @@ export default function PromptResponsesSheet({ post, currentUser, open, onOpenCh
   const handleMessage = async (authorId) => {
     if (!currentUser || authorId === currentUser.id) return;
     try {
-      const convs = await dataService.entities.Conversation.list('-updated_date', 50);
+      const convs = await listConversation('-updated_date', 50);
       const existing = findDirectConversation(currentUser.id, authorId, convs);
       if (existing) { navigate(createPageUrl('Messages') + `?conversation=${existing.id}`); return; }
-      const [other] = await dataService.entities.User.filter({ id: authorId });
+      const [other] = await filterUser({ id: authorId });
       const conv = await createDirectConversation(currentUser, {
         id: authorId,
         name: other?.display_name || other?.full_name || 'User',

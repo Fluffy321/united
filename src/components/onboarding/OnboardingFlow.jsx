@@ -5,6 +5,7 @@ import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
 import { requestPushPermission, subscribeToPush } from '@/lib/pushSubscription';
 import { toast } from 'sonner';
 import { COMMUNITIES_ENABLED } from '@/config/features';
+import { listUser } from '@/services/entityServices';
 
 const ONBOARDING_KEY_PREFIX = 'junited_onboarding_complete_';
 const USERNAME_REGEX = /^[a-z0-9_]{3,30}$/;
@@ -546,7 +547,7 @@ export default function OnboardingFlow({ user, onComplete }) {
         return;
       }
 
-      const users = await dataService.entities.User.list('-created_date', 500);
+      const users = await listUser('-created_date', 500);
       const matches = users.filter((candidate) => {
         if (candidate.id === user?.id) return false;
         const candidateValues = [

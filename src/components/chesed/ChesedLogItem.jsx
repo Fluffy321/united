@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CheckCircle2, Clock, Edit2, Trash2, MoreVertical, HandHeart } from 'lucide-react';
-import { dataService } from '@/services';
 import { toast } from 'sonner';
+import { deleteChesedLog } from '@/services/entityServices';
 
 const CATEGORY_COLORS = {
   'Chesed': 'bg-blue-100 text-blue-700',
@@ -25,7 +25,7 @@ export default function ChesedLogItem({ log, onDelete, onEdit }) {
 
   const handleDelete = async () => {
     setShowMenu(false);
-    await dataService.entities.ChesedLog.delete(log.id);
+    await deleteChesedLog(log.id);
     toast.success('Log deleted');
     if (onDelete) onDelete();
   };

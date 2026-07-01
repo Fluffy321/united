@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { dataService } from '@/services';
 import { toast } from 'sonner';
 import CommunityLogo from './CommunityLogo';
+import { createCommunityPost, updateCommunity } from '@/services/entityServices';
 
 export default function AdminToolsPanel({ community, org, currentUser, onPostCreated, onLogoUpdated, onInfoUpdated }) {
   const [tab, setTab] = useState('posts');
@@ -32,7 +33,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
 
   const handleSaveInfo = async () => {
     setSavingInfo(true);
-    await dataService.entities.Community.update(community.id, {
+    await updateCommunity(community.id, {
       website: infoWebsite.trim() || undefined,
       phone: infoPhone.trim() || undefined,
       address: infoAddress.trim() || undefined,
@@ -54,7 +55,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
     setLogoUploading(true);
     try {
       const { file_url } = await dataService.integrations.Core.UploadFile({ file });
-      await dataService.entities.Community.update(community.id, {
+      await updateCommunity(community.id, {
         logo_url: file_url,
         logo_source: 'UPLOADED',
       });
@@ -70,7 +71,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
   const handleCreatePost = async () => {
     if (!postBody.trim()) { toast.error('Please write something'); return; }
     setSubmitting(true);
-    await dataService.entities.CommunityPost.create({
+    await createCommunityPost({
       community_id: community.id,
       org_id: org?.id,
       author_user_id: currentUser.id,

@@ -1,15 +1,15 @@
 import React from 'react';
 import { Download } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { dataService } from '@/services';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { filterMitzvahLog } from '@/services/entityServices';
 
 export default function CompletedMitzvahs({ currentUser }) {
   const { data: completedMitzvahs = [] } = useQuery({
     queryKey: ['completed-mitzvahs', currentUser?.id],
     queryFn: async () => {
-      const logs = await dataService.entities.MitzvahLog.filter({ user_id: currentUser.id }, '-created_date', 100);
+      const logs = await filterMitzvahLog({ user_id: currentUser.id }, '-created_date', 100);
       return logs.filter(log => log.hours_completed > 0 || log.date);
     },
     enabled: !!currentUser,

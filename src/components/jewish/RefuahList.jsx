@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, X, Check, Heart } from 'lucide-react';
-import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import JewishHubBackButton from './JewishHubBackButton';
 import { toast } from 'sonner';
+import { createRefuahRequest, filterRefuahRequest, updateRefuahRequest } from '@/services/entityServices';
 
 const EMPTY_FORM = { name: '', hebrew_name: '', condition: '' };
 
@@ -16,13 +16,13 @@ export default function RefuahList() {
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['refuah-requests'],
-    queryFn: () => dataService.entities.RefuahRequest.filter({ is_active: true }, 'name', 300),
+    queryFn: () => filterRefuahRequest({ is_active: true }, 'name', 300),
     staleTime: 60000,
     enabled: !!user,
   });
 
   const add = useMutation({
-    mutationFn: (data) => dataService.entities.RefuahRequest.create({
+    mutationFn: (data) => createRefuahRequest({
       ...data,
       submitted_by: user?.id,
       is_active: true,
@@ -37,7 +37,7 @@ export default function RefuahList() {
   });
 
   const remove = useMutation({
-    mutationFn: (id) => dataService.entities.RefuahRequest.update(id, { is_active: false }),
+    mutationFn: (id) => updateRefuahRequest(id, { is_active: false }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['refuah-requests'] });
       toast.success('Removed from list');

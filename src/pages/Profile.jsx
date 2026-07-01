@@ -26,6 +26,7 @@ import SavedPostsSection from '@/components/profile/SavedPostsSection.jsx';
 import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
 import FriendsHub from '@/components/profile/FriendsHub.jsx';
 import DestinationHeader from '@/components/layout/DestinationHeader';
+import { createBlock, filterMitzvahAction, filterMitzvahLog, filterMitzvahPoints, filterUnifiedPost, filterUser, filterUserCommunity, filterUserStreak } from '@/services/entityServices';
 
 export default function Profile() {
   const [searchParams] = useSearchParams();
@@ -55,7 +56,7 @@ export default function Profile() {
 
       if (profileId && profileId !== currentUser.id) {
         try {
-          const users = await dataService.entities.User.filter({ id: profileId });
+          const users = await filterUser({ id: profileId });
           if (users[0]) {
             setProfileUser(users[0]);
             setIsOwnProfile(false);
@@ -88,14 +89,14 @@ export default function Profile() {
 
   const { data: unifiedPosts = [] } = useQuery({
     queryKey: ['user-posts', profileUser?.id],
-    queryFn: () => dataService.entities.UnifiedPost.filter({ user_id: profileUser.id }, '-created_date', 10),
+    queryFn: () => filterUnifiedPost({ user_id: profileUser.id }, '-created_date', 10),
     enabled: !!profileUser && COMMUNITIES_ENABLED,
   });
 
   const { data: userStreak } = useQuery({
     queryKey: ['user-streak', profileUser?.id],
     queryFn: async () => {
-      const existing = await dataService.entities.UserStreak.filter({ user_id: profileUser.id });
+      const existing = await filterUserStreak({ user_id: profileUser.id });
       return existing[0] || null;
     },
     enabled: !!profileUser,
@@ -106,7 +107,7 @@ export default function Profile() {
   const { data: mitzvahLogs = [] } = useQuery({
     queryKey: ['mitzvah-logs', profileUser?.id],
     queryFn: async () => {
-      const logs = await dataService.entities.MitzvahLog.filter({ user_id: profileUser.id }, '-created_date', 50);
+      const logs = await filterMitzvahLog({ user_id: profileUser.id }, '-created_date', 50);
       return logs;
     },
     enabled: !!profileUser && isOwnProfile,
@@ -117,8 +118,8 @@ export default function Profile() {
   const { data: weeklyMitzvahCount = 0 } = useQuery({
     queryKey: ['weekly-mitzvah-count', profileUser?.id],
     queryFn: async () => {
-      const actions = await dataService.entities.MitzvahAction.filter({ user_id: profileUser.id }, '-created_date', 100);
-      const logs = await dataService.entities.MitzvahLog.filter({ user_id: profileUser.id }, '-created_date', 100);
+      const actions = await filterMitzvahAction({ user_id: profileUser.id }, '-created_date', 100);
+      const logs = await filterMitzvahLog({ user_id: profileUser.id }, '-created_date', 100);
 
       const weekActions = actions.filter(a => {
         const date = parseISO(a.created_date);
@@ -139,7 +140,7 @@ export default function Profile() {
   const { data: mitzvahPoints = 0 } = useQuery({
     queryKey: ['mitzvah-points', profileUser?.id],
     queryFn: async () => {
-      const points = await dataService.entities.MitzvahPoints.filter({ user_id: profileUser.id });
+      const points = await filterMitzvahPoints({ user_id: profileUser.id });
       return points.length > 0 ? points[0].total_points : 0;
     },
     enabled: !!profileUser,
@@ -150,7 +151,7 @@ export default function Profile() {
   const { data: userCommunities = [] } = useQuery({
     queryKey: ['user-communities', profileUser?.id],
     queryFn: async () => {
-      const comms = await dataService.entities.UserCommunity.filter({ user_id: profileUser.id }, '-created_date', 50);
+      const comms = await filterUserCommunity({ user_id: profileUser.id }, '-created_date', 50);
       if (comms.length > 0 && (!profileUser.communities_joined_count || profileUser.communities_joined_count !== comms.length)) {
         dataService.auth.updateMe({ communities_joined_count: comms.length }).catch(() => {});
       }
@@ -244,7 +245,7 @@ export default function Profile() {
   };
 
   const handleBlock = async () => {
-    await dataService.entities.Block.create({
+    await createBlock({
       blocker_id: currentUser.id,
       blocked_id: profileUser.id,
     });

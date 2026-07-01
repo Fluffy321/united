@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Calendar, MapPin, Clock, ChevronRight, Sparkles, Ticket } from 'lucide-react';
-import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO, startOfToday, addDays, isBefore, isToday, isTomorrow } from 'date-fns';
+import { filterUnifiedPost } from '@/services/entityServices';
 
 export default function ThisWeekEvents({ currentUser }) {
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -11,7 +11,7 @@ export default function ThisWeekEvents({ currentUser }) {
   const { data: events = [] } = useQuery({
     queryKey: ['this-week-events'],
     queryFn: async () => {
-      const all = await dataService.entities.UnifiedPost.filter({ type: 'event' }, 'event_date', 60);
+      const all = await filterUnifiedPost({ type: 'event' }, 'event_date', 60);
       const today = startOfToday();
       const weekEnd = addDays(today, 7);
       return all.filter(e => {

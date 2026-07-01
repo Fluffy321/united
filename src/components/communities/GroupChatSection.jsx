@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Send, Loader2, Share2 } from 'lucide-react';
-import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import UserAvatar from '@/components/common/UserAvatar';
 import { formatDistanceToNow } from 'date-fns';
 import { captureError } from '@/lib/analytics';
+import { createCommunityGroupChat, filterCommunityGroupChat, subscribeCommunityGroupChat } from '@/services/entityServices';
 
 export default function GroupChatSection({ communityId, currentUser, onInvite }) {
   const [message, setMessage] = useState('');
@@ -25,7 +25,7 @@ export default function GroupChatSection({ communityId, currentUser, onInvite })
 
   const { data: messages = [], isLoading, refetch } = useQuery({
     queryKey: ['community-chat', communityId],
-    queryFn: () => dataService.entities.CommunityGroupChat.filter(
+    queryFn: () => filterCommunityGroupChat(
       { community_id: communityId },
       '-created_date',
       50
@@ -47,7 +47,7 @@ export default function GroupChatSection({ communityId, currentUser, onInvite })
 
   useEffect(() => {
     if (!communityId) return;
-    const unsubscribe = dataService.entities.CommunityGroupChat.subscribe((event) => {
+    const unsubscribe = subscribeCommunityGroupChat((event) => {
       if (event.data?.community_id === communityId) {
         refetch();
       }
@@ -61,7 +61,7 @@ export default function GroupChatSection({ communityId, currentUser, onInvite })
 
     setSending(true);
     try {
-      await dataService.entities.CommunityGroupChat.create({
+      await createCommunityGroupChat({
         community_id: communityId,
         author_id: currentUser.id,
         author_name: currentUser.display_name || currentUser.full_name,

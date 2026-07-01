@@ -26,6 +26,7 @@ import { dataService, notificationsService, checkRateLimit, RateLimitError } fro
 import postsService from '@/services/postsService';
 import { ACTIVITY_KIND } from '@/lib/productInfrastructure';
 import { toast } from 'sonner';
+import { filterDailyFeedPrompt, updateDailyFeedPrompt } from '@/services/entityServices';
 
 const POST_TYPES = [
   { value: 'post', label: 'Post', icon: MessageCircle, tone: 'from-blue-500 to-cyan-500', soft: 'bg-blue-50 text-blue-700', placeholder: "What's happening in the Five Towns?" },
@@ -303,9 +304,9 @@ export default function UnifiedPostModal({
       }
 
       if (promptId) {
-        const prompt = await dataService.entities.DailyFeedPrompt.filter({ id: promptId });
+        const prompt = await filterDailyFeedPrompt({ id: promptId });
         if (prompt[0]) {
-          await dataService.entities.DailyFeedPrompt.update(promptId, {
+          await updateDailyFeedPrompt(promptId, {
             replies_count: (prompt[0].replies_count || 0) + 1,
           });
         }

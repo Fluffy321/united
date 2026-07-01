@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { dataService } from '@/services';
 import { toast } from 'sonner';
 import CommunityLogo from './CommunityLogo';
+import { createClaimRequest, updateCommunity } from '@/services/entityServices';
 
 export default function ClaimModal({ open, onOpenChange, community, currentUser }) {
   const [name, setName]   = useState(currentUser?.display_name || currentUser?.full_name || '');
@@ -41,7 +42,7 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
       return;
     }
     setSubmitting(true);
-    await dataService.entities.ClaimRequest.create({
+    await createClaimRequest({
       community_id: community.id,
       community_name: community.name,
       requester_id: currentUser?.id,
@@ -54,7 +55,7 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
     });
     // If they uploaded a logo, save it immediately
     if (logoUrl && logoUrl !== community?.logo_url) {
-      await dataService.entities.Community.update(community.id, {
+      await updateCommunity(community.id, {
         logo_url: logoUrl,
         logo_source: 'UPLOADED',
       });

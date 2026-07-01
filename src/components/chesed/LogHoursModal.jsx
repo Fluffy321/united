@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { Minus, Plus, Loader2 } from 'lucide-react';
+import { createChesedLog } from '@/services/entityServices';
 
 const CATEGORIES = ['Chesed', 'Volunteering', 'Tutoring', 'Visiting Sick', 'Food Drive', 'Other'];
 
@@ -49,7 +49,7 @@ export default function LogHoursModal({ open, onOpenChange, currentUser, onSucce
       verifier_phone: form.requestVerification ? form.verifier_phone.trim() : undefined,
     };
 
-    await dataService.entities.ChesedLog.create(payload);
+    await createChesedLog(payload);
     toast.success('Hours logged!');
     setSubmitting(false);
     onOpenChange(false);

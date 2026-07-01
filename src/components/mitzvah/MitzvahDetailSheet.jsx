@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { captureError } from '@/lib/analytics';
+import { createConversation, createHelpOffer, createMessage, createMitzvahAction, createMitzvahPoints, createReport, filterConversation, filterHelpOffer, filterMitzvahPoints, filterUser, updateConversation, updateHelpOffer, updateMitzvahPoints, updateMitzvahRequest } from '@/services/entityServices';
 
 const CATEGORY_COLORS = {
   'Errand': 'bg-blue-600 text-white',
@@ -48,7 +49,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
     setIsProcessing(true);
     try {
       // Check if help offer already exists
-      const existingOffers = await dataService.entities.HelpOffer.filter({ 
+      const existingOffers = await filterHelpOffer({ 
         request_id: request.id,
         helper_user_id: currentUser.id 
       });
@@ -61,7 +62,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
 
       // Get or create conversation
       let conversation;
-      const existingConversations = await dataService.entities.Conversation.filter({
+      const existingConversations = await filterConversation({
         participant_ids: { $all: [currentUser.id, request.created_by_user_id] },
         request_id: request.id
       });
@@ -69,8 +70,8 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
       if (existingConversations.length > 0) {
         conversation = existingConversations[0];
       } else {
-        const [requester] = await dataService.entities.User.filter({ id: request.created_by_user_id });
-        conversation = await dataService.entities.Conversation.create({
+        const [requester] = await filterUser({ id: request.created_by_user_id });
+        conversation = await createConversation({
           participant_ids: [currentUser.id, request.created_by_user_id],
           participant_names: [currentUser.display_name, requester?.display_name || request.created_by_name],
           participant_ages: [currentUser.age_range, requester?.age_range || '18+'],
@@ -81,7 +82,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
       }
 
       // Create help offer
-      await dataService.entities.HelpOffer.create({
+      await createHelpOffer({
         request_id: request.id,
         helper_user_id: currentUser.id,
         helper_name: currentUser.display_name,
@@ -90,14 +91,14 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
       });
 
       // Update request status
-      await dataService.entities.MitzvahRequest.update(request.id, {
+      await updateMitzvahRequest(request.id, {
         status: 'in_progress',
         claimed_by_user_id: currentUser.id,
         claimed_by_name: currentUser.display_name
       });
 
       // Send auto message
-      await dataService.entities.Message.create({
+      await createMessage({
         conversation_id: conversation.id,
         sender_id: currentUser.id,
         sender_name: currentUser.display_name,
@@ -108,7 +109,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
       });
 
       // Update conversation
-      await dataService.entities.Conversation.update(conversation.id, {
+      await updateConversation(conversation.id, {
         last_message: `Hi! I'm available to help...`,
         last_message_at: new Date().toISOString()
       });
@@ -139,13 +140,13 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
   const handleMarkComplete = async () => {
     setIsProcessing(true);
     try {
-      const [offer] = await dataService.entities.HelpOffer.filter({
+      const [offer] = await filterHelpOffer({
         request_id: request.id,
         helper_user_id: currentUser.id
       });
 
       if (offer) {
-        await dataService.entities.HelpOffer.update(offer.id, {
+        await updateHelpOffer(offer.id, {
           completed_by_helper: true
         });
         toast.success('Marked as completed. Waiting for requester confirmation.');
@@ -160,13 +161,13 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
     setIsProcessing(true);
     try {
       // Update request
-      await dataService.entities.MitzvahRequest.update(request.id, {
+      await updateMitzvahRequest(request.id, {
         status: 'completed',
         completed_at: new Date().toISOString()
       });
 
       // Award points
-      await dataService.entities.MitzvahAction.create({
+      await createMitzvahAction({
         user_id: request.claimed_by_user_id,
         user_name: request.claimed_by_name,
         request_id: request.id,
@@ -174,13 +175,13 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
         points_awarded: 10
       });
 
-      const [points] = await dataService.entities.MitzvahPoints.filter({ user_id: request.claimed_by_user_id });
+      const [points] = await filterMitzvahPoints({ user_id: request.claimed_by_user_id });
       if (points) {
-        await dataService.entities.MitzvahPoints.update(points.id, {
+        await updateMitzvahPoints(points.id, {
           total_points: points.total_points + 10
         });
       } else {
-        await dataService.entities.MitzvahPoints.create({
+        await createMitzvahPoints({
           user_id: request.claimed_by_user_id,
           user_name: request.claimed_by_name,
           total_points: 10
@@ -188,9 +189,9 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
       }
 
       // Update offer
-      const [offer] = await dataService.entities.HelpOffer.filter({ request_id: request.id });
+      const [offer] = await filterHelpOffer({ request_id: request.id });
       if (offer) {
-        await dataService.entities.HelpOffer.update(offer.id, { status: 'completed' });
+        await updateHelpOffer(offer.id, { status: 'completed' });
       }
 
       // Send completion notification to helper
@@ -217,7 +218,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
   const handleCancel = async () => {
     setIsProcessing(true);
     try {
-      await dataService.entities.MitzvahRequest.update(request.id, {
+      await updateMitzvahRequest(request.id, {
         status: 'cancelled'
       });
       toast.success('Request cancelled');
@@ -232,7 +233,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
   const handleReopen = async () => {
     setIsProcessing(true);
     try {
-      await dataService.entities.MitzvahRequest.update(request.id, {
+      await updateMitzvahRequest(request.id, {
         status: 'open',
         claimed_by_user_id: null,
         claimed_by_name: null
@@ -248,7 +249,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
 
   const handleReport = async () => {
     try {
-      await dataService.entities.Report.create({
+      await createReport({
         reporter_id: currentUser.id,
         reported_content_id: request.id,
         content_type: 'request',
@@ -264,7 +265,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
 
   const handleReportUser = async () => {
     try {
-      await dataService.entities.Report.create({
+      await createReport({
         reporter_id: currentUser.id,
         reported_content_id: request.created_by_user_id,
         content_type: 'user',
@@ -280,7 +281,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
 
   const handleMessage = async () => {
     const otherUserId = isRequester ? request.claimed_by_user_id : request.created_by_user_id;
-    const [conversation] = await dataService.entities.Conversation.filter({
+    const [conversation] = await filterConversation({
       participant_ids: { $all: [currentUser.id, otherUserId] },
       request_id: request.id
     });

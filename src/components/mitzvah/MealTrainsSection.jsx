@@ -4,9 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, eachDayOfInterval, parseISO } from 'date-fns';
 import { CalendarDays, CheckCircle2, ChefHat, Loader2, Plus, UtensilsCrossed, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { dataService, notificationsService } from '@/services';
+import { notificationsService } from '@/services';
 import { supabase } from '@/api/supabaseClient';
 import { appParams } from '@/lib/app-params';
+import { bulkCreateMealSlot, createMealSlot, createMealTrainRequest, filterMealTrainRequest, listMealSlot } from '@/services/entityServices';
 
 const MEAL_TYPES = [
   { value: 'dinner', label: 'Dinner' },
@@ -209,12 +210,12 @@ export default function MealTrainsSection({ currentUser }) {
 
   const { data: trains = [], isLoading: loadingTrains } = useQuery({
     queryKey: ['meal-trains'],
-    queryFn: () => dataService.entities.MealTrainRequest.filter({ status: 'open' }, '-created_date', 50),
+    queryFn: () => filterMealTrainRequest({ status: 'open' }, '-created_date', 50),
   });
 
   const { data: allSlots = [], isLoading: loadingSlots } = useQuery({
     queryKey: ['meal-slots'],
-    queryFn: () => dataService.entities.MealSlot.list('slot_date', 500),
+    queryFn: () => listMealSlot('slot_date', 500),
     enabled: trains.length > 0,
   });
 
@@ -229,7 +230,7 @@ export default function MealTrainsSection({ currentUser }) {
 
   const createMutation = useMutation({
     mutationFn: async ({ familyName, periodStart, periodEnd, mealType, notes, dietaryNotes, deliveryAddress, hideExactAddress }) => {
-      const train = await dataService.entities.MealTrainRequest.create({
+      const train = await createMealTrainRequest({
         created_by: currentUser.id,
         created_by_name: currentUser.display_name || currentUser.full_name || 'A neighbor',
         family_name: familyName,
@@ -247,10 +248,10 @@ export default function MealTrainsSection({ currentUser }) {
         slot_date: format(day, 'yyyy-MM-dd'),
         meal_type: mealType,
       }));
-      if (dataService.entities.MealSlot.bulkCreate) {
-        await dataService.entities.MealSlot.bulkCreate(slots);
+      if (bulkCreateMealSlot) {
+        await bulkCreateMealSlot(slots);
       } else {
-        await Promise.all(slots.map((slot) => dataService.entities.MealSlot.create(slot)));
+        await Promise.all(slots.map((slot) => createMealSlot(slot)));
       }
       return train;
     },

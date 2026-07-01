@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Navigation, X, Loader2, Hand } from 'lucide-react';
-import { dataService, storageService } from '@/services';
+import { storageService } from '@/services';
 import { formatDistanceToNow } from 'date-fns';
+import { filterMitzvahRequest } from '@/services/entityServices';
 
 const MILES_TO_KM = 1.60934;
 const RADIUS_MILES = 5;
@@ -51,7 +52,7 @@ export default function NearbyHelpBanner({ currentUser, onClaim }) {
 
   const fetchNearby = async (coords) => {
     try {
-      const requests = await dataService.entities.MitzvahRequest.filter({ status: 'open' }, '-created_date', 50);
+      const requests = await filterMitzvahRequest({ status: 'open' }, '-created_date', 50);
       const withDistance = requests
         .filter(r => r.approxLat && r.approxLng)
         .map(r => ({

@@ -7,6 +7,7 @@ import { storageService } from '@/services/storageService';
 import { processImage } from '@/lib/imageUpload';
 import { toast } from 'sonner';
 import CreateCommunityFlow from './CreateCommunityFlow';
+import { createCommunity, createCommunityPost, createUserCommunity } from '@/services/entityServices';
 
 const CATEGORIES = [
   { value: 'School', label: 'School', emoji: '🏫' },
@@ -75,7 +76,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
         }
       }
 
-      const community = await dataService.entities.Community.create({
+      const community = await createCommunity({
         name,
         description: description || undefined,
         description_short: description ? description.slice(0, 120) : undefined,
@@ -98,7 +99,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
       });
 
       // Auto-join as admin
-      await dataService.entities.UserCommunity.create({
+      await createUserCommunity({
         user_id: currentUser.id,
         community_id: community.id,
         role: 'Admin',
@@ -108,7 +109,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
       // Post the first welcome post if provided
       if (firstPost && firstPost.trim()) {
         const authorName = currentUser.display_name || currentUser.full_name || 'Admin';
-        await dataService.entities.CommunityPost.create({
+        await createCommunityPost({
           community_id: community.id,
           author_name: authorName,
           author_user_id: currentUser.id,
@@ -183,7 +184,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
         setUploading(false);
       }
 
-      const community = await dataService.entities.Community.create({
+      const community = await createCommunity({
         name: form.name.trim(),
         description: form.description.trim() || undefined,
         description_short: form.description.trim().slice(0, 120) || undefined,
@@ -203,7 +204,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
       });
 
       // Auto-join as admin
-      await dataService.entities.UserCommunity.create({
+      await createUserCommunity({
         user_id: currentUser?.id,
         community_id: community.id,
         role: 'Admin',
@@ -227,7 +228,7 @@ export default function CreateCommunityModal({ open, onOpenChange, currentUser, 
     setPostingFirst(true);
     try {
       const name = currentUser?.display_name || currentUser?.full_name || 'Admin';
-      await dataService.entities.CommunityPost.create({
+      await createCommunityPost({
         community_id: createdCommunity.id,
         author_name: name,
         author_user_id: currentUser?.id,

@@ -15,7 +15,7 @@ import {
   Heart,
   AtSign,
 } from 'lucide-react';
-import { notificationsService, dataService } from '@/services';
+import { notificationsService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow, parseISO, isToday, isYesterday, format, isValid } from 'date-fns';
@@ -25,6 +25,7 @@ import QueryError from '@/components/common/QueryError';
 import { appParams } from '@/lib/app-params';
 import { getNotificationRoute } from '@/lib/notificationRoute';
 import { COMMUNITIES_ENABLED } from '@/config/features';
+import { subscribeNotification } from '@/services/entityServices';
 
 // ── Type configuration ──────────────────────────────────────────────────────
 
@@ -263,7 +264,7 @@ export default function Notifications() {
   // Realtime — invalidate when any notification for this user is inserted
   useEffect(() => {
     if (!currentUser?.id || !appParams.hasBackendConfig) return;
-    const unsubscribe = dataService.entities.Notification.subscribe((event) => {
+    const unsubscribe = subscribeNotification((event) => {
       if (event.type === 'create' && event.data?.user_id === currentUser.id) {
         queryClient.invalidateQueries({ queryKey: ['notifications-page', currentUser.id] });
       }

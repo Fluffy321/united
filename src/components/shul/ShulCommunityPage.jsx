@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { MapPin, Users, ChevronLeft, Bell, Calendar, FileText, Users2 } from 'lucide-react';
-import { dataService } from '@/services';
 import { useQuery } from '@tanstack/react-query';
 import CommunityPostCard from '@/components/communities/CommunityPostCard';
+import { filterCommunityPost, filterUserCommunity } from '@/services/entityServices';
 
 const TABS = ['Posts', 'Announcements', 'Events', 'Members'];
 
@@ -11,22 +11,22 @@ export default function ShulCommunityPage({ community, currentUser, onBack }) {
 
   const { data: posts = [] } = useQuery({
     queryKey: ['shul-posts', community.id],
-    queryFn: () => dataService.entities.CommunityPost.filter({ community_id: community.id, type: 'general' }),
+    queryFn: () => filterCommunityPost({ community_id: community.id, type: 'general' }),
   });
 
   const { data: announcements = [] } = useQuery({
     queryKey: ['shul-announcements', community.id],
-    queryFn: () => dataService.entities.CommunityPost.filter({ community_id: community.id, type: 'announcement' }),
+    queryFn: () => filterCommunityPost({ community_id: community.id, type: 'announcement' }),
   });
 
   const { data: events = [] } = useQuery({
     queryKey: ['shul-events', community.id],
-    queryFn: () => dataService.entities.CommunityPost.filter({ community_id: community.id, type: 'event' }),
+    queryFn: () => filterCommunityPost({ community_id: community.id, type: 'event' }),
   });
 
   const { data: members = [] } = useQuery({
     queryKey: ['shul-members', community.id],
-    queryFn: () => dataService.entities.UserCommunity.filter({ community_id: community.id }),
+    queryFn: () => filterUserCommunity({ community_id: community.id }),
   });
 
   const tabContent = {

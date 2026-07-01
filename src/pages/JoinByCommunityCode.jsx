@@ -4,6 +4,7 @@ import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Users, MapPin, CheckCircle2, ArrowRight, Shield, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { createUserCommunity, filterCommunity, filterInviteLink, filterUserCommunity, updateInviteLink } from '@/services/entityServices';
 
 // /join?code=ABC123
 export default function JoinByCommunityCode() {
@@ -27,13 +28,13 @@ export default function JoinByCommunityCode() {
 
   const loadInvite = async () => {
     try {
-      const invites = await dataService.entities.InviteLink.filter({ code });
+      const invites = await filterInviteLink({ code });
       const inv = invites[0];
 
       if (!inv) { setStatus('error'); return; }
       if (!inv.is_active) { setStatus('expired'); return; }
       if (inv.expires_at && new Date(inv.expires_at) < new Date()) {
-        await dataService.entities.InviteLink.update(inv.id, { is_active: false });
+        await updateInviteLink(inv.id, { is_active: false });
         setStatus('expired');
         return;
       }
@@ -45,12 +46,12 @@ export default function JoinByCommunityCode() {
       setInvite(inv);
       setInviterName(inv.inviter_name || 'A community member');
 
-      const comm = await dataService.entities.Community.filter({ id: inv.community_id });
+      const comm = await filterCommunity({ id: inv.community_id });
       if (!comm[0]) { setStatus('error'); return; }
       setCommunity(comm[0]);
 
       if (currentUser) {
-        const existing = await dataService.entities.UserCommunity.filter({
+        const existing = await filterUserCommunity({
           user_id: currentUser.id,
           community_id: inv.community_id
         });
@@ -76,12 +77,12 @@ export default function JoinByCommunityCode() {
 
     setStatus('joining');
     try {
-      const existing = await dataService.entities.UserCommunity.filter({
+      const existing = await filterUserCommunity({
         user_id: currentUser.id,
         community_id: invite.community_id
       });
       if (existing.length === 0) {
-        await dataService.entities.UserCommunity.create({
+        await createUserCommunity({
           user_id: currentUser.id,
           community_id: invite.community_id,
           role: 'Member',
@@ -94,7 +95,7 @@ export default function JoinByCommunityCode() {
             if (error) throw error;
             return;
           }
-          await dataService.entities.InviteLink.update(invite.id, {
+          await updateInviteLink(invite.id, {
             uses_count: (invite.uses_count || 0) + 1,
           });
         };

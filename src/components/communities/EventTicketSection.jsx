@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Ticket, Users, ChevronDown, ChevronUp, Loader2, ShoppingCart, CheckCircle } from 'lucide-react';
-import { dataService } from '@/services';
 import { toast } from 'sonner';
 import PaymentTrustBenefits from '@/components/payments/PaymentTrustBenefits';
+import { createCommunityEventRSVP, deleteCommunityEventRSVP, filterCommunityEventRSVP, updateCommunityEvent, updateCommunityEventRSVP } from '@/services/entityServices';
 
 const RSVP_OPTIONS = [
   { value: 'going', label: 'Going', activeClass: 'bg-emerald-600 text-white border-emerald-600' },
@@ -32,9 +32,9 @@ export default function EventTicketSection({ event, currentUser, past }) {
 
   const loadRsvpData = async () => {
     const [allRsvps, userRsvps] = await Promise.all([
-      dataService.entities.CommunityEventRSVP.filter({ event_id: event.id }),
+      filterCommunityEventRSVP({ event_id: event.id }),
       currentUser
-        ? dataService.entities.CommunityEventRSVP.filter({ event_id: event.id, user_id: currentUser.id })
+        ? filterCommunityEventRSVP({ event_id: event.id, user_id: currentUser.id })
         : Promise.resolve([]),
     ]);
     setRsvpCounts({
@@ -57,14 +57,14 @@ export default function EventTicketSection({ event, currentUser, past }) {
     try {
       if (rsvpRecord) {
         if (rsvp === status) {
-          await dataService.entities.CommunityEventRSVP.delete(rsvpRecord.id);
+          await deleteCommunityEventRSVP(rsvpRecord.id);
           setRsvp(null); setRsvpRecord(null);
         } else {
-          await dataService.entities.CommunityEventRSVP.update(rsvpRecord.id, { status });
+          await updateCommunityEventRSVP(rsvpRecord.id, { status });
           setRsvp(status); setRsvpRecord(r => ({ ...r, status }));
         }
       } else {
-        const created = await dataService.entities.CommunityEventRSVP.create({
+        const created = await createCommunityEventRSVP({
           event_id: event.id,
           community_id: event.community_id,
           user_id: currentUser.id,
@@ -100,7 +100,7 @@ export default function EventTicketSection({ event, currentUser, past }) {
     setLoading(true);
     try {
       if (!rsvpRecord) {
-        const created = await dataService.entities.CommunityEventRSVP.create({
+        const created = await createCommunityEventRSVP({
           event_id: event.id,
           community_id: event.community_id,
           user_id: currentUser.id,
@@ -110,7 +110,7 @@ export default function EventTicketSection({ event, currentUser, past }) {
           ticket_quantity: quantity,
         });
         setRsvp('going'); setRsvpRecord(created);
-        await dataService.entities.CommunityEvent.update(event.id, { tickets_sold: (event.tickets_sold || 0) + quantity });
+        await updateCommunityEvent(event.id, { tickets_sold: (event.tickets_sold || 0) + quantity });
         toast.success("You're registered! 🎉");
       } else {
         toast('You are already registered for this event.');

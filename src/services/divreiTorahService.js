@@ -1,4 +1,4 @@
-import { dataService } from '@/services';
+import { createUnifiedPost, filterUnifiedPost, updateUnifiedPost } from '@/services/entityServices';
 
 export const DVAR_TORAH_KIND = 'jewish_dvar_torah';
 
@@ -25,7 +25,7 @@ function matchesReading(post, reading) {
 }
 
 export async function listDvarTorahPosts(reading, { includePending = false, currentUserId = null } = {}) {
-  const posts = await dataService.entities.UnifiedPost.filter({ activity_kind: DVAR_TORAH_KIND }, '-created_date', 100);
+  const posts = await filterUnifiedPost({ activity_kind: DVAR_TORAH_KIND }, '-created_date', 100);
   return posts
     .filter((post) => matchesReading(post, reading))
     .filter((post) => {
@@ -37,7 +37,7 @@ export async function listDvarTorahPosts(reading, { includePending = false, curr
 
 export async function submitDvarTorah({ reading, currentUser, title, body, authorTitle = '' }) {
   const autoApproved = canAutoApproveDvarTorah(currentUser);
-  return dataService.entities.UnifiedPost.create({
+  return createUnifiedPost({
     title: title.trim(),
     body: body.trim(),
     content: body.trim(),
@@ -63,7 +63,7 @@ export async function submitDvarTorah({ reading, currentUser, title, body, autho
 }
 
 export async function approveDvarTorah(id) {
-  return dataService.entities.UnifiedPost.update(id, {
+  return updateUnifiedPost(id, {
     dvar_torah_status: 'approved',
     needs_review: false,
     verified: true,
@@ -72,7 +72,7 @@ export async function approveDvarTorah(id) {
 }
 
 export async function rejectDvarTorah(id) {
-  return dataService.entities.UnifiedPost.update(id, {
+  return updateUnifiedPost(id, {
     dvar_torah_status: 'rejected',
     needs_review: false,
     verified: false,

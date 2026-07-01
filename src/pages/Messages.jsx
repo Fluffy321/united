@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle, Inbox, Loader2, MessageCircle, Plus, Users } from 'lucide-react';
 import PageHelp from '@/components/common/PageHelp';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { dataService, batchFetchByIds } from '@/services';
+import { batchFetchByIds } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import ChatView from '@/components/messages/ChatView';
@@ -16,6 +16,7 @@ import BackButton from '@/components/common/BackButton';
 import { buildAIConversation } from '@/lib/aiAgent';
 import { captureError } from '@/lib/analytics';
 import { COMMUNITIES_ENABLED } from '@/config/features';
+import { createBlock, filterConversation, filterMessageRequest, filterUserCommunity, listCommunity, listConversation, subscribeMessage, updateConversation } from '@/services/entityServices';
 
 export default function Messages() {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ export default function Messages() {
 
   useEffect(() => {
     if (!currentUser) return;
-    const unsubscribe = dataService.entities.Message.subscribe((event) => {
+    const unsubscribe = subscribeMessage((event) => {
       if (event.type === 'create') {
         const newMsg = event.data;
         if (newMsg.sender_id !== currentUser.id) {
@@ -63,7 +64,7 @@ export default function Messages() {
 
   const loadConversation = async (id) => {
     try {
-      const [conv] = await dataService.entities.Conversation.filter({ id });
+      const [conv] = await filterConversation({ id });
       if (!conv) {
         toast.error('That conversation could not be found.');
         navigate('/Messages', { replace: true });
@@ -81,10 +82,10 @@ export default function Messages() {
   const { data: communityConversations = [] } = useQuery({
     queryKey: ['community-convs', currentUser?.id],
     queryFn: async () => {
-      const memberships = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id });
+      const memberships = await filterUserCommunity({ user_id: currentUser.id });
       if (!memberships.length) return [];
       const communityIds = memberships.map(m => m.community_id);
-      const allComms = await dataService.entities.Community.list('-follower_count', 100);
+      const allComms = await listCommunity('-follower_count', 100);
       const joined = allComms.filter(c => communityIds.includes(c.id));
       return joined.map(c => ({
         id: `community-${c.id}`,
@@ -108,7 +109,7 @@ export default function Messages() {
   const { data: conversations = [], isLoading, isError: isConversationsError } = useQuery({
     queryKey: ['conversations', currentUser?.id],
     queryFn: async () => {
-      const allConvs = await dataService.entities.Conversation.list('-updated_date', 50);
+      const allConvs = await listConversation('-updated_date', 50);
       const userConvs = allConvs.filter((c) => c.participant_ids?.includes(currentUser.id));
 
       const requestIds = [...new Set(userConvs.map((c) => c.request_id).filter(Boolean))];
@@ -138,7 +139,7 @@ export default function Messages() {
 
   const { data: pendingRequests = [] } = useQuery({
     queryKey: ['message-requests', currentUser?.id],
-    queryFn: () => dataService.entities.MessageRequest.filter({ recipient_id: currentUser.id, status: 'pending' }, '-created_date', 50),
+    queryFn: () => filterMessageRequest({ recipient_id: currentUser.id, status: 'pending' }, '-created_date', 50),
     enabled: !!currentUser,
     staleTime: 60000,
   });
@@ -165,7 +166,7 @@ export default function Messages() {
 
   const handleArchive = async (conv) => {
     try {
-      await dataService.entities.Conversation.update(conv.id, { is_archived: true });
+      await updateConversation(conv.id, { is_archived: true });
       queryClient.invalidateQueries({ queryKey: ['conversations', currentUser.id] });
       toast.success('Conversation archived');
     } catch (e) {
@@ -176,7 +177,7 @@ export default function Messages() {
   const handleMarkUnread = async (conv) => {
     try {
       const newUnread = { ...(conv.unread_count || {}), [currentUser.id]: 1 };
-      await dataService.entities.Conversation.update(conv.id, { unread_count: newUnread });
+      await updateConversation(conv.id, { unread_count: newUnread });
       queryClient.invalidateQueries({ queryKey: ['conversations', currentUser.id] });
       toast.success('Marked as unread');
     } catch (e) {
@@ -185,7 +186,7 @@ export default function Messages() {
   };
 
   const handleBlock = async (userId) => {
-    await dataService.entities.Block.create({
+    await createBlock({
       blocker_id: currentUser.id,
       blocked_id: userId
     });

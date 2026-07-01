@@ -2,8 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Award, CheckCircle2, Flame, Heart, Plus, Sparkles } from 'lucide-react';
 import { format, isToday, parseISO, subDays } from 'date-fns';
-import { dataService } from '@/services';
 import { toast } from 'sonner';
+import { createMitzvahLog, createMitzvahPoints, createUserStreak, filterMitzvahLog, filterMitzvahPoints, filterUserStreak, updateMitzvahPoints, updateUserStreak } from '@/services/entityServices';
 
 const DAILY_GOAL = 2;
 
@@ -42,7 +42,7 @@ async function upsertStreak({ currentUser, completedToday }) {
   if (!completedToday) return null;
   const today = dateKey();
   const yesterday = dateKey(subDays(new Date(), 1));
-  const existing = await dataService.entities.UserStreak.filter({ user_id: currentUser.id });
+  const existing = await filterUserStreak({ user_id: currentUser.id });
   const current = existing[0];
 
   if (current?.last_activity_date === today) return current;
@@ -59,20 +59,20 @@ async function upsertStreak({ currentUser, completedToday }) {
     badge_level: badgeFor(nextCurrent),
   };
 
-  if (current?.id) return dataService.entities.UserStreak.update(current.id, patch);
-  return dataService.entities.UserStreak.create(patch);
+  if (current?.id) return updateUserStreak(current.id, patch);
+  return createUserStreak(patch);
 }
 
 async function addMitzvahPoints(currentUser, pointsToAdd) {
-  const existing = await dataService.entities.MitzvahPoints.filter({ user_id: currentUser.id });
+  const existing = await filterMitzvahPoints({ user_id: currentUser.id });
   const current = existing[0];
   const patch = {
     user_id: currentUser.id,
     user_name: currentUser.display_name || currentUser.full_name || 'Community member',
     total_points: (current?.total_points || 0) + pointsToAdd,
   };
-  if (current?.id) return dataService.entities.MitzvahPoints.update(current.id, patch);
-  return dataService.entities.MitzvahPoints.create(patch);
+  if (current?.id) return updateMitzvahPoints(current.id, patch);
+  return createMitzvahPoints(patch);
 }
 
 export default function DailyMitzvahTracker({ currentUser }) {
@@ -86,7 +86,7 @@ export default function DailyMitzvahTracker({ currentUser }) {
 
   const { data: logs = [] } = useQuery({
     queryKey: ['daily-mitzvah-tracker-logs', currentUser?.id],
-    queryFn: () => dataService.entities.MitzvahLog.filter({ user_id: currentUser.id }, '-date', 100),
+    queryFn: () => filterMitzvahLog({ user_id: currentUser.id }, '-date', 100),
     enabled: Boolean(currentUser?.id),
     staleTime: 60000,
   });
@@ -94,7 +94,7 @@ export default function DailyMitzvahTracker({ currentUser }) {
   const { data: streak = null } = useQuery({
     queryKey: ['daily-mitzvah-tracker-streak', currentUser?.id],
     queryFn: async () => {
-      const rows = await dataService.entities.UserStreak.filter({ user_id: currentUser.id });
+      const rows = await filterUserStreak({ user_id: currentUser.id });
       return rows[0] || null;
     },
     enabled: Boolean(currentUser?.id),
@@ -120,7 +120,7 @@ export default function DailyMitzvahTracker({ currentUser }) {
     setSaving(true);
     try {
       const beforeCount = todayCount;
-      await dataService.entities.MitzvahLog.create({
+      await createMitzvahLog({
         user_id: currentUser.id,
         user_name: currentUser.display_name || currentUser.full_name || 'Community member',
         date: dateKey(),

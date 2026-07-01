@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { dataService } from '@/services';
 import UserAvatar from '@/components/common/UserAvatar';
 import { formatDistanceToNow } from 'date-fns';
 import { BarChart2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { createPollVote, filterPollVote, subscribePollVote, updateUnifiedPost } from '@/services/entityServices';
 
 export default function PollCard({ post, currentUser }) {
   const [votes, setVotes] = useState([]);
@@ -14,7 +14,7 @@ export default function PollCard({ post, currentUser }) {
   const totalVotes = votes.length;
 
   useEffect(() => {
-    dataService.entities.PollVote.filter({ post_id: post.id }).then(v => {
+    filterPollVote({ post_id: post.id }).then(v => {
       setVotes(v);
       if (currentUser) {
         const mine = v.find(x => x.user_id === currentUser.id);
@@ -22,7 +22,7 @@ export default function PollCard({ post, currentUser }) {
       }
     }).catch(() => {});
 
-    const unsub = dataService.entities.PollVote.subscribe((event) => {
+    const unsub = subscribePollVote((event) => {
       if (event.data?.post_id !== post.id) return;
       setVotes(prev => {
         if (event.type === 'create') return [...prev, event.data];
@@ -37,8 +37,8 @@ export default function PollCard({ post, currentUser }) {
     if (!currentUser || userVote !== null || voting) return;
     setVoting(true);
     try {
-      await dataService.entities.PollVote.create({ post_id: post.id, user_id: currentUser.id, option_index: index });
-      await dataService.entities.UnifiedPost.update(post.id, { poll_votes_count: totalVotes + 1 });
+      await createPollVote({ post_id: post.id, user_id: currentUser.id, option_index: index });
+      await updateUnifiedPost(post.id, { poll_votes_count: totalVotes + 1 });
       setUserVote(index);
     } catch {
       toast.error('Could not submit your vote. Please try again.');

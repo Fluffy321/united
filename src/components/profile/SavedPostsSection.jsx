@@ -1,12 +1,12 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/api/supabaseClient';
-import { batchFetchByIds } from '@/api/base44Client';
-import { dataService } from '@/services';
+import { batchFetchByIds } from '@/services/supabaseRepository';
 import { Bookmark, Loader2, X, MessageCircle, Heart } from 'lucide-react';
 import { formatDistanceToNow, parseISO, isValid } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { deleteBookmark } from '@/services/entityServices';
 
 function safeFormatDate(dateStr) {
   if (!dateStr) return null;
@@ -104,7 +104,7 @@ export default function SavedPostsSection({ userId }) {
 
   const removeMutation = useMutation({
     mutationFn: async (bookmarkId) => {
-      await dataService.entities.Bookmark.delete(bookmarkId);
+      await deleteBookmark(bookmarkId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmarks', userId] });

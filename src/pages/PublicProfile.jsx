@@ -6,6 +6,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import UserAvatar from '@/components/common/UserAvatar';
 import { toast } from 'sonner';
+import { filterMitzvahLog, filterUnifiedPost, filterUser } from '@/services/entityServices';
 
 // ── Avatar color helper ───────────────────────────────────────────────────────
 const AVATAR_COLORS = ['#2563EB','#7C3AED','#16A34A','#F59E0B','#EC4899','#0891B2'];
@@ -134,9 +135,9 @@ export default function PublicProfile() {
 
     const fetchAll = async () => {
       const [usersRes, postsRes, mitzvahRes] = await Promise.allSettled([
-        dataService.entities.User.filter({ id: userId }),
-        dataService.entities.UnifiedPost.filter({ user_id: userId }, '-created_date', 20),
-        dataService.entities.MitzvahLog.filter({ user_id: userId }, '-created_date', 100),
+        filterUser({ id: userId }),
+        filterUnifiedPost({ user_id: userId }, '-created_date', 20),
+        filterMitzvahLog({ user_id: userId }, '-created_date', 100),
       ]);
 
       if (usersRes.status === 'fulfilled' && usersRes.value[0]) {

@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Loader2, MessageCircle, Users, Bot } from 'lucide-react';
-import { dataService, findOrCreateDirectConversation, checkRateLimit, RateLimitError } from '@/services';
+import { findOrCreateDirectConversation, checkRateLimit, RateLimitError } from '@/services';
 import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 import { canMessage } from '@/lib/messagingPermissions';
 import { AI_AGENT, buildAIConversation } from '@/lib/aiAgent';
 import { toast } from 'sonner';
 import { COMMUNITIES_ENABLED } from '@/config/features';
+import { filterUserCommunity, listUser } from '@/services/entityServices';
 
 const DEBOUNCE_MS = 300;
 
@@ -45,7 +46,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
         }));
       } else {
         // Local/demo mode: bounded fetch, client-side filter.
-        const allUsers = await dataService.entities.User.list('-created_date', 200);
+        const allUsers = await listUser('-created_date', 200);
         const lq = q.toLowerCase();
         filtered = allUsers.filter(u =>
           u.id !== currentUser.id &&
@@ -61,7 +62,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
 
       // Lazily load current user's communities for mutual community counts.
       if (COMMUNITIES_ENABLED && !userCommunities) {
-        const memberships = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id });
+        const memberships = await filterUserCommunity({ user_id: currentUser.id });
         setUserCommunities(new Set(memberships.map(m => m.community_id)));
       }
     } catch {
@@ -169,7 +170,7 @@ function UserResultRow({ user, currentUserCommunities, loading, onClick }) {
 
   React.useEffect(() => {
     if (isAI || !COMMUNITIES_ENABLED || !currentUserCommunities) return;
-    dataService.entities.UserCommunity.filter({ user_id: user.id }).then(memberships => {
+    filterUserCommunity({ user_id: user.id }).then(memberships => {
       const theirCommunities = new Set(memberships.map(m => m.community_id));
       const count = [...currentUserCommunities].filter(id => theirCommunities.has(id)).length;
       setMutualCount(count);

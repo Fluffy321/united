@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { dataService, incrementCounter } from '@/services';
+import { incrementCounter } from '@/services';
 import { ArrowLeft, Users, MapPin, Send } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
+import { createGroupPost, filterGroupMember, filterGroupPost } from '@/services/entityServices';
 
 export default function GroupDetailSheet({ group, open, onOpenChange, currentUser, isMember, onJoin, onLeave }) {
   const [posts, setPosts] = useState([]);
@@ -14,15 +15,15 @@ export default function GroupDetailSheet({ group, open, onOpenChange, currentUse
 
   useEffect(() => {
     if (open && group) {
-      dataService.entities.GroupPost.filter({ group_id: group.id }, '-created_date', 30).then(setPosts);
-      dataService.entities.GroupMember.filter({ group_id: group.id }, '-created_date', 50).then(setMembers);
+      filterGroupPost({ group_id: group.id }, '-created_date', 30).then(setPosts);
+      filterGroupMember({ group_id: group.id }, '-created_date', 50).then(setMembers);
     }
   }, [open, group]);
 
   const handlePost = async () => {
     if (!newPost.trim()) return;
     setPosting(true);
-    const post = await dataService.entities.GroupPost.create({
+    const post = await createGroupPost({
       group_id: group.id,
       user_id: currentUser.id,
       user_name: currentUser.full_name,

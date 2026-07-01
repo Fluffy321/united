@@ -91,7 +91,7 @@ const SUPABASE_ENTITY_TABLES = {
   // All other entities (Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.
-  // See the UNMAPPED ENTITIES section in base44Client.js for the full list and
+  // See the UNMAPPED ENTITIES section below for the full list and
   // the required migrations.
 };
 
@@ -1001,7 +1001,7 @@ const createUnmappedEntityApi = (entityName) => {
       `[JUnited] Entity "${entityName}" has no SUPABASE_ENTITY_TABLES mapping. ` +
       (import.meta.env.DEV
         ? 'Using localStorage in dev — add a migration + mapping before shipping this feature.'
-        : 'All reads/writes will throw in production. See base44Client.js for required migrations.');
+        : 'All reads/writes will throw in production. See supabaseRepository.js for required migrations.');
     import.meta.env.DEV ? console.warn(msg) : console.error(msg);
   }
 
@@ -1501,7 +1501,7 @@ export const checkRateLimit = async (action) => {
   }
 };
 
-export const base44 = {
+export const supabaseBackend = {
   auth: {
     async me() {
       if (shouldUseSupabase) return getSupabaseUser();

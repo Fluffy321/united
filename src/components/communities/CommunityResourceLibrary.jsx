@@ -8,6 +8,7 @@ import { dataService } from '@/services';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { createCommunityResource, deleteCommunityResource, filterCommunityResource } from '@/services/entityServices';
 import {
   FREE_COMMUNITY_LIMITS,
   canCreateCommunityResource,
@@ -100,7 +101,7 @@ function AddResourceSheet({
         fileUrl = res.file_url;
         fileName = file.name;
       }
-      await dataService.entities.CommunityResource.create({
+      await createCommunityResource({
         community_id: communityId,
         title: title.trim(),
         description: description.trim(),
@@ -354,12 +355,12 @@ export default function CommunityResourceLibrary({ communityId, community, curre
 
   const { data: resources = [], isLoading } = useQuery({
     queryKey: ['community-resources', communityId],
-    queryFn: () => dataService.entities.CommunityResource.filter({ community_id: communityId }, '-created_date', 100),
+    queryFn: () => filterCommunityResource({ community_id: communityId }, '-created_date', 100),
     enabled: !!communityId,
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => dataService.entities.CommunityResource.delete(id),
+    mutationFn: (id) => deleteCommunityResource(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['community-resources', communityId] });
       toast.success('Resource deleted');

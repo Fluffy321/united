@@ -42,6 +42,7 @@ import {
   CommunityWelcomeHub,
 } from './CommunityOperatingSystem';
 import CommunityPersonalizationHub from './CommunityPersonalizationHub';
+import { filterCommunityEvent, filterCommunityResource, filterMitzvahRequest, filterUnifiedPost, filterUserCommunity } from '@/services/entityServices';
 
 function getPostTypeForTab(activeTab, typeKey) {
   if (activeTab === 'announcements') return 'announcement';
@@ -104,7 +105,7 @@ export default function CommunityHubDetail({
 
   const { data: membershipRecord = [] } = useQuery({
     queryKey: ['community-hub-membership', community.id, currentUser?.id],
-    queryFn: () => dataService.entities.UserCommunity.filter({ community_id: community.id, user_id: currentUser.id }),
+    queryFn: () => filterUserCommunity({ community_id: community.id, user_id: currentUser.id }),
     enabled: Boolean(currentUser?.id && community.id) && !isSeedCommunity,
     staleTime: 30000,
   });
@@ -167,7 +168,7 @@ export default function CommunityHubDetail({
 
   const { data: realPosts = [] } = useQuery({
     queryKey: ['community-hub-posts', community.id],
-    queryFn: () => dataService.entities.UnifiedPost.filter({ community_id: community.id }, '-created_date', 50),
+    queryFn: () => filterUnifiedPost({ community_id: community.id }, '-created_date', 50),
     enabled: Boolean(community.id) && (!isSeedCommunity || isDailyTorahCommunity),
     staleTime: 30000,
   });
@@ -191,28 +192,28 @@ export default function CommunityHubDetail({
 
   const { data: openNeeds = [] } = useQuery({
     queryKey: ['community-hub-open-needs', community.id],
-    queryFn: () => dataService.entities.MitzvahRequest.filter({ community_id: community.id }, '-created_date', 30),
+    queryFn: () => filterMitzvahRequest({ community_id: community.id }, '-created_date', 30),
     enabled: Boolean(community.id) && !isSeedCommunity && typeConfig.key === 'chesed',
     staleTime: 30000,
   });
 
   const { data: events = [] } = useQuery({
     queryKey: ['community-hub-events', community.id],
-    queryFn: () => dataService.entities.CommunityEvent.filter({ community_id: community.id }, 'start_date', 50),
+    queryFn: () => filterCommunityEvent({ community_id: community.id }, 'start_date', 50),
     enabled: Boolean(community.id) && !isSeedCommunity,
     staleTime: 30000,
   });
 
   const { data: resources = [] } = useQuery({
     queryKey: ['community-hub-resources', community.id],
-    queryFn: () => dataService.entities.CommunityResource.filter({ community_id: community.id }, '-created_date', 50),
+    queryFn: () => filterCommunityResource({ community_id: community.id }, '-created_date', 50),
     enabled: Boolean(community.id) && !isSeedCommunity && canUseCommunityResources(community),
     staleTime: 30000,
   });
 
   const { data: members = [] } = useQuery({
     queryKey: ['community-hub-members', community.id],
-    queryFn: () => dataService.entities.UserCommunity.filter({ community_id: community.id }, '-created_date', 100),
+    queryFn: () => filterUserCommunity({ community_id: community.id }, '-created_date', 100),
     enabled: Boolean(community.id) && !isSeedCommunity,
     staleTime: 30000,
   });

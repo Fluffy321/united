@@ -11,13 +11,13 @@ import {
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/api/supabaseClient';
-import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { format, parseISO } from 'date-fns';
 import JewishHubBackButton from './JewishHubBackButton';
 import CalendarDaySheet from '@/components/calendar/CalendarDaySheet';
 import CalendarEventDetailSheet from '@/components/calendar/CalendarEventDetailSheet';
 import CreateCalendarEventModal from '@/components/calendar/CreateCalendarEventModal';
+import { filterCommunityEventRSVP, listCommunityEvent, listMitzvahRequest } from '@/services/entityServices';
 
 // ─── Hebcal fetch ────────────────────────────────────────────────────────────
 
@@ -225,7 +225,7 @@ function JewishCalendarPageInner() {
     queryKey: ['my-rsvp-event-ids', currentUser?.id],
     queryFn: async () => {
       if (!currentUser?.id) return [];
-      const rsvps = await dataService.entities.CommunityEventRSVP.filter(
+      const rsvps = await filterCommunityEventRSVP(
         { user_id: currentUser.id, status: 'going' }, '-created_at', 200
       );
       return (rsvps || []).map(r => r.event_id).filter(Boolean);
@@ -244,7 +244,7 @@ function JewishCalendarPageInner() {
     queryFn: async () => {
       if (!supabase) {
         // Fallback: use dataService
-        const all = await dataService.entities.CommunityEvent.list('-start_date', 300);
+        const all = await listCommunityEvent('-start_date', 300);
         return (all || []).filter(e => {
           const d = (e.start_date || e.event_date || '').slice(0, 10);
           return d >= monthStart && d <= monthEnd;
@@ -267,7 +267,7 @@ function JewishCalendarPageInner() {
   const { data: mitzvahs = [] } = useQuery({
     queryKey: ['calendar-mitzvahs', viewYear, viewMonth],
     queryFn: async () => {
-      const all = await dataService.entities.MitzvahRequest.list('-created_date', 300);
+      const all = await listMitzvahRequest('-created_date', 300);
       return (all || []).filter(m => {
         const d = (m.needed_by || '').slice(0, 10);
         return d >= monthStart && d <= monthEnd;

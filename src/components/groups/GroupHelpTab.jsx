@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, HandHeart, CheckCircle2, Loader2, X } from 'lucide-react';
-import { dataService } from '@/services';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { toast } from 'sonner';
+import { createGroupPost, filterGroupPost, updateGroupPost } from '@/services/entityServices';
 
 export default function GroupHelpTab({ group, currentUser, isMember }) {
   const [requests, setRequests] = useState([]);
@@ -18,7 +18,7 @@ export default function GroupHelpTab({ group, currentUser, isMember }) {
 
   const load = async () => {
     setLoading(true);
-    const all = await dataService.entities.GroupPost.filter({ group_id: group.id, post_type: 'help' }, '-created_date', 50);
+    const all = await filterGroupPost({ group_id: group.id, post_type: 'help' }, '-created_date', 50);
     setRequests(all);
     setLoading(false);
   };
@@ -27,7 +27,7 @@ export default function GroupHelpTab({ group, currentUser, isMember }) {
     e.preventDefault();
     if (!body.trim()) return;
     setPosting(true);
-    const post = await dataService.entities.GroupPost.create({
+    const post = await createGroupPost({
       group_id: group.id,
       user_id: currentUser.id,
       user_name: currentUser.full_name,
@@ -44,7 +44,7 @@ export default function GroupHelpTab({ group, currentUser, isMember }) {
 
   const handleFulfill = async (req) => {
     setFulfilling(req.id);
-    await dataService.entities.GroupPost.update(req.id, { help_status: 'fulfilled' });
+    await updateGroupPost(req.id, { help_status: 'fulfilled' });
     setRequests(prev => prev.map(r => r.id === req.id ? { ...r, help_status: 'fulfilled' } : r));
     setFulfilling(null);
     toast.success('Marked as fulfilled!');

@@ -3,9 +3,9 @@ import { Hand, MessageCircle, CheckCircle2, Clock, MapPin, Eye, Users } from 'lu
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from 'date-fns';
-import { dataService } from '@/services';
 import StatusPipeline from './StatusPipeline';
 import ThankYouBanner from './ThankYouBanner';
+import { updateMitzvahRequest } from '@/services/entityServices';
 
 const CATEGORY_COLORS = {
   'Errand':       'bg-blue-100 text-blue-700',
@@ -48,7 +48,7 @@ export default function MitzvahRequestCard({ request, currentUser, onClaim, onMe
   // Track view
   useEffect(() => {
     if (!isRequester && isOpen) {
-      dataService.entities.MitzvahRequest.update(request.id, {
+      updateMitzvahRequest(request.id, {
         views_count: (request.views_count || 0) + 1
       }).catch(() => {});
     }

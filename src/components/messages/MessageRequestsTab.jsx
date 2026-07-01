@@ -1,30 +1,30 @@
 import React from 'react';
-import { dataService } from '@/services';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { createConversation, filterConversation, filterMessageRequest, updateMessageRequest } from '@/services/entityServices';
 
 export default function MessageRequestsTab({ currentUser, onAccepted }) {
   const queryClient = useQueryClient();
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['message-requests', currentUser.id],
-    queryFn: () => dataService.entities.MessageRequest.filter({ recipient_id: currentUser.id, status: 'pending' }, '-created_date', 50),
+    queryFn: () => filterMessageRequest({ recipient_id: currentUser.id, status: 'pending' }, '-created_date', 50),
     enabled: !!currentUser,
   });
 
   const handleAccept = async (req) => {
     // Create a real conversation
-    const existing = await dataService.entities.Conversation.filter({ id: req.sender_id });
-    const conv = await dataService.entities.Conversation.create({
+    const existing = await filterConversation({ id: req.sender_id });
+    const conv = await createConversation({
       participant_ids: [req.sender_id, currentUser.id],
       participant_names: [req.sender_name, currentUser.full_name || currentUser.display_name],
       participant_ages: [null, currentUser.age_range || '18+'],
       request_type: 'general',
       unread_count: { [currentUser.id]: 0 },
     });
-    await dataService.entities.MessageRequest.update(req.id, { status: 'accepted' });
+    await updateMessageRequest(req.id, { status: 'accepted' });
     queryClient.invalidateQueries({ queryKey: ['message-requests', currentUser.id] });
     queryClient.invalidateQueries({ queryKey: ['conversations', currentUser.id] });
     toast.success(`Accepted message request from ${req.sender_name}`);
@@ -32,7 +32,7 @@ export default function MessageRequestsTab({ currentUser, onAccepted }) {
   };
 
   const handleDecline = async (req) => {
-    await dataService.entities.MessageRequest.update(req.id, { status: 'declined' });
+    await updateMessageRequest(req.id, { status: 'declined' });
     queryClient.invalidateQueries({ queryKey: ['message-requests', currentUser.id] });
     toast.success('Request declined');
   };

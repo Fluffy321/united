@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { dataService } from '@/services';
 import { appParams } from '@/lib/app-params';
 import { withFeedTimeout } from '@/lib/feed/feedRanking';
+import { listPostFeedView } from '@/services/entityServices';
 
 const PAGE_SIZE = 30;
 
@@ -14,7 +14,7 @@ export function useFeedData() {
       if (!appParams.hasBackendConfig) return [];
       try {
         const posts = await withFeedTimeout(
-          dataService.entities.PostFeedView.list('-updated_date', PAGE_SIZE, pageParam * PAGE_SIZE)
+          listPostFeedView('-updated_date', PAGE_SIZE, pageParam * PAGE_SIZE)
         );
         return Array.isArray(posts) ? posts : [];
       } catch (error) {

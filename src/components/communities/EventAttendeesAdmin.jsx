@@ -1,12 +1,12 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { dataService } from '@/services';
 import { Users, CheckCircle, Clock, X, Download } from 'lucide-react';
+import { filterCommunityEventRSVP } from '@/services/entityServices';
 
 export default function EventAttendeesAdmin({ event, onClose }) {
   const { data: rsvps = [], isLoading } = useQuery({
     queryKey: ['event-rsvps-admin', event.id],
-    queryFn: () => dataService.entities.CommunityEventRSVP.filter({ event_id: event.id }),
+    queryFn: () => filterCommunityEventRSVP({ event_id: event.id }),
   });
 
   const going = rsvps.filter(r => r.status === 'going');

@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Bookmark, Calendar, Clock, MapPin, MessageCircle, Users, Search, X } from 'lucide-react';
-import { dataService } from '@/services';
 import { format, isPast, parseISO } from 'date-fns';
 import { COMMUNITIES_ENABLED } from '@/config/features';
+import { filterBookmark, filterUnifiedPost } from '@/services/entityServices';
 
 export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, joinedCommunityIds = [], onOpenEvent }) {
   const [events, setEvents] = useState([]);
@@ -16,8 +16,8 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
     if (!open) return;
     setLoading(true);
     Promise.all([
-      dataService.entities.UnifiedPost.filter({ type: 'event' }, '-event_date', 60),
-      currentUser?.id ? dataService.entities.Bookmark.filter({ user_id: currentUser.id }, '-created_date', 100) : Promise.resolve([]),
+      filterUnifiedPost({ type: 'event' }, '-event_date', 60),
+      currentUser?.id ? filterBookmark({ user_id: currentUser.id }, '-created_date', 100) : Promise.resolve([]),
     ])
       .then(([all, bookmarks]) => {
         const savedIds = bookmarks.map(b => b.post_id).filter(Boolean);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { dataService } from '@/services';
 import { toast } from 'sonner';
+import { createCommunityGroup, createGroupMember } from '@/services/entityServices';
 
 const CATEGORIES = ['Torah Learning', 'Shabbat', 'Chesed', 'Events', 'Youth', 'Families', 'Seniors', 'General'];
 
@@ -13,7 +13,7 @@ export default function CreateGroupModal({ open, onOpenChange, currentUser, onCr
     e.preventDefault();
     if (!form.name.trim() || !form.description.trim()) return;
     setLoading(true);
-    const group = await dataService.entities.CommunityGroup.create({
+    const group = await createCommunityGroup({
       ...form,
       community_id: communityId || null,
       created_by_user_id: currentUser.id,
@@ -21,7 +21,7 @@ export default function CreateGroupModal({ open, onOpenChange, currentUser, onCr
       member_count: 1
     });
     // Auto-join as admin
-    await dataService.entities.GroupMember.create({
+    await createGroupMember({
       group_id: group.id,
       user_id: currentUser.id,
       user_name: currentUser.full_name,

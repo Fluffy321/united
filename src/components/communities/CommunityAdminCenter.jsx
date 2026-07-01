@@ -22,6 +22,7 @@ import CommunityInviteModal from './CommunityInviteModal';
 import AdminFormsTab from './admin/AdminFormsTab';
 import StoreAdminTab from './admin/StoreAdminTab';
 import { formatPlanDate, getCommunityPlanStatusLabel, isCommunityPremium } from '@/lib/communityPlans';
+import { filterCommunityPlanSubscription, filterUserCommunity, updateCommunity } from '@/services/entityServices';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -463,7 +464,7 @@ function BillingTab({ communityId, community, currentUser, onCommunityUpdated })
   const premiumActive = isCommunityPremium(community);
   const { data: myMembershipRows = [] } = useQuery({
     queryKey: ['community-billing-membership', communityId, currentUser?.id],
-    queryFn: () => dataService.entities.UserCommunity.filter({ community_id: communityId, user_id: currentUser.id }),
+    queryFn: () => filterUserCommunity({ community_id: communityId, user_id: currentUser.id }),
     enabled: Boolean(communityId && currentUser?.id),
   });
   const membershipRole = String(myMembershipRows[0]?.role || community?.myRole || community?.role || '').toLowerCase();
@@ -476,7 +477,7 @@ function BillingTab({ communityId, community, currentUser, onCommunityUpdated })
 
   const { data: planRows = [], isLoading } = useQuery({
     queryKey: ['community-plan-subscriptions', communityId],
-    queryFn: () => dataService.entities.CommunityPlanSubscription.filter(
+    queryFn: () => filterCommunityPlanSubscription(
       { community_id: communityId },
       '-created_at',
       5
@@ -2596,7 +2597,7 @@ function ProfileSection({ communityId, community, settings, onCommunityUpdated, 
 
     setSaving(true);
     try {
-      const updated = await dataService.entities.Community.update(communityId, {
+      const updated = await updateCommunity(communityId, {
         name,
         description,
         description_short: description,
@@ -2762,7 +2763,7 @@ function AppearanceSection({ communityId, community, onCommunityUpdated }) {
         const result = await dataService.integrations.Core.UploadFile({ file: logoFile, bucket: 'community-images' });
         updates.logo_url = typeof result === 'string' ? result : (result?.url || result?.publicUrl);
       }
-      const updated = await dataService.entities.Community.update(communityId, updates);
+      const updated = await updateCommunity(communityId, updates);
       toast.success('Appearance updated');
       onCommunityUpdated?.(updated);
       setCoverFile(null);
@@ -2851,7 +2852,7 @@ function ModulesSection({ communityId, community, onCommunityUpdated }) {
     }
     setSaving(true);
     try {
-      const updated = await dataService.entities.Community.update(communityId, flags);
+      const updated = await updateCommunity(communityId, flags);
       toast.success('Modules updated');
       onCommunityUpdated?.(updated);
     } catch (err) {
@@ -2936,7 +2937,7 @@ function PermissionsSection({ communityId, community, onCommunityUpdated }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updated = await dataService.entities.Community.update(communityId, { posting_mode: postingMode });
+      const updated = await updateCommunity(communityId, { posting_mode: postingMode });
       toast.success('Permissions updated');
       onCommunityUpdated?.(updated);
     } catch (err) {

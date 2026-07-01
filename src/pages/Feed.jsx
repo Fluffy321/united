@@ -25,6 +25,7 @@ import CommentsSheet from '@/components/feed/CommentsSheet';
 
 import { DEMO_POSTS } from '@/lib/feed/demoPosts';
 import { buildFeedSections } from '@/lib/feed/feedSections';
+import { createBlock, deleteComment, deleteUnifiedPost, filterBlock, filterComment, filterUserCommunity, getCommunity, getUnifiedPost } from '@/services/entityServices';
 import {
   FEED_LOAD_TIMEOUT_MS,
   feedBody,
@@ -135,11 +136,11 @@ export default function Feed({ isActive = true }) {
     queryKey: ['user-communities', currentUser?.id],
     queryFn: async () => {
       if (!currentUser?.id) return [];
-      const memberships = await dataService.entities.UserCommunity.filter({ user_id: currentUser.id });
+      const memberships = await filterUserCommunity({ user_id: currentUser.id });
       const ids = memberships.map(m => m.community_id).filter(Boolean);
       if (ids.length === 0) return [];
       // Fetch each community individually so a single bad/deleted ID doesn't poison the whole list
-      const results = await Promise.allSettled(ids.map(id => dataService.entities.Community.get(id)));
+      const results = await Promise.allSettled(ids.map(id => getCommunity(id)));
       return results
         .filter(r => r.status === 'fulfilled' && r.value && typeof r.value.id === 'string')
         .map(r => r.value);
@@ -151,7 +152,7 @@ export default function Feed({ isActive = true }) {
     queryKey: ['user-blocks', currentUser?.id],
     queryFn: async () => {
       if (!currentUser?.id) return [];
-      return dataService.entities.Block.filter({ blocker_id: currentUser.id });
+      return filterBlock({ blocker_id: currentUser.id });
     },
     enabled: !!currentUser?.id && appParams.hasBackendConfig,
   });
@@ -195,8 +196,8 @@ export default function Feed({ isActive = true }) {
 
   const deleteMutation = useMutation({
     mutationFn: async (postId) => {
-      await dataService.entities.UnifiedPost.delete(postId);
-      await dataService.entities.Comment.delete(await dataService.entities.Comment.filter({ post_id: postId }).then(c => c.map(x => x.id)));
+      await deleteUnifiedPost(postId);
+      await deleteComment(await filterComment({ post_id: postId }).then(c => c.map(x => x.id)));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
@@ -241,7 +242,7 @@ export default function Feed({ isActive = true }) {
       return;
     }
     try {
-      await dataService.entities.Block.create({ blocker_id: currentUser.id, blocked_id: userId });
+      await createBlock({ blocker_id: currentUser.id, blocked_id: userId });
       setBlockedIds(prev => [...prev, userId]);
       toast.success('User blocked');
     } catch { toast.error('Could not block user'); }
@@ -273,7 +274,7 @@ export default function Feed({ isActive = true }) {
     }
 
     if (!appParams.hasBackendConfig) return;
-    dataService.entities.UnifiedPost.get(postId)
+    getUnifiedPost(postId)
       .then(post => {
         if (post) setReplyPost(post);
       })

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Search, X } from 'lucide-react';
-import { dataService, messagesService, findOrCreateDirectConversation } from '@/services';
+import { messagesService, findOrCreateDirectConversation } from '@/services';
 import UserAvatar from '@/components/common/UserAvatar';
 import { toast } from 'sonner';
 import { captureError } from '@/lib/analytics';
+import { listUser } from '@/services/entityServices';
 
 export default function NewMessageComposer({ currentUser, onConversationSelect, onCancel }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -18,7 +19,7 @@ export default function NewMessageComposer({ currentUser, onConversationSelect, 
   const loadMembers = async () => {
     try {
       // Get all users (simplified - in production would filter by shared communities)
-      const users = await dataService.entities.User.list('-created_date', 50);
+      const users = await listUser('-created_date', 50);
       setMembers(users.filter(u => u.id !== currentUser.id));
 
       // Get existing conversation IDs to mark them

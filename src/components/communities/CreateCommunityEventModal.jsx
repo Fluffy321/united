@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { dataService } from '@/services';
 import { toast } from 'sonner';
 import { X, Calendar, Clock, MapPin, AlignLeft, Sparkles, Loader2, Tag, ChevronDown, Ticket, DollarSign, Users } from 'lucide-react';
+import { createCommunityEvent } from '@/services/entityServices';
 import {
   FREE_COMMUNITY_LIMITS,
   canCreateCommunityEvent,
@@ -183,7 +184,7 @@ Return a JSON object with a "suggestions" array of exactly 3 items, each with:
     }
     setSaving(true);
     try {
-      const created = await dataService.entities.CommunityEvent.create({
+      const created = await createCommunityEvent({
         community_id: communityId,
         title: form.title.trim(),
         description: form.description.trim(),

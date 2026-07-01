@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { dataService, findDirectConversation, createDirectConversation } from '@/services';
+import { findDirectConversation, createDirectConversation } from '@/services';
 import { captureError } from '@/lib/analytics';
+import { filterUser, listConversation } from '@/services/entityServices';
 
 export default function CommunityPromptCard({ prompt, responses = [], onReply, currentUser }) {
   const navigate = useNavigate();
@@ -10,13 +11,13 @@ export default function CommunityPromptCard({ prompt, responses = [], onReply, c
   const handleMessage = async (userId) => {
     if (onReply) { onReply(userId); return; }
     try {
-      const convs = await dataService.entities.Conversation.list('-updated_date', 50);
+      const convs = await listConversation('-updated_date', 50);
       const existing = findDirectConversation(currentUser?.id, userId, convs);
       if (existing) {
         navigate(createPageUrl('Messages') + `?conversation=${existing.id}`);
         return;
       }
-      const [otherUser] = await dataService.entities.User.filter({ id: userId });
+      const [otherUser] = await filterUser({ id: userId });
       const conv = await createDirectConversation(currentUser, {
         id: userId,
         name: otherUser?.display_name || otherUser?.full_name || 'User',
