@@ -148,21 +148,25 @@ export default function ChesedChallenge() {
           <p className="text-[14px] font-bold leading-[1.6] text-slate-800">{challenge}</p>
         </div>
 
-        {/* Progress bar */}
-        <div className="mt-3">
-          <div className="flex items-center justify-between mb-1.5">
-            <p className="text-[11px] font-black text-slate-500">
-              {count} {count === 1 ? 'neighbor' : 'neighbors'} completed this week
-            </p>
-            <p className="text-[11px] font-black text-rose-600">Goal: {GOAL}</p>
+        {/* Progress bar — hidden until someone completes; "0 of 50" reads as a dead app */}
+        {count > 0 ? (
+          <div className="mt-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-[11px] font-black text-slate-500">
+                {count} {count === 1 ? 'neighbor' : 'neighbors'} completed this week
+              </p>
+              <p className="text-[11px] font-black text-rose-600">Goal: {GOAL}</p>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-rose-100">
+              <div
+                className="h-full rounded-full bg-rose-500 transition-all duration-500"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-rose-100">
-            <div
-              className="h-full rounded-full bg-rose-500 transition-all duration-500"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-        </div>
+        ) : (
+          <p className="mt-3 text-[11px] font-black text-rose-600">Be the first neighbor to complete it this week</p>
+        )}
 
         {/* Action button */}
         {user ? (

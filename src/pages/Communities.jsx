@@ -319,18 +319,6 @@ function getCoreFiveTownsRooms(communities = []) {
   });
 }
 
-function getRealRoomStats(rooms = []) {
-  const realRooms = rooms.filter(room => room?.id && room?.name);
-  const postsToday = realRooms.reduce((sum, room) => sum + Number(room.postsToday || room.posts_today || 0), 0);
-  const activeNow = realRooms.reduce((sum, room) => sum + Number(room.activeNow || room.active_now || room.active_members || 0), 0);
-
-  return [
-    realRooms.length > 0 ? [realRooms.length.toLocaleString(), 'real rooms'] : null,
-    postsToday > 0 ? [postsToday.toLocaleString(), 'posts today'] : null,
-    activeNow > 0 ? [activeNow.toLocaleString(), 'active now'] : null,
-  ].filter(Boolean);
-}
-
 function mergeCommunityCatalog(communities = []) {
   const valid = (communities || []).filter(c => c?.id && c?.name);
   return valid;
@@ -584,7 +572,6 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
   const rooms = blueprintRooms.length >= 2
     ? blueprintRooms
     : communities.filter(c => c?.id && c?.name).map((c, i) => buildRoomViewModel(c, i));
-  const roomStats = getRealRoomStats(rooms);
   const leadRooms = rooms.slice(0, 3);
   const remainingRooms = rooms.slice(3);
   if (!rooms.length) {
@@ -606,21 +593,11 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
             Live Five Towns rooms
           </div>
-          <h2 className="text-[26px] font-black leading-tight tracking-tight">Jump into the room that matches what you need right now.</h2>
+          <h2 className="text-[26px] font-black leading-tight tracking-tight">Find your people in the Five Towns.</h2>
           <p className="mt-2 text-[13px] font-semibold leading-relaxed text-white/78">
-            Communities are not folders. They are live places to ask, plan, help, find people, and move real life forward.
+            Join a group for your shul, neighborhood, or interest — ask questions, plan things, and help each other out.
           </p>
         </div>
-        {roomStats.length > 0 && (
-        <div className={`grid gap-2 p-3 ${roomStats.length === 1 ? 'grid-cols-1' : roomStats.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-          {roomStats.map(([value, label]) => (
-            <div key={label} className="rounded-2xl bg-slate-50 p-3 text-center">
-              <p className="text-[20px] font-black text-slate-950">{value}</p>
-              <p className="text-[10px] font-black uppercase text-slate-400">{label}</p>
-            </div>
-          ))}
-        </div>
-        )}
       </section>
 
       {leadRooms.length > 0 && <section className="space-y-3">
@@ -1206,13 +1183,9 @@ export default function Communities() {
         <div className="mb-5 overflow-hidden rounded-[28px] border border-slate-200 bg-slate-950 p-4 text-white shadow-sm">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-blue-100">
-                <MessageCircleMore className="h-3.5 w-3.5" />
-                Community-first reset
-              </div>
-              <h2 className="text-[20px] font-black leading-tight">Start with one Five Towns conversation.</h2>
+              <h2 className="text-[20px] font-black leading-tight">Groups for every part of Five Towns life.</h2>
               <p className="mt-2 text-[13px] font-semibold leading-5 text-slate-300">
-                Communities are smaller rooms for sports, shuls, parents, learning, support, and chesed after people meet in the main feed.
+                Shuls, parents, sports, learning, chesed — join the ones that fit, or start your own.
               </p>
             </div>
             <button
@@ -1223,23 +1196,11 @@ export default function Communities() {
               <ArrowUpRight className="h-3.5 w-3.5" />
             </button>
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            {[
-              ['Ask', 'Get a neighbor answer'],
-              ['Plan', 'Find people nearby'],
-              ['Help', 'Move needs to action'],
-            ].map(([label, detail]) => (
-              <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
-                <p className="text-[13px] font-black">{label}</p>
-                <p className="mt-1 text-[11px] font-bold leading-4 text-slate-400">{detail}</p>
-              </div>
-            ))}
-          </div>
         </div>
 
         <LiveNowPanel
           title="Community rooms"
-          subtitle="Real rooms you can open, join, or use to start a local conversation."
+          subtitle="Groups you can join now, or open to see what's going on."
           items={communityActionItems}
           className="mb-5"
         />

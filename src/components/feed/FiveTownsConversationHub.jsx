@@ -71,26 +71,28 @@ export default function FiveTownsConversationHub({ posts = [], networkLabel = 'F
       <div className="bg-slate-950 px-4 py-3 text-white">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white/75">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              Main community thread
-            </p>
-            <h2 className="mt-2 text-[20px] font-black leading-tight">Talk to the Five Towns</h2>
+            <h2 className="flex items-center gap-2 text-[18px] font-black leading-tight">
+              <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+              Talk to the Five Towns
+            </h2>
             <p className="mt-1 max-w-xl text-[12px] font-semibold leading-5 text-white/75">
-              The main thread for questions, plans, rides, needs, events, and useful local updates.
+              Questions, plans, rides, needs, and local updates.
             </p>
           </div>
-          <div className="shrink-0 rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-right">
-            <p className="text-[16px] font-black leading-none">{activeThreads}</p>
-            <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-white/60">active</p>
-          </div>
+          {activeThreads > 0 && (
+            <div className="shrink-0 rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-right">
+              <p className="text-[16px] font-black leading-none">{activeThreads}</p>
+              <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-white/60">active</p>
+            </div>
+          )}
         </div>
+        {/* Never surface zero-counts — an empty stat line reads as "this app is dead". */}
         <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-wide text-white/65">
-          <span>{recentPosts.length} recent posts</span>
-          <span>•</span>
-          <span>{needsToday} needs today</span>
-          <span>•</span>
-          <span>{updatedText}</span>
+          {recentPosts.length > 0 && <span>{recentPosts.length} recent posts</span>}
+          {recentPosts.length > 0 && needsToday > 0 && <span>•</span>}
+          {needsToday > 0 && <span>{needsToday} needs today</span>}
+          {(recentPosts.length > 0 || needsToday > 0) && <span>•</span>}
+          <span>{recentPosts.length > 0 || needsToday > 0 ? updatedText : 'Be the first to post today'}</span>
         </div>
       </div>
 

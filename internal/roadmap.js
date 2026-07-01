@@ -2790,6 +2790,25 @@ Goals:
   },
 
   {
+    id: 'purge-production-test-data',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.HIGH,
+    title: 'Purge test/demo communities from production',
+    description: 'Test communities (e.g. "Cucumber apples 🥒🍎 / Daily pickle ball") are visible on the live Communities page and as Map filter chips. First-time visitors read the whole site as fake. Delete or archive all seed/test communities and their posts from the production database.',
+    why: 'Surfaced by the 2026-07-01 multi-persona UX review: test data was the single most credibility-damaging thing a new visitor sees.',
+    prompt: `You are removing test/demo data from the JUnited production database.
+
+Context: Test communities like "Cucumber apples" appear on /Communities and in Map community filters. Supabase project uwbmfmtvjcnuuekiyogu. Community rows live in the communities table; membership in user_communities; posts reference community_id.
+
+Goals:
+1. Query production for communities whose names/descriptions are obviously test data; list them for human confirmation before deleting anything.
+2. After confirmation, delete their posts, memberships, and the community rows (or add an archived flag and filter archived communities out of Communities.jsx and MitzvahMap.jsx).
+3. Verify /Communities and the Map filter chips no longer show them.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'orphaned-feature-scaffolding-cleanup',
     category: 'Infrastructure',
     status: STATUS.PLANNED,

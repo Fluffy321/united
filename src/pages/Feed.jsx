@@ -412,7 +412,7 @@ export default function Feed({ isActive = true }) {
 
 
       {feedTab === 'general' ? (
-        <div className="mobile-page px-3 pt-3 mobile-safe-bottom space-y-2.5 bg-[#F0EEE8] min-h-screen">
+        <div className="mobile-page px-3 pt-3 mobile-safe-bottom-fab space-y-2.5 bg-[#F0EEE8] min-h-screen">
           {/* One-time network banner */}
           {showNetworkBanner && (
             <div className="graphic-stripes flex items-center gap-2 rounded-[22px] bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-4 py-3 text-white text-[12px] font-medium shadow-[0_14px_30px_rgba(37,99,235,0.18)]">

@@ -1386,6 +1386,7 @@ export default function MitzvahMap({
 }) {
   const [mapCenter, setMapCenter] = useState(null);
   const [activeTypes, setActiveTypes] = useState(() => new Set());
+  const [showTypeFilters, setShowTypeFilters] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [tileUrl, setTileUrl] = useState('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
   const resolvedMapHeight = mapHeight || 'clamp(460px, 64dvh, 720px)';
@@ -1583,9 +1584,18 @@ export default function MitzvahMap({
             </button>
           );
         })}
+        <button
+          onClick={() => setShowTypeFilters((v) => !v)}
+          className={`motion-press shrink-0 rounded-full px-3.5 py-2 text-[12px] font-black transition ${
+            showTypeFilters ? 'bg-blue-600 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+          }`}
+        >
+          {showTypeFilters ? 'Fewer filters' : 'More filters'}
+        </button>
       </div>
 
-      {/* Type filter chips */}
+      {/* Granular type chips — collapsed by default so the map isn't buried under two filter rows */}
+      {showTypeFilters && (
       <div className="mobile-scroll-x flex gap-2 border-b border-slate-200 bg-white px-2 py-2">
         {Object.entries(PIN_TYPES).filter(([type]) => type !== 'other').map(([type, config]) => {
           const active = activeTypes.has(type);
@@ -1614,6 +1624,7 @@ export default function MitzvahMap({
           </button>
         )}
       </div>
+      )}
 
       {/* Map canvas */}
       <div className="relative">

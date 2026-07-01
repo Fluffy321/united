@@ -1433,9 +1433,11 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
               Pick joined communities one by one, or leave all unselected to show posts from every joined community.
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
-            {communityPoints.length} posts
-          </span>
+          {communityPoints.length > 0 && (
+            <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
+              {communityPoints.length} posts
+            </span>
+          )}
         </div>
 
         <div className="mobile-scroll-x mt-3 flex gap-2 pb-1">
@@ -1589,7 +1591,7 @@ export default function MapPage() {
         className="relative before:pointer-events-none before:absolute before:inset-x-3 before:top-2 before:bottom-1 before:rounded-[30px] before:bg-gradient-to-r before:from-blue-200/45 before:via-white/35 before:to-emerald-100/45 before:blur-xl before:content-[''] sm:before:inset-x-4"
         toolbarClassName="relative"
         icon={Store}
-        title="Our Businesses"
+        title={activeView === 'businesses' ? 'Our Businesses' : 'Five Towns Map'}
         help={<PageHelp text="Discover trusted Jewish-owned businesses, kosher spots, and local services near you or online." />}
         actions={(
           <button

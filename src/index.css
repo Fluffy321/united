@@ -595,6 +595,12 @@
     padding-bottom: calc(var(--app-bottom-nav-height) + var(--app-bottom-safe) + 16px);
   }
 
+  /* For pages with a floating action button: clears the 56px FAB + gap so the
+     last list item is never hidden underneath it. */
+  .mobile-safe-bottom-fab {
+    padding-bottom: calc(var(--app-bottom-nav-height) + var(--app-bottom-safe) + 88px);
+  }
+
   .app-floating-banner {
     bottom: var(--app-floating-bottom);
   }

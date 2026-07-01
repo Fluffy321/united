@@ -137,8 +137,10 @@ export default function UnifiedPostModal({
     const nextType = typeFromLegacyProps(postType, initialSubtype);
     setPostKind(nextType);
     setTitle('');
-    setBody('');
-    setStarterPlaceholder(initialBody || '');
+    // Pre-fill tapped prompts as real editable text so the post is one tap away,
+    // rather than showing the prompt as a placeholder the user has to retype.
+    setBody(initialBody || '');
+    setStarterPlaceholder('');
     setLocation('');
     setSelectedCity(currentUser?.cityPreset || 'Five Towns');
     setSelectedCommunityId(initialCommunityId || '');
