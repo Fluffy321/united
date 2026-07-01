@@ -4,7 +4,8 @@ import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Users, MapPin, CheckCircle2, ArrowRight, Shield, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { createUserCommunity, filterCommunity, filterInviteLink, filterUserCommunity, updateInviteLink } from '@/services/entityServices';
+import { createUserCommunity, filterUserCommunity, updateInviteLink } from '@/services/entityServices';
+import { communitiesService } from '@/services/communitiesService';
 
 // /join?code=ABC123
 export default function JoinByCommunityCode() {
@@ -28,27 +29,18 @@ export default function JoinByCommunityCode() {
 
   const loadInvite = async () => {
     try {
-      const invites = await filterInviteLink({ code });
-      const inv = invites[0];
+      // invite_links reads are RLS-scoped to inviters/managers; the lookup RPC
+      // validates the code and returns the invite + a community preview
+      // (including private communities the invitee can't read directly).
+      const result = await communitiesService.getInviteLinkByCode(code);
 
-      if (!inv) { setStatus('error'); return; }
-      if (!inv.is_active) { setStatus('expired'); return; }
-      if (inv.expires_at && new Date(inv.expires_at) < new Date()) {
-        await updateInviteLink(inv.id, { is_active: false });
-        setStatus('expired');
-        return;
-      }
-      if (inv.max_uses && (inv.uses_count || 0) >= inv.max_uses) {
-        setStatus('expired');
-        return;
-      }
+      if (!result || result.status === 'not_found') { setStatus('error'); return; }
+      if (result.status === 'expired') { setStatus('expired'); return; }
 
+      const inv = result.invite;
       setInvite(inv);
       setInviterName(inv.inviter_name || 'A community member');
-
-      const comm = await filterCommunity({ id: inv.community_id });
-      if (!comm[0]) { setStatus('error'); return; }
-      setCommunity(comm[0]);
+      setCommunity(result.community);
 
       if (currentUser) {
         const existing = await filterUserCommunity({

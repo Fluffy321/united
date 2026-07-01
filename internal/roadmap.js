@@ -2835,4 +2835,55 @@ Goals:
 5. Update internal/roadmap.js: change this item's status to 'shipped' (if cleaned up) or 'dropped' (if decided not worth doing) with a why.`,
   },
 
+  {
+    id: 'content-rls-security-hardening',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Content RLS Security Hardening (posts, invite links, feed view, refuah)',
+    description: 'Close the four high/medium RLS exposures found in the 2026-07-01 full-app security review: (1) posts/comments/reactions were world-readable including anon, leaking private-community content; (2) invite_links had a public SELECT policy letting anyone harvest every community invite code; (3) posts_feed_view was a definer view bypassing RLS on posts/profiles/communities; (4) refuah_requests (names + medical condition text) was readable by anon.',
+    shippedNote: 'Shipped 2026-07-01. Migration supabase/migrations/20260701200000_security_hardening_content_rls.sql: posts/comments/reactions SELECT now authenticated-only and scoped via can_access_community (global posts with community_id IS NULL stay visible to all signed-in users); also dropped three live-only duplicate policies on posts, including a loose INSERT policy that bypassed the posting_mode restrictions from 20260515182824. invite_links SELECT scoped to inviter + community managers; /join lookups moved to new SECURITY DEFINER RPC get_invite_link_by_code (granted to anon+authenticated — the code itself is the capability) which also returns a community preview so invites to private communities keep working. posts_feed_view recreated with security_invoker=true joining public_profiles instead of profiles, revoked from anon. refuah_requests SELECT restricted to authenticated. Client: communitiesService.getInviteLinkByCode() added; JoinByCommunityCode.jsx switched to the RPC and no longer attempts the (RLS-blocked) client-side deactivation write on expired links.',
+  },
+
+  {
+    id: 'low-severity-rls-followups',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Low-Severity RLS & Abuse-Surface Follow-ups',
+    description: 'Remaining low-severity findings from the 2026-07-01 security review, deferred from the main hardening batch: group_members SELECT is USING (true) (any authenticated user can enumerate all group memberships, even in communities they do not belong to); chesed_challenge_completions SELECT is anon-readable (exposes per-user completion history); error_logs allows anon INSERT with no rate limit (admin inbox flooding vector); storage.objects INSERT policies have no per-user path scoping or MIME/size constraints and there are no UPDATE/DELETE policies for user cleanup.',
+    why: 'Lower stakes than the private-content/invite-code leaks fixed in content-rls-security-hardening; each needs a small product decision (e.g., whether group membership lists should be community-scoped, whether challenge counts need anon access for logged-out views).',
+    prompt: `You are implementing the low-severity RLS follow-ups for JUnited.
+
+Context: See supabase/migrations/20260517221000_community_groups.sql (group_members SELECT true), 20260701150000_chesed_challenge.sql (anon-readable completions), 20260613215838_create_error_logs.sql (anon INSERT), and the storage policies in 001_core.sql / 015_production_schema_alignment.sql. The prior hardening pattern to follow is 20260701200000_security_hardening_content_rls.sql. Check pg_policies on the live DB first — it has drifted from migration files before.
+
+Goals:
+1. Scope group_members SELECT to members of the group's community (mirror is_active_community_member usage).
+2. Restrict chesed_challenge_completions SELECT to authenticated, keeping any aggregate counts the UI needs (check src/ consumers first; if a logged-out surface needs counts, expose a definer RPC returning counts only).
+3. Rate-limit or authenticate error_logs INSERT (consider reusing check_rate_limit from 011_rate_limiting.sql via a definer RPC, or require authenticated).
+4. Add per-user path scoping ({user_id}/ prefix) to storage.objects INSERT policies and add owner-scoped UPDATE/DELETE policies; verify existing upload paths in src/ before enforcing.
+5. Verify each change against the live DB with a BEGIN/ROLLBACK dry-run via the Supabase MCP before applying.
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'master-plan-production-push',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.HIGH,
+    title: 'Master Plan: Production / Addictive / Profitable / Marketable Push',
+    description: 'A 20-item, 5-phase standing plan created from the 2026-07-01 full-app review: Phase 1 trust & correctness (Marketplace data loss, fake AI agent, safety follow-ups, dead code), Phase 2 production polish (post-card consolidation, style-guide enforcement, React Query migration, giant-file splits), Phase 3 retention (unified streaks, realtime chat, daily hooks, recognition), Phase 4 monetization (Stripe Connect, Pro plans, funnels), Phase 5 growth (Capacitor/iOS, desktop shell, invite loops, SEO).',
+    why: 'The full plan, the reusable agent prompt, and the per-item progress tracker live in internal/master-plan.md — that file is the source of truth for item status; this entry tracks the initiative as a whole. Individual items that overlap existing roadmap entries (Stripe Connect, orphaned-scaffolding cleanup, etc.) keep their own entries.',
+    prompt: `You are executing the JUnited master plan.
+
+Context: Read internal/master-plan.md — it contains the full mission prompt, rules, and a phase-by-phase progress tracker. CLAUDE.md governs workflow.
+
+Goals:
+1. Open internal/master-plan.md and find the first unchecked item.
+2. Implement it following the plan's RULES section (real UI path verification, lint+build, small commits).
+3. Mark the item done in internal/master-plan.md and update any overlapping entries in internal/roadmap.js.
+4. Repeat for as many items as the session allows; stop and ask the owner on pricing/removal decisions.
+5. When all 20 items are checked, update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
 ];
