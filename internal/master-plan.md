@@ -61,7 +61,7 @@ Start with the first unchecked item in internal/master-plan.md. Report progress 
 - [x] 2. Fake AI DM agent: remove or label — removed (InvokeLLM is a stub; every reply was one canned sentence). All AI branches stripped from Messages/ConversationList/ChatView/UserSearchPanel/MessagesDrawer; aiAgent.js and AIChatBubble.jsx deleted. Real assistant stays tracked as ai-community-assistant (exploring).
 - [x] 3. Landing honesty pass + dead links — Landing no longer markets Shuls/schools-on-map (deferred features); Marketplace stays (now real). PrivacyRights → /Settings; FriendsHub invite → /welcome.
 - [x] 4. Hide deleted accounts; retroactive block enforcement — deleted-accounts half was shipped by a parallel session (migration 20260701230000 + people-picker filters). Block half shipped: blocked DMs hidden from Messages list, deep links rejected, createMessage() enforces two-directional blocks.
-- [ ] 5. Low-severity RLS follow-ups + dead-code purge
+- [x] 5. Low-severity RLS follow-ups + dead-code purge — migration `20260701223223` (group_members scoping, chesed completions auth-only, error_logs recreated hardened after discovering the live table had been dropped, storage owner DELETE; + fixed two live bugs: group-admin edits and join-request approval both broken by policy typos). 37 dead files / ~7,000 lines deleted, deps pruned; react-leaflet-cluster and @hebcal/core audit claims corrected (both fine as-is).
 
 ### Phase 2 — Production Polish
 - [ ] 6. Single post-card system
