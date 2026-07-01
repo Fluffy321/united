@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ArrowLeft, CheckCircle2, ClipboardList, Search, Smartphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { ALL_TASKS, IOS_READINESS_CATEGORIES, TASK_TYPE, computeReadiness } from '../../internal/iosReadiness.js';
+import { ALL_TASKS, IOS_READINESS_CATEGORIES, TASK_TYPE, computeCatalogReadiness } from '../../internal/iosReadiness.js';
 import CopyPromptButton from '../components/common/CopyPromptButton.jsx';
 
 // Tasks have no stored prompt, so compose one from the task's own fields for
@@ -54,7 +54,7 @@ export default function AdminiOSReadiness() {
   const [type, setType] = useState('all');
   const [query, setQuery] = useState('');
 
-  const readiness = useMemo(() => computeReadiness({}, ALL_TASKS), []);
+  const readiness = useMemo(() => computeCatalogReadiness(ALL_TASKS), []);
   const requiredCount = useMemo(() => ALL_TASKS.filter((task) => task.required).length, []);
   const visibleCategories = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -94,9 +94,9 @@ export default function AdminiOSReadiness() {
         </header>
 
         <section className="grid gap-3 sm:grid-cols-3">
-          <Stat label="Readiness" value={`${Math.round(readiness.pct)}%`} sub={STATE_LABELS[readiness.state]} />
-          <Stat label="Required Tasks" value={requiredCount} sub="must be done or marked N/A" />
-          <Stat label="Catalog" value={ALL_TASKS.length} sub="total App Store tasks" />
+          <Stat label="Readiness" value={`${Math.round(readiness.pct)}%`} sub={`${readiness.done}/${readiness.total} required tasks done`} />
+          <Stat label="Remaining" value={requiredCount} sub="required tasks still open" />
+          <Stat label="Catalog" value={ALL_TASKS.length} sub="total open App Store tasks" />
         </section>
 
         <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">

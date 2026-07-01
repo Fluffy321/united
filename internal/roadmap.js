@@ -65,6 +65,16 @@ export const CATEGORY_ORDER = [
 export const ROADMAP = [
 
   {
+    id: 'mitzvah-circle-content-tabs',
+    category: 'Chesed & Mitzvah',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Organize Mitzvah Circle content tabs',
+    description: 'Give Dvar Torah its own category, place the weekly chesed challenge with open needs, and simplify the minyan destination label.',
+    shippedNote: 'Shipped 2026-07-01. MitzvahCircle.jsx adds a dedicated Dvar Torah tab, moves ChesedChallenge to the top of Browse Needs, and renames Shuls & Minyan to Minyan Board. Verified through /MitzvahCircle in the browser.',
+  },
+
+  {
     id: 'remove-base44-shim',
     category: 'Admin & Platform',
     status: STATUS.SHIPPED,
@@ -189,6 +199,56 @@ Goals:
   },
 
   {
+    id: 'account-deletion-backend-rpc',
+    category: 'Auth & Identity',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Server-Side Account Deletion RPC (App Store Guideline 5.1.1(v))',
+    description: 'SECURITY DEFINER Postgres RPC (public.delete_my_account()) that anonymizes/removes an account\'s data so it cannot be bypassed by killing the client mid-flow.',
+    shippedNote: 'Shipped 2026-07-01. Migration 20260701181530_delete_my_account.sql. profiles.deleted_at column added; delete_my_account() (auth.uid()-scoped, no args, granted to authenticated only) does NOT hard-delete the profiles row — several NOT NULL author columns (comments.author_id, community_group_chats.author_id, group_posts.user_id, mitzvah_request_comments.author_id, mitzvah_requests.requester_id) are ON DELETE CASCADE, so deleting profiles would silently erase posts/replies other members are participating in. Instead: profiles PII is scrubbed in place (display_name -> "Deleted User", email/username/avatar/bio/settings nulled, deleted_at stamped) so every join to profiles already renders anonymized with no other code changes; public content tables (posts, comments, community_group_chats, group_posts, mitzvah_request_comments, mitzvah_requests, legacy messages/conversations) are anonymized in place (denormalized author_name/avatar snapshot columns nulled, comment/message bodies redacted to \'[deleted]\') rather than deleted, preserving other members\' threads; ~35 other tables are walked individually, replicating each column\'s own FK delete_rule (CASCADE -> delete the row, SET NULL -> null the column) since the profile row is intentionally not deleted so no cascade fires automatically. Audit-trail tables (moderation_audit_logs, community_admin_audit_log, community_member_removals) are deliberately left untouched to preserve moderation history. account_private (raw email/phone) is hard-deleted. Verified end-to-end against temporary throwaway auth.users/profiles rows (inserted and cleaned up in the same session, zero production data touched): confirmed a bystander\'s comment/notification/mitzvah-request-they-authored is untouched when only a secondary column (e.g. claimed_by_user_id) referenced the deleted account. Does not call auth.admin.deleteUser — that happens separately via the admin API, per the sibling client-side task below.',
+  },
+
+  {
+    id: 'hide-deleted-accounts-from-surfaces',
+    category: 'Auth & Identity',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Hide "Deleted User" Accounts From Member Lists, Search & Suggestions',
+    description: 'profiles.deleted_at (added by the account-deletion RPC) is not yet consumed anywhere in the client. A deleted account\'s anonymized "Deleted User" profile can still surface in community member lists, user search, and friend suggestions indefinitely.',
+    why: 'Discovered while auditing every table touched by delete_my_account(): the RPC anonymizes PII but intentionally does not delete the profiles row (several public-content tables have NOT NULL, ON DELETE CASCADE author columns that depend on it staying valid). Nothing currently filters on deleted_at, so "Deleted User" ghost entries would accumulate.',
+    prompt: `You are hiding deleted accounts from JUnited's browse/search surfaces.
+
+Context: supabase/migrations/20260701181530_delete_my_account.sql added profiles.deleted_at (null = active). The RPC deliberately keeps the profiles row alive (anonymized) rather than deleting it, so joins to it still resolve.
+
+Goals:
+1. Find every query that lists/searches profiles for member lists, user search (UserSearchPanel.jsx), friend suggestions (FriendsHub.jsx), and community admin contact pickers.
+2. Add a "deleted_at is null" filter (or equivalent dataService.entities.Profile.filter condition) to each so anonymized accounts stop appearing in new results. Do not touch historical content (posts/comments) — those should keep showing "Deleted User" as authored content, only live people-pickers should exclude them.
+3. Confirm public.profiles RLS policies don't already need updating for this (deleted_at is informational, not a visibility gate on its own).
+4. Run npm run lint && npm run build.
+5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'in-app-account-deletion-ui',
+    category: 'Auth & Identity',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'In-App Account Deletion UI (App Store Guideline 5.1.1(v))',
+    description: 'Client-side "Delete my account" flow in Settings, wired to the delete_my_account() RPC and a new Edge Function that also revokes the auth session.',
+    shippedNote: 'Shipped 2026-07-01. Settings.jsx: replaced the old email-based "email support@... we process within 30 days" danger-zone flow with a real two-step in-app flow — a confirmation sheet requiring the user to type DELETE, then handleDeleteAccount() calls the new supabase/functions/delete-account Edge Function, signs out, and redirects to /login. The Edge Function authenticates the caller from their bearer token, calls public.delete_my_account() AS that user (so the RPC\'s auth.uid() check is real, not bypassable), and only on success calls auth.admin.deleteUser() with the service-role key to remove the auth.users row — ordered so a failed data-anonymization step never leaves the login revoked with the data still attached. Removed the iosReadiness.js in-app-account-deletion / data-deletion-backend tasks as complete. Follow-up 2026-07-01: PrivacyRights.jsx still had the stale email-and-wait-30-days copy for account deletion — updated it to point at the real Settings flow. Also found and fixed a wrong-TLD bug: several places (PrivacyRights.jsx, Settings.jsx, the delete-account Edge Function) emailed support@junited.org instead of the actual domain support@junited.us (CLAUDE.md confirms junited.us is production) — fixed all of them and redeployed the Edge Function.',
+  },
+
+  {
+    id: 'support-help-page',
+    category: 'Auth & Identity',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Public Support/Help Page (App Store support URL requirement)',
+    description: 'App Store Connect requires a Support URL that actually helps users, not a donation page. /SupportJUnited was donations-only.',
+    shippedNote: 'Shipped 2026-07-01. New src/pages/Support.jsx routed at /support (App.jsx), public/no-auth, matching TermsOfService.jsx\'s prose styling: contact email (support@junited.us), 3 FAQ items (join a community, report content, delete account), and links to /guidelines and /privacy. Did not touch the existing /SupportJUnited donations page. Removed the iosReadiness.js support-url task\'s AI portion (re-typed to manual — only the App Store Connect URL field entry remains).',
+  },
+
+  {
     id: 'push-notifications',
     category: 'Auth & Identity',
     status: STATUS.SHIPPED,
@@ -242,6 +302,16 @@ Goals:
   },
 
   // ── Community ─────────────────────────────────────────────────────────────
+
+  {
+    id: 'content-safety-completion',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Content Safety & Moderation Completion (App Store Guideline 1.2)',
+    description: 'Closed the gaps an iOS-readiness audit found in reporting and blocking: comments had no report entry point, blocked users had no visible list, and block enforcement only covered the Feed.',
+    shippedNote: 'Shipped 2026-07-01. CommentsSheet.jsx: added a per-comment Report action (flag icon, hidden on your own comments) wired to the existing ReportModal with content_type "comment" — posts and profiles already had this. Settings.jsx: added BlockedUsersCard to the Account tab, listing everyone the user has blocked (via batchFetchByIds against profiles) with an Unblock button — previously blocking was one-way with no way to review or undo it from the UI. PostDetail.jsx: was passing blockedIds={[]} into CommentsSheet, silently showing blocked users\' comments on that screen even though the Feed correctly filtered them; now loads the same public.user_blocks rows Feed.jsx does. messagesService.js: findOrCreateDirectConversation() now checks user_blocks in both directions before creating a new conversation, blocking new DMs between a blocker and a blocked user (existing conversations/messages-within-a-conversation are not yet retroactively filtered — see roadmap follow-up). Removed the iosReadiness.js verify-report-flow / verify-block-flow tasks as complete.',
+  },
 
   {
     id: 'community-admin-center',
@@ -1241,6 +1311,27 @@ Goals:
   },
 
   // ── Messaging ─────────────────────────────────────────────────────────────
+
+  {
+    id: 'block-enforcement-existing-conversations',
+    category: 'Messaging',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Retroactively Hide/Prevent Messages in Existing Conversations After a Block',
+    description: 'findOrCreateDirectConversation() now blocks starting a new DM between a blocker and a blocked user (see content-safety-completion), but a conversation that already existed before the block still shows up in both users\' Messages list and still accepts new sends.',
+    why: 'Discovered during the content-safety-completion audit — full parity with the Feed/PostDetail block filtering would also hide (or clearly mark) existing conversations with a blocked user in Messages.jsx, and reject createMessage() calls into a conversation where either participant has blocked the other, not just block conversation creation.',
+    prompt: `You are closing the last gap in JUnited's block-enforcement audit.
+
+Context: src/services/messagesService.js findOrCreateDirectConversation() already checks public.user_blocks in both directions before creating a NEW conversation (see the content-safety-completion roadmap entry). What's still open:
+1. src/pages/Messages.jsx lists all of the current user's conversations from dataService.entities.Conversation — it does not filter out conversations with a user who is now blocked (in either direction).
+2. messagesService.createMessage() has no block check, so a message can still be sent into a pre-existing conversation between two users where one has since blocked the other.
+
+Goals:
+1. In Messages.jsx (or a shared helper), fetch the current user's user_blocks (both blocker_id and blocked_id rows) alongside conversations, and either hide blocked-participant conversations from the list or show them read-only with a "You've blocked this person" notice instead of an input box.
+2. Add the same two-directional block check from findOrCreateDirectConversation() into createMessage() (or a wrapper the UI calls before createMessage()), throwing a clear error if either side has blocked the other.
+3. Run npm run lint && npm run build.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
 
   {
     id: 'message-requests',
@@ -2283,6 +2374,26 @@ Goals:
   },
 
   // ── Admin & Platform ──────────────────────────────────────────────────────
+
+  {
+    id: 'app-icon-placeholder-artwork',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.LOW,
+    title: 'Generated App Icon Set (Placeholder Artwork)',
+    description: 'iOS App Store submission requires a 1024x1024 icon plus derived sizes; nothing existed and no design tool/image library was available in this environment.',
+    shippedNote: 'Shipped 2026-07-01. scripts/generate-app-icons.cjs hand-rolls both the raster (a supersampled, anti-aliased six-pointed star / Magen David in white on the brand blue #2563EB background) and a from-scratch PNG encoder (manual IHDR/IDAT/IEND chunks, zlib.deflateSync for compression) using only Node built-ins — no npm dependency needed. Generates all 12 required sizes directly (re-rasterized per size, not downsampled, so edges stay crisp at 20x20) into internal/app-store/ios-native-prep/app-icons/, each 8-bit RGB with no alpha channel per Apple\'s requirement. This is real, presentable placeholder artwork (verified legible down to 40x40 by visual inspection), not a mockup, but should be swapped for a professionally designed mark when one exists. Did not mark the iosReadiness.js app-icons task as done — applying it in Xcode and confirming no build warnings is still blocked on setup-capacitor (no ios/ project exists yet).',
+  },
+
+  {
+    id: 'ios-readiness-polish',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'iOS App Store Readiness — Feed & Offline Polish',
+    description: 'Fixed a dead pull-to-refresh implementation, added a global offline banner, and fixed missing nav-bar accessibility labels — all found during an AI-completion pass over internal/iosReadiness.js.',
+    shippedNote: 'Shipped 2026-07-01. Feed.jsx: usePullToRefresh(refetch) hook existed but was never called — Feed had its own dead pullDistance/isRefreshing state that nothing ever updated, so the spinner in the UI could never appear. Now wired to useFeedData()\'s refetch. New src/components/common/OfflineBanner.jsx listens for window online/offline events and renders a fixed top banner ("No internet connection — showing saved content"), mounted in Layout.jsx alongside the other global banners; auto-dismisses on reconnect. Layout.jsx: the 5 main bottom-nav buttons (Feed/Mitzvah/Communities-or-Jewish/Map/Profile) had no aria-label — a screen reader had only the icon to go on for the active-state variants; added aria-label={item.name} and aria-current for the active tab. Also fixed AdminiOSReadiness.jsx\'s "Readiness" stat, which was permanently stuck at 0% because it called computeReadiness({}, ALL_TASKS) — an always-empty progress map. Added computeCatalogReadiness() (internal/iosReadiness.js) driven by a frozen ORIGINAL_REQUIRED_TASK_COUNT baseline compared against the live required-task count, since finished tasks are deleted from the catalog rather than tracked via a status field.',
+  },
 
   {
     id: 'in-app-feedback',

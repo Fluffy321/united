@@ -3,6 +3,7 @@ import { supabaseBackend } from './supabaseRepository';
 // Named entity operations used while call sites migrate to domain-specific services.
 export const createAppFeedback = (...args) => supabaseBackend.entities.AppFeedback.create(...args);
 export const createBlock = (...args) => supabaseBackend.entities.Block.create(...args);
+export const deleteBlock = (...args) => supabaseBackend.entities.Block.delete(...args);
 export const filterBlock = (...args) => supabaseBackend.entities.Block.filter(...args);
 export const deleteBookmark = (...args) => supabaseBackend.entities.Bookmark.delete(...args);
 export const filterBookmark = (...args) => supabaseBackend.entities.Bookmark.filter(...args);

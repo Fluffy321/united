@@ -26,6 +26,7 @@ import CommunitiesFeedView from '@/components/feed/CommunitiesFeedView';
 import FiveTownsBrief from '@/components/feed/FiveTownsBrief';
 import FiveTownsConversationHub from '@/components/feed/FiveTownsConversationHub';
 import WidgetBoundary from '@/components/feed/WidgetBoundary';
+import { usePullToRefresh } from '@/lib/usePullToRefresh';
 
 import { DEMO_POSTS } from '@/lib/feed/demoPosts';
 import { createBlock, deleteComment, deleteUnifiedPost, filterBlock, filterComment, filterUserCommunity, getCommunity, getUnifiedPost } from '@/services/entityServices';
@@ -57,8 +58,6 @@ export default function Feed({ isActive = true }) {
     return () => shabbatReminderService.stop();
   }, [currentUser?.id, currentUser?.notification_settings?.shabbatReminders, currentUser?.app_settings?.quietMode]);
   const [interestSignals, setInterestSignals] = useState({ types: {}, subtypes: {}, keywords: [] }); // track user interactions
-  const [pullDistance, setPullDistance] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [communityGroups, setCommunityGroups] = useState([]);
   const [loadTimedOut, setLoadTimedOut] = useState(false);
   const [dailyPrompt, setDailyPrompt] = useState(null);
@@ -124,7 +123,8 @@ export default function Feed({ isActive = true }) {
       .catch(() => setPublishedBrief(null));
   }, [primaryNetwork.cityPreset]);
 
-  const { posts, fetchNextPage, hasNextPage, isLoading, isError } = useFeedData();
+  const { posts, fetchNextPage, hasNextPage, isLoading, isError, refetch } = useFeedData();
+  const { isRefreshing, pullDistance } = usePullToRefresh(refetch);
 
   const { data: userCommunitiesList, isFetched: communitiesFetched } = useQuery({
     queryKey: ['user-communities', currentUser?.id],

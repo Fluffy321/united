@@ -9,7 +9,7 @@ import CommentsSheet from '@/components/feed/CommentsSheet';
 import ReportModal from '@/components/common/ReportModal';
 import { toast } from 'sonner';
 import { captureError } from '@/lib/analytics';
-import { createBlock, deleteUnifiedPost, filterUnifiedPost } from '@/services/entityServices';
+import { createBlock, deleteUnifiedPost, filterBlock, filterUnifiedPost } from '@/services/entityServices';
 
 
 
@@ -24,6 +24,7 @@ export default function PostDetail() {
   const [userLikes, setUserLikes] = useState([]);
   const [showComments, setShowComments] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [blockedIds, setBlockedIds] = useState([]);
 
   useEffect(() => {
     loadPost();
@@ -44,6 +45,9 @@ export default function PostDetail() {
         const likedPostIds = await loadUserPostLikes(currentUser.id);
         setUserLikes(likedPostIds);
 
+        // Load blocked users so their comments can be filtered out below
+        const blocks = await filterBlock({ blocker_id: currentUser.id });
+        setBlockedIds(blocks.map(b => b.blocked_id));
       }
     } catch (e) {
       captureError(e, { context: 'PostDetail: load post' });
@@ -171,7 +175,7 @@ export default function PostDetail() {
             isOpen={showComments}
             onClose={() => setShowComments(false)}
             currentUser={currentUser}
-            blockedIds={[]}
+            blockedIds={blockedIds}
           />
           <button
             onClick={() => setShowComments(true)}
