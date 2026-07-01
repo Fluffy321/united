@@ -49,7 +49,7 @@ export default function MitzvahDetailSheet({ request, currentUser, open, onClose
     setIsProcessing(true);
     try {
       // Check if help offer already exists
-      const existingOffers = await filterHelpOffer({ 
+      const existingOffers = await filterHelpOffer({
         request_id: request.id,
         helper_user_id: currentUser.id 
       });
