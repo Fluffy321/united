@@ -1394,7 +1394,8 @@ Goals:
   {
     id: 'candle-lighting-minhag-offset',
     category: 'Jewish Life',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'getStoredCandleOffset/setCandleOffset helpers in shabbatLocation.js. getShabbatTimes() accepts offsetMinutes param. useShabbatLocation exposes offset + setOffset. shabbatReminderService passes stored offset. Feed.jsx passes stored offset. Settings candle-lighting card has 5 offset chips: 15/18/20/30/40 min.',
     priority: PRIORITY.LOW,
     title: 'User-Selectable Candle-Lighting Offset',
     description: 'Let users choose their community\'s candle-lighting offset (e.g., 18 min standard Ashkenazi, 15 min Sephardic, 30 min, 40 min Jerusalem-area). Currently hardcoded to 18 minutes.',

@@ -1,5 +1,5 @@
 import { getShabbatTimes } from '@/lib/hebrewDate';
-import { getStoredCandleLocation, DEFAULT_LOCATION } from '@/lib/shabbatLocation';
+import { getStoredCandleLocation, getStoredCandleOffset, DEFAULT_LOCATION } from '@/lib/shabbatLocation';
 import { storageService } from './storageService';
 
 const SENT_KEY = 'junited_shabbat_reminders_sent';
@@ -87,7 +87,7 @@ export const shabbatReminderService = {
       ? `in ${loc.label}`
       : 'in the Five Towns';
 
-    const times = await getShabbatTimes(loc.lat, loc.lng, loc.tzid);
+    const times = await getShabbatTimes(loc.lat, loc.lng, loc.tzid, new Date(), undefined, getStoredCandleOffset());
     if (!times?.candleLighting || !times?.havdalah) return null;
 
     const candleLighting = new Date(times.candleLighting);

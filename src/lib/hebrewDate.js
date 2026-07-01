@@ -91,11 +91,11 @@ export const HAVDALAH_MINUTES = 50;
  * Get candle-lighting and Havdalah times for any lat/lng.
  * tzid should be an IANA timezone string (e.g. 'America/New_York').
  */
-export async function getShabbatTimes(lat, lng, tzid = 'America/New_York', date = new Date(), havdalahMinutes = HAVDALAH_MINUTES) {
+export async function getShabbatTimes(lat, lng, tzid = 'America/New_York', date = new Date(), havdalahMinutes = HAVDALAH_MINUTES, offsetMinutes = CANDLE_LIGHTING_MINUTES) {
   const dateStr = formatDateForTimeZone(date, tzid);
   try {
     const res = await fetch(
-      `${HEBCAL_BASE}/shabbat?cfg=json&geo=pos&latitude=${lat}&longitude=${lng}&tzid=${encodeURIComponent(tzid)}&m=${havdalahMinutes}&b=${CANDLE_LIGHTING_MINUTES}&date=${dateStr}`
+      `${HEBCAL_BASE}/shabbat?cfg=json&geo=pos&latitude=${lat}&longitude=${lng}&tzid=${encodeURIComponent(tzid)}&m=${havdalahMinutes}&b=${offsetMinutes}&date=${dateStr}`
     );
     const data = await res.json();
     const items = data.items || [];
@@ -121,7 +121,7 @@ export async function getShabbatTimes(lat, lng, tzid = 'America/New_York', date 
       havdalah:              allHavdalah[0]?.date  || null,
       havdalahTitle:         allHavdalah[0]?.title || 'Havdalah',
       parsha: items.find(i => i.category === 'parashat')?.title || null,
-      candleLightingMinutes: CANDLE_LIGHTING_MINUTES,
+      candleLightingMinutes: offsetMinutes,
       // Full item arrays for multi-event weeks (2-day Yom Tov, holiday + Shabbat)
       allCandles,
       allHavdalah,

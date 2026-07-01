@@ -13,6 +13,8 @@ import {
   isResolvedLocationLabel,
   subscribeCandleLocation,
   subscribeCandleLocationPermission,
+  getStoredCandleOffset,
+  setCandleOffset,
 } from '@/lib/shabbatLocation';
 
 function resolveInitialLocation() {
@@ -24,6 +26,7 @@ function resolveInitialLocation() {
 // options.autoRequest — if true, trigger GPS on first mount when no stored pref exists
 export default function useShabbatLocation({ autoRequest = false } = {}) {
   const [location, setLocation] = useState(resolveInitialLocation);
+  const [offset, setOffsetState] = useState(getStoredCandleOffset);
   const [permission, setPermission] = useState(getCandleLocationPermission);
   const [loading, setLoading] = useState(() => {
     if (!autoRequest) return false;
@@ -75,6 +78,7 @@ export default function useShabbatLocation({ autoRequest = false } = {}) {
     return subscribeCandleLocation((event) => {
       const next = event.detail || resolveInitialLocation();
       setLocation(next);
+      setOffsetState(next?.offset ?? 18);
       setError(null);
     });
   }, []);
@@ -148,11 +152,19 @@ export default function useShabbatLocation({ autoRequest = false } = {}) {
   const resetToDefault = useCallback(() => {
     clearCandleLocation();
     setLocation(DEFAULT_LOCATION);
+    setOffsetState(18);
     setError(null);
+  }, []);
+
+  const setOffset = useCallback((minutes) => {
+    setCandleOffset(minutes);
+    setOffsetState(minutes);
   }, []);
 
   return {
     location,
+    offset,
+    setOffset,
     locationLoading: loading,
     locationError: error,
     locationPermission: permission,

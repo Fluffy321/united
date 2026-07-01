@@ -18,6 +18,7 @@ import FeedFilters, { FeedFilterTrigger } from '@/components/feed/FeedFilters';
 import FeedComposer from '@/components/feed/FeedComposer';
 import TodayFiveTownsCard from '@/components/feed/TodayFiveTownsCard';
 import { getTodayHebrew, getShabbatTimes, getZmanim, getDafYomi, getParshaDescription, getTodayEvents } from '@/lib/hebrewDate';
+import { getStoredCandleOffset } from '@/lib/shabbatLocation';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 
@@ -851,7 +852,7 @@ function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, commu
 
   useEffect(() => {
     getTodayHebrew().then(setHebrewDate);
-    getShabbatTimes(FIVE_TOWNS_LAT, FIVE_TOWNS_LNG).then((times) => {
+    getShabbatTimes(FIVE_TOWNS_LAT, FIVE_TOWNS_LNG, 'America/New_York', new Date(), undefined, getStoredCandleOffset()).then((times) => {
       if (times?.candleLighting) {
         const dt = new Date(times.candleLighting);
         if (!isNaN(dt.getTime())) {

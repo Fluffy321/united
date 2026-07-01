@@ -66,6 +66,18 @@ export function setSessionCandleLocation(pref) {
   window.dispatchEvent(new CustomEvent(LOCATION_UPDATED_EVENT, { detail: pref }));
 }
 
+export function getStoredCandleOffset() {
+  const stored = storageService.getJson(STORAGE_KEY, null);
+  return stored?.offset ?? 18;
+}
+
+export function setCandleOffset(minutes) {
+  const stored = storageService.getJson(STORAGE_KEY, null) || {};
+  const next = { ...stored, offset: minutes };
+  storageService.setJson(STORAGE_KEY, next);
+  window.dispatchEvent(new CustomEvent(LOCATION_UPDATED_EVENT, { detail: next }));
+}
+
 export function clearCandleLocation() {
   storageService.removeItem(STORAGE_KEY);
   try {

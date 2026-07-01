@@ -132,6 +132,8 @@ export default function Settings() {
     requestGPS: requestCandleGPS,
     setManualCity: setCandleManualCity,
     resetToDefault: resetCandleLocation,
+    offset: candleOffset,
+    setOffset: setCandleOffset,
   } = useShabbatLocation({ autoRequest: false });
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
@@ -534,7 +536,6 @@ export default function Settings() {
             <SettingsCard title="Candle-lighting location" icon={MapPin}>
               <p className="mb-3 text-[12.5px] text-slate-500 leading-relaxed">
                 Candle-lighting and Shabbat reminder times are calculated for this location.
-                Times use the standard 18-minute candle-lighting offset before sunset.
               </p>
 
               {/* Current location status */}
@@ -646,6 +647,28 @@ export default function Settings() {
                   </button>
                 </div>
               )}
+
+              {/* Candle-lighting offset */}
+              <div className="mt-4 border-t border-slate-100 pt-4">
+                <p className="mb-1.5 text-[12.5px] font-semibold text-slate-700">Candle-lighting offset</p>
+                <p className="mb-3 text-[11.5px] text-slate-400 leading-relaxed">Minutes before sunset. Standard Ashkenaz is 18 min; many Sephardic communities use 15 min; Yerushalmim use 40 min.</p>
+                <div className="flex flex-wrap gap-2">
+                  {[15, 18, 20, 30, 40].map((min) => (
+                    <button
+                      key={min}
+                      type="button"
+                      onClick={() => { setCandleOffset(min); toast.success(`Offset set to ${min} minutes`); }}
+                      className={`rounded-xl px-3.5 py-2 text-[13px] font-black transition active:scale-[0.97] ${
+                        candleOffset === min
+                          ? 'bg-slate-950 text-white'
+                          : 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      {min} min
+                    </button>
+                  ))}
+                </div>
+              </div>
             </SettingsCard>
             </>
           )}
