@@ -58,7 +58,12 @@ export const getEventTimeLabel = (post) => {
   const time = new Date(rawDate).getTime();
   if (!Number.isFinite(time)) return null;
   const deltaMinutes = Math.round((time - Date.now()) / 60000);
-  const clock = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(new Date(time));
+  let clock = '';
+  try {
+    clock = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(new Date(time));
+  } catch {
+    return null; // date is out of Intl range (e.g. year 0001 from bad DB value)
+  }
   if (deltaMinutes <= 0) return 'Happening now';
   if (deltaMinutes < 60) return `Starts in ${deltaMinutes} min`;
   if (deltaMinutes < 180) return `Starts at ${clock}`;
