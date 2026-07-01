@@ -2937,6 +2937,17 @@ Goals:
   },
 
   {
+    id: 'remove-fake-ai-dm-agent',
+    category: 'Messaging',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Remove Fake AI DM Agent From Messages',
+    description: 'A "United AI Assistant" conversation was pinned to the top of every user\'s Messages list, styled as a live AI with an "Always available" badge and typing animation — but dataService.integrations.Core.InvokeLLM is a stub, so every reply was the same canned sentence ("AI features are not connected yet..."). Scripted bots presented as real assistants destroy user trust.',
+    why: 'Master plan Phase 1, item 2 (trust & correctness). The real AI assistant remains tracked separately as ai-community-assistant (exploring); this removal clears the fake surface until an actual LLM integration exists.',
+    shippedNote: 'Shipped 2026-07-01. Removed the pinned AI conversation injection from Messages.jsx and MessagesDrawer.jsx; stripped all AI branches from ConversationList.jsx (AI-first sorting, gradient card, AI/Always-available badges), ChatView.jsx (localStorage message store, fake 1.5s typing delay, AI welcome screen with suggested questions, AI avatar branches), and UserSearchPanel.jsx (AI row styling and direct-open path). Deleted src/lib/aiAgent.js and the unmounted src/components/common/AIChatBubble.jsx. The InvokeLLM stub itself remains for other callers that handle it honestly (e.g. EventSummaryButton\'s try/catch). Old localStorage ai_messages_* keys are orphaned but harmless.',
+  },
+
+  {
     id: 'master-plan-production-push',
     category: 'Admin & Platform',
     status: STATUS.PLANNED,

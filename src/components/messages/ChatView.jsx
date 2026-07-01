@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, ArrowLeft, MoreVertical, Flag, Ban, CheckCircle2, HandHeart, Bot, Sparkles, Users } from 'lucide-react';
+import { Send, Loader2, ArrowLeft, MoreVertical, Flag, Ban, CheckCircle2, HandHeart, Users } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import FileAttachmentButton from '@/components/common/FileAttachmentButton';
 import { AttachmentPreview, PendingAttachmentChip } from '@/components/common/FileAttachmentPreview';
-import { AI_AGENT, isAIConversation, loadAIMessages, saveAIMessages, getAIReply } from '@/lib/aiAgent';
 import UserAvatar from '@/components/common/UserAvatar';
 import { captureError } from '@/lib/analytics';
 import { createMitzvahAction, createMitzvahPoints, filterHelpOffer, filterMitzvahPoints, filterMitzvahRequest, updateHelpOffer, updateMitzvahPoints, updateMitzvahRequest } from '@/services/entityServices';
@@ -25,9 +24,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const [mitzvahRequest, setMitzvahRequest] = useState(null);
   const [helpOffer, setHelpOffer] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [aiThinking, setAiThinking] = useState(false);
   const messagesEndRef = useRef(null);
-  const isAI = isAIConversation(conversation);
   const isCommunityChat = !!conversation.is_community_chat;
 
   const getOtherParticipant = () => {
@@ -53,13 +50,6 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const other = getOtherParticipant();
 
   useEffect(() => {
-    if (isAI) {
-      const saved = loadAIMessages(currentUser.id);
-      setMessages(saved);
-      setIsLoading(false);
-      return;
-    }
-
     loadMessages();
     if (!isCommunityChat) {
       markAsRead();
@@ -191,45 +181,6 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     setNewMessage('');
     setPendingAttachment(null);
 
-    // AI conversation — local messages + InvokeLLM
-    if (isAI) {
-      const userMsg = {
-        id: `user-${Date.now()}`,
-        conversation_id: conversation.id,
-        sender_id: currentUser.id,
-        sender_name: currentUser.display_name || currentUser.full_name,
-        recipient_id: AI_AGENT.id,
-        content: text,
-        created_date: new Date().toISOString(),
-      };
-      const updated = [...messages, userMsg];
-      setMessages(updated);
-      saveAIMessages(currentUser.id, updated);
-
-      setAiThinking(true);
-       try {
-         // Wait 1-2 seconds for typing animation effect
-         await new Promise(resolve => setTimeout(resolve, 1500));
-         const reply = await getAIReply(text, currentUser, updated);
-         const aiMsg = {
-           id: `ai-${Date.now()}`,
-           conversation_id: conversation.id,
-           sender_id: AI_AGENT.id,
-           sender_name: AI_AGENT.full_name,
-           recipient_id: currentUser.id,
-           content: reply,
-           created_date: new Date().toISOString(),
-         };
-         const withReply = [...updated, aiMsg];
-         setMessages(withReply);
-         saveAIMessages(currentUser.id, withReply);
-       } catch {
-         toast.error('AI failed to respond, try again.');
-       }
-       setAiThinking(false);
-      return;
-    }
-
     setIsSending(true);
 
     try {
@@ -287,19 +238,15 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
         {/* Avatar — matches ConversationList styling */}
         <div
           className={`relative flex shrink-0 items-center justify-center overflow-hidden font-bold text-white shadow-sm ${
-            isAI ? 'h-10 w-10 rounded-2xl' : isCommunityChat ? 'h-10 w-10 rounded-xl' : 'h-10 w-10 rounded-full'
+            isCommunityChat ? 'h-10 w-10 rounded-xl' : 'h-10 w-10 rounded-full'
           }`}
           style={{
-            background: isAI
-              ? 'linear-gradient(135deg, #2563EB, #0F172A)'
-              : isCommunityChat
+            background: isCommunityChat
               ? 'linear-gradient(135deg, #0EA5E9, #2563EB)'
               : 'linear-gradient(135deg, #2563EB, #0F172A)',
           }}
         >
-          {isAI ? (
-            <Bot className="w-5 h-5 text-white" />
-          ) : isCommunityChat ? (
+          {isCommunityChat ? (
             other.avatar
               ? <img src={other.avatar} alt="" className="w-full h-full object-cover" />
               : <Users className="w-5 h-5 text-white" />
@@ -308,16 +255,10 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           ) : (
             <span className="text-[15px]">{other.name?.charAt(0)?.toUpperCase()}</span>
           )}
-          {isAI && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-amber-400">
-              <Sparkles className="h-2 w-2 text-white" />
-            </span>
-          )}
         </div>
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-bold text-slate-900">{other.name}</p>
-          {isAI && <p className="text-[11px] font-semibold text-amber-500">AI Assistant</p>}
           {isCommunityChat && (
             <p className="text-[11px] font-medium text-slate-400">
               {other.memberCount?.toLocaleString()} members
@@ -325,8 +266,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           )}
         </div>
 
-        {!isAI && (
-          <DropdownMenu>
+        <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button aria-label="More options" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-all hover:bg-slate-100 active:scale-95">
                 <MoreVertical className="w-4 h-4" />
@@ -342,8 +282,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
                 Block User
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        </DropdownMenu>
       </div>
 
       {/* Scrollable Messages Area */}
@@ -379,32 +318,6 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
                   <p className="font-bold text-slate-800 text-[15px]">{other.name}</p>
                   <p className="text-[13px] text-slate-500 mt-1 max-w-xs">Say hello to your community!</p>
                 </>
-              ) : isAI ? (
-                <>
-                  <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-slate-900 flex items-center justify-center mb-4 shadow-md">
-                    <Bot className="w-8 h-8 text-white" />
-                    <span className="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-amber-400 shadow">
-                      <Sparkles className="h-3 w-3 text-white" />
-                    </span>
-                  </div>
-                  <p className="font-bold text-slate-800 text-[15px]">United AI Assistant</p>
-                  <p className="text-[13px] text-slate-500 mt-1 max-w-[260px]">Ask a Jewish question — Torah, calendar, davening, concepts, or history.</p>
-                  <div className="flex flex-wrap gap-2 justify-center mt-5">
-                    {[
-                      'What is the weekly parsha about?',
-                      'What is Havdalah?',
-                      'How does the Hebrew calendar work?',
-                    ].map(s => (
-                      <button
-                        key={s}
-                        onClick={() => setNewMessage(s)}
-                        className="text-[12px] px-3 py-1.5 rounded-xl bg-white text-slate-700 border border-slate-200 shadow-sm hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </>
               ) : (
                 <>
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-slate-800 flex items-center justify-center mb-3 shadow-md">
@@ -418,17 +331,12 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           ) : (
             messages.map(msg => {
               const isOwn = msg.sender_id === currentUser.id;
-              const isAIMsg = msg.sender_id === AI_AGENT.id;
               const senderAvatar = isOwn
                 ? { ...currentUser, display_name: msg.sender_name || currentUser.display_name }
                 : { avatar_url: msg.sender_avatar_url || msg.sender_avatar || other.avatar, display_name: msg.sender_name || other.name };
               return (
                 <div key={msg.id} className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                  {isAIMsg ? (
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-600 to-slate-900 flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <Bot className="w-3.5 h-3.5 text-white" />
-                    </div>
-                  ) : !isOwn && (
+                  {!isOwn && (
                     <UserAvatar user={senderAvatar} name={senderAvatar.display_name} size="sm" className="mb-5" />
                   )}
                   <div className={`max-w-[76%] ${isOwn ? 'order-2' : ''}`}>
@@ -457,19 +365,6 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
                 </div>
               );
             })
-          )}
-          {/* AI thinking indicator */}
-          {aiThinking && (
-            <div className="flex justify-start">
-              <div className="bg-white rounded-2xl rounded-bl-sm shadow-sm border border-slate-100 px-4 py-3 flex items-center gap-2">
-                <span className="flex gap-1 items-center">
-                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                </span>
-                <span className="text-[13px] text-slate-400">Thinking…</span>
-              </div>
-            </div>
           )}
           <div ref={messagesEndRef} />
         </div>
@@ -523,7 +418,7 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           <FileAttachmentButton onAttached={setPendingAttachment} />
           <textarea
             rows={1}
-            placeholder={isAI ? 'Ask the AI assistant…' : isCommunityChat ? 'Message the community…' : 'Type a message…'}
+            placeholder={isCommunityChat ? 'Message the community…' : 'Type a message…'}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => {
@@ -537,9 +432,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           />
           <button
             onClick={handleSend}
-            disabled={(!newMessage.trim() && !pendingAttachment) || isSending || aiThinking}
+            disabled={(!newMessage.trim() && !pendingAttachment) || isSending}
             className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 disabled:opacity-40 active:scale-95 transition-all"
-            style={{ background: isAI ? 'linear-gradient(135deg, #2563EB, #0F172A)' : '#2563EB' }}
+            style={{ background: '#2563EB' }}
           >
             {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
