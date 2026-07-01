@@ -38,6 +38,7 @@ const MUTED_BADGE = 'bg-slate-100 text-slate-500 border border-slate-200';
 
 const TYPE_CONFIGS = {
   feed:         { label: 'Post',        color: MUTED_BADGE },
+  marketplace:  { label: 'For Sale',    color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
   help:         { label: 'Help Needed', color: URGENT_BADGE },
   event:        { label: 'Event',       color: BASE_BADGE },
   job:          { label: 'Job',         color: BASE_BADGE },
@@ -143,6 +144,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
 
   const isOwner = currentUser?.id === post.user_id;
   const isAnonymous = post.is_anonymous;
+  const isMarketplace = post.activity_kind === 'marketplace_listing' || post.type === 'marketplace';
   const typeConfig = TYPE_CONFIGS[post.type] || TYPE_CONFIGS.feed;
   const helpCat = HELP_REQUEST_CATEGORIES.find(c => c.value === post.category);
 
@@ -868,6 +870,20 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
           </div>
         )}
         {post.title && <h3 className="font-bold text-[14px] text-slate-900 mb-0.5 leading-snug line-clamp-2">{post.title}</h3>}
+        {isMarketplace && (
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            {post.price && <span className="text-[15px] font-black text-slate-950">{post.price}</span>}
+            {post.listing_status === 'sold' && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wide">Sold</span>
+            )}
+            <button
+              onClick={() => navigate(`/Marketplace?listing=${post.id}`)}
+              className="text-[12px] font-semibold text-blue-600 hover:underline"
+            >
+              View listing →
+            </button>
+          </div>
+        )}
         <p className={`text-[13px] text-slate-700 leading-relaxed ${!expanded ? 'line-clamp-3' : ''}`}>
           {post.body}
           {bodyLong && (
@@ -931,7 +947,7 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
             <span className="j-chip j-chip-muted">Reply</span>
           )}
         </button>
-        {post.user_id !== currentUser?.id && (
+        {post.user_id !== currentUser?.id && !(isMarketplace && post.listing_status === 'sold') && (
           <MessageButton recipientId={post.user_id} recipientName={post.user_name} postId={post.id} postTitle={post.title || post.body?.substring(0, 50)} postType={post.type} currentUser={currentUser} variant="compact" />
         )}
         <BookmarkButton postId={post.id} currentUser={currentUser} />

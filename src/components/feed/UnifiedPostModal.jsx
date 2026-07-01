@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { dataService, notificationsService, checkRateLimit, RateLimitError } from '@/services';
 import postsService from '@/services/postsService';
 import { ACTIVITY_KIND } from '@/lib/productInfrastructure';
+import { MARKETPLACE_CATEGORIES } from '@/lib/marketplaceTaxonomy';
 import { toast } from 'sonner';
 import { filterDailyFeedPrompt, updateDailyFeedPrompt } from '@/services/entityServices';
 
@@ -49,16 +50,7 @@ const HELP_CATEGORIES = [
   { value: 'other', label: 'Other' },
 ];
 
-const MARKET_CATEGORIES = [
-  'Furniture',
-  'Baby / kids',
-  'Clothing',
-  'Judaica',
-  'Books',
-  'Food',
-  'Services',
-  'Other',
-];
+const MARKET_CATEGORIES = MARKETPLACE_CATEGORIES;
 
 const URGENCY_OPTIONS = [
   { value: 'flexible', label: 'Flexible', className: 'border-slate-200 bg-slate-50 text-slate-700' },

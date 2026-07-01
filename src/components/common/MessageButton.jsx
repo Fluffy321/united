@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MessageCircle, Loader2 } from 'lucide-react';
 import { findOrCreateDirectConversation, checkRateLimit, RateLimitError } from '@/services';
+import { notificationsService } from '@/services/notificationsService';
 import { toast } from 'sonner';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
@@ -28,8 +29,11 @@ export default function MessageButton({
       // New conversation — server-side rate limit check
       await checkRateLimit('new_conversation');
 
-      // Check messaging permission
-      const { canMessage: allowed } = await canMessage(currentUser, recipientId);
+      // Check messaging permission (marketplace listings relax the
+      // shared-community default — see messagingPermissions.js)
+      const { canMessage: allowed } = await canMessage(currentUser, recipientId, {
+        context: postType === 'marketplace' ? 'marketplace' : undefined,
+      });
 
       if (allowed) {
         const conv = await findOrCreateDirectConversation(currentUser, { id: recipientId, name: recipientName }, {
@@ -37,6 +41,15 @@ export default function MessageButton({
           request_title: postTitle || null,
           request_type: postType,
         });
+        if (postType === 'marketplace' && postId) {
+          notificationsService.notifyMarketplaceMessage({
+            sellerId: recipientId,
+            buyerId: currentUser.id,
+            buyerName: currentUser.display_name || currentUser.full_name || '',
+            listingId: postId,
+            listingTitle: postTitle,
+          }).catch(() => {});
+        }
         navigate(createPageUrl(`Messages?conversation=${conv.id}`));
         toast.success('Conversation started!');
       } else {

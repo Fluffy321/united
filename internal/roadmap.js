@@ -2927,6 +2927,16 @@ Goals:
   },
 
   {
+    id: 'marketplace-real-persistence',
+    category: 'Growth & Monetization',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Marketplace: Real Persistence, Deep Links, and Honest Actions',
+    description: 'The /Marketplace page was a prototype in production: listings lived in useState([]), "Post listing" showed success then silently discarded the data on refresh, Save/Message buttons were toast stubs, and ?listing= deep links from Search/notifications/Live Now were never read. Separately, the Feed composer\'s "Sell / Give" flow was writing marketplace posts whose price/marketplace_category/pickup_option/image_urls fields were silently dropped because the posts table had no such columns.',
+    shippedNote: 'Shipped 2026-07-01 (master plan Phase 1, item 1). Migration 20260701210331_marketplace_listing_columns.sql adds posts columns: price, marketplace_category, condition, pickup_option, listing_urgency, listing_section, listing_status (available/pending/sold/closed + check constraint), image_urls text[], plus a partial index for marketplace queries — this also fixes the composer path\'s silent field loss. Migration 20260701214455 recreates posts_feed_view so the feed can see the new columns. src/pages/Marketplace.jsx rewritten: React Query list (queryKey [\'marketplace-listings\'], server-side activity_kind filter), create via postsService.createMarketplaceListing with single-photo upload through src/lib/imageUpload.js (actionable failure toast, draft preserved), ?listing= deep link opens a ListingDetailSheet with loading/error/not-found states (fetches by id when not in the first page; Back closes the sheet), real Save (BookmarkButton) and Message seller (MessageButton with rate limit + permission checks; marketplace context relaxes the shared-community messaging default since a public listing invites contact — see messagingPermissions.js), owner Mark-as-sold with tap-again confirm + Mark-as-available undo, fake "Trusted" badge / fake interested counts / dead "Shul school" chip / dead Map deep-link removed, bg-slate-950 CTAs replaced with bg-blue-600 per STYLE_GUIDE. Feed integration: UnifiedPostCard shows a For Sale badge, price, Sold chip, and View listing link for marketplace posts and hides Message on sold ones; Feed.jsx hides sold/closed listings. Shared category vocabulary in src/lib/marketplaceTaxonomy.js (composer + page now match; legacy values normalized on read). MessageButton fires notifyMarketplaceMessage so sellers get listing-linked notifications. universalSearch marketplace filter fixed in both Supabase and local branches. toDbPatch drops reactions_count for post entities (was costing a failed-insert retry on every post creation app-wide).',
+  },
+
+  {
     id: 'master-plan-production-push',
     category: 'Admin & Platform',
     status: STATUS.PLANNED,

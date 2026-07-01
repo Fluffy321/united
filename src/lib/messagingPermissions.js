@@ -23,8 +23,13 @@ export async function areConnections(senderId, recipientId) {
 /**
  * Main permission check.
  * Returns { canMessage: boolean }
+ *
+ * options.context: 'marketplace' relaxes the default 'communities' rule —
+ * posting a public marketplace listing is an implicit invitation to be
+ * contacted about it, so buyers don't need a shared community. Explicit
+ * stricter settings ('nobody', 'connections') are still respected.
  */
-export async function canMessage(sender, recipientId) {
+export async function canMessage(sender, recipientId, { context } = {}) {
   const recipientArr = await filterUser({ id: recipientId });
   const recipient = recipientArr[0];
   if (!recipient) return { canMessage: false };
@@ -36,6 +41,7 @@ export async function canMessage(sender, recipientId) {
   if (rule === 'members') return { canMessage: true };
   if (rule === 'nobody') return { canMessage: false };
   if (rule === 'communities') {
+    if (context === 'marketplace') return { canMessage: true };
     const shared = await shareCommunity(sender.id, recipientId);
     return { canMessage: shared };
   }

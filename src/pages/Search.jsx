@@ -344,7 +344,7 @@ export default function SearchPage() {
                   item={m}
                   icon={ShoppingBag}
                   title={m.title}
-                  subtitle={`${m.price || 'Listing'} · ${m.category || 'Marketplace'} · ${m.neighborhood || 'nearby'}`}
+                  subtitle={`${m.price || 'Listing'} · ${m.marketplace_category || m.category || 'Marketplace'} · ${m.location_text || m.neighborhood || 'nearby'}`}
                   onClick={() => navigate(`/Marketplace?listing=${m.id}`)}
                 />
               ))}

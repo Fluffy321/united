@@ -57,7 +57,7 @@ Start with the first unchecked item in internal/master-plan.md. Report progress 
 ## Progress tracker
 
 ### Phase 1 — Trust & Correctness
-- [ ] 1. Marketplace: fix persistence or pull from production
+- [x] 1. Marketplace: fix persistence or pull from production — fixed (chose fix over pull). Migration `20260701210331` + Marketplace.jsx rewrite: React Query, photo upload, ?listing= deep links, real Save/Message, mark-as-sold. Also fixed the Feed composer's silent marketplace-field drop and the dead universalSearch marketplace filter.
 - [ ] 2. Fake AI DM agent: remove or label
 - [ ] 3. Landing honesty pass + dead links
 - [ ] 4. Hide deleted accounts; retroactive block enforcement
