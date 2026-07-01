@@ -121,6 +121,7 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
             .from('public_profiles')
             .select('id, display_name, avatar_url, username, city')
             .neq('id', uid)
+            .is('deleted_at', null)
             .order('display_name', { ascending: true })
             .limit(25);
           if (error) throw error;
@@ -178,6 +179,7 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
           .select('id, display_name, avatar_url, username, city')
           .or(`display_name.ilike.${pattern},username.ilike.${pattern},city.ilike.${pattern}`)
           .neq('id', uid)
+          .is('deleted_at', null)
           .limit(25);
         if (error) throw error;
         results = data || [];

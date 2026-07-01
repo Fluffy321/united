@@ -37,6 +37,7 @@ export default function UserSearchPanel({ currentUser, onConversationOpened }) {
           .select('id,display_name,avatar_url,username,city,created_at')
           .ilike('display_name', `%${escapeIlike(q)}%`)
           .neq('id', currentUser.id)
+          .is('deleted_at', null)
           .limit(20);
         if (error) throw error;
         filtered = (data || []).map(row => ({

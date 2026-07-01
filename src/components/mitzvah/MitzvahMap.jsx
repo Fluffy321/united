@@ -1,7 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import { divIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+
+const createClusterIcon = (cluster) => divIcon({
+  className: 'junited-cluster-icon',
+  html: `<div style="
+    display:flex;align-items:center;justify-content:center;
+    width:34px;height:34px;border-radius:9999px;
+    background:#0f172a;color:#fff;font-weight:800;font-size:12px;
+    border:3px solid #fff;box-shadow:0 6px 16px rgba(15,23,42,0.35);
+  ">${cluster.getChildCount()}</div>`,
+  iconSize: [34, 34],
+  iconAnchor: [17, 17],
+});
 import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const PIN_TYPES = {
@@ -31,8 +44,6 @@ const PRIMARY_FILTERS = [
   { key: 'mitzvot', label: 'Mitzvot', types: ['help_needed', 'mitzvah_available', 'lost_found'] },
 ];
 
-const CLUSTER_BUCKET_SCALE = 1000;
-const CLUSTER_BASE_RADIUS = 0.00042;
 const DIRECTORY_LAST_REVIEWED = 'June 2026';
 
 const STATIC_POINTS = [
@@ -1420,48 +1431,6 @@ export default function MitzvahMap({
     () => (activeTypes.size === 0 ? allPoints : allPoints.filter((point) => activeTypes.has(point.type))),
     [activeTypes, allPoints]
   );
-  const spreadVisiblePoints = useMemo(() => {
-    const buckets = new Map();
-
-    visiblePoints.forEach((point) => {
-      if (!point.location_lat || !point.location_lng) return;
-      const bucketKey = [
-        Math.round(point.location_lat * CLUSTER_BUCKET_SCALE),
-        Math.round(point.location_lng * CLUSTER_BUCKET_SCALE),
-      ].join(':');
-      const bucket = buckets.get(bucketKey) || [];
-      bucket.push(point);
-      buckets.set(bucketKey, bucket);
-    });
-
-    return visiblePoints.map((point) => {
-      if (!point.location_lat || !point.location_lng) return point;
-
-      const bucketKey = [
-        Math.round(point.location_lat * CLUSTER_BUCKET_SCALE),
-        Math.round(point.location_lng * CLUSTER_BUCKET_SCALE),
-      ].join(':');
-      const bucket = buckets.get(bucketKey) || [];
-      if (bucket.length <= 1) {
-        return {
-          ...point,
-          display_lat: point.location_lat,
-          display_lng: point.location_lng,
-        };
-      }
-
-      const index = bucket.findIndex((candidate) => candidate.id === point.id);
-      const angle = (Math.PI * 2 * index) / bucket.length;
-      const ring = Math.floor(index / 8);
-      const radius = CLUSTER_BASE_RADIUS + ring * 0.00018;
-
-      return {
-        ...point,
-        display_lat: point.location_lat + Math.sin(angle) * radius,
-        display_lng: point.location_lng + Math.cos(angle) * radius,
-      };
-    });
-  }, [visiblePoints]);
   const hasActiveFilters = activeTypes.size > 0;
   const activePrimaryFilter = PRIMARY_FILTERS.find((filter) => (
     filter.types.length === activeTypes.size && filter.types.every((type) => activeTypes.has(type))
@@ -1689,23 +1658,31 @@ export default function MitzvahMap({
             />
           )}
 
-          {spreadVisiblePoints.map(point => {
-            if (!point.location_lat || !point.location_lng) return null;
+          <MarkerClusterGroup
+            chunkedLoading
+            maxClusterRadius={44}
+            spiderfyOnMaxZoom
+            showCoverageOnHover={false}
+            iconCreateFunction={createClusterIcon}
+          >
+            {visiblePoints.map(point => {
+              if (!point.location_lat || !point.location_lng) return null;
 
-            return (
-              <Marker
-                key={point.id}
-                position={[point.display_lat || point.location_lat, point.display_lng || point.location_lng]}
-                icon={createMarkerIcon(point.type)}
-                eventHandlers={{
-                  click: () => {
-                    setSelectedPoint(point);
-                    if (point.isRequest) onSelectRequest?.(point);
-                  }
-                }}
-              />
-            );
-          })}
+              return (
+                <Marker
+                  key={point.id}
+                  position={[point.location_lat, point.location_lng]}
+                  icon={createMarkerIcon(point.type)}
+                  eventHandlers={{
+                    click: () => {
+                      setSelectedPoint(point);
+                      if (point.isRequest) onSelectRequest?.(point);
+                    }
+                  }}
+                />
+              );
+            })}
+          </MarkerClusterGroup>
         </MapContainer>
 
         {/* Selected point card */}

@@ -90,7 +90,7 @@ export const ROADMAP = [
     status: STATUS.PLANNED,
     priority: PRIORITY.HIGH,
     title: 'Expand automated test coverage',
-    description: 'Vitest is installed with a first suite covering src/lib/feed/feedRanking.js and feedColors.js (npm test). Extend coverage to the highest-risk untested code: supabaseRepository.js query building, feedRetentionService scoring, and communityTypes tab logic. Long-term: RLS policy tests against a local Supabase instance.',
+    description: 'Progress 2026-07-01: 23 tests across feedRanking/feedColors, communityTypes (getSupportedCommunityTabs), and feedRetentionService.scorePost — the scorePost suite caught and fixed a real NaN-poisoning bug from malformed dates. Remaining: supabaseRepository.js query-building tests with a mocked client, and long-term RLS policy tests against a local Supabase instance.',
     why: 'The app has 400+ source files and zero tests until 2026-07-01; regressions in feed ranking, entity mapping, or RLS policies would ship silently.',
     prompt: `You are expanding automated test coverage for JUnited.
 
@@ -211,7 +211,8 @@ Goals:
   {
     id: 'hide-deleted-accounts-from-surfaces',
     category: 'Auth & Identity',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'Shipped 2026-07-01. Migration 20260701230000 adds deleted_at to the public_profiles view. Added .is(\'deleted_at\', null) to the four people-picker queries: UserSearchPanel.jsx search, FriendsHub.jsx suggestions + search, and the global-search peopleQuery in supabaseRepository.js. By-id lookups (friendsService.loadPublicProfileMap) intentionally still resolve so historical content shows Deleted User. Also recovered two remote-only migrations (20260701210331, 20260701214455) into the local repo to unblock db push.',
     priority: PRIORITY.MEDIUM,
     title: 'Hide "Deleted User" Accounts From Member Lists, Search & Suggestions',
     description: 'profiles.deleted_at (added by the account-deletion RPC) is not yet consumed anywhere in the client. A deleted account\'s anonymized "Deleted User" profile can still surface in community member lists, user search, and friend suggestions indefinitely.',
@@ -2812,7 +2813,8 @@ Goals:
   {
     id: 'map-marker-clustering',
     category: 'Businesses & Map',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'Shipped 2026-07-01. MitzvahMap.jsx: markers wrapped in MarkerClusterGroup (react-leaflet-cluster, chunkedLoading, maxClusterRadius 44, spiderfy on max zoom) with custom dark-circle count icons. Removed the manual spreadVisiblePoints ring-fan memo and CLUSTER_BUCKET_SCALE/CLUSTER_BASE_RADIUS constants.',
     priority: PRIORITY.MEDIUM,
     title: 'Cluster map markers in the default all-pins view',
     description: 'The map now shows all points by default (~114 static + up to 80 community posts + requests) as individual Leaflet divIcon markers with only a manual ring-spread for overlaps. Add real marker clustering (react-leaflet-cluster is already a dependency) so the default view stays fast and readable on low-end phones.',
@@ -2825,6 +2827,44 @@ Goals:
 1. Wrap the point markers in MarkerClusterGroup from react-leaflet-cluster; style cluster icons to match the app's pin design.
 2. Remove or simplify spreadVisiblePoints once clustering handles overlap.
 3. Verify tapping a cluster zooms in and individual pins still open the preview card.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'map-community-chip-semantics',
+    category: 'Businesses & Map',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Fix community filter chip toggle semantics on the Map',
+    description: 'On Map.jsx, when no community is selected every chip renders active (empty = all). Tapping one chip then narrows to ONLY that community — the opposite of what the visual state implies (users expect the tap to remove that community). Align tap semantics with the visual model.',
+    why: 'Surfaced by the 2026-07-01 code review: the two map filter surfaces teach contradictory mental models.',
+    prompt: `You are fixing community filter chip semantics on the JUnited map.
+
+Context: src/pages/Map.jsx ~line 1445: active = selectedCommunityIds.size === 0 || selectedCommunityIds.has(community.id); toggleSelectedCommunity adds the id to an empty set, narrowing to one community.
+
+Goals:
+1. When the set is empty (all-active state) and a user taps a chip, populate the set with ALL community ids minus the tapped one (i.e. the tap removes that community, matching the visual).
+2. When the set equals all ids, reset it to empty (back to the all-active default).
+3. Verify tapping chips adds/removes communities intuitively in both directions.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'typography-hierarchy-sweep',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Typography hierarchy sweep (reduce font-black overuse)',
+    description: 'Most text app-wide is font-black with tiny uppercase micro-labels, flattening visual hierarchy. Rule: one black-weight element per card; labels bold, body/detail medium or semibold. Started 2026-07-01 in FiveTownsConversationHub and Marketplace chips; remaining: Feed cards, Mitzvah Circle, Communities cards, Profile, admin pages.',
+    why: 'From the 2026-07-01 professional design audit: weight discipline is the highest-leverage remaining polish item.',
+    prompt: `You are continuing the JUnited typography hierarchy sweep.
+
+Context: see FiveTownsConversationHub.jsx (post-2026-07-01) for the target pattern: heading font-black, labels font-bold, detail text font-medium, chips font-semibold. STYLE_GUIDE.md is at the repo root.
+
+Goals:
+1. Sweep src/components/feed, src/components/mitzvah, src/components/communities, and src/pages (Feed, MitzvahCircle, Communities, Profile) reducing font-black to one element per card.
+2. Do not change sizes or colors — weights only, so the diff stays reviewable.
+3. Verify npm run lint and npm run build pass; screenshot Feed and Communities before/after.
 4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 

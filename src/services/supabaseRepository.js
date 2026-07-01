@@ -1233,6 +1233,7 @@ const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
     .from('public_profiles')
     .select(PUBLIC_PROFILE_SELECT)
     .or(`display_name.ilike.%${esc}%,username.ilike.%${esc}%,bio.ilike.%${esc}%,city.ilike.%${esc}%,public_community.ilike.%${esc}%`)
+    .is('deleted_at', null)
     .limit(12);
   const businessesQuery = supabase
     .from('business_listings')
