@@ -1268,7 +1268,7 @@ export default function MitzvahCircle() {
   const { user: currentUser, isLoadingAuth } = useAuth();
   const queryClient = useQueryClient();
 
-  const VALID_VIEWS = ['browse', 'rides', 'mealtrains', 'shuls', 'mine', 'completed'];
+  const VALID_VIEWS = ['browse', 'rides', 'mealtrains', 'dvar-torah', 'shuls', 'mine', 'completed'];
   const [activeView, setActiveView] = React.useState(() => {
     const tab = searchParams.get('tab');
     if (tab === 'open' || tab === 'carpool') return 'browse';
@@ -1669,7 +1669,8 @@ export default function MitzvahCircle() {
     { id: 'browse', label: 'Browse Needs' },
     { id: 'rides', label: 'Rides' },
     { id: 'mealtrains', label: 'Meal Trains' },
-    { id: 'shuls', label: 'Shuls & Minyan' },
+    { id: 'dvar-torah', label: 'Dvar Torah' },
+    { id: 'shuls', label: 'Minyan Board' },
     { id: 'mine', label: 'Mine' },
     { id: 'completed', label: 'Completed' },
   ];
@@ -1806,7 +1807,7 @@ export default function MitzvahCircle() {
           </div>
         </div>
 
-        {activeView !== 'shuls' && activeView !== 'mealtrains' && (
+        {activeView !== 'shuls' && activeView !== 'mealtrains' && activeView !== 'dvar-torah' && (
           <LiveNowRail
             className="mb-3"
             title="Needs help now"
@@ -1830,7 +1831,7 @@ export default function MitzvahCircle() {
         ) : null}
 
         {/* Search/filter bar */}
-        {activeView !== 'shuls' && activeView !== 'mealtrains' && activeView !== 'rides' && (
+        {activeView !== 'shuls' && activeView !== 'mealtrains' && activeView !== 'rides' && activeView !== 'dvar-torah' && (
           <div className="surface-panel-soft mb-3 space-y-3 rounded-[24px] p-3">
             {activeView === 'browse' && (
               <div>
@@ -1901,11 +1902,11 @@ export default function MitzvahCircle() {
         {/* Tab content */}
         <div key={`${activeView}-${activeCategory}`} className="motion-stagger space-y-3">
           {activeView === 'shuls' && (
-            <>
-              <ParshaCard />
-              <ChesedChallenge />
-              <MinyanBoard />
-            </>
+            <MinyanBoard />
+          )}
+
+          {activeView === 'dvar-torah' && (
+            <ParshaCard />
           )}
 
           {activeView === 'mealtrains' && (
@@ -1913,7 +1914,9 @@ export default function MitzvahCircle() {
           )}
 
           {activeView === 'browse' && (
-            loadingRequests ? (
+            <>
+              <ChesedChallenge />
+              {loadingRequests ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
               </div>
@@ -1947,7 +1950,8 @@ export default function MitzvahCircle() {
                 actionLabel="Post a need"
                 onAction={() => setShowCreate(true)}
               />
-            )
+              )}
+            </>
           )}
 
           {activeView === 'mine' && (

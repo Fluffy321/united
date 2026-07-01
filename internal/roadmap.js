@@ -65,6 +65,16 @@ export const CATEGORY_ORDER = [
 export const ROADMAP = [
 
   {
+    id: 'mitzvah-circle-content-tabs',
+    category: 'Chesed & Mitzvah',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Organize Mitzvah Circle content tabs',
+    description: 'Give Dvar Torah its own category, place the weekly chesed challenge with open needs, and simplify the minyan destination label.',
+    shippedNote: 'Shipped 2026-07-01. MitzvahCircle.jsx adds a dedicated Dvar Torah tab, moves ChesedChallenge to the top of Browse Needs, and renames Shuls & Minyan to Minyan Board. Verified through /MitzvahCircle in the browser.',
+  },
+
+  {
     id: 'remove-base44-shim',
     category: 'Admin & Platform',
     status: STATUS.SHIPPED,
