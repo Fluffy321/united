@@ -412,36 +412,6 @@ export default function Feed({ isActive = true }) {
         onClose={() => setShowLocationPicker(false)}
       />
 
-      {COMMUNITIES_ENABLED && (
-        <div className="sticky top-[56px] z-[50] bg-white/95 backdrop-blur-sm border-b border-slate-100 px-3 py-2">
-          <div className="mobile-page">
-            <div className="flex bg-[#E4E1D9] rounded-full p-[3px]">
-              <button
-                type="button"
-                onClick={() => setFeedTab('general')}
-                className={`flex-1 py-2 rounded-full text-[14px] transition-all ${
-                  feedTab === 'general'
-                    ? 'bg-white text-slate-950 font-semibold shadow-[0_1px_4px_rgba(0,0,0,0.14),0_0_0_0.5px_rgba(0,0,0,0.06)]'
-                    : 'text-slate-400 font-normal'
-                }`}
-              >
-                Feed
-              </button>
-              <button
-                type="button"
-                onClick={() => setFeedTab('communities')}
-                className={`flex-1 py-2 rounded-full text-[14px] transition-all ${
-                  feedTab === 'communities'
-                    ? 'bg-white text-slate-950 font-semibold shadow-[0_1px_4px_rgba(0,0,0,0.14),0_0_0_0.5px_rgba(0,0,0,0.06)]'
-                    : 'text-slate-400 font-normal'
-                }`}
-              >
-                Communities
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {feedTab === 'general' ? (
         <div className="mobile-page px-3 pt-3 mobile-safe-bottom space-y-2.5 bg-[#F0EEE8] min-h-screen">
