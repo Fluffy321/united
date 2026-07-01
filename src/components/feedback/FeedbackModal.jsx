@@ -63,7 +63,7 @@ export default function FeedbackModal({ open, onClose }) {
         viewport: { width: window.innerWidth, height: window.innerHeight },
       });
     }
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open]);  
 
   const reset = () => {
     setFeedbackType(DEFAULT_TYPE);

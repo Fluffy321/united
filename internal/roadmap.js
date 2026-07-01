@@ -74,6 +74,26 @@ export const ROADMAP = [
     shippedNote: 'All dataService.entities.* calls replaced with typed functions in src/services/. base44Client.js deleted.',
   },
 
+  {
+    id: 'expand-test-coverage',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.HIGH,
+    title: 'Expand automated test coverage',
+    description: 'Vitest is installed with a first suite covering src/lib/feed/feedRanking.js and feedColors.js (npm test). Extend coverage to the highest-risk untested code: supabaseRepository.js query building, feedRetentionService scoring, and communityTypes tab logic. Long-term: RLS policy tests against a local Supabase instance.',
+    why: 'The app has 400+ source files and zero tests until 2026-07-01; regressions in feed ranking, entity mapping, or RLS policies would ship silently.',
+    prompt: `You are expanding automated test coverage for JUnited.
+
+Context: Vitest is already installed (see package.json "test" script). An example suite lives at src/lib/feed/feedRanking.test.js. The highest-value untested modules are src/services/supabaseRepository.js (mock the supabase client from src/api/supabaseClient.js), src/services/feedRetentionService.js (scorePost, buildBrief), and src/lib/communityTypes.js (getSupportedCommunityTabs).
+
+Goals:
+1. Add tests for getSupportedCommunityTabs covering each allow_* flag combination.
+2. Add tests for feedRetentionService.scorePost verifying joined-community and interest boosts.
+3. Add tests for supabaseRepository query helpers using a mocked supabase client (vi.mock).
+4. Keep npm run lint and npm run build passing.
+5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
   // ── Growth & Activation ─────────────────────────────────────────────────
 
   {
