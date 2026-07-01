@@ -4,7 +4,7 @@ import ZmanimWidget from '@/components/jewish/ZmanimWidget';
 import ParshaWidget from '@/components/jewish/ParshaWidget';
 import { isSunday } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCommunityActionCopy, timeAgo } from '@/lib/liveNow';
 
@@ -409,7 +409,7 @@ function UpcomingEventsModule({ events, communityId, currentUser, onTabChange })
 
   const handleRSVP = async (ev, e) => {
     e.stopPropagation();
-    if (!currentUser) { base44.auth.redirectToLogin(); return; }
+    if (!currentUser) { navigate('/login'); return; }
     if (rsvpedIds.has(ev.id)) return;
     await base44.entities.CommunityEventRSVP.create({
       event_id: ev.id,
@@ -650,6 +650,7 @@ function InviteCTA({ community }) {
 
 // ─── Main export ─────────────────────────────────────────────────────────────
 export default function CommunityHomepage({ community, posts, events, opportunities, onTabChange, stats, members = [], currentUser }) {
+  const navigate = useNavigate();
   const postsThisWeek = community.posts_this_week || posts.filter(p => {
     return p.created_date && (Date.now() - new Date(p.created_date).getTime()) < 7 * 24 * 60 * 60 * 1000;
   }).length;

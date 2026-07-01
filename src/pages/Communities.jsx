@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, Search, X, AlertCircle, Map, Calendar, Compass, ArrowUpRight, MessageCircleMore, Sparkles, BookOpenText, ChevronRight } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/api/supabaseClient';
+import { useAuth } from '@/lib/AuthContext';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
@@ -919,7 +920,7 @@ function GroupCard({ group, isMember, onClick, onJoin }) {
 export default function Communities() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('discover');
   const [allCommunities, setAllCommunities] = useState(() => getCached());
   const [allGroups, setAllGroups] = useState([]);
@@ -991,10 +992,8 @@ export default function Communities() {
   }, []);
 
   useEffect(() => {
-    base44.auth.me()
-      .then(user => { setCurrentUser(user); loadData(user); })
-      .catch(() => loadData(null));
-  }, [loadData]);
+    loadData(currentUser);
+  }, [loadData, currentUser]);
 
   const catalogCommunities = useMemo(() => mergeCommunityCatalog(allCommunities), [allCommunities]);
 
@@ -1096,7 +1095,8 @@ export default function Communities() {
     }
     setReseedingFeatured(true);
     try {
-      const result = await base44.functions.invoke('reseedFeaturedCommunities', {});
+      const { data: result, error: fnError } = await supabase.functions.invoke('reseedFeaturedCommunities', {});
+      if (fnError) throw fnError;
       toast.success(`Reseeded featured communities: ${result?.data?.main_featured || 'done'}`);
       setFeaturedError(false);
       // Silently refresh communities without resetting loading state
@@ -1117,7 +1117,7 @@ export default function Communities() {
   };
 
   if (currentUser?.is_profile_complete === false) {
-    return <ProfileSetup user={currentUser} onComplete={() => base44.auth.me().then(setCurrentUser)} />;
+    return <ProfileSetup user={currentUser} onComplete={() => {}} />;
   }
 
   if (selectedGroup) {
