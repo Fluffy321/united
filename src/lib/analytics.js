@@ -141,8 +141,13 @@ export async function logClientError(errorLike, context = {}) {
       .filter(Boolean)
       .join('\n\nComponent stack:\n');
 
+    // error_logs RLS requires an authenticated user (migration 20260701223223);
+    // pre-auth errors go to Sentry only, so skip the doomed insert
+    const userId = await currentUserId();
+    if (!userId) return;
+
     const row = {
-      user_id: await currentUserId(),
+      user_id: userId,
       route: safeRoute(),
       message: truncate(sanitizeErrorText(normalized.message) || 'Unknown error', MAX_MESSAGE_LENGTH),
       stack: truncate(sanitizeErrorText(stackParts), MAX_STACK_LENGTH),

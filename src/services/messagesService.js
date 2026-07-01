@@ -21,6 +21,17 @@ export const messagesService = {
     return filterMessage({ conversation_id: conversationId }, sort);
   },
   async createMessage(payload) {
+    // Blocks must also stop sends into conversations that predate the block
+    // (community chats have a pseudo recipient id and are exempt).
+    const recipientId = payload.recipient_id ? String(payload.recipient_id) : '';
+    if (payload.sender_id && recipientId && !recipientId.startsWith('community-')) {
+      const [blockedByMe, blockedByThem] = await Promise.all([
+        filterBlock({ blocker_id: payload.sender_id, blocked_id: payload.recipient_id }),
+        filterBlock({ blocker_id: payload.recipient_id, blocked_id: payload.sender_id }),
+      ]);
+      if (blockedByMe.length > 0) throw new Error("You've blocked this person. Unblock them in Settings to message them.");
+      if (blockedByThem.length > 0) throw new Error("You can't message this person.");
+    }
     const message = await createMessage({
       ...payload,
       sender_avatar_url: payload.sender_avatar_url || payload.sender_avatar || null,
