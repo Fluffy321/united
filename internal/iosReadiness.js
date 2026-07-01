@@ -195,26 +195,20 @@ The storyboard should use UIKit's safe areas and work on all modern iPhone sizes
       },
       {
         id: 'info-plist',
-        title: 'Configure required Info.plist keys',
-        description: 'Info.plist must include usage description strings for any device capabilities the app accesses.',
+        title: 'Apply Info.plist keys to Capacitor iOS project',
+        description: 'Usage description strings and required keys have been generated. They need to be merged into ios/App/App/Info.plist after Capacitor is initialized.',
         whyItMatters: 'Apps that access camera, location, contacts, etc. without a usage description string crash on launch or are rejected.',
         required: true,
-        taskType: TASK_TYPE.AI,
-        copyPrompt: `You are writing Info.plist usage description strings for the JUnited iOS app.
-
-JUnited is a Jewish community platform. The app:
-- Requests push notification permission (for community updates and Mitzvah reminders)
-- May access the camera for profile photo uploads
-- May access the photo library for profile photo uploads
-- Does NOT use location, contacts, microphone, Bluetooth, or other sensitive APIs
-
-Please write the required Info.plist XML keys and values for each capability JUnited needs.
-Include the NSPhotoLibraryUsageDescription, NSCameraUsageDescription, and any others needed.
-The descriptions should be user-friendly and explain the concrete benefit to the user.
-
-Also list any Info.plist keys required specifically for Capacitor iOS apps.`,
-        completionCriteria: 'All required NSUsageDescription keys present; app passes App Store validation.',
-        deliverableNote: 'Keys generated and saved to internal/ios-info-plist-additions.xml. Merge into ios/App/App/Info.plist after running `npx cap add ios`. Covers: NSCameraUsageDescription, NSPhotoLibraryUsageDescription, NSPhotoLibraryAddUsageDescription, ITSAppUsesNonExemptEncryption, UIBackgroundModes (remote-notification).',
+        taskType: TASK_TYPE.MANUAL,
+        manualSteps: [
+          'Ensure `npx cap add ios` has been run (see setup-capacitor task)',
+          'Open internal/ios-info-plist-additions.xml — this file contains all required keys',
+          'Merge all <key> / <string> pairs into ios/App/App/Info.plist inside the root <dict>',
+          'Keys to add: NSCameraUsageDescription, NSPhotoLibraryUsageDescription, NSPhotoLibraryAddUsageDescription, ITSAppUsesNonExemptEncryption (false), UIBackgroundModes (remote-notification)',
+          'In Xcode, open Info.plist and confirm all keys appear without warnings',
+          'Run `npx cap sync ios` and rebuild to verify no signing or plist errors',
+        ],
+        completionCriteria: 'All required NSUsageDescription keys present in ios/App/App/Info.plist; Xcode build succeeds with no plist warnings.',
       },
       {
         id: 'testflight-setup',
@@ -246,34 +240,34 @@ Also list any Info.plist keys required specifically for Capacitor iOS apps.`,
     tasks: [
       {
         id: 'sign-in-with-apple',
-        title: 'Implement Sign in with Apple (Guideline 4.8)',
-        description: 'Because JUnited offers Google Sign-In, Apple Guideline 4.8 requires Sign in with Apple as an option.',
-        whyItMatters: 'REQUIRED. Without this, your app will be rejected. Apple will not grant exceptions for social apps.',
+        title: 'Wire up native Sign in with Apple on iOS (Guideline 4.8)',
+        description: 'The "Continue with Apple" button exists in Login.jsx and calls supabase.auth.signInWithOAuth — this works for web. On the native iOS app, Apple requires the native modal (not a browser redirect), which needs the @capacitor/sign-in-with-apple plugin.',
+        whyItMatters: 'REQUIRED. Apple rejects apps that offer a third-party login (Google) without also offering Sign in with Apple. The web OAuth redirect will not satisfy Apple reviewers testing on device.',
         required: true,
         taskType: TASK_TYPE.AI,
-        copyPrompt: `You are implementing Sign in with Apple for JUnited, a React/Vite app using Supabase Auth and wrapped with Capacitor for iOS.
+        copyPrompt: `You are wiring up native Sign in with Apple for JUnited on iOS (Capacitor + React + Supabase).
 
 Current state:
-- Google Sign-In is implemented in src/pages/Login.jsx using supabase.auth.signInWithOAuth({ provider: 'google' })
-- Auth state is in src/lib/AuthContext.jsx
-- After login, users land on OnboardingFlow if onboarding_complete is false
-- getAuthRedirectUrl() in src/api/supabaseClient.js returns the correct redirect URL
+- Login.jsx already has a "Continue with Apple" button that calls supabase.auth.signInWithOAuth({ provider: 'apple' })
+- This works as a web OAuth redirect but on native iOS it opens a browser instead of the native Apple modal
+- Supabase Apple provider is NOT yet configured in the dashboard
+- The Xcode "Sign In with Apple" capability is NOT yet added
 
 Goals:
-1. Add a "Sign in with Apple" button to src/pages/Login.jsx (below the Google button)
-2. Call supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: getAuthRedirectUrl() } })
-3. On native iOS (via Capacitor), use the native Apple Sign-In flow via @capacitor-community/apple-sign-in
-4. Handle the Supabase callback and profile bootstrap the same as Google (full_name from user_metadata)
-5. Show the Apple logo (use the lucide-react Apple icon or an SVG)
-6. The button must follow Apple's Human Interface Guidelines for Sign in with Apple styling
+1. Install @capacitor/sign-in-with-apple: npm install @capacitor/sign-in-with-apple
+2. In Login.jsx, detect when running in a native Capacitor context (Capacitor.isNativePlatform())
+   - Native: use SignInWithApple.authorize() → exchange the identityToken with Supabase via supabase.auth.signInWithIdToken({ provider: 'apple', token })
+   - Web: keep the existing supabase.auth.signInWithOAuth({ provider: 'apple' }) call
+3. Handle the Supabase session and profile bootstrap the same as Google (full_name from user_metadata)
+4. The button already follows Apple HIG styling — do not change its appearance
 
-Note: You also need to:
-- Enable "Sign In with Apple" capability in Xcode (Signing & Capabilities tab)
+Manual steps also required (not AI):
+- Enable "Sign In with Apple" capability in Xcode → target → Signing & Capabilities → + → Sign In with Apple
 - Enable Apple provider in Supabase Dashboard → Authentication → Providers → Apple
-- Configure Apple Services ID and private key in Supabase
+- Create a Services ID (com.junited.app.service) and Key at developer.apple.com, enter in Supabase
 
-Please write the complete updated Login.jsx and explain the Supabase configuration steps.`,
-        completionCriteria: 'Sign in with Apple button works on web and native iOS, creating a valid Supabase session.',
+Please write only the Login.jsx changes for the native/web branch. Explain the Supabase and Xcode manual steps separately.`,
+        completionCriteria: 'Native Apple Sign-In modal appears on iOS device/simulator. Session is created in Supabase. Google and Apple sign-in both work.',
       },
       {
         id: 'apple-provider-supabase',
@@ -307,8 +301,8 @@ Please write the complete updated Login.jsx and explain the Supabase configurati
       {
         id: 'in-app-account-deletion',
         title: 'In-app account deletion (Guideline 5.1.1(v))',
-        description: 'Users must be able to permanently delete their account directly within the app — not just via email request.',
-        whyItMatters: 'REQUIRED. This is one of the most common rejection reasons. The current email-based flow is not sufficient for App Store compliance.',
+        description: 'Settings.jsx currently shows "email support@junited.org to delete your account" — this email-based flow is not compliant. Users must be able to delete their account directly in the app with no external steps.',
+        whyItMatters: 'REQUIRED. One of the most common rejection reasons. The email flow in Settings.jsx must be replaced with a real in-app delete button backed by a server-side RPC.',
         required: true,
         taskType: TASK_TYPE.AI,
         copyPrompt: `You are implementing in-app account deletion for JUnited, a Jewish community platform using React + Supabase.
@@ -376,72 +370,18 @@ The function must use SECURITY DEFINER so it can delete across tables.`,
   {
     id: 'content-safety',
     label: 'Content Safety & Moderation',
-    description: 'Apple Guideline 1.2 requires UGC apps to have reporting, blocking, moderation, and a contact method for content issues.',
+    description: 'Apple Guideline 1.2 requires UGC apps to have reporting, blocking, moderation, and a contact method for content issues. Reporting and blocking are fully implemented in the codebase.',
     tasks: [
-      {
-        id: 'verify-report-flow',
-        title: 'Verify content reporting flow is complete',
-        description: 'JUnited has a ReportModal — verify it covers posts, comments, and profiles and actually sends data to a moderation queue.',
-        whyItMatters: 'REQUIRED. Apple tests this. A broken or incomplete reporting flow is a rejection reason.',
-        required: true,
-        taskType: TASK_TYPE.MIXED,
-        copyPrompt: `You are auditing and completing the content reporting system for JUnited.
-
-Current state: A ReportModal component exists. Please:
-1. Search the codebase for ReportModal and identify which content types can be reported (posts, comments, profiles, communities)
-2. Verify the report goes into a DB table that admins can review
-3. Identify any content types that are missing a report button
-4. List what needs to be added or fixed to make the reporting system complete for Apple App Store review
-
-The report flow needs to let users:
-- Report offensive, illegal, or harassing content
-- Report specific users
-- Get a confirmation that the report was received`,
-        manualSteps: [
-          'Open the app and find a post — verify there is a "Report" option in the menu',
-          'Submit a test report and check in the Supabase dashboard that it appears in the reports table',
-          'Open a user profile — verify there is a "Report" or "Block" option',
-          'Go to AdminModerationQueue (admin only) and verify the report appears there',
-          'Document which content types are covered and which are missing',
-        ],
-        completionCriteria: 'Posts, comments, and user profiles can all be reported. Reports appear in admin queue.',
-      },
-      {
-        id: 'verify-block-flow',
-        title: 'Verify user blocking flow is complete',
-        description: 'Users must be able to block other users, which should hide the blocked user\'s content.',
-        whyItMatters: 'REQUIRED per Apple Guideline 1.2. Blocking must actually prevent the blocked user\'s content from appearing.',
-        required: true,
-        taskType: TASK_TYPE.MIXED,
-        copyPrompt: `You are auditing the user blocking system for JUnited.
-
-Please:
-1. Search the codebase for any block-related code (block_user, blocked_users, BlockButton, etc.)
-2. Check if there is a blocked_users table in Supabase migrations
-3. Verify that blocking a user prevents their posts from appearing in the Feed and Community feeds
-4. Verify that blocked users cannot send messages to the user who blocked them (if messaging exists)
-5. Verify that the block can be undone (un-block)
-
-Report what exists and what is missing. If blocking is incomplete, outline the minimal changes needed.`,
-        manualSteps: [
-          'Open another user\'s profile in the app',
-          'Look for a "Block" option (usually in a ⋯ menu)',
-          'Block the user and verify their posts disappear from the feed',
-          'Go to Settings or Profile → verify there is a "Blocked Users" list',
-          'Un-block the user and verify their posts reappear',
-        ],
-        completionCriteria: 'Block/unblock works. Blocked users\' content is hidden. Blocked users list is accessible.',
-      },
       {
         id: 'moderation-contact-info',
         title: 'Add content moderation contact info to App Store listing',
-        description: 'App Store Connect requires you to provide contact information specifically for content issues.',
-        whyItMatters: 'REQUIRED. Apple reviewers check this. Use the same email as your support contact or a dedicated abuse@junited.us.',
+        description: 'App Store Connect requires contact information specifically for content issues. ReportModal and user blocking are already implemented; this is the App Store Connect metadata step.',
+        whyItMatters: 'REQUIRED. Apple reviewers check this. Reporting (Feed, PostDetail, Profile) and blocking (user_blocks table, Feed/Messages/Profile/PostDetail) are already working — just need the public-facing contact entry.',
         required: true,
         taskType: TASK_TYPE.MANUAL,
         manualSteps: [
           'Go to appstoreconnect.apple.com → your app → App Information',
-          'Find the "Support URL" field — enter https://www.junited.us/guidelines or a contact page',
+          'Find the "Support URL" field — enter https://www.junited.us/support (see support-url task)',
           'In the privacy policy and app description, include an email address for reporting content (e.g. support@junited.us)',
           'Optionally create a dedicated page at junited.us/report that explains how to report content and includes a contact email',
         ],
@@ -676,18 +616,29 @@ Also explain your reasoning for the top 5 keyword choices.`,
       },
       {
         id: 'support-url',
-        title: 'Set up support URL and marketing URL',
-        description: 'App Store Connect requires a support URL. Users who have problems with the app are directed here.',
-        whyItMatters: 'REQUIRED. Submissions without a support URL are rejected.',
+        title: 'Create a help/contact page and set support URL',
+        description: '/SupportJUnited is a donations page, not a help page. App Store Connect needs a real support URL with a contact email and FAQ. This page does not exist yet.',
+        whyItMatters: 'REQUIRED. Submissions without a support URL are rejected. The support URL must actually help users with problems, not redirect them to donations.',
         required: true,
-        taskType: TASK_TYPE.MANUAL,
-        manualSteps: [
-          'Create a support page at junited.us/support or use an existing contact page',
-          'The page should have: contact email, FAQ, link to community guidelines',
-          'In App Store Connect → App Information → Support URL: enter the URL',
-          'Marketing URL (optional): enter https://www.junited.us',
-        ],
-        completionCriteria: 'Support URL is live and set in App Store Connect.',
+        taskType: TASK_TYPE.AI,
+        copyPrompt: `You are creating a public support/help page for JUnited at the route /support.
+
+JUnited is a Jewish community platform (React/Vite). The existing /SupportJUnited route is a donations page — it is NOT suitable as a support URL.
+
+Goals:
+1. Create src/pages/Support.jsx — a simple static page with:
+   - "Get Help" heading
+   - Contact email: support@junited.us
+   - Link to community guidelines: /guidelines
+   - Two or three common FAQ items (how to join a community, how to report content, how to delete your account)
+   - Link to privacy policy: /privacy
+2. Add the route to App.jsx (no auth required — it must be publicly accessible)
+3. The page should use the same design language as TermsOfService.jsx (prose-style, no LayoutWrapper needed)
+
+Do NOT modify the existing /SupportJUnited donations page.
+
+Update internal/iosReadiness.js: change this item to reflect completion after the page is live.`,
+        completionCriteria: 'https://www.junited.us/support loads a public help page with a contact email. URL set in App Store Connect.',
       },
     ],
   },
@@ -701,17 +652,17 @@ Also explain your reasoning for the top 5 keyword choices.`,
       {
         id: 'tos-privacy-urls',
         title: 'Set Terms of Service and Privacy Policy URLs in App Store Connect',
-        description: 'Both URLs must be live public web pages, not PDFs.',
-        whyItMatters: 'REQUIRED. Apple will reject apps without a privacy policy URL.',
+        description: 'Both pages already exist in the app (/terms → TermsOfService.jsx, /privacy → PrivacyPolicy.jsx). The remaining step is entering the public URLs in App Store Connect.',
+        whyItMatters: 'REQUIRED. Apple will reject apps without a privacy policy URL. The pages exist — this is purely an App Store Connect data entry step.',
         required: true,
         taskType: TASK_TYPE.MANUAL,
         manualSteps: [
-          'Verify Terms of Service is live at https://www.junited.us/terms',
-          'Verify Privacy Policy is live at https://www.junited.us/privacy',
+          'Verify Terms of Service loads at https://www.junited.us/terms',
+          'Verify Privacy Policy loads at https://www.junited.us/privacy',
           'In App Store Connect → App Information → Privacy Policy URL: https://www.junited.us/privacy',
-          'In App Store Connect → App Information → License Agreement: can link to terms or use Apple\'s standard',
+          'In App Store Connect → App Information → License Agreement: can link to /terms or use Apple\'s standard EULA',
         ],
-        completionCriteria: 'Privacy Policy URL set in App Store Connect. Both pages load correctly.',
+        completionCriteria: 'Privacy Policy URL set in App Store Connect. Both pages load correctly at their public URLs.',
       },
       {
         id: 'age-rating',
@@ -750,35 +701,17 @@ Also explain your reasoning for the top 5 keyword choices.`,
       {
         id: 'export-compliance',
         title: 'Export compliance / encryption declaration',
-        description: 'Apps that use encryption (HTTPS, TLS) must complete an export compliance questionnaire.',
-        whyItMatters: 'REQUIRED. Using HTTPS counts as encryption under US export law. Must answer the questionnaire correctly.',
+        description: 'ITSAppUsesNonExemptEncryption = false is already in internal/ios-info-plist-additions.xml — it just needs to be merged into the Xcode project. This skips the annual questionnaire automatically.',
+        whyItMatters: 'REQUIRED. Using HTTPS counts as encryption under US export law. The Info.plist key is already generated; apply it when Capacitor is set up.',
         required: true,
-        taskType: TASK_TYPE.MIXED,
-        copyPrompt: `You are helping complete the encryption export compliance declaration for JUnited (iOS app).
-
-JUnited uses:
-- HTTPS/TLS for all API calls (Supabase, Google OAuth, Resend)
-- WebCrypto API (via browser) for session tokens
-- No custom or proprietary encryption algorithms
-- No VPN or end-to-end encryption of messages
-
-For Apple's export compliance questionnaire, should JUnited select:
-(A) "Yes, this app uses encryption" — and qualify for the standard exemption
-(B) "No, this app does not use encryption"
-
-Please explain:
-1. The correct answer for JUnited
-2. What ECCN exemption applies (likely EAR99 or 5D992.c)
-3. Whether JUnited needs an encryption registration number (ERN)
-4. What to add to Info.plist to automate the response for future builds`,
+        taskType: TASK_TYPE.MANUAL,
         manualSteps: [
-          'During App Store Connect submission, you\'ll be asked about encryption',
-          'Answer: "Yes, my app uses encryption" (HTTPS counts)',
-          'Select: "My app qualifies for the standard encryption exemptions"',
-          'This exemption applies because JUnited uses only standard HTTPS/TLS (not custom encryption)',
-          'Add to Info.plist: ITSAppUsesNonExemptEncryption = NO (to skip the questionnaire automatically)',
+          'Confirm ITSAppUsesNonExemptEncryption = false is present in ios/App/App/Info.plist (it is in the ios-info-plist-additions.xml deliverable)',
+          'This key tells Apple the app uses only standard HTTPS/TLS (OS-provided, exempt from export controls)',
+          'No ERN (Encryption Registration Number) is needed for standard HTTPS-only apps',
+          'No annual questionnaire in App Store Connect is required once the key is in Info.plist',
         ],
-        completionCriteria: 'ITSAppUsesNonExemptEncryption = NO in Info.plist, or questionnaire completed in App Store Connect.',
+        completionCriteria: 'ITSAppUsesNonExemptEncryption = false is in ios/App/App/Info.plist and Xcode build succeeds.',
       },
     ],
   },
@@ -789,6 +722,29 @@ Please explain:
     label: 'iOS UI & Accessibility',
     description: 'The app must handle iOS-specific UI requirements: safe areas, status bar, and basic accessibility.',
     tasks: [
+      {
+        id: 'viewport-fit-cover',
+        title: 'Add viewport-fit=cover to index.html',
+        description: 'The meta viewport tag in index.html must include viewport-fit=cover so that env(safe-area-inset-*) CSS variables work on iPhones with a notch or Dynamic Island.',
+        whyItMatters: 'Without this, safe-area CSS insets are always 0 and the bottom nav will be hidden behind the home indicator on modern iPhones. Can be done now, before Capacitor is set up.',
+        required: true,
+        taskType: TASK_TYPE.AI,
+        copyPrompt: `You are adding viewport-fit=cover to JUnited's index.html for iOS safe area support.
+
+The file is at index.html in the project root.
+
+Find the existing <meta name="viewport" ...> tag and add viewport-fit=cover to it.
+The result should be: <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+Also check src/index.css and Layout.jsx (wherever the bottom nav bar is defined) to confirm that
+env(safe-area-inset-bottom) padding is being applied to the bottom navigation bar.
+If it is not, add: padding-bottom: env(safe-area-inset-bottom) to the bottom nav container.
+
+This must work on: iPhone SE (no notch), iPhone 12–14 (notch), iPhone 15–16 (Dynamic Island).
+
+Update internal/iosReadiness.js: change this item's status-related fields to reflect completion.`,
+        completionCriteria: 'viewport-fit=cover is in index.html. Bottom nav clears the home indicator on iPhone 16 Pro Max simulator.',
+      },
       {
         id: 'safe-area-handling',
         title: 'Verify safe area insets (notch, Dynamic Island, home indicator)',
