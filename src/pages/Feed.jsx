@@ -17,6 +17,7 @@ import useFeedData from '@/components/feed/useFeedData';
 import FeedFilters, { FeedFilterTrigger } from '@/components/feed/FeedFilters';
 import FeedComposer from '@/components/feed/FeedComposer';
 import PostingPrompts from '@/components/feed/PostingPrompts';
+import MinyanBoard from '@/components/feed/MinyanBoard';
 import { getTodayHebrew, getShabbatTimes, getZmanim, getDafYomi, getParshaDescription, getTodayEvents } from '@/lib/hebrewDate';
 import { getStoredCandleOffset } from '@/lib/shabbatLocation';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
@@ -488,9 +489,12 @@ export default function Feed({ isActive = true }) {
           </WidgetBoundary>
 
           {feedCanRender && feedPosts.length === 0 && !isLoading && (
-            <PostingPrompts
-              onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
-            />
+            <>
+              <PostingPrompts
+                onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
+              />
+              <MinyanBoard />
+            </>
           )}
 
           {isLoading && !loadTimedOut && (
