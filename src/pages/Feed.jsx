@@ -16,6 +16,7 @@ import DestinationHeader from '@/components/layout/DestinationHeader';
 import useFeedData from '@/components/feed/useFeedData';
 import FeedFilters, { FeedFilterTrigger } from '@/components/feed/FeedFilters';
 import FeedComposer from '@/components/feed/FeedComposer';
+import PostingPrompts from '@/components/feed/PostingPrompts';
 import { getTodayHebrew, getShabbatTimes, getZmanim, getDafYomi, getParshaDescription, getTodayEvents } from '@/lib/hebrewDate';
 import { getStoredCandleOffset } from '@/lib/shabbatLocation';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
@@ -485,6 +486,12 @@ export default function Feed({ isActive = true }) {
               onOpenMarketplace={() => navigate('/Marketplace')}
             />
           </WidgetBoundary>
+
+          {feedCanRender && feedPosts.length === 0 && !isLoading && (
+            <PostingPrompts
+              onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
+            />
+          )}
 
           {isLoading && !loadTimedOut && (
             <div className="motion-stagger space-y-2.5 tab-fade-in">
