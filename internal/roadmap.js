@@ -2297,11 +2297,12 @@ Goals:
   {
     id: 'map-window-scroll-redesign',
     category: 'Admin & Platform',
-    status: STATUS.DROPPED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'Removed overflow-hidden from main container so mobile-safe-bottom padding is not clipped. Moved mobile-safe-bottom to the scroll child div. Map keeps flex h-dvh flex-col with overflow-y-auto on the content area — content now scrolls fully to the bottom above the nav bar.',
     priority: PRIORITY.LOW,
-    title: 'Map Page Window-Scroll Architecture Redesign',
-    description: 'Map currently uses flex h-dvh with an overflow-y-auto inner container. This prevents hide-on-scroll from working on the Map header. A future redesign to use window scroll would enable hide-on-scroll consistency with Feed/Communities, but requires a significant layout change.',
-    why: 'Dropped 2026-05-17 after the broader page-shell review. Map should keep its internal scroll/fixed-height map architecture; Feed and Communities now match Map with persistent headers instead of forcing Map into hide-on-scroll.',
+    title: 'Map Page Scroll Architecture Fix',
+    description: 'Map uses flex h-dvh with an overflow-y-auto inner container. overflow-hidden on the outer main was clipping the bottom-nav padding, causing content to be hidden behind the nav bar.',
+    why: 'Fixed 2026-07-01: removed overflow-hidden from <main>, moved mobile-safe-bottom to the scroll container.',
   },
 
   {

@@ -1581,7 +1581,7 @@ export default function MapPage() {
   const isDeepLinkedMap = searchParams.toString().length > 0;
 
   return (
-    <main className="app-page flex h-dvh flex-col overflow-hidden mobile-safe-bottom">
+    <main className="app-page flex h-dvh flex-col">
       <DestinationHeader
         sticky={false}
         showBack={isDeepLinkedMap}
@@ -1602,7 +1602,7 @@ export default function MapPage() {
         )}
       />
 
-      <div className="mobile-page-wide min-h-0 flex-1 overflow-y-auto px-3 pb-3 sm:px-4 sm:pb-4">
+      <div className="mobile-page-wide min-h-0 flex-1 overflow-y-auto px-3 sm:px-4 mobile-safe-bottom">
         <div className="mb-3 grid grid-cols-2 gap-2 rounded-[20px] border border-slate-200 bg-white p-1 shadow-sm">
           <button
             type="button"
