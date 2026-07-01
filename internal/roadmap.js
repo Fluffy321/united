@@ -1316,9 +1316,10 @@ Goals:
   {
     id: 'block-enforcement-existing-conversations',
     category: 'Messaging',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Retroactively Hide/Prevent Messages in Existing Conversations After a Block',
+    shippedNote: 'Shipped 2026-07-01 (master plan Phase 1, item 4). Messages.jsx fetches user_blocks in both directions ([\'user-blocks-both\'] query) and filters blocked-partner DMs out of the conversation list; ?conversation= deep links to a blocked DM are rejected with "This conversation is unavailable"; blocking from ChatView invalidates the blocks query so the list updates immediately. messagesService.createMessage() now runs the same two-directional user_blocks check as findOrCreateDirectConversation() before any send (community chats exempt via their pseudo recipient id), so pre-existing conversations can no longer accept messages across a block. Note: enforcement is at the service layer, matching the rest of the app\'s block handling — a DB-level RLS policy on messages remains a possible hardening follow-up (tracked in low-severity-rls-followups scope).',
     description: 'findOrCreateDirectConversation() now blocks starting a new DM between a blocker and a blocked user (see content-safety-completion), but a conversation that already existed before the block still shows up in both users\' Messages list and still accepts new sends.',
     why: 'Discovered during the content-safety-completion audit — full parity with the Feed/PostDetail block filtering would also hide (or clearly mark) existing conversations with a blocked user in Messages.jsx, and reject createMessage() calls into a conversation where either participant has blocked the other, not just block conversation creation.',
     prompt: `You are closing the last gap in JUnited's block-enforcement audit.
