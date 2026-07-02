@@ -2961,6 +2961,16 @@ Goals:
   },
 
   {
+    id: 'react-query-migration-and-admin-center-split',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'React Query Migration (Settings, Communities) + Admin Center Split',
+    description: 'Settings.jsx and Communities.jsx were the last two large pages doing manual useEffect/useState fetching — no caching, no cross-page invalidation, no global error toasts. CommunityAdminCenter.jsx was a 3,733-line single file bundling 13 admin features.',
+    shippedNote: 'Shipped 2026-07-01 (master plan Phase 2, item 8, first three stages). Settings.jsx: subscription on [\'active-subscription\', uid]; BlockedUsersCard reads Feed\'s [\'user-blocks\', uid] key and unblocking invalidates [\'user-blocks-both\'] + [\'conversations\'] so Messages un-hides threads immediately. Communities.jsx: four queries ([\'communities-list\'], [\'community-groups-list\'], [\'user-community-ids\', uid], [\'user-group-ids\', uid]) replace the loadData/Promise.allSettled machinery; joins/leaves are optimistic useMutations with snapshot rollback; the localStorage cache survives as placeholderData; the page is finally a reader of [\'communities-list\'], which CommunityDetailView had been invalidating with no subscriber — community edits/joins from detail views now refresh the catalog. CommunityAdminCenter.jsx: move-only split from 3,733 to 134 lines — 11 inline tabs extracted to communities/admin/ (OverviewTab, BillingTab, AnalyticsTab, ContentTab, MembersTab, ModerationTab, LocalUpdatesTab, AppealsTab, LayoutTab, BrandingTab, SettingsTab) plus shared.jsx and AppealSubmitModal.jsx (re-exported to preserve CommunityDetailView\'s named import). Remaining item-8 work (CommunityDetailView split) tracked in internal/master-plan.md.',
+  },
+
+  {
     id: 'master-plan-production-push',
     category: 'Admin & Platform',
     status: STATUS.PLANNED,

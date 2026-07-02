@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, Search, X, AlertCircle, Map, Compass, ArrowUpRight, MessageCircleMore, Sparkles, BookOpenText, ChevronRight, UsersRound } from 'lucide-react';
 import DestinationHeader from '@/components/layout/DestinationHeader';
@@ -900,12 +901,9 @@ export default function Communities() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user: currentUser } = useAuth();
+  const queryClient = useQueryClient();
+  const uid = currentUser?.id;
   const [activeTab, setActiveTab] = useState('discover');
-  const [allCommunities, setAllCommunities] = useState(() => getCached());
-  const [allGroups, setAllGroups] = useState([]);
-  const [userCommunityIds, setUserCommunityIds] = useState(new Set());
-  const [memberGroupIds, setMemberGroupIds] = useState(new Set());
-  const [loadingPhase, setLoadingPhase] = useState('loading');
   const [joiningId, setJoiningId] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -913,7 +911,6 @@ export default function Communities() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [reseedingFeatured, setReseedingFeatured] = useState(false);
   const [showCategoryBrowse, setShowCategoryBrowse] = useState(false);
-  const [isDemo, setIsDemo] = useState(false);
   const [featuredError, setFeaturedError] = useState(false);
   const [sizeFilter, setSizeFilter] = useState('all_sizes');
   const [activityFilter, setActivityFilter] = useState('all_activity');
@@ -929,50 +926,55 @@ export default function Communities() {
     navigate(`/communities/${encodeURIComponent(legacyCommunityId)}${suffix}`, { replace: true });
   }, [navigate, searchParams]);
 
-  const loadData = useCallback(async (user) => {
-    setLoadingPhase('loading');
-    try {
-      const results = await Promise.allSettled([
-        user ? filterUserCommunity({ user_id: user.id }) : Promise.resolve([]),
-        user ? filterGroupMember({ user_id: user.id }) : Promise.resolve([]),
-        listCommunity('-follower_count', 80),
-        listCommunityGroup('-member_count', 50),
-      ]);
-
-      const [memberships, groupMembers, comms, groups] = results;
-
-      if (memberships.status === 'fulfilled') setUserCommunityIds(new Set(memberships.value.map(m => m.community_id)));
-      if (groupMembers.status === 'fulfilled') setMemberGroupIds(new Set(groupMembers.value.map(m => m.group_id)));
-
-      if (comms.status === 'fulfilled' && comms.value?.length > 0) {
-        // Sanitize: only keep records with a valid id and name
-        const sanitized = comms.value.filter(c => c?.id && c?.name);
-        const toSet = sanitized;
-        allCommunitiesRef.current = toSet;
-        setAllCommunities(toSet);
-        setCache(sanitized);
-        setIsDemo(false);
-      } else {
-        const cached = getCached().filter(c => c?.id && c?.name);
-        const toSet = cached;
-        allCommunitiesRef.current = toSet;
-        setAllCommunities(toSet);
-        setIsDemo(false);
-      }
-
-      if (groups.status === 'fulfilled') setAllGroups(groups.value || []);
-    } catch {
+  const {
+    data: communitiesData,
+    isLoading: communitiesLoading,
+    isPlaceholderData: communitiesIsPlaceholder,
+  } = useQuery({
+    queryKey: ['communities-list'],
+    queryFn: () => listCommunity('-follower_count', 80),
+    // Preserve the localStorage offline/fallback cache: show it instantly
+    // while the network fetch runs (and if the fetch fails entirely).
+    placeholderData: () => {
       const cached = getCached().filter(c => c?.id && c?.name);
-      allCommunitiesRef.current = cached;
-      setAllCommunities(cached);
-      setIsDemo(false);
-    }
-    setLoadingPhase('done');
-  }, []);
+      return cached.length > 0 ? cached : undefined;
+    },
+  });
 
+  const { data: allGroups = [], isLoading: groupsLoading } = useQuery({
+    queryKey: ['community-groups-list'],
+    queryFn: () => listCommunityGroup('-member_count', 50),
+  });
+
+  const { data: membershipRows = [], isLoading: membershipsLoading } = useQuery({
+    queryKey: ['user-community-ids', uid],
+    queryFn: () => filterUserCommunity({ user_id: uid }),
+    enabled: !!uid,
+  });
+
+  const { data: groupMemberRows = [], isLoading: groupMembersLoading } = useQuery({
+    queryKey: ['user-group-ids', uid],
+    queryFn: () => filterGroupMember({ user_id: uid }),
+    enabled: !!uid,
+  });
+
+  const userCommunityIds = useMemo(() => new Set(membershipRows.map(m => m.community_id)), [membershipRows]);
+  const memberGroupIds = useMemo(() => new Set(groupMemberRows.map(m => m.group_id)), [groupMemberRows]);
+
+  // Sanitize: only keep records with a valid id and name. Fall back to the
+  // localStorage cache when the server returns nothing (offline behavior).
+  const allCommunities = useMemo(() => {
+    const sanitized = (communitiesData || []).filter(c => c?.id && c?.name);
+    if (sanitized.length > 0) return sanitized;
+    return getCached().filter(c => c?.id && c?.name);
+  }, [communitiesData]);
+
+  // Persist fresh server data to the localStorage offline cache.
   useEffect(() => {
-    loadData(currentUser);
-  }, [loadData, currentUser]);
+    if (communitiesIsPlaceholder) return;
+    const sanitized = (communitiesData || []).filter(c => c?.id && c?.name);
+    if (sanitized.length > 0) setCache(sanitized);
+  }, [communitiesData, communitiesIsPlaceholder]);
 
   const catalogCommunities = useMemo(() => mergeCommunityCatalog(allCommunities), [allCommunities]);
 
@@ -1028,30 +1030,96 @@ export default function Communities() {
     return result;
   }, [searchQuery, activeCategory]);
 
-  const joinCommunity = async (community) => {
-    if (!currentUser) { toast.error('Sign in to join communities'); return; }
-    setJoiningId(community.id);
-    try {
-      await createUserCommunity({ user_id: currentUser.id, community_id: community.id, role: 'Member' });
+  const joinCommunityMutation = useMutation({
+    mutationFn: async (community) => {
+      await createUserCommunity({ user_id: uid, community_id: community.id, role: 'Member' });
       await updateCommunity(community.id, {
         follower_count: (community.follower_count || 0) + 1,
         joins_this_week: (community.joins_this_week || 0) + 1
       });
-      setUserCommunityIds(prev => new Set([...prev, community.id]));
+    },
+    onMutate: async (community) => {
+      // Optimistically flip the Join button by appending a synthetic membership row.
+      await queryClient.cancelQueries({ queryKey: ['user-community-ids', uid] });
+      const previous = queryClient.getQueryData(['user-community-ids', uid]);
+      queryClient.setQueryData(['user-community-ids', uid], (old) => [
+        ...(old || []),
+        { user_id: uid, community_id: community.id, role: 'Member' },
+      ]);
+      return { previous };
+    },
+    onSuccess: (_data, community) => {
       toast.success(`Joined ${community.name}!`);
-    } catch { toast.error('Something went wrong'); }
-    setJoiningId(null);
+    },
+    onError: (_error, _community, context) => {
+      queryClient.setQueryData(['user-community-ids', uid], context?.previous);
+      toast.error('Something went wrong');
+    },
+    onSettled: () => {
+      setJoiningId(null);
+      queryClient.invalidateQueries({ queryKey: ['user-community-ids', uid] });
+      queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+      queryClient.invalidateQueries({ queryKey: ['user-communities', uid] });
+    },
+  });
+
+  const joinCommunity = async (community) => {
+    if (!currentUser) { toast.error('Sign in to join communities'); return; }
+    setJoiningId(community.id);
+    try { await joinCommunityMutation.mutateAsync(community); } catch { /* handled in onError */ }
   };
+
+  const joinGroupMutation = useMutation({
+    mutationFn: async (group) => {
+      await createGroupMember({ group_id: group.id, user_id: uid, user_name: currentUser?.full_name, role: 'member' });
+      await updateCommunityGroup(group.id, { member_count: (group.member_count || 0) + 1 });
+    },
+    onMutate: async (group) => {
+      await queryClient.cancelQueries({ queryKey: ['user-group-ids', uid] });
+      const previous = queryClient.getQueryData(['user-group-ids', uid]);
+      queryClient.setQueryData(['user-group-ids', uid], (old) => [
+        ...(old || []),
+        { user_id: uid, group_id: group.id, role: 'member' },
+      ]);
+      return { previous };
+    },
+    onSuccess: (_data, group) => {
+      toast.success(`Joined ${group.name}!`);
+    },
+    onError: (_error, _group, context) => {
+      queryClient.setQueryData(['user-group-ids', uid], context?.previous);
+      toast.error('Something went wrong');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-group-ids', uid] });
+      queryClient.invalidateQueries({ queryKey: ['community-groups-list'] });
+    },
+  });
 
   const joinGroup = async (group) => {
     if (!currentUser) { toast.error('Sign in to join groups'); return; }
-    try {
-      await createGroupMember({ group_id: group.id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
-      await updateCommunityGroup(group.id, { member_count: (group.member_count || 0) + 1 });
-      setMemberGroupIds(prev => new Set([...prev, group.id]));
-      toast.success(`Joined ${group.name}!`);
-    } catch { toast.error('Something went wrong'); }
+    try { await joinGroupMutation.mutateAsync(group); } catch { /* handled in onError */ }
   };
+
+  const leaveGroupMutation = useMutation({
+    mutationFn: async (group) => {
+      const members = await filterGroupMember({ group_id: group.id, user_id: uid });
+      if (members[0]) await deleteGroupMember(members[0].id);
+    },
+    onMutate: async (group) => {
+      await queryClient.cancelQueries({ queryKey: ['user-group-ids', uid] });
+      const previous = queryClient.getQueryData(['user-group-ids', uid]);
+      queryClient.setQueryData(['user-group-ids', uid], (old) => (old || []).filter(m => m.group_id !== group.id));
+      return { previous };
+    },
+    onError: (_error, _group, context) => {
+      queryClient.setQueryData(['user-group-ids', uid], context?.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-group-ids', uid] });
+      queryClient.invalidateQueries({ queryKey: ['community-groups-list'] });
+    },
+  });
 
   // Stable callback — reads communities from ref so it never needs to be recreated.
   // This prevents all CommunityCards from re-rendering mid-tap when allCommunities updates,
@@ -1078,13 +1146,11 @@ export default function Communities() {
       if (fnError) throw fnError;
       toast.success(`Reseeded featured communities: ${result?.data?.main_featured || 'done'}`);
       setFeaturedError(false);
-      // Silently refresh communities without resetting loading state
+      // Silently refresh communities without resetting loading state:
+      // write the fresh list straight into the query cache.
       const comms = await listCommunity('-follower_count', 80);
       if (comms?.length > 0) {
-        allCommunitiesRef.current = comms;
-        setAllCommunities(comms);
-        setCache(comms);
-        setIsDemo(false);
+        queryClient.setQueryData(['communities-list'], comms);
       }
     } catch (error) {
       console.error('[reseedFeatured] error:', error?.message || error);
@@ -1107,13 +1173,12 @@ export default function Communities() {
         isMember={memberGroupIds.has(selectedGroup.id)}
         isPendingRequest={false}
         onJoin={joinGroup}
-        onLeave={async (g) => {
-          const members = await filterGroupMember({ group_id: g.id, user_id: currentUser.id });
-          if (members[0]) await deleteGroupMember(members[0].id);
-          setMemberGroupIds(prev => { const s = new Set(prev); s.delete(g.id); return s; });
-        }}
+        onLeave={(g) => leaveGroupMutation.mutateAsync(g)}
         onBack={() => setSelectedGroup(null)}
-        onMemberApproved={(gid) => setMemberGroupIds(prev => new Set([...prev, gid]))}
+        onMemberApproved={(gid) => {
+          queryClient.setQueryData(['user-group-ids', uid], (old) => [...(old || []), { user_id: uid, group_id: gid }]);
+          queryClient.invalidateQueries({ queryKey: ['user-group-ids', uid] });
+        }}
       />
     );
   }
@@ -1121,7 +1186,7 @@ export default function Communities() {
 
 
   // Only show skeleton if we have no data at all (not even cached)
-  const isLoading = loadingPhase === 'loading' && catalogCommunities.length === 0;
+  const isLoading = communitiesLoading && catalogCommunities.length === 0;
 
   return (
     <div className="min-h-screen bg-transparent pb-24">
@@ -1318,9 +1383,13 @@ export default function Communities() {
                 joiningId={joiningId}
                 currentUser={currentUser}
                 allCommunities={catalogCommunities}
-                isLoadingData={loadingPhase === 'loading'}
+                isLoadingData={communitiesLoading || groupsLoading || membershipsLoading || groupMembersLoading}
                 onJoinedFromOnboarding={(newIds) => {
-                  setUserCommunityIds(prev => new Set([...prev, ...newIds]));
+                  queryClient.setQueryData(['user-community-ids', uid], (old) => [
+                    ...(old || []),
+                    ...newIds.map((id) => ({ user_id: uid, community_id: id })),
+                  ]);
+                  queryClient.invalidateQueries({ queryKey: ['user-community-ids', uid] });
                 }}
               />
             ) : (
@@ -1362,7 +1431,9 @@ export default function Communities() {
         onOpenChange={setShowCreateModal}
         currentUser={currentUser}
         onCreated={(newCommunity) => {
-          loadData(currentUser);
+          queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+          queryClient.invalidateQueries({ queryKey: ['user-community-ids', uid] });
+          queryClient.invalidateQueries({ queryKey: ['user-communities', uid] });
           if (newCommunity?.id) {
             setTimeout(() => {
               navigate(`/communities/${encodeURIComponent(newCommunity.id)}?tab=chat&focus=message`);
