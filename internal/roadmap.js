@@ -87,20 +87,89 @@ export const ROADMAP = [
   {
     id: 'expand-test-coverage',
     category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Expand automated test coverage — first wave',
+    description: 'Stand up Vitest and cover the highest-risk pure logic: feed ranking, community tab gating, and feed retention scoring.',
+    why: 'The app has 400+ source files and zero tests until 2026-07-01; regressions in feed ranking, entity mapping, or RLS policies would ship silently.',
+    shippedNote: 'Shipped 2026-07-01. 23 tests across 3 suites, all passing via npm test: src/lib/feed/feedRanking.test.js (feedRanking/feedColors), src/lib/communityTypes.test.js (getSupportedCommunityTabs per allow_* flag), src/services/feedRetentionService.test.js (scorePost — this suite caught and fixed a real NaN-poisoning bug from malformed dates). Remaining coverage tracked in test-coverage-repository-rls.',
+  },
+
+  {
+    id: 'test-coverage-repository-rls',
+    category: 'Admin & Platform',
     status: STATUS.PLANNED,
     priority: PRIORITY.HIGH,
-    title: 'Expand automated test coverage',
-    description: 'Progress 2026-07-01: 23 tests across feedRanking/feedColors, communityTypes (getSupportedCommunityTabs), and feedRetentionService.scorePost — the scorePost suite caught and fixed a real NaN-poisoning bug from malformed dates. Remaining: supabaseRepository.js query-building tests with a mocked client, and long-term RLS policy tests against a local Supabase instance.',
-    why: 'The app has 400+ source files and zero tests until 2026-07-01; regressions in feed ranking, entity mapping, or RLS policies would ship silently.',
+    title: 'Test coverage — repository query-building and RLS policies',
+    description: 'Second wave of automated tests: supabaseRepository.js query-building tests with a mocked Supabase client, and longer-term RLS policy tests against a local Supabase instance. Follows expand-test-coverage (first wave, shipped 2026-07-01).',
+    why: 'supabaseRepository.js is the shared data-access layer for every entity; a regression in its query building or the RLS policies it depends on would break reads/writes app-wide with no test signal.',
     prompt: `You are expanding automated test coverage for JUnited.
 
-Context: Vitest is already installed (see package.json "test" script). An example suite lives at src/lib/feed/feedRanking.test.js. The highest-value untested modules are src/services/supabaseRepository.js (mock the supabase client from src/api/supabaseClient.js), src/services/feedRetentionService.js (scorePost, buildBrief), and src/lib/communityTypes.js (getSupportedCommunityTabs).
+Context: Vitest is installed (see package.json "test" script) and 23 tests already pass across src/lib/feed/feedRanking.test.js, src/lib/communityTypes.test.js, and src/services/feedRetentionService.test.js. The highest-value untested module is src/services/supabaseRepository.js (mock the supabase client from src/api/supabaseClient.js with vi.mock).
 
 Goals:
-1. Add tests for getSupportedCommunityTabs covering each allow_* flag combination.
-2. Add tests for feedRetentionService.scorePost verifying joined-community and interest boosts.
-3. Add tests for supabaseRepository query helpers using a mocked supabase client (vi.mock).
-4. Keep npm run lint and npm run build passing.
+1. Add tests for supabaseRepository query helpers using a mocked supabase client: entity table mapping (unmapped entity throws), filter/sort/limit query building, delete(idOrIds) handling both a single id and an array via .in('id', ids), and the local-fallback path.
+2. If feasible, add RLS policy smoke tests against a local Supabase instance (npx supabase start); if not feasible in this environment, document the setup in a test README and keep it tracked here.
+3. Keep npm run lint, npm test, and npm run build passing.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'service-layer-crud-consolidation',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Route direct component CRUD through the service layer',
+    description: 'Audit 2026-07-02 found 19 plain single-table supabase.from() CRUD calls in components/pages that bypass the dataService convention, plus 6 tables with no SUPABASE_ENTITY_TABLES mapping (gemachs, simcha_announcements, community_forms, community_form_fields, community_form_submissions, community_volunteer_slots). Nothing crashes — these use direct calls — but they skip the repository\'s shared behavior (local fallback, column-mismatch handling) and are untestable via the service layer.',
+    why: 'A single data-access path is the codebase\'s stated architecture (CLAUDE.md); every bypass is a place where repository-level fixes and future instrumentation silently don\'t apply.',
+    prompt: `You are consolidating direct Supabase CRUD calls behind the JUnited service layer.
+
+Context: CLAUDE.md defines when direct supabase.from() calls are acceptable (RPCs, multi-table joins, admin endpoints, storage, auth). A 2026-07-02 audit found 19 plain single-table CRUD calls in components that violate this. Worst offenders bypass entities that already exist: src/components/BookmarkButton.jsx (Bookmark entity) and src/components/communities/admin/ContentTab.jsx (Post entity). Six tables need new SUPABASE_ENTITY_TABLES entries in src/services/supabaseRepository.js first: gemachs, simcha_announcements, community_forms, community_form_fields, community_form_submissions, community_volunteer_slots. Callers: GemachDirectory.jsx, SimchaBoard.jsx, communities/admin/AdminFormsTab.jsx, AnalyticsTab.jsx, AppealsTab.jsx, ContentTab.jsx, MembersTab.jsx, ModerationTab.jsx, OverviewTab.jsx.
+
+Goals:
+1. Add the 6 missing SUPABASE_ENTITY_TABLES mappings and named functions in src/services/entityServices.js.
+2. Refactor the plain CRUD call sites to use the named service functions. Leave legitimate exceptions (RPCs, nested selects, count-only aggregate queries) as direct calls per CLAUDE.md.
+3. Keep npm run lint, npm test, and npm run build passing.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'community-detail-code-health',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Split CommunityDetailView and unify posts query keys',
+    description: 'CommunityDetailView.jsx is 2,814 lines holding 7 tabs plus modals and sheets, and it anchors the largest page chunk in the build (CommunityPage, ~340 kB). Separately, posts are cached under at least 5 react-query key families (unified-posts, community-posts, community-content-posts, admin-analytics-posts, shul-posts), so mutations over-invalidate some caches and miss others.',
+    why: 'The file size makes data flow and memoization impossible to reason about, and the fragmented cache keys cause both stale views and wasted refetches after post mutations.',
+    prompt: `You are improving code health of the JUnited community detail experience.
+
+Context: src/components/communities/CommunityDetailView.jsx (2,814 lines) contains all community tabs, modals, and detail sheets inline. Posts query keys are fragmented across ['unified-posts'], ['community-posts', id], ['community-content-posts', id], ['admin-analytics-posts', id], ['shul-posts', id] in various components.
+
+Goals:
+1. Extract each community tab from CommunityDetailView.jsx into its own file under src/components/communities/, keeping CommunityDetailView as orchestration (~600 lines). No behavior changes.
+2. Create a query-key factory (e.g. src/lib/queryKeys.js) for posts and migrate the fragmented key families to it; after mutations, invalidate via the factory so all views of the same data update together.
+3. Verify the real UI path: every community tab still renders and mutations (post create/edit/delete, reactions) refresh all views showing that post.
+4. Keep npm run lint, npm test, and npm run build passing.
+5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'query-error-states',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Error states for list queries',
+    description: 'Most useQuery consumers (Feed, CommunityDetailView tabs, admin tabs) render their empty state when a fetch fails, so users cannot distinguish "no posts" from "failed to load". Related: analytics init and service-worker registration in src/main.jsx use silent .catch(() => {}) blocks.',
+    why: 'Silent failure reads as an empty app; a visible error state with retry preserves trust and makes production issues reportable.',
+    prompt: `You are adding error states to JUnited list queries.
+
+Context: Most useQuery calls (e.g. src/pages/Feed.jsx, src/components/communities/CommunityDetailView.jsx) fall back to [] on error and render the empty state. src/main.jsx swallows analytics/service-worker errors with .catch(() => {}).
+
+Goals:
+1. Create a small shared ErrorBanner component (message + retry button calling refetch).
+2. Wire isError/refetch into the highest-traffic list queries: Feed posts, community feed/announcements/events tabs, Messages threads.
+3. In src/main.jsx, log swallowed errors in dev (console.warn) and route them through installGlobalErrorLogging in production instead of dropping them.
+4. Keep npm run lint, npm test, and npm run build passing.
 5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
@@ -781,12 +850,21 @@ Goals:
   {
     id: 'community-list-new-activity-indicator',
     category: 'Community',
-    status: STATUS.SHIPPED,
+    status: STATUS.PLANNED,
     priority: PRIORITY.LOW,
     title: 'New-Activity Dot on Community List Cards',
-    description: 'Show a subtle indicator on community cards in the Communities list when there are posts or events newer than the user\'s last visit, so users know which communities have new content before opening them.',
+    description: 'Show a subtle indicator on community cards in the Communities list when there are posts or events newer than the user\'s last visit, so users know which communities have new content before opening them. REGRESSION NOTE 2026-07-02: originally shipped 2026-05-19 via CommunityHubCard, but that component was orphaned in the communities mini-app redesign and has been deleted — no live card renders the dot anymore. The get_communities_with_new_activity() RPC (migration 20260519100000) still exists and is unused; only the UI wiring needs to be rebuilt.',
     why: 'The digest pill inside the community is useful once you\'re already in. A list-level signal closes the loop so members know where to go next without opening every community.',
-    shippedNote: 'get_communities_with_new_activity() RPC (migration 20260519100000) batches the check; Communities.jsx queries it once per session; small blue dot renders at avatar top-right in CommunityHubCard when hasNewActivity=true. Only joined communities with a visit record and newer posts/events show the dot.',
+    prompt: `You are restoring the new-activity dot on community list cards for JUnited.
+
+Context: The get_communities_with_new_activity() RPC already exists (supabase/migrations/20260519100000_community_new_activity_rpc.sql) and returns the joined communities that have posts/events newer than the user's last visit. It is currently unused: the component that consumed it (CommunityHubCard) was orphaned in the 2026-05-19 communities redesign and deleted. The live list cards are defined inline in src/pages/Communities.jsx: CommunityCard, LiveFiveTownsRoomCard, and CommunityDiscoveryCard.
+
+Goals:
+1. In Communities.jsx, call supabase.rpc('get_communities_with_new_activity') once per page load (React Query, staleTime a few minutes) and build a Set of community ids with new activity.
+2. Pass hasNewActivity into the joined-community cards (CommunityCard and LiveFiveTownsRoomCard) and render a small blue dot at the avatar's top-right when true. Do not show it on discover/not-joined cards.
+3. Verify the real UI path: a logged-in member sees the dot on the Communities list for a joined community with newer posts.
+4. Keep npm run lint, npm test, and npm run build passing.
+5. Update internal/roadmap.js: change this item's status to 'shipped' with an accurate shippedNote.`,
   },
 
   {
