@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -123,9 +124,14 @@ export default function Settings() {
   const [pushSubscribed, setPushSubscribed] = useState(false);
   const [pushLoading, setPushLoading]       = useState(false);
 
-  const [activeSubscription,    setActiveSubscription]    = useState(null);
-  const [subscriptionLoading,   setSubscriptionLoading]   = useState(false);
-  const [portalLoading,         setPortalLoading]         = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const { data: activeSubscription = null, isLoading: subscriptionLoading } = useQuery({
+    queryKey: ['active-subscription', currentUser?.id],
+    // resolve to null on failure — the subscription card simply doesn't render
+    queryFn: () => paymentsService.getActiveSubscription().catch(() => null),
+    enabled: !!currentUser,
+  });
 
   const {
     location: candleLocation,
@@ -169,15 +175,6 @@ export default function Settings() {
     setPushSupported(isPushSupported());
     isPushSubscribed().then(setPushSubscribed);
   }, []);
-
-  useEffect(() => {
-    if (!currentUser) return;
-    setSubscriptionLoading(true);
-    paymentsService.getActiveSubscription()
-      .then(setActiveSubscription)
-      .catch(() => setActiveSubscription(null))
-      .finally(() => setSubscriptionLoading(false));
-  }, [currentUser]);
 
   const handlePushToggle = async (enable) => {
     setPushLoading(true);
@@ -982,41 +979,45 @@ function ProfileSummary({ form, onAvatarChange }) {
 /** Lists users the current account has blocked, with an unblock action.
  *  Lives in the Account tab, above the danger zone. */
 function BlockedUsersCard({ currentUserId }) {
-  const [blocks, setBlocks] = useState(null); // null = loading
+  const queryClient = useQueryClient();
   const [unblockingId, setUnblockingId] = useState(null);
 
-  const loadBlocks = useCallback(async () => {
-    try {
-      const rows = await filterBlock({ blocker_id: currentUserId });
-      const blockedIds = rows.map(r => r.blocked_id).filter(Boolean);
-      const profiles = blockedIds.length ? await batchFetchByIds('Profile', blockedIds) : [];
-      const profileById = new Map(profiles.map(p => [p.id, p]));
-      setBlocks(rows.map(r => ({ ...r, profile: profileById.get(r.blocked_id) })));
-    } catch {
-      setBlocks([]);
-    }
-  }, [currentUserId]);
+  // Same key Feed.jsx uses for the block list, so both stay in sync
+  const { data: blocks, isLoading } = useQuery({
+    queryKey: ['user-blocks', currentUserId],
+    queryFn: () => filterBlock({ blocker_id: currentUserId }),
+    enabled: !!currentUserId,
+  });
 
-  useEffect(() => { loadBlocks(); }, [loadBlocks]);
+  const blockedIds = (blocks || []).map(r => r.blocked_id).filter(Boolean);
+  const { data: profiles = [] } = useQuery({
+    queryKey: ['blocked-profiles', currentUserId, blockedIds.join(',')],
+    queryFn: () => batchFetchByIds('Profile', blockedIds),
+    enabled: blockedIds.length > 0,
+  });
+  const profileById = new Map(profiles.map(p => [p.id, p]));
+  const rows = (blocks || []).map(r => ({ ...r, profile: profileById.get(r.blocked_id) }));
 
-  const handleUnblock = async (blockRow) => {
-    setUnblockingId(blockRow.id);
-    try {
-      await deleteBlock(blockRow.id);
-      setBlocks(prev => prev.filter(b => b.id !== blockRow.id));
+  const unblockMutation = useMutation({
+    mutationFn: (blockRow) => deleteBlock(blockRow.id),
+    onMutate: (blockRow) => setUnblockingId(blockRow.id),
+    onSuccess: () => {
       toast.success('User unblocked');
-    } catch {
-      toast.error('Could not unblock. Please try again.');
-    }
-    setUnblockingId(null);
-  };
+      queryClient.invalidateQueries({ queryKey: ['user-blocks', currentUserId] });
+      // Messages hides blocked conversations off this key — unhide them
+      queryClient.invalidateQueries({ queryKey: ['user-blocks-both'] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    },
+    onError: () => toast.error('Could not unblock. Please try again.'),
+    onSettled: () => setUnblockingId(null),
+  });
 
-  if (blocks === null || blocks.length === 0) return null;
+  if (isLoading || rows.length === 0) return null;
 
   return (
     <SettingsCard title="Blocked Users" icon={Shield}>
       <div className="divide-y divide-slate-100">
-        {blocks.map((block) => (
+        {rows.map((block) => (
           <div key={block.id} className="flex items-center justify-between gap-3 py-3">
             <div className="flex min-w-0 items-center gap-2.5">
               {block.profile?.avatar_url ? (
@@ -1031,7 +1032,7 @@ function BlockedUsersCard({ currentUserId }) {
               </p>
             </div>
             <button
-              onClick={() => handleUnblock(block)}
+              onClick={() => unblockMutation.mutate(block)}
               disabled={unblockingId === block.id}
               className="shrink-0 rounded-lg bg-slate-100 px-3 py-1.5 text-[12px] font-bold text-slate-700 transition hover:bg-slate-200 disabled:opacity-50"
             >
