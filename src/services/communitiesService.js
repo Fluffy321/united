@@ -38,6 +38,17 @@ export const communitiesService = {
     if (error) throw error;
     return data || { status: 'not_found' };
   },
+  // Batch check for the Communities list page: which of the current user's
+  // joined communities have new posts/events since their last visit?
+  // Backed by the SECURITY DEFINER RPC in migration 20260519100000.
+  // Returns an array of community id uuids.
+  async getCommunitiesWithNewActivity() {
+    if (!shouldUseSupabase || !supabase) return [];
+    const { data, error } = await supabase.rpc('get_communities_with_new_activity');
+    if (error) throw error;
+    // setof uuid serializes as an array of strings; normalize object rows just in case.
+    return (data || []).map(row => (row && typeof row === 'object') ? Object.values(row)[0] : row);
+  },
 };
 
 export default communitiesService;

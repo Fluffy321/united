@@ -14,6 +14,15 @@ import {
   X,
 } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
+import {
+  bulkCreateCommunityFormField,
+  bulkCreateCommunityVolunteerSlot,
+  createCommunityForm,
+  deleteCommunityForm,
+  filterCommunityFormSubmission,
+  filterCommunityVolunteerSlot,
+  updateCommunityForm,
+} from '@/services/entityServices';
 
 // ─── Admin Forms tab ──────────────────────────────────────────────────────────
 
@@ -61,22 +70,17 @@ function CreateFormPanel({ communityId, currentUser, onCreated, onCancel }) {
     if (fields.some((f) => !f.label.trim())) { toast.error('All field labels are required'); return; }
     setSaving(true);
     try {
-      const { data: form, error: formErr } = await supabase
-        .from('community_forms')
-        .insert({
-          community_id:    communityId,
-          created_by:      currentUser.id,
-          title:           title.trim(),
-          description:     description.trim() || null,
-          form_type:       formType,
-          status:          'open',
-          allow_multiple:  allowMulti,
-          max_submissions: maxSubs ? parseInt(maxSubs, 10) : null,
-          due_date:        dueDate || null,
-        })
-        .select('id')
-        .single();
-      if (formErr) throw formErr;
+      const form = await createCommunityForm({
+        community_id:    communityId,
+        created_by:      currentUser.id,
+        title:           title.trim(),
+        description:     description.trim() || null,
+        form_type:       formType,
+        status:          'open',
+        allow_multiple:  allowMulti,
+        max_submissions: maxSubs ? parseInt(maxSubs, 10) : null,
+        due_date:        dueDate || null,
+      });
       if (fields.length) {
         const fieldRows = fields.map((f, i) => ({
           form_id:     form.id,
@@ -89,8 +93,7 @@ function CreateFormPanel({ communityId, currentUser, onCreated, onCancel }) {
             ? f.options.split(',').map((o) => o.trim()).filter(Boolean)
             : null,
         }));
-        const { error: fieldErr } = await supabase.from('community_form_fields').insert(fieldRows);
-        if (fieldErr) throw fieldErr;
+        await bulkCreateCommunityFormField(fieldRows);
       }
       if (formType === 'volunteer' && slots.length > 0) {
         const slotRows = slots
@@ -103,8 +106,7 @@ function CreateFormPanel({ communityId, currentUser, onCreated, onCancel }) {
             capacity:   Math.max(1, parseInt(s.capacity, 10) || 1),
           }));
         if (slotRows.length > 0) {
-          const { error: slotErr } = await supabase.from('community_volunteer_slots').insert(slotRows);
-          if (slotErr) throw slotErr;
+          await bulkCreateCommunityVolunteerSlot(slotRows);
         }
       }
       toast.success('Form created');
@@ -281,8 +283,7 @@ function SubmissionsPanel({ form, fields, onBack, onFormUpdated }) {
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ['admin-form-submissions', form.id],
     queryFn: async () => {
-      const { data } = await supabase.from('community_form_submissions').select('*').eq('form_id', form.id).order('submitted_at', { ascending: false });
-      return data ?? [];
+      return filterCommunityFormSubmission({ form_id: form.id }, '-submitted_at', 500);
     },
   });
 
@@ -290,12 +291,7 @@ function SubmissionsPanel({ form, fields, onBack, onFormUpdated }) {
     queryKey: ['admin-form-slot-summary', form.id],
     queryFn: async () => {
       if (form.form_type !== 'volunteer') return { slots: [], claimsBySubmitter: {} };
-      const { data: slotsData } = await supabase
-        .from('community_volunteer_slots')
-        .select('id, label, capacity, claimed_count')
-        .eq('form_id', form.id)
-        .order('created_at');
-      const sl = slotsData ?? [];
+      const sl = await filterCommunityVolunteerSlot({ form_id: form.id }, 'created_at');
       if (!sl.length) return { slots: sl, claimsBySubmitter: {} };
       const { data: claimsData } = await supabase
         .from('community_volunteer_claims')
@@ -317,16 +313,18 @@ function SubmissionsPanel({ form, fields, onBack, onFormUpdated }) {
 
   const toggleStatus = async () => {
     const next = form.status === 'open' ? 'closed' : 'open';
-    const { error } = await supabase.from('community_forms').update({ status: next, updated_at: new Date().toISOString() }).eq('id', form.id);
-    if (error) { toast.error(error.message); return; }
+    try {
+      await updateCommunityForm(form.id, { status: next, updated_at: new Date().toISOString() });
+    } catch (error) { toast.error(error.message); return; }
     toast.success(next === 'open' ? 'Form reopened' : 'Form closed');
     onFormUpdated?.();
   };
 
   const deleteForm = async () => {
     if (!window.confirm('Delete this form and all its submissions? This cannot be undone.')) return;
-    const { error } = await supabase.from('community_forms').delete().eq('id', form.id);
-    if (error) { toast.error(error.message); return; }
+    try {
+      await deleteCommunityForm(form.id);
+    } catch (error) { toast.error(error.message); return; }
     toast.success('Form deleted');
     onBack?.();
   };

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Megaphone, Loader2, Send, Pin } from 'lucide-react';
-import { supabase } from '@/api/supabaseClient';
 import postsService from '@/services/postsService';
 import { EmptyState, SectionHeader, fmtRelative } from './shared';
 
@@ -20,27 +19,15 @@ export default function ContentTab({ communityId, currentUser }) {
   const { data: pinnedPost = null } = useQuery({
     queryKey: ['community-pinned-post', communityId],
     queryFn: async () => {
-      const { data } = await supabase.from('posts')
-        .select('id, title, body, content, type, post_type, post_kind, is_official, created_at')
-        .eq('community_id', communityId)
-        .eq('is_pinned', true)
-        .order('pinned_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
+      const rows = await postsService.filterPosts({ community_id: communityId, is_pinned: true }, '-pinned_at', 1);
+      return rows[0] ?? null;
     },
   });
 
   const { data: recentPosts = [] } = useQuery({
     queryKey: ['community-content-posts', communityId],
     queryFn: async () => {
-      const { data } = await supabase.from('posts')
-        .select('id, title, body, content, type, post_type, post_kind, is_official, created_at')
-        .eq('community_id', communityId)
-        .eq('is_pinned', false)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      return data ?? [];
+      return postsService.filterPosts({ community_id: communityId, is_pinned: false }, '-created_date', 20);
     },
     enabled: pickerOpen,
   });
@@ -62,8 +49,7 @@ export default function ContentTab({ communityId, currentUser }) {
     setCreatingAnnouncement(true);
     try {
       if (pinAnnouncement && pinnedPost) {
-        const { error: unpinError } = await supabase.from('posts').update({ is_pinned: false }).eq('id', pinnedPost.id);
-        if (unpinError) throw unpinError;
+        await postsService.updatePost(pinnedPost.id, { is_pinned: false });
       }
       await postsService.createCommunityPost({
         community_id: communityId,
@@ -95,10 +81,9 @@ export default function ContentTab({ communityId, currentUser }) {
     setPinning(true);
     try {
       if (pinnedPost) {
-        await supabase.from('posts').update({ is_pinned: false }).eq('id', pinnedPost.id);
+        await postsService.updatePost(pinnedPost.id, { is_pinned: false });
       }
-      const { error } = await supabase.from('posts').update({ is_pinned: true }).eq('id', postId);
-      if (error) throw error;
+      await postsService.updatePost(postId, { is_pinned: true });
       invalidatePins();
       toast.success('Post pinned');
       setPickerOpen(false);
@@ -113,8 +98,7 @@ export default function ContentTab({ communityId, currentUser }) {
     if (!pinnedPost) return;
     setPinning(true);
     try {
-      const { error } = await supabase.from('posts').update({ is_pinned: false }).eq('id', pinnedPost.id);
-      if (error) throw error;
+      await postsService.updatePost(pinnedPost.id, { is_pinned: false });
       invalidatePins();
       toast.success('Post unpinned');
     } catch (err) {

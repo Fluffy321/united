@@ -9,6 +9,7 @@ import ReportModal from '@/components/common/ReportModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { ArrowRight, CalendarDays, Heart, MessageCircle, Plus, RefreshCw, Search, Sparkles, Users, X } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
+import QueryError from '@/components/common/QueryError';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import { useFloatingActions } from '@/components/layout/FloatingActionsContext';
@@ -496,6 +497,10 @@ export default function Feed({ isActive = true }) {
             <div className="motion-stagger space-y-2.5 tab-fade-in">
               {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
             </div>
+          )}
+
+          {isError && !isLoading && feedPosts.length === 0 && (
+            <QueryError message="The feed could not load." onRetry={refetch} />
           )}
 
           {isLoading && loadTimedOut && feedPosts.length === 0 && (

@@ -4,6 +4,7 @@ import {
   Shield, Users, TrendingUp, Activity, Gavel, ShieldCheck, Clock,
 } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
+import { filterCommunityAdminAuditLog } from '@/services/entityServices';
 import { EmptyState, SectionHeader, fmtRelative, isPublicCommunity } from './shared';
 
 const ACTION_LABELS = {
@@ -103,10 +104,7 @@ export default function OverviewTab({ communityId, community, onNavigateTo }) {
   const { data: activity = [] } = useQuery({
     queryKey: ['admin-ov-activity', communityId],
     queryFn: async () => {
-      const { data } = await supabase.from('community_admin_audit_log')
-        .select('*').eq('community_id', communityId)
-        .order('created_at', { ascending: false }).limit(8);
-      return data ?? [];
+      return filterCommunityAdminAuditLog({ community_id: communityId }, '-created_at', 8);
     },
   });
 

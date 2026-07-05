@@ -18,8 +18,11 @@ import { toast } from 'sonner';
 import LiveNowPanel from '@/components/common/LiveNowPanel';
 import { buildCommunityActionItems, getCommunityActionCopy } from '@/lib/liveNow';
 import { createGroupMember, createUserCommunity, deleteGroupMember, filterGroupMember, filterUserCommunity, listCommunity, listCommunityGroup, updateCommunity, updateCommunityGroup } from '@/services/entityServices';
+import { communitiesService } from '@/services/communitiesService';
 
 const CACHE_KEY = 'communities_v3_cache';
+// Shared empty Set so components with an optional id-set prop get a stable default.
+const EMPTY_ID_SET = new Set();
 const FEATURED_SHULS = ["Young Israel Woodmere", "Chabad of Woodmere", "Beth Shalom", "Shaaray Tefila"];
 
 const CATEGORIES = [
@@ -484,7 +487,7 @@ function CommunitySectionRail({ title, subtitle, communities, userCommunityIds, 
   );
 }
 
-function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOpen, onJoin, compact = false }) {
+function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOpen, onJoin, compact = false, hasNewActivity = false }) {
   if (!community?.id) return null;
   const room = buildRoomViewModel(community, index);
   const hasActivity = Number(room.roomActiveNow || 0) > 0;
@@ -503,8 +506,13 @@ function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOp
       <div className="flex h-full flex-col gap-3 p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${room.roomGradient} text-xl shadow-sm`}>
-              {room.roomIcon}
+            <div className="relative shrink-0">
+              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${room.roomGradient} text-xl shadow-sm`}>
+                {room.roomIcon}
+              </div>
+              {isJoined && hasNewActivity && (
+                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 ring-2 ring-white" aria-label="New activity" />
+              )}
             </div>
             <div className="min-w-0">
               <h3 className="line-clamp-1 text-[17px] font-black tracking-tight text-slate-950">{room.roomName}</h3>
@@ -568,7 +576,7 @@ function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOp
   );
 }
 
-function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, onJoin }) {
+function FiveTownsRoomsHub({ communities, userCommunityIds, newActivityIds = EMPTY_ID_SET, joiningId, onOpen, onJoin }) {
   const blueprintRooms = getCoreFiveTownsRooms(communities);
   // Fall back to all communities (as viewmodels) when blueprint matching yields too few
   const rooms = blueprintRooms.length >= 2
@@ -614,6 +622,7 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
                 community={room}
                 index={index}
                 isJoined={userCommunityIds.has(room.id)}
+                hasNewActivity={newActivityIds.has(room.id)}
                 isJoining={joiningId === room.id}
                 onOpen={onOpen}
                 onJoin={onJoin}
@@ -636,6 +645,7 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
               index={index + 3}
               compact
               isJoined={userCommunityIds.has(room.id)}
+              hasNewActivity={newActivityIds.has(room.id)}
               isJoining={joiningId === room.id}
               onOpen={onOpen}
               onJoin={onJoin}
@@ -735,7 +745,7 @@ function CommunityDiscoveryHub({ communities, userCommunityIds, joiningId, onOpe
   );
 }
 
-function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
+function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, hasNewActivity = false }) {
   // Guard: skip rendering if community has no id
   if (!community?.id || !community?.name) return null;
 
@@ -772,13 +782,18 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
       <div className="relative p-4 pt-5">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-start gap-2.5 flex-1 min-w-0">
-            {community.logo_url ? (
-              <img src={community.logo_url} alt={community.name} className="h-12 w-12 rounded-2xl object-cover shrink-0 ring-4 ring-white shadow-sm" />
-            ) : (
-              <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center font-bold text-[12px] shadow-md ring-4 ring-white shrink-0`}>
-                {initials}
-              </div>
-            )}
+            <div className="relative shrink-0">
+              {community.logo_url ? (
+                <img src={community.logo_url} alt={community.name} className="h-12 w-12 rounded-2xl object-cover ring-4 ring-white shadow-sm" />
+              ) : (
+                <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center font-bold text-[12px] shadow-md ring-4 ring-white`}>
+                  {initials}
+                </div>
+              )}
+              {isJoined && hasNewActivity && (
+                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 ring-2 ring-white" aria-label="New activity" />
+              )}
+            </div>
             <div className="min-w-0 flex-1">
               <div className="pr-10 text-[14px] font-black text-slate-900 line-clamp-2 leading-snug">{community.name}</div>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
@@ -958,7 +973,17 @@ export default function Communities() {
     enabled: !!uid,
   });
 
+  // Which joined communities have new posts/events since the user's last visit?
+  // Drives the small blue "new activity" dot on joined community cards.
+  const { data: newActivityRows = [] } = useQuery({
+    queryKey: ['communities-new-activity', uid],
+    queryFn: () => communitiesService.getCommunitiesWithNewActivity(),
+    enabled: !!uid,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const userCommunityIds = useMemo(() => new Set(membershipRows.map(m => m.community_id)), [membershipRows]);
+  const newActivityIds = useMemo(() => new Set(newActivityRows), [newActivityRows]);
   const memberGroupIds = useMemo(() => new Set(groupMemberRows.map(m => m.group_id)), [groupMemberRows]);
 
   // Sanitize: only keep records with a valid id and name. Fall back to the
@@ -1377,6 +1402,7 @@ export default function Communities() {
                 setSelectedGroup={setSelectedGroup}
                 setActiveTab={setActiveTab}
                 userCommunityIds={userCommunityIds}
+                newActivityIds={newActivityIds}
                 memberGroupIds={memberGroupIds}
                 onJoinCommunity={joinCommunity}
                 onJoinGroup={joinGroup}
@@ -1409,6 +1435,7 @@ export default function Communities() {
                 onJoinGroup={joinGroup}
                 joiningId={joiningId}
                 userCommunityIds={userCommunityIds}
+                newActivityIds={newActivityIds}
                 memberGroupIds={memberGroupIds}
                 setShowCreateModal={setShowCreateModal}
                 hasFilter={activeCategory !== 'all' || !!searchQuery}
@@ -1445,7 +1472,7 @@ export default function Communities() {
   );
 }
 
-function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId, currentUser, allCommunities, onJoinedFromOnboarding, isLoadingData }) {
+function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, newActivityIds = EMPTY_ID_SET, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId, currentUser, allCommunities, onJoinedFromOnboarding, isLoadingData }) {
   // Don't show onboarding while data is still loading — prevents race condition flash
   if (myCommunities.length === 0 && myGroups.length === 0) {
     if (isLoadingData) {
@@ -1480,6 +1507,7 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
                 index={index}
                 compact
                 isJoined={userCommunityIds.has(c.id)}
+                hasNewActivity={newActivityIds.has(c.id)}
                 isJoining={joiningId === c.id}
                 onOpen={openCommunity}
                 onJoin={onJoinCommunity}
@@ -1509,7 +1537,7 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
   );
 }
 
-function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory, sizeFilter, setSizeFilter, activityFilter, setActivityFilter, currentUser, allCommunities, onJoinCommunity }) {
+function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, newActivityIds = EMPTY_ID_SET, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory, sizeFilter, setSizeFilter, activityFilter, setActivityFilter, currentUser, allCommunities, onJoinCommunity }) {
   // Apply extra filters then sort: directory picks first, then by follower count
   const filtered = applyExtraFilters(communities, sizeFilter, activityFilter);
   const sortedCommunities = [...filtered].sort((a, b) => {
@@ -1526,6 +1554,7 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
         <FiveTownsRoomsHub
           communities={allCommunities}
           userCommunityIds={userCommunityIds}
+          newActivityIds={newActivityIds}
           joiningId={joiningId}
           onOpen={openCommunity}
           onJoin={onJoinCommunity || onJoin}
@@ -1574,6 +1603,7 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
                     index={index}
                     compact
                     isJoined={userCommunityIds.has(c.id)}
+                    hasNewActivity={newActivityIds.has(c.id)}
                     isJoining={joiningId === c.id}
                     onOpen={openCommunity}
                     onJoin={onJoin}
