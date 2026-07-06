@@ -544,10 +544,10 @@ export default function CommunityFeedTab({ posts: initialPosts, community, curre
       </div>
 
       {sorted.length === 0 ? (
-        <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center">
+        <div className="app-empty-state">
           <div className="text-4xl mb-3">✍️</div>
-          <p className="text-[15px] font-bold text-slate-900">No posts yet</p>
-          <p className="text-[13px] text-slate-500 mt-1">Be the first to share something!</p>
+          <p className="app-empty-state-title">No posts yet</p>
+          <p className="app-empty-state-body">Be the first to share something!</p>
         </div>
       ) : (
         <div className="space-y-3">

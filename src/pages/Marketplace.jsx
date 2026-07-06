@@ -837,12 +837,12 @@ export default function Marketplace() {
         )}
 
         {!isLoading && !isError && filteredListings.length === 0 && (
-          <div className="mt-6 rounded-[24px] border border-dashed border-slate-300 bg-white p-8 text-center">
-            <ShoppingBag className="mx-auto h-10 w-10 text-slate-300" />
-            <h2 className="mt-3 text-base font-black text-slate-900">
+          <div className="mt-6 app-empty-state">
+            <div className="app-empty-state-icon"><ShoppingBag className="h-6 w-6" /></div>
+            <h2 className="app-empty-state-title">
               {listings.length === 0 ? 'No listings yet' : 'Nothing matches yet'}
             </h2>
-            <p className="mt-1 text-sm font-semibold text-slate-500">
+            <p className="app-empty-state-body">
               {listings.length === 0 ? 'Be the first to post something useful for the neighborhood.' : 'Try a different category or post what you are looking for.'}
             </p>
             <button onClick={() => openPostModal('looking')} className="motion-press mt-4 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white">

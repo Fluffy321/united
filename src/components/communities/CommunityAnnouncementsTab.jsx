@@ -193,10 +193,10 @@ export default function CommunityAnnouncementsTab({ announcements, allPosts, com
       </div>
 
       {all.length === 0 ? (
-        <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center">
+        <div className="app-empty-state">
           <div className="text-4xl mb-3">📢</div>
-          <p className="text-[15px] font-bold text-slate-900">No announcements yet</p>
-          <p className="text-[13px] text-slate-500 mt-1">Community updates from admins will appear here.</p>
+          <p className="app-empty-state-title">No announcements yet</p>
+          <p className="app-empty-state-body">Community updates from admins will appear here.</p>
         </div>
       ) : (
         <div className="space-y-3">

@@ -109,12 +109,10 @@ export default function CommunityGroupsTab({ communityId, currentUser, isAdmin }
       )}
 
       {groups.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white mb-4">
-            <Users className="h-6 w-6" />
-          </div>
-          <p className="text-[15px] font-black text-slate-900">No groups yet</p>
-          <p className="mt-1 text-[13px] font-semibold text-slate-500">
+        <div className="app-empty-state">
+          <div className="app-empty-state-icon"><Users className="h-6 w-6" /></div>
+          <p className="app-empty-state-title">No groups yet</p>
+          <p className="app-empty-state-body">
             {isAdmin ? 'Create the first group for this community.' : 'Groups will appear here once an admin creates them.'}
           </p>
         </div>
