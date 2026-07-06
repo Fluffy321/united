@@ -32,6 +32,7 @@ import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { DEMO_POSTS } from '@/lib/feed/demoPosts';
 import { createBlock, deleteComment, deleteUnifiedPost, filterBlock, filterComment, filterUserCommunity, getCommunity, getUnifiedPost } from '@/services/entityServices';
 import { FEED_LOAD_TIMEOUT_MS, feedText, getPostLivePriority } from '@/lib/feed/feedRanking';
+import { postKeys } from '@/lib/queryKeys';
 
 export default function Feed({ isActive = true }) {
   const queryClient = useQueryClient();
@@ -185,7 +186,7 @@ export default function Feed({ isActive = true }) {
     mutationFn: (postId) => togglePostLike(postId, currentUser.id),
     onSuccess: ({ liked }, postId) => {
       setUserLikes(prev => liked ? [...prev, postId] : prev.filter(id => id !== postId));
-      queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
     },
   });
 
@@ -195,7 +196,7 @@ export default function Feed({ isActive = true }) {
       await deleteComment(await filterComment({ post_id: postId }).then(c => c.map(x => x.id)));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
     },
   });
 
@@ -563,7 +564,7 @@ export default function Feed({ isActive = true }) {
         ref={composerRef}
         currentUser={currentUser}
         userCommunities={communityGroups}
-        onPostCreated={() => queryClient.invalidateQueries({ queryKey: ['unified-posts'] })}
+        onPostCreated={() => queryClient.invalidateQueries({ queryKey: postKeys.all })}
       />
 
       <ReportModal
@@ -638,7 +639,7 @@ export default function Feed({ isActive = true }) {
             post={replyPost}
             currentUser={currentUser}
             blockedIds={blockedIds}
-            onCommentAdded={() => queryClient.invalidateQueries({ queryKey: ['unified-posts'] })}
+            onCommentAdded={() => queryClient.invalidateQueries({ queryKey: postKeys.all })}
           />
         </WidgetBoundary>
       )}

@@ -6,6 +6,7 @@ import {
 import { supabase } from '@/api/supabaseClient';
 import { filterCommunityAdminAuditLog } from '@/services/entityServices';
 import { EmptyState, SectionHeader, fmtRelative, isPublicCommunity } from './shared';
+import { postKeys } from '@/lib/queryKeys';
 
 const ACTION_LABELS = {
   member_removed:  'Removed member',
@@ -71,7 +72,7 @@ export default function OverviewTab({ communityId, community, onNavigateTo }) {
   });
 
   const { data: postsThisWeek = 0 } = useQuery({
-    queryKey: ['admin-ov-posts', communityId],
+    queryKey: postKeys.communityWeeklyCount(communityId),
     queryFn: async () => {
       const { count } = await supabase.from('posts')
         .select('*', { count: 'exact', head: true })

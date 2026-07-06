@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Loader2, Activity, AlertCircle, CheckCircle2, ExternalLink, Save, XCircle } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
 import { EmptyState, SectionHeader, fmtRelative } from './shared';
+import { postKeys } from '@/lib/queryKeys';
 
 // ─── Automated local updates tab ─────────────────────────────────────────────
 
@@ -74,7 +75,7 @@ export default function LocalUpdatesTab({ communityId }) {
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['local-update-items', communityId] });
-    queryClient.invalidateQueries({ queryKey: ['community-hub-posts', communityId] });
+    queryClient.invalidateQueries({ queryKey: postKeys.community(communityId) });
   };
 
   const updateDraft = (itemId, field, value) => {

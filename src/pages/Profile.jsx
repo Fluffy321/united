@@ -27,6 +27,7 @@ import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
 import FriendsHub from '@/components/profile/FriendsHub.jsx';
 import DestinationHeader from '@/components/layout/DestinationHeader';
 import { createBlock, filterMitzvahAction, filterMitzvahLog, filterMitzvahPoints, filterUnifiedPost, filterUser, filterUserCommunity, filterUserStreak } from '@/services/entityServices';
+import { postKeys } from '@/lib/queryKeys';
 
 export default function Profile() {
   const [searchParams] = useSearchParams();
@@ -88,7 +89,7 @@ export default function Profile() {
   }, [currentUser?.id, profileUser?.id, isOwnProfile]);
 
   const { data: unifiedPosts = [] } = useQuery({
-    queryKey: ['user-posts', profileUser?.id],
+    queryKey: postKeys.user(profileUser?.id),
     queryFn: () => filterUnifiedPost({ user_id: profileUser.id }, '-created_date', 10),
     enabled: !!profileUser && COMMUNITIES_ENABLED,
   });

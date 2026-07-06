@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PromptResponsesSheet from './PromptResponsesSheet';
 import { useQueryClient } from '@tanstack/react-query';
+import { postKeys } from '@/lib/queryKeys';
 
 export default function PromptCard({ post, currentUser }) {
   const [showSheet, setShowSheet] = useState(false);
@@ -31,7 +32,7 @@ export default function PromptCard({ post, currentUser }) {
         onOpenChange={setShowSheet}
         onResponseAdded={() => {
           setLocalCount(c => c + 1);
-          queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+          queryClient.invalidateQueries({ queryKey: postKeys.all });
         }}
       />
     </>

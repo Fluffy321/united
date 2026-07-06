@@ -4,6 +4,7 @@ import { createBookmark, deleteBookmark, filterBookmark } from '@/services/entit
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { appParams } from '@/lib/app-params';
+import { postKeys } from '@/lib/queryKeys';
 
 export default function BookmarkButton({ postId, currentUser }) {
   const queryClient = useQueryClient();
@@ -48,7 +49,7 @@ export default function BookmarkButton({ postId, currentUser }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmark', postId, currentUser?.id] });
       queryClient.invalidateQueries({ queryKey: ['bookmarks', currentUser?.id] });
-      queryClient.invalidateQueries({ queryKey: ['saved-posts'] });
+      queryClient.invalidateQueries({ queryKey: postKeys.savedAll() });
       if (!isBookmarked) toast.success('Post saved');
     },
   });

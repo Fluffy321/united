@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
+import { postKeys } from '@/lib/queryKeys';
 
 function SimpleBarChart({ data, color = '#2563EB', label }) {
   const max = Math.max(...data.map(d => d.value), 1);
@@ -63,7 +64,7 @@ export default function AnalyticsTab({ communityId }) {
   });
 
   const { data: allPosts = [], isLoading: postsLoading } = useQuery({
-    queryKey: ['admin-analytics-posts', communityId],
+    queryKey: postKeys.communityAnalytics(communityId),
     queryFn: async () => {
       const { data } = await supabase.from('posts')
         .select('created_at')

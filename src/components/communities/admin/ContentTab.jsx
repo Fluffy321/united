@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Megaphone, Loader2, Send, Pin } from 'lucide-react';
 import postsService from '@/services/postsService';
 import { EmptyState, SectionHeader, fmtRelative } from './shared';
+import { postKeys } from '@/lib/queryKeys';
 
 // ─── Content tab (pinned post) ────────────────────────────────────────────────
 
@@ -17,7 +18,7 @@ export default function ContentTab({ communityId, currentUser }) {
   const [creatingAnnouncement, setCreatingAnnouncement] = useState(false);
 
   const { data: pinnedPost = null } = useQuery({
-    queryKey: ['community-pinned-post', communityId],
+    queryKey: postKeys.communityPinned(communityId),
     queryFn: async () => {
       const rows = await postsService.filterPosts({ community_id: communityId, is_pinned: true }, '-pinned_at', 1);
       return rows[0] ?? null;
@@ -25,7 +26,7 @@ export default function ContentTab({ communityId, currentUser }) {
   });
 
   const { data: recentPosts = [] } = useQuery({
-    queryKey: ['community-content-posts', communityId],
+    queryKey: postKeys.communityContent(communityId),
     queryFn: async () => {
       return postsService.filterPosts({ community_id: communityId, is_pinned: false }, '-created_date', 20);
     },
@@ -33,10 +34,7 @@ export default function ContentTab({ communityId, currentUser }) {
   });
 
   const invalidatePins = () => {
-    queryClient.invalidateQueries({ queryKey: ['community-pinned-post', communityId] });
-    queryClient.invalidateQueries({ queryKey: ['community-content-posts', communityId] });
-    queryClient.invalidateQueries({ queryKey: ['community-posts', communityId] });
-    queryClient.invalidateQueries({ queryKey: ['community-hub-posts', communityId] });
+    queryClient.invalidateQueries({ queryKey: postKeys.community(communityId) });
   };
 
   const handleCreateAnnouncement = async () => {
