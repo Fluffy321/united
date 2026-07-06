@@ -41,6 +41,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/api/supabaseClient';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 import { createBusinessClaimRequest, createBusinessListing, filterBusinessClaimRequest, filterBusinessListing, filterBusinessManager, filterUserCommunity, listBusinessListing, listBusinessReview, listCommunity, listMitzvahRequest, listUnifiedPost } from '@/services/entityServices';
+import { postKeys } from '@/lib/queryKeys';
 
 const BusinessMap = lazy(() => import('@/components/business/BusinessMap'));
 const MitzvahMap = lazy(() => import('@/components/mitzvah/MitzvahMap'));
@@ -1317,7 +1318,7 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
   });
 
   const { data: communityPosts = [] } = useQuery({
-    queryKey: ['map-community-posts'],
+    queryKey: postKeys.map(),
     queryFn: () => listUnifiedPost('-created_date', 180),
     enabled: COMMUNITIES_ENABLED,
     staleTime: 120000,

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus, Phone, MapPin, X, Heart } from 'lucide-react';
-import { supabase } from '@/api/supabaseClient';
+import { createGemach, filterGemach } from '@/services/entityServices';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 
@@ -27,14 +27,7 @@ const EMPTY_FORM = {
 };
 
 async function fetchGemachs() {
-  const { data, error } = await supabase
-    .from('gemachs')
-    .select('*')
-    .eq('is_approved', true)
-    .eq('is_active', true)
-    .order('name');
-  if (error) throw error;
-  return data || [];
+  return filterGemach({ is_approved: true, is_active: true }, 'name', 500);
 }
 
 export default function GemachDirectory() {
@@ -54,12 +47,11 @@ export default function GemachDirectory() {
 
   const submitMutation = useMutation({
     mutationFn: async (data) => {
-      const { error } = await supabase.from('gemachs').insert({
+      await createGemach({
         ...data,
         submitted_by: user?.id,
         is_approved: false,
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       toast.success('Gemach submitted — thank you! It will appear after review.');

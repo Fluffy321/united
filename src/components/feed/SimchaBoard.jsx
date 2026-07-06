@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, X, Sparkles } from 'lucide-react';
-import { supabase } from '@/api/supabaseClient';
+import { createSimchaAnnouncement, filterSimchaAnnouncement } from '@/services/entityServices';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 
@@ -26,15 +26,10 @@ const EMPTY_FORM = {
 
 async function fetchSimchas() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const { data, error } = await supabase
-    .from('simcha_announcements')
-    .select('*')
-    .eq('is_public', true)
-    .gte('created_at', thirtyDaysAgo)
-    .order('created_at', { ascending: false })
-    .limit(20);
-  if (error) throw error;
-  return data || [];
+  // Newest 20 public simchas, then drop anything older than 30 days — same
+  // result set as a gte() filter since rows are sorted by created_at desc.
+  const rows = await filterSimchaAnnouncement({ is_public: true }, '-created_at', 20);
+  return rows.filter((r) => r.created_at >= thirtyDaysAgo);
 }
 
 function timeAgo(dateStr) {
@@ -62,13 +57,12 @@ export default function SimchaBoard() {
 
   const submitMutation = useMutation({
     mutationFn: async (data) => {
-      const { error } = await supabase.from('simcha_announcements').insert({
+      await createSimchaAnnouncement({
         ...data,
         user_id: user.id,
         is_public: true,
         date_of_event: data.date_of_event || null,
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       toast.success('Mazel Tov! 🎉 Your simcha has been shared.');

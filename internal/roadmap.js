@@ -87,21 +87,95 @@ export const ROADMAP = [
   {
     id: 'expand-test-coverage',
     category: 'Admin & Platform',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.HIGH,
-    title: 'Expand automated test coverage',
-    description: 'Progress 2026-07-01: 23 tests across feedRanking/feedColors, communityTypes (getSupportedCommunityTabs), and feedRetentionService.scorePost — the scorePost suite caught and fixed a real NaN-poisoning bug from malformed dates. Remaining: supabaseRepository.js query-building tests with a mocked client, and long-term RLS policy tests against a local Supabase instance.',
+    title: 'Expand automated test coverage — first wave',
+    description: 'Stand up Vitest and cover the highest-risk pure logic: feed ranking, community tab gating, and feed retention scoring.',
     why: 'The app has 400+ source files and zero tests until 2026-07-01; regressions in feed ranking, entity mapping, or RLS policies would ship silently.',
-    prompt: `You are expanding automated test coverage for JUnited.
+    shippedNote: 'Shipped 2026-07-01. 23 tests across 3 suites, all passing via npm test: src/lib/feed/feedRanking.test.js (feedRanking/feedColors), src/lib/communityTypes.test.js (getSupportedCommunityTabs per allow_* flag), src/services/feedRetentionService.test.js (scorePost — this suite caught and fixed a real NaN-poisoning bug from malformed dates). Remaining coverage tracked in test-coverage-repository-rls.',
+  },
 
-Context: Vitest is already installed (see package.json "test" script). An example suite lives at src/lib/feed/feedRanking.test.js. The highest-value untested modules are src/services/supabaseRepository.js (mock the supabase client from src/api/supabaseClient.js), src/services/feedRetentionService.js (scorePost, buildBrief), and src/lib/communityTypes.js (getSupportedCommunityTabs).
+  {
+    id: 'test-coverage-repository-rls',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Test coverage — repository query-building',
+    description: 'Second wave of automated tests: supabaseRepository.js query-building tests with a mocked Supabase client. Follows expand-test-coverage (first wave, shipped 2026-07-01). RLS policy tests split out to rls-policy-tests.',
+    why: 'supabaseRepository.js is the shared data-access layer for every entity; a regression in its query building would break reads/writes app-wide with no test signal.',
+    shippedNote: 'Shipped 2026-07-05. src/services/supabaseRepository.test.js: 15 tests (38 total passing) covering entity table mapping (unmapped-entity throw in prod, localStorage fallback in dev, public_profiles column restriction for User/Profile), filter/sort/limit query building with created_date→created_at mapping, delete(idOrIds) single-vs-array batching via .in(), the reads-only/dev-only local fallback, and batchFetchByIds. RLS test setup documented in src/services/README.tests.md.',
+  },
+
+  {
+    id: 'rls-policy-tests',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'RLS policy tests against a local Supabase instance',
+    description: 'Integration tests asserting row-level-security policies (e.g. non-members cannot read private community posts, users cannot edit others\' rows) against a local Supabase stack. Setup procedure is documented in src/services/README.tests.md.',
+    why: 'RLS is the only server-side enforcement layer; a bad policy migration currently ships with no test signal.',
+    prompt: `You are adding RLS policy integration tests for JUnited.
+
+Context: Read src/services/README.tests.md — it documents the intended approach (npx supabase start, seed two users, assert error.code '42501' on forbidden operations). Unit tests live in src/services/supabaseRepository.test.js; keep RLS tests in a separate suite that is skipped unless a local Supabase is running (e.g. gate on an env var like RLS_TESTS=1).
 
 Goals:
-1. Add tests for getSupportedCommunityTabs covering each allow_* flag combination.
-2. Add tests for feedRetentionService.scorePost verifying joined-community and interest boosts.
-3. Add tests for supabaseRepository query helpers using a mocked supabase client (vi.mock).
-4. Keep npm run lint and npm run build passing.
+1. Stand up the local-Supabase test harness per the README, applying supabase/migrations.
+2. Cover the highest-risk policies: posts read/write visibility by community membership, community_member_removals/appeals admin-only access, error_logs authenticated-insert-only, profiles self-update-only.
+3. Add an npm script (e.g. "test:rls") and document it in the README.
+4. Keep npm run lint, npm test, and npm run build passing (default test run must not require Supabase).
 5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'service-layer-crud-consolidation',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Route direct component CRUD through the service layer',
+    description: 'Audit 2026-07-02 found 19 plain single-table supabase.from() CRUD calls in components/pages that bypass the dataService convention, plus 6 tables with no SUPABASE_ENTITY_TABLES mapping. Nothing crashed — these used direct calls — but they skipped the repository\'s shared behavior and were untestable via the service layer.',
+    why: 'A single data-access path is the codebase\'s stated architecture (CLAUDE.md); every bypass is a place where repository-level fixes and future instrumentation silently don\'t apply.',
+    shippedNote: 'Shipped 2026-07-05. Added 6 SUPABASE_ENTITY_TABLES mappings (Gemach, SimchaAnnouncement, CommunityForm, CommunityFormField, CommunityFormSubmission, CommunityVolunteerSlot) plus named exports in entityServices.js (incl. createBookmark, filterCommunityAdminAuditLog, bulkCreate wrappers). Converted plain CRUD in BookmarkButton.jsx, GemachDirectory.jsx, SimchaBoard.jsx, AdminFormsTab.jsx, ContentTab.jsx (via postsService), and OverviewTab.jsx audit-log fetch. Left as sanctioned direct calls per CLAUDE.md: nested-select joins (MembersTab, ModerationTab, AppealsTab, AdminFormsTab forms+fields join), count-only aggregates and gte() range queries (OverviewTab, AnalyticsTab), and the .in()-based volunteer-claims query.',
+  },
+
+  {
+    id: 'community-detail-code-health',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Split CommunityDetailView and unify posts query keys',
+    description: 'CommunityDetailView.jsx was 2,814 lines holding all tabs, modals, and sheets inline, and posts were cached under 10+ react-query key families so mutations over-invalidated some caches and missed others.',
+    why: 'The file size made data flow impossible to reason about, and the fragmented cache keys caused both stale views and wasted refetches after post mutations.',
+    shippedNote: 'Shipped 2026-07-05. CommunityDetailView.jsx: 2,814 → ~600 lines; 25 components/helpers extracted verbatim to src/components/communities/detail/ (pure move, build verified after every extraction). src/lib/queryKeys.js exports the postKeys factory — every post key starts [\'posts\'] with community views under [\'posts\',\'community\',id,\'<view>\'], so one prefix invalidation refreshes all views. All legacy keys migrated and grep-verified gone: unified-posts, community-posts, community-content-posts, community-hub-posts (dead — had no subscriber), admin-analytics-posts, admin-ov-posts, shul-posts, community-pinned-post, map-community-posts, user-posts, saved-posts. Note: 8 extracted components are dead code (never rendered) — tracked in communities-dead-code-cleanup.',
+  },
+
+  {
+    id: 'communities-dead-code-cleanup',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Delete or wire up dead communities components',
+    description: 'The CommunityDetailView split (2026-07-05) surfaced 8 components that were defined but never rendered, now sitting as standalone files in src/components/communities/detail/: TypeAwareComposer, RightNowBanner, CommunityBottomNav, CommunityMoreSheet, FeaturedLaunchpadCard, SecondaryLaunchpadCard, CommunityActionHeader, HomeFeedSection (plus the getFeaturedTab helper in detail/shared.js). Separately, CommunityCard in src/pages/Communities.jsx is defined but not mounted anywhere.',
+    why: 'Dead components invite accidental edits to code that never runs (the CommunityHubCard incident hid a shipped feature for six weeks). Some of these (TypeAwareComposer, CommunityBottomNav) may be intentional future UI — decide per component.',
+    prompt: `You are cleaning up dead components in the JUnited communities module.
+
+Context: See src/components/communities/detail/ — TypeAwareComposer.jsx, RightNowBanner.jsx, CommunityBottomNav.jsx, CommunityMoreSheet.jsx, FeaturedLaunchpadCard.jsx, SecondaryLaunchpadCard.jsx, CommunityActionHeader.jsx, HomeFeedSection.jsx are never imported by any live code, and getFeaturedTab in detail/shared.js has no live caller. CommunityCard in src/pages/Communities.jsx is defined but never mounted (it already supports the hasNewActivity dot).
+
+Goals:
+1. For each dead component, grep to confirm zero imports, then check internal/roadmap.js and recent git history for evidence it is planned UI; delete it if not, or wire it up if a shipped roadmap entry claims it is live.
+2. Remove getFeaturedTab and the CommunityCard definition (or mount CommunityCard where the design calls for it).
+3. Keep npm run lint, npm test, and npm run build passing.
+4. Update internal/roadmap.js: change this item's status to 'shipped' with a note listing what was deleted vs. wired up.`,
+  },
+
+  {
+    id: 'query-error-states',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.LOW,
+    title: 'Error states for list queries',
+    description: 'Key list queries rendered their empty state when a fetch failed, so users could not distinguish "no posts" from "failed to load". Related: analytics init and service-worker registration in src/main.jsx used silent .catch(() => {}) blocks.',
+    why: 'Silent failure reads as an empty app; a visible error state with retry preserves trust and makes production issues reportable.',
+    shippedNote: 'Shipped 2026-07-05. Audit found the shared component already existed (QueryError.jsx, used by Profile and Notifications) and Messages already rendered its error state — the real gaps were: (1) useFeedData.js swallowed fetch errors and returned [], making isError permanently false and Feed\'s error UI unreachable — it now rethrows (React Query keeps cached pages, so posts stay visible); (2) Feed.jsx renders QueryError with retry when the feed errors with zero posts; (3) CommunityDetailView renders QueryError for the community posts tabs on error; (4) main.jsx routes analytics-init and service-worker failures through captureError (Sentry + error_logs) instead of dropping them.',
   },
 
   // ── Growth & Activation ─────────────────────────────────────────────────
@@ -784,9 +858,9 @@ Goals:
     status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'New-Activity Dot on Community List Cards',
-    description: 'Show a subtle indicator on community cards in the Communities list when there are posts or events newer than the user\'s last visit, so users know which communities have new content before opening them.',
+    description: 'Show a subtle indicator on community cards in the Communities list when there are posts or events newer than the user\'s last visit, so users know which communities have new content before opening them. (Originally shipped 2026-05-19 via CommunityHubCard, regressed when that component was orphaned in the mini-app redesign; rebuilt 2026-07-05 on the live cards.)',
     why: 'The digest pill inside the community is useful once you\'re already in. A list-level signal closes the loop so members know where to go next without opening every community.',
-    shippedNote: 'get_communities_with_new_activity() RPC (migration 20260519100000) batches the check; Communities.jsx queries it once per session; small blue dot renders at avatar top-right in CommunityHubCard when hasNewActivity=true. Only joined communities with a visit record and newer posts/events show the dot.',
+    shippedNote: 'Re-shipped 2026-07-05. communitiesService.getCommunitiesWithNewActivity() wraps the get_communities_with_new_activity() RPC (migration 20260519100000). Communities.jsx queries it via React Query ([\'communities-new-activity\', uid], staleTime 5 min, enabled when logged in) and threads a newActivityIds Set to every LiveFiveTownsRoomCard render site (MineTab grid, Discover filtered grid, FiveTownsRoomsHub rails). Dot: absolute blue h-2.5 w-2.5 with white ring at the avatar\'s top-right, rendered only when isJoined && hasNewActivity — never on discover/not-joined cards. Known limitation: the dot clears on the 5-minute staleTime rather than instantly after visiting a community.',
   },
 
   {
@@ -2958,6 +3032,16 @@ Goals:
     title: 'Landing Honesty Pass + Dead-Link Fixes',
     description: 'Landing.jsx marketed features that do not exist as described: "Shuls" as a daily-use surface (shul directory is deferred), and map copy promising shuls/schools/events on a map that only has business categories. Two live links pointed at dead legacy redirects: PrivacyRights "Go to Settings" → /UserSettings and the FriendsHub app-invite URL → /InviteJoin (both silently redirect to /Feed).',
     shippedNote: 'Shipped 2026-07-01 (master plan Phase 1, item 3). Landing.jsx: differentiator line and "What people use daily" paragraph no longer list Shuls; map use-case copy now describes what the Map actually shows (kosher food, Jewish-owned businesses, local services, live activity). Marketplace stays listed — it became real in marketplace-real-persistence. PrivacyRights.jsx now links to /Settings; FriendsHub invite URL now lands on /welcome.',
+  },
+
+  {
+    id: 'react-query-migration-and-admin-center-split',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'React Query Migration (Settings, Communities) + Admin Center Split',
+    description: 'Settings.jsx and Communities.jsx were the last two large pages doing manual useEffect/useState fetching — no caching, no cross-page invalidation, no global error toasts. CommunityAdminCenter.jsx was a 3,733-line single file bundling 13 admin features.',
+    shippedNote: 'Shipped 2026-07-01 (master plan Phase 2, item 8, first three stages). Settings.jsx: subscription on [\'active-subscription\', uid]; BlockedUsersCard reads Feed\'s [\'user-blocks\', uid] key and unblocking invalidates [\'user-blocks-both\'] + [\'conversations\'] so Messages un-hides threads immediately. Communities.jsx: four queries ([\'communities-list\'], [\'community-groups-list\'], [\'user-community-ids\', uid], [\'user-group-ids\', uid]) replace the loadData/Promise.allSettled machinery; joins/leaves are optimistic useMutations with snapshot rollback; the localStorage cache survives as placeholderData; the page is finally a reader of [\'communities-list\'], which CommunityDetailView had been invalidating with no subscriber — community edits/joins from detail views now refresh the catalog. CommunityAdminCenter.jsx: move-only split from 3,733 to 134 lines — 11 inline tabs extracted to communities/admin/ (OverviewTab, BillingTab, AnalyticsTab, ContentTab, MembersTab, ModerationTab, LocalUpdatesTab, AppealsTab, LayoutTab, BrandingTab, SettingsTab) plus shared.jsx and AppealSubmitModal.jsx (re-exported to preserve CommunityDetailView\'s named import). Remaining item-8 work (CommunityDetailView split) tracked in internal/master-plan.md.',
   },
 
   {

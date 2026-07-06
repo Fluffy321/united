@@ -7,6 +7,7 @@ import { formatDistanceToNow, parseISO, isValid } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { deleteBookmark } from '@/services/entityServices';
+import { postKeys } from '@/lib/queryKeys';
 
 function safeFormatDate(dateStr) {
   if (!dateStr) return null;
@@ -96,7 +97,7 @@ export default function SavedPostsSection({ userId }) {
   const postIds = bookmarks.map(b => b.post_id);
 
   const { data: savedPosts = [], isLoading: loadingPosts } = useQuery({
-    queryKey: ['saved-posts', postIds.join(',')],
+    queryKey: postKeys.saved(postIds.join(',')),
     queryFn: () => batchFetchByIds('UnifiedPost', postIds),
     enabled: postIds.length > 0,
     staleTime: 30_000,
@@ -108,7 +109,7 @@ export default function SavedPostsSection({ userId }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmarks', userId] });
-      queryClient.invalidateQueries({ queryKey: ['saved-posts'] });
+      queryClient.invalidateQueries({ queryKey: postKeys.savedAll() });
       toast.success('Bookmark removed');
     },
     onError: () => toast.error('Failed to remove bookmark'),

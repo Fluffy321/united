@@ -9,6 +9,7 @@ import ReportModal from '@/components/common/ReportModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { ArrowRight, CalendarDays, Heart, MessageCircle, Plus, RefreshCw, Search, Sparkles, Users, X } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
+import QueryError from '@/components/common/QueryError';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import { useFloatingActions } from '@/components/layout/FloatingActionsContext';
@@ -31,6 +32,7 @@ import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { DEMO_POSTS } from '@/lib/feed/demoPosts';
 import { createBlock, deleteComment, deleteUnifiedPost, filterBlock, filterComment, filterUserCommunity, getCommunity, getUnifiedPost } from '@/services/entityServices';
 import { FEED_LOAD_TIMEOUT_MS, feedText, getPostLivePriority } from '@/lib/feed/feedRanking';
+import { postKeys } from '@/lib/queryKeys';
 
 export default function Feed({ isActive = true }) {
   const queryClient = useQueryClient();
@@ -184,7 +186,7 @@ export default function Feed({ isActive = true }) {
     mutationFn: (postId) => togglePostLike(postId, currentUser.id),
     onSuccess: ({ liked }, postId) => {
       setUserLikes(prev => liked ? [...prev, postId] : prev.filter(id => id !== postId));
-      queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
     },
   });
 
@@ -194,7 +196,7 @@ export default function Feed({ isActive = true }) {
       await deleteComment(await filterComment({ post_id: postId }).then(c => c.map(x => x.id)));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
     },
   });
 
@@ -498,6 +500,10 @@ export default function Feed({ isActive = true }) {
             </div>
           )}
 
+          {isError && !isLoading && feedPosts.length === 0 && (
+            <QueryError message="The feed could not load." onRetry={refetch} />
+          )}
+
           {isLoading && loadTimedOut && feedPosts.length === 0 && (
             <div className="rounded-[26px] bg-white px-5 py-12 text-center shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
               <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-2xl">🌿</div>
@@ -559,7 +565,7 @@ export default function Feed({ isActive = true }) {
         ref={composerRef}
         currentUser={currentUser}
         userCommunities={communityGroups}
-        onPostCreated={() => queryClient.invalidateQueries({ queryKey: ['unified-posts'] })}
+        onPostCreated={() => queryClient.invalidateQueries({ queryKey: postKeys.all })}
       />
 
       <ReportModal
@@ -634,7 +640,7 @@ export default function Feed({ isActive = true }) {
             post={replyPost}
             currentUser={currentUser}
             blockedIds={blockedIds}
-            onCommentAdded={() => queryClient.invalidateQueries({ queryKey: ['unified-posts'] })}
+            onCommentAdded={() => queryClient.invalidateQueries({ queryKey: postKeys.all })}
           />
         </WidgetBoundary>
       )}

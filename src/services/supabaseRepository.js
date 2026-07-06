@@ -88,6 +88,15 @@ const SUPABASE_ENTITY_TABLES = {
   Yahrzeit: 'yahrzeits',
   RefuahRequest: 'refuah_requests',
   MealSlot: 'meal_slots',
+  // Eruv/gemach/simcha — migration 20260701160000_eruv_gemach_simcha.sql
+  Gemach: 'gemachs',
+  SimchaAnnouncement: 'simcha_announcements',
+  // Community forms — migration 20260520025433_community_forms.sql
+  CommunityForm: 'community_forms',
+  CommunityFormField: 'community_form_fields',
+  CommunityFormSubmission: 'community_form_submissions',
+  // Volunteer slots — migration 20260520200328_community_volunteer_slots.sql
+  CommunityVolunteerSlot: 'community_volunteer_slots',
   // All other entities (Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.

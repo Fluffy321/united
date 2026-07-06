@@ -3,15 +3,24 @@ import { createPortal } from 'react-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  X, Loader2, Save, CheckCircle2, Trash2, AlertTriangle, Image, Lock, Globe, Upload,
+  X, Loader2, Save, Image, Upload, Globe, Lock, Trash2, AlertTriangle, CheckCircle2,
 } from 'lucide-react';
 import { supabase } from '@/api/supabaseClient';
 import { dataService } from '@/services';
 import { notificationsService } from '@/services/notificationsService';
 import { COMMUNITY_TYPE_OPTIONS, getCommunityTypeKey } from '@/lib/communityTypes';
-import { isCommunityPremium } from '@/lib/communityPlans';
 import { updateCommunity } from '@/services/entityServices';
-import { SETTINGS_SECTIONS, MODULE_CONFIG, PRIVACY_OPTIONS, SectionHeader, Avatar, RoleBadge } from './shared';
+import { isCommunityPremium } from '@/lib/communityPlans';
+import { Avatar, RoleBadge, SectionHeader, MODULE_CONFIG, PRIVACY_OPTIONS } from './shared';
+
+const SETTINGS_SECTIONS = [
+  { key: 'profile',     label: 'Profile' },
+  { key: 'appearance',  label: 'Appearance' },
+  { key: 'modules',     label: 'Modules' },
+  { key: 'permissions', label: 'Permissions' },
+];
+
+// ─── Settings tab (sub-nav: Profile | Appearance | Modules | Permissions) ─────
 
 export default function SettingsTab({ communityId, community, currentUser, onCommunityUpdated, onClose, onDeleted }) {
   const [section, setSection] = useState('profile');
@@ -913,6 +922,3 @@ function DeletionVoteBanner({ request, admins, currentUser, onDeleted, onCancell
     </div>
   );
 }
-
-// ─── Remove member modal ──────────────────────────────────────────────────────
-

@@ -31,6 +31,7 @@ import { postsService } from '@/services/postsService';
 import { updateUnifiedPost } from '@/services/entityServices';
 import { uploadImage } from '@/lib/imageUpload';
 import { MARKETPLACE_CATEGORIES, normalizeMarketplaceCategory, normalizePickupOption } from '@/lib/marketplaceTaxonomy';
+import { postKeys } from '@/lib/queryKeys';
 
 const sections = [
   { id: 'all', label: 'All' },
@@ -631,7 +632,7 @@ export default function Marketplace() {
     onSuccess: () => {
       toast.success('Listing posted');
       queryClient.invalidateQueries({ queryKey: ['marketplace-listings'] });
-      queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
     },
     onError: (error) => {
       toast.error(error?.message === 'PHOTO_UPLOAD_FAILED'
@@ -646,7 +647,7 @@ export default function Marketplace() {
       toast.success(status === 'sold' ? 'Marked as sold' : 'Listing is available again');
       queryClient.invalidateQueries({ queryKey: ['marketplace-listings'] });
       queryClient.invalidateQueries({ queryKey: ['marketplace-listing'] });
-      queryClient.invalidateQueries({ queryKey: ['unified-posts'] });
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
     },
   });
 

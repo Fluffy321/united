@@ -30,6 +30,8 @@ function ReactionBar({ postId, currentUser, initialCounts = {} }) {
   const react = async (emoji) => {
     if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setPicker(false);
+    const prevReaction = myReaction;
+    const prevCounts = counts;
     if (myReaction === emoji) {
       // un-react
       setMyReaction(null);
@@ -44,12 +46,14 @@ function ReactionBar({ postId, currentUser, initialCounts = {} }) {
     try {
       await checkRateLimit('react');
       const existing = await filterReaction({ post_id: postId, user_id: currentUser.id });
-      for (const r of existing) await deleteReaction(r.id);
-      if (myReaction !== emoji) {
+      if (existing.length > 0) await deleteReaction(existing.map(r => r.id));
+      if (prevReaction !== emoji) {
         await createReaction({ post_id: postId, user_id: currentUser.id, emoji });
       }
     } catch (err) {
-      if (err instanceof RateLimitError) toast.error(err.message);
+      setMyReaction(prevReaction);
+      setCounts(prevCounts);
+      toast.error(err instanceof RateLimitError ? err.message : 'Could not save your reaction. Please try again.');
     }
   };
 
