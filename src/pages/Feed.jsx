@@ -21,7 +21,7 @@ import MinyanBoard from '@/components/feed/MinyanBoard';
 import JewishCountdown from '@/components/feed/JewishCountdown';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import CommentsSheet from '@/components/feed/CommentsSheet';
-import FeedPostCard from '@/components/feed/FeedPostCard';
+import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import CommunitiesFeedView from '@/components/feed/CommunitiesFeedView';
 import FiveTownsBrief from '@/components/feed/FiveTownsBrief';
 import FiveTownsConversationHub from '@/components/feed/FiveTownsConversationHub';
@@ -518,7 +518,8 @@ export default function Feed({ isActive = true }) {
                 <p className="text-[12px] text-slate-400 text-center px-4 py-2">Showing cached posts — pull down to refresh.</p>
               )}
               {feedPosts.map((post) => (
-                <FeedPostCard
+                <UnifiedPostCard
+                  variant="compact"
                   key={post.id}
                   post={post}
                   liked={userLikes.includes(post.id)}

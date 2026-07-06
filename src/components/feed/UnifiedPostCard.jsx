@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { MessageCircle, MoreHorizontal, Flag, Trash2, MapPin, Clock, CheckCircle2, Ban, Megaphone, Pin } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Flag, Trash2, MapPin, Clock, CheckCircle2, Ban, Megaphone, Pin } from 'lucide-react';
+import { feedBody, feedText, formatPostAge, getCardIntent, postDate, toneClasses } from '@/lib/feed/feedRanking';
+import { authorColor } from '@/lib/feed/feedColors';
 import PostImage from '@/components/common/PostImage';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import PromptCard from './PromptCard';
@@ -108,7 +110,80 @@ const InterestedButton = React.memo(function InterestedButton({ post, currentUse
   );
 });
 
-function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onReport, onBlock, blockedIds, liked, communities, onCommunityClick, isFromJoinedCommunity = false }) {
+// Compact card used by the Feed list (variant="compact") — formerly FeedPostCard.jsx
+function CompactPostCard({ post, liked = false, onLike, onReply, onOpen }) {
+  const intent = getCardIntent(post);
+  const tone = toneClasses[intent.tone] || toneClasses.slate;
+  const Icon = intent.icon || MessageCircle;
+  const title = feedText(post);
+  const body = feedBody(post);
+  const age = formatPostAge(postDate(post));
+  const replies = Number(post.comments_count || 0);
+  const reactions = Number(post.likes_count || 0);
+  const initials = (post.author_name || 'J').split(/\s+/).map(p => p[0]).join('').slice(0, 2).toUpperCase();
+  const avatarBg = authorColor(post.author_id || post.author_name || '');
+  const avatarUrl = post.author_avatar_url;
+
+  return (
+    <article className="rounded-[16px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden">
+      <div className="p-4 pb-3">
+        <div className="flex items-center gap-3 mb-3">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={post.author_name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+          ) : (
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold text-white shrink-0" style={{ background: avatarBg }}>
+              {initials}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="text-[14px] font-bold text-slate-900 leading-tight truncate">{post.author_name || 'Neighbor'}</div>
+            <div className="text-[12px] text-slate-400">{age}</div>
+          </div>
+          <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border shrink-0 ${tone.pill}`}>
+            <Icon className="h-3 w-3 shrink-0" />
+            {intent.label}
+          </span>
+        </div>
+        <button type="button" onClick={() => onOpen?.(post)} className="block w-full text-left">
+          <p className="text-[16px] leading-[1.55] text-slate-900 font-medium">{title}</p>
+          {body && body !== title && (
+            <p className="mt-1 text-[14px] leading-snug text-slate-500 line-clamp-2">{body}</p>
+          )}
+        </button>
+      </div>
+      <div className="flex border-t border-slate-100">
+        <button
+          type="button"
+          onClick={() => onLike(post.id)}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-medium transition-colors ${liked ? 'text-rose-500' : 'text-slate-400'}`}
+        >
+          <Heart className={`h-[17px] w-[17px] ${liked ? 'fill-rose-500' : ''}`} />
+          {reactions > 0 && <span>{reactions}</span>}
+        </button>
+        <button
+          type="button"
+          onClick={() => onReply(post)}
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-medium text-slate-400"
+        >
+          <MessageCircle className="h-[17px] w-[17px]" />
+          {replies > 0 ? <span>{replies}</span> : null}
+        </button>
+        <button
+          type="button"
+          className="flex-1 flex items-center justify-center py-3 text-slate-400"
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function UnifiedPostCardInner({ post, currentUser, onLike, onComment, onDelete, onReport, onBlock, blockedIds, liked, communities, onCommunityClick, isFromJoinedCommunity = false }) {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [imgExpanded, setImgExpanded] = useState(false);
   const [helpStatus, setHelpStatus] = useState(post.help_status || 'open');
@@ -137,41 +212,31 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
       .catch(() => {});
   }, [post.id, commentCount]);
 
-  if (post.type === 'prompt') return <PromptWrapper post={post} currentUser={currentUser} />;
-  if (post.type === 'poll' || post.post_subtype === 'poll') {
-    return <PollCard post={post} currentUser={currentUser} />;
-  }
-
   const isOwner = currentUser?.id === post.user_id;
   const isAnonymous = post.is_anonymous;
   const isMarketplace = post.activity_kind === 'marketplace_listing' || post.type === 'marketplace';
   const typeConfig = TYPE_CONFIGS[post.type] || TYPE_CONFIGS.feed;
   const helpCat = HELP_REQUEST_CATEGORIES.find(c => c.value === post.category);
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const communityData = useMemo(() =>
     communities?.find(c => c.id === post.community_id) || null,
   [communities, post.community_id]);
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const communityName = useMemo(() =>
     post.community_name || communityData?.name || null,
   [post.community_name, communityData]);
 
   // A community-authored post: published by the community itself (not a user posting
   // into a community). Triggered by is_official=true or post_kind='local_update'.
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const isCommunityPost = useMemo(() =>
     post.is_official === true || post.post_kind === 'local_update' || post.post_kind === 'announcement' || post.type === 'announcement' || post.post_type === 'announcement',
   [post.is_official, post.post_kind, post.post_type, post.type]);
   const isOfficialAnnouncement = post.is_official === true || post.post_kind === 'announcement' || post.type === 'announcement' || post.post_type === 'announcement';
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const allImages = useMemo(() =>
     post.image_urls?.length > 0 ? post.image_urls : (post.image_url ? [post.image_url] : []),
   [post.image_urls, post.image_url]);
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const { timeAgo, isVeryRecent } = useMemo(() => {
     let displayDate;
     if (post.is_seeded) {
@@ -193,7 +258,6 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
     };
   }, [post.id, post.created_date, post.is_seeded]);
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const { isActiveNow, hasNewReplies, isHotPost } = useMemo(() => {
     const nowMs = Date.now();
     const updatedAgeMs = post.updated_date
@@ -210,13 +274,11 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
 
   const BODY_LIMIT = 200;
   const bodyLong = post.body && post.body.length > BODY_LIMIT;
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const bodyPreview = useMemo(
     () => (bodyLong && !expanded ? post.body.slice(0, BODY_LIMIT).trimEnd() + '…' : post.body),
     [post.body, expanded, bodyLong],
   );
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const handleFulfilled = useCallback(async () => {
     setFulfilling(true);
     if (!appParams.hasBackendConfig) {
@@ -231,7 +293,6 @@ function UnifiedPostCard({ post, currentUser, onLike, onComment, onDelete, onRep
     toast.success('Marked as fulfilled! 🎉');
   }, [post.id]);
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const handleQuickReply = useCallback(async () => {
     if (!quickReplyText.trim() || !currentUser) return;
     setSubmittingQuickReply(true);
@@ -974,8 +1035,20 @@ function blockedIdsEqual(a, b) {
   return true;
 }
 
+// Hook-free dispatcher: routes to the right card face so no variant branch ever
+// sits between hook calls (Rules of Hooks safe by construction).
+function UnifiedPostCard({ variant, ...props }) {
+  if (variant === 'compact') return <CompactPostCard {...props} />;
+  if (props.post.type === 'prompt') return <PromptWrapper post={props.post} currentUser={props.currentUser} />;
+  if (props.post.type === 'poll' || props.post.post_subtype === 'poll') {
+    return <PollCard post={props.post} currentUser={props.currentUser} />;
+  }
+  return <UnifiedPostCardInner {...props} />;
+}
+
 function arePropsEqual(prev, next) {
   return (
+    prev.variant === next.variant &&
     prev.post === next.post &&
     prev.currentUser === next.currentUser &&
     prev.liked === next.liked &&
