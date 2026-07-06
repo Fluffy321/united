@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search, X, Clock, Filter, ChevronLeft, Users, Calendar, FileText, User, Loader2, Store, ShoppingBag, HeartHandshake, MapPin } from 'lucide-react';
 import { dataService, storageService } from '@/services';
@@ -122,9 +123,6 @@ export default function SearchPage() {
   const [filters, setFilters] = useState({ post_type: '', community_id: '', date_from: '', date_to: '' });
   const [recentSearches, setRecentSearches] = useState(() => storageService.getJson('junited_recent_searches', []));
   const { user } = useAuth();
-  const [searching, setSearching] = useState(false);
-  const [results, setResults] = useState(null);
-
   useEffect(() => { inputRef.current?.focus(); }, []);
 
   // Debounce query
@@ -133,32 +131,31 @@ export default function SearchPage() {
     return () => clearTimeout(t);
   }, [query]);
 
-  // Run search
+  const hasQuery = debouncedQuery.trim().length >= 2;
+
+  const { data: results = null, isFetching: searching } = useQuery({
+    queryKey: ['universal-search', debouncedQuery, filters, user?.id],
+    queryFn: async () => {
+      if (!appParams.hasBackendConfig) return EMPTY_RESULTS;
+      try {
+        const res = await dataService.functions.invoke('universalSearch', { query: debouncedQuery, filters, user_id: user?.id });
+        return res.data?.results || EMPTY_RESULTS;
+      } catch {
+        return EMPTY_RESULTS;
+      }
+    },
+    enabled: hasQuery,
+  });
+
+  // Record recent searches once a query actually runs
   useEffect(() => {
-    if (debouncedQuery.trim().length < 2) { setResults(null); return; }
-    setSearching(true);
-    if (!appParams.hasBackendConfig) {
-      setResults(EMPTY_RESULTS);
-      setSearching(false);
-      const updated = [debouncedQuery, ...recentSearches.filter(s => s !== debouncedQuery)].slice(0, 8);
-      setRecentSearches(updated);
+    if (!hasQuery) return;
+    setRecentSearches(prev => {
+      const updated = [debouncedQuery, ...prev.filter(s => s !== debouncedQuery)].slice(0, 8);
       storageService.setJson('junited_recent_searches', updated);
-      return;
-    }
-    dataService.functions.invoke('universalSearch', { query: debouncedQuery, filters, user_id: user?.id })
-      .then(res => {
-        setResults(res.data?.results || EMPTY_RESULTS);
-        setSearching(false);
-        // Save to recent
-        const updated = [debouncedQuery, ...recentSearches.filter(s => s !== debouncedQuery)].slice(0, 8);
-        setRecentSearches(updated);
-        storageService.setJson('junited_recent_searches', updated);
-      })
-      .catch(() => {
-        setResults(EMPTY_RESULTS);
-        setSearching(false);
-      });
-  }, [debouncedQuery, filters, user?.id]);
+      return updated;
+    });
+  }, [debouncedQuery, hasQuery]);
 
   const handlePostClick = (post) => {
     navigate(`/PostDetail?postId=${post.id}`);

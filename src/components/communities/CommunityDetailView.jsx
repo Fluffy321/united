@@ -33,7 +33,8 @@ import CommunityResourceLibrary from './CommunityResourceLibrary';
 import CommunityStoreTab from './CommunityStoreTab';
 import GroupChatSection from './GroupChatSection';
 import CommunityInviteModal from './CommunityInviteModal';
-import CommunityAdminCenter, { AppealSubmitModal } from './CommunityAdminCenter';
+import CommunityAdminCenter from './CommunityAdminCenter';
+import { AppealSubmitModal } from './admin-center/modals';
 import { useSwipeableTabs } from '@/hooks/useSwipeableTabs';
 import {
   CommunityAdminQuickActions,

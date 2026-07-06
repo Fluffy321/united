@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { MapPin, MessageCircle, Loader2, ArrowLeft, Heart, Users, HandHeart, Calendar, FileText, UserRoundPlus, UserRoundCheck } from 'lucide-react';
 import { dataService, findOrCreateDirectConversation, friendsService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
@@ -120,45 +121,39 @@ export default function PublicProfile() {
   const [searchParams] = useSearchParams();
   const userId = searchParams.get('id');
   const { user: currentUser } = useAuth();
-  const [profileUser, setProfileUser] = useState(null);
-  const [posts, setPosts] = useState([]);
-  const [mitzvahCount, setMitzvahCount] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [messagingLoading, setMessagingLoading] = useState(false);
   const [friendLoading, setFriendLoading] = useState(false);
   const [isFriend, setIsFriend] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!userId) return;
-    setLoading(true);
-
-    const fetchAll = async () => {
+  const { data: profileData, isLoading: loading } = useQuery({
+    queryKey: ['public-profile', userId],
+    queryFn: async () => {
       const [usersRes, postsRes, mitzvahRes] = await Promise.allSettled([
         filterUser({ id: userId }),
         filterUnifiedPost({ user_id: userId }, '-created_date', 20),
         filterMitzvahLog({ user_id: userId }, '-created_date', 100),
       ]);
+      return {
+        profileUser: usersRes.status === 'fulfilled' ? (usersRes.value[0] || null) : null,
+        posts: postsRes.status === 'fulfilled' ? postsRes.value.filter(p => p.type !== 'dating' && !p.is_anonymous) : [],
+        mitzvahCount: mitzvahRes.status === 'fulfilled' ? mitzvahRes.value.length : 0,
+      };
+    },
+    enabled: !!userId,
+  });
+  const { profileUser = null, posts = [], mitzvahCount = 0 } = profileData || {};
 
-      if (usersRes.status === 'fulfilled' && usersRes.value[0]) {
-        setProfileUser(usersRes.value[0]);
-      }
-      if (postsRes.status === 'fulfilled') {
-        setPosts(postsRes.value.filter(p => p.type !== 'dating' && !p.is_anonymous));
-      }
-      if (mitzvahRes.status === 'fulfilled') {
-        setMitzvahCount(mitzvahRes.value.length);
-      }
-      setLoading(false);
-    };
+  const { data: isFriendData } = useQuery({
+    queryKey: ['is-friend', currentUser?.id, userId],
+    queryFn: () => friendsService.isFriend(currentUser.id, userId).catch(() => false),
+    enabled: !!currentUser?.id && !!userId && currentUser.id !== userId,
+  });
 
-    fetchAll();
-  }, [userId]);
-
+  // Local state so the friend button can toggle optimistically after add/remove
   useEffect(() => {
-    if (!currentUser?.id || !userId || currentUser.id === userId) return;
-    friendsService.isFriend(currentUser.id, userId).then(setIsFriend).catch(() => setIsFriend(false));
-  }, [currentUser?.id, userId]);
+    if (typeof isFriendData === 'boolean') setIsFriend(isFriendData);
+  }, [isFriendData]);
 
   const handleMessage = async () => {
     if (!currentUser) { dataService.auth.redirectToLogin(); return; }

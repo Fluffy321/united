@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Loader2, Heart, MessageCircle } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { notificationsService, togglePostLike, loadUserPostLikes } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { createPageUrl } from '@/utils';
@@ -19,42 +20,46 @@ export default function PostDetail() {
   const postId = searchParams.get('id');
   
   const { user: currentUser } = useAuth();
-  const [post, setPost] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [userLikes, setUserLikes] = useState([]);
   const [showComments, setShowComments] = useState(false);
   const [showReport, setShowReport] = useState(false);
-  const [blockedIds, setBlockedIds] = useState([]);
+
+  const { data: post, isLoading: loading, isError } = useQuery({
+    queryKey: ['unified-post', postId],
+    queryFn: async () => {
+      const posts = await filterUnifiedPost({ id: postId });
+      return posts[0] ?? null;
+    },
+    enabled: !!postId,
+  });
+
+  const { data: likedPostIds } = useQuery({
+    queryKey: ['user-post-likes', currentUser?.id],
+    queryFn: () => loadUserPostLikes(currentUser.id),
+    enabled: !!currentUser?.id,
+  });
+
+  // Blocked users so their comments can be filtered out below
+  const { data: blockedIds = [] } = useQuery({
+    queryKey: ['blocked-ids', currentUser?.id],
+    queryFn: async () => {
+      const blocks = await filterBlock({ blocker_id: currentUser.id });
+      return blocks.map(b => b.blocked_id);
+    },
+    enabled: !!currentUser?.id,
+  });
+
+  // Likes stay in local state so optimistic like/unlike below keeps working
+  useEffect(() => {
+    if (likedPostIds) setUserLikes(likedPostIds);
+  }, [likedPostIds]);
 
   useEffect(() => {
-    loadPost();
-  }, [postId]);
-
-  const loadPost = async () => {
-    try {
-      const posts = await filterUnifiedPost({ id: postId });
-      if (posts[0]) {
-        setPost(posts[0]);
-      } else {
-        navigate(createPageUrl('Feed'));
-        return;
-      }
-
-      if (currentUser) {
-        // Load user likes
-        const likedPostIds = await loadUserPostLikes(currentUser.id);
-        setUserLikes(likedPostIds);
-
-        // Load blocked users so their comments can be filtered out below
-        const blocks = await filterBlock({ blocker_id: currentUser.id });
-        setBlockedIds(blocks.map(b => b.blocked_id));
-      }
-    } catch (e) {
-      captureError(e, { context: 'PostDetail: load post' });
+    if (!postId || isError || (!loading && post === null)) {
+      if (isError) captureError(new Error('PostDetail: load post failed'), { context: 'PostDetail: load post' });
       navigate(createPageUrl('Feed'));
     }
-    setLoading(false);
-  };
+  }, [postId, isError, loading, post, navigate]);
 
   const handleLike = async () => {
     if (!post) return;
