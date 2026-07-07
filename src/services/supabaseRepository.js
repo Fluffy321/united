@@ -4,7 +4,6 @@ const STORAGE_PREFIX = 'junited_local_entity_';
 const SUPABASE_ENTITY_TABLES = {
   // Core — migration 001_core.sql
   User: 'profiles',
-  Profile: 'profiles',
   Community: 'communities',
   UnifiedPost: 'posts',
   Post: 'posts',
@@ -29,7 +28,6 @@ const SUPABASE_ENTITY_TABLES = {
   MitzvahAction: 'mitzvah_actions',
   MitzvahPoints: 'mitzvah_points',
   Block: 'user_blocks',
-  FriendRequest: 'friend_requests',
   Friendship: 'friendships',
   // Messaging permissions — migration 20260517033459_message_requests.sql
   MessageRequest: 'message_requests',
@@ -55,14 +53,10 @@ const SUPABASE_ENTITY_TABLES = {
   ClaimRequest: 'claim_requests',
   ModerationAuditLog: 'moderation_audit_logs',
   // Community admin center — migration 024_community_admin_center.sql
-  CommunityMemberRemoval: 'community_member_removals',
-  CommunityMemberAppeal: 'community_member_appeals',
   CommunityAdminAuditLog: 'community_admin_audit_log',
   // Poll votes — migration 030_poll_votes.sql
   PollVote: 'poll_votes',
   // Local updates automation — migration 20260515180122_local_updates_automation.sql
-  LocalUpdateSource: 'local_update_sources',
-  LocalUpdateItem: 'local_update_items',
   // Business directory MVP — migration 20260516011532_business_directory_mvp.sql
   BusinessListing: 'business_listings',
   BusinessClaimRequest: 'business_claim_requests',
@@ -81,7 +75,6 @@ const SUPABASE_ENTITY_TABLES = {
   // Community invites — migration 20260519220000_invite_links.sql
   InviteLink: 'invite_links',
   // Activity digest — migration 20260519000000_community_last_visits.sql
-  CommunityLastVisit: 'community_last_visits',
   // Meal trains — migration 20260622223000_meal_trains.sql
   MealTrainRequest: 'meal_train_requests',
   // Yahrzeits & refuah — migration 20260701130000_yahrzeits_refuah.sql
