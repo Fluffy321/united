@@ -9,7 +9,7 @@ Claude Code sessions read `CLAUDE.md` instead, but both files share the same rul
 
 - **Frontend**: React 18, Vite, Tailwind CSS, shadcn/ui, React Router v6, TanStack Query
 - **Backend**: Supabase (Postgres, Auth, Edge Functions, Storage)
-- **Auth bridge**: `src/api/base44Client.js` is a compatibility shim — prefer `src/api/supabaseClient.js` and `src/services/` for new code
+- **Data layer**: named entity operations in `src/services/entityServices.js`; shared query behavior and the `SUPABASE_ENTITY_TABLES` map live in `src/services/supabaseRepository.js`
 - **Email**: Resend (via Supabase Edge Functions)
 - **Payments**: Stripe (not yet live — see roadmap)
 
@@ -17,12 +17,12 @@ Claude Code sessions read `CLAUDE.md` instead, but both files share the same rul
 
 ## ⚠️ Roadmap Maintenance — Two-Part Rule
 
-**`src/config/roadmap.js` is the single source of truth for the JUnited product roadmap.**
-`src/pages/FutureFeatures.jsx` is a pure renderer — it reads from the config. Do not edit the page; only edit the config.
+**`internal/roadmap.js` is the single source of truth for the JUnited product roadmap.**
+`src/pages/AdminRoadmap.jsx` renders it automatically — only edit the config, never the page.
 
 ### Part A — Status updates for work you completed
 
-You must update `src/config/roadmap.js` in the same task whenever you:
+You must update `internal/roadmap.js` in the same task whenever you:
 
 | Situation | Action |
 |---|---|
@@ -36,7 +36,7 @@ Valid status values: `'planned'`, `'deferred'`, `'exploring'`, `'blocked'`, `'sh
 
 ### Prompt field rule — REQUIRED for AI-implementable items
 
-The `prompt` field in each roadmap entry powers the **Copy Prompt** button in `/FutureFeatures`. When present, admins can one-click-copy it into an AI agent to implement the feature. When absent, the button silently disappears.
+The `prompt` field in each roadmap entry powers the **Copy Prompt** button in `/AdminRoadmap`. When present, admins can one-click-copy it into an AI agent to implement the feature. When absent, the button silently disappears.
 
 **Any new roadmap entry that an AI agent could reasonably implement MUST include a `prompt` field.** This applies to `planned`, `deferred`, `exploring`, and `blocked` entries.
 
@@ -48,7 +48,7 @@ Context: <point to exact files, migrations, and existing code>
 
 Goals:
 1. <specific, ordered implementation steps>
-N. Update src/config/roadmap.js: change this item's status to 'shipped'.`
+N. Update internal/roadmap.js: change this item's status to 'shipped'.`
 ```
 
 **When a prompt MAY be omitted:** Only if the item is purely manual (no code to write). If omitting, explain why in `why` or `description`.
@@ -62,7 +62,7 @@ N. Update src/config/roadmap.js: change this item's status to 'shipped'.`
 Before writing the final report on any feature implementation, significant bug fix, redesign, audit, admin tool addition, or any task that surfaces recommendations or deferred work — you must perform a roadmap future-improvements scan:
 
 1. Review the session for anything that qualifies as future work: implied improvements, deferred enhancements, discovered gaps, follow-up features, recommended next steps.
-2. Open `src/config/roadmap.js` and for each candidate determine:
+2. Open `internal/roadmap.js` and for each candidate determine:
    - **Already tracked** → no action; note it in the report
    - **Belongs under an existing item** → merge or update that entry
    - **Deserves its own entry** → add it with `status: 'planned'` or `'deferred'`

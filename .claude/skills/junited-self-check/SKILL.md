@@ -1,148 +1,121 @@
 ---
 name: junited-self-check
 description: >
-  JUnited codebase consistency checker. Use this skill automatically after implementing any feature, fix, migration, or roadmap change in the JUnited repo. Also invoke it whenever the user asks to "check the code", "self-check", "make sure nothing is broken", "verify consistency", or "audit the codebase". This skill is JUnited-specific and knows the exact conventions of the stack (React + Supabase + roadmap.js). Run it proactively — don't wait to be asked if you just shipped something.
+  Use after implementing any feature, fix, migration, refactor, or roadmap change in the JUnited repo, and whenever the user asks to "check the code", "self-check", "make sure nothing is broken", "verify consistency", or "audit the codebase". Catches cross-file contradictions that compile cleanly but break at runtime — stale mappings, orphaned routes, committed conflict markers, stale doc paths, unpaired React Query keys. JUnited-specific (React 18 + Vite + React Query + Supabase). Run proactively after shipping — don't wait to be asked.
 ---
 
-# JUnited Self-Check
+# JUnited Self-Check (v2, authored by Fable 5, 2026-07-07)
 
-You are auditing the JUnited codebase for internal contradictions and consistency issues. This is not a lint pass — it's a cross-file consistency check. The goal is to catch things that compile cleanly but are wrong in practice.
+Cross-file consistency audit for the JUnited repo. Not a lint pass — every check here targets a class of bug that lint and build have historically let through in this exact codebase. Each check notes the real incident that motivated it.
 
-Work through each check below in order. For each one, report findings as **PASS**, **WARN**, or **FAIL**:
-- **PASS** — nothing wrong found
-- **WARN** — something looks off but may be intentional; flag it for human review
-- **FAIL** — clear contradiction or broken invariant
+Run every check. Report each as **PASS** / **WARN** (looks off, may be intentional) / **FAIL** (broken invariant). All file paths below were verified to exist on 2026-07-07 — if one is missing, the codebase moved under the skill: flag that as WARN and update this file in the same session.
 
-At the end, print a summary table and a prioritized list of action items. Only include checks with WARN or FAIL in the summary — omit clean passes to reduce noise.
+**Run from the repo root:** `cd "$(git rev-parse --show-toplevel)"`.
 
 ---
 
-## Check 1 — Roadmap vs. Code
+## Check 0 — Sync & conflict state *(new in v2)*
 
-**File:** `internal/roadmap.js`
+Motivated by: the June 22 audit ran 7 commits behind production, and committed `<<<<<<<` markers shipped to main **twice** in one week (FriendsHub.jsx, master-plan.md).
 
-For every entry with `status: STATUS.SHIPPED`:
-1. Does the `shippedNote` describe where the code lives? If not, flag as WARN.
-2. Does at least one of the files mentioned in `shippedNote` actually exist in the repo? Spot-check 2–3 shipped items.
-
-For every entry with `status: STATUS.PLANNED` or `STATUS.EXPLORING`:
-1. Is there already code in the repo that appears to implement it? If so, flag as WARN — the roadmap may need updating.
-
-Run `npm run check-prompts` (defined in package.json) and include its output. Any AI-implementable entry missing a `prompt` field is a FAIL.
-
----
-
-## Check 2 — Routes vs. Pages Config
-
-**Files:** `src/App.jsx`, `src/pages.config.js`
-
-Every `<Route path="..." element={<PageComponent />} />` in App.jsx should have a corresponding entry in pages.config.js — and vice versa. Flag any route that exists in one but not the other as WARN.
-
-Exception: `<Navigate>` redirect routes don't need pages.config.js entries — those are intentionally disabled pages.
-
----
-
-## Check 3 — VALID_VIEWS Whitelists
-
-**Files:** `src/pages/MitzvahCircle.jsx` (and any other page that uses a `VALID_VIEWS` or similar array to gate tab IDs)
-
-Every tab ID in the `workflowTabs` array (or equivalent) must also appear in `VALID_VIEWS`. A tab ID present in `workflowTabs` but missing from `VALID_VIEWS` means clicking that tab silently bounces back to the default — this is a silent runtime bug that won't show up in lint or build. Flag any mismatch as FAIL.
-
----
-
-## Check 4 — Entity Table Mapping
-
-**File:** `src/api/base44Client.js` (the `SUPABASE_ENTITY_TABLES` object)
-
-Scan application source files for `dataService.entities.<Name>` and `base44.entities.<Name>` usage patterns, excluding `src/docs/`. Every `<Name>` used must have a corresponding key in `SUPABASE_ENTITY_TABLES`. A missing mapping throws at runtime in production. Flag any unmapped entity in production-reachable code as FAIL; flag references confined to confirmed unimported scaffolding as WARN.
-
-Conversely, check for entity names in `SUPABASE_ENTITY_TABLES` that are never referenced in any component or service — flag as WARN (dead mapping, not harmful but noisy).
-
----
-
-## Check 5 — Direct Supabase Calls in Components
-
-**Rule** (from CLAUDE.md): Direct `supabase.from()` calls in component files are only acceptable for RPCs, multi-table joins, admin endpoints, storage uploads, and auth operations. Basic CRUD that `dataService` already handles should not use direct `supabase.from()`.
-
-Grep for `supabase.from(` in `src/components/` and `src/pages/`. For each match:
-- If it's a `.select('*, relatedTable(*)')` join or an `.rpc(` call → PASS
-- If it's a plain `.select()`, `.insert()`, `.update()`, or `.delete()` on a single table that `dataService` covers → WARN with the file and line
-
----
-
-## Check 6 — Migration vs. Code References
-
-**Files:** `supabase/migrations/*.sql`, `src/`
-
-Pick any new table or column names introduced in recent migrations (focus on the 3–5 most recently modified migration files). Verify they're referenced correctly in the code:
-- Table name in `SUPABASE_ENTITY_TABLES` or in a direct `supabase.from('table_name')` call
-- Column names in select/insert/update calls match what the migration actually created
-
-Flag any mismatch between migration column name and code usage as FAIL.
-
----
-
-## Check 7 — Feature Flag Gating
-
-**File:** `src/config/features.js`
-
-`COMMUNITIES_ENABLED` must remain `true`: Communities is a live production feature. Spot-check `src/pages.config.js` and `src/App.jsx` to confirm the Communities page, community detail routes, invite route, and post-onboarding navigation remain enabled. Flag a false value, removed route, or redirect that prevents users from reaching Communities as FAIL.
-
----
-
-## Check 8 — Duplicate / Shadowed Components
-
-Known historical issue: duplicate components with similar names do different things (e.g. `CommunityHubDetail` vs `CommunityDetailView`). After any large refactor, check for:
-- Two components in different files with near-identical names
-- A component that is imported and rendered in App.jsx/routing but also has a sibling with nearly the same name that is no longer used
-
-Flag any pair that looks like one might be a stale copy of the other as WARN.
-
----
-
-## Check 9 — React Hooks Rules in Modified Files
-
-For any file you edited in this session, quickly scan for the most common hooks violation: a `return` statement *before* a `useState`, `useEffect`, `useQuery`, or other hook call in the same function component. This won't always be caught by the build if ESLint isn't run. Flag any occurrence as FAIL.
-
-If you didn't edit any files in this session, skip this check.
-
----
-
-## Check 10 — Build + Lint
-
-Run these commands from the repository root. Determine it with `git rev-parse --show-toplevel`; do not assume a machine-specific absolute path.
-
-Run:
 ```bash
-cd "$(git rev-parse --show-toplevel)"
-npm run lint 2>&1 | tail -20
-npm run build
+git fetch -q && git status -sb | head -1     # behind origin? WARN — findings may not match production
+grep -rln '^<<<<<<< \|^>>>>>>> ' src internal supabase 2>/dev/null   # any hit = FAIL
 ```
 
-Report lint errors as FAIL and warnings as WARN. If the user's environment blocks a full `npm run build` (e.g., native binary mismatch in sandbox), note that and recommend the user run it locally — do not mark this as FAIL due to environment limitations.
+## Check 1 — Lint, tests, build
+
+```bash
+npm run lint          # errors = FAIL, warnings = WARN
+npm run test          # vitest; failures = FAIL
+npm run build         # also runs prebuild ratchets (see Check 2)
+```
+
+If the sandbox can't run the build (rollup native-binary mismatch), say so and tell the user to run it locally — that is not a FAIL.
+
+## Check 2 — Style & regression ratchets
+
+`prebuild` runs `scripts/check-jewish-hub-regressions.cjs` and `scripts/check-style.mjs` (a bg-slate-950 count ratchet: may drop, never grow). If build passed, these passed — just confirm nobody edited the baseline number upward in `check-style.mjs` to sneak past it. Baseline raised without justification = FAIL.
+
+## Check 3 — Roadmap vs. code
+
+`internal/roadmap.js` is the single source of truth (see CLAUDE.md rules).
+
+- Spot-check 2–3 `STATUS.SHIPPED` entries: do the files their `shippedNote` names exist? Missing file = WARN.
+- Spot-check `PLANNED`/`EXPLORING` entries against the code: already implemented = WARN (roadmap stale).
+- `npm run check-prompts` — an AI-implementable entry missing its `prompt` field = FAIL.
+- Cross-check `internal/master-plan.md` checkboxes against reality for items touched this session; a `[x]` on unshipped work = FAIL.
+
+## Check 4 — Stale internal-doc paths *(new in v2)*
+
+Motivated by: CLAUDE.md/AGENTS.md pointed at deleted `src/config/roadmap.js` for weeks, and this very skill's v1 pointed at deleted `src/api/base44Client.js`.
+
+For every file path mentioned in `CLAUDE.md`, `AGENTS.md`, and this skill, verify it exists:
+
+```bash
+for f in CLAUDE.md AGENTS.md .claude/skills/junited-self-check/SKILL.md; do
+  grep -oE '(src|internal|supabase|scripts)/[A-Za-z0-9_./-]+\.[a-z]+' "$f" | sort -u \
+    | while read p; do [ -e "$p" ] || echo "STALE in $f: $p"; done
+done
+```
+
+Any STALE line = WARN (FAIL if it's in a rule an agent is expected to follow). Paths quoted as historical incidents (like the two in this check's first paragraph) are expected to be missing — skip those.
+
+## Check 5 — Routes vs. pages config
+
+Every `<Route path=...>` in `src/App.jsx` should have a matching entry in `src/pages.config.js`, and vice versa. Exception: `<Navigate>` redirects are intentionally disabled pages. Mismatch = WARN.
+
+## Check 6 — Tab whitelists
+
+`src/pages/MitzvahCircle.jsx` gates tabs through `VALID_VIEWS` (~line 1271). Every tab ID offered in the UI must be in the whitelist — a missing one silently bounces to the default (invisible to lint/build). Mismatch = FAIL. Apply the same test to any other page using a views whitelist.
+
+## Check 7 — Entity table mapping
+
+The map is `SUPABASE_ENTITY_TABLES` in `src/services/supabaseRepository.js` (moved from the old base44Client). Every entity name used via `dataService.entities.<Name>` / repository helpers must have a key there — a missing mapping throws in production (unit tests in `src/services/supabaseRepository.test.js` cover the warning path, not every call site). Unmapped entity reachable in production = FAIL; mapped-but-never-referenced entity = WARN.
+
+## Check 8 — Direct Supabase calls in components
+
+Per CLAUDE.md, direct `supabase.from()` in `src/components/` or `src/pages/` is only for RPCs, nested-select joins, admin endpoints, storage, and auth. Plain single-table CRUD that belongs in `src/services/` = WARN with file:line.
+
+## Check 9 — React Query key pairing *(new in v2)*
+
+Motivated by: Communities' `['communities-list']` key was invalidated by CommunityDetailView for months before anything actually read it.
+
+For query keys touched this session:
+- Every `invalidateQueries` key should have at least one `useQuery` reader — invalidating a key nobody reads = WARN (dead invalidation or missing reader).
+- Every mutation that changes data shown elsewhere should invalidate (or optimistically update) the relevant key — missing invalidation = FAIL (stale UI).
+
+## Check 10 — Hooks order in modified files
+
+Motivated by: UnifiedPostCard shipped with 9 suppressed rules-of-hooks violations; the fix pattern is a hook-free dispatcher above the hooks (see `src/components/feed/UnifiedPostCard.jsx`).
+
+In files edited this session: any early `return` before a hook call in the same component = FAIL. Any new `eslint-disable.*rules-of-hooks` = FAIL — restructure instead (dispatcher pattern).
+
+## Check 11 — Undefined identifiers in event handlers *(new in v2)*
+
+Motivated by: `onClick={() => navigate(...)}` shipped inside a component that never defined `navigate` — a ReferenceError only on tap, invisible to build. In files edited this session, confirm identifiers used inside JSX callbacks are actually defined in scope (eslint `no-undef` catches most, but check moved/extracted code where the definition may have stayed behind).
+
+## Check 12 — Duplicate / shadowed components
+
+Historical trap: `CommunityHubDetail` vs `CommunityDetailView`. After any refactor, look for near-identical component names where one is routed and the sibling is stale, and for extracted modules whose originals were left behind (this week: two parallel splits of CommunityAdminCenter had to be reconciled). Suspected stale copy = WARN; two live copies both imported = FAIL.
 
 ---
 
 ## Output format
-
-After all checks, print:
 
 ```
 ## JUnited Self-Check Results — [date]
 
 | Check | Status | Notes |
 |---|---|---|
-| Roadmap vs. Code | ✅ PASS / ⚠️ WARN / ❌ FAIL | ... |
-| Routes vs. Pages Config | ... | ... |
-...
+(only WARN/FAIL rows — omit clean passes)
 
 ## Action items (priority order)
-1. [FAIL] <specific fix needed> — <file:line>
-2. [WARN] <review needed> — <file>
-...
+1. [FAIL] <exact fix> — <file:line>
+2. [WARN] <what to review> — <file>
 
 ## What looks good
-- <brief list of checks that passed cleanly>
+- <one-line list of clean checks>
 ```
 
-Keep the action items concrete — file names, line numbers, and the exact thing to change where possible. Do not pad the output with things that are fine.
+Keep action items concrete (file, line, exact change). Don't pad the report with things that are fine.
