@@ -63,7 +63,7 @@ Any STALE line = WARN (FAIL if it's in a rule an agent is expected to follow). P
 
 ## Check 5 — Routes vs. pages config
 
-Every `<Route path=...>` in `src/App.jsx` should have a matching entry in `src/pages.config.js`, and vice versa. Exception: `<Navigate>` redirects are intentionally disabled pages. Mismatch = WARN.
+`src/pages.config.js` intentionally registers ONLY the 8 main app pages (Feed, Communities, Map, Marketplace, Messages, MitzvahCircle, Profile, Settings — see its header comment); admin, legal, and detail pages route directly in `src/App.jsx`. So check two things only: (a) every page in pages.config.js has a live route in App.jsx, and (b) `mainPage` names a key that exists in the PAGES object. Do NOT flag App.jsx-only routes — that's the documented design. Mismatch = WARN.
 
 ## Check 6 — Tab whitelists
 
@@ -71,7 +71,7 @@ Every `<Route path=...>` in `src/App.jsx` should have a matching entry in `src/p
 
 ## Check 7 — Entity table mapping
 
-The map is `SUPABASE_ENTITY_TABLES` in `src/services/supabaseRepository.js` (moved from the old base44Client). Every entity name used via `dataService.entities.<Name>` / repository helpers must have a key there — a missing mapping throws in production (unit tests in `src/services/supabaseRepository.test.js` cover the warning path, not every call site). Unmapped entity reachable in production = FAIL; mapped-but-never-referenced entity = WARN.
+The map is `SUPABASE_ENTITY_TABLES` in `src/services/supabaseRepository.js` (moved from the old base44Client). The live usage pattern is `supabaseBackend.entities.<Name>` — almost entirely inside `src/services/entityServices.js`, which re-exports named functions (`filterX`, `createX`, …) that components import. Grep for `(supabaseBackend|dataService|base44)\.entities\.([A-Za-z]+)` across `src/` (excluding `.test.js`) and compare against the map keys. Unmapped entity = FAIL (throws in production); mapped-but-never-referenced = WARN (dead mapping).
 
 ## Check 8 — Direct Supabase calls in components
 
