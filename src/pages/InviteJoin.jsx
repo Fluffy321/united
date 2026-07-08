@@ -181,7 +181,7 @@ export default function InviteJoin() {
         </div>
 
         <p className="text-center text-[12px] text-slate-400">
-          You were invited to join this community on <span className="font-semibold text-[#2563EB]">Kehilla</span>
+          You were invited to join this community on <span className="font-semibold text-[#2563EB]">JUnited</span>
         </p>
       </div>
     </div>

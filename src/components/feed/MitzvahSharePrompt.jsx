@@ -9,7 +9,7 @@ export default function MitzvahSharePrompt({ onClose }) {
     const shareText = "Join me in doing mitzvahs! Let's help our community together 💜";
     
     if (navigator.share) {
-      navigator.share({ title: 'United Community', text: shareText, url: shareUrl })
+      navigator.share({ title: 'JUnited', text: shareText, url: shareUrl })
         .then(() => toast.success('Shared!'))
         .catch(() => {});
     } else {

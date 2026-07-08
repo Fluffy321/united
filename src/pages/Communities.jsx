@@ -580,10 +580,7 @@ function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOp
 
 function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, onJoin }) {
   const blueprintRooms = getCoreFiveTownsRooms(communities);
-  // Fall back to all communities (as viewmodels) when blueprint matching yields too few
-  const rooms = blueprintRooms.length >= 2
-    ? blueprintRooms
-    : communities.filter(c => c?.id && c?.name).map((c, i) => buildRoomViewModel(c, i));
+  const rooms = blueprintRooms.slice(0, 10);
   const roomStats = getRealRoomStats(rooms);
   const leadRooms = rooms.slice(0, 3);
   const remainingRooms = rooms.slice(3);
@@ -604,7 +601,7 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
         <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-blue-700 p-5 text-white">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-white/80">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            Live Five Towns rooms
+            JUnited Essential 10
           </div>
           <h2 className="text-[26px] font-black leading-tight tracking-tight">Jump into the room that matches what you need right now.</h2>
           <p className="mt-2 text-[13px] font-semibold leading-relaxed text-white/78">
@@ -646,7 +643,7 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
 
       {remainingRooms.length > 0 && <section className="space-y-3">
         <div>
-          <h2 className="text-[18px] font-black tracking-tight text-slate-950">All Five Towns Rooms</h2>
+          <h2 className="text-[18px] font-black tracking-tight text-slate-950">The Essential 10</h2>
           <p className="text-[12px] font-semibold text-slate-500">Built around local action, not generic categories.</p>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
