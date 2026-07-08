@@ -1257,7 +1257,7 @@ export default function Communities() {
           </>
         )}
       />
-      <div className="max-w-2xl mx-auto px-4 pt-2">
+      <div className="mobile-page-wide px-4 pt-2">
 
         <div className="mb-5 overflow-hidden rounded-[28px] border border-slate-200 bg-slate-950 p-4 text-white shadow-sm">
           <div className="flex items-start justify-between gap-3">
