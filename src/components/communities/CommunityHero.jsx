@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle2, Star, Share2, UserPlus } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Menu, Star, Share2, UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CommunityLogo from './CommunityLogo';
 import CommunityInviteModal from './CommunityInviteModal';
@@ -106,41 +106,30 @@ export default function CommunityHero({
       {/* ── Branded cover ── */}
       {inAppShell ? (
         <>
-          {/* Twitter-style compact header */}
-
-          {/* 100px banner with floating nav buttons */}
-          <div className="relative overflow-hidden" style={{ height: 100 }}>
-            <div className="absolute inset-0 w-full">
-              {(community.cover_url || community.cover_image_url) ? (
-                <img src={community.cover_url || community.cover_image_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full" style={{ background: gradient }} />
-              )}
-            </div>
+          {/* Compact app-shell controls. Standalone keeps the full branded cover below. */}
+          <div className="flex h-11 items-center justify-between bg-white px-3">
             {onBack && (
               <button
                 onClick={onBack}
-                className="absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center active:scale-95 transition-all"
-                style={{ background: 'rgba(0,0,0,0.28)' }}
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center active:scale-95 transition-all"
                 aria-label="Back"
               >
-                <ArrowLeft className="w-4 h-4 text-white" />
+                <ArrowLeft className="w-4 h-4 text-slate-700" />
               </button>
             )}
             {onOpenDrawer && (
               <button
                 onClick={onOpenDrawer}
-                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center active:scale-95 transition-all"
-                style={{ background: 'rgba(0,0,0,0.28)' }}
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center active:scale-95 transition-all"
                 aria-label="Community menu"
               >
-                <span className="font-black text-[18px] leading-none tracking-[2px] text-white">≡</span>
+                <Menu className="w-4 h-4 text-slate-700" />
               </button>
             )}
           </div>
 
-          {/* Profile row: overlapping logo + join button */}
-          <div className="bg-white px-4 flex items-end justify-between" style={{ marginTop: -28, paddingBottom: 10 }}>
+          {/* Profile row */}
+          <div className="bg-white px-4 pb-2 flex items-end justify-between">
             {community.logo_url ? (
               <img
                 src={community.logo_url}

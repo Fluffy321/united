@@ -10,12 +10,13 @@ export default function DestinationHeader({
   showBack = false,
   backTo = '/Feed',
   sticky = true,
+  veil = true,
   className = '',
   toolbarClassName = '',
 }) {
   return (
     <div
-      className={`${sticky ? 'sticky top-0 app-header-veil' : 'relative'} z-[60] shrink-0 px-3 pt-3 pb-2 sm:px-4 sm:pt-4 ${className}`}
+      className={`${sticky ? `sticky top-0 ${veil ? 'app-header-veil' : ''}` : 'relative'} z-[60] shrink-0 px-3 pt-3 pb-2 sm:px-4 sm:pt-4 ${className}`}
     >
       <div className={`glass-toolbar mobile-page flex min-h-[56px] items-center justify-between rounded-[24px] px-3 py-2 ${toolbarClassName}`}>
         <div className="flex min-w-0 flex-1 items-center gap-2">

@@ -2542,11 +2542,11 @@ Goals:
     id: 'map-window-scroll-redesign',
     category: 'Admin & Platform',
     status: STATUS.SHIPPED,
-    shippedNote: 'Removed overflow-hidden from main container so mobile-safe-bottom padding is not clipped. Moved mobile-safe-bottom to the scroll child div. Map keeps flex h-dvh flex-col with overflow-y-auto on the content area — content now scrolls fully to the bottom above the nav bar.',
+    shippedNote: 'Refined 2026-07-08. Earlier fix removed overflow-hidden and moved mobile-safe-bottom to the inner scroll child. Follow-up visual bug pass replaced the Map page inner-scroll shell with normal document scrolling, made the Directory header and Businesses/Community Map selector sticky glass layers, removed the fake blurred header glow, and wrapped business filter controls so they fit mobile widths.',
     priority: PRIORITY.LOW,
     title: 'Map Page Scroll Architecture Fix',
     description: 'Map uses flex h-dvh with an overflow-y-auto inner container. overflow-hidden on the outer main was clipping the bottom-nav padding, causing content to be hidden behind the nav bar.',
-    why: 'Fixed 2026-07-01: removed overflow-hidden from <main>, moved mobile-safe-bottom to the scroll container.',
+    why: 'Fixed 2026-07-01: removed overflow-hidden from <main>, moved mobile-safe-bottom to the scroll container. Refined 2026-07-08 after the inner-scroll approach made the bottom nav, selector, and glass header feel wrong on the Directory page.',
   },
 
   {
