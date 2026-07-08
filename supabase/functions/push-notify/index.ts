@@ -11,6 +11,7 @@ const TYPE_TO_PREF: Record<string, string> = {
   new_message:          'messages',
   mitzvah_offer:        'mitzvah',
   mitzvah_accepted:     'mitzvah',
+  streak_at_risk:       'mitzvah',
   verification_request: 'mitzvah',
   community_activity:   'community',
   comment_reply:        'replies',

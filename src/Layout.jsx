@@ -85,9 +85,9 @@ function LayoutContent({ children, currentPageName }) {
     const enabled = Boolean(currentUser)
       && currentUser?.notification_settings?.mitzvahDailyReminders !== false
       && currentUser?.app_settings?.quietMode !== true;
-    mitzvahReminderService.start({ enabled });
+    mitzvahReminderService.start({ enabled, currentUser });
     return () => mitzvahReminderService.stop();
-  }, [currentUser?.notification_settings?.mitzvahDailyReminders, currentUser?.app_settings?.quietMode]);
+  }, [currentUser?.id, currentUser?.notification_settings?.mitzvahDailyReminders, currentUser?.app_settings?.quietMode]);
 
   const activeNavKey = currentPageName === 'MitzvahCircle' ? 'Mitzvah' : currentPageName;
   const swipeablePages = COMMUNITIES_ENABLED ? ['Feed', 'MitzvahCircle', 'Communities'] : ['Feed', 'MitzvahCircle'];

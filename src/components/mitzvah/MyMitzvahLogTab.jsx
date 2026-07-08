@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import LogNewMitzvahModal from '@/components/mitzvah/LogNewMitzvahModal';
-import { createMitzvahLog, filterMitzvahLog, filterUserStreak } from '@/services/entityServices';
+import { streakDateKey, streakService } from '@/services';
+import { createMitzvahLog, filterMitzvahLog } from '@/services/entityServices';
 
 export default function MyMitzvahLogTab({ currentUser }) {
   const [showLogModal, setShowLogModal] = useState(false);
@@ -23,11 +24,7 @@ export default function MyMitzvahLogTab({ currentUser }) {
 
   const { data: userStreak = null } = useQuery({
     queryKey: ['user-streak', currentUser?.id],
-    queryFn: async () => {
-      const existing = await filterUserStreak({ user_id: currentUser.id });
-      if (existing.length > 0) return existing[0];
-      return null;
-    },
+    queryFn: () => streakService.getUserStreak(currentUser.id),
     enabled: !!currentUser,
     staleTime: 1800000,
     gcTime: 2400000,
@@ -38,15 +35,23 @@ export default function MyMitzvahLogTab({ currentUser }) {
 
   const handleLogSubmit = async ({ title, description, hoursCompleted, community, date }) => {
     try {
+      const logDate = date || streakDateKey();
+      const countsForToday = logDate === streakDateKey();
+      const beforeCount = countsForToday ? await streakService.getTodayMitzvahCount(currentUser.id) : 0;
+
       await createMitzvahLog({
         user_id: currentUser.id,
         user_name: currentUser.display_name || currentUser.full_name,
         description: title || description,
         hours_completed: parseFloat(hoursCompleted) || 0,
         community_id: community || null,
-        date: date || format(new Date(), 'yyyy-MM-dd'),
+        date: logDate,
         category: 'logged'
       });
+
+      if (countsForToday) {
+        await streakService.recordLogProgress({ currentUser, beforeCount });
+      }
 
       queryClient.invalidateQueries({ queryKey: ['mitzvah-logs'] });
       queryClient.invalidateQueries({ queryKey: ['user-streak'] });

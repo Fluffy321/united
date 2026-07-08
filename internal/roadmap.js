@@ -3051,7 +3051,7 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'Master Plan: Production / Addictive / Profitable / Marketable Push',
     description: 'A 20-item, 5-phase standing plan created from the 2026-07-01 full-app review: Phase 1 trust & correctness (Marketplace data loss, fake AI agent, safety follow-ups, dead code), Phase 2 production polish (post-card consolidation, style-guide enforcement, React Query migration, giant-file splits), Phase 3 retention (unified streaks, realtime chat, daily hooks, recognition), Phase 4 monetization (Stripe Connect, Pro plans, funnels), Phase 5 growth (Capacitor/iOS, desktop shell, invite loops, SEO).',
-    why: 'The full plan, the reusable agent prompt, and the per-item progress tracker live in internal/master-plan.md — that file is the source of truth for item status; this entry tracks the initiative as a whole. Individual items that overlap existing roadmap entries (Stripe Connect, orphaned-scaffolding cleanup, etc.) keep their own entries.',
+    why: 'The full plan, the reusable agent prompt, and the per-item progress tracker live in internal/master-plan.md — that file is the source of truth for item status; this entry tracks the initiative as a whole. Individual items that overlap existing roadmap entries (Stripe Connect, orphaned-scaffolding cleanup, etc.) keep their own entries. Progress: item 10 shipped on 2026-07-08 with unified backend user_streaks reads/writes, Profile/FiveTownsBrief backend streak display, and a streak-at-risk evening push cron.',
     prompt: `You are executing the JUnited master plan.
 
 Context: Read internal/master-plan.md — it contains the full mission prompt, rules, and a phase-by-phase progress tracker. CLAUDE.md governs workflow.

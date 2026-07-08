@@ -1,11 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Award, CheckCircle2, Flame, Heart, Plus, Sparkles } from 'lucide-react';
-import { format, isToday, parseISO, subDays } from 'date-fns';
+import { isToday, parseISO } from 'date-fns';
 import { toast } from 'sonner';
-import { createMitzvahLog, createMitzvahPoints, createUserStreak, filterMitzvahLog, filterMitzvahPoints, filterUserStreak, updateMitzvahPoints, updateUserStreak } from '@/services/entityServices';
-
-const DAILY_GOAL = 2;
+import { DAILY_MITZVAH_GOAL, streakDateKey, streakService } from '@/services';
+import { createMitzvahLog, createMitzvahPoints, filterMitzvahLog, filterMitzvahPoints, updateMitzvahPoints } from '@/services/entityServices';
 
 const CATEGORIES = [
   'Chesed',
@@ -25,43 +24,6 @@ const REFLECTION_PROMPTS = [
   'What did you notice about yourself after doing it?',
   'What feeling do you want to carry from this mitzvah?',
 ];
-
-function dateKey(date = new Date()) {
-  return format(date, 'yyyy-MM-dd');
-}
-
-function badgeFor(streak) {
-  if (streak >= 30) return 'elite';
-  if (streak >= 14) return 'gold';
-  if (streak >= 7) return 'silver';
-  if (streak >= 2) return 'basic';
-  return 'starter';
-}
-
-async function upsertStreak({ currentUser, completedToday }) {
-  if (!completedToday) return null;
-  const today = dateKey();
-  const yesterday = dateKey(subDays(new Date(), 1));
-  const existing = await filterUserStreak({ user_id: currentUser.id });
-  const current = existing[0];
-
-  if (current?.last_activity_date === today) return current;
-
-  const nextCurrent = current?.last_activity_date === yesterday
-    ? (current.current_streak || 0) + 1
-    : 1;
-
-  const patch = {
-    user_id: currentUser.id,
-    current_streak: nextCurrent,
-    best_streak: Math.max(current?.best_streak || 0, nextCurrent),
-    last_activity_date: today,
-    badge_level: badgeFor(nextCurrent),
-  };
-
-  if (current?.id) return updateUserStreak(current.id, patch);
-  return createUserStreak(patch);
-}
 
 async function addMitzvahPoints(currentUser, pointsToAdd) {
   const existing = await filterMitzvahPoints({ user_id: currentUser.id });
@@ -93,10 +55,7 @@ export default function DailyMitzvahTracker({ currentUser }) {
 
   const { data: streak = null } = useQuery({
     queryKey: ['daily-mitzvah-tracker-streak', currentUser?.id],
-    queryFn: async () => {
-      const rows = await filterUserStreak({ user_id: currentUser.id });
-      return rows[0] || null;
-    },
+    queryFn: () => streakService.getUserStreak(currentUser.id),
     enabled: Boolean(currentUser?.id),
     staleTime: 60000,
   });
@@ -105,14 +64,14 @@ export default function DailyMitzvahTracker({ currentUser }) {
     logs.filter((log) => {
       const value = log.date || log.created_date || log.created_at;
       if (!value) return false;
-      return value.length === 10 ? value === dateKey() : isToday(parseISO(value));
+      return value.length === 10 ? value === streakDateKey() : isToday(parseISO(value));
     })
   ), [logs]);
 
   const todayCount = todayLogs.length;
-  const progress = Math.min(100, (todayCount / DAILY_GOAL) * 100);
-  const complete = todayCount >= DAILY_GOAL;
-  const remaining = Math.max(0, DAILY_GOAL - todayCount);
+  const progress = Math.min(100, (todayCount / DAILY_MITZVAH_GOAL) * 100);
+  const complete = todayCount >= DAILY_MITZVAH_GOAL;
+  const remaining = Math.max(0, DAILY_MITZVAH_GOAL - todayCount);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -123,16 +82,15 @@ export default function DailyMitzvahTracker({ currentUser }) {
       await createMitzvahLog({
         user_id: currentUser.id,
         user_name: currentUser.display_name || currentUser.full_name || 'Community member',
-        date: dateKey(),
+        date: streakDateKey(),
         category,
         description: title.trim(),
         reflection: reflection.trim(),
         hours_completed: 0,
       });
 
-      const reachedGoal = beforeCount < DAILY_GOAL && beforeCount + 1 >= DAILY_GOAL;
+      const { reachedGoal } = await streakService.recordLogProgress({ currentUser, beforeCount });
       await Promise.all([
-        upsertStreak({ currentUser, completedToday: reachedGoal }),
         addMitzvahPoints(currentUser, reachedGoal ? 20 : 10),
       ]);
 
@@ -168,7 +126,7 @@ export default function DailyMitzvahTracker({ currentUser }) {
             </p>
           </div>
           <div className="rounded-2xl bg-white/12 px-3 py-2 text-center backdrop-blur">
-            <p className="text-2xl font-black">{Math.min(todayCount, DAILY_GOAL)}/{DAILY_GOAL}</p>
+            <p className="text-2xl font-black">{Math.min(todayCount, DAILY_MITZVAH_GOAL)}/{DAILY_MITZVAH_GOAL}</p>
             <p className="text-[9px] font-black uppercase tracking-wide text-white/60">today</p>
           </div>
         </div>

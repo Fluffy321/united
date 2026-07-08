@@ -70,7 +70,7 @@ Start with the first unchecked item in internal/master-plan.md. Report progress 
 - [x] 9. Remove 1.5s splash delay for returning users — SPLASH_SEEN_KEY now persisted in localStorage (with sessionStorage fallback for private mode), so the branded splash + 1.5s minimum only ever runs on a device's first visit.
 
 ### Phase 3 — Addictive
-- [ ] 10. Unified backend streaks + streak-at-risk push
+- [x] 10. Unified backend streaks + streak-at-risk push — `streakService` now owns `user_streaks` reads/writes; DailyMitzvahTracker, MyMitzvahLogTab, Profile, and FiveTownsBrief all use the backend streak instead of separate local counters. Added `supabase/functions/streak-at-risk` plus migration `20260708210000_streak_at_risk_cron.sql` to run an evening CRON_SECRET-gated web push/in-app notification for active streaks that have not met today's goal. Real UI path verified in demo mode: `/Profile` shows the 3-day backend streak in the header and streak card; `/Feed` → Five Towns Daily Brief → Daily Mitzvah shows the same 3-day backend streak.
 - [ ] 11. Realtime group chat, typing indicators, read receipts
 - [ ] 12. Daily tappable action + event reminders/digests
 - [ ] 13. Leaderboards, badges, weekly impact recap

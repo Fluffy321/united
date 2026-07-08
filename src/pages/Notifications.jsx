@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   Bell,
   CheckCheck,
+  Flame,
   MessageCircle,
   HandHeart,
   CheckCircle2,
@@ -38,6 +39,7 @@ const TYPE_CONFIG = {
   post_liked:           { icon: Heart,         tone: 'bg-red-50 text-red-500',         label: 'Like' },
   mitzvah_offer:        { icon: HandHeart,     tone: 'bg-violet-50 text-violet-600',   label: 'Mitzvah offer' },
   mitzvah_accepted:     { icon: CheckCircle2,  tone: 'bg-emerald-50 text-emerald-600', label: 'Mitzvah accepted' },
+  streak_at_risk:       { icon: Flame,         tone: 'bg-orange-50 text-orange-600',   label: 'Streak' },
   verification_request: { icon: CheckCircle2,  tone: 'bg-purple-50 text-purple-600',   label: 'Verification needed' },
   community_activity:   { icon: Users,         tone: 'bg-amber-50 text-amber-600',     label: COMMUNITIES_ENABLED ? 'Community' : 'Local' },
   announcement:         { icon: Megaphone,     tone: 'bg-amber-50 text-amber-600',     label: 'Announcement' },
@@ -60,7 +62,7 @@ const FILTERS = [
 
 const FILTER_TYPES = {
   replies:   ['comment_reply', 'post_commented', 'user_mentioned'],
-  mitzvah:   ['mitzvah_offer', 'mitzvah_accepted', 'verification_request'],
+  mitzvah:   ['mitzvah_offer', 'mitzvah_accepted', 'verification_request', 'streak_at_risk'],
   community: ['community_activity', 'announcement'],
   messages:  ['new_message', 'marketplace_message'],
 };

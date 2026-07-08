@@ -10,3 +10,4 @@ export { storageService } from './storageService';
 export { feedRetentionService } from './feedRetentionService';
 export { shabbatReminderService } from './shabbatReminderService';
 export { mitzvahReminderService } from './mitzvahReminderService';
+export { streakService, DAILY_MITZVAH_GOAL, streakDateKey } from './streakService';

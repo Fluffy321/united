@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { dataService, feedRetentionService, shabbatReminderService, storageService, togglePostLike } from '@/services';
+import { dataService, feedRetentionService, shabbatReminderService, storageService, streakService, togglePostLike } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { COMMUNITIES_ENABLED } from '@/config/features';
@@ -127,6 +127,12 @@ export default function Feed({ isActive = true }) {
 
   const { posts, fetchNextPage, hasNextPage, isLoading, isError, refetch } = useFeedData();
   const { isRefreshing, pullDistance } = usePullToRefresh(refetch);
+  const { data: userStreak = null } = useQuery({
+    queryKey: ['user-streak', currentUser?.id],
+    queryFn: () => streakService.getUserStreak(currentUser.id),
+    enabled: Boolean(currentUser?.id),
+    staleTime: 60000,
+  });
 
   const { data: userCommunitiesList, isFetched: communitiesFetched } = useQuery({
     queryKey: ['user-communities', currentUser?.id],
@@ -469,6 +475,7 @@ export default function Feed({ isActive = true }) {
               joinedCommunityIds={joinedCommunityIds}
               communitiesEnabled={COMMUNITIES_ENABLED}
               prompt={dailyPrompt}
+              streak={userStreak}
               onOpenMap={() => navigate('/Map')}
               onOpenCommunities={() => navigate('/Communities')}
               onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
@@ -647,4 +654,3 @@ export default function Feed({ isActive = true }) {
     </div>
   );
 }
-

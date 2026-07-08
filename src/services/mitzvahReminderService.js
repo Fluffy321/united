@@ -1,4 +1,5 @@
 import { storageService } from './storageService';
+import { DAILY_MITZVAH_GOAL, streakService } from './streakService';
 
 const SENT_KEY = 'junited_daily_mitzvah_reminders_sent';
 const activeTimers = new Set();
@@ -43,7 +44,7 @@ async function showNotification(title, body) {
   return true;
 }
 
-function scheduleDaily(hour, minute, id, title, body) {
+function scheduleDaily(hour, minute, id, title, body, beforeSend = null) {
   const now = new Date();
   const runAt = new Date();
   runAt.setHours(hour, minute, 0, 0);
@@ -55,6 +56,7 @@ function scheduleDaily(hour, minute, id, title, body) {
   const timer = window.setTimeout(async () => {
     activeTimers.delete(timer);
     if (wasSent(key)) return;
+    if (beforeSend && !(await beforeSend())) return;
     const delivered = await showNotification(title, body);
     if (delivered) markSent(key);
   }, runAt.getTime() - now.getTime());
@@ -67,7 +69,7 @@ export const mitzvahReminderService = {
     activeTimers.clear();
   },
 
-  start({ enabled = true } = {}) {
+  start({ enabled = true, currentUser = null } = {}) {
     this.stop();
     if (!enabled || typeof window === 'undefined' || typeof Notification === 'undefined') return;
     if (Notification.permission !== 'granted') return;
@@ -84,7 +86,12 @@ export const mitzvahReminderService = {
       30,
       'evening',
       'Keep your mitzvah streak alive',
-      'Log today’s mitzvot and write a quick reflection before the day ends.'
+      `Log ${DAILY_MITZVAH_GOAL} mitzvot before the day ends so your streak stays alive.`,
+      async () => {
+        if (!currentUser?.id) return false;
+        const { atRisk } = await streakService.getStreakAtRisk(currentUser.id);
+        return atRisk;
+      }
     );
   },
 };

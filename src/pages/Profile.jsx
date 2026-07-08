@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Settings, Share2, UserRound } from 'lucide-react';
-import { dataService, findOrCreateDirectConversation, friendsService } from '@/services';
+import { dataService, findOrCreateDirectConversation, friendsService, streakService } from '@/services';
 import { FRIEND_STATUS } from '@/services/friendsService';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -26,7 +26,7 @@ import SavedPostsSection from '@/components/profile/SavedPostsSection.jsx';
 import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
 import FriendsHub from '@/components/profile/FriendsHub.jsx';
 import DestinationHeader from '@/components/layout/DestinationHeader';
-import { createBlock, filterMitzvahAction, filterMitzvahLog, filterMitzvahPoints, filterUnifiedPost, filterUser, filterUserCommunity, filterUserStreak } from '@/services/entityServices';
+import { createBlock, filterMitzvahAction, filterMitzvahLog, filterMitzvahPoints, filterUnifiedPost, filterUser, filterUserCommunity } from '@/services/entityServices';
 import { postKeys } from '@/lib/queryKeys';
 
 export default function Profile() {
@@ -96,10 +96,7 @@ export default function Profile() {
 
   const { data: userStreak } = useQuery({
     queryKey: ['user-streak', profileUser?.id],
-    queryFn: async () => {
-      const existing = await filterUserStreak({ user_id: profileUser.id });
-      return existing[0] || null;
-    },
+    queryFn: () => streakService.getUserStreak(profileUser.id),
     enabled: !!profileUser,
     staleTime: 0,
     retry: 1,
@@ -336,7 +333,7 @@ export default function Profile() {
         <section className="px-3 pt-3">
           <div className="surface-panel overflow-hidden rounded-[28px] shadow-[0_18px_48px_rgba(15,23,42,0.08)]">
             <ModernProfileHeader
-              user={profileUser}
+              user={{ ...profileUser, current_streak: userStreak?.current_streak || 0 }}
               isOwnProfile={isOwnProfile}
               onMessage={handleMessage}
               onReport={() => setShowReport(true)}

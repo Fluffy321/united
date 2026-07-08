@@ -16,7 +16,7 @@ const BRIEF_SLIDE_GRADIENTS = {
 const FIVE_TOWNS_LAT = 40.6198;
 const FIVE_TOWNS_LNG = -73.7298;
 
-export default function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, communitiesEnabled = true, prompt, onOpenMap, onOpenCommunities, onCreate }) {
+export default function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, communitiesEnabled = true, prompt, streak, onOpenMap, onOpenCommunities, onCreate }) {
   const { location: candleLocation } = useShabbatLocation();
   const [activeSlide, setActiveSlide] = useState(0);
   const briefScrollerRef = useRef(null);
@@ -35,17 +35,7 @@ export default function FiveTownsBrief({ brief, momentum, posts = [], joinedComm
   const [mitzvahShareTarget, setMitzvahShareTarget] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [mitzvahProgress] = useState(() => Math.min(100, Math.max(0, (momentum?.mitzvahs || 0) * 2 + 28)));
-  const [streak] = useState(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('junited_brief_streak') || '{}');
-      const todayStr = new Date().toDateString();
-      const yesterdayStr = new Date(Date.now() - 86_400_000).toDateString();
-      if (stored.lastOpen === todayStr) return stored.count || 1;
-      const newCount = stored.lastOpen === yesterdayStr ? (stored.count || 0) + 1 : 1;
-      localStorage.setItem('junited_brief_streak', JSON.stringify({ lastOpen: todayStr, count: newCount }));
-      return newCount;
-    } catch { return 1; }
-  });
+  const currentStreak = streak?.current_streak || 0;
 
   useEffect(() => {
     getTodayHebrew().then(setHebrewDate);
@@ -326,8 +316,8 @@ export default function FiveTownsBrief({ brief, momentum, posts = [], joinedComm
           <div className={visibleSlide === 1 ? '' : 'hidden'}>
             <div className="flex items-start justify-between mb-1">
               <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#4CAF7D' }}>Daily Mitzvah</p>
-              {streak > 1 && (
-                <span className="text-[11px] font-black" style={{ color: '#fb923c' }}>🔥 {streak} days in a row</span>
+              {currentStreak > 1 && (
+                <span className="text-[11px] font-black" style={{ color: '#fb923c' }}>🔥 {currentStreak} days in a row</span>
               )}
             </div>
             <p className="text-[19px] font-black leading-snug mb-1">
