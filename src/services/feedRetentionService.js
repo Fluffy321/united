@@ -151,7 +151,9 @@ export const feedRetentionService = {
 
     const likes = post.likes_count || 0;
     const comments = post.comments_count || 0;
-    const created = new Date(post.created_date || post.created_at || Date.now()).getTime();
+    const parsed = new Date(post.created_date || post.created_at || Date.now()).getTime();
+    // A malformed date must not poison the score with NaN — treat it as "now".
+    const created = Number.isFinite(parsed) ? parsed : Date.now();
     const ageHours = Math.max(0, (Date.now() - created) / 3600000);
     const timeDecay = Math.max(0.2, 1 - ageHours / 72);
     let score = (likes + comments * 4 + 4) * timeDecay;

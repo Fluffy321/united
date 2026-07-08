@@ -165,10 +165,10 @@ export default function CommunityEventsTab({ events: initialEvents, community, c
       )}
 
       {events.length === 0 ? (
-        <div className="rounded-2xl bg-white border border-slate-100 px-5 py-8 text-center">
+        <div className="app-empty-state">
           <div className="text-3xl mb-2">{(EVENT_EMPTY_BY_TYPE[typeConfig?.key] || {}).emoji || '📅'}</div>
-          <p className="text-[14px] font-bold text-slate-900">No events yet</p>
-          <p className="text-[12px] text-slate-500 mt-1 leading-5">
+          <p className="app-empty-state-title">No events yet</p>
+          <p className="app-empty-state-body">
             {isAdmin ? 'Create your first event above.' : ((EVENT_EMPTY_BY_TYPE[typeConfig?.key] || {}).body || 'Upcoming events will appear here.')}
           </p>
         </div>

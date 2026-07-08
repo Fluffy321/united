@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle, Inbox, Loader2, MessageCircle, Plus, Users } from 'lucide-react';
 import PageHelp from '@/components/common/PageHelp';
@@ -13,10 +13,9 @@ import NewMessageComposer from '@/components/messages/NewMessageComposer';
 import MessageRequestsTab from '@/components/messages/MessageRequestsTab';
 import ReportModal from '@/components/common/ReportModal';
 import BackButton from '@/components/common/BackButton';
-import { buildAIConversation } from '@/lib/aiAgent';
 import { captureError } from '@/lib/analytics';
 import { COMMUNITIES_ENABLED } from '@/config/features';
-import { createBlock, filterConversation, filterMessageRequest, filterUserCommunity, listCommunity, listConversation, subscribeMessage, updateConversation } from '@/services/entityServices';
+import { createBlock, filterBlock, filterConversation, filterMessageRequest, filterUserCommunity, listCommunity, listConversation, subscribeMessage, updateConversation } from '@/services/entityServices';
 
 export default function Messages() {
   const navigate = useNavigate();
@@ -70,6 +69,21 @@ export default function Messages() {
         navigate('/Messages', { replace: true });
         return;
       }
+      // Deep links must not reopen a conversation hidden by a block
+      if (!conv.is_community_chat) {
+        const otherId = conv.participant_ids?.find((pid) => pid !== currentUser.id);
+        if (otherId) {
+          const [mine, theirs] = await Promise.all([
+            filterBlock({ blocker_id: currentUser.id, blocked_id: otherId }),
+            filterBlock({ blocker_id: otherId, blocked_id: currentUser.id }),
+          ]);
+          if (mine.length > 0 || theirs.length > 0) {
+            toast.error('This conversation is unavailable.');
+            navigate('/Messages', { replace: true });
+            return;
+          }
+        }
+      }
       setSelectedConversation(conv);
     } catch (e) {
       captureError(e, { context: 'Messages: load conversation from URL param' });
@@ -77,7 +91,28 @@ export default function Messages() {
     }
   };
 
-  const aiConversation = currentUser ? buildAIConversation(currentUser) : null;
+  // Blocks in either direction hide the conversation and are re-checked on send
+  const { data: userBlocks = [] } = useQuery({
+    queryKey: ['user-blocks-both', currentUser?.id],
+    queryFn: async () => {
+      const [mine, theirs] = await Promise.all([
+        filterBlock({ blocker_id: currentUser.id }),
+        filterBlock({ blocked_id: currentUser.id }),
+      ]);
+      return [...mine, ...theirs];
+    },
+    enabled: !!currentUser,
+    staleTime: 60000,
+  });
+  const blockedPartnerIds = useMemo(
+    () => new Set(userBlocks.map((b) => (b.blocker_id === currentUser?.id ? b.blocked_id : b.blocker_id))),
+    [userBlocks, currentUser?.id],
+  );
+  const isBlockedDm = (conv) => {
+    if (!conv || conv.is_community_chat) return false;
+    const otherId = conv.participant_ids?.find((id) => id !== currentUser?.id);
+    return Boolean(otherId && blockedPartnerIds.has(otherId));
+  };
 
   const { data: communityConversations = [] } = useQuery({
     queryKey: ['community-convs', currentUser?.id],
@@ -109,8 +144,18 @@ export default function Messages() {
   const { data: conversations = [], isLoading, isError: isConversationsError } = useQuery({
     queryKey: ['conversations', currentUser?.id],
     queryFn: async () => {
-      const allConvs = await listConversation('-updated_date', 50);
-      const userConvs = allConvs.filter((c) => c.participant_ids?.includes(currentUser.id));
+      const [allConvs, myBlocks] = await Promise.all([
+        listConversation('-updated_date', 50),
+        filterBlock({ blocker_id: currentUser.id }).catch(() => []),
+      ]);
+      const blockedIds = new Set(myBlocks.map((b) => b.blocked_id));
+      const userConvs = allConvs.filter((c) => {
+        if (!c.participant_ids?.includes(currentUser.id)) return false;
+        // Retroactive block enforcement: hide direct conversations with anyone I've blocked.
+        const others = (c.participant_ids || []).filter((id) => id !== currentUser.id);
+        if (others.length === 1 && blockedIds.has(others[0])) return false;
+        return true;
+      });
 
       const requestIds = [...new Set(userConvs.map((c) => c.request_id).filter(Boolean))];
       let requests = [];
@@ -132,14 +177,20 @@ export default function Messages() {
   });
 
   const allConversations = [
-    ...(aiConversation ? [aiConversation] : []),
-    ...conversations,
+    ...conversations.filter((conv) => !isBlockedDm(conv)),
     ...(COMMUNITIES_ENABLED ? communityConversations : []),
   ];
 
   const { data: pendingRequests = [] } = useQuery({
     queryKey: ['message-requests', currentUser?.id],
-    queryFn: () => filterMessageRequest({ recipient_id: currentUser.id, status: 'pending' }, '-created_date', 50),
+    queryFn: async () => {
+      const [requests, myBlocks] = await Promise.all([
+        filterMessageRequest({ recipient_id: currentUser.id, status: 'pending' }, '-created_date', 50),
+        filterBlock({ blocker_id: currentUser.id }).catch(() => []),
+      ]);
+      const blockedIds = new Set(myBlocks.map((b) => b.blocked_id));
+      return requests.filter((r) => !blockedIds.has(r.sender_id));
+    },
     enabled: !!currentUser,
     staleTime: 60000,
   });
@@ -193,6 +244,7 @@ export default function Messages() {
     toast.success('User blocked');
     setSelectedConversation(null);
     queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    queryClient.invalidateQueries({ queryKey: ['user-blocks-both'] });
   };
 
   if (!currentUser) {

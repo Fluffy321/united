@@ -84,6 +84,100 @@ export const ROADMAP = [
     shippedNote: 'All dataService.entities.* calls replaced with typed functions in src/services/. base44Client.js deleted.',
   },
 
+  {
+    id: 'expand-test-coverage',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Expand automated test coverage — first wave',
+    description: 'Stand up Vitest and cover the highest-risk pure logic: feed ranking, community tab gating, and feed retention scoring.',
+    why: 'The app has 400+ source files and zero tests until 2026-07-01; regressions in feed ranking, entity mapping, or RLS policies would ship silently.',
+    shippedNote: 'Shipped 2026-07-01. 23 tests across 3 suites, all passing via npm test: src/lib/feed/feedRanking.test.js (feedRanking/feedColors), src/lib/communityTypes.test.js (getSupportedCommunityTabs per allow_* flag), src/services/feedRetentionService.test.js (scorePost — this suite caught and fixed a real NaN-poisoning bug from malformed dates). Remaining coverage tracked in test-coverage-repository-rls.',
+  },
+
+  {
+    id: 'test-coverage-repository-rls',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Test coverage — repository query-building',
+    description: 'Second wave of automated tests: supabaseRepository.js query-building tests with a mocked Supabase client. Follows expand-test-coverage (first wave, shipped 2026-07-01). RLS policy tests split out to rls-policy-tests.',
+    why: 'supabaseRepository.js is the shared data-access layer for every entity; a regression in its query building would break reads/writes app-wide with no test signal.',
+    shippedNote: 'Shipped 2026-07-05. src/services/supabaseRepository.test.js: 15 tests (38 total passing) covering entity table mapping (unmapped-entity throw in prod, localStorage fallback in dev, public_profiles column restriction for User/Profile), filter/sort/limit query building with created_date→created_at mapping, delete(idOrIds) single-vs-array batching via .in(), the reads-only/dev-only local fallback, and batchFetchByIds. RLS test setup documented in src/services/README.tests.md.',
+  },
+
+  {
+    id: 'rls-policy-tests',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.MEDIUM,
+    title: 'RLS policy tests against a local Supabase instance',
+    description: 'Integration tests asserting row-level-security policies (e.g. non-members cannot read private community posts, users cannot edit others\' rows) against a local Supabase stack. Setup procedure is documented in src/services/README.tests.md.',
+    why: 'RLS is the only server-side enforcement layer; a bad policy migration currently ships with no test signal.',
+    prompt: `You are adding RLS policy integration tests for JUnited.
+
+Context: Read src/services/README.tests.md — it documents the intended approach (npx supabase start, seed two users, assert error.code '42501' on forbidden operations). Unit tests live in src/services/supabaseRepository.test.js; keep RLS tests in a separate suite that is skipped unless a local Supabase is running (e.g. gate on an env var like RLS_TESTS=1).
+
+Goals:
+1. Stand up the local-Supabase test harness per the README, applying supabase/migrations.
+2. Cover the highest-risk policies: posts read/write visibility by community membership, community_member_removals/appeals admin-only access, error_logs authenticated-insert-only, profiles self-update-only.
+3. Add an npm script (e.g. "test:rls") and document it in the README.
+4. Keep npm run lint, npm test, and npm run build passing (default test run must not require Supabase).
+5. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'service-layer-crud-consolidation',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Route direct component CRUD through the service layer',
+    description: 'Audit 2026-07-02 found 19 plain single-table supabase.from() CRUD calls in components/pages that bypass the dataService convention, plus 6 tables with no SUPABASE_ENTITY_TABLES mapping. Nothing crashed — these used direct calls — but they skipped the repository\'s shared behavior and were untestable via the service layer.',
+    why: 'A single data-access path is the codebase\'s stated architecture (CLAUDE.md); every bypass is a place where repository-level fixes and future instrumentation silently don\'t apply.',
+    shippedNote: 'Shipped 2026-07-05. Added 6 SUPABASE_ENTITY_TABLES mappings (Gemach, SimchaAnnouncement, CommunityForm, CommunityFormField, CommunityFormSubmission, CommunityVolunteerSlot) plus named exports in entityServices.js (incl. createBookmark, filterCommunityAdminAuditLog, bulkCreate wrappers). Converted plain CRUD in BookmarkButton.jsx, GemachDirectory.jsx, SimchaBoard.jsx, AdminFormsTab.jsx, ContentTab.jsx (via postsService), and OverviewTab.jsx audit-log fetch. Left as sanctioned direct calls per CLAUDE.md: nested-select joins (MembersTab, ModerationTab, AppealsTab, AdminFormsTab forms+fields join), count-only aggregates and gte() range queries (OverviewTab, AnalyticsTab), and the .in()-based volunteer-claims query.',
+  },
+
+  {
+    id: 'community-detail-code-health',
+    category: 'Community',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Split CommunityDetailView and unify posts query keys',
+    description: 'CommunityDetailView.jsx was 2,814 lines holding all tabs, modals, and sheets inline, and posts were cached under 10+ react-query key families so mutations over-invalidated some caches and missed others.',
+    why: 'The file size made data flow impossible to reason about, and the fragmented cache keys caused both stale views and wasted refetches after post mutations.',
+    shippedNote: 'Shipped 2026-07-05. CommunityDetailView.jsx: 2,814 → ~600 lines; 25 components/helpers extracted verbatim to src/components/communities/detail/ (pure move, build verified after every extraction). src/lib/queryKeys.js exports the postKeys factory — every post key starts [\'posts\'] with community views under [\'posts\',\'community\',id,\'<view>\'], so one prefix invalidation refreshes all views. All legacy keys migrated and grep-verified gone: unified-posts, community-posts, community-content-posts, community-hub-posts (dead — had no subscriber), admin-analytics-posts, admin-ov-posts, shul-posts, community-pinned-post, map-community-posts, user-posts, saved-posts. Note: 8 extracted components are dead code (never rendered) — tracked in communities-dead-code-cleanup.',
+  },
+
+  {
+    id: 'communities-dead-code-cleanup',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Delete or wire up dead communities components',
+    description: 'The CommunityDetailView split (2026-07-05) surfaced 8 components that were defined but never rendered, now sitting as standalone files in src/components/communities/detail/: TypeAwareComposer, RightNowBanner, CommunityBottomNav, CommunityMoreSheet, FeaturedLaunchpadCard, SecondaryLaunchpadCard, CommunityActionHeader, HomeFeedSection (plus the getFeaturedTab helper in detail/shared.js). Separately, CommunityCard in src/pages/Communities.jsx is defined but not mounted anywhere.',
+    why: 'Dead components invite accidental edits to code that never runs (the CommunityHubCard incident hid a shipped feature for six weeks). Some of these (TypeAwareComposer, CommunityBottomNav) may be intentional future UI — decide per component.',
+    prompt: `You are cleaning up dead components in the JUnited communities module.
+
+Context: See src/components/communities/detail/ — TypeAwareComposer.jsx, RightNowBanner.jsx, CommunityBottomNav.jsx, CommunityMoreSheet.jsx, FeaturedLaunchpadCard.jsx, SecondaryLaunchpadCard.jsx, CommunityActionHeader.jsx, HomeFeedSection.jsx are never imported by any live code, and getFeaturedTab in detail/shared.js has no live caller. CommunityCard in src/pages/Communities.jsx is defined but never mounted (it already supports the hasNewActivity dot).
+
+Goals:
+1. For each dead component, grep to confirm zero imports, then check internal/roadmap.js and recent git history for evidence it is planned UI; delete it if not, or wire it up if a shipped roadmap entry claims it is live.
+2. Remove getFeaturedTab and the CommunityCard definition (or mount CommunityCard where the design calls for it).
+3. Keep npm run lint, npm test, and npm run build passing.
+4. Update internal/roadmap.js: change this item's status to 'shipped' with a note listing what was deleted vs. wired up.`,
+  },
+
+  {
+    id: 'query-error-states',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.LOW,
+    title: 'Error states for list queries',
+    description: 'Key list queries rendered their empty state when a fetch failed, so users could not distinguish "no posts" from "failed to load". Related: analytics init and service-worker registration in src/main.jsx used silent .catch(() => {}) blocks.',
+    why: 'Silent failure reads as an empty app; a visible error state with retry preserves trust and makes production issues reportable.',
+    shippedNote: 'Shipped 2026-07-05. Audit found the shared component already existed (QueryError.jsx, used by Profile and Notifications) and Messages already rendered its error state — the real gaps were: (1) useFeedData.js swallowed fetch errors and returned [], making isError permanently false and Feed\'s error UI unreachable — it now rethrows (React Query keeps cached pages, so posts stay visible); (2) Feed.jsx renders QueryError with retry when the feed errors with zero posts; (3) CommunityDetailView renders QueryError for the community posts tabs on error; (4) main.jsx routes analytics-init and service-worker failures through captureError (Sentry + error_logs) instead of dropping them.',
+  },
+
   // ── Growth & Activation ─────────────────────────────────────────────────
 
   {
@@ -191,7 +285,8 @@ Goals:
   {
     id: 'hide-deleted-accounts-from-surfaces',
     category: 'Auth & Identity',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'Shipped 2026-07-01. Migration 20260701230000 adds deleted_at to the public_profiles view. Added .is(\'deleted_at\', null) to the four people-picker queries: UserSearchPanel.jsx search, FriendsHub.jsx suggestions + search, and the global-search peopleQuery in supabaseRepository.js. By-id lookups (friendsService.loadPublicProfileMap) intentionally still resolve so historical content shows Deleted User. Also recovered two remote-only migrations (20260701210331, 20260701214455) into the local repo to unblock db push.',
     priority: PRIORITY.MEDIUM,
     title: 'Hide "Deleted User" Accounts From Member Lists, Search & Suggestions',
     description: 'profiles.deleted_at (added by the account-deletion RPC) is not yet consumed anywhere in the client. A deleted account\'s anonymized "Deleted User" profile can still surface in community member lists, user search, and friend suggestions indefinitely.',
@@ -763,9 +858,9 @@ Goals:
     status: STATUS.SHIPPED,
     priority: PRIORITY.LOW,
     title: 'New-Activity Dot on Community List Cards',
-    description: 'Show a subtle indicator on community cards in the Communities list when there are posts or events newer than the user\'s last visit, so users know which communities have new content before opening them.',
+    description: 'Show a subtle indicator on community cards in the Communities list when there are posts or events newer than the user\'s last visit, so users know which communities have new content before opening them. (Originally shipped 2026-05-19 via CommunityHubCard, regressed when that component was orphaned in the mini-app redesign; rebuilt 2026-07-05 on the live cards.)',
     why: 'The digest pill inside the community is useful once you\'re already in. A list-level signal closes the loop so members know where to go next without opening every community.',
-    shippedNote: 'get_communities_with_new_activity() RPC (migration 20260519100000) batches the check; Communities.jsx queries it once per session; small blue dot renders at avatar top-right in CommunityHubCard when hasNewActivity=true. Only joined communities with a visit record and newer posts/events show the dot.',
+    shippedNote: 'Re-shipped 2026-07-05. communitiesService.getCommunitiesWithNewActivity() wraps the get_communities_with_new_activity() RPC (migration 20260519100000). Communities.jsx queries it via React Query ([\'communities-new-activity\', uid], staleTime 5 min, enabled when logged in) and threads a newActivityIds Set to every LiveFiveTownsRoomCard render site (MineTab grid, Discover filtered grid, FiveTownsRoomsHub rails). Dot: absolute blue h-2.5 w-2.5 with white ring at the avatar\'s top-right, rendered only when isJoined && hasNewActivity — never on discover/not-joined cards. Known limitation: the dot clears on the 5-minute staleTime rather than instantly after visiting a community.',
   },
 
   {
@@ -1295,9 +1390,10 @@ Goals:
   {
     id: 'block-enforcement-existing-conversations',
     category: 'Messaging',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.MEDIUM,
     title: 'Retroactively Hide/Prevent Messages in Existing Conversations After a Block',
+    shippedNote: 'Shipped 2026-07-01 (master plan Phase 1, item 4). Messages.jsx fetches user_blocks in both directions ([\'user-blocks-both\'] query) and filters blocked-partner DMs out of the conversation list; ?conversation= deep links to a blocked DM are rejected with "This conversation is unavailable"; blocking from ChatView invalidates the blocks query so the list updates immediately. messagesService.createMessage() now runs the same two-directional user_blocks check as findOrCreateDirectConversation() before any send (community chats exempt via their pseudo recipient id), so pre-existing conversations can no longer accept messages across a block. Note: enforcement is at the service layer, matching the rest of the app\'s block handling — a DB-level RLS policy on messages remains a possible hardening follow-up (tracked in low-severity-rls-followups scope).',
     description: 'findOrCreateDirectConversation() now blocks starting a new DM between a blocker and a blocked user (see content-safety-completion), but a conversation that already existed before the block still shows up in both users\' Messages list and still accepts new sends.',
     why: 'Discovered during the content-safety-completion audit — full parity with the Feed/PostDetail block filtering would also hide (or clearly mark) existing conversations with a blocked user in Messages.jsx, and reject createMessage() calls into a conversation where either participant has blocked the other, not just block conversation creation.',
     prompt: `You are closing the last gap in JUnited's block-enforcement audit.
@@ -2770,11 +2866,90 @@ Goals:
   },
 
   {
-    id: 'orphaned-feature-scaffolding-cleanup',
-    category: 'Infrastructure',
+    id: 'purge-production-test-data',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Purge test/demo communities from production',
+    shippedNote: 'Shipped 2026-07-01. Deleted "Cucumber apples🥒🍎" (4 memberships, 0 posts) from production via supabase db query --linked. "Hollywood FL" kept per owner decision. Remaining communities verified real.',
+    description: 'Test communities (e.g. "Cucumber apples 🥒🍎 / Daily pickle ball") are visible on the live Communities page and as Map filter chips. First-time visitors read the whole site as fake. Delete or archive all seed/test communities and their posts from the production database.',
+    why: 'Surfaced by the 2026-07-01 multi-persona UX review: test data was the single most credibility-damaging thing a new visitor sees.',
+    prompt: `You are removing test/demo data from the JUnited production database.
+
+Context: Test communities like "Cucumber apples" appear on /Communities and in Map community filters. Supabase project uwbmfmtvjcnuuekiyogu. Community rows live in the communities table; membership in user_communities; posts reference community_id.
+
+Goals:
+1. Query production for communities whose names/descriptions are obviously test data; list them for human confirmation before deleting anything.
+2. After confirmation, delete their posts, memberships, and the community rows (or add an archived flag and filter archived communities out of Communities.jsx and MitzvahMap.jsx).
+3. Verify /Communities and the Map filter chips no longer show them.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'map-marker-clustering',
+    category: 'Businesses & Map',
+    status: STATUS.SHIPPED,
+    shippedNote: 'Shipped 2026-07-01. MitzvahMap.jsx: markers wrapped in MarkerClusterGroup (react-leaflet-cluster, chunkedLoading, maxClusterRadius 44, spiderfy on max zoom) with custom dark-circle count icons. Removed the manual spreadVisiblePoints ring-fan memo and CLUSTER_BUCKET_SCALE/CLUSTER_BASE_RADIUS constants.',
+    priority: PRIORITY.MEDIUM,
+    title: 'Cluster map markers in the default all-pins view',
+    description: 'The map now shows all points by default (~114 static + up to 80 community posts + requests) as individual Leaflet divIcon markers with only a manual ring-spread for overlaps. Add real marker clustering (react-leaflet-cluster is already a dependency) so the default view stays fast and readable on low-end phones.',
+    why: 'Surfaced by the 2026-07-01 code review of the show-all-by-default map change: 200 marker DOM nodes at zoom 13 is measurable jank on mobile.',
+    prompt: `You are adding marker clustering to the JUnited map.
+
+Context: src/components/mitzvah/MitzvahMap.jsx renders visiblePoints (all points when no filter selected) as individual react-leaflet Markers with divIcons, plus a manual spreadVisiblePoints ring-fan for overlapping pins. react-leaflet-cluster is already in package.json.
+
+Goals:
+1. Wrap the point markers in MarkerClusterGroup from react-leaflet-cluster; style cluster icons to match the app's pin design.
+2. Remove or simplify spreadVisiblePoints once clustering handles overlap.
+3. Verify tapping a cluster zooms in and individual pins still open the preview card.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'map-community-chip-semantics',
+    category: 'Businesses & Map',
     status: STATUS.PLANNED,
     priority: PRIORITY.LOW,
+    title: 'Fix community filter chip toggle semantics on the Map',
+    description: 'On Map.jsx, when no community is selected every chip renders active (empty = all). Tapping one chip then narrows to ONLY that community — the opposite of what the visual state implies (users expect the tap to remove that community). Align tap semantics with the visual model.',
+    why: 'Surfaced by the 2026-07-01 code review: the two map filter surfaces teach contradictory mental models.',
+    prompt: `You are fixing community filter chip semantics on the JUnited map.
+
+Context: src/pages/Map.jsx ~line 1445: active = selectedCommunityIds.size === 0 || selectedCommunityIds.has(community.id); toggleSelectedCommunity adds the id to an empty set, narrowing to one community.
+
+Goals:
+1. When the set is empty (all-active state) and a user taps a chip, populate the set with ALL community ids minus the tapped one (i.e. the tap removes that community, matching the visual).
+2. When the set equals all ids, reset it to empty (back to the all-active default).
+3. Verify tapping chips adds/removes communities intuitively in both directions.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'typography-hierarchy-sweep',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'Typography hierarchy sweep (reduce font-black overuse)',
+    description: 'Most text app-wide is font-black with tiny uppercase micro-labels, flattening visual hierarchy. Rule: one black-weight element per card; labels bold, body/detail medium or semibold. Started 2026-07-01 in FiveTownsConversationHub and Marketplace chips; remaining: Feed cards, Mitzvah Circle, Communities cards, Profile, admin pages.',
+    why: 'From the 2026-07-01 professional design audit: weight discipline is the highest-leverage remaining polish item.',
+    prompt: `You are continuing the JUnited typography hierarchy sweep.
+
+Context: see FiveTownsConversationHub.jsx (post-2026-07-01) for the target pattern: heading font-black, labels font-bold, detail text font-medium, chips font-semibold. STYLE_GUIDE.md is at the repo root.
+
+Goals:
+1. Sweep src/components/feed, src/components/mitzvah, src/components/communities, and src/pages (Feed, MitzvahCircle, Communities, Profile) reducing font-black to one element per card.
+2. Do not change sizes or colors — weights only, so the diff stays reviewable.
+3. Verify npm run lint and npm run build pass; screenshot Feed and Communities before/after.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'orphaned-feature-scaffolding-cleanup',
+    category: 'Infrastructure',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.LOW,
     title: 'Decide Fate of Orphaned Component Scaffolding',
+    shippedNote: 'Shipped 2026-07-01 (master plan Phase 1, item 5). Deleted 37 dead files (~7,000 lines), each re-verified zero-importers (static + dynamic imports, barrels, pages.config, prebuild scripts) immediately before deletion: whole dirs components/chalkboard, components/updates, components/chesed (dead island); feed/DailyHooks, TodaySummaryCard, ActivityPulseBanner, CreatePostModal, EventsForYou, FeedCategoryTabs, FeedFilterBar, LocalContextStrip; communities/CommunityHubDetail (the CLAUDE.md shadowing hazard), DiscoverCommunityCard, ColorfulCommunityCard, RichCommunityCard, CommunityNetworkView, CommunityHomepage; groups/GroupCard, GroupDetailSheet, GroupHelpTab; mitzvah/ShulMinyanBoard; pages Events, MyEvents, InviteJoin, UserSettings; ui/calendar + ui/carousel (imported packages that are not installed); the ui toast island (toast/toaster/use-toast/sonner wrappers — app uses the sonner package directly via Layout.jsx). Kept per plan: components/shul/* (reserved for shul-directory), GroupDiscussionTab/GroupResourcesTab/CommunityDiscussionsTab (parked for restoration), CreateGroupModal + GroupEventsTab + RequestHelpModal + FeedFilters (live). Deps: removed @radix-ui/react-toast and @types/dompurify. Two stale audit claims corrected: react-leaflet-cluster IS live (MitzvahMap.jsx:3) and @hebcal/core is correctly a devDependency (only used by a Node script; src/lib/hebrewDate.js calls the Hebcal HTTP API).',
     description: 'A 2026-06-29 self-check found ~20 entities referenced via dataService.entities.<Name> with no SUPABASE_ENTITY_TABLES mapping. Almost all trace back to components that are never imported by any page or parent component, so they are not reachable by real users and pose no current production risk — but they are dead weight and a few duplicate functionality already shipped elsewhere.',
     why: 'Not a live bug (createUnmappedEntityApi in base44Client.js already falls back to localStorage in dev and throws a clear error in prod, so nothing silently breaks), but the roadmap had no record of this scaffolding existing, and CLAUDE.md requires tracking known gaps surfaced during an audit. Two buckets: (1) src/components/shul/* (RideBoard, VolunteerBoard, MinyanStatusWidget, WeeklyScheduleWidget, CreateShulPostModal, AdminBroadcastModal, MediaTab) — already folded into the shul-directory prompt as reusable scaffolding, build it out there. (2) Components superseded or never wired in: src/components/chalkboard/CreateChalkboardModal.jsx + EventCard.jsx + EventRSVPSection.jsx + SavedEventsSection.jsx (legacy RSVP/EventAttendee entities, superseded by the shipped events-system which uses CommunityEvent/CommunityEventRSVP instead), src/components/feed/CommunityAlertBanner.jsx (CommunityAlert), src/components/feed/WeeklyImpactCard.jsx (WeeklyStats), src/components/communities/NewsletterSubscribeBox.jsx + src/components/groups/NewsletterHistoryModal.jsx + GroupAnalyticsDashboard.jsx (NewsletterSubscriber/NewsletterLog — newsletter-system above already covers building this out), and src/components/groups/GroupDiscussionTab.jsx + GroupResourcesTab.jsx + src/components/communities/CommunityDiscussionsTab.jsx (already covered by the group-events-discussion-resources entry above). Also overlaps Check 8 dead-component findings: src/components/communities/CommunityHubDetail.jsx, DiscoverCommunityCard.jsx, ColorfulCommunityCard.jsx, RichCommunityCard.jsx are unused and should be deleted in the same pass.',
     prompt: `You are cleaning up orphaned/unwired component scaffolding in JUnited surfaced by the 2026-06-29 self-check.
@@ -2794,6 +2969,99 @@ Goals:
 3. For CommunityAlertBanner, WeeklyImpactCard, NewsletterSubscribeBox/NewsletterHistoryModal/GroupAnalyticsDashboard: these look like real unfinished features rather than dead code — either wire them into a real page with proper entity mappings + migrations, or delete them if there's no near-term plan to ship them. Use judgment per-component; don't leave a half-wired state.
 4. Run npm run lint && npm run build after deletions to confirm nothing else imports the removed files.
 5. Update internal/roadmap.js: change this item's status to 'shipped' (if cleaned up) or 'dropped' (if decided not worth doing) with a why.`,
+  },
+
+  {
+    id: 'content-rls-security-hardening',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Content RLS Security Hardening (posts, invite links, feed view, refuah)',
+    description: 'Close the four high/medium RLS exposures found in the 2026-07-01 full-app security review: (1) posts/comments/reactions were world-readable including anon, leaking private-community content; (2) invite_links had a public SELECT policy letting anyone harvest every community invite code; (3) posts_feed_view was a definer view bypassing RLS on posts/profiles/communities; (4) refuah_requests (names + medical condition text) was readable by anon.',
+    shippedNote: 'Shipped 2026-07-01. Migration supabase/migrations/20260701200000_security_hardening_content_rls.sql: posts/comments/reactions SELECT now authenticated-only and scoped via can_access_community (global posts with community_id IS NULL stay visible to all signed-in users); also dropped three live-only duplicate policies on posts, including a loose INSERT policy that bypassed the posting_mode restrictions from 20260515182824. invite_links SELECT scoped to inviter + community managers; /join lookups moved to new SECURITY DEFINER RPC get_invite_link_by_code (granted to anon+authenticated — the code itself is the capability) which also returns a community preview so invites to private communities keep working. posts_feed_view recreated with security_invoker=true joining public_profiles instead of profiles, revoked from anon. refuah_requests SELECT restricted to authenticated. Client: communitiesService.getInviteLinkByCode() added; JoinByCommunityCode.jsx switched to the RPC and no longer attempts the (RLS-blocked) client-side deactivation write on expired links.',
+  },
+
+  {
+    id: 'low-severity-rls-followups',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Low-Severity RLS & Abuse-Surface Follow-ups',
+    shippedNote: 'Shipped 2026-07-01 (master plan Phase 1, item 5). Migration 20260701223223_low_severity_rls_followups.sql: group_members SELECT scoped to own rows / fellow group members / active parent-community members / admins (was USING (true) — any signed-in user could enumerate all memberships) via new SECURITY DEFINER helpers is_group_member/is_group_manager (needed to avoid RLS self-recursion); chesed_challenge_completions SELECT now authenticated-only (sole consumer ChesedChallenge.jsx is behind ProtectedRoute); error_logs — discovered the table had been DROPPED from live despite a recorded migration, so all client error logging was silently failing — recreated hardened (authenticated-only INSERT with user_id = auth.uid(), length CHECKs on message/stack/user_agent, admin-only SELECT, anon revoked; analytics.js logClientError now skips pre-auth inserts); storage.objects gained an owner-scoped DELETE policy for the five public buckets (per-user path prefixes intentionally not enforced — all upload sites use flat Date.now() paths and overwrites already require owner-scoped UPDATE). Bonus live-bug fixes found during pg_policies verification: community_groups_update contained a gm.group_id = gm.id self-compare so group admins could never edit their group (fixed via is_group_manager), and group_members_insert rejected the join-request approval flow (managers inserting a member row for another user) — managers may now add role=member rows.',
+    description: 'Remaining low-severity findings from the 2026-07-01 security review, deferred from the main hardening batch: group_members SELECT is USING (true) (any authenticated user can enumerate all group memberships, even in communities they do not belong to); chesed_challenge_completions SELECT is anon-readable (exposes per-user completion history); error_logs allows anon INSERT with no rate limit (admin inbox flooding vector); storage.objects INSERT policies have no per-user path scoping or MIME/size constraints and there are no UPDATE/DELETE policies for user cleanup.',
+    why: 'Lower stakes than the private-content/invite-code leaks fixed in content-rls-security-hardening; each needs a small product decision (e.g., whether group membership lists should be community-scoped, whether challenge counts need anon access for logged-out views).',
+    prompt: `You are implementing the low-severity RLS follow-ups for JUnited.
+
+Context: See supabase/migrations/20260517221000_community_groups.sql (group_members SELECT true), 20260701150000_chesed_challenge.sql (anon-readable completions), 20260613215838_create_error_logs.sql (anon INSERT), and the storage policies in 001_core.sql / 015_production_schema_alignment.sql. The prior hardening pattern to follow is 20260701200000_security_hardening_content_rls.sql. Check pg_policies on the live DB first — it has drifted from migration files before.
+
+Goals:
+1. Scope group_members SELECT to members of the group's community (mirror is_active_community_member usage).
+2. Restrict chesed_challenge_completions SELECT to authenticated, keeping any aggregate counts the UI needs (check src/ consumers first; if a logged-out surface needs counts, expose a definer RPC returning counts only).
+3. Rate-limit or authenticate error_logs INSERT (consider reusing check_rate_limit from 011_rate_limiting.sql via a definer RPC, or require authenticated).
+4. Add per-user path scoping ({user_id}/ prefix) to storage.objects INSERT policies and add owner-scoped UPDATE/DELETE policies; verify existing upload paths in src/ before enforcing.
+5. Verify each change against the live DB with a BEGIN/ROLLBACK dry-run via the Supabase MCP before applying.
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
+    id: 'marketplace-real-persistence',
+    category: 'Growth & Monetization',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Marketplace: Real Persistence, Deep Links, and Honest Actions',
+    description: 'The /Marketplace page was a prototype in production: listings lived in useState([]), "Post listing" showed success then silently discarded the data on refresh, Save/Message buttons were toast stubs, and ?listing= deep links from Search/notifications/Live Now were never read. Separately, the Feed composer\'s "Sell / Give" flow was writing marketplace posts whose price/marketplace_category/pickup_option/image_urls fields were silently dropped because the posts table had no such columns.',
+    shippedNote: 'Shipped 2026-07-01 (master plan Phase 1, item 1). Migration 20260701210331_marketplace_listing_columns.sql adds posts columns: price, marketplace_category, condition, pickup_option, listing_urgency, listing_section, listing_status (available/pending/sold/closed + check constraint), image_urls text[], plus a partial index for marketplace queries — this also fixes the composer path\'s silent field loss. Migration 20260701214455 recreates posts_feed_view so the feed can see the new columns. src/pages/Marketplace.jsx rewritten: React Query list (queryKey [\'marketplace-listings\'], server-side activity_kind filter), create via postsService.createMarketplaceListing with single-photo upload through src/lib/imageUpload.js (actionable failure toast, draft preserved), ?listing= deep link opens a ListingDetailSheet with loading/error/not-found states (fetches by id when not in the first page; Back closes the sheet), real Save (BookmarkButton) and Message seller (MessageButton with rate limit + permission checks; marketplace context relaxes the shared-community messaging default since a public listing invites contact — see messagingPermissions.js), owner Mark-as-sold with tap-again confirm + Mark-as-available undo, fake "Trusted" badge / fake interested counts / dead "Shul school" chip / dead Map deep-link removed, bg-slate-950 CTAs replaced with bg-blue-600 per STYLE_GUIDE. Feed integration: UnifiedPostCard shows a For Sale badge, price, Sold chip, and View listing link for marketplace posts and hides Message on sold ones; Feed.jsx hides sold/closed listings. Shared category vocabulary in src/lib/marketplaceTaxonomy.js (composer + page now match; legacy values normalized on read). MessageButton fires notifyMarketplaceMessage so sellers get listing-linked notifications. universalSearch marketplace filter fixed in both Supabase and local branches. toDbPatch drops reactions_count for post entities (was costing a failed-insert retry on every post creation app-wide).',
+  },
+
+  {
+    id: 'remove-fake-ai-dm-agent',
+    category: 'Messaging',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.HIGH,
+    title: 'Remove Fake AI DM Agent From Messages',
+    description: 'A "United AI Assistant" conversation was pinned to the top of every user\'s Messages list, styled as a live AI with an "Always available" badge and typing animation — but dataService.integrations.Core.InvokeLLM is a stub, so every reply was the same canned sentence ("AI features are not connected yet..."). Scripted bots presented as real assistants destroy user trust.',
+    why: 'Master plan Phase 1, item 2 (trust & correctness). The real AI assistant remains tracked separately as ai-community-assistant (exploring); this removal clears the fake surface until an actual LLM integration exists.',
+    shippedNote: 'Shipped 2026-07-01. Removed the pinned AI conversation injection from Messages.jsx and MessagesDrawer.jsx; stripped all AI branches from ConversationList.jsx (AI-first sorting, gradient card, AI/Always-available badges), ChatView.jsx (localStorage message store, fake 1.5s typing delay, AI welcome screen with suggested questions, AI avatar branches), and UserSearchPanel.jsx (AI row styling and direct-open path). Deleted src/lib/aiAgent.js and the unmounted src/components/common/AIChatBubble.jsx. The InvokeLLM stub itself remains for other callers that handle it honestly (e.g. EventSummaryButton\'s try/catch). Old localStorage ai_messages_* keys are orphaned but harmless.',
+  },
+
+  {
+    id: 'landing-honesty-dead-links',
+    category: 'Growth & Monetization',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'Landing Honesty Pass + Dead-Link Fixes',
+    description: 'Landing.jsx marketed features that do not exist as described: "Shuls" as a daily-use surface (shul directory is deferred), and map copy promising shuls/schools/events on a map that only has business categories. Two live links pointed at dead legacy redirects: PrivacyRights "Go to Settings" → /UserSettings and the FriendsHub app-invite URL → /InviteJoin (both silently redirect to /Feed).',
+    shippedNote: 'Shipped 2026-07-01 (master plan Phase 1, item 3). Landing.jsx: differentiator line and "What people use daily" paragraph no longer list Shuls; map use-case copy now describes what the Map actually shows (kosher food, Jewish-owned businesses, local services, live activity). Marketplace stays listed — it became real in marketplace-real-persistence. PrivacyRights.jsx now links to /Settings; FriendsHub invite URL now lands on /welcome.',
+  },
+
+  {
+    id: 'react-query-migration-and-admin-center-split',
+    category: 'Admin & Platform',
+    status: STATUS.SHIPPED,
+    priority: PRIORITY.MEDIUM,
+    title: 'React Query Migration (Settings, Communities) + Admin Center Split',
+    description: 'Settings.jsx and Communities.jsx were the last two large pages doing manual useEffect/useState fetching — no caching, no cross-page invalidation, no global error toasts. CommunityAdminCenter.jsx was a 3,733-line single file bundling 13 admin features.',
+    shippedNote: 'Shipped 2026-07-01 (master plan Phase 2, item 8, first three stages). Settings.jsx: subscription on [\'active-subscription\', uid]; BlockedUsersCard reads Feed\'s [\'user-blocks\', uid] key and unblocking invalidates [\'user-blocks-both\'] + [\'conversations\'] so Messages un-hides threads immediately. Communities.jsx: four queries ([\'communities-list\'], [\'community-groups-list\'], [\'user-community-ids\', uid], [\'user-group-ids\', uid]) replace the loadData/Promise.allSettled machinery; joins/leaves are optimistic useMutations with snapshot rollback; the localStorage cache survives as placeholderData; the page is finally a reader of [\'communities-list\'], which CommunityDetailView had been invalidating with no subscriber — community edits/joins from detail views now refresh the catalog. CommunityAdminCenter.jsx: move-only split from 3,733 to 134 lines — 11 inline tabs extracted to communities/admin/ (OverviewTab, BillingTab, AnalyticsTab, ContentTab, MembersTab, ModerationTab, LocalUpdatesTab, AppealsTab, LayoutTab, BrandingTab, SettingsTab) plus shared.jsx and AppealSubmitModal.jsx (re-exported to preserve CommunityDetailView\'s named import). Remaining item-8 work (CommunityDetailView split) tracked in internal/master-plan.md.',
+  },
+
+  {
+    id: 'master-plan-production-push',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.HIGH,
+    title: 'Master Plan: Production / Addictive / Profitable / Marketable Push',
+    description: 'A 20-item, 5-phase standing plan created from the 2026-07-01 full-app review: Phase 1 trust & correctness (Marketplace data loss, fake AI agent, safety follow-ups, dead code), Phase 2 production polish (post-card consolidation, style-guide enforcement, React Query migration, giant-file splits), Phase 3 retention (unified streaks, realtime chat, daily hooks, recognition), Phase 4 monetization (Stripe Connect, Pro plans, funnels), Phase 5 growth (Capacitor/iOS, desktop shell, invite loops, SEO).',
+    why: 'The full plan, the reusable agent prompt, and the per-item progress tracker live in internal/master-plan.md — that file is the source of truth for item status; this entry tracks the initiative as a whole. Individual items that overlap existing roadmap entries (Stripe Connect, orphaned-scaffolding cleanup, etc.) keep their own entries.',
+    prompt: `You are executing the JUnited master plan.
+
+Context: Read internal/master-plan.md — it contains the full mission prompt, rules, and a phase-by-phase progress tracker. CLAUDE.md governs workflow.
+
+Goals:
+1. Open internal/master-plan.md and find the first unchecked item.
+2. Implement it following the plan's RULES section (real UI path verification, lint+build, small commits).
+3. Mark the item done in internal/master-plan.md and update any overlapping entries in internal/roadmap.js.
+4. Repeat for as many items as the session allows; stop and ask the owner on pricing/removal decisions.
+5. When all 20 items are checked, update internal/roadmap.js: change this item's status to 'shipped'.`,
   },
 
 ];

@@ -1,7 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import { divIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+
+const createClusterIcon = (cluster) => divIcon({
+  className: 'junited-cluster-icon',
+  html: `<div style="
+    display:flex;align-items:center;justify-content:center;
+    width:34px;height:34px;border-radius:9999px;
+    background:#0f172a;color:#fff;font-weight:800;font-size:12px;
+    border:3px solid #fff;box-shadow:0 6px 16px rgba(15,23,42,0.35);
+  ">${cluster.getChildCount()}</div>`,
+  iconSize: [34, 34],
+  iconAnchor: [17, 17],
+});
 import { COMMUNITIES_ENABLED } from '@/config/features';
 
 const PIN_TYPES = {
@@ -31,8 +44,6 @@ const PRIMARY_FILTERS = [
   { key: 'mitzvot', label: 'Mitzvot', types: ['help_needed', 'mitzvah_available', 'lost_found'] },
 ];
 
-const CLUSTER_BUCKET_SCALE = 1000;
-const CLUSTER_BASE_RADIUS = 0.00042;
 const DIRECTORY_LAST_REVIEWED = 'June 2026';
 
 const STATIC_POINTS = [
@@ -1386,6 +1397,7 @@ export default function MitzvahMap({
 }) {
   const [mapCenter, setMapCenter] = useState(null);
   const [activeTypes, setActiveTypes] = useState(() => new Set());
+  const [showTypeFilters, setShowTypeFilters] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [tileUrl, setTileUrl] = useState('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
   const resolvedMapHeight = mapHeight || 'clamp(460px, 64dvh, 720px)';
@@ -1414,49 +1426,11 @@ export default function MitzvahMap({
     () => [...requestPoints, ...personalizedPoints, ...(includeStaticPoints ? VERIFIED_STATIC_POINTS : [])],
     [includeStaticPoints, personalizedPoints, requestPoints]
   );
-  const visiblePoints = useMemo(() => allPoints.filter((point) => activeTypes.has(point.type)), [activeTypes, allPoints]);
-  const spreadVisiblePoints = useMemo(() => {
-    const buckets = new Map();
-
-    visiblePoints.forEach((point) => {
-      if (!point.location_lat || !point.location_lng) return;
-      const bucketKey = [
-        Math.round(point.location_lat * CLUSTER_BUCKET_SCALE),
-        Math.round(point.location_lng * CLUSTER_BUCKET_SCALE),
-      ].join(':');
-      const bucket = buckets.get(bucketKey) || [];
-      bucket.push(point);
-      buckets.set(bucketKey, bucket);
-    });
-
-    return visiblePoints.map((point) => {
-      if (!point.location_lat || !point.location_lng) return point;
-
-      const bucketKey = [
-        Math.round(point.location_lat * CLUSTER_BUCKET_SCALE),
-        Math.round(point.location_lng * CLUSTER_BUCKET_SCALE),
-      ].join(':');
-      const bucket = buckets.get(bucketKey) || [];
-      if (bucket.length <= 1) {
-        return {
-          ...point,
-          display_lat: point.location_lat,
-          display_lng: point.location_lng,
-        };
-      }
-
-      const index = bucket.findIndex((candidate) => candidate.id === point.id);
-      const angle = (Math.PI * 2 * index) / bucket.length;
-      const ring = Math.floor(index / 8);
-      const radius = CLUSTER_BASE_RADIUS + ring * 0.00018;
-
-      return {
-        ...point,
-        display_lat: point.location_lat + Math.sin(angle) * radius,
-        display_lng: point.location_lng + Math.cos(angle) * radius,
-      };
-    });
-  }, [visiblePoints]);
+  // No filters selected = show everything; the map should never be empty
+  const visiblePoints = useMemo(
+    () => (activeTypes.size === 0 ? allPoints : allPoints.filter((point) => activeTypes.has(point.type))),
+    [activeTypes, allPoints]
+  );
   const hasActiveFilters = activeTypes.size > 0;
   const activePrimaryFilter = PRIMARY_FILTERS.find((filter) => (
     filter.types.length === activeTypes.size && filter.types.every((type) => activeTypes.has(type))
@@ -1558,17 +1532,27 @@ export default function MitzvahMap({
       {/* Five Towns hub banner */}
       {personalized && (
         <div className="border-b border-blue-100 bg-blue-50 px-3 py-2">
-          <p className="text-[12px] font-black text-blue-900">Five Towns digital hub</p>
-          <p className="text-[11px] font-semibold leading-5 text-blue-700">
-            {COMMUNITIES_ENABLED
-              ? 'A personalized local map for Lawrence, Cedarhurst, Woodmere, Hewlett, and Inwood, showing source-backed kosher food, shops, shuls, schools, posts, events, and mitzvah needs from communities you joined.'
-              : 'A personalized local map for Lawrence, Cedarhurst, Woodmere, Hewlett, and Inwood, showing source-backed kosher food, shops, shuls, schools, events, and mitzvah needs.'}
+          <p className="text-[12px] font-black text-blue-900">
+            Five Towns map
+            <span className="ml-2 font-medium text-blue-700">
+              {COMMUNITIES_ENABLED
+                ? 'Kosher food, shuls, schools, events, mitzvahs, and community posts'
+                : 'Kosher food, shuls, schools, events, and mitzvah needs'}
+            </span>
           </p>
         </div>
       )}
 
       {/* Primary filter chips — horizontal scroll, matches Communities chip pattern */}
       <div className="mobile-scroll-x flex gap-2 border-b border-slate-200 bg-white px-2 py-2">
+        <button
+          onClick={() => setActiveTypes(new Set())}
+          className={`motion-press shrink-0 rounded-full px-3.5 py-2 text-[12px] font-black transition ${
+            activeTypes.size === 0 ? 'bg-slate-950 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+          }`}
+        >
+          All
+        </button>
         {PRIMARY_FILTERS.map((filter) => {
           const active = activePrimaryFilter === filter.key;
           return (
@@ -1583,9 +1567,18 @@ export default function MitzvahMap({
             </button>
           );
         })}
+        <button
+          onClick={() => setShowTypeFilters((v) => !v)}
+          className={`motion-press shrink-0 rounded-full px-3.5 py-2 text-[12px] font-black transition ${
+            showTypeFilters ? 'bg-blue-600 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+          }`}
+        >
+          {showTypeFilters ? 'Fewer filters' : 'More filters'}
+        </button>
       </div>
 
-      {/* Type filter chips */}
+      {/* Granular type chips — collapsed by default so the map isn't buried under two filter rows */}
+      {showTypeFilters && (
       <div className="mobile-scroll-x flex gap-2 border-b border-slate-200 bg-white px-2 py-2">
         {Object.entries(PIN_TYPES).filter(([type]) => type !== 'other').map(([type, config]) => {
           const active = activeTypes.has(type);
@@ -1614,20 +1607,10 @@ export default function MitzvahMap({
           </button>
         )}
       </div>
+      )}
 
       {/* Map canvas */}
       <div className="relative">
-        {!hasActiveFilters && (
-          <div className="glass-toolbar absolute left-3 right-3 top-3 z-[500] rounded-2xl px-4 py-3">
-            <p className="text-[13px] font-black text-slate-900">Pick a filter to show pins</p>
-            <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">
-              {COMMUNITIES_ENABLED
-                ? 'Choose source-backed kosher food, shops, shuls, schools, community businesses, lost and found, help, mitzvahs, events, or community posts.'
-                : 'Choose source-backed kosher food, shops, shuls, schools, local businesses, lost and found, help, mitzvahs, or events.'}
-            </p>
-          </div>
-        )}
-
         <MapContainer
           center={mapCenter}
           zoom={13}
@@ -1656,7 +1639,7 @@ export default function MitzvahMap({
             }}
           />
 
-          {userLocation && hasActiveFilters && (
+          {userLocation && (
             <Marker
               position={[userLocation.lat, userLocation.lng]}
               icon={divIcon({
@@ -1675,23 +1658,31 @@ export default function MitzvahMap({
             />
           )}
 
-          {spreadVisiblePoints.map(point => {
-            if (!point.location_lat || !point.location_lng) return null;
+          <MarkerClusterGroup
+            chunkedLoading
+            maxClusterRadius={44}
+            spiderfyOnMaxZoom
+            showCoverageOnHover={false}
+            iconCreateFunction={createClusterIcon}
+          >
+            {visiblePoints.map(point => {
+              if (!point.location_lat || !point.location_lng) return null;
 
-            return (
-              <Marker
-                key={point.id}
-                position={[point.display_lat || point.location_lat, point.display_lng || point.location_lng]}
-                icon={createMarkerIcon(point.type)}
-                eventHandlers={{
-                  click: () => {
-                    setSelectedPoint(point);
-                    if (point.isRequest) onSelectRequest?.(point);
-                  }
-                }}
-              />
-            );
-          })}
+              return (
+                <Marker
+                  key={point.id}
+                  position={[point.location_lat, point.location_lng]}
+                  icon={createMarkerIcon(point.type)}
+                  eventHandlers={{
+                    click: () => {
+                      setSelectedPoint(point);
+                      if (point.isRequest) onSelectRequest?.(point);
+                    }
+                  }}
+                />
+              );
+            })}
+          </MarkerClusterGroup>
         </MapContainer>
 
         {/* Selected point card */}
@@ -1796,7 +1787,7 @@ export default function MitzvahMap({
         )}
       </div>
 
-      {/* Preview cards strip */}
+      {/* Preview cards strip — only when a filter is active so the default "show all" state isn't buried under 200 cards */}
       {hasActiveFilters && visiblePoints.length > 0 && (
         <div className="border-t border-slate-200 bg-white px-3 py-3">
           <div className="mb-2 flex items-center justify-between gap-3">
@@ -1812,7 +1803,8 @@ export default function MitzvahMap({
           </div>
 
           <div className="mobile-scroll-x flex gap-2 pb-1">
-            {visiblePoints.map((point) => {
+            {/* Cap the strip — in the unfiltered default all ~200 points are visible */}
+            {visiblePoints.slice(0, 30).map((point) => {
               const config = PIN_TYPES[point.type] || PIN_TYPES.other;
               const active = selectedPoint?.id === point.id;
               const distanceLabel = formatDistance(getDistanceMiles(userLocation, point));

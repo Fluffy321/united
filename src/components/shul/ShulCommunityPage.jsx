@@ -3,6 +3,7 @@ import { MapPin, Users, ChevronLeft, Bell, Calendar, FileText, Users2 } from 'lu
 import { useQuery } from '@tanstack/react-query';
 import CommunityPostCard from '@/components/communities/CommunityPostCard';
 import { filterCommunityPost, filterUserCommunity } from '@/services/entityServices';
+import { postKeys } from '@/lib/queryKeys';
 
 const TABS = ['Posts', 'Announcements', 'Events', 'Members'];
 
@@ -10,7 +11,7 @@ export default function ShulCommunityPage({ community, currentUser, onBack }) {
   const [activeTab, setActiveTab] = useState('Posts');
 
   const { data: posts = [] } = useQuery({
-    queryKey: ['shul-posts', community.id],
+    queryKey: postKeys.communityShul(community.id),
     queryFn: () => filterCommunityPost({ community_id: community.id, type: 'general' }),
   });
 

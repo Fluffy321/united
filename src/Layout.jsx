@@ -143,15 +143,16 @@ function LayoutContent({ children, currentPageName }) {
       {!hideNav && currentUser && (
         <div className="app-fixed-layer">
           <div className="app-fixed-frame">
-            <button
-              onClick={() => setShowFeedback(true)}
-              aria-label="Send feedback"
-              className="app-feedback-action app-floating-action flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md transition-all duration-200 hover:bg-slate-50 active:scale-95"
-              title="Send feedback"
-            >
-              <MessageSquarePlus className="h-4 w-4 text-slate-600" />
-            </button>
             <div className="app-floating-stack">
+              {/* Feedback shares the floating stack so it never overlaps page content */}
+              <button
+                onClick={() => setShowFeedback(true)}
+                aria-label="Send feedback"
+                className="app-floating-action flex h-10 w-10 items-center justify-center self-end rounded-full border border-slate-200 bg-white shadow-md transition-all duration-200 hover:bg-slate-50 active:scale-95"
+                title="Send feedback"
+              >
+                <MessageSquarePlus className="h-4 w-4 text-slate-600" />
+              </button>
               {floatingActions.map((action) => (
                 <React.Fragment key={action.id}>
                   {action.render?.()}

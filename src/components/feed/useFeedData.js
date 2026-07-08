@@ -3,12 +3,13 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { appParams } from '@/lib/app-params';
 import { withFeedTimeout } from '@/lib/feed/feedRanking';
 import { listPostFeedView } from '@/services/entityServices';
+import { postKeys } from '@/lib/queryKeys';
 
 const PAGE_SIZE = 30;
 
 export function useFeedData() {
   const query = useInfiniteQuery({
-    queryKey: ['unified-posts'],
+    queryKey: postKeys.feed(),
     initialPageParam: 0,
     queryFn: async ({ pageParam = 0 }) => {
       if (!appParams.hasBackendConfig) return [];
@@ -18,8 +19,11 @@ export function useFeedData() {
         );
         return Array.isArray(posts) ? posts : [];
       } catch (error) {
+        // Rethrow so React Query tracks isError — swallowing here made a
+        // failed feed indistinguishable from an empty one. Cached pages are
+        // preserved by React Query, so existing posts stay visible.
         console.warn('Feed posts request failed:', error?.message || error);
-        return [];
+        throw error;
       }
     },
     getNextPageParam: (lastPage, _allPages, lastPageParam) => (

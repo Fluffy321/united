@@ -1,8 +1,7 @@
 import React from 'react';
 import SwipeableConversationItem from './SwipeableConversationItem';
 import { differenceInMinutes, differenceInHours, differenceInDays, isYesterday, isToday, format } from 'date-fns';
-import { HandHeart, Bot, Sparkles, Users } from 'lucide-react';
-import { AI_AGENT } from '@/lib/aiAgent';
+import { HandHeart, Users } from 'lucide-react';
 
 function formatTimestamp(date) {
   if (!date) return '';
@@ -54,18 +53,14 @@ export default function ConversationList({ conversations, currentUser, selectedI
         </div>
         <p className="text-slate-700 font-semibold">Start with one real conversation</p>
         <p className="text-[13px] text-slate-400 mt-1 leading-relaxed">
-          Search for someone you know, or open United AI for a Jewish-knowledge question.
+          Search for someone you know to start a conversation.
         </p>
       </div>
     );
   }
 
-  // Sort: AI first, then unread, then by recency
+  // Sort: unread first, then by recency
   const sorted = [...conversations].sort((a, b) => {
-    const aIsAI = getOther(a).id === AI_AGENT.id;
-    const bIsAI = getOther(b).id === AI_AGENT.id;
-    if (aIsAI && !bIsAI) return -1;
-    if (!aIsAI && bIsAI) return 1;
     const aUnread = (a.unread_count?.[currentUser.id] || 0) > 0;
     const bUnread = (b.unread_count?.[currentUser.id] || 0) > 0;
     if (aUnread && !bUnread) return -1;
@@ -76,15 +71,13 @@ export default function ConversationList({ conversations, currentUser, selectedI
   });
 
   // Group into sections
-  const aiConvs = sorted.filter(c => getOther(c).id === AI_AGENT.id);
-  const unreadConvs = sorted.filter(c => getOther(c).id !== AI_AGENT.id && (c.unread_count?.[currentUser.id] || 0) > 0);
-  const recentConvs = sorted.filter(c => getOther(c).id !== AI_AGENT.id && (c.unread_count?.[currentUser.id] || 0) === 0);
+  const unreadConvs = sorted.filter(c => (c.unread_count?.[currentUser.id] || 0) > 0);
+  const recentConvs = sorted.filter(c => (c.unread_count?.[currentUser.id] || 0) === 0);
 
   const renderConv = (conv, idx) => {
     const other = getOther(conv);
     const unread = conv.unread_count?.[currentUser.id] || 0;
     const isSelected = selectedId === conv.id;
-    const isAIChat = other.id === AI_AGENT.id;
     const initials = other.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
 
     return (
@@ -96,41 +89,24 @@ export default function ConversationList({ conversations, currentUser, selectedI
       <button
         onClick={() => onSelect(conv)}
         className={`w-full rounded-[20px] px-3 py-3 cursor-pointer flex items-center gap-3 text-left border transition-all duration-150 ${
-          isAIChat && isSelected
-            ? 'border-blue-200 shadow-sm'
-            : isAIChat
-            ? 'border-blue-100 hover:shadow-md hover:border-blue-200 active:scale-[0.98]'
-            : isSelected
+          isSelected
             ? 'bg-blue-50 border-blue-200 shadow-sm'
             : unread > 0
             ? 'bg-white border-blue-100 shadow-sm hover:shadow-md hover:border-blue-200 active:scale-[0.98]'
             : 'bg-white border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 active:scale-[0.98]'
         }`}
-        style={isAIChat ? {
-          background: isSelected
-            ? 'linear-gradient(135deg, #EFF6FF, #F8FAFC)'
-            : 'linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 100%)'
-        } : {}}
       >
         {/* Avatar */}
         <div
           className={`relative flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-white shadow-md ${
-            isAIChat
-              ? 'w-12 h-12 rounded-2xl'
-              : other.isCommunity
-              ? 'w-12 h-12 rounded-2xl'
-              : 'w-12 h-12 rounded-full'
+            other.isCommunity ? 'w-12 h-12 rounded-2xl' : 'w-12 h-12 rounded-full'
           }`}
-          style={{ background: isAIChat
-            ? 'linear-gradient(135deg, #2563EB, #0F172A)'
-            : other.isCommunity
+          style={{ background: other.isCommunity
             ? 'linear-gradient(135deg, #0EA5E9, #2563EB)'
             : 'linear-gradient(135deg, #2563EB, #0F172A)'
           }}
         >
-          {isAIChat
-            ? <Bot className="w-7 h-7 text-white" />
-            : other.isCommunity
+          {other.isCommunity
             ? other.avatar
               ? <img src={other.avatar} alt="" className="w-full h-full object-cover" />
               : <Users className="w-6 h-6 text-white" />
@@ -138,14 +114,6 @@ export default function ConversationList({ conversations, currentUser, selectedI
             ? <img src={other.avatar} alt="" className="w-full h-full object-cover" />
             : <span className="text-[17px]">{initials}</span>
           }
-          {isAIChat && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center shadow border-2 border-white">
-              <Sparkles className="w-2.5 h-2.5 text-white" />
-            </span>
-          )}
-          {isAIChat && (
-            <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full shadow-sm" />
-          )}
         </div>
 
         {/* Content */}
@@ -156,17 +124,9 @@ export default function ConversationList({ conversations, currentUser, selectedI
                 unread > 0 ? 'text-slate-900' : 'text-slate-700'
               }`}>
                 <span className="truncate">{other.name}</span>
-                {isAIChat && (
-                  <span className="flex-shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-slate-950 text-white">
-                    AI
-                  </span>
-                )}
               </span>
               {other.isCommunity && (
                 <span className="text-[10px] font-medium text-slate-400 leading-none mt-0.5">{other.memberCount.toLocaleString()} members</span>
-              )}
-              {isAIChat && (
-                <span className="text-[10px] font-semibold text-emerald-400 leading-none mt-0.5">Always available</span>
               )}
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
@@ -208,9 +168,6 @@ export default function ConversationList({ conversations, currentUser, selectedI
 
   return (
     <div className="px-3 py-3 space-y-1">
-      {/* AI Assistant */}
-      {aiConvs.map((conv, idx) => renderConv(conv, idx))}
-
       {/* Unread */}
       {unreadConvs.length > 0 && (
         <>

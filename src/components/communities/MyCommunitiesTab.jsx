@@ -15,13 +15,11 @@ export default function MyCommunitiesTab({ communities, isLoading, onViewCommuni
 
   if (communities.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
-        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-          <Users className="w-8 h-8 text-slate-400" />
-        </div>
-        <p className="font-semibold text-slate-700 mb-1">No communities yet</p>
-        <p className="text-sm text-slate-400 mb-5">Join communities to see them here.</p>
-        <Button onClick={onBrowse} className="bg-[#0F5ED7] hover:bg-[#0D4EB8] text-white rounded-full px-6">
+      <div className="app-empty-state">
+        <div className="app-empty-state-icon"><Users className="h-6 w-6" /></div>
+        <p className="app-empty-state-title">No communities yet</p>
+        <p className="app-empty-state-body">Join communities to see them here.</p>
+        <Button onClick={onBrowse} className="mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6">
           Browse Communities
         </Button>
       </div>

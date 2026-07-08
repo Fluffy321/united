@@ -30,6 +30,8 @@ function ReactionBar({ postId, currentUser, initialCounts = {} }) {
   const react = async (emoji) => {
     if (!currentUser) { dataService.auth.redirectToLogin(); return; }
     setPicker(false);
+    const prevReaction = myReaction;
+    const prevCounts = counts;
     if (myReaction === emoji) {
       // un-react
       setMyReaction(null);
@@ -44,12 +46,14 @@ function ReactionBar({ postId, currentUser, initialCounts = {} }) {
     try {
       await checkRateLimit('react');
       const existing = await filterReaction({ post_id: postId, user_id: currentUser.id });
-      for (const r of existing) await deleteReaction(r.id);
-      if (myReaction !== emoji) {
+      if (existing.length > 0) await deleteReaction(existing.map(r => r.id));
+      if (prevReaction !== emoji) {
         await createReaction({ post_id: postId, user_id: currentUser.id, emoji });
       }
     } catch (err) {
-      if (err instanceof RateLimitError) toast.error(err.message);
+      setMyReaction(prevReaction);
+      setCounts(prevCounts);
+      toast.error(err instanceof RateLimitError ? err.message : 'Could not save your reaction. Please try again.');
     }
   };
 
@@ -544,10 +548,10 @@ export default function CommunityFeedTab({ posts: initialPosts, community, curre
       </div>
 
       {sorted.length === 0 ? (
-        <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center">
+        <div className="app-empty-state">
           <div className="text-4xl mb-3">✍️</div>
-          <p className="text-[15px] font-bold text-slate-900">No posts yet</p>
-          <p className="text-[13px] text-slate-500 mt-1">Be the first to share something!</p>
+          <p className="app-empty-state-title">No posts yet</p>
+          <p className="app-empty-state-body">Be the first to share something!</p>
         </div>
       ) : (
         <div className="space-y-3">

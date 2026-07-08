@@ -7,6 +7,7 @@ import { formatDistanceToNow, parseISO, isValid } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { deleteBookmark } from '@/services/entityServices';
+import { postKeys } from '@/lib/queryKeys';
 
 function safeFormatDate(dateStr) {
   if (!dateStr) return null;
@@ -96,7 +97,7 @@ export default function SavedPostsSection({ userId }) {
   const postIds = bookmarks.map(b => b.post_id);
 
   const { data: savedPosts = [], isLoading: loadingPosts } = useQuery({
-    queryKey: ['saved-posts', postIds.join(',')],
+    queryKey: postKeys.saved(postIds.join(',')),
     queryFn: () => batchFetchByIds('UnifiedPost', postIds),
     enabled: postIds.length > 0,
     staleTime: 30_000,
@@ -108,7 +109,7 @@ export default function SavedPostsSection({ userId }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmarks', userId] });
-      queryClient.invalidateQueries({ queryKey: ['saved-posts'] });
+      queryClient.invalidateQueries({ queryKey: postKeys.savedAll() });
       toast.success('Bookmark removed');
     },
     onError: () => toast.error('Failed to remove bookmark'),
@@ -131,10 +132,9 @@ export default function SavedPostsSection({ userId }) {
           <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
         </div>
       ) : orderedPairs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-center bg-white rounded-2xl border border-slate-100">
-          <Bookmark className="w-9 h-9 text-slate-300 mb-3" />
-          <p className="font-semibold text-slate-600 text-[14px]">No saved posts yet</p>
-          <p className="text-[12px] text-slate-400 mt-1 max-w-[220px] leading-relaxed">
+        <div className="flex items-center gap-3 bg-white rounded-2xl border border-slate-100 px-4 py-3">
+          <Bookmark className="w-5 h-5 shrink-0 text-slate-300" />
+          <p className="text-[13px] text-slate-400 leading-snug">
             Tap the bookmark icon on any post to save it here.
           </p>
         </div>

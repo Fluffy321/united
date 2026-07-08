@@ -2,10 +2,10 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
 import '@/index.css'
-import { initAnalytics, installGlobalErrorLogging } from '@/lib/analytics'
+import { captureError, initAnalytics, installGlobalErrorLogging } from '@/lib/analytics'
 
 installGlobalErrorLogging();
-initAnalytics().catch(() => {});
+initAnalytics().catch((err) => captureError(err, { source: 'initAnalytics' }));
 
 const resetDevelopmentServiceWorker = async () => {
   if (!('serviceWorker' in navigator)) return;
@@ -23,13 +23,13 @@ const resetDevelopmentServiceWorker = async () => {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     if (import.meta.env.DEV) {
-      resetDevelopmentServiceWorker().catch(() => {});
+      resetDevelopmentServiceWorker().catch((err) => console.warn('[SW] dev reset failed:', err));
       return;
     }
 
     navigator.serviceWorker.register('/sw.js')
-      .then((registration) => registration.update().catch(() => {}))
-      .catch(() => {});
+      .then((registration) => registration.update().catch((err) => captureError(err, { source: 'sw-update' })))
+      .catch((err) => captureError(err, { source: 'sw-register' }));
   });
 
   navigator.serviceWorker.addEventListener('message', (event) => {

@@ -1,9 +1,10 @@
 import React from 'react';
 import { Bookmark } from 'lucide-react';
-import { supabase } from '@/api/supabaseClient';
+import { createBookmark, deleteBookmark, filterBookmark } from '@/services/entityServices';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { appParams } from '@/lib/app-params';
+import { postKeys } from '@/lib/queryKeys';
 
 export default function BookmarkButton({ postId, currentUser }) {
   const queryClient = useQueryClient();
@@ -12,13 +13,8 @@ export default function BookmarkButton({ postId, currentUser }) {
   const { data: bookmark } = useQuery({
     queryKey: ['bookmark', postId, currentUser?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('bookmarks')
-        .select('id')
-        .eq('user_id', currentUser.id)
-        .eq('post_id', postId)
-        .maybeSingle();
-      return data ?? null;
+      const rows = await filterBookmark({ user_id: currentUser.id, post_id: postId }, undefined, 1);
+      return rows[0] ?? null;
     },
     enabled: !!postId && isRealUser && appParams.hasBackendConfig,
     staleTime: 60_000,
@@ -32,13 +28,9 @@ export default function BookmarkButton({ postId, currentUser }) {
   const toggleMutation = useMutation({
     mutationFn: async () => {
       if (isBookmarked) {
-        const { error } = await supabase.from('bookmarks').delete().eq('id', bookmark.id);
-        if (error) throw error;
+        await deleteBookmark(bookmark.id);
       } else {
-        const { error } = await supabase
-          .from('bookmarks')
-          .insert({ user_id: currentUser.id, post_id: postId });
-        if (error) throw error;
+        await createBookmark({ user_id: currentUser.id, post_id: postId });
       }
     },
     onMutate: async () => {
@@ -57,7 +49,7 @@ export default function BookmarkButton({ postId, currentUser }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmark', postId, currentUser?.id] });
       queryClient.invalidateQueries({ queryKey: ['bookmarks', currentUser?.id] });
-      queryClient.invalidateQueries({ queryKey: ['saved-posts'] });
+      queryClient.invalidateQueries({ queryKey: postKeys.savedAll() });
       if (!isBookmarked) toast.success('Post saved');
     },
   });

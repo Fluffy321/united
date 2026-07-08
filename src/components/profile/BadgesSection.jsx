@@ -73,7 +73,7 @@ export default function BadgesSection({ user }) {
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              {!isUnlocked && (
+              {!isUnlocked && actionCount > 0 && (
                 <p className="mt-0.5 text-[9px] font-semibold text-slate-400">
                   {Math.min(actionCount, badge.threshold)}/{badge.threshold}
                 </p>

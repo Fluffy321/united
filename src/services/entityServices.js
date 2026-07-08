@@ -5,6 +5,7 @@ export const createAppFeedback = (...args) => supabaseBackend.entities.AppFeedba
 export const createBlock = (...args) => supabaseBackend.entities.Block.create(...args);
 export const deleteBlock = (...args) => supabaseBackend.entities.Block.delete(...args);
 export const filterBlock = (...args) => supabaseBackend.entities.Block.filter(...args);
+export const createBookmark = (...args) => supabaseBackend.entities.Bookmark.create(...args);
 export const deleteBookmark = (...args) => supabaseBackend.entities.Bookmark.delete(...args);
 export const filterBookmark = (...args) => supabaseBackend.entities.Bookmark.filter(...args);
 export const createBusinessClaimRequest = (...args) => supabaseBackend.entities.BusinessClaimRequest.create(...args);
@@ -36,10 +37,16 @@ export const createCommunityEvent = (...args) => supabaseBackend.entities.Commun
 export const filterCommunityEvent = (...args) => supabaseBackend.entities.CommunityEvent.filter(...args);
 export const listCommunityEvent = (...args) => supabaseBackend.entities.CommunityEvent.list(...args);
 export const updateCommunityEvent = (...args) => supabaseBackend.entities.CommunityEvent.update(...args);
+export const filterCommunityAdminAuditLog = (...args) => supabaseBackend.entities.CommunityAdminAuditLog.filter(...args);
 export const createCommunityEventRSVP = (...args) => supabaseBackend.entities.CommunityEventRSVP.create(...args);
 export const deleteCommunityEventRSVP = (...args) => supabaseBackend.entities.CommunityEventRSVP.delete(...args);
 export const filterCommunityEventRSVP = (...args) => supabaseBackend.entities.CommunityEventRSVP.filter(...args);
 export const updateCommunityEventRSVP = (...args) => supabaseBackend.entities.CommunityEventRSVP.update(...args);
+export const createCommunityForm = (...args) => supabaseBackend.entities.CommunityForm.create(...args);
+export const deleteCommunityForm = (...args) => supabaseBackend.entities.CommunityForm.delete(...args);
+export const updateCommunityForm = (...args) => supabaseBackend.entities.CommunityForm.update(...args);
+export const bulkCreateCommunityFormField = (...args) => supabaseBackend.entities.CommunityFormField.bulkCreate(...args);
+export const filterCommunityFormSubmission = (...args) => supabaseBackend.entities.CommunityFormSubmission.filter(...args);
 export const createCommunityGroup = (...args) => supabaseBackend.entities.CommunityGroup.create(...args);
 export const listCommunityGroup = (...args) => supabaseBackend.entities.CommunityGroup.list(...args);
 export const updateCommunityGroup = (...args) => supabaseBackend.entities.CommunityGroup.update(...args);
@@ -54,6 +61,8 @@ export const updateCommunityPost = (...args) => supabaseBackend.entities.Communi
 export const createCommunityResource = (...args) => supabaseBackend.entities.CommunityResource.create(...args);
 export const deleteCommunityResource = (...args) => supabaseBackend.entities.CommunityResource.delete(...args);
 export const filterCommunityResource = (...args) => supabaseBackend.entities.CommunityResource.filter(...args);
+export const bulkCreateCommunityVolunteerSlot = (...args) => supabaseBackend.entities.CommunityVolunteerSlot.bulkCreate(...args);
+export const filterCommunityVolunteerSlot = (...args) => supabaseBackend.entities.CommunityVolunteerSlot.filter(...args);
 export const createConversation = (...args) => supabaseBackend.entities.Conversation.create(...args);
 export const filterConversation = (...args) => supabaseBackend.entities.Conversation.filter(...args);
 export const listConversation = (...args) => supabaseBackend.entities.Conversation.list(...args);
@@ -66,6 +75,8 @@ export const filterFeedUserPreference = (...args) => supabaseBackend.entities.Fe
 export const updateFeedUserPreference = (...args) => supabaseBackend.entities.FeedUserPreference.update(...args);
 export const filterFiveTownsBrief = (...args) => supabaseBackend.entities.FiveTownsBrief.filter(...args);
 export const filterFriendship = (...args) => supabaseBackend.entities.Friendship.filter(...args);
+export const createGemach = (...args) => supabaseBackend.entities.Gemach.create(...args);
+export const filterGemach = (...args) => supabaseBackend.entities.Gemach.filter(...args);
 export const createGroupJoinRequest = (...args) => supabaseBackend.entities.GroupJoinRequest.create(...args);
 export const filterGroupJoinRequest = (...args) => supabaseBackend.entities.GroupJoinRequest.filter(...args);
 export const updateGroupJoinRequest = (...args) => supabaseBackend.entities.GroupJoinRequest.update(...args);
@@ -144,6 +155,8 @@ export const filterReport = (...args) => supabaseBackend.entities.Report.filter(
 export const listReport = (...args) => supabaseBackend.entities.Report.list(...args);
 export const updateReport = (...args) => supabaseBackend.entities.Report.update(...args);
 export const listRetentionEvent = (...args) => supabaseBackend.entities.RetentionEvent.list(...args);
+export const createSimchaAnnouncement = (...args) => supabaseBackend.entities.SimchaAnnouncement.create(...args);
+export const filterSimchaAnnouncement = (...args) => supabaseBackend.entities.SimchaAnnouncement.filter(...args);
 export const filterTransaction = (...args) => supabaseBackend.entities.Transaction.filter(...args);
 export const createUnifiedPost = (...args) => supabaseBackend.entities.UnifiedPost.create(...args);
 export const deleteUnifiedPost = (...args) => supabaseBackend.entities.UnifiedPost.delete(...args);

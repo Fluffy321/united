@@ -1842,9 +1842,11 @@ export default function MitzvahCircle() {
                       Choose the kind of chesed you want to help with.
                     </p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-500">
-                    {browseRequests.length} open
-                  </span>
+                  {browseRequests.length > 0 && (
+                    <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-500">
+                      {browseRequests.length} open
+                    </span>
+                  )}
                 </div>
                 <div className="mobile-scroll-x flex gap-2">
                   {CATEGORY_GROUPS.map((group) => {

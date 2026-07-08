@@ -4,7 +4,6 @@ const STORAGE_PREFIX = 'junited_local_entity_';
 const SUPABASE_ENTITY_TABLES = {
   // Core — migration 001_core.sql
   User: 'profiles',
-  Profile: 'profiles',
   Community: 'communities',
   UnifiedPost: 'posts',
   Post: 'posts',
@@ -29,7 +28,6 @@ const SUPABASE_ENTITY_TABLES = {
   MitzvahAction: 'mitzvah_actions',
   MitzvahPoints: 'mitzvah_points',
   Block: 'user_blocks',
-  FriendRequest: 'friend_requests',
   Friendship: 'friendships',
   // Messaging permissions — migration 20260517033459_message_requests.sql
   MessageRequest: 'message_requests',
@@ -55,14 +53,10 @@ const SUPABASE_ENTITY_TABLES = {
   ClaimRequest: 'claim_requests',
   ModerationAuditLog: 'moderation_audit_logs',
   // Community admin center — migration 024_community_admin_center.sql
-  CommunityMemberRemoval: 'community_member_removals',
-  CommunityMemberAppeal: 'community_member_appeals',
   CommunityAdminAuditLog: 'community_admin_audit_log',
   // Poll votes — migration 030_poll_votes.sql
   PollVote: 'poll_votes',
   // Local updates automation — migration 20260515180122_local_updates_automation.sql
-  LocalUpdateSource: 'local_update_sources',
-  LocalUpdateItem: 'local_update_items',
   // Business directory MVP — migration 20260516011532_business_directory_mvp.sql
   BusinessListing: 'business_listings',
   BusinessClaimRequest: 'business_claim_requests',
@@ -81,13 +75,21 @@ const SUPABASE_ENTITY_TABLES = {
   // Community invites — migration 20260519220000_invite_links.sql
   InviteLink: 'invite_links',
   // Activity digest — migration 20260519000000_community_last_visits.sql
-  CommunityLastVisit: 'community_last_visits',
   // Meal trains — migration 20260622223000_meal_trains.sql
   MealTrainRequest: 'meal_train_requests',
   // Yahrzeits & refuah — migration 20260701130000_yahrzeits_refuah.sql
   Yahrzeit: 'yahrzeits',
   RefuahRequest: 'refuah_requests',
   MealSlot: 'meal_slots',
+  // Eruv/gemach/simcha — migration 20260701160000_eruv_gemach_simcha.sql
+  Gemach: 'gemachs',
+  SimchaAnnouncement: 'simcha_announcements',
+  // Community forms — migration 20260520025433_community_forms.sql
+  CommunityForm: 'community_forms',
+  CommunityFormField: 'community_form_fields',
+  CommunityFormSubmission: 'community_form_submissions',
+  // Volunteer slots — migration 20260520200328_community_volunteer_slots.sql
+  CommunityVolunteerSlot: 'community_volunteer_slots',
   // All other entities (Shul, etc.) are
   // intentionally unmapped — their DB tables do not exist yet. Each unmapped
   // entity will throw clearly in production rather than silently using localStorage.
@@ -743,6 +745,9 @@ const toDbPatch = (data = {}, entityName) => {
     }
     if (patch.author_user_id && !patch.user_id) patch.user_id = patch.author_user_id;
     if (patch.user_id && !patch.author_user_id) patch.author_user_id = patch.user_id;
+    // posts counts likes via likes_count; normalizeUnifiedActivity's
+    // reactions_count has no posts column and costs a failed-insert retry
+    delete patch.reactions_count;
   }
 
   if (entityName === 'CommunityEvent') {
@@ -1168,7 +1173,9 @@ const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
 
     const postMatches = allPosts
       .filter((post) => {
-        if (filters.post_type && post.type !== filters.post_type) return false;
+        if (filters.post_type === 'marketplace_listing') {
+          if (post.activity_kind !== 'marketplace_listing' && post.type !== 'marketplace') return false;
+        } else if (filters.post_type && post.type !== filters.post_type) return false;
         if (filters.community_id && post.community_id !== filters.community_id) return false;
         if (filters.date_from && post.created_date < filters.date_from) return false;
         if (filters.date_to && post.created_date > filters.date_to) return false;
@@ -1217,7 +1224,12 @@ const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
     .order('created_at', { ascending: false })
     .limit(30);
 
-  if (filters.post_type) postsQuery = postsQuery.eq('type', filters.post_type);
+  if (filters.post_type === 'marketplace_listing') {
+    // Marketplace rows carry type 'marketplace' with activity_kind 'marketplace_listing'
+    postsQuery = postsQuery.or('activity_kind.eq.marketplace_listing,type.eq.marketplace');
+  } else if (filters.post_type) {
+    postsQuery = postsQuery.eq('type', filters.post_type);
+  }
   if (filters.community_id) postsQuery = postsQuery.eq('community_id', filters.community_id);
   if (filters.date_from) postsQuery = postsQuery.gte('created_at', filters.date_from);
   if (filters.date_to) postsQuery = postsQuery.lte('created_at', `${filters.date_to}T23:59:59.999Z`);
@@ -1233,6 +1245,7 @@ const runUniversalSearch = async ({ query = '', filters = {} } = {}) => {
     .from('public_profiles')
     .select(PUBLIC_PROFILE_SELECT)
     .or(`display_name.ilike.%${esc}%,username.ilike.%${esc}%,bio.ilike.%${esc}%,city.ilike.%${esc}%,public_community.ilike.%${esc}%`)
+    .is('deleted_at', null)
     .limit(12);
   const businessesQuery = supabase
     .from('business_listings')

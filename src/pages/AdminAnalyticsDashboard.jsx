@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
@@ -231,17 +232,12 @@ function buildWeeklyBuckets(items, dateField, weeks = 8) {
 export default function AdminAnalyticsDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('platform');
-  const [data, setData] = useState(null);
 
-  useEffect(() => {
-    if (user?.role === 'admin') loadData();
-    else setLoading(false);
-  }, [user?.role]);
-
-  const loadData = async () => {
-    try {
+  const { data = null, isLoading } = useQuery({
+    queryKey: ['admin-analytics'],
+    enabled: user?.role === 'admin',
+    queryFn: async () => {
       const [communities, posts, users, reports, events, userCommunities, commentsResult, mitzvahRequestsResult, notificationsResult, businessesResult, retentionResult, subsResult, communityPlansResult] = await Promise.all([
         listCommunity('-follower_count', 200),
         listUnifiedPost('-created_date', 500),
@@ -370,7 +366,7 @@ export default function AdminAnalyticsDashboard() {
       const premiumCommunities = communities.filter(c => premiumCommunityIds.has(c.id) || c.plan_key === 'community_premium');
       const communityPlansPerWeek = buildWeeklyBuckets(communityPlanSubscriptions, 'created_at', 8);
 
-      setData({
+      return {
         dau, wau, mau,
         signupsPerDay, postsPerDay, postTypeData, topCommunities,
         reportsPerDay, unresolvedReports, resolvedReports,
@@ -402,14 +398,16 @@ export default function AdminAnalyticsDashboard() {
         annualCommunityPlans,
         premiumCommunities,
         communityPlansPerWeek,
-      });
-    } catch (e) {
+      };
+    },
+    retry: 1,
+    throwOnError: (e) => {
       toast.error('Failed to load analytics');
       captureError(e, { context: 'AdminAnalyticsDashboard: load analytics data' });
-    } finally {
-      setLoading(false);
-    }
-  };
+      return false;
+    },
+  });
+  const loading = user?.role === 'admin' && isLoading;
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
   if (!user || user.role !== 'admin') return <div className="min-h-screen flex items-center justify-center"><p className="text-slate-600">Admin access required.</p></div>;

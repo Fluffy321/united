@@ -41,6 +41,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/api/supabaseClient';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 import { createBusinessClaimRequest, createBusinessListing, filterBusinessClaimRequest, filterBusinessListing, filterBusinessManager, filterUserCommunity, listBusinessListing, listBusinessReview, listCommunity, listMitzvahRequest, listUnifiedPost } from '@/services/entityServices';
+import { postKeys } from '@/lib/queryKeys';
 
 const BusinessMap = lazy(() => import('@/components/business/BusinessMap'));
 const MitzvahMap = lazy(() => import('@/components/mitzvah/MitzvahMap'));
@@ -1317,7 +1318,7 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
   });
 
   const { data: communityPosts = [] } = useQuery({
-    queryKey: ['map-community-posts'],
+    queryKey: postKeys.map(),
     queryFn: () => listUnifiedPost('-created_date', 180),
     enabled: COMMUNITIES_ENABLED,
     staleTime: 120000,
@@ -1427,15 +1428,17 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
           <div>
             <p className="flex items-center gap-2 text-sm font-black text-slate-950">
               <UsersRound className="h-4 w-4 text-blue-600" />
-              Community posts on my map
+              My communities
             </p>
-            <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-500">
-              Pick joined communities one by one, or leave all unselected to show posts from every joined community.
+            <p className="mt-1 text-[12px] font-medium leading-5 text-slate-500">
+              Tap to filter posts on the map.
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
-            {communityPoints.length} posts
-          </span>
+          {communityPoints.length > 0 && (
+            <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
+              {communityPoints.length} posts
+            </span>
+          )}
         </div>
 
         <div className="mobile-scroll-x mt-3 flex gap-2 pb-1">
@@ -1527,7 +1530,6 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
             requests={requests}
             userLocation={userLocation}
             communityPoints={COMMUNITIES_ENABLED ? communityPoints : []}
-            personalized
             includeStaticPoints
             initialPrimaryFilter={categoryParam}
             highlightedPlace={placeParam}
@@ -1586,10 +1588,10 @@ export default function MapPage() {
         sticky={false}
         showBack={isDeepLinkedMap}
         backTo="/Feed"
-        className="relative before:pointer-events-none before:absolute before:inset-x-3 before:top-2 before:bottom-1 before:rounded-[30px] before:bg-gradient-to-r before:from-blue-200/45 before:via-white/35 before:to-emerald-100/45 before:blur-xl before:content-[''] sm:before:inset-x-4"
+        className="relative pb-0 before:pointer-events-none before:absolute before:inset-x-3 before:top-2 before:bottom-1 before:rounded-[30px] before:bg-gradient-to-r before:from-blue-200/45 before:via-white/35 before:to-emerald-100/45 before:blur-xl before:content-[''] sm:before:inset-x-4"
         toolbarClassName="relative"
         icon={Store}
-        title="Our Businesses"
+        title={activeView === 'businesses' ? 'Our Businesses' : 'Five Towns Map'}
         help={<PageHelp text="Discover trusted Jewish-owned businesses, kosher spots, and local services near you or online." />}
         actions={(
           <button
@@ -1602,25 +1604,29 @@ export default function MapPage() {
         )}
       />
 
-      <div className="mobile-page-wide min-h-0 flex-1 overflow-y-auto px-3 sm:px-4 mobile-safe-bottom">
-        <div className="mb-3 grid grid-cols-2 gap-2 rounded-[20px] border border-slate-200 bg-white p-1 shadow-sm">
+      {/* View toggle — outside scroll so it stays anchored below the header */}
+      <div className="shrink-0 px-3 pt-2 pb-0 sm:px-4">
+        <div className="grid grid-cols-2 gap-1.5 rounded-2xl bg-slate-100 p-1">
           <button
             type="button"
             onClick={() => setActiveView('businesses')}
-            className={`flex h-10 items-center justify-center gap-2 rounded-2xl text-xs font-black ${activeView === 'businesses' ? 'bg-slate-950 text-white' : 'text-slate-500'}`}
+            className={`flex h-9 items-center justify-center gap-2 rounded-xl text-xs font-black transition ${activeView === 'businesses' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}
           >
-            <Store className="h-4 w-4" />
+            <Store className="h-3.5 w-3.5" />
             Businesses
           </button>
           <button
             type="button"
             onClick={() => setActiveView('community')}
-            className={`flex h-10 items-center justify-center gap-2 rounded-2xl text-xs font-black ${activeView === 'community' ? 'bg-slate-950 text-white' : 'text-slate-500'}`}
+            className={`flex h-9 items-center justify-center gap-2 rounded-xl text-xs font-black transition ${activeView === 'community' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}
           >
-            <Sparkles className="h-4 w-4" />
+            <Sparkles className="h-3.5 w-3.5" />
             {COMMUNITIES_ENABLED ? 'Community Map' : 'Local Map'}
           </button>
         </div>
+      </div>
+
+      <div className="mobile-page-wide min-h-0 flex-1 overflow-y-auto px-3 pt-2 sm:px-4 mobile-safe-bottom">
 
         <LiveNowRail
           className="mb-3"

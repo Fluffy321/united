@@ -290,7 +290,10 @@ export function buildMarketplaceLiveNowItems({ listings = [] } = {}) {
       eyebrow: urgency === 'urgent' ? 'Need gone soon' : 'Marketplace',
       title: listing.title || 'Community listing',
       meta: listing.price || listing.category || 'Listing',
-      liveText: `${listing.interested || 0} interested · ${listing.neighborhood || 'Five Towns'}`,
+      liveText: [
+        listing.replies ? `${listing.replies} ${listing.replies === 1 ? 'reply' : 'replies'}` : '',
+        listing.neighborhood || 'Five Towns',
+      ].filter(Boolean).join(' · '),
       actionLabel: listing.price === 'Free' ? 'Pick up' : 'Message',
       href: `/Marketplace?listing=${encodeURIComponent(listing.id)}`,
       avatars: [initials(listing.seller || listing.seller_name)],

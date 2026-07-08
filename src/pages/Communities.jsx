@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, Search, X, AlertCircle, Map, Calendar, Compass, ArrowUpRight, MessageCircleMore, Sparkles, BookOpenText, ChevronRight } from 'lucide-react';
+import { Loader2, Search, X, AlertCircle, Map, Compass, ArrowUpRight, MessageCircleMore, Sparkles, BookOpenText, ChevronRight, UsersRound } from 'lucide-react';
+import DestinationHeader from '@/components/layout/DestinationHeader';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import ProfileSetup from '@/components/profile/ProfileSetup';
@@ -16,8 +18,11 @@ import { toast } from 'sonner';
 import LiveNowPanel from '@/components/common/LiveNowPanel';
 import { buildCommunityActionItems, getCommunityActionCopy } from '@/lib/liveNow';
 import { createGroupMember, createUserCommunity, deleteGroupMember, filterGroupMember, filterUserCommunity, listCommunity, listCommunityGroup, updateCommunity, updateCommunityGroup } from '@/services/entityServices';
+import { communitiesService } from '@/services/communitiesService';
 
 const CACHE_KEY = 'communities_v3_cache';
+// Shared empty Set so components with an optional id-set prop get a stable default.
+const EMPTY_ID_SET = new Set();
 const FEATURED_SHULS = ["Young Israel Woodmere", "Chabad of Woodmere", "Beth Shalom", "Shaaray Tefila"];
 
 const CATEGORIES = [
@@ -319,18 +324,6 @@ function getCoreFiveTownsRooms(communities = []) {
   });
 }
 
-function getRealRoomStats(rooms = []) {
-  const realRooms = rooms.filter(room => room?.id && room?.name);
-  const postsToday = realRooms.reduce((sum, room) => sum + Number(room.postsToday || room.posts_today || 0), 0);
-  const activeNow = realRooms.reduce((sum, room) => sum + Number(room.activeNow || room.active_now || room.active_members || 0), 0);
-
-  return [
-    realRooms.length > 0 ? [realRooms.length.toLocaleString(), 'real rooms'] : null,
-    postsToday > 0 ? [postsToday.toLocaleString(), 'posts today'] : null,
-    activeNow > 0 ? [activeNow.toLocaleString(), 'active now'] : null,
-  ].filter(Boolean);
-}
-
 function mergeCommunityCatalog(communities = []) {
   const valid = (communities || []).filter(c => c?.id && c?.name);
   return valid;
@@ -494,7 +487,7 @@ function CommunitySectionRail({ title, subtitle, communities, userCommunityIds, 
   );
 }
 
-function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOpen, onJoin, compact = false }) {
+function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOpen, onJoin, compact = false, hasNewActivity = false }) {
   if (!community?.id) return null;
   const room = buildRoomViewModel(community, index);
   const hasActivity = Number(room.roomActiveNow || 0) > 0;
@@ -513,8 +506,13 @@ function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOp
       <div className="flex h-full flex-col gap-3 p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${room.roomGradient} text-xl shadow-sm`}>
-              {room.roomIcon}
+            <div className="relative shrink-0">
+              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${room.roomGradient} text-xl shadow-sm`}>
+                {room.roomIcon}
+              </div>
+              {isJoined && hasNewActivity && (
+                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 ring-2 ring-white" aria-label="New activity" />
+              )}
             </div>
             <div className="min-w-0">
               <h3 className="line-clamp-1 text-[17px] font-black tracking-tight text-slate-950">{room.roomName}</h3>
@@ -578,17 +576,16 @@ function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOp
   );
 }
 
-function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, onJoin }) {
+function FiveTownsRoomsHub({ communities, userCommunityIds, newActivityIds = EMPTY_ID_SET, joiningId, onOpen, onJoin }) {
   const blueprintRooms = getCoreFiveTownsRooms(communities);
   const rooms = blueprintRooms.slice(0, 10);
-  const roomStats = getRealRoomStats(rooms);
   const leadRooms = rooms.slice(0, 3);
   const remainingRooms = rooms.slice(3);
   if (!rooms.length) {
     return (
-      <section className="rounded-[28px] border border-dashed border-slate-300 bg-white p-5 text-center shadow-sm">
-        <h2 className="text-[18px] font-black tracking-tight text-slate-950">No Five Towns rooms yet</h2>
-        <p className="mt-1 text-[13px] font-semibold leading-relaxed text-slate-500">
+      <section className="app-empty-state">
+        <h2 className="app-empty-state-title">No Five Towns rooms yet</h2>
+        <p className="app-empty-state-body">
           Be the first to create a real room for local questions, help, or plans.
         </p>
       </section>
@@ -603,21 +600,11 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
             JUnited Essential 10
           </div>
-          <h2 className="text-[26px] font-black leading-tight tracking-tight">Jump into the room that matches what you need right now.</h2>
+          <h2 className="text-[26px] font-black leading-tight tracking-tight">Find your people in the Five Towns.</h2>
           <p className="mt-2 text-[13px] font-semibold leading-relaxed text-white/78">
-            Communities are not folders. They are live places to ask, plan, help, find people, and move real life forward.
+            Join a group for your shul, neighborhood, or interest — ask questions, plan things, and help each other out.
           </p>
         </div>
-        {roomStats.length > 0 && (
-        <div className={`grid gap-2 p-3 ${roomStats.length === 1 ? 'grid-cols-1' : roomStats.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-          {roomStats.map(([value, label]) => (
-            <div key={label} className="rounded-2xl bg-slate-50 p-3 text-center">
-              <p className="text-[20px] font-black text-slate-950">{value}</p>
-              <p className="text-[10px] font-black uppercase text-slate-400">{label}</p>
-            </div>
-          ))}
-        </div>
-        )}
       </section>
 
       {leadRooms.length > 0 && <section className="space-y-3">
@@ -632,6 +619,7 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
                 community={room}
                 index={index}
                 isJoined={userCommunityIds.has(room.id)}
+                hasNewActivity={newActivityIds.has(room.id)}
                 isJoining={joiningId === room.id}
                 onOpen={onOpen}
                 onJoin={onJoin}
@@ -654,6 +642,7 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, joiningId, onOpen, o
               index={index + 3}
               compact
               isJoined={userCommunityIds.has(room.id)}
+              hasNewActivity={newActivityIds.has(room.id)}
               isJoining={joiningId === room.id}
               onOpen={onOpen}
               onJoin={onJoin}
@@ -753,7 +742,7 @@ function CommunityDiscoveryHub({ communities, userCommunityIds, joiningId, onOpe
   );
 }
 
-function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
+function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, hasNewActivity = false }) {
   // Guard: skip rendering if community has no id
   if (!community?.id || !community?.name) return null;
 
@@ -790,13 +779,18 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin }) {
       <div className="relative p-4 pt-5">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-start gap-2.5 flex-1 min-w-0">
-            {community.logo_url ? (
-              <img src={community.logo_url} alt={community.name} className="h-12 w-12 rounded-2xl object-cover shrink-0 ring-4 ring-white shadow-sm" />
-            ) : (
-              <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center font-bold text-[12px] shadow-md ring-4 ring-white shrink-0`}>
-                {initials}
-              </div>
-            )}
+            <div className="relative shrink-0">
+              {community.logo_url ? (
+                <img src={community.logo_url} alt={community.name} className="h-12 w-12 rounded-2xl object-cover ring-4 ring-white shadow-sm" />
+              ) : (
+                <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center font-bold text-[12px] shadow-md ring-4 ring-white`}>
+                  {initials}
+                </div>
+              )}
+              {isJoined && hasNewActivity && (
+                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 ring-2 ring-white" aria-label="New activity" />
+              )}
+            </div>
             <div className="min-w-0 flex-1">
               <div className="pr-10 text-[14px] font-black text-slate-900 line-clamp-2 leading-snug">{community.name}</div>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
@@ -919,12 +913,9 @@ export default function Communities() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user: currentUser } = useAuth();
+  const queryClient = useQueryClient();
+  const uid = currentUser?.id;
   const [activeTab, setActiveTab] = useState('discover');
-  const [allCommunities, setAllCommunities] = useState(() => getCached());
-  const [allGroups, setAllGroups] = useState([]);
-  const [userCommunityIds, setUserCommunityIds] = useState(new Set());
-  const [memberGroupIds, setMemberGroupIds] = useState(new Set());
-  const [loadingPhase, setLoadingPhase] = useState('loading');
   const [joiningId, setJoiningId] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -932,7 +923,6 @@ export default function Communities() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [reseedingFeatured, setReseedingFeatured] = useState(false);
   const [showCategoryBrowse, setShowCategoryBrowse] = useState(false);
-  const [isDemo, setIsDemo] = useState(false);
   const [featuredError, setFeaturedError] = useState(false);
   const [sizeFilter, setSizeFilter] = useState('all_sizes');
   const [activityFilter, setActivityFilter] = useState('all_activity');
@@ -948,50 +938,65 @@ export default function Communities() {
     navigate(`/communities/${encodeURIComponent(legacyCommunityId)}${suffix}`, { replace: true });
   }, [navigate, searchParams]);
 
-  const loadData = useCallback(async (user) => {
-    setLoadingPhase('loading');
-    try {
-      const results = await Promise.allSettled([
-        user ? filterUserCommunity({ user_id: user.id }) : Promise.resolve([]),
-        user ? filterGroupMember({ user_id: user.id }) : Promise.resolve([]),
-        listCommunity('-follower_count', 80),
-        listCommunityGroup('-member_count', 50),
-      ]);
-
-      const [memberships, groupMembers, comms, groups] = results;
-
-      if (memberships.status === 'fulfilled') setUserCommunityIds(new Set(memberships.value.map(m => m.community_id)));
-      if (groupMembers.status === 'fulfilled') setMemberGroupIds(new Set(groupMembers.value.map(m => m.group_id)));
-
-      if (comms.status === 'fulfilled' && comms.value?.length > 0) {
-        // Sanitize: only keep records with a valid id and name
-        const sanitized = comms.value.filter(c => c?.id && c?.name);
-        const toSet = sanitized;
-        allCommunitiesRef.current = toSet;
-        setAllCommunities(toSet);
-        setCache(sanitized);
-        setIsDemo(false);
-      } else {
-        const cached = getCached().filter(c => c?.id && c?.name);
-        const toSet = cached;
-        allCommunitiesRef.current = toSet;
-        setAllCommunities(toSet);
-        setIsDemo(false);
-      }
-
-      if (groups.status === 'fulfilled') setAllGroups(groups.value || []);
-    } catch {
+  const {
+    data: communitiesData,
+    isLoading: communitiesLoading,
+    isPlaceholderData: communitiesIsPlaceholder,
+  } = useQuery({
+    queryKey: ['communities-list'],
+    queryFn: () => listCommunity('-follower_count', 80),
+    // Preserve the localStorage offline/fallback cache: show it instantly
+    // while the network fetch runs (and if the fetch fails entirely).
+    placeholderData: () => {
       const cached = getCached().filter(c => c?.id && c?.name);
-      allCommunitiesRef.current = cached;
-      setAllCommunities(cached);
-      setIsDemo(false);
-    }
-    setLoadingPhase('done');
-  }, []);
+      return cached.length > 0 ? cached : undefined;
+    },
+  });
 
+  const { data: allGroups = [], isLoading: groupsLoading } = useQuery({
+    queryKey: ['community-groups-list'],
+    queryFn: () => listCommunityGroup('-member_count', 50),
+  });
+
+  const { data: membershipRows = [], isLoading: membershipsLoading } = useQuery({
+    queryKey: ['user-community-ids', uid],
+    queryFn: () => filterUserCommunity({ user_id: uid }),
+    enabled: !!uid,
+  });
+
+  const { data: groupMemberRows = [], isLoading: groupMembersLoading } = useQuery({
+    queryKey: ['user-group-ids', uid],
+    queryFn: () => filterGroupMember({ user_id: uid }),
+    enabled: !!uid,
+  });
+
+  // Which joined communities have new posts/events since the user's last visit?
+  // Drives the small blue "new activity" dot on joined community cards.
+  const { data: newActivityRows = [] } = useQuery({
+    queryKey: ['communities-new-activity', uid],
+    queryFn: () => communitiesService.getCommunitiesWithNewActivity(),
+    enabled: !!uid,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const userCommunityIds = useMemo(() => new Set(membershipRows.map(m => m.community_id)), [membershipRows]);
+  const newActivityIds = useMemo(() => new Set(newActivityRows), [newActivityRows]);
+  const memberGroupIds = useMemo(() => new Set(groupMemberRows.map(m => m.group_id)), [groupMemberRows]);
+
+  // Sanitize: only keep records with a valid id and name. Fall back to the
+  // localStorage cache when the server returns nothing (offline behavior).
+  const allCommunities = useMemo(() => {
+    const sanitized = (communitiesData || []).filter(c => c?.id && c?.name);
+    if (sanitized.length > 0) return sanitized;
+    return getCached().filter(c => c?.id && c?.name);
+  }, [communitiesData]);
+
+  // Persist fresh server data to the localStorage offline cache.
   useEffect(() => {
-    loadData(currentUser);
-  }, [loadData, currentUser]);
+    if (communitiesIsPlaceholder) return;
+    const sanitized = (communitiesData || []).filter(c => c?.id && c?.name);
+    if (sanitized.length > 0) setCache(sanitized);
+  }, [communitiesData, communitiesIsPlaceholder]);
 
   const catalogCommunities = useMemo(() => mergeCommunityCatalog(allCommunities), [allCommunities]);
 
@@ -1047,30 +1052,96 @@ export default function Communities() {
     return result;
   }, [searchQuery, activeCategory]);
 
-  const joinCommunity = async (community) => {
-    if (!currentUser) { toast.error('Sign in to join communities'); return; }
-    setJoiningId(community.id);
-    try {
-      await createUserCommunity({ user_id: currentUser.id, community_id: community.id, role: 'Member' });
+  const joinCommunityMutation = useMutation({
+    mutationFn: async (community) => {
+      await createUserCommunity({ user_id: uid, community_id: community.id, role: 'Member' });
       await updateCommunity(community.id, {
         follower_count: (community.follower_count || 0) + 1,
         joins_this_week: (community.joins_this_week || 0) + 1
       });
-      setUserCommunityIds(prev => new Set([...prev, community.id]));
+    },
+    onMutate: async (community) => {
+      // Optimistically flip the Join button by appending a synthetic membership row.
+      await queryClient.cancelQueries({ queryKey: ['user-community-ids', uid] });
+      const previous = queryClient.getQueryData(['user-community-ids', uid]);
+      queryClient.setQueryData(['user-community-ids', uid], (old) => [
+        ...(old || []),
+        { user_id: uid, community_id: community.id, role: 'Member' },
+      ]);
+      return { previous };
+    },
+    onSuccess: (_data, community) => {
       toast.success(`Joined ${community.name}!`);
-    } catch { toast.error('Something went wrong'); }
-    setJoiningId(null);
+    },
+    onError: (_error, _community, context) => {
+      queryClient.setQueryData(['user-community-ids', uid], context?.previous);
+      toast.error('Something went wrong');
+    },
+    onSettled: () => {
+      setJoiningId(null);
+      queryClient.invalidateQueries({ queryKey: ['user-community-ids', uid] });
+      queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+      queryClient.invalidateQueries({ queryKey: ['user-communities', uid] });
+    },
+  });
+
+  const joinCommunity = async (community) => {
+    if (!currentUser) { toast.error('Sign in to join communities'); return; }
+    setJoiningId(community.id);
+    try { await joinCommunityMutation.mutateAsync(community); } catch { /* handled in onError */ }
   };
+
+  const joinGroupMutation = useMutation({
+    mutationFn: async (group) => {
+      await createGroupMember({ group_id: group.id, user_id: uid, user_name: currentUser?.full_name, role: 'member' });
+      await updateCommunityGroup(group.id, { member_count: (group.member_count || 0) + 1 });
+    },
+    onMutate: async (group) => {
+      await queryClient.cancelQueries({ queryKey: ['user-group-ids', uid] });
+      const previous = queryClient.getQueryData(['user-group-ids', uid]);
+      queryClient.setQueryData(['user-group-ids', uid], (old) => [
+        ...(old || []),
+        { user_id: uid, group_id: group.id, role: 'member' },
+      ]);
+      return { previous };
+    },
+    onSuccess: (_data, group) => {
+      toast.success(`Joined ${group.name}!`);
+    },
+    onError: (_error, _group, context) => {
+      queryClient.setQueryData(['user-group-ids', uid], context?.previous);
+      toast.error('Something went wrong');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-group-ids', uid] });
+      queryClient.invalidateQueries({ queryKey: ['community-groups-list'] });
+    },
+  });
 
   const joinGroup = async (group) => {
     if (!currentUser) { toast.error('Sign in to join groups'); return; }
-    try {
-      await createGroupMember({ group_id: group.id, user_id: currentUser.id, user_name: currentUser.full_name, role: 'member' });
-      await updateCommunityGroup(group.id, { member_count: (group.member_count || 0) + 1 });
-      setMemberGroupIds(prev => new Set([...prev, group.id]));
-      toast.success(`Joined ${group.name}!`);
-    } catch { toast.error('Something went wrong'); }
+    try { await joinGroupMutation.mutateAsync(group); } catch { /* handled in onError */ }
   };
+
+  const leaveGroupMutation = useMutation({
+    mutationFn: async (group) => {
+      const members = await filterGroupMember({ group_id: group.id, user_id: uid });
+      if (members[0]) await deleteGroupMember(members[0].id);
+    },
+    onMutate: async (group) => {
+      await queryClient.cancelQueries({ queryKey: ['user-group-ids', uid] });
+      const previous = queryClient.getQueryData(['user-group-ids', uid]);
+      queryClient.setQueryData(['user-group-ids', uid], (old) => (old || []).filter(m => m.group_id !== group.id));
+      return { previous };
+    },
+    onError: (_error, _group, context) => {
+      queryClient.setQueryData(['user-group-ids', uid], context?.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-group-ids', uid] });
+      queryClient.invalidateQueries({ queryKey: ['community-groups-list'] });
+    },
+  });
 
   // Stable callback — reads communities from ref so it never needs to be recreated.
   // This prevents all CommunityCards from re-rendering mid-tap when allCommunities updates,
@@ -1097,13 +1168,11 @@ export default function Communities() {
       if (fnError) throw fnError;
       toast.success(`Reseeded featured communities: ${result?.data?.main_featured || 'done'}`);
       setFeaturedError(false);
-      // Silently refresh communities without resetting loading state
+      // Silently refresh communities without resetting loading state:
+      // write the fresh list straight into the query cache.
       const comms = await listCommunity('-follower_count', 80);
       if (comms?.length > 0) {
-        allCommunitiesRef.current = comms;
-        setAllCommunities(comms);
-        setCache(comms);
-        setIsDemo(false);
+        queryClient.setQueryData(['communities-list'], comms);
       }
     } catch (error) {
       console.error('[reseedFeatured] error:', error?.message || error);
@@ -1126,13 +1195,12 @@ export default function Communities() {
         isMember={memberGroupIds.has(selectedGroup.id)}
         isPendingRequest={false}
         onJoin={joinGroup}
-        onLeave={async (g) => {
-          const members = await filterGroupMember({ group_id: g.id, user_id: currentUser.id });
-          if (members[0]) await deleteGroupMember(members[0].id);
-          setMemberGroupIds(prev => { const s = new Set(prev); s.delete(g.id); return s; });
-        }}
+        onLeave={(g) => leaveGroupMutation.mutateAsync(g)}
         onBack={() => setSelectedGroup(null)}
-        onMemberApproved={(gid) => setMemberGroupIds(prev => new Set([...prev, gid]))}
+        onMemberApproved={(gid) => {
+          queryClient.setQueryData(['user-group-ids', uid], (old) => [...(old || []), { user_id: uid, group_id: gid }]);
+          queryClient.invalidateQueries({ queryKey: ['user-group-ids', uid] });
+        }}
       />
     );
   }
@@ -1140,7 +1208,7 @@ export default function Communities() {
 
 
   // Only show skeleton if we have no data at all (not even cached)
-  const isLoading = loadingPhase === 'loading' && catalogCommunities.length === 0;
+  const isLoading = communitiesLoading && catalogCommunities.length === 0;
 
   return (
     <div className="min-h-screen bg-transparent pb-24">
@@ -1151,41 +1219,30 @@ export default function Communities() {
         @keyframes heroEnter { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .hero-enter { animation: heroEnter 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
       `}</style>
-      <div className="max-w-2xl mx-auto px-4 pt-6">
-
-        {/* Header */}
-        <div className="mb-5 flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold uppercase text-blue-600">Rooms around the main thread</p>
-            <h1 className="text-3xl font-bold text-slate-900">Communities</h1>
-          </div>
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+      <DestinationHeader
+        icon={UsersRound}
+        title="Communities"
+        actions={(
+          <>
             <button
               onClick={() => navigate('/Map')}
-              className="surface-tile-hover hidden rounded-full border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-150 active:scale-90 sm:inline-flex"
-              title="Map"
+              className="app-icon-button surface-tile-hover hidden touch-manipulation sm:inline-flex"
+              aria-label="Map"
             >
-              <Map className="w-4 h-4 text-slate-600" />
-            </button>
-            <button
-              onClick={() => navigate('/Feed')}
-              className="surface-tile-hover hidden rounded-full border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-150 active:scale-90 sm:inline-flex"
-              title="Main feed"
-            >
-              <Calendar className="w-4 h-4 text-slate-600" />
+              <Map className="h-[18px] w-[18px] text-slate-500" />
             </button>
             <button
               onClick={() => setActiveTab('discover')}
-              className="surface-tile-hover hidden rounded-full border border-slate-200 bg-white p-2.5 shadow-sm transition-all duration-150 active:scale-90 sm:inline-flex"
-              title="Discover communities"
+              className="app-icon-button surface-tile-hover hidden touch-manipulation sm:inline-flex"
+              aria-label="Discover communities"
             >
-              <Compass className="w-4 h-4 text-slate-600" />
+              <Compass className="h-[18px] w-[18px] text-slate-500" />
             </button>
             {currentUser?.role === 'admin' && (
               <button
                 onClick={reseedFeatured}
                 disabled={reseedingFeatured}
-                className="rounded-full bg-amber-600 text-white px-4 py-2.5 text-[13px] font-semibold shadow-sm hover:bg-amber-700 disabled:opacity-50 active:scale-95 transition-all duration-150"
+                className="rounded-full bg-amber-600 px-3 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-amber-700 disabled:opacity-50 active:scale-95 transition-all duration-150"
                 title="Reseed featured communities (admin only)"
               >
                 {reseedingFeatured ? '⟳ ...' : '⟳ Reseed'}
@@ -1193,23 +1250,21 @@ export default function Communities() {
             )}
             <button
               onClick={() => setShowCreateModal(true)}
-              className="graphic-stripes shrink-0 rounded-full bg-blue-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm transition-all duration-150 hover:bg-blue-700 active:scale-95"
+              className="shrink-0 rounded-full bg-blue-600 px-3.5 py-2 text-[12px] font-bold text-white shadow-sm transition-all duration-150 hover:bg-blue-700 active:scale-95"
             >
               + Create
             </button>
-          </div>
-        </div>
+          </>
+        )}
+      />
+      <div className="max-w-2xl mx-auto px-4 pt-2">
 
         <div className="mb-5 overflow-hidden rounded-[28px] border border-slate-200 bg-slate-950 p-4 text-white shadow-sm">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-blue-100">
-                <MessageCircleMore className="h-3.5 w-3.5" />
-                Community-first reset
-              </div>
-              <h2 className="text-[20px] font-black leading-tight">Start with one Five Towns conversation.</h2>
+              <h2 className="text-[20px] font-black leading-tight">Groups for every part of Five Towns life.</h2>
               <p className="mt-2 text-[13px] font-semibold leading-5 text-slate-300">
-                Communities are smaller rooms for sports, shuls, parents, learning, support, and chesed after people meet in the main feed.
+                Shuls, parents, sports, learning, chesed — join the ones that fit, or start your own.
               </p>
             </div>
             <button
@@ -1220,23 +1275,11 @@ export default function Communities() {
               <ArrowUpRight className="h-3.5 w-3.5" />
             </button>
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            {[
-              ['Ask', 'Get a neighbor answer'],
-              ['Plan', 'Find people nearby'],
-              ['Help', 'Move needs to action'],
-            ].map(([label, detail]) => (
-              <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
-                <p className="text-[13px] font-black">{label}</p>
-                <p className="mt-1 text-[11px] font-bold leading-4 text-slate-400">{detail}</p>
-              </div>
-            ))}
-          </div>
         </div>
 
         <LiveNowPanel
           title="Community rooms"
-          subtitle="Real rooms you can open, join, or use to start a local conversation."
+          subtitle="Groups you can join now, or open to see what's going on."
           items={communityActionItems}
           className="mb-5"
         />
@@ -1356,15 +1399,20 @@ export default function Communities() {
                 setSelectedGroup={setSelectedGroup}
                 setActiveTab={setActiveTab}
                 userCommunityIds={userCommunityIds}
+                newActivityIds={newActivityIds}
                 memberGroupIds={memberGroupIds}
                 onJoinCommunity={joinCommunity}
                 onJoinGroup={joinGroup}
                 joiningId={joiningId}
                 currentUser={currentUser}
                 allCommunities={catalogCommunities}
-                isLoadingData={loadingPhase === 'loading'}
+                isLoadingData={communitiesLoading || groupsLoading || membershipsLoading || groupMembersLoading}
                 onJoinedFromOnboarding={(newIds) => {
-                  setUserCommunityIds(prev => new Set([...prev, ...newIds]));
+                  queryClient.setQueryData(['user-community-ids', uid], (old) => [
+                    ...(old || []),
+                    ...newIds.map((id) => ({ user_id: uid, community_id: id })),
+                  ]);
+                  queryClient.invalidateQueries({ queryKey: ['user-community-ids', uid] });
                 }}
               />
             ) : (
@@ -1384,6 +1432,7 @@ export default function Communities() {
                 onJoinGroup={joinGroup}
                 joiningId={joiningId}
                 userCommunityIds={userCommunityIds}
+                newActivityIds={newActivityIds}
                 memberGroupIds={memberGroupIds}
                 setShowCreateModal={setShowCreateModal}
                 hasFilter={activeCategory !== 'all' || !!searchQuery}
@@ -1406,7 +1455,9 @@ export default function Communities() {
         onOpenChange={setShowCreateModal}
         currentUser={currentUser}
         onCreated={(newCommunity) => {
-          loadData(currentUser);
+          queryClient.invalidateQueries({ queryKey: ['communities-list'] });
+          queryClient.invalidateQueries({ queryKey: ['user-community-ids', uid] });
+          queryClient.invalidateQueries({ queryKey: ['user-communities', uid] });
           if (newCommunity?.id) {
             setTimeout(() => {
               navigate(`/communities/${encodeURIComponent(newCommunity.id)}?tab=chat&focus=message`);
@@ -1418,7 +1469,7 @@ export default function Communities() {
   );
 }
 
-function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId, currentUser, allCommunities, onJoinedFromOnboarding, isLoadingData }) {
+function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, setActiveTab, userCommunityIds, newActivityIds = EMPTY_ID_SET, memberGroupIds, onJoinCommunity, onJoinGroup, joiningId, currentUser, allCommunities, onJoinedFromOnboarding, isLoadingData }) {
   // Don't show onboarding while data is still loading — prevents race condition flash
   if (myCommunities.length === 0 && myGroups.length === 0) {
     if (isLoadingData) {
@@ -1453,6 +1504,7 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
                 index={index}
                 compact
                 isJoined={userCommunityIds.has(c.id)}
+                hasNewActivity={newActivityIds.has(c.id)}
                 isJoining={joiningId === c.id}
                 onOpen={openCommunity}
                 onJoin={onJoinCommunity}
@@ -1482,7 +1534,7 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
   );
 }
 
-function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory, sizeFilter, setSizeFilter, activityFilter, setActivityFilter, currentUser, allCommunities, onJoinCommunity }) {
+function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, newActivityIds = EMPTY_ID_SET, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory, sizeFilter, setSizeFilter, activityFilter, setActivityFilter, currentUser, allCommunities, onJoinCommunity }) {
   // Apply extra filters then sort: directory picks first, then by follower count
   const filtered = applyExtraFilters(communities, sizeFilter, activityFilter);
   const sortedCommunities = [...filtered].sort((a, b) => {
@@ -1499,6 +1551,7 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
         <FiveTownsRoomsHub
           communities={allCommunities}
           userCommunityIds={userCommunityIds}
+          newActivityIds={newActivityIds}
           joiningId={joiningId}
           onOpen={openCommunity}
           onJoin={onJoinCommunity || onJoin}
@@ -1523,10 +1576,10 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
         </>
       )}
       {noResults ? (
-        <div className="rounded-3xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', border: '1px dashed #BFDBFE' }}>
+        <div className="app-empty-state">
           <div className="text-3xl mb-2">🔍</div>
-          <h3 className="text-[15px] font-bold text-slate-800 mb-1">No results found</h3>
-          <p className="text-[12px] text-slate-500 mb-4">Try a different search or explore by category</p>
+          <h3 className="app-empty-state-title">No results found</h3>
+          <p className="app-empty-state-body mb-4">Try a different search or explore by category</p>
           <button
             onClick={() => { setActiveCategory('all'); setSizeFilter('all_sizes'); setActivityFilter('all_activity'); }}
             className="bg-blue-600 text-white rounded-full px-5 py-2 text-[12px] font-bold active:scale-95 transition-all duration-150"
@@ -1547,6 +1600,7 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
                     index={index}
                     compact
                     isJoined={userCommunityIds.has(c.id)}
+                    hasNewActivity={newActivityIds.has(c.id)}
                     isJoining={joiningId === c.id}
                     onOpen={openCommunity}
                     onJoin={onJoin}

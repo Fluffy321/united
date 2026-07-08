@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { dataService, incrementCounter } from '@/services';
 import { shouldUseSupabase, supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { Loader2, Users, MapPin, CheckCircle2, ArrowRight, Shield, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { createUserCommunity, filterCommunity, filterInviteLink, filterUserCommunity, updateInviteLink } from '@/services/entityServices';
+import { createUserCommunity, filterUserCommunity, updateInviteLink } from '@/services/entityServices';
+import { communitiesService } from '@/services/communitiesService';
 
 // /join?code=ABC123
 export default function JoinByCommunityCode() {
@@ -13,56 +15,54 @@ export default function JoinByCommunityCode() {
   const navigate = useNavigate();
 
   const { user: currentUser } = useAuth();
-  const [invite, setInvite] = useState(null);
-  const [community, setCommunity] = useState(null);
-  const [status, setStatus] = useState('loading'); // loading | preview | joining | joined | error | expired
-  const [alreadyMember, setAlreadyMember] = useState(false);
-  const [inviterName, setInviterName] = useState('');
+  // 'idle' until the user acts; join progress overlays the query-derived status below
+  const [joinStatus, setJoinStatus] = useState('idle'); // idle | joining | joined | error
 
   const chatPath = (communityId) => `/communities/${encodeURIComponent(communityId)}?tab=chat&focus=message`;
 
-  useEffect(() => {
-    if (!code) { setStatus('error'); return; }
-    loadInvite();
-  }, [currentUser?.id]);
+  const { data: lookup, isLoading } = useQuery({
+    queryKey: ['invite-lookup', code, currentUser?.id],
+    enabled: !!code,
+    retry: 1,
+    queryFn: async () => {
+      // invite_links reads are RLS-scoped to inviters/managers; the lookup RPC
+      // validates the code and returns the invite + a community preview
+      // (including private communities the invitee can't read directly).
+      const result = await communitiesService.getInviteLinkByCode(code);
+      if (!result || result.status === 'not_found') return { kind: 'error' };
+      if (result.status === 'expired') return { kind: 'expired' };
 
-  const loadInvite = async () => {
-    try {
-      const invites = await filterInviteLink({ code });
-      const inv = invites[0];
-
-      if (!inv) { setStatus('error'); return; }
-      if (!inv.is_active) { setStatus('expired'); return; }
-      if (inv.expires_at && new Date(inv.expires_at) < new Date()) {
-        await updateInviteLink(inv.id, { is_active: false });
-        setStatus('expired');
-        return;
-      }
-      if (inv.max_uses && (inv.uses_count || 0) >= inv.max_uses) {
-        setStatus('expired');
-        return;
-      }
-
-      setInvite(inv);
-      setInviterName(inv.inviter_name || 'A community member');
-
-      const comm = await filterCommunity({ id: inv.community_id });
-      if (!comm[0]) { setStatus('error'); return; }
-      setCommunity(comm[0]);
-
+      let alreadyMember = false;
       if (currentUser) {
         const existing = await filterUserCommunity({
           user_id: currentUser.id,
-          community_id: inv.community_id
+          community_id: result.invite.community_id,
         });
-        setAlreadyMember(existing.length > 0);
+        alreadyMember = existing.length > 0;
       }
+      return {
+        kind: 'ok',
+        invite: result.invite,
+        community: result.community,
+        inviterName: result.invite.inviter_name || 'A community member',
+        alreadyMember,
+      };
+    },
+  });
 
-      setStatus('preview');
-    } catch {
-      setStatus('error');
-    }
-  };
+  const invite = lookup?.kind === 'ok' ? lookup.invite : null;
+  const community = lookup?.kind === 'ok' ? lookup.community : null;
+  const inviterName = lookup?.inviterName || '';
+  const alreadyMember = lookup?.alreadyMember || false;
+
+  // Same state machine as before, now derived: loading | preview | joining | joined | error | expired
+  const status =
+    !code ? 'error'
+    : isLoading ? 'loading'
+    : lookup?.kind === 'expired' ? 'expired'
+    : lookup?.kind !== 'ok' ? 'error'
+    : joinStatus === 'idle' ? 'preview'
+    : joinStatus;
 
   const handleJoin = async () => {
     if (!currentUser) {
@@ -75,7 +75,7 @@ export default function JoinByCommunityCode() {
       return;
     }
 
-    setStatus('joining');
+    setJoinStatus('joining');
     try {
       const existing = await filterUserCommunity({
         user_id: currentUser.id,
@@ -107,7 +107,7 @@ export default function JoinByCommunityCode() {
       }
       navigate(chatPath(invite.community_id), { replace: true });
     } catch {
-      setStatus('error');
+      setJoinStatus('error');
     }
   };
 
