@@ -187,7 +187,7 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'First-Run Discovery & Activation Sprint',
     description: 'Make the first 3 minutes of JUnited feel personal and community-centered. New users with 0 joined communities are redirected to Communities Discover after onboarding. Feed shows a "Join your first community" banner for users with no communities. Communities Discover and empty search state include a "Don\'t see your shul?" card with a native share/copy invite for admins. Messages icon added persistently to the Feed header.',
-    shippedNote: 'Shipped 2026-05-22. OnboardingFlow.jsx: passes _joinedCount in onComplete callback. App.jsx: after onboarding, navigates to /Communities if _joinedCount === 0. Feed.jsx: communitiesFetched flag tracks query resolution; zero-state banner (Users icon + "Join your first community" CTA → /Communities) shown when communityGroups.length === 0 and backend is live; MessageCircle icon added to Feed DestinationHeader actions. Communities.jsx: MissingCommunityCard component ("Don\'t see your shul?") renders in search empty-state and at the bottom of every Discover results list; uses navigator.share with clipboard fallback; pre-fills share message with search query if present.',
+    shippedNote: 'Shipped 2026-05-22; simplified 2026-07-08. OnboardingFlow.jsx now asks only for name/username, neighborhood, optional first communities, and notification preferences; photo, identity, contacts, and tour remain available after first value. It passes _joinedCount in onComplete. App.jsx redirects users with no joined communities to Discover. Feed retains the zero-state join banner and Messages action. Communities retains the MissingCommunityCard invite flow.',
   },
 
   // ── Auth & Identity ──────────────────────────────────────────────────────
@@ -1878,7 +1878,7 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'Five Towns Local Updates Automation',
     description: 'Automated pipeline ingesting local updates from monitored sources and publishing to the local_updates feed.',
-    shippedNote: 'Shipped. Migration 20260515180122_local_updates_automation.sql + cron job. Cron secret verified in 20260515184322. Community post identity fix (migration 20260517034309) added community name denormalization to publish_local_update_item so feed cards show community as author.',
+    shippedNote: 'Shipped. Migration 20260515180122_local_updates_automation.sql + cron job. Cron secret verified in 20260515184322. Community post identity fix (migration 20260517034309) added community name denormalization to publish_local_update_item so feed cards show community as author. Hardened 2026-07-08: ingestion accepts only public HTTPS sources, rejects local/private addresses and redirects, enforces content types, and caps source bodies at 1 MB.',
   },
 
   {

@@ -256,7 +256,7 @@ export default function JoinByCommunityCode() {
         </div>
 
         <p className="text-center text-[12px] text-slate-400">
-          Powered by <span className="font-semibold text-blue-600">Kehilla</span> — your Jewish community hub
+          Powered by <span className="font-semibold text-blue-600">JUnited</span> — your Jewish community hub
         </p>
       </div>
     </div>

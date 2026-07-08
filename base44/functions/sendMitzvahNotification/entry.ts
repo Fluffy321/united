@@ -16,24 +16,24 @@ Deno.serve(async (req) => {
 
     if (type === 'help_accepted') {
       subject = 'Someone wants to help with your mitzvah!';
-      body = `Great news! ${helperName} has offered to help with your request: "${requestTitle}"\n\nCheck your messages to coordinate the details.\n\n- United Community`;
+      body = `Great news! ${helperName} has offered to help with your request: "${requestTitle}"\n\nCheck your messages to coordinate the details.\n\n- JUnited`;
     } else if (type === 'completion_reminder') {
       subject = 'Did your mitzvah get completed?';
-      body = `Hi! Can you confirm if your mitzvah request "${requestTitle}" was completed?\n\nThis helps our community track impact and rewards helpers.\n\n- United Community`;
+      body = `Hi! Can you confirm if your mitzvah request "${requestTitle}" was completed?\n\nThis helps our community track impact and rewards helpers.\n\n- JUnited`;
     } else if (type === 'requester_message') {
       subject = 'New message about your mitzvah offer';
-      body = `You have a new message about the mitzvah: "${requestTitle}"\n\nCheck your messages to respond.\n\n- United Community`;
+      body = `You have a new message about the mitzvah: "${requestTitle}"\n\nCheck your messages to respond.\n\n- JUnited`;
     } else if (type === 'nearby_request') {
       subject = `New mitzvah request near ${locationLabel || 'you'}`;
-      body = `A new mitzvah request has been posted near ${locationLabel || 'your area'}: "${requestTitle}"\n\nCheck the Mitzvah Circle to see if you can help!\n\n- United Community`;
+      body = `A new mitzvah request has been posted near ${locationLabel || 'your area'}: "${requestTitle}"\n\nCheck the Mitzvah Circle to see if you can help!\n\n- JUnited`;
     } else if (type === 'mitzvah_completed') {
       subject = 'Mitzvah completed!';
-      body = `Great news! Your mitzvah "${requestTitle}" has been marked as completed.\n\n${helperName} has earned 10 points for helping!\n\n- United Community`;
+      body = `Great news! Your mitzvah "${requestTitle}" has been marked as completed.\n\n${helperName} has earned 10 points for helping!\n\n- JUnited`;
     }
 
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: recipient.email,
-      from_name: 'United Community',
+      from_name: 'JUnited',
       subject,
       body
     });

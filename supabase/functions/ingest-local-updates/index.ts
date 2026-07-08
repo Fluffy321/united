@@ -34,6 +34,50 @@ const JSON_REQUEST_HEADERS = {
   'user-agent': REQUEST_HEADERS['user-agent'],
 };
 
+const MAX_SOURCE_BYTES = 1_000_000;
+
+function isSafePublicSourceUrl(value: string) {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' || url.username || url.password) return false;
+    const host = url.hostname.toLowerCase();
+    if (host === 'localhost' || host.endsWith('.local')) return false;
+    if (/^(127\.|10\.|0\.|169\.254\.|192\.168\.)/.test(host)) return false;
+    const match = host.match(/^172\.(\d+)\./);
+    if (match && Number(match[1]) >= 16 && Number(match[1]) <= 31) return false;
+    if (host === '::1' || host.startsWith('fc') || host.startsWith('fd') || host.startsWith('fe80:')) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function readBoundedText(response: Response) {
+  const declaredLength = Number(response.headers.get('content-length') || 0);
+  if (declaredLength > MAX_SOURCE_BYTES) throw new Error('Source response exceeds the size limit');
+  const reader = response.body?.getReader();
+  if (!reader) return (await response.text()).slice(0, MAX_SOURCE_BYTES);
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    received += value.byteLength;
+    if (received > MAX_SOURCE_BYTES) {
+      await reader.cancel();
+      throw new Error('Source response exceeds the size limit');
+    }
+    chunks.push(value);
+  }
+  const body = new Uint8Array(received);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(body);
+}
+
 function getSupabaseSecretKey() {
   const keys = getAllowedServerKeys();
   return keys[0] || '';
@@ -205,19 +249,29 @@ async function parseNwsAlerts(source: LocalUpdateSource, payload: Record<string,
 }
 
 async function fetchSource(source: LocalUpdateSource) {
+  if (!isSafePublicSourceUrl(source.source_url)) {
+    throw new Error('Source URL must be a public HTTPS address');
+  }
   const response = await fetch(source.source_url, {
     headers: source.source_type === 'api' ? JSON_REQUEST_HEADERS : REQUEST_HEADERS,
+    redirect: 'error',
   });
   if (!response.ok) {
     throw new Error(`${response.status} ${response.statusText}`);
   }
 
   if (source.source_type === 'api') {
-    const json = await response.json();
+    const contentType = response.headers.get('content-type')?.toLowerCase() || '';
+    if (contentType && !contentType.includes('json')) throw new Error('API source returned an unexpected content type');
+    const json = JSON.parse(await readBoundedText(response));
     return parseNwsAlerts(source, json);
   }
 
-  const xml = await response.text();
+  const contentType = response.headers.get('content-type')?.toLowerCase() || '';
+  if (contentType && !contentType.includes('xml') && !contentType.includes('rss') && !contentType.includes('atom')) {
+    throw new Error('RSS source returned an unexpected content type');
+  }
+  const xml = await readBoundedText(response);
   return parseRssFeed(source, xml);
 }
 

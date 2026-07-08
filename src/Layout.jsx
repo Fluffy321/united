@@ -22,13 +22,13 @@ const MitzvahCircle = lazy(() => import('@/pages/MitzvahCircle'));
 const Profile = lazy(() => import('@/pages/Profile'));
 
 const navItems = [
-  { key: 'Feed',        name: 'Feed',        icon: Home,      page: 'Feed' },
-  { key: 'Mitzvah',    name: 'Mitzvah',     icon: null,      page: 'MitzvahCircle', to: '/MitzvahCircle', isMitzvah: true },
+  { key: 'Feed',        name: 'Home',        icon: Home,      page: 'Feed' },
+  { key: 'Mitzvah',    name: 'Help',     icon: null,      page: 'MitzvahCircle', to: '/MitzvahCircle', isMitzvah: true },
   COMMUNITIES_ENABLED
     ? { key: 'Communities', name: 'Communities', icon: Users, page: 'Communities' }
-    : { key: 'JewishHub', name: 'Jewish', icon: BookOpenText, page: 'JewishHub', to: '/JewishHub' },
-  { key: 'Map',        name: 'Map',  icon: Store,     page: 'Map',          to: '/Map' },
-  { key: 'Profile',    name: 'Profile',     icon: User,      page: 'Profile', isProfile: true },
+    : { key: 'JewishHub', name: 'Resources', icon: BookOpenText, page: 'JewishHub', to: '/JewishHub' },
+  { key: 'Map',        name: 'Directory',  icon: Store,     page: 'Map',          to: '/Map' },
+  { key: 'Profile',    name: 'Me',     icon: User,      page: 'Profile', isProfile: true },
 ];
 
 /* colorStyles removed — now uses direct active/inactive logic per item */
@@ -93,7 +93,7 @@ function LayoutContent({ children, currentPageName }) {
   const swipeablePages = COMMUNITIES_ENABLED ? ['Feed', 'MitzvahCircle', 'Communities'] : ['Feed', 'MitzvahCircle'];
   const currentIndex = swipeablePages.indexOf(currentPageName);
   const isSwipeable = currentIndex !== -1;
-  const swipeLabels = COMMUNITIES_ENABLED ? ['Feed', 'Mitzvah', 'Communities'] : ['Feed', 'Mitzvah'];
+  const swipeLabels = COMMUNITIES_ENABLED ? ['Home', 'Help', 'Communities'] : ['Home', 'Help'];
 
   const handleTabChange = (newIndex) => {
     if (newIndex >= 0 && newIndex < swipeablePages.length) {

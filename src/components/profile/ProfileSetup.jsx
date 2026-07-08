@@ -135,7 +135,7 @@ export default function ProfileSetup({ user, onComplete }) {
           <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <Camera className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Welcome to United</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Welcome to JUnited</h1>
           <p className="text-slate-500 mt-1">Let's set up your profile</p>
         </div>
 

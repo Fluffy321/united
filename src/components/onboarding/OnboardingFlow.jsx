@@ -439,12 +439,8 @@ export default function OnboardingFlow({ user, onComplete }) {
 
   const steps = useMemo(() => [
     'Name',
-    'Photo',
     'Neighborhood',
-    'Identity',
-    'Friends',
     ...(COMMUNITIES_ENABLED ? ['Communities'] : []),
-    'App Tour',
     'Notifications',
   ], []);
 
@@ -507,7 +503,7 @@ export default function OnboardingFlow({ user, onComplete }) {
         !checkingUsername
       );
     }
-    if (step === 2) return Boolean(neighborhood);
+    if (steps[step] === 'Neighborhood') return Boolean(neighborhood);
     return true;
   };
 
@@ -646,7 +642,7 @@ export default function OnboardingFlow({ user, onComplete }) {
 
   const back = () => setStep((current) => Math.max(0, current - 1));
   const skip = () => {
-    if (['Photo', 'Identity', 'Friends', 'Communities', 'App Tour'].includes(steps[step])) next();
+    if (steps[step] === 'Communities') next();
   };
 
   const currentStep = steps[step];

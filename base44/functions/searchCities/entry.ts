@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
 
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'United Community App'
+        'User-Agent': 'JUnited App'
       }
     });
 
