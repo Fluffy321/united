@@ -2629,6 +2629,25 @@ Goals:
   },
 
   {
+    id: 'community-hero-touch-targets',
+    category: 'Admin & Platform',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'CommunityHero back/menu buttons below 44px touch target',
+    description: 'src/components/communities/CommunityHero.jsx renders the in-app-shell back and community-menu buttons at w-8 h-8 (32px), below the 44x44px Apple HIG minimum called out in ux-accessibility-audit (shipped 2026-05-20). Found during the 2026-07-08 self-check UI/UX pass — this gap predates that day\'s changes and was not introduced by them.',
+    why: 'The 2026-05-20 accessibility audit shipped Leaflet zoom controls at 44px and aria-labels on several icon-only buttons, but CommunityHero\'s two circular buttons were missed. Re-opened as its own scoped item rather than reverting the parent audit to planned, since the rest of that work is still valid.',
+    prompt: `You are fixing a touch-target size gap in the JUnited community page header.
+
+Context: src/components/communities/CommunityHero.jsx renders a compact in-app-shell header (~line 106-124) with two circular icon buttons — back (aria-label="Back") and community menu (aria-label="Community menu") — both classed w-8 h-8 (32px). Apple HIG and the existing ux-accessibility-audit roadmap item call for a 44x44px minimum touch target.
+
+Goals:
+1. Increase the tappable area of both buttons to at least 44x44px (e.g. bump to w-11 h-11, or keep the visual icon size and enlarge padding/hit area) without breaking the compact header's h-11 row height or visual balance with the rest of the header.
+2. Check other similarly-sized icon-only buttons introduced in the same 2026-07-08 CommunityHero refactor for the same gap.
+3. Run npm run lint && npm run build.
+4. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'ux-design-audit-primitives',
     category: 'Admin & Platform',
     status: STATUS.SHIPPED,
