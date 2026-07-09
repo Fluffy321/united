@@ -26,6 +26,12 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const [helpOffer, setHelpOffer] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [otherTyping, setOtherTyping] = useState(false);
+  const [liveUnreadCount, setLiveUnreadCount] = useState(conversation.unread_count || {});
+  const liveUnreadRef = useRef(conversation.unread_count || {});
+  const updateLiveUnread = (next) => {
+    liveUnreadRef.current = next;
+    setLiveUnreadCount(next);
+  };
   const messagesEndRef = useRef(null);
   const typingChannelRef = useRef(null);
   const typingClearTimerRef = useRef(null);
@@ -69,11 +75,36 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
           const msg = { ...event.data, created_date: event.data.created_date || event.data.created_at };
           return [...prev, msg];
         });
+        // We're looking at the conversation, so a message that arrives while
+        // it's open is read — keeps the inbox badge honest and powers the
+        // sender's "Seen" receipt.
+        if (!isCommunityChat && event.data.sender_id !== currentUser.id) {
+          markAsRead();
+        }
       }
     });
 
     return unsubscribe;
   }, [conversation.id]);
+
+  // Read receipts — watch the conversation row so the recipient's markAsRead
+  // (which zeroes their unread counter) flips our last message to "Seen".
+  useEffect(() => {
+    if (isCommunityChat || !conversation?.id) return;
+    updateLiveUnread(conversation.unread_count || {});
+    const channel = supabase
+      .channel(`conv-${conversation.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'conversations',
+        filter: `id=eq.${conversation.id}`,
+      }, (payload) => {
+        if (payload.new?.unread_count) updateLiveUnread(payload.new.unread_count);
+      })
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [conversation.id, isCommunityChat]);
 
   // Typing indicator — ephemeral broadcast channel per DM conversation.
   useEffect(() => {
@@ -127,8 +158,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const markAsRead = async () => {
     try {
       if (!conversation?.id) return;
-      const unreadCount = { ...conversation.unread_count, [currentUser.id]: 0 };
-      await messagesService.updateConversation(conversation.id, { unread_count: unreadCount });
+      const next = { ...liveUnreadRef.current, [currentUser.id]: 0 };
+      updateLiveUnread(next);
+      await messagesService.updateConversation(conversation.id, { unread_count: next });
     } catch (error) {
       captureError(error, { context: 'ChatView: mark conversation as read' });
     }
@@ -238,10 +270,14 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       // Optimistically append
       setMessages(prev => prev.find(m => m.id === msg.id) ? prev : [...prev, msg]);
 
+      // Base the increment on the live counter, not the prop — the prop is a
+      // snapshot from when the chat opened, so consecutive sends used to keep
+      // recomputing 0 + 1 and the recipient's badge stuck at 1.
       const unreadCount = {
-        ...conversation.unread_count,
-        [other.id]: (conversation.unread_count?.[other.id] || 0) + 1
+        ...liveUnreadRef.current,
+        [other.id]: (liveUnreadRef.current?.[other.id] || 0) + 1
       };
+      updateLiveUnread(unreadCount);
 
       await messagesService.updateConversation(conversation.id, {
         last_message: text || (attachment ? `📎 ${attachment.name}` : ''),
@@ -260,6 +296,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
       setIsSending(false);
     }
   };
+
+  const lastOwnMessageId = [...messages].reverse().find(m => m.sender_id === currentUser.id)?.id;
+  const otherHasSeen = !isCommunityChat && other?.id && Number(liveUnreadCount?.[other.id] ?? 0) === 0;
 
   return (
     <div className="flex flex-col h-full">
@@ -395,6 +434,9 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
                     </div>
                     <p className={`text-[11px] text-slate-400 mt-1 ${isOwn ? 'text-right' : ''}`}>
                       {formatDistanceToNow(new Date(msg.created_date || msg.created_at || Date.now()), { addSuffix: true })}
+                      {isOwn && msg.id === lastOwnMessageId && otherHasSeen && (
+                        <span className="ml-1 font-semibold text-blue-500">· Seen</span>
+                      )}
                     </p>
                   </div>
                   {isOwn && (
