@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Send, Loader2, Share2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import UserAvatar from '@/components/common/UserAvatar';
 import { formatDistanceToNow } from 'date-fns';
@@ -14,6 +14,7 @@ export default function GroupChatSection({ communityId, currentUser, onInvite })
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -32,7 +33,9 @@ export default function GroupChatSection({ communityId, currentUser, onInvite })
     ),
     enabled: !!communityId,
     staleTime: 5000,
-    refetchInterval: 8000,
+    // Realtime (below) delivers new messages instantly; this poll is only a
+    // self-heal fallback in case the subscription drops or isn't enabled.
+    refetchInterval: 30000,
   });
 
   useEffect(() => {
@@ -48,12 +51,23 @@ export default function GroupChatSection({ communityId, currentUser, onInvite })
   useEffect(() => {
     if (!communityId) return;
     const unsubscribe = subscribeCommunityGroupChat((event) => {
-      if (event.data?.community_id === communityId) {
+      if (event.data?.community_id !== communityId) return;
+      if (event.type === 'create') {
+        // Realtime rows use created_at (Postgres column name), not created_date
+        const msg = {
+          ...event.data,
+          created_date: event.data.created_date || event.data.created_at || new Date().toISOString(),
+        };
+        queryClient.setQueryData(['community-chat', communityId], (old = []) => {
+          if (old.some((m) => m.id === msg.id)) return old;
+          return [msg, ...old];
+        });
+      } else {
         refetch();
       }
     });
     return unsubscribe;
-  }, [communityId, refetch]);
+  }, [communityId, queryClient, refetch]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
