@@ -11,14 +11,12 @@ import DestinationHeader from '@/components/layout/DestinationHeader';
 import CarpoolBoard from '@/components/mitzvah/CarpoolBoard';
 import MinyanBoard from '@/components/feed/MinyanBoard';
 import ParshaCard from '@/components/feed/ParshaCard';
-import ChesedChallenge from '@/components/feed/ChesedChallenge';
 import MealTrainsSection from '@/components/mitzvah/MealTrainsSection';
 import { buildMitzvahLiveNowItems } from '@/lib/liveNow';
 import {
   REQUEST_EXPIRY_MS,
   STATUSES,
   VALID_VIEWS,
-  getCategoryGroup,
   isRequestExpired,
   normalizeCarpoolRide,
   normalizeOffer,
@@ -26,14 +24,15 @@ import {
   requestMatchesCategoryGroup,
   resolveMapLocation,
 } from '@/components/mitzvah/circle/shared';
-import EmptyState from '@/components/mitzvah/circle/EmptyState';
-import RequestCard from '@/components/mitzvah/circle/RequestCard';
 import CreateRequestModal from '@/components/mitzvah/circle/CreateRequestModal';
 import CreateCarpoolModal from '@/components/mitzvah/circle/CreateCarpoolModal';
 import QuickViewSheet from '@/components/mitzvah/circle/QuickViewSheet';
 import MitzvahCircleHero from '@/components/mitzvah/circle/MitzvahCircleHero';
 import MitzvahWorkflowTabsBar from '@/components/mitzvah/circle/MitzvahWorkflowTabsBar';
 import MitzvahFilterBar from '@/components/mitzvah/circle/MitzvahFilterBar';
+import BrowseTab from '@/components/mitzvah/circle/BrowseTab';
+import MineTab from '@/components/mitzvah/circle/MineTab';
+import CompletedTab from '@/components/mitzvah/circle/CompletedTab';
 
 
 export default function MitzvahCircle() {
@@ -518,106 +517,55 @@ export default function MitzvahCircle() {
           )}
 
           {activeView === 'browse' && (
-            <>
-              <ChesedChallenge />
-              {loadingRequests ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-              </div>
-            ) : activeCategory === 'rides' ? null : browseRequests.length ? (
-              <>
-                {browseRequests.map((r) => (
-                  <RequestCard
-                    key={r.id}
-                    request={r}
-                    offers={offers}
-                    comments={commentsByRequest[r.id] || []}
-                    currentUser={currentUser}
-                    onOffer={handleOffer}
-                    onAcceptOffer={handleAcceptOffer}
-                    onStart={handleStart}
-                    onComplete={handleComplete}
-                    onVerify={handleVerify}
-                    onComment={handleCommentOnRequest}
-                    onOpenMap={openRequestOnMap}
-                    onQuickView={setQuickViewRequest}
-                    onUrgencyChange={handleUrgencyChange}
-                  />
-                ))}
-              </>
-            ) : (
-              <EmptyState
-                title={activeCategory === 'all' ? 'Ready for the first chesed request' : `${getCategoryGroup(activeCategory).shortLabel} requests will appear here`}
-                text={activeCategory === 'all'
-                  ? 'Post a food, ride, errand, or care request with enough detail for someone to say yes.'
-                  : `${getCategoryGroup(activeCategory).description} belong here when a real need comes up.`}
-                actionLabel="Post a need"
-                onAction={() => setShowCreate(true)}
-              />
-              )}
-            </>
+            <BrowseTab
+              activeCategory={activeCategory}
+              loadingRequests={loadingRequests}
+              browseRequests={browseRequests}
+              offers={offers}
+              commentsByRequest={commentsByRequest}
+              currentUser={currentUser}
+              onOffer={handleOffer}
+              onAcceptOffer={handleAcceptOffer}
+              onStart={handleStart}
+              onComplete={handleComplete}
+              onVerify={handleVerify}
+              onComment={handleCommentOnRequest}
+              onOpenMap={openRequestOnMap}
+              onQuickView={setQuickViewRequest}
+              onUrgencyChange={handleUrgencyChange}
+              onPostRequest={() => setShowCreate(true)}
+            />
           )}
 
           {activeView === 'mine' && (
-            myActivityItems.length ? (
-              myActivityItems.map(({ type, request }) => (
-                <div key={`${type}-${request.id}`} className="space-y-2">
-                  <p className="px-1 text-[11px] font-black uppercase tracking-wide text-slate-400">
-                    {type === 'request' ? 'My request' : 'My offer'}
-                  </p>
-                  <RequestCard
-                    request={request}
-                    offers={offers}
-                    comments={commentsByRequest[request.id] || []}
-                    currentUser={currentUser}
-                    onOffer={handleOffer}
-                    onAcceptOffer={handleAcceptOffer}
-                    onStart={handleStart}
-                    onComplete={handleComplete}
-                    onVerify={handleVerify}
-                    onComment={handleCommentOnRequest}
-                    onOpenMap={openRequestOnMap}
-                    onUrgencyChange={handleUrgencyChange}
-                  />
-                </div>
-              ))
-            ) : (
-              <EmptyState
-                title="Your mitzvah activity starts here"
-                text="Post a need you know about, or offer help on an open request and it will show here."
-                actionLabel="Offer help"
-                onAction={() => changeView('browse')}
-              />
-            )
+            <MineTab
+              myActivityItems={myActivityItems}
+              offers={offers}
+              commentsByRequest={commentsByRequest}
+              currentUser={currentUser}
+              onOffer={handleOffer}
+              onAcceptOffer={handleAcceptOffer}
+              onStart={handleStart}
+              onComplete={handleComplete}
+              onVerify={handleVerify}
+              onComment={handleCommentOnRequest}
+              onOpenMap={openRequestOnMap}
+              onUrgencyChange={handleUrgencyChange}
+              onBrowse={() => changeView('browse')}
+            />
           )}
 
           {activeView === 'completed' && (
-            completedRequests.length ? (
-              completedRequests.map((r) => (
-                <RequestCard
-                  key={r.id}
-                  request={r}
-                  offers={offers}
-                  comments={commentsByRequest[r.id] || []}
-                  currentUser={currentUser}
-                  onOffer={() => {}}
-                  onAcceptOffer={() => {}}
-                  onStart={() => {}}
-                  onComplete={() => {}}
-                  onVerify={() => {}}
-                  onComment={handleCommentOnRequest}
-                  onOpenMap={openRequestOnMap}
-                  onUrgencyChange={handleUrgencyChange}
-                />
-              ))
-            ) : (
-              <EmptyState
-                title="Completed mitzvahs will collect here"
-                text="When a request is helped and marked complete, this becomes the shared record of good done."
-                actionLabel="Find a request"
-                onAction={() => changeView('browse')}
-              />
-            )
+            <CompletedTab
+              completedRequests={completedRequests}
+              offers={offers}
+              commentsByRequest={commentsByRequest}
+              currentUser={currentUser}
+              onComment={handleCommentOnRequest}
+              onOpenMap={openRequestOnMap}
+              onUrgencyChange={handleUrgencyChange}
+              onFindRequest={() => changeView('browse')}
+            />
           )}
         </div>
       </section>
