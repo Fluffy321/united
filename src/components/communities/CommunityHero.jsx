@@ -84,9 +84,12 @@ export default function CommunityHero({
         >
           <button
             onClick={onBack}
-            className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0"
+            className="flex h-11 w-11 -ml-2 items-center justify-center flex-shrink-0"
+            aria-label="Back"
           >
-            <ArrowLeft className="w-4 h-4 text-slate-700" />
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+              <ArrowLeft className="w-4 h-4 text-slate-700" />
+            </span>
           </button>
           <div className="flex-1 min-w-0">
             <p className="font-bold text-slate-900 text-[14px] truncate">{community.name}</p>
@@ -94,7 +97,7 @@ export default function CommunityHero({
           </div>
           <button
             onClick={isCreator ? onManage : onFollow}
-            className={`h-8 px-4 rounded-full text-[13px] font-bold transition-colors ${
+            className={`h-10 px-4 rounded-full text-[13px] font-bold transition-colors ${
               isCreator ? 'bg-slate-950 text-white' : isFollowing ? 'bg-slate-100 text-slate-600' : 'bg-[#2563EB] text-white'
             }`}
           >
@@ -107,23 +110,27 @@ export default function CommunityHero({
       {inAppShell ? (
         <>
           {/* Compact app-shell controls. Standalone keeps the full branded cover below. */}
-          <div className="flex h-11 items-center justify-between bg-white px-3">
+          <div className="flex h-12 items-center justify-between bg-white px-2">
             {onBack && (
               <button
                 onClick={onBack}
-                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center active:scale-95 transition-all"
+                className="flex h-11 w-11 items-center justify-center active:scale-95 transition-all"
                 aria-label="Back"
               >
-                <ArrowLeft className="w-4 h-4 text-slate-700" />
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+                  <ArrowLeft className="w-4 h-4 text-slate-700" />
+                </span>
               </button>
             )}
             {onOpenDrawer && (
               <button
                 onClick={onOpenDrawer}
-                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center active:scale-95 transition-all"
+                className="flex h-11 w-11 items-center justify-center active:scale-95 transition-all"
                 aria-label="Community menu"
               >
-                <Menu className="w-4 h-4 text-slate-700" />
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+                  <Menu className="w-4 h-4 text-slate-700" />
+                </span>
               </button>
             )}
           </div>

@@ -2631,7 +2631,8 @@ Goals:
   {
     id: 'community-hero-touch-targets',
     category: 'Admin & Platform',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
+    shippedNote: 'Shipped 2026-07-09. Both app-shell header buttons (back, community menu) and the standalone sticky mini-header back button now have 44x44px tappable areas wrapping the unchanged 32px visual circle; the mini-header Join/Admin button bumped h-8 -> h-10. Missing aria-label added to the mini-header back button.',
     priority: PRIORITY.LOW,
     title: 'CommunityHero back/menu buttons below 44px touch target',
     description: 'src/components/communities/CommunityHero.jsx renders the in-app-shell back and community-menu buttons at w-8 h-8 (32px), below the 44x44px Apple HIG minimum called out in ux-accessibility-audit (shipped 2026-05-20). Found during the 2026-07-08 self-check UI/UX pass — this gap predates that day\'s changes and was not introduced by them.',
