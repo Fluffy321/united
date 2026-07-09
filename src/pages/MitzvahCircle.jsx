@@ -2,17 +2,7 @@ import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Award,
-  Car,
-  Clock,
-  HandHeart,
-  ListFilter,
-  Loader2,
-  Plus,
-  Search,
-  ShoppingBag,
-} from 'lucide-react';
+import { HandHeart, Loader2 } from 'lucide-react';
 import { mitzvahService, notificationsService } from '@/services';
 import { toast } from 'sonner';
 import PageHelp from '@/components/common/PageHelp';
@@ -25,12 +15,9 @@ import ChesedChallenge from '@/components/feed/ChesedChallenge';
 import MealTrainsSection from '@/components/mitzvah/MealTrainsSection';
 import { buildMitzvahLiveNowItems } from '@/lib/liveNow';
 import {
-  CATEGORIES,
-  CATEGORY_GROUPS,
   REQUEST_EXPIRY_MS,
   STATUSES,
   VALID_VIEWS,
-  WORKFLOW_TABS,
   getCategoryGroup,
   isRequestExpired,
   normalizeCarpoolRide,
@@ -40,11 +27,13 @@ import {
   resolveMapLocation,
 } from '@/components/mitzvah/circle/shared';
 import EmptyState from '@/components/mitzvah/circle/EmptyState';
-import Metric from '@/components/mitzvah/circle/Metric';
 import RequestCard from '@/components/mitzvah/circle/RequestCard';
 import CreateRequestModal from '@/components/mitzvah/circle/CreateRequestModal';
 import CreateCarpoolModal from '@/components/mitzvah/circle/CreateCarpoolModal';
 import QuickViewSheet from '@/components/mitzvah/circle/QuickViewSheet';
+import MitzvahCircleHero from '@/components/mitzvah/circle/MitzvahCircleHero';
+import MitzvahWorkflowTabsBar from '@/components/mitzvah/circle/MitzvahWorkflowTabsBar';
+import MitzvahFilterBar from '@/components/mitzvah/circle/MitzvahFilterBar';
 
 
 export default function MitzvahCircle() {
@@ -467,119 +456,17 @@ export default function MitzvahCircle() {
 
       <section className="mobile-page-wide px-3 pt-3 sm:px-4 sm:pt-4">
         {/* Header */}
-        {activeView !== 'shuls' && (
-          <div className="overflow-hidden rounded-[30px] border border-blue-100 bg-gradient-to-br from-white via-blue-50/70 to-indigo-50 shadow-sm">
-            <div className="relative p-4 sm:p-5">
-              <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full bg-white/50 blur-2xl" />
-              <div className="relative space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/75 px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-blue-700">
-                      <HandHeart className="h-3.5 w-3.5" />
-                      Real mitzvah network
-                    </div>
-                    <p className="max-w-xl text-[15px] font-black leading-6 text-slate-950">
-                      Post an opportunity, take a mitzvah, share what you did, and keep the community moving.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setShowCreate(true)}
-                    className="app-button-primary h-11 shrink-0 px-3 sm:px-4"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span className="hidden sm:inline">Post Request</span>
-                    <span className="sm:hidden">Post</span>
-                  </button>
-                </div>
-
-                {hasMitzvahStats ? (
-                  <div className="grid grid-cols-3 gap-2">
-                    <Metric icon={HandHeart} label="Open" value={totals.openCount} tone="blue" />
-                    <Metric icon={Clock} label="In Progress" value={totals.offeredCount} tone="amber" />
-                    <Metric icon={Award} label="Completed" value={totals.completedCount} tone="emerald" />
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-blue-100 bg-white/75 px-3 py-2.5 text-[12px] font-bold text-slate-600">
-                    Start with one clear ask, or offer a ride before someone needs it.
-                  </div>
-                )}
-
-	                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-	                  {[
-	                    {
-	                      label: 'Post opportunity',
-	                      detail: 'Ask or offer help',
-                      icon: Plus,
-                      onClick: () => setShowCreate(true),
-	                    },
-	                    {
-	                      label: 'Do one now',
-	                      detail: 'Browse open needs',
-	                      icon: HandHeart,
-	                      onClick: () => changeView('browse'),
-	                    },
-	                    {
-	                      label: 'Share completed',
-	                      detail: 'Build your streak',
-	                      icon: Award,
-	                      onClick: () => changeView('completed'),
-	                    },
-	                    {
-	                      label: 'Carpool safely',
-	                      detail: 'Rides in one place',
-                      icon: Car,
-                      onClick: () => changeView('rides'),
-	                    },
-	                    {
-	                      label: 'Jewish business',
-	                      detail: 'Work local',
-	                      icon: ShoppingBag,
-	                      onClick: () => navigate('/Marketplace'),
-	                    },
-                  ].map((action) => {
-                    const Icon = action.icon;
-                    return (
-                      <button
-                        key={action.label}
-                        type="button"
-                        onClick={action.onClick}
-                        className="motion-press rounded-2xl border border-white bg-white/80 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                      >
-                        <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <p className="text-[12px] font-black text-slate-950">{action.label}</p>
-                        <p className="mt-0.5 text-[11px] font-bold text-slate-500">{action.detail}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <MitzvahCircleHero
+          activeView={activeView}
+          hasMitzvahStats={hasMitzvahStats}
+          totals={totals}
+          onPostRequest={() => setShowCreate(true)}
+          onChangeView={changeView}
+          onGoToMarketplace={() => navigate('/Marketplace')}
+        />
 
         {/* Activity views */}
-        <div className="sticky top-0 z-20 -mx-3 mt-3 bg-[#F6F8FB]/78 px-3 py-2 backdrop-blur sm:-mx-4 sm:px-4">
-          <div className="surface-panel-soft rounded-[24px] p-2">
-            <p className="px-2 pb-1 text-[11px] font-black uppercase tracking-wide text-slate-400">My activity</p>
-            <div className="mobile-scroll-x flex gap-2">
-              {WORKFLOW_TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => changeView(tab.id)}
-                  className={`motion-press shrink-0 rounded-xl px-3.5 py-2 text-[13px] font-black transition ${
-                    activeView === tab.id
-                      ? 'bg-slate-950 text-white shadow-sm'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-950'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <MitzvahWorkflowTabsBar activeView={activeView} onChangeView={changeView} />
 
         {activeView !== 'shuls' && activeView !== 'mealtrains' && activeView !== 'dvar-torah' && (
           <LiveNowRail
@@ -605,75 +492,16 @@ export default function MitzvahCircle() {
         ) : null}
 
         {/* Search/filter bar */}
-        {activeView !== 'shuls' && activeView !== 'mealtrains' && activeView !== 'rides' && activeView !== 'dvar-torah' && (
-          <div className="surface-panel-soft mb-3 space-y-3 rounded-[24px] p-3">
-            {activeView === 'browse' && (
-              <div>
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[13px] font-black text-slate-950">Browse by need</p>
-                    <p className="text-[12px] font-semibold text-slate-500">
-                      Choose the kind of chesed you want to help with.
-                    </p>
-                  </div>
-                  {browseRequests.length > 0 && (
-                    <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-500">
-                      {browseRequests.length} open
-                    </span>
-                  )}
-                </div>
-                <div className="mobile-scroll-x flex gap-2">
-                  {CATEGORY_GROUPS.map((group) => {
-                    const Icon = group.icon;
-                    const selected = activeCategory === group.id;
-                    return (
-                      <button
-                        key={group.id}
-                        type="button"
-                        onClick={() => changeBrowseCategory(group.id)}
-                        className={`motion-press shrink-0 rounded-2xl border px-3 py-2 text-left transition ${
-                          selected
-                            ? `${group.tone} shadow-sm`
-                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        <span className="flex items-center gap-2 text-[12px] font-black">
-                          <Icon className="h-4 w-4" />
-                          {group.shortLabel}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <div className={activeView === 'browse' ? 'grid gap-2' : 'grid gap-2 sm:grid-cols-[1fr_220px]'}>
-              <label className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search requests"
-                  className="app-input h-11 pl-10 pr-3 text-sm"
-                />
-              </label>
-              {activeView !== 'browse' && (
-                <label className="relative">
-                  <ListFilter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <select
-                    value={detailCategoryFilter}
-                    onChange={(e) => setDetailCategoryFilter(e.target.value)}
-                    className="app-input h-11 pl-10 pr-3 text-sm font-black"
-                  >
-                    <option>All</option>
-                    {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-                  </select>
-                </label>
-              )}
-            </div>
-          </div>
-        )}
+        <MitzvahFilterBar
+          activeView={activeView}
+          activeCategory={activeCategory}
+          onChangeBrowseCategory={changeBrowseCategory}
+          browseCount={browseRequests.length}
+          query={query}
+          onQueryChange={setQuery}
+          detailCategoryFilter={detailCategoryFilter}
+          onDetailCategoryFilterChange={setDetailCategoryFilter}
+        />
 
         {/* Tab content */}
         <div key={`${activeView}-${activeCategory}`} className="motion-stagger space-y-3">
