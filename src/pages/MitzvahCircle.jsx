@@ -34,7 +34,6 @@ import BrowseTab from '@/components/mitzvah/circle/BrowseTab';
 import MineTab from '@/components/mitzvah/circle/MineTab';
 import CompletedTab from '@/components/mitzvah/circle/CompletedTab';
 
-
 export default function MitzvahCircle() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
