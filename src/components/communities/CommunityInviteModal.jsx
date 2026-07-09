@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Copy, Share2, RefreshCw, Check, Link2, Loader2, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/api/supabaseClient';
 import { createInviteLink, updateInviteLink } from '@/services/entityServices';
 
 const INVITE_NOUN = {

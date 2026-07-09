@@ -100,7 +100,7 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
             )}
           </div>
           {/* Filter pills */}
-          {(joinedCommunityIds.length > 0 || savedEventIds.length > 0 || rsvpEventIds.length > 0) && (
+          {(joinedCommunityIds.length > 0 || savedEventIds.length > 0) && (
             <div className="flex gap-2 mt-2">
               {[
                 {v:'for_you',l:'For You'},
@@ -141,7 +141,6 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
                 {monthEvents.map(event => {
                   const inJoined = joinedCommunityIds.includes(event.community_id);
                   const isSaved = savedEventIds.includes(event.id);
-                  const isRsvped = rsvpEventIds.includes(event.id);
                   const dayNum = format(parseISO(event.event_date), 'd');
                   const dayName = format(parseISO(event.event_date), 'EEE');
 
@@ -154,7 +153,7 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
                         onOpenChange(false);
                       }}
                       className={`flex w-full items-start gap-3 p-3 rounded-2xl border text-left transition-all active:scale-[0.99] ${
-                        inJoined || isSaved || isRsvped
+                        inJoined || isSaved
                           ? 'bg-blue-50/60 border-blue-200'
                           : 'bg-white border-slate-200'
                       }`}
@@ -184,11 +183,6 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
                           {event.community_name && (
                             <span className="flex items-center gap-1 text-[11px] text-blue-600 font-semibold">
                               <Users className="w-3 h-3" />{event.community_name}
-                            </span>
-                          )}
-                          {isRsvped && (
-                            <span className="flex items-center gap-1 text-[11px] text-green-600 font-semibold">
-                              <Users className="w-3 h-3" />Joined
                             </span>
                           )}
                           {isSaved && (
