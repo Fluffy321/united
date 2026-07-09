@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { messagesService, checkRateLimit, RateLimitError } from '@/services';
+import { supabase } from '@/api/supabaseClient';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import FileAttachmentButton from '@/components/common/FileAttachmentButton';
@@ -24,7 +25,11 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
   const [mitzvahRequest, setMitzvahRequest] = useState(null);
   const [helpOffer, setHelpOffer] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [otherTyping, setOtherTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const typingChannelRef = useRef(null);
+  const typingClearTimerRef = useRef(null);
+  const lastTypingSentRef = useRef(0);
   const isCommunityChat = !!conversation.is_community_chat;
 
   const getOtherParticipant = () => {
@@ -70,9 +75,42 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
     return unsubscribe;
   }, [conversation.id]);
 
+  // Typing indicator — ephemeral broadcast channel per DM conversation.
+  useEffect(() => {
+    if (isCommunityChat || !conversation?.id || !currentUser?.id) return;
+    const channel = supabase
+      .channel(`typing-${conversation.id}`)
+      .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        if (payload?.user_id === currentUser.id) return;
+        setOtherTyping(true);
+        window.clearTimeout(typingClearTimerRef.current);
+        typingClearTimerRef.current = window.setTimeout(() => setOtherTyping(false), 3000);
+      })
+      .subscribe();
+    typingChannelRef.current = channel;
+    return () => {
+      window.clearTimeout(typingClearTimerRef.current);
+      typingChannelRef.current = null;
+      setOtherTyping(false);
+      supabase.removeChannel(channel);
+    };
+  }, [conversation.id, currentUser?.id, isCommunityChat]);
+
+  const sendTypingSignal = () => {
+    if (isCommunityChat || !typingChannelRef.current) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 1500) return;
+    lastTypingSentRef.current = now;
+    typingChannelRef.current.send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { user_id: currentUser.id },
+    });
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, otherTyping]);
 
   const loadMessages = async (silent = false) => {
     if (!silent) setIsLoading(true);
@@ -366,6 +404,18 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
               );
             })
           )}
+          {otherTyping && (
+            <div className="flex items-end gap-2 justify-start">
+              <UserAvatar user={{ avatar_url: other.avatar, display_name: other.name }} name={other.name} size="sm" />
+              <div className="rounded-2xl rounded-bl-sm bg-white px-4 py-3 shadow-sm border border-slate-100">
+                <span className="typing-dots inline-flex gap-1" aria-label={`${other.name} is typing`}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0ms]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:150ms]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:300ms]" />
+                </span>
+              </div>
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
       </div>
@@ -420,7 +470,10 @@ export default function ChatView({ conversation, currentUser, onBack, onReport, 
             rows={1}
             placeholder={isCommunityChat ? 'Message the community…' : 'Type a message…'}
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => {
+              setNewMessage(e.target.value);
+              if (e.target.value.trim()) sendTypingSignal();
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
