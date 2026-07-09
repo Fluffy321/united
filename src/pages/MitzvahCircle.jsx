@@ -52,6 +52,7 @@ export default function MitzvahCircle() {
   const [query, setQuery] = React.useState('');
   const [detailCategoryFilter, setDetailCategoryFilter] = React.useState('All');
   const [showCreate, setShowCreate] = React.useState(false);
+  const [requestDefaults, setRequestDefaults] = React.useState(null);
   const [carpoolCreateMode, setCarpoolCreateMode] = React.useState(null);
   const [quickViewRequest, setQuickViewRequest] = React.useState(null);
 
@@ -81,6 +82,11 @@ export default function MitzvahCircle() {
   const changeBrowseCategory = (categoryId) => {
     setActiveCategory(categoryId);
     if (activeView !== 'browse') changeView('browse');
+  };
+
+  const openRequestForm = (defaults = null) => {
+    setRequestDefaults(defaults);
+    setShowCreate(true);
   };
 
   const openRequestOnMap = (request) => {
@@ -458,7 +464,7 @@ export default function MitzvahCircle() {
           activeView={activeView}
           hasMitzvahStats={hasMitzvahStats}
           totals={totals}
-          onPostRequest={() => setShowCreate(true)}
+          onPostRequest={openRequestForm}
           onChangeView={changeView}
           onGoToMarketplace={() => navigate('/Marketplace')}
         />
@@ -574,6 +580,7 @@ export default function MitzvahCircle() {
         onClose={() => setShowCreate(false)}
         onCreate={handleCreateRequest}
         isLoading={isCreating}
+        initialValues={requestDefaults}
       />
 
       <CreateCarpoolModal

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Loader2, X } from 'lucide-react';
 import { CATEGORIES } from './shared';
 
-export default function CreateRequestModal({ open, onClose, onCreate, isLoading }) {
+export default function CreateRequestModal({ open, onClose, onCreate, isLoading, initialValues = null }) {
   const [form, setForm] = React.useState({
     title: '',
     description: '',
@@ -13,6 +13,19 @@ export default function CreateRequestModal({ open, onClose, onCreate, isLoading 
     urgency: 'Today',
     postToMap: true,
   });
+
+  React.useEffect(() => {
+    if (!open) return;
+    setForm({
+      title: '',
+      description: '',
+      category: initialValues?.category || 'Other',
+      neighborhood: 'Five Towns',
+      estimatedHours: 1,
+      urgency: initialValues?.urgency || 'Today',
+      postToMap: true,
+    });
+  }, [open, initialValues]);
 
   if (!open) return null;
 
