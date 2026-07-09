@@ -55,6 +55,11 @@ export default [
         { ignore: ["cmdk-input-wrapper", "toast-close"] },
       ],
       "react-hooks/rules-of-hooks": "error",
+      // Catches missing imports (e.g. a refactor drops an import a JSX
+      // callback still uses) — this shipped 4 latent ReferenceErrors in
+      // one week before being enabled (COMMUNITIES_ENABLED, divIcon,
+      // supabase in CommunityInviteModal, rsvpEventIds).
+      "no-undef": "error",
     },
   },
 ];

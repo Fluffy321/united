@@ -196,7 +196,7 @@ export default function SearchPage() {
                 className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-slate-100 text-[14px] text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white transition-all"
               />
               {query && (
-                <button onClick={() => { setQuery(''); setResults(null); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-slate-200">
+                <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-slate-200">
                   <X className="w-3.5 h-3.5 text-slate-400" />
                 </button>
               )}
