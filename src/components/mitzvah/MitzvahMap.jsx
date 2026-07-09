@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 import { VERIFIED_STATIC_POINTS } from './map/staticPoints';
@@ -15,28 +15,7 @@ import {
   getRequestPinType,
   getTrustLabel,
 } from './map/shared';
-
-function MapController({ center }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (center) {
-      map.setView(center, map.getZoom() || 13);
-    }
-  }, [center, map]);
-
-  useEffect(() => {
-    const invalidate = () => map.invalidateSize({ animate: false });
-    const timers = [0, 120, 350, 800].map((delay) => window.setTimeout(invalidate, delay));
-    window.addEventListener('resize', invalidate);
-    return () => {
-      timers.forEach(window.clearTimeout);
-      window.removeEventListener('resize', invalidate);
-    };
-  }, [map]);
-
-  return null;
-}
+import MapController from './map/MapController';
 
 export default function MitzvahMap({
   requests,
