@@ -1,6 +1,5 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
-import ChesedChallenge from '@/components/feed/ChesedChallenge';
 import { getCategoryGroup } from './shared';
 import RequestCard from './RequestCard';
 import EmptyState from './EmptyState';
@@ -25,7 +24,6 @@ export default function BrowseTab({
 }) {
   return (
     <>
-      <ChesedChallenge />
       {loadingRequests ? (
         <div className="flex justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin text-blue-600" />

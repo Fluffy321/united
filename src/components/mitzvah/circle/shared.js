@@ -160,12 +160,9 @@ export const REQUEST_EXPIRY_MS = REQUEST_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
 // junited-self-check Check 6: a tab offered in the UI but missing from the
 // whitelist silently bounces users to the default tab).
 export const WORKFLOW_TABS = [
-  { id: 'browse', label: 'Browse Needs' },
+  { id: 'browse', label: 'Needs' },
   { id: 'rides', label: 'Rides' },
-  { id: 'mealtrains', label: 'Meal Trains' },
-  { id: 'dvar-torah', label: 'Dvar Torah' },
-  { id: 'shuls', label: 'Minyan Board' },
-  { id: 'mine', label: 'Mine' },
+  { id: 'mine', label: 'My activity' },
   { id: 'completed', label: 'Completed' },
 ];
 
