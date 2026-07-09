@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
+import { divIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 import { VERIFIED_STATIC_POINTS } from './map/staticPoints';
