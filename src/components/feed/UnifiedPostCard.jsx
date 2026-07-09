@@ -188,9 +188,6 @@ function UnifiedPostCardInner({ post, currentUser, onLike, onComment, onDelete, 
   const [imgExpanded, setImgExpanded] = useState(false);
   const [helpStatus, setHelpStatus] = useState(post.help_status || 'open');
   const [fulfilling, setFulfilling] = useState(false);
-  const [isRSVPed, setIsRSVPed] = useState(false);
-  const [rsvpCount, setRsvpCount] = useState(0);
-  const [loadingRSVP, setLoadingRSVP] = useState(false);
   const [commentsOpen, setCommentsOpenState] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments_count || 0);
   const [quickReplyOpen, setQuickReplyOpen] = useState(false);
@@ -476,9 +473,6 @@ function UnifiedPostCardInner({ post, currentUser, onLike, onComment, onDelete, 
             <span className="text-[11px] text-slate-500 truncate">{post.user_name}</span>
             <div className="ml-auto flex-shrink-0 flex items-center gap-2">
               <ReactionBar postId={post.id} currentUser={currentUser} postAuthorId={post.user_id} />
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-500">
-                RSVP paused
-              </span>
             </div>
           </div>
           {recentComments.length > 0 && (

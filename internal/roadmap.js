@@ -459,6 +459,27 @@ Goals:
   },
 
   {
+    id: 'feed-event-post-rsvp',
+    category: 'Community',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.LOW,
+    title: 'RSVP on feed event posts',
+    description: 'Event posts in the Feed (UnifiedPostCard type "event") have no working RSVP. The card showed a permanent "RSVP paused" pill (removed 2026-07-09 during a UX cleanup — dead controls should not be advertised) and UpcomingEventsSheet briefly referenced an rsvpEventIds list that was never wired (removed the same day after it crashed the sheet). Community events already have a working RSVP foundation to reuse.',
+    why: 'RSVP on event posts was paused rather than built. When it returns it should reuse community_event_rsvps rather than invent a parallel mechanism, and UpcomingEventsSheet should then regain its RSVP filter/badge.',
+    prompt: `You are adding RSVP to feed event posts for JUnited.
+
+Context: src/components/feed/UnifiedPostCard.jsx renders event-type posts; the community-event RSVP foundation (community_event_rsvps table, CommunityEventRSVP entity, createRSVP/filterRSVP in src/services/entityServices.js) already works on community event pages. UpcomingEventsSheet.jsx (src/components/feed/) previously referenced an rsvpEventIds prop-shaped list that was never implemented.
+
+Goals:
+1. Decide the storage shape: either reuse community_event_rsvps keyed by the event post id, or add a migration for post RSVPs — prefer reuse if event posts map to community events, otherwise a small posts_event_rsvps table with RLS.
+2. Add an RSVP button (Going / undo) to the event variant of UnifiedPostCard with optimistic update and a count.
+3. In UpcomingEventsSheet, fetch the current user's RSVPed event ids, restore the RSVP-aware filter pill and per-event "Joined" badge that were removed on 2026-07-09.
+4. Invalidate the relevant React Query keys after RSVP mutations.
+5. Run npm run lint && npm run build.
+6. Update internal/roadmap.js: change this item's status to 'shipped'.`,
+  },
+
+  {
     id: 'community-member-directory-role-labels',
     category: 'Community',
     status: STATUS.SHIPPED,
