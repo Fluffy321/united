@@ -149,10 +149,16 @@ export default function CommunityDetailView({ communityId, currentUser, onBack, 
   const defaultTab = !requestedTab && isFollowing && featureCapabilities.chat ? 'chat' : 'home';
 
   useEffect(() => {
-    if (requestedTab || isLoading) return;
+    if (isLoading) return;
+    // A deep-linked ?tab= that isn't offered here (disabled module, typo)
+    // would otherwise render a blank content area — setTab only guards clicks.
+    if (requestedTab) {
+      if (!visibleTabs.includes(activeTab)) setActiveTab(visibleTabs[0] || 'home');
+      return;
+    }
     const nextTab = visibleTabs.includes(defaultTab) ? defaultTab : (visibleTabs[0] || 'home');
     setActiveTab((current) => (current === nextTab ? current : nextTab));
-  }, [defaultTab, isLoading, requestedTab, visibleTabs]);
+  }, [activeTab, defaultTab, isLoading, requestedTab, visibleTabs]);
 
   const setTab = (tab) => {
     const nextTab = visibleTabs.includes(tab) ? tab : (visibleTabs[0] || 'home');
