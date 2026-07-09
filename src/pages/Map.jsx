@@ -1590,26 +1590,28 @@ export default function MapPage() {
 
   return (
     <main className="app-page min-h-screen mobile-safe-bottom">
-      <DestinationHeader
-        veil={false}
-        showBack={isDeepLinkedMap}
-        backTo="/Feed"
-        icon={Store}
-        title={activeView === 'businesses' ? 'Our Businesses' : 'Five Towns Map'}
-        help={<PageHelp text="Discover trusted Jewish-owned businesses, kosher spots, and local services near you or online." />}
-        actions={(
-          <button
-            onClick={handleUseMyLocation}
-            className="motion-press inline-flex h-9 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 text-xs font-black text-blue-700 shadow-sm transition hover:bg-blue-100"
-          >
-            <Navigation className="h-3.5 w-3.5" />
-            {locationStatus === 'requesting' ? 'Locating...' : userLocation ? 'Using location' : 'Near me'}
-          </button>
-        )}
-      />
+      <div className="sticky top-0 z-[60]">
+        <DestinationHeader
+          sticky={false}
+          veil={false}
+          showBack={isDeepLinkedMap}
+          backTo="/Feed"
+          icon={Store}
+          title={activeView === 'businesses' ? 'Our Businesses' : 'Five Towns Map'}
+          help={<PageHelp text="Discover trusted Jewish-owned businesses, kosher spots, and local services near you or online." />}
+          actions={(
+            <button
+              onClick={handleUseMyLocation}
+              className="motion-press inline-flex h-9 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 text-xs font-black text-blue-700 shadow-sm transition hover:bg-blue-100"
+            >
+              <Navigation className="h-3.5 w-3.5" />
+              {locationStatus === 'requesting' ? 'Locating...' : userLocation ? 'Using location' : 'Near me'}
+            </button>
+          )}
+        />
 
-      {/* View toggle — outside scroll so it stays anchored below the header */}
-      <div className="mobile-page-wide sticky top-[76px] z-[55] px-3 pb-2 pt-1 sm:px-4">
+        {/* View toggle — grouped in the same sticky wrapper as the header so it stays anchored without guessing the header's height */}
+        <div className="mobile-page-wide px-3 pb-2 pt-1 sm:px-4">
         <div className="glass-toolbar grid grid-cols-2 gap-1.5 rounded-2xl p-1">
           <button
             type="button"
@@ -1627,6 +1629,7 @@ export default function MapPage() {
             <Sparkles className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{COMMUNITIES_ENABLED ? 'Community Map' : 'Local Map'}</span>
           </button>
+        </div>
         </div>
       </div>
 

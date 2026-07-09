@@ -578,7 +578,11 @@ function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOp
 
 function FiveTownsRoomsHub({ communities, userCommunityIds, newActivityIds = EMPTY_ID_SET, joiningId, onOpen, onJoin }) {
   const blueprintRooms = getCoreFiveTownsRooms(communities);
-  const rooms = blueprintRooms.slice(0, 10);
+  // Fall back to all communities (as viewmodels) when blueprint matching yields too few —
+  // e.g. before the Essential 10 seed migration has run in an environment.
+  const rooms = blueprintRooms.length >= 2
+    ? blueprintRooms.slice(0, 10)
+    : communities.filter(c => c?.id && c?.name).map((c, i) => buildRoomViewModel(c, i));
   const leadRooms = rooms.slice(0, 3);
   const remainingRooms = rooms.slice(3);
   if (!rooms.length) {
