@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, ArrowRight, Award, BookOpen, Car, ChevronRight, Clock, HandHeart, ShoppingBag, Sparkles } from 'lucide-react';
+import { AlertCircle, Award, BookOpen, Car, ChevronRight, Clock, HandHeart, Heart, Laptop, ShoppingBag, Sparkles, Users, Utensils } from 'lucide-react';
 import Metric from './Metric';
 
 export default function MitzvahCircleHero({
@@ -8,48 +8,37 @@ export default function MitzvahCircleHero({
   totals,
   onPostRequest,
   onChangeView,
-  onGoToMarketplace,
 }) {
   if (activeView === 'shuls') return null;
 
   const quickNeeds = [
-    { label: 'A ride', icon: Car, tone: 'bg-amber-50 text-amber-700', onClick: () => onChangeView('rides') },
-    { label: 'An errand', icon: ShoppingBag, tone: 'bg-sky-50 text-sky-700', onClick: () => onPostRequest({ category: 'Errands' }) },
+    { label: 'Ride or carpool', icon: Car, tone: 'bg-amber-50 text-amber-700', onClick: () => onChangeView('rides') },
+    { label: 'Errand', icon: ShoppingBag, tone: 'bg-sky-50 text-sky-700', onClick: () => onPostRequest({ category: 'Errands' }) },
+    { label: 'Meals', icon: Utensils, tone: 'bg-orange-50 text-orange-700', onClick: () => onPostRequest({ category: 'Food / Meals' }) },
+    { label: 'Childcare', icon: Users, tone: 'bg-rose-50 text-rose-700', onClick: () => onPostRequest({ category: 'Babysitting' }) },
+    { label: 'Check-in', icon: Heart, tone: 'bg-pink-50 text-pink-700', onClick: () => onPostRequest({ category: 'Elderly Support' }) },
     { label: 'Tutoring', icon: BookOpen, tone: 'bg-violet-50 text-violet-700', onClick: () => onPostRequest({ category: 'Tutoring' }) },
-    { label: 'Shul help', icon: Sparkles, tone: 'bg-rose-50 text-rose-700', onClick: () => onPostRequest({ category: 'Shul Help' }) },
+    { label: 'Tech help', icon: Laptop, tone: 'bg-cyan-50 text-cyan-700', onClick: () => onPostRequest({ category: 'Tech Help' }) },
+    { label: 'Shul or simcha', icon: Sparkles, tone: 'bg-indigo-50 text-indigo-700', onClick: () => onPostRequest({ category: 'Shul Help' }) },
   ];
 
   return (
     <div className="space-y-4">
-      <section className="overflow-hidden rounded-[30px] bg-[#0B2E6D] p-5 text-white shadow-[0_20px_45px_rgba(16,72,166,0.24)]" style={{ backgroundImage: 'radial-gradient(circle at 92% 2%, rgba(110,205,255,.42), transparent 30%), linear-gradient(135deg, #073477, #1261DD)' }}>
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <div>
-            <div className="mb-2 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-blue-100"><Sparkles className="h-3.5 w-3.5" /> Community support</div>
-            <h2 className="max-w-[330px] text-[26px] font-black leading-[1.08] tracking-tight">Whatever today brings, start here.</h2>
-            <p className="mt-2 max-w-md text-[13px] leading-relaxed text-blue-100">Ask for practical help, find a ride, or step in for a neighbor who needs a hand.</p>
-          </div>
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/15"><HandHeart className="h-5 w-5" /></div>
+      <section className="overflow-hidden rounded-[24px] bg-[#0B2E6D] p-4 text-white shadow-[0_16px_32px_rgba(16,72,166,0.2)]" style={{ backgroundImage: 'radial-gradient(circle at 92% 2%, rgba(110,205,255,.42), transparent 30%), linear-gradient(135deg, #073477, #1261DD)' }}>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="min-w-0"><div className="mb-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-blue-100"><Sparkles className="h-3 w-3" /> Community support</div><h2 className="text-[19px] font-black leading-tight tracking-tight">How can we help today?</h2></div>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/15"><HandHeart className="h-4 w-4" /></div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <button onClick={() => onPostRequest()} className="motion-press group rounded-[20px] bg-white p-4 text-left text-slate-950 shadow-lg">
-            <span className="mb-3 flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700"><AlertCircle className="h-4 w-4" /></span>
-            <span className="block text-[14px] font-black">I need help</span>
-            <span className="mt-0.5 block text-[11px] font-semibold text-slate-500">Make a clear, private request</span>
-            <ArrowRight className="mt-3 h-4 w-4 text-blue-600 transition group-hover:translate-x-1" />
-          </button>
-          <button onClick={() => onChangeView('browse')} className="motion-press group rounded-[20px] border border-white/20 bg-white/10 p-4 text-left backdrop-blur">
-            <span className="mb-3 flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-300/20 text-emerald-100"><HandHeart className="h-4 w-4" /></span>
-            <span className="block text-[14px] font-black">I can help</span>
-            <span className="mt-0.5 block text-[11px] font-semibold text-blue-100">See who could use a hand</span>
-            <ArrowRight className="mt-3 h-4 w-4 text-white transition group-hover:translate-x-1" />
-          </button>
+        <div className="grid grid-cols-2 gap-2.5">
+          <button onClick={() => onPostRequest()} className="motion-press flex items-center gap-2.5 rounded-2xl bg-white px-3 py-3 text-left text-slate-950 shadow-lg"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700"><AlertCircle className="h-4 w-4" /></span><span><span className="block text-[13px] font-black">I need help</span><span className="block text-[10px] font-semibold text-slate-500">Post a request</span></span></button>
+          <button onClick={() => onChangeView('browse')} className="motion-press flex items-center gap-2.5 rounded-2xl border border-white/20 bg-white/10 px-3 py-3 text-left backdrop-blur"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-300/20 text-emerald-100"><HandHeart className="h-4 w-4" /></span><span><span className="block text-[13px] font-black">I can help</span><span className="block text-[10px] font-semibold text-blue-100">Browse needs</span></span></button>
         </div>
       </section>
 
       <section>
         <div className="mb-2.5 flex items-center justify-between"><div><h2 className="text-[16px] font-black text-slate-950">What do you need?</h2><p className="text-[12px] font-semibold text-slate-500">Start with the kind of support you need.</p></div><button onClick={() => onPostRequest()} className="text-[12px] font-black text-blue-600">Something else</button></div>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-          {quickNeeds.map(({ label, icon: Icon, tone, onClick }) => <button key={label} onClick={onClick} className="motion-press surface-tile flex min-h-[88px] flex-col items-start justify-between rounded-[20px] p-3 text-left transition hover:-translate-y-0.5 hover:shadow-md"><span className={`flex h-8 w-8 items-center justify-center rounded-xl ${tone}`}><Icon className="h-4 w-4" /></span><span className="text-[12px] font-black text-slate-800">{label}</span></button>)}
+          {quickNeeds.map(({ label, icon: Icon, tone, onClick }) => <button key={label} onClick={onClick} className="motion-press surface-tile flex min-h-[76px] items-center gap-3 rounded-[18px] p-3 text-left transition hover:-translate-y-0.5 hover:shadow-md"><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${tone}`}><Icon className="h-4 w-4" /></span><span className="text-[12px] font-black leading-tight text-slate-800">{label}</span></button>)}
         </div>
       </section>
 
