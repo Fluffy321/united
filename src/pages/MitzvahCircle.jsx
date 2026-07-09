@@ -6,13 +6,11 @@ import { HandHeart, Loader2 } from 'lucide-react';
 import { mitzvahService, notificationsService } from '@/services';
 import { toast } from 'sonner';
 import PageHelp from '@/components/common/PageHelp';
-import LiveNowRail from '@/components/common/LiveNowRail';
 import DestinationHeader from '@/components/layout/DestinationHeader';
 import CarpoolBoard from '@/components/mitzvah/CarpoolBoard';
 import MinyanBoard from '@/components/feed/MinyanBoard';
 import ParshaCard from '@/components/feed/ParshaCard';
 import MealTrainsSection from '@/components/mitzvah/MealTrainsSection';
-import { buildMitzvahLiveNowItems } from '@/lib/liveNow';
 import {
   REQUEST_EXPIRY_MS,
   STATUSES,
@@ -28,8 +26,6 @@ import CreateRequestModal from '@/components/mitzvah/circle/CreateRequestModal';
 import CreateCarpoolModal from '@/components/mitzvah/circle/CreateCarpoolModal';
 import QuickViewSheet from '@/components/mitzvah/circle/QuickViewSheet';
 import MitzvahCircleHero from '@/components/mitzvah/circle/MitzvahCircleHero';
-import MitzvahWorkflowTabsBar from '@/components/mitzvah/circle/MitzvahWorkflowTabsBar';
-import MitzvahFilterBar from '@/components/mitzvah/circle/MitzvahFilterBar';
 import BrowseTab from '@/components/mitzvah/circle/BrowseTab';
 import MineTab from '@/components/mitzvah/circle/MineTab';
 import CompletedTab from '@/components/mitzvah/circle/CompletedTab';
@@ -436,10 +432,6 @@ export default function MitzvahCircle() {
     ).length,
     completedCount: requests.filter((r) => r.status === STATUSES.VERIFIED).length,
   }), [requests]);
-  const liveNowItems = React.useMemo(() => buildMitzvahLiveNowItems({
-    requests: requests.filter((r) => r.status === STATUSES.OPEN),
-    offers,
-  }), [requests, offers]);
   const hasMitzvahStats = totals.openCount > 0 || totals.offeredCount > 0 || totals.completedCount > 0;
 
   if (isLoadingAuth) {
@@ -469,19 +461,6 @@ export default function MitzvahCircle() {
           onGoToMarketplace={() => navigate('/Marketplace')}
         />
 
-        {/* Activity views */}
-        <MitzvahWorkflowTabsBar activeView={activeView} onChangeView={changeView} />
-
-        {activeView !== 'shuls' && activeView !== 'mealtrains' && activeView !== 'dvar-torah' && (
-          <LiveNowRail
-            className="mb-3"
-            title="Needs help now"
-            subtitle="Live mitzvah requests with progress and people responding"
-            items={liveNowItems}
-            onItemClick={(item) => navigate(item.href || '/MitzvahCircle')}
-          />
-        )}
-
         {(activeView === 'browse' && activeCategory === 'rides') || activeView === 'rides' ? (
           <div className="mb-3">
             <CarpoolBoard
@@ -494,18 +473,6 @@ export default function MitzvahCircle() {
             />
           </div>
         ) : null}
-
-        {/* Search/filter bar */}
-        <MitzvahFilterBar
-          activeView={activeView}
-          activeCategory={activeCategory}
-          onChangeBrowseCategory={changeBrowseCategory}
-          browseCount={browseRequests.length}
-          query={query}
-          onQueryChange={setQuery}
-          detailCategoryFilter={detailCategoryFilter}
-          onDetailCategoryFilterChange={setDetailCategoryFilter}
-        />
 
         {/* Tab content */}
         <div key={`${activeView}-${activeCategory}`} className="motion-stagger space-y-3">
