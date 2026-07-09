@@ -3,6 +3,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, MapPin, Sparkles } f
 import { getTodayHebrew, getShabbatTimes, getZmanim, getDafYomi, getParshaDescription, getTodayEvents } from '@/lib/hebrewDate';
 import { getStoredCandleOffset } from '@/lib/shabbatLocation';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
+import DailyTapMitzvah from './DailyTapMitzvah';
 
 const BRIEF_SLIDE_GRADIENTS = {
   today:   'from-[#0a1628] via-[#0d1f3c] to-[#152a52]',
@@ -16,7 +17,7 @@ const BRIEF_SLIDE_GRADIENTS = {
 const FIVE_TOWNS_LAT = 40.6198;
 const FIVE_TOWNS_LNG = -73.7298;
 
-export default function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, communitiesEnabled = true, prompt, streak, onOpenMap, onOpenCommunities, onCreate }) {
+export default function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, communitiesEnabled = true, prompt, streak, currentUser, onOpenMap, onOpenCommunities, onCreate }) {
   const { location: candleLocation } = useShabbatLocation();
   const [activeSlide, setActiveSlide] = useState(0);
   const briefScrollerRef = useRef(null);
@@ -339,6 +340,9 @@ export default function FiveTownsBrief({ brief, momentum, posts = [], joinedComm
                 <span className="text-[9px] text-white/20">Community goal</span>
               </div>
             </div>
+
+            {/* One-tap daily action — logs a mitzvah and feeds the streak */}
+            <DailyTapMitzvah currentUser={currentUser} streak={streak} />
 
             {/* Composer box 1 — Mitzvah / act of kindness */}
             {(() => {

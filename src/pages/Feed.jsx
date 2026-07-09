@@ -476,6 +476,7 @@ export default function Feed({ isActive = true }) {
               communitiesEnabled={COMMUNITIES_ENABLED}
               prompt={dailyPrompt}
               streak={userStreak}
+              currentUser={currentUser}
               onOpenMap={() => navigate('/Map')}
               onOpenCommunities={() => navigate('/Communities')}
               onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
