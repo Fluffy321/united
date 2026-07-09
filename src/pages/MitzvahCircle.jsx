@@ -458,7 +458,10 @@ export default function MitzvahCircle() {
           totals={totals}
           onPostRequest={openRequestForm}
           onChangeView={changeView}
-          onGoToMarketplace={() => navigate('/Marketplace')}
+          activeCategory={activeCategory}
+          onChangeBrowseCategory={changeBrowseCategory}
+          query={query}
+          onQueryChange={setQuery}
         />
 
         {(activeView === 'browse' && activeCategory === 'rides') || activeView === 'rides' ? (
