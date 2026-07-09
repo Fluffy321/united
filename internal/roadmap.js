@@ -2542,11 +2542,11 @@ Goals:
     id: 'map-window-scroll-redesign',
     category: 'Admin & Platform',
     status: STATUS.SHIPPED,
-    shippedNote: 'Refined 2026-07-08. Earlier fix removed overflow-hidden and moved mobile-safe-bottom to the inner scroll child. Follow-up visual bug pass replaced the Map page inner-scroll shell with normal document scrolling, made the Directory header and Businesses/Community Map selector sticky glass layers, removed the fake blurred header glow, and wrapped business filter controls so they fit mobile widths.',
+    shippedNote: 'Refined 2026-07-08. Earlier fix removed overflow-hidden and moved mobile-safe-bottom to the inner scroll child. Follow-up visual bug pass replaced the Map page inner-scroll shell with normal document scrolling, made the Directory header and Businesses/Community Map selector sticky glass layers, removed the fake blurred header glow, and wrapped business filter controls so they fit mobile widths. Self-check fix (same day): the view-toggle selector had been given a hardcoded `sticky top-[76px]` offset guessing DestinationHeader\'s height, which was already wrong at the sm+ breakpoint; replaced with a single sticky wrapper around the header + selector so no offset is guessed.',
     priority: PRIORITY.LOW,
     title: 'Map Page Scroll Architecture Fix',
     description: 'Map uses flex h-dvh with an overflow-y-auto inner container. overflow-hidden on the outer main was clipping the bottom-nav padding, causing content to be hidden behind the nav bar.',
-    why: 'Fixed 2026-07-01: removed overflow-hidden from <main>, moved mobile-safe-bottom to the scroll container. Refined 2026-07-08 after the inner-scroll approach made the bottom nav, selector, and glass header feel wrong on the Directory page.',
+    why: 'Fixed 2026-07-01: removed overflow-hidden from <main>, moved mobile-safe-bottom to the scroll container. Refined 2026-07-08 after the inner-scroll approach made the bottom nav, selector, and glass header feel wrong on the Directory page. Same-day self-check fix removed a brittle hardcoded sticky offset introduced by that refinement.',
   },
 
   {
