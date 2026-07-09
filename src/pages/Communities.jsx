@@ -15,8 +15,7 @@ import CommunityInterestOnboarding from '@/components/communities/CommunityInter
 import SuggestedCommunities from '@/components/communities/SuggestedCommunities';
 import DiscoverFilters, { applyExtraFilters } from '@/components/communities/DiscoverFilters';
 import { toast } from 'sonner';
-import LiveNowPanel from '@/components/common/LiveNowPanel';
-import { buildCommunityActionItems, getCommunityActionCopy } from '@/lib/liveNow';
+import { getCommunityActionCopy } from '@/lib/liveNow';
 import { createGroupMember, createUserCommunity, deleteGroupMember, filterGroupMember, filterUserCommunity, listCommunity, listCommunityGroup, updateCommunity, updateCommunityGroup } from '@/services/entityServices';
 import { communitiesService } from '@/services/communitiesService';
 
@@ -1017,10 +1016,6 @@ export default function Communities() {
   const myGroups = useMemo(() => (allGroups || []).filter(g => memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
   const discoverCommunities = useMemo(() => (catalogCommunities || []).filter(c => !userCommunityIds.has(c.id)), [catalogCommunities, userCommunityIds]);
   const discoverGroups = useMemo(() => (allGroups || []).filter(g => !memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
-  const communityActionItems = useMemo(
-    () => buildCommunityActionItems(myCommunities.length ? myCommunities : catalogCommunities),
-    [myCommunities, catalogCommunities]
-  );
 
   const filterItems = useCallback((items) => {
     let result = items;
@@ -1262,31 +1257,6 @@ export default function Communities() {
         )}
       />
       <div className="mobile-page-wide px-4 pt-2">
-
-        <div className="mb-5 overflow-hidden rounded-[28px] border border-slate-200 bg-slate-950 p-4 text-white shadow-sm">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h2 className="text-[20px] font-black leading-tight">Groups for every part of Five Towns life.</h2>
-              <p className="mt-2 text-[13px] font-semibold leading-5 text-slate-300">
-                Shuls, parents, sports, learning, chesed — join the ones that fit, or start your own.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/Feed')}
-              className="motion-press inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-2 text-[12px] font-black text-slate-950 shadow-sm"
-            >
-              Open Feed
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-
-        <LiveNowPanel
-          title="Community rooms"
-          subtitle="Groups you can join now, or open to see what's going on."
-          items={communityActionItems}
-          className="mb-5"
-        />
 
         <button
           type="button"
