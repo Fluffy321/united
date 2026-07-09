@@ -49,7 +49,7 @@ const VALUE_CHIPS = [
 function BrandMark({ compact = false }) {
   return (
     <div className={`flex items-center gap-3 ${compact ? '' : 'mb-0'}`}>
-      <div className={`${compact ? 'h-12 w-12 rounded-[18px]' : 'h-14 w-14 rounded-[20px]'} flex shrink-0 items-center justify-center bg-gradient-to-br from-blue-600 via-[#0F5ED7] to-slate-950 shadow-xl shadow-blue-950/20 ring-1 ring-white/70`}>
+      <div className={`${compact ? 'h-12 w-12 rounded-[18px]' : 'h-14 w-14 rounded-[20px]'} flex shrink-0 items-center justify-center bg-gradient-to-br from-blue-600 via-blue-600 to-slate-950 shadow-xl shadow-blue-950/20 ring-1 ring-white/70`}>
         <img src="/brand-mark.png" alt="JUnited" className={compact ? 'h-8 w-8' : 'h-9 w-9'} />
       </div>
       <div>
@@ -292,7 +292,7 @@ export default function Login() {
             <button
               type="button"
               onClick={() => setMode('signin')}
-              className="motion-press h-11 w-full rounded-2xl border border-blue-100 bg-blue-50 text-center text-[14px] font-black text-[#0F5ED7] transition hover:bg-blue-100 active:scale-[0.98]"
+              className="motion-press h-11 w-full rounded-2xl border border-blue-100 bg-blue-50 text-center text-[14px] font-black text-blue-600 transition hover:bg-blue-100 active:scale-[0.98]"
             >
               Already have an account? Sign in
             </button>
@@ -323,7 +323,7 @@ export default function Login() {
         <BrandMark compact />
 
         <div className="mt-6">
-          <p className="text-[12px] font-black uppercase tracking-wide text-[#0F5ED7]">Secure access</p>
+          <p className="text-[12px] font-black uppercase tracking-wide text-blue-600">Secure access</p>
           <h2 className="mt-1 text-[30px] font-black leading-tight text-slate-950">
             {mode === 'signin' ? 'Sign in' : 'Create account'}
           </h2>
@@ -377,7 +377,7 @@ export default function Login() {
             <label className="block">
               <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">Display name</span>
               <span className="login-field flex h-12 items-center gap-2 px-3 transition">
-                <User className="h-4 w-4 text-[#0F5ED7]" />
+                <User className="h-4 w-4 text-blue-600" />
                 <input
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
@@ -391,7 +391,7 @@ export default function Login() {
           <label className="block">
             <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">Email</span>
             <span className="login-field flex h-12 items-center gap-2 px-3 transition">
-              <Mail className="h-4 w-4 text-[#0F5ED7]" />
+              <Mail className="h-4 w-4 text-blue-600" />
               <input
                 type="email"
                 value={email}
@@ -406,7 +406,7 @@ export default function Login() {
           <label className="block">
             <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">Password</span>
             <span className="login-field flex h-12 items-center gap-2 px-3 transition">
-              <Lock className="h-4 w-4 text-[#0F5ED7]" />
+              <Lock className="h-4 w-4 text-blue-600" />
               <input
                 type="password"
                 value={password}
@@ -447,7 +447,7 @@ export default function Login() {
             setError('');
             setMessage('');
           }}
-          className="motion-press mt-5 h-11 w-full rounded-2xl border border-blue-100 bg-blue-50 text-center text-[14px] font-black text-[#0F5ED7] transition hover:bg-blue-100"
+          className="motion-press mt-5 h-11 w-full rounded-2xl border border-blue-100 bg-blue-50 text-center text-[14px] font-black text-blue-600 transition hover:bg-blue-100"
         >
           {mode === 'signin' ? 'Need an account? Create one' : 'Already have an account? Sign in'}
         </button>

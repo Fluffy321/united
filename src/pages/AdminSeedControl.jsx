@@ -69,7 +69,7 @@ function SeedControlTool() {
               type="number"
               value={volumeCommunities}
               onChange={e => setVolumeCommunities(Number(e.target.value))}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0F5ED7]"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-600"
               min={1} max={2000}
             />
           </div>
@@ -79,7 +79,7 @@ function SeedControlTool() {
               type="number"
               value={volumePosts}
               onChange={e => setVolumePosts(Number(e.target.value))}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0F5ED7]"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-600"
               min={0} max={6}
             />
           </div>
@@ -89,7 +89,7 @@ function SeedControlTool() {
               type="number"
               value={volumeEvents}
               onChange={e => setVolumeEvents(Number(e.target.value))}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0F5ED7]"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-600"
               min={0} max={4}
             />
           </div>
@@ -111,7 +111,7 @@ function SeedControlTool() {
         <Button
           onClick={handleRun}
           disabled={loading}
-          className="w-full bg-[#0F5ED7] hover:bg-[#0D4EB8] text-white rounded-xl h-11 font-semibold flex items-center gap-2"
+          className="w-full bg-blue-600 hover:bg-[#0D4EB8] text-white rounded-xl h-11 font-semibold flex items-center gap-2"
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
           {loading ? 'Seeding...' : 'Run Seed Now'}

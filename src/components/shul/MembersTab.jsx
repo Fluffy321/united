@@ -63,7 +63,7 @@ function MemberRow({ member, isMe }) {
   return (
     <div className="flex items-center justify-between bg-white border border-slate-100 rounded-xl px-4 py-3">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-[#EEF4FF] flex items-center justify-center text-[#0F5ED7] font-bold text-sm">
+        <div className="w-8 h-8 rounded-full bg-[#EEF4FF] flex items-center justify-center text-blue-600 font-bold text-sm">
           {member.user_name?.charAt(0)?.toUpperCase() || '?'}
         </div>
         <span className="font-medium text-slate-900 text-sm">

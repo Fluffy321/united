@@ -8,7 +8,7 @@ export default function MyCommunitiesTab({ communities, isLoading, onViewCommuni
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0F5ED7]" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -37,7 +37,7 @@ export default function MyCommunitiesTab({ communities, isLoading, onViewCommuni
           <div className="w-12 h-12 rounded-xl flex-shrink-0 bg-[#EEF4FF] flex items-center justify-center overflow-hidden border border-slate-100">
             {community.logo_url
               ? <img src={community.logo_url} alt="" className="w-full h-full object-cover" />
-              : <span className="text-[#0F5ED7] font-bold text-lg">{community.name?.charAt(0)}</span>
+              : <span className="text-blue-600 font-bold text-lg">{community.name?.charAt(0)}</span>
             }
           </div>
 

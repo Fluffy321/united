@@ -209,7 +209,7 @@ export default function CreateCommunityForm({ categories = [], onCreate, onClose
               <span>{STEPS[stepIndex].label}</span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full rounded-full bg-gradient-to-r from-blue-600 via-[#0F5ED7] to-emerald-600 transition-all duration-300" style={{ width: `${progress}%` }} />
+              <div className="h-full rounded-full bg-gradient-to-r from-blue-600 via-blue-600 to-emerald-600 transition-all duration-300" style={{ width: `${progress}%` }} />
             </div>
             <div className="mt-2 grid grid-cols-5 gap-1">
               {STEPS.map((step, index) => (

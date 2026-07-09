@@ -111,7 +111,7 @@ export default function AdminBusinessImport() {
               <select
                 value={town}
                 onChange={(e) => setTown(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0F5ED7]"
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-600"
               >
                 {TOWNS.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
               </select>
@@ -121,7 +121,7 @@ export default function AdminBusinessImport() {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0F5ED7]"
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-600"
               >
                 {CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
               </select>
@@ -136,14 +136,14 @@ export default function AdminBusinessImport() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="e.g. kosher pizza"
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0F5ED7]"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-600"
             />
           </div>
           <button
             type="button"
             onClick={handleSearch}
             disabled={searching}
-            className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-xl bg-[#0F5ED7] text-white font-semibold disabled:opacity-60"
+            className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-xl bg-blue-600 text-white font-semibold disabled:opacity-60"
           >
             {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
             {searching ? 'Searching...' : 'Search Google Places'}
@@ -170,7 +170,7 @@ export default function AdminBusinessImport() {
                 <label
                   key={r.placeId}
                   className={`flex items-start gap-3 rounded-xl border px-3 py-3 cursor-pointer ${
-                    selected.has(r.placeId) ? 'border-[#0F5ED7] bg-blue-50/50' : 'border-slate-200'
+                    selected.has(r.placeId) ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200'
                   }`}
                 >
                   <input

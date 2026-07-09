@@ -46,7 +46,7 @@ export default function TrendingCarousel({ communities, joinedIds, joiningId, on
                 variant={joined ? 'outline' : 'default'}
                 disabled={loading}
                 onClick={e => { e.stopPropagation(); onJoin(e, c); }}
-                className={`w-full text-xs h-7 ${joined ? 'border-slate-200 text-slate-600' : 'bg-[#0F5ED7] hover:bg-[#0D4EB8]'}`}
+                className={`w-full text-xs h-7 ${joined ? 'border-slate-200 text-slate-600' : 'bg-blue-600 hover:bg-[#0D4EB8]'}`}
               >
                 {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : joined ? 'Joined' : 'Join'}
               </Button>

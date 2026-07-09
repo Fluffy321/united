@@ -86,7 +86,7 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
             <p className="text-sm text-slate-500 mb-6">
               We'll review your claim and get back to you at <strong>{email}</strong> within 24–48 hours.
             </p>
-            <Button onClick={handleClose} className="bg-[#0F5ED7] hover:bg-[#0D4EB8]">Got it</Button>
+            <Button onClick={handleClose} className="bg-blue-600 hover:bg-[#0D4EB8]">Got it</Button>
           </div>
         ) : (
           <div className="space-y-4">
@@ -99,7 +99,7 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
                 <button
                   onClick={() => fileRef.current?.click()}
                   disabled={logoUploading}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-[#0F5ED7] bg-[#EEF4FF] px-3 py-1.5 rounded-lg"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-[#EEF4FF] px-3 py-1.5 rounded-lg"
                 >
                   {logoUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                   {logoUploading ? 'Uploading…' : logoUrl ? 'Change logo' : 'Upload logo'}
@@ -137,7 +137,7 @@ export default function ClaimModal({ open, onOpenChange, community, currentUser 
 
             <div className="flex gap-2 pt-2">
               <Button variant="outline" className="flex-1" onClick={handleClose}>Cancel</Button>
-              <Button className="flex-1 bg-[#0F5ED7] hover:bg-[#0D4EB8]" onClick={handleSubmit} disabled={submitting}>
+              <Button className="flex-1 bg-blue-600 hover:bg-[#0D4EB8]" onClick={handleSubmit} disabled={submitting}>
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit Claim'}
               </Button>
             </div>

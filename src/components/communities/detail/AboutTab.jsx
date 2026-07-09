@@ -80,7 +80,7 @@ export default function AboutTab({ community, typeConfig, onClaim }) {
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
           <p className="text-sm font-semibold text-amber-800 mb-1">{claim.question}</p>
           <p className="text-xs text-amber-700 mb-2">Manage announcements, posts, and your community hub.</p>
-          <button onClick={onClaim} className="text-xs font-bold text-[#0F5ED7] underline">
+          <button onClick={onClaim} className="text-xs font-bold text-blue-600 underline">
             {claim.cta} →
           </button>
         </div>

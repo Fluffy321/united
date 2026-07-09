@@ -38,7 +38,7 @@ export default function MessageRequestsTab({ currentUser, onAccepted }) {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7]" /></div>;
+    return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-blue-600" /></div>;
   }
 
   if (requests.length === 0) {

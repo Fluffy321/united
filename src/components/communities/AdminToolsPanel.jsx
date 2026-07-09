@@ -99,7 +99,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
             key={t}
             onClick={() => setTab(t)}
             className={`flex-shrink-0 flex-1 py-3 text-sm font-medium capitalize transition-colors ${
-              tab === t ? 'text-[#0F5ED7] border-b-2 border-[#0F5ED7]' : 'text-slate-500'
+              tab === t ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500'
             }`}
           >
             {t}
@@ -117,7 +117,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
                   key={t}
                   onClick={() => setPostType(t)}
                   className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors capitalize ${
-                    postType === t ? 'bg-[#0F5ED7] text-white' : 'bg-slate-100 text-slate-600'
+                    postType === t ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
                   }`}
                 >
                   {t}
@@ -141,7 +141,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
                 </div>
               </div>
             )}
-            <Button className="w-full bg-[#0F5ED7] hover:bg-[#0D4EB8]" onClick={handleCreatePost} disabled={submitting}>
+            <Button className="w-full bg-blue-600 hover:bg-[#0D4EB8]" onClick={handleCreatePost} disabled={submitting}>
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4 mr-1" />Post</>}
             </Button>
           </div>
@@ -158,7 +158,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
             </div>
             <Input value={eventLocation} onChange={e => setEventLocation(e.target.value)} placeholder="Location" />
             <Button
-              className="w-full bg-[#0F5ED7] hover:bg-[#0D4EB8]"
+              className="w-full bg-blue-600 hover:bg-[#0D4EB8]"
               onClick={() => { setPostType('event'); handleCreatePost(); }}
               disabled={submitting}
             >
@@ -202,7 +202,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
               <Input value={infoDonationUrl} onChange={e => setInfoDonationUrl(e.target.value)} placeholder="https://chesed.fund/your-org" />
               <p className="text-[10px] text-slate-400 mt-1">JUnited takes no cut. Donors go directly to your payment provider.</p>
             </div>
-            <Button className="w-full bg-[#0F5ED7] hover:bg-[#0D4EB8]" onClick={handleSaveInfo} disabled={savingInfo}>
+            <Button className="w-full bg-blue-600 hover:bg-[#0D4EB8]" onClick={handleSaveInfo} disabled={savingInfo}>
               {savingInfo ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-1" />Save Info</>}
             </Button>
           </div>
@@ -225,7 +225,7 @@ export default function AdminToolsPanel({ community, org, currentUser, onPostCre
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={logoUploading}
-                  className="bg-[#0F5ED7] hover:bg-[#0D4EB8] text-xs"
+                  className="bg-blue-600 hover:bg-[#0D4EB8] text-xs"
                 >
                   {logoUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Upload className="w-3.5 h-3.5 mr-1" />}
                   {logoUploading ? 'Uploading…' : 'Upload Logo'}

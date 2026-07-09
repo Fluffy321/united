@@ -14,7 +14,7 @@ export default function QuickActions({ onAction }) {
     <>
       <Button
         onClick={() => setShowTypeSelector(true)}
-        className="w-full bg-[#0F5ED7] hover:bg-[#0D4EB8] text-white font-semibold py-6 rounded-2xl text-base shadow-sm"
+        className="w-full bg-blue-600 hover:bg-[#0D4EB8] text-white font-semibold py-6 rounded-2xl text-base shadow-sm"
       >
         <Plus className="w-5 h-5 mr-2" />
         Create Post

@@ -382,7 +382,7 @@ export default function Messages() {
               />
             ) : isLoading ? (
               <div className="flex justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-[#0F5ED7]" />
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
               </div>
             ) : isConversationsError ? (
               <div className="mx-3 my-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">

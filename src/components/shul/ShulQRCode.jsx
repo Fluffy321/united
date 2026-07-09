@@ -32,7 +32,7 @@ export default function ShulQRCode({ shul }) {
       {/* Header */}
       <div className="px-4 pt-4 pb-3 border-b border-[#F2F4F7]">
         <div className="flex items-center gap-2">
-          <QrCode className="w-4 h-4 text-[#0F5ED7]" />
+          <QrCode className="w-4 h-4 text-blue-600" />
           <p className="font-bold text-[14px] text-[#0F1C2E]">Join QR Code</p>
         </div>
         <p className="text-[12px] text-slate-500 mt-0.5">Print or share to let members join instantly</p>

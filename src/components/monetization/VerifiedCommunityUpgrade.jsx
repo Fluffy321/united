@@ -99,7 +99,7 @@ export default function VerifiedCommunityUpgrade({ community, currentUser }) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="bg-gradient-to-br from-[#0F5ED7] to-[#7B3FE4] rounded-2xl p-5 text-white">
+      <div className="bg-gradient-to-br from-blue-600 to-[#7B3FE4] rounded-2xl p-5 text-white">
         <div className="flex items-center gap-2 mb-1">
           <Shield className="w-5 h-5" />
           <span className="font-bold text-[16px]">Get Verified</span>

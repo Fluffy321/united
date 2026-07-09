@@ -27,7 +27,7 @@ function businessIcon(business) {
     .toUpperCase();
 
   return divIcon({
-    html: `<div style="background:#0f5ed7;color:white;border:3px solid white;box-shadow:0 10px 24px rgba(15,94,215,.28);width:42px;height:42px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;">${initials}</div>`,
+    html: `<div style="background:#2563eb;color:white;border:3px solid white;box-shadow:0 10px 24px rgba(15,94,215,.28);width:42px;height:42px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;">${initials}</div>`,
     className: '',
     iconSize: [42, 42],
     iconAnchor: [21, 21],
