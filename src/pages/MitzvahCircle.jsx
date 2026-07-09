@@ -39,7 +39,6 @@ import {
   CATEGORIES,
   CATEGORY_GROUPS,
   REQUEST_EXPIRY_MS,
-  STATUS_CONFIGS,
   STATUSES,
   VALID_VIEWS,
   WORKFLOW_TABS,
@@ -58,20 +57,9 @@ import {
   requestMatchesCategoryGroup,
   resolveMapLocation,
 } from '@/components/mitzvah/circle/shared';
-
-function StatusPill({ status }) {
-  const { cls, Icon, label } = STATUS_CONFIGS[status] || {
-    cls: 'bg-slate-50 text-slate-600 border-slate-200',
-    Icon: null,
-    label: status,
-  };
-  return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-black ${cls}`}>
-      {Icon && <Icon className="h-3 w-3" />}
-      {label}
-    </span>
-  );
-}
+import StatusPill from '@/components/mitzvah/circle/StatusPill';
+import EmptyState from '@/components/mitzvah/circle/EmptyState';
+import Metric from '@/components/mitzvah/circle/Metric';
 
 function RequestCard({
   request,
@@ -757,23 +745,6 @@ function CreateCarpoolModal({ mode, onClose, onCreate, isLoading }) {
   );
 }
 
-function EmptyState({ title, text, actionLabel, onAction }) {
-  return (
-    <div className="app-card flex flex-col items-center gap-3 p-8 text-center">
-      <HandHeart className="h-10 w-10 text-slate-300" />
-      <div>
-        <p className="font-black text-slate-950">{title}</p>
-        {text && <p className="mt-1 text-[13px] text-slate-500">{text}</p>}
-      </div>
-      {actionLabel && onAction && (
-        <button type="button" onClick={onAction} className="motion-press rounded-full bg-slate-950 px-5 py-2.5 text-[13px] font-black text-white">
-          {actionLabel}
-        </button>
-      )}
-    </div>
-  );
-}
-
 function QuickViewSheet({ request, offers, comments = [], currentUser, onClose, onOffer, onOpenMap }) {
   if (!request || typeof document === 'undefined') return null;
   const myOffer = offers.find(
@@ -889,22 +860,6 @@ function QuickViewSheet({ request, offers, comments = [], currentUser, onClose, 
   );
 }
 
-function Metric({ icon: Icon, label, value, tone }) {
-  const tones = {
-    blue: 'border-blue-100 bg-blue-50/80 text-blue-700',
-    amber: 'border-amber-100 bg-amber-50/80 text-amber-700',
-    emerald: 'border-emerald-100 bg-emerald-50/80 text-emerald-700',
-  };
-  return (
-    <div className={`rounded-2xl border p-3 shadow-sm ${tones[tone]}`}>
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[10px] font-black uppercase tracking-wide opacity-75">{label}</p>
-        <Icon className="h-4 w-4" />
-      </div>
-      <p className="mt-1 text-2xl font-black leading-none">{value}</p>
-    </div>
-  );
-}
 
 
 export default function MitzvahCircle() {
