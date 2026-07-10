@@ -446,8 +446,8 @@ export default function MitzvahCircle() {
     <div className="app-page mobile-safe-bottom">
       <DestinationHeader
         icon={HandHeart}
-        title="Mitzvah Circle"
-        help={<PageHelp text="Post mitzvah opportunities, take one, share what you did, coordinate carpools, and build daily mitzvah streaks." />}
+        title="Help"
+        help={<PageHelp text="Ask for help, offer help, coordinate carpools, and build daily mitzvah streaks — the Five Towns Mitzvah Circle." />}
       />
 
       <section className="mobile-page-wide px-3 pt-3 sm:px-4 sm:pt-4">
