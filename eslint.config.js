@@ -60,6 +60,9 @@ export default [
       // one week before being enabled (COMMUNITIES_ENABLED, divIcon,
       // supabase in CommunityInviteModal, rsvpEventIds).
       "no-undef": "error",
+      // Core no-undef does NOT check JSX element names (<Users /> slipped
+      // through it) — this rule closes that gap.
+      "react/jsx-no-undef": "error",
     },
   },
 ];

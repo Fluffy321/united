@@ -46,7 +46,7 @@ export default function MitzvahCircleHero({
           {quickNeeds.map(({ label, sub, icon: Icon, tone, onClick }) => (
             <button key={label} onClick={onClick} className="motion-press surface-tile flex min-h-[64px] items-center gap-3 rounded-[18px] p-3 text-left transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]">
               <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone}`}><Icon className="h-4 w-4" /></span>
-              <span className="min-w-0"><span className="block truncate text-[13px] font-black leading-tight text-slate-900">{label}</span><span className="block truncate text-[10px] font-semibold text-slate-400">{sub}</span></span>
+              <span className="min-w-0"><span className="block text-[13px] font-black leading-tight text-slate-900">{label}</span><span className="block truncate text-[10px] font-semibold text-slate-400">{sub}</span></span>
             </button>
           ))}
         </div>

@@ -109,6 +109,9 @@ const demoUser = {
   role: 'user',
   age_range: '18+',
   is_profile_complete: true,
+  // Local preview should land in the app, not the onboarding gate (whose
+  // push-permission step can't complete in local mode anyway).
+  onboarding_complete: true,
   interests: ['chesed', 'events', 'community'],
   message_settings: {
     allow_messages_from: 'members',
