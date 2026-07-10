@@ -19,7 +19,7 @@ export default function MitzvahCircleHero({
     { label: 'Errand', sub: 'Pickup or dropoff', icon: ShoppingBag, tone: 'bg-sky-50 text-sky-700', onClick: () => onPostRequest({ category: 'Errands' }) },
     { label: 'Meals', sub: 'Food when it counts', icon: Utensils, tone: 'bg-orange-50 text-orange-700', onClick: () => onPostRequest({ category: 'Food / Meals' }) },
     { label: 'Childcare', sub: 'Babysitting help', icon: Users, tone: 'bg-rose-50 text-rose-700', onClick: () => onPostRequest({ category: 'Babysitting' }) },
-    { label: 'Elderly check-in', sub: 'Visits and support', icon: Heart, tone: 'bg-pink-50 text-pink-700', onClick: () => onPostRequest({ category: 'Elderly Support' }) },
+    { label: 'Elderly care', sub: 'Visits and check-ins', icon: Heart, tone: 'bg-pink-50 text-pink-700', onClick: () => onPostRequest({ category: 'Elderly Support' }) },
     { label: 'Tutoring', sub: 'Learning help', icon: BookOpen, tone: 'bg-violet-50 text-violet-700', onClick: () => onPostRequest({ category: 'Tutoring' }) },
     { label: 'Tech help', sub: 'Devices and setup', icon: Laptop, tone: 'bg-cyan-50 text-cyan-700', onClick: () => onPostRequest({ category: 'Tech Help' }) },
     { label: 'Shul help', sub: 'Minyan and setup', icon: Sparkles, tone: 'bg-indigo-50 text-indigo-700', onClick: () => onPostRequest({ category: 'Shul Help' }) },
