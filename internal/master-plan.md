@@ -81,7 +81,7 @@ Start with the first unchecked item in internal/master-plan.md. Report progress 
 - [x] 16. Conversion funnel analytics — shipped 2026-07-09. AdminAnalyticsDashboard's funnel tab now leads with a true per-user conversion funnel (signup → first community join → first post → first payment), counting DISTINCT users per stage with %-of-signups and %-of-previous-step conversion rates, CSV-exportable. The pre-existing row-count metrics were kept below, honestly relabeled as activation signals (they can exceed signups). subscriptions select now includes user_id to make the Paid stage computable.
 
 ### Phase 5 — Marketable
-- [ ] 17. Capacitor init + APNs push bridge plan
+- [x] 17. Capacitor init + APNs push bridge plan — shipped 2026-07-09. @capacitor/core+cli+ios installed, capacitor.config.ts (appId us.junited.app, webDir dist), `npx cap add ios` + `cap sync ios` succeeded — ios/App Xcode project scaffolded with the built bundle. APNs bridge plan written to internal/apns-push-bridge-plan.md: platform column on push_subscriptions, @capacitor/push-notifications registration, shared edge sender fanning out web-push vs APNs HTTP/2 (p8/ES256), payload mapping through getNotificationRoute(). Only remaining blocker is owner-side: Apple Developer enrollment + APNs key.
 - [ ] 18. Desktop responsive shell
 - [ ] 19. Invite loops with OG previews + referral credit
 - [ ] 20. Public OG metadata / SEO
