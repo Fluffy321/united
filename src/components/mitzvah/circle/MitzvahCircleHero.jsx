@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertCircle, Award, BookOpen, Car, Clock, HandHeart, Heart, Laptop, PartyPopper, ShoppingBag, Sparkles, Users, Utensils } from 'lucide-react';
 import Metric from './Metric';
+import ImpactLeaderboard from './ImpactLeaderboard';
 
 export default function MitzvahCircleHero({
   activeView,
@@ -9,6 +10,7 @@ export default function MitzvahCircleHero({
   onPostRequest,
   onChangeView,
   onChangeBrowseCategory,
+  currentUser,
 }) {
   if (activeView === 'shuls') return null;
 
@@ -53,6 +55,8 @@ export default function MitzvahCircleHero({
       </section>
 
       {hasMitzvahStats && <div className="grid grid-cols-3 gap-2"><Metric icon={HandHeart} label="Open" value={totals.openCount} tone="blue" /><Metric icon={Clock} label="In Progress" value={totals.offeredCount} tone="amber" /><Metric icon={Award} label="Completed" value={totals.completedCount} tone="emerald" /></div>}
+
+      {activeView === 'browse' && <ImpactLeaderboard currentUser={currentUser} />}
     </div>
   );
 }

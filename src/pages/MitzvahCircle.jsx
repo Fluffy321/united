@@ -458,10 +458,8 @@ export default function MitzvahCircle() {
           totals={totals}
           onPostRequest={openRequestForm}
           onChangeView={changeView}
-          activeCategory={activeCategory}
           onChangeBrowseCategory={changeBrowseCategory}
-          query={query}
-          onQueryChange={setQuery}
+          currentUser={currentUser}
         />
 
         {(activeView === 'browse' && activeCategory === 'rides') || activeView === 'rides' ? (
