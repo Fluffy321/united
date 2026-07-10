@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, Award, BookOpen, Car, ChevronRight, Clock, HandHeart, Heart, Laptop, PartyPopper, ShoppingBag, Sparkles, Users, Utensils } from 'lucide-react';
+import { AlertCircle, Award, BookOpen, Car, Clock, HandHeart, Heart, Laptop, PartyPopper, ShoppingBag, Sparkles, Users, Utensils } from 'lucide-react';
 import Metric from './Metric';
 
 export default function MitzvahCircleHero({
@@ -51,8 +51,6 @@ export default function MitzvahCircleHero({
           ))}
         </div>
       </section>
-
-      <button onClick={() => onPostRequest({ urgency: 'Urgent' })} className="flex w-full items-center gap-3 rounded-[20px] border border-rose-100 bg-rose-50 px-4 py-3 text-left transition hover:bg-rose-100"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-600"><AlertCircle className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block text-[13px] font-black text-rose-950">Need help urgently?</span><span className="block text-[11px] font-semibold text-rose-700">Post a time-sensitive request so your neighbors can respond quickly.</span></span><ChevronRight className="h-4 w-4 text-rose-500" /></button>
 
       {hasMitzvahStats && <div className="grid grid-cols-3 gap-2"><Metric icon={HandHeart} label="Open" value={totals.openCount} tone="blue" /><Metric icon={Clock} label="In Progress" value={totals.offeredCount} tone="amber" /><Metric icon={Award} label="Completed" value={totals.completedCount} tone="emerald" /></div>}
     </div>
