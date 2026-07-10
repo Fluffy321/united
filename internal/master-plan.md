@@ -78,7 +78,7 @@ Start with the first unchecked item in internal/master-plan.md. Report progress 
 ### Phase 4 — Profitable
 - [ ] 14. Stripe Connect foundation + application fees (unblocks 4 checkouts)
 - [ ] 15. Community Pro Plan + Verified badge
-- [ ] 16. Conversion funnel analytics
+- [x] 16. Conversion funnel analytics — shipped 2026-07-09. AdminAnalyticsDashboard's funnel tab now leads with a true per-user conversion funnel (signup → first community join → first post → first payment), counting DISTINCT users per stage with %-of-signups and %-of-previous-step conversion rates, CSV-exportable. The pre-existing row-count metrics were kept below, honestly relabeled as activation signals (they can exceed signups). subscriptions select now includes user_id to make the Paid stage computable.
 
 ### Phase 5 — Marketable
 - [ ] 17. Capacitor init + APNs push bridge plan

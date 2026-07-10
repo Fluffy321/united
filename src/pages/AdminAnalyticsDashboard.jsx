@@ -252,7 +252,7 @@ export default function AdminAnalyticsDashboard() {
         listRetentionEvent('-created_date', 500).catch(() => []),
         supabase
           .from('subscriptions')
-          .select('id, tier, interval, status, created_at')
+          .select('id, user_id, tier, interval, status, created_at')
           .order('created_at', { ascending: false }),
         supabase
           .from('community_plan_subscriptions')
@@ -305,6 +305,18 @@ export default function AdminAnalyticsDashboard() {
         { stage: 'Mitzvah completions', count: mitzvahRequests.filter((r) => ['completed', 'verified'].includes(String(r.status || '').toLowerCase())).length },
         { stage: 'WAU', count: wau },
         { stage: 'MAU', count: mau },
+      ];
+
+      // Real per-user conversion funnel (master-plan item 16):
+      // signup -> first community join -> first post -> first payment.
+      // Counts DISTINCT users per stage (unlike the activation signals above,
+      // which count raw activity rows), within the dashboard's fetch windows.
+      const distinctUsers = (rows, key = 'user_id') => new Set((rows || []).map((r) => r?.[key]).filter(Boolean));
+      const conversionFunnel = [
+        { stage: 'Signed up', count: users.length },
+        { stage: 'Joined a community', count: distinctUsers(userCommunities).size },
+        { stage: 'Posted', count: distinctUsers(posts).size },
+        { stage: 'Paid', count: distinctUsers(subscriptions).size },
       ];
 
       // Engagement rate per post type
@@ -370,7 +382,7 @@ export default function AdminAnalyticsDashboard() {
         dau, wau, mau,
         signupsPerDay, postsPerDay, postTypeData, topCommunities,
         reportsPerDay, unresolvedReports, resolvedReports,
-        funnel, engByType, communityHealth,
+        funnel, conversionFunnel, engByType, communityHealth,
         totalUsers: users.length, totalPosts: posts.length,
         totalCommunities: communities.length, totalEvents: events.length,
         totalComments: comments.length,
@@ -630,6 +642,34 @@ export default function AdminAnalyticsDashboard() {
         {/* FUNNEL TAB */}
         {tab === 'funnel' && (
           <div className="space-y-6">
+            <ChartCard title="Conversion Funnel (distinct users)" onExport={() => exportCSV(data.conversionFunnel, 'conversion-funnel.csv')}>
+              <p className="mb-3 text-[12px] font-medium text-slate-500">
+                Signup → first community join → first post → first payment. Each step counts unique users, so percentages are true conversion rates.
+              </p>
+              <div className="space-y-2">
+                {data.conversionFunnel.map((step, index) => {
+                  const base = data.conversionFunnel[0]?.count || 0;
+                  const prev = index > 0 ? data.conversionFunnel[index - 1]?.count || 0 : base;
+                  const ofSignups = base ? Math.round((step.count / base) * 100) : 0;
+                  const ofPrev = prev ? Math.round((step.count / prev) * 100) : 0;
+                  return (
+                    <div key={step.stage}>
+                      <div className="mb-1 flex items-baseline justify-between gap-2">
+                        <span className="text-[13px] font-bold text-slate-800">{step.stage}</span>
+                        <span className="text-[12px] font-black text-slate-500">
+                          {step.count.toLocaleString()}
+                          <span className="ml-2 font-bold text-slate-400">{ofSignups}% of signups{index > 0 ? ` · ${ofPrev}% of previous` : ''}</span>
+                        </span>
+                      </div>
+                      <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                        <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${Math.min(100, ofSignups)}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </ChartCard>
+
             <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-5 shadow-sm">
               <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                 <div>
