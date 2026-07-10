@@ -1,7 +1,6 @@
 import React from 'react';
-import { AlertCircle, Award, BookOpen, Car, ChevronRight, Clock, HandHeart, Heart, Laptop, Search, ShoppingBag, Sparkles, Users, Utensils } from 'lucide-react';
+import { AlertCircle, Award, BookOpen, Car, ChevronRight, Clock, HandHeart, Heart, Laptop, PartyPopper, ShoppingBag, Sparkles, Users, Utensils } from 'lucide-react';
 import Metric from './Metric';
-import { CATEGORY_GROUPS } from './shared';
 
 export default function MitzvahCircleHero({
   activeView,
@@ -9,22 +8,23 @@ export default function MitzvahCircleHero({
   totals,
   onPostRequest,
   onChangeView,
-  activeCategory,
   onChangeBrowseCategory,
-  query,
-  onQueryChange,
 }) {
   if (activeView === 'shuls') return null;
 
+  // One tile per request category (see CATEGORIES in shared.js) so every kind
+  // of need starts here with one tap. iPhone-first: 2-up grid, no side-scroll.
   const quickNeeds = [
-    { label: 'Ride or carpool', icon: Car, tone: 'bg-amber-50 text-amber-700', onClick: () => onChangeView('rides') },
-    { label: 'Errand', icon: ShoppingBag, tone: 'bg-sky-50 text-sky-700', onClick: () => onPostRequest({ category: 'Errands' }) },
-    { label: 'Meals', icon: Utensils, tone: 'bg-orange-50 text-orange-700', onClick: () => onPostRequest({ category: 'Food / Meals' }) },
-    { label: 'Childcare', icon: Users, tone: 'bg-rose-50 text-rose-700', onClick: () => onPostRequest({ category: 'Babysitting' }) },
-    { label: 'Check-in', icon: Heart, tone: 'bg-pink-50 text-pink-700', onClick: () => onPostRequest({ category: 'Elderly Support' }) },
-    { label: 'Tutoring', icon: BookOpen, tone: 'bg-violet-50 text-violet-700', onClick: () => onPostRequest({ category: 'Tutoring' }) },
-    { label: 'Tech help', icon: Laptop, tone: 'bg-cyan-50 text-cyan-700', onClick: () => onPostRequest({ category: 'Tech Help' }) },
-    { label: 'Shul or simcha', icon: Sparkles, tone: 'bg-indigo-50 text-indigo-700', onClick: () => onPostRequest({ category: 'Shul Help' }) },
+    { label: 'Ride or carpool', sub: 'Get where you need', icon: Car, tone: 'bg-amber-50 text-amber-700', onClick: () => onChangeView('rides') },
+    { label: 'Errand', sub: 'Pickup or dropoff', icon: ShoppingBag, tone: 'bg-sky-50 text-sky-700', onClick: () => onPostRequest({ category: 'Errands' }) },
+    { label: 'Meals', sub: 'Food when it counts', icon: Utensils, tone: 'bg-orange-50 text-orange-700', onClick: () => onPostRequest({ category: 'Food / Meals' }) },
+    { label: 'Childcare', sub: 'Babysitting help', icon: Users, tone: 'bg-rose-50 text-rose-700', onClick: () => onPostRequest({ category: 'Babysitting' }) },
+    { label: 'Elderly check-in', sub: 'Visits and support', icon: Heart, tone: 'bg-pink-50 text-pink-700', onClick: () => onPostRequest({ category: 'Elderly Support' }) },
+    { label: 'Tutoring', sub: 'Learning help', icon: BookOpen, tone: 'bg-violet-50 text-violet-700', onClick: () => onPostRequest({ category: 'Tutoring' }) },
+    { label: 'Tech help', sub: 'Devices and setup', icon: Laptop, tone: 'bg-cyan-50 text-cyan-700', onClick: () => onPostRequest({ category: 'Tech Help' }) },
+    { label: 'Shul help', sub: 'Minyan and setup', icon: Sparkles, tone: 'bg-indigo-50 text-indigo-700', onClick: () => onPostRequest({ category: 'Shul Help' }) },
+    { label: 'Simcha help', sub: 'Event hands', icon: PartyPopper, tone: 'bg-emerald-50 text-emerald-700', onClick: () => onPostRequest({ category: 'Simcha Help' }) },
+    { label: 'Something else', sub: 'Anything at all', icon: HandHeart, tone: 'bg-slate-100 text-slate-700', onClick: () => onPostRequest({ category: 'Other' }) },
   ];
 
   return (
@@ -41,16 +41,14 @@ export default function MitzvahCircleHero({
       </section>
 
       <section>
-        <div className="mb-2.5 flex items-center justify-between"><div><h2 className="text-[16px] font-black text-slate-950">What do you need?</h2><p className="text-[12px] font-semibold text-slate-500">Start with the kind of support you need.</p></div><button onClick={() => onPostRequest()} className="text-[12px] font-black text-blue-600">Something else</button></div>
+        <div className="mb-2.5"><h2 className="text-[17px] font-black text-slate-950">What do you need?</h2><p className="text-[12px] font-semibold text-slate-500">Tap a need — we&rsquo;ll start the request for you.</p></div>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-          {quickNeeds.map(({ label, icon: Icon, tone, onClick }) => <button key={label} onClick={onClick} className="motion-press surface-tile flex min-h-[76px] items-center gap-3 rounded-[18px] p-3 text-left transition hover:-translate-y-0.5 hover:shadow-md"><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${tone}`}><Icon className="h-4 w-4" /></span><span className="text-[12px] font-black leading-tight text-slate-800">{label}</span></button>)}
-        </div>
-        <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3 shadow-sm">
-          <div className="mb-2 flex items-center justify-between gap-3"><div><p className="text-[13px] font-black text-slate-950">Want to help someone?</p><p className="text-[11px] font-semibold text-slate-500">Choose a need to see open requests.</p></div></div>
-          <div className="mobile-scroll-x flex gap-2 pb-2">
-            {CATEGORY_GROUPS.map((group) => { const Icon = group.icon; const selected = activeCategory === group.id; return <button key={group.id} type="button" onClick={() => { onChangeBrowseCategory(group.id); onChangeView('browse'); }} className={`motion-press shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-black transition ${selected ? group.tone : 'border-slate-200 bg-slate-50 text-slate-600'}`}><span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" />{group.shortLabel}</span></button>; })}
-          </div>
-          <label className="relative block"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Search open requests" className="app-input h-10 w-full pl-10 pr-3 text-sm" /></label>
+          {quickNeeds.map(({ label, sub, icon: Icon, tone, onClick }) => (
+            <button key={label} onClick={onClick} className="motion-press surface-tile flex min-h-[64px] items-center gap-3 rounded-[18px] p-3 text-left transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]">
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone}`}><Icon className="h-4 w-4" /></span>
+              <span className="min-w-0"><span className="block truncate text-[13px] font-black leading-tight text-slate-900">{label}</span><span className="block truncate text-[10px] font-semibold text-slate-400">{sub}</span></span>
+            </button>
+          ))}
         </div>
       </section>
 
