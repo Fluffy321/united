@@ -190,7 +190,61 @@ Goals:
     shippedNote: 'Shipped 2026-05-22; simplified 2026-07-08. OnboardingFlow.jsx now asks only for name/username, neighborhood, optional first communities, and notification preferences; photo, identity, contacts, and tour remain available after first value. It passes _joinedCount in onComplete. App.jsx redirects users with no joined communities to Discover. Feed retains the zero-state join banner and Messages action. Communities retains the MissingCommunityCard invite flow.',
   },
 
+  {
+    id: 'multi-market-launch-foundation',
+    category: 'Growth & Monetization',
+    status: STATUS.EXPLORING,
+    priority: PRIORITY.HIGH,
+    title: 'Multi-Market Launch Foundation',
+    description: 'Prepare JUnited to launch into multiple geographic communities without hardcoded Five Towns brand copy, ambiguous market ownership, or cross-market data leakage. Define how users select and move between markets, how content and businesses are scoped, and how admins configure a launch market.',
+    why: 'Product direction noted 2026-07-27: JUnited may launch into multiple markets at or near the same time. The reusable login welcome copy is becoming market-neutral now, but data architecture, routing, discovery, moderation ownership, and launch operations need a dedicated approved design before implementation.',
+    prompt: `You are designing the multi-market launch foundation for JUnited.
+
+Context:
+- docs/superpowers/specs/2026-07-28-direct-app-entry-and-welcome-design.md establishes the market-neutral brand-copy contract.
+- src/App.jsx owns routing.
+- src/lib/AuthContext.jsx owns authenticated user state.
+- src/services/ contains named data access.
+- supabase/migrations/ contains the production schema.
+- Feed, Communities, Map, Marketplace, and business discovery currently contain Five Towns assumptions that must be audited.
+
+Goals:
+1. Audit the repository for hardcoded Five Towns copy, location defaults, geographic filters, seed data assumptions, notification targeting, admin ownership, and analytics segmentation.
+2. Write a focused design spec that decides the Market entity, whether users can belong to multiple markets, active-market selection and persistence, URL strategy, data-scoping rules, RLS boundaries, moderation ownership, and migration/backfill behavior.
+3. Get explicit owner approval on that spec before changing schema or production behavior.
+4. Create a test-driven implementation plan that introduces the smallest safe market foundation without making existing Five Towns data disappear or leak into another market.
+5. Include admin launch configuration, market-aware analytics, deep-link behavior, and rollback/backfill verification.
+6. Update internal/roadmap.js: change this item's status to 'shipped' only after the approved foundation is implemented and verified through the real user-facing paths.`,
+  },
+
   // ── Auth & Identity ──────────────────────────────────────────────────────
+
+  {
+    id: 'direct-app-entry-and-welcome-refresh',
+    category: 'Auth & Identity',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.HIGH,
+    title: 'Direct App Entry + Multi-Market Welcome Refresh',
+    description: 'Make / route directly toward the protected Feed, preserve /welcome as the deliberate marketing page, and replace the direct /login welcome mode with the approved Neutral Pearl, natural-sky, market-neutral experience.',
+    why: 'The current root marketing page and separate login welcome create two layers before app value. Returning users need an app-like launch, while deliberate login visitors need a polished introduction that can travel beyond the Five Towns.',
+    prompt: `You are implementing JUnited's direct app entry and multi-market welcome refresh.
+
+Context:
+- Approved design: docs/superpowers/specs/2026-07-28-direct-app-entry-and-welcome-design.md
+- Routing: src/App.jsx
+- Auth-mode orchestration and forms: src/pages/Login.jsx
+- Existing logo: public/brand-mark.png
+- Protected-route redirect behavior: src/components/ProtectedRoute.jsx
+
+Goals:
+1. Follow the approved spec exactly: / redirects to /Feed, /welcome retains Landing, and direct /login renders the redesigned welcome mode.
+2. Extract LoginWelcomeScreen and CommunitySignalGraphic under src/components/auth/ while keeping authentication logic in Login.jsx.
+3. Use the approved market-neutral copy, Neutral Pearl foundation, narrow ink logo frames, 18 deterministic irregular stars, and one centered soft orbital band.
+4. Preserve sign-in, sign-up, OAuth, callback, from_url, onboarding, and deep-link behavior.
+5. Add focused route/component tests and verify mobile and desktop behavior through the real browser paths.
+6. Run npm test, npm run lint, npm run build, and the repository's JUnited self-check.
+7. Update internal/roadmap.js: change this item's status to 'shipped' and add a precise shippedNote.`,
+  },
 
   {
     id: 'google-signin',

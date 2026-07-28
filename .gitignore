@@ -35,3 +35,6 @@ dist-ssr
 ios/App/App/public
 ios/DerivedData
 ios/App/Pods
+
+# Local visual brainstorming artifacts
+.superpowers/
