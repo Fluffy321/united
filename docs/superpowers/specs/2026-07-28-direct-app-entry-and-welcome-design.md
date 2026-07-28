@@ -77,7 +77,7 @@ Neutral Pearl is the benchmark light surface for this screen. It does not automa
 The dark signal panel replaces the current generic two-by-two feature grid as the memorable visual center.
 
 - Background: a natural dark sky using deep navy values around `#07142D`, `#040A19`, and `#020713`.
-- Stars: exactly 18 deterministic, irregularly positioned cool-white or blue-white stars.
+- Stars: exactly 56 deterministic, irregularly positioned cool-white or blue-white stars.
 - Stars vary subtly in size and opacity.
 - Do not use yellow/gold stars, repeating CSS grids, tiled star textures, fake notification counts, or random values generated at runtime.
 - The logo is centered horizontally within the graphic.
@@ -196,7 +196,7 @@ Automated coverage should verify:
 - direct `/login` starts in the redesigned welcome mode;
 - "Get started" enters sign-up mode;
 - "Already have an account? Sign in" enters sign-in mode;
-- the signal graphic renders exactly 18 deterministic stars;
+- the signal graphic renders exactly 56 deterministic stars;
 - approved multi-market copy is present and "Five Towns" is absent from the reusable welcome screen.
 
 Visual browser verification should cover:
@@ -219,7 +219,7 @@ Run the repository's complete applicable verification commands, including tests,
 - A direct `/login` visitor sees the approved Neutral Pearl welcome screen.
 - The welcome screen uses the approved multi-market copy.
 - The visual contains no fabricated counts or activity claims.
-- The signal graphic uses the existing JUnited logo, narrow ink framing, 18 irregular stars, and one centered soft orbital band.
+- The signal graphic uses the existing JUnited logo, narrow ink framing, 56 irregular stars, and one centered soft orbital band.
 - `/welcome` remains available and functional.
 - No protected content becomes publicly readable.
 - Existing sign-in, sign-up, OAuth, callback, and onboarding behavior remains intact.
