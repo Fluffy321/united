@@ -381,6 +381,33 @@
     transform: none;
   }
 
+  /* Branded acquisition surfaces may use the approved JUnited ink treatment
+     when a screen-specific design spec calls for it. Product workflow CTAs
+     continue to use .app-button-primary. */
+  .app-button-ink {
+    display: inline-flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 16px;
+    background: #03091B;
+    padding: 0 16px;
+    font-size: 15px;
+    font-weight: 900;
+    color: #FFFFFF;
+    box-shadow: 0 12px 26px rgba(3, 9, 27, 0.17);
+    transition: background-color 160ms ease, box-shadow 160ms ease, transform 120ms ease;
+  }
+
+  .app-button-ink:hover {
+    background: #10182C;
+  }
+
+  .app-button-ink:active {
+    transform: scale(0.99);
+  }
+
   .app-button-secondary {
     display: inline-flex;
     min-height: 44px;

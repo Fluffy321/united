@@ -70,7 +70,7 @@ export default function LoginWelcomeScreen({ onGetStarted, onSignIn }) {
           <button
             type="button"
             onClick={onGetStarted}
-            className="motion-press flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-[#03091B] px-4 text-[15px] font-black text-white shadow-[0_12px_26px_rgba(3,9,27,0.17)] transition hover:bg-[#10182C] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 active:scale-[0.99]"
+            className="app-button-ink motion-press w-full"
           >
             Get started
             <ArrowRight className="h-4 w-4" aria-hidden="true" />

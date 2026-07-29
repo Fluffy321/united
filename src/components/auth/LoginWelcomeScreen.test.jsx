@@ -46,6 +46,7 @@ describe('LoginWelcomeScreen', () => {
     );
 
     expect((html.match(/<button/g) || [])).toHaveLength(2);
+    expect(html).toContain('app-button-ink');
     expect(html).toContain('Get started');
     expect(html).toContain('Already have an account? Sign in');
   });

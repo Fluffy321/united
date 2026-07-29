@@ -16,7 +16,8 @@ Primitives are defined in `src/index.css`; this guide explains when and how to u
 | Slate-950 | `#020617` | Reserved: intentional dark surfaces only |
 
 ### Color rules
-- **Primary CTAs always use `bg-blue-600`** (Tailwind) or `#2563EB` — not `bg-slate-950`.
+- **Product workflow CTAs use `bg-blue-600`** (Tailwind) or `#2563EB` — not `bg-slate-950`.
+- A branded acquisition surface may use `.app-button-ink` only when an approved screen-specific design spec calls for the JUnited ink treatment.
 - `bg-slate-950` is reserved for **dark segment controls** (ViewSwitch on Communities) and is intentionally "black pill" style. Do not use it for regular buttons or tabs.
 - Active filter chips and tab pills use **blue** to match the primary color.
 - Destructive/danger actions use `bg-red-600` / `text-red-600`.
@@ -49,6 +50,13 @@ Primitives are defined in `src/index.css`; this guide explains when and how to u
 ```
 - Blue gradient, 44px min-height, 14px border-radius.
 - Use for the single primary CTA per screen/modal.
+
+### Branded acquisition action — `.app-button-ink`
+```html
+<button class="app-button-ink">Get started</button>
+```
+- Ink treatment reserved for approved login, welcome, and acquisition surfaces.
+- Do not use it for in-app workflow actions, forms, filters, or routine modal confirmation.
 
 ### Secondary action — `.app-button-secondary`
 ```html
@@ -248,7 +256,7 @@ Use inline Tailwind with type-specific colors:
 
 | Don't | Do instead |
 |---|---|
-| `bg-slate-950` on primary CTAs | `bg-blue-600` |
+| `bg-slate-950` on product workflow CTAs | `bg-blue-600`; use `.app-button-ink` only for an approved acquisition screen |
 | `bg-slate-800` on active filter chips | `bg-blue-600` + `app-tab-pill-active` |
 | Random `bottom-[Xpx]` on floating buttons | Use `FloatingActionsContext` |
 | Hardcode `font-[900]` | Use `font-black` |
