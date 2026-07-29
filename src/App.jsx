@@ -16,6 +16,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import OnboardingFlow, { hasCompletedOnboarding } from '@/components/onboarding/OnboardingFlow';
 import { getSupabaseConfigStatus } from '@/api/supabaseClient';
 import { COMMUNITIES_ENABLED } from '@/config/features';
+import { APP_ENTRY_PATH } from '@/lib/appEntry';
 
 const supabaseStatus = getSupabaseConfigStatus();
 const PROD_CONFIG_MISSING = import.meta.env.PROD && !supabaseStatus.shouldUseSupabase;
@@ -172,7 +173,7 @@ const AuthenticatedApp = () => {
     <>
       <Suspense fallback={<PageFallback />}>
         <Routes>
-          <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
+          <Route path="/" element={<Navigate to={APP_ENTRY_PATH} replace />} />
           <Route path="/welcome" element={<PageTransition><Landing /></PageTransition>} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route path="/Jewish" element={<Navigate to="/Feed" replace />} />
