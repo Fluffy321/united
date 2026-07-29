@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Compass, HeartHandshake, Lock, Mail, MapPin, MessageCircle, ShieldCheck, Sparkles, User, Users, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Lock, Mail, MessageCircle, User, Loader2 } from 'lucide-react';
 import { dataService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { shouldUseSupabase, supabase, getAuthRedirectUrl } from '@/api/supabaseClient';
+import LoginWelcomeScreen from '@/components/auth/LoginWelcomeScreen';
 
 const DEFAULT_AUTH_DESTINATION = '/Feed';
 const AUTH_SUBMIT_TIMEOUT_MS = 15000;
@@ -19,42 +20,15 @@ const withTimeout = (promise, timeoutMs, message) => new Promise((resolve, rejec
     .finally(() => window.clearTimeout(timeoutId));
 });
 
-const VALUE_CHIPS = [
-  {
-    icon: Users,
-    label: 'Five Towns feed',
-    text: 'Talk to neighbors and see what is happening now.',
-    className: 'bg-blue-50 text-blue-700 border-blue-100',
-  },
-  {
-    icon: HeartHandshake,
-    label: 'Mitzvah needs',
-    text: 'Ask for help or show up for someone nearby.',
-    className: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-  },
-  {
-    icon: ShieldCheck,
-    label: 'Trusted local sharing',
-    text: 'Post and message with more confidence.',
-    className: 'bg-amber-50 text-amber-700 border-amber-100',
-  },
-  {
-    icon: MapPin,
-    label: 'Shuls, events, map',
-    text: 'Find places and plans around the Five Towns.',
-    className: 'bg-indigo-50 text-indigo-700 border-indigo-100',
-  },
-];
-
 function BrandMark({ compact = false }) {
   return (
     <div className={`flex items-center gap-3 ${compact ? '' : 'mb-0'}`}>
-      <div className={`${compact ? 'h-12 w-12 rounded-[18px]' : 'h-14 w-14 rounded-[20px]'} flex shrink-0 items-center justify-center bg-gradient-to-br from-blue-600 via-blue-600 to-slate-950 shadow-xl shadow-blue-950/20 ring-1 ring-white/70`}>
-        <img src="/brand-mark.png" alt="JUnited" className={compact ? 'h-8 w-8' : 'h-9 w-9'} />
+      <div className={`${compact ? 'h-12 w-12 rounded-[17px]' : 'h-[51px] w-[51px] rounded-[17px]'} shrink-0 bg-[#07101E] p-1 shadow-[0_9px_22px_rgba(9,20,39,0.2)]`}>
+        <img src="/brand-mark.png" alt="JUnited" className="h-full w-full rounded-[13px] object-cover" />
       </div>
       <div>
         <p className={`${compact ? 'text-[18px]' : 'text-[21px]'} font-black leading-none text-slate-950`}>JUnited</p>
-        <p className="mt-1 text-[12px] font-bold text-slate-500">Five Towns, live in one place.</p>
+        <p className="mt-1 text-[12px] font-bold text-slate-500">Local Jewish life, in one place.</p>
       </div>
     </div>
   );
@@ -232,73 +206,10 @@ export default function Login() {
   // ─── Screen 1: Welcome ────────────────────────────────────────────────────
   if (mode === 'welcome') {
     return (
-      <main
-        className="login-page-root min-h-[100dvh] bg-[#F6F8FB] px-5 py-5 text-slate-950 sm:py-10"
-        style={{ colorScheme: 'light' }}
-      >
-        <style>{LOGIN_STYLES}</style>
-        <div className="mx-auto w-full max-w-sm">
-
-          <BrandMark />
-
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[11px] font-black text-blue-700">
-            <Sparkles className="h-3.5 w-3.5" />
-            Built for Five Towns Jewish life
-          </div>
-
-          <h1 className="mt-3 text-[28px] font-black leading-[1.08] text-slate-950 sm:text-[34px]">
-            The Five Towns, connected.
-          </h1>
-
-          <p className="mt-2 text-[14px] font-semibold leading-6 text-slate-600">
-            Local updates, mitzvah needs, shuls, events, businesses, carpools, and neighbors in one trusted place.
-          </p>
-
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {VALUE_CHIPS.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.label}
-                  className="rounded-[16px] border border-slate-200 bg-white p-3 shadow-sm"
-                >
-                  <div className={`mb-2 flex h-8 w-8 items-center justify-center rounded-xl border ${item.className}`}>
-                    <Icon className="h-3.5 w-3.5" />
-                  </div>
-                  <p className="text-[12px] font-black leading-4 text-slate-950">{item.label}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-3 rounded-[20px] border border-slate-200 bg-slate-950 px-4 py-3 text-white shadow-xl shadow-slate-950/15">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
-                <Compass className="h-4 w-4" />
-              </div>
-              <p className="text-[13px] font-black">Less noise than group chats. More useful than scrolling.</p>
-            </div>
-          </div>
-
-          <div className="mt-5 space-y-3">
-            <button
-              type="button"
-              onClick={() => setMode('signup')}
-              className="motion-press flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 text-[15px] font-black text-white shadow-lg shadow-slate-950/15 transition hover:bg-slate-800 active:scale-[0.98]"
-            >
-              Get Started
-              <ArrowRight className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('signin')}
-              className="motion-press h-11 w-full rounded-2xl border border-blue-100 bg-blue-50 text-center text-[14px] font-black text-blue-600 transition hover:bg-blue-100 active:scale-[0.98]"
-            >
-              Already have an account? Sign in
-            </button>
-          </div>
-        </div>
-      </main>
+      <LoginWelcomeScreen
+        onGetStarted={() => setMode('signup')}
+        onSignIn={() => setMode('signin')}
+      />
     );
   }
 
