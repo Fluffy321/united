@@ -38,3 +38,6 @@ ios/App/Pods
 
 # Local visual brainstorming artifacts
 .superpowers/
+
+# Isolated implementation worktrees
+.worktrees/
