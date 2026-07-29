@@ -7,7 +7,8 @@
  *
  * THE ONLY EDITABLE VALUE: mainPage
  * This controls the authenticated app fallback/legacy redirect page.
- * The public marketing homepage lives in src/pages/Landing.jsx and is served at /.
+ * The public marketing homepage lives in src/pages/Landing.jsx and is served at
+ * /welcome. The root route enters the app through the protected Feed path.
  * The value must match a key in the PAGES object exactly.
  *
  * ACTIVE APP PAGES: Feed, Communities, Map, Marketplace, Messages,

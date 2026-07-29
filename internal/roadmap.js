@@ -217,16 +217,46 @@ Goals:
 6. Update internal/roadmap.js: change this item's status to 'shipped' only after the approved foundation is implemented and verified through the real user-facing paths.`,
   },
 
+  {
+    id: 'screen-by-screen-world-class-redesign',
+    category: 'Growth & Monetization',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.HIGH,
+    title: 'World-Class Screen-by-Screen Product Redesign',
+    description: 'Redesign JUnited one real user-facing screen at a time, using the approved login welcome as the first quality benchmark. Each screen gets its own visual exploration, focused design spec, implementation plan, browser verification, and shipped roadmap note instead of a risky global reskin.',
+    why: 'Product direction confirmed 2026-07-28: JUnited should feel like a cohesive, successful consumer app across every path, but each surface has different jobs, density, trust, and mobile constraints. Screen-level decisions need deliberate owner review while shared patterns accumulate into a coherent system.',
+    prompt: `You are continuing JUnited's world-class screen-by-screen product redesign.
+
+Context:
+- The approved entry benchmark is documented in docs/superpowers/specs/2026-07-28-direct-app-entry-and-welcome-design.md.
+- The direct login welcome is the first completed screen, not a universal template for every destination.
+- STYLE_GUIDE.md and src/index.css contain current shared product conventions.
+- src/App.jsx and src/pages.config.js identify the live route inventory.
+- src/lib/PageNotFound.jsx currently contains an admin-only message about AI implementation; treat that as a trust failure to remove during the route-state review.
+- The separate multi-market-launch-foundation roadmap item owns market entities, scoping, RLS, routing, and launch operations.
+
+Goals:
+1. Audit the real user-facing route inventory and prioritize the next screen by user value and current UX debt; start with Feed unless product evidence justifies another screen.
+2. For exactly one screen at a time, inspect its live mobile and desktop states, user data dependencies, empty/loading/error states, accessibility, and navigation context.
+3. Use visual brainstorming to show 2-4 materially different directions, get explicit owner selection, then write and approve a focused design spec before implementation.
+4. Preserve functional behavior and data safety unless the approved screen spec explicitly changes them; do not bundle unrelated screens or apply a site-wide reskin.
+5. Extract shared tokens or components only after at least two approved screens demonstrate the repeated need.
+6. Verify the chosen screen through its real browser path at mobile and desktop widths, including keyboard, loading, empty, error, and reduced-motion behavior.
+7. Keep market-neutral reusable copy and flag any Five Towns assumption for the multi-market foundation audit.
+8. Update internal/roadmap.js with the shipped screen, evidence, and the next recommended screen; mark this program shipped only when the agreed live route inventory is complete.`,
+  },
+
   // ── Auth & Identity ──────────────────────────────────────────────────────
 
   {
     id: 'direct-app-entry-and-welcome-refresh',
     category: 'Auth & Identity',
-    status: STATUS.PLANNED,
+    status: STATUS.SHIPPED,
     priority: PRIORITY.HIGH,
     title: 'Direct App Entry + Multi-Market Welcome Refresh',
     description: 'Make / route directly toward the protected Feed, preserve /welcome as the deliberate marketing page, and replace the direct /login welcome mode with the approved Neutral Pearl, natural-sky, market-neutral experience.',
     why: 'The current root marketing page and separate login welcome create two layers before app value. Returning users need an app-like launch, while deliberate login visitors need a polished introduction that can travel beyond the Five Towns.',
+    shippedNote: 'Shipped 2026-07-29 on codex/direct-app-entry-welcome. The root route now replaces into the protected /Feed path while /welcome retains Landing. Direct /login renders the approved Neutral Pearl welcome with market-neutral copy, two ink-framed brand marks, a single centered orbital band, and 56 deterministic irregular cool-white stars; protected-route from_url visits still open sign-in directly. Presentation, login-mode integration, and root-entry contracts are covered by focused Vitest suites, with full automated and real-browser verification recorded in the implementation handoff.',
     prompt: `You are implementing JUnited's direct app entry and multi-market welcome refresh.
 
 Context:
