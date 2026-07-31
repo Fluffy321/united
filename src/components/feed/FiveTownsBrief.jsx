@@ -1,595 +1,348 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, MapPin, Sparkles } from 'lucide-react';
-import { getTodayHebrew, getShabbatTimes, getZmanim, getDafYomi, getParshaDescription, getTodayEvents } from '@/lib/hebrewDate';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  ArrowRight,
+  CalendarDays,
+  ChevronDown,
+  Clock3,
+  Compass,
+  HeartHandshake,
+  MapPin,
+  Sparkles,
+  SunMedium,
+} from 'lucide-react';
+import { getTodayHebrew, getShabbatTimes, getZmanim } from '@/lib/hebrewDate';
 import { getStoredCandleOffset } from '@/lib/shabbatLocation';
 import useShabbatLocation from '@/hooks/useShabbatLocation';
 import DailyTapMitzvah from './DailyTapMitzvah';
 
-const BRIEF_SLIDE_GRADIENTS = {
-  today:   'from-[#0a1628] via-[#0d1f3c] to-[#152a52]',
-  mitzvah: 'from-[#081a10] via-[#0d2e1a] to-[#0f3d20]',
-  events:  'from-[#130a28] via-[#1e0d3c] to-[#2a1255]',
-  nearby:  'from-[#081a1a] via-[#0d2e2e] to-[#0f3d3d]',
-  pulse:   'from-[#0a1628] via-[#0d1a38] to-[#0f2040]',
-  shabbos: 'from-[#1a0f05] via-[#2e1a08] to-[#3d2010]',
-};
+const EXCLUDED_BRIEF_TYPES = new Set(['daily_greeting', 'dating', 'prompt']);
+const TWO_HOURS = 2 * 60 * 60 * 1000;
 
-const FIVE_TOWNS_LAT = 40.6198;
-const FIVE_TOWNS_LNG = -73.7298;
+const postTitle = (post) => String(post?.title || post?.body || '').trim();
 
-export default function FiveTownsBrief({ brief, momentum, posts = [], joinedCommunityIds, communitiesEnabled = true, prompt, streak, currentUser, onOpenMap, onOpenCommunities, onCreate }) {
-  const { location: candleLocation } = useShabbatLocation();
-  const [activeSlide, setActiveSlide] = useState(0);
-  const briefScrollerRef = useRef(null);
-  const carouselRef = useRef(null);
-  const safeBrief = brief || {};
+const postLabel = (post) => (
+  post?.community_name
+  || post?.location_text
+  || (post?.type === 'help' ? 'Community need' : null)
+  || (post?.type === 'event' ? 'Local event' : null)
+  || (post?.type === 'question' ? 'Community question' : null)
+  || 'Community post'
+);
 
+export function buildBriefingItems({ brief, posts = [] } = {}) {
+  const curated = Array.isArray(brief?.topLocalUpdates)
+    ? brief.topLocalUpdates
+      .filter((item) => String(item?.title || '').trim())
+      .slice(0, 3)
+      .map((item, index) => ({
+        id: item.id || `editor-pick-${index}`,
+        title: String(item.title).trim(),
+        label: item.source_label || item.source || 'Editor pick',
+        provenance: 'editor',
+        post: null,
+      }))
+    : [];
+
+  if (curated.length) return curated;
+
+  return posts
+    .filter((post) => post && !EXCLUDED_BRIEF_TYPES.has(post.type) && postTitle(post))
+    .slice(0, 3)
+    .map((post) => ({
+      id: post.id,
+      title: postTitle(post),
+      label: postLabel(post),
+      provenance: 'feed',
+      post,
+    }));
+}
+
+export function findUrgentNeed(posts = [], now = new Date()) {
+  const nowMs = now.getTime();
+  return posts
+    .filter((post) => post?.type === 'help')
+    .map((post) => ({ post, expiresAt: post.expires_at ? new Date(post.expires_at).getTime() : null }))
+    .filter(({ post, expiresAt }) => (
+      post.urgent === true
+      || post.is_urgent === true
+      || (Number.isFinite(expiresAt) && expiresAt > nowMs && expiresAt - nowMs <= TWO_HOURS)
+    ))
+    .sort((a, b) => (a.expiresAt || Infinity) - (b.expiresAt || Infinity))[0]?.post || null;
+}
+
+function BriefItem({ item, index, onOpenPost }) {
+  const canOpen = item.provenance === 'feed' && item.post?.id && onOpenPost;
+  const content = (
+    <>
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#EAF0F8] text-[11px] font-black text-[#0F1C2E]">
+        {index + 1}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[10px] font-black uppercase tracking-[0.13em] text-slate-400">
+          {item.provenance === 'editor' ? 'Editor pick · ' : ''}{item.label}
+        </span>
+        <span className="mt-0.5 block text-[14px] font-bold leading-[1.35] text-[#0F1C2E]">{item.title}</span>
+      </span>
+      {canOpen && <ArrowRight className="h-4 w-4 shrink-0 text-slate-300" />}
+    </>
+  );
+
+  if (canOpen) {
+    return (
+      <button
+        type="button"
+        onClick={() => onOpenPost(item.post)}
+        className="motion-press flex min-h-[58px] w-full items-center gap-3 rounded-[17px] px-3 py-2.5 text-left hover:bg-slate-50"
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return <div className="flex min-h-[58px] items-center gap-3 rounded-[17px] px-3 py-2.5">{content}</div>;
+}
+
+function DisclosureButton({ active, controls, icon: Icon, title, description, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={active}
+      aria-controls={controls}
+      className={`motion-press flex min-h-[68px] flex-1 items-center gap-2.5 rounded-[18px] border px-3 py-2.5 text-left transition ${
+        active ? 'border-[#0F1C2E] bg-[#0F1C2E] text-white' : 'border-slate-200 bg-white text-[#0F1C2E] hover:border-slate-300'
+      }`}
+    >
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] ${active ? 'bg-white/10' : 'bg-[#EAF0F8]'}`}>
+        <Icon className={`h-[17px] w-[17px] ${active ? 'text-white' : 'text-[#315B8A]'}`} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[12px] font-black leading-tight">{title}</span>
+        <span className={`mt-0.5 block text-[10px] font-semibold ${active ? 'text-white/60' : 'text-slate-400'}`}>{description}</span>
+      </span>
+      <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${active ? 'rotate-180 text-white/60' : 'text-slate-300'}`} />
+    </button>
+  );
+}
+
+export default function FiveTownsBrief({
+  brief,
+  posts = [],
+  streak,
+  currentUser,
+  networkLabel = 'Your community',
+  onOpenMap,
+  onOpenPost,
+  onCreate,
+}) {
+  const { location } = useShabbatLocation();
+  const [openPanel, setOpenPanel] = useState(null);
   const [hebrewDate, setHebrewDate] = useState(null);
-  const [candleLighting, setCandleLighting] = useState(null);
-  const [zmanOfDay, setZmanOfDay] = useState(null);
-  const [parshaDescription, setParshaDescription] = useState(null);
-  const [dafYomi, setDafYomi] = useState(null);
-  const [todayJewishEvents, setTodayJewishEvents] = useState([]);
-  const [shareTarget, setShareTarget] = useState(null);
-  const [thoughtText, setThoughtText] = useState('');
-  const [mitzvahText, setMitzvahText] = useState('');
-  const [mitzvahShareTarget, setMitzvahShareTarget] = useState(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [mitzvahProgress] = useState(() => Math.min(100, Math.max(0, (momentum?.mitzvahs || 0) * 2 + 28)));
-  const currentStreak = streak?.current_streak || 0;
+  const [jewishTime, setJewishTime] = useState(null);
+
+  const items = useMemo(() => buildBriefingItems({ brief, posts }), [brief, posts]);
+  const urgentNeed = useMemo(() => findUrgentNeed(posts), [posts]);
+  const events = useMemo(() => posts.filter((post) => post?.type === 'event' && postTitle(post)).slice(0, 3), [posts]);
+  const activeThreads = useMemo(() => posts
+    .filter((post) => postTitle(post) && Number(post.comments_count || 0) + Number(post.likes_count || 0) > 0)
+    .sort((a, b) => (Number(b.comments_count || 0) + Number(b.likes_count || 0)) - (Number(a.comments_count || 0) + Number(a.likes_count || 0)))
+    .slice(0, 2), [posts]);
 
   useEffect(() => {
-    getTodayHebrew().then(setHebrewDate);
-    const loc = (candleLocation && candleLocation.type !== 'default') ? candleLocation : { lat: FIVE_TOWNS_LAT, lng: FIVE_TOWNS_LNG, tzid: 'America/New_York' };
-    getShabbatTimes(loc.lat, loc.lng, loc.tzid || 'America/New_York', new Date(), undefined, getStoredCandleOffset()).then((times) => {
-      if (times?.candleLighting) {
-        const dt = new Date(times.candleLighting);
-        if (!isNaN(dt.getTime())) {
-          const parshaTitle = times.parsha;
-          setCandleLighting({
-            timeStr: dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }),
-            date: dt,
-            parsha: parshaTitle,
-          });
-          if (parshaTitle) getParshaDescription(parshaTitle).then(setParshaDescription);
-        }
-      }
-    });
-    getDafYomi().then(setDafYomi);
-    getTodayEvents().then(setTodayJewishEvents);
-    const now = new Date();
-    const isWeekday = now.getDay() !== 0 && now.getDay() !== 6;
-    if (isWeekday) {
-      getZmanim(loc.lat, loc.lng).then((times) => {
-        if (!times) return;
-        const isAfternoon = now.getHours() >= 13;
-        const key = isAfternoon ? 'minchaGedola' : 'sofZmanShma';
-        const label = isAfternoon ? 'Mincha from' : 'Latest Shacharis';
-        const raw = times[key];
-        if (raw) {
-          const dt = new Date(raw);
-          if (!isNaN(dt.getTime())) {
-            setZmanOfDay({
-              label,
-              timeStr: dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }),
+    let active = true;
+    getTodayHebrew().then((value) => { if (active) setHebrewDate(value); });
+
+    if (location?.lat && location?.lng) {
+      const timeZone = location.tzid || 'America/New_York';
+      getShabbatTimes(location.lat, location.lng, timeZone, new Date(), undefined, getStoredCandleOffset())
+        .then((times) => {
+          if (!active || !times?.candleLighting) return;
+          const candleDate = new Date(times.candleLighting);
+          if (!Number.isNaN(candleDate.getTime())) {
+            setJewishTime({
+              label: 'Candle lighting',
+              value: candleDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone }),
             });
           }
-        }
-      });
+        });
+
+      const now = new Date();
+      if (now.getDay() !== 0 && now.getDay() !== 6) {
+        getZmanim(location.lat, location.lng).then((times) => {
+          if (!active || !times) return;
+          const afternoon = now.getHours() >= 13;
+          const raw = times[afternoon ? 'minchaGedola' : 'sofZmanShma'];
+          if (!raw) return;
+          const date = new Date(raw);
+          if (!Number.isNaN(date.getTime())) {
+            setJewishTime({
+              label: afternoon ? 'Mincha from' : 'Latest Shema',
+              value: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone }),
+            });
+          }
+        });
+      }
     }
-  }, [candleLocation?.lat, candleLocation?.lng, candleLocation?.tzid]);
+
+    return () => { active = false; };
+  }, [location?.lat, location?.lng, location?.tzid]);
 
   const today = new Date();
-  const dayOfWeek = today.getDay();
-  const todayHour = today.getHours();
-  const msUntilCandles = candleLighting?.date ? candleLighting.date - today : null;
-  // Wed afternoon (≥13:00) through Friday before candle lighting
-  const isWedAfternoon = dayOfWeek === 3 && todayHour >= 13;
-  const isThuOrFri = (dayOfWeek === 4 || dayOfWeek === 5) && (msUntilCandles === null || msUntilCandles > 0);
-  const showShabbos = isWedAfternoon || isThuOrFri;
-  // 'prep' = Wed; 'countdown' = Thu/Fri
-  const shabbosMode = isThuOrFri ? 'countdown' : 'prep';
-  const hoursUntil = msUntilCandles ? Math.max(0, Math.floor(msUntilCandles / 3_600_000)) : 0;
-  const minutesUntil = msUntilCandles ? Math.max(0, Math.floor((msUntilCandles % 3_600_000) / 60_000)) : 0;
-
-  const curatedNewsItems = (safeBrief.topLocalUpdates || []).map((item, index) => ({
-    id: item.id || `curated-local-${index}`,
-    title: item.title || 'Verified local update',
-    community_name: item.source_label || item.source || 'Verified local source',
-  }));
-  const fallbackNewsItems = posts
-    .filter((post) => post.type === 'news' || /update|brief|eruv|traffic|school|notice|local/i.test(`${post.title || ''} ${post.body || ''}`))
-    .slice(0, 3);
-  const parshaName = candleLighting?.parsha?.replace(/^Parashat\s+/i, '') || null;
-  const defaultNewsItems = [
-    parshaName
-      ? { id: 'n1', title: parshaDescription || `This week's parsha: ${parshaName}`, community_name: `Parashat ${parshaName}` }
-      : { id: 'n1', title: 'Look for one small way to help a neighbor today.', community_name: 'Daily mitzvah' },
-    dafYomi
-      ? { id: 'n2', title: `Today's Daf Yomi: ${dafYomi.title}`, community_name: 'Daf Yomi' }
-      : { id: 'n2', title: 'A Jewish community is built one thoughtful action at a time.', community_name: 'Torah thought' },
-    todayJewishEvents.length
-      ? { id: 'n3', title: todayJewishEvents[0].title, community_name: todayJewishEvents[0].category || 'Jewish calendar' }
-      : { id: 'n3', title: "Check today's schedule for local times, events, and community moments.", community_name: "Today's schedule" },
-  ];
-  const newsItems = curatedNewsItems.length ? curatedNewsItems : fallbackNewsItems.length ? fallbackNewsItems : defaultNewsItems;
-
-  const now = new Date();
-  const mitzvahNeeds = posts
-    .filter((post) => post.type === 'help' || /help|chesed|meal|ride|offer|volunteer/i.test(`${post.title || ''} ${post.body || ''}`))
-    .slice(0, 3)
-    .map((post) => {
-      const expiresAt = post.expires_at ? new Date(post.expires_at) : null;
-      const urgent = expiresAt && (expiresAt - now) < 2 * 3_600_000 && expiresAt > now;
-      return { ...post, urgent };
-    });
-  const mitzvahItems = mitzvahNeeds.length ? mitzvahNeeds : [
-    { id: 'm1', title: 'Meal needed — Schwartz family', community_name: 'Chesed', location_text: '0.3 mi · Tonight', urgent: false },
-    { id: 'm2', title: 'Ride needed — Mrs. Cohen', community_name: 'Chesed', location_text: '1.1 mi · By 2 PM', urgent: true },
-  ];
-
-  const communityEvents = posts
-    .filter((post) => post.type === 'event')
-    .slice(0, 3);
-  const eventItems = communityEvents.length ? communityEvents : [
-    { id: 'e1', title: 'Shacharis', community_name: 'Young Israel Woodmere', location_text: '7:30 AM' },
-    { id: 'e2', title: 'Daf Yomi Shiur', community_name: 'Agudah Lawrence', location_text: '8:00 PM' },
-    { id: 'e3', title: 'Community Board Meeting', community_name: 'Cedarhurst', location_text: '9:00 PM' },
-  ];
-
-  const trendingMoments = [...posts]
-    .sort((a, b) => ((b.comments_count || 0) * 2 + (b.likes_count || 0)) - ((a.comments_count || 0) * 2 + (a.likes_count || 0)))
-    .filter((p) => (p.comments_count || 0) + (p.likes_count || 0) > 0)
-    .slice(0, 3)
-    .map((p) => ({ emoji: '🔥', text: `Most discussed: ${p.title || p.body || 'Community thread'}` }));
-  const pulseStats = [
-    ...(trendingMoments.length ? trendingMoments : [
-      { emoji: '🔥', text: 'Most discussed: Hatzalah fundraiser in Cedarhurst' },
-      { emoji: '🔥', text: 'Hot thread: Eruv status update — Lawrence' },
-    ]),
-    { emoji: '🍲', text: `${Math.max(1, momentum?.mitzvahs || 3)} meal requests open` },
-    { emoji: '📋', text: `${Math.max(1, momentum?.joinedPosts || 7)} new community posts` },
-  ].slice(0, 4);
-
-  const slideKeys = ['today', 'mitzvah', 'events', 'nearby', 'pulse', ...(showShabbos ? ['shabbos'] : [])];
-  const slideLabels = ['Today', 'Daily Mitzvah', 'Events', 'Near You', 'Pulse', ...(showShabbos ? [shabbosMode === 'prep' ? 'Shabbos Prep' : 'Shabbos'] : [])];
-
-  useEffect(() => {
-    if (activeSlide >= slideKeys.length) setActiveSlide(0);
-  }, [activeSlide, slideKeys.length]);
-
-
-  const visibleSlide = Math.min(activeSlide, slideKeys.length - 1);
-  const currentKey = slideKeys[visibleSlide];
-  const englishDate = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-
-  const goToSlide = (index) => {
-    setActiveSlide(index);
+  const dateLabel = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const togglePanel = (panel) => setOpenPanel((current) => current === panel ? null : panel);
+  const primaryAction = () => {
+    if (urgentNeed && onOpenPost) onOpenPost(urgentNeed);
+    else onCreate?.('feed', 'local_update', '');
   };
 
   return (
-    <section className="mb-3 overflow-hidden rounded-[24px] border border-white/8 shadow-[0_14px_32px_rgba(10,18,40,0.18)]">
-      <style>{`
-        @keyframes brief-progress { from { width: 0 } }
-        .brief-progress-bar { animation: brief-progress 1.1s cubic-bezier(.4,0,.2,1) both; }
-        @keyframes brief-pulse { 0%,100% { opacity:1 } 50% { opacity:.55 } }
-        .brief-last-chance { animation: brief-pulse 1.4s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) { .brief-progress-bar,.brief-last-chance { animation: none; } }
-        .brief-share-input::placeholder { color: rgba(255,255,255,0.3); }
-      `}</style>
+    <section className="overflow-hidden rounded-[26px] border border-[#DDE3EA] bg-white shadow-[0_16px_36px_rgba(15,28,46,0.08)]">
+      <header className="relative overflow-hidden border-b border-[#DDE3EA] px-4 pb-4 pt-4">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-28"
+          style={{ background: 'radial-gradient(ellipse 80% 62% at 72% 0%, rgba(201,139,46,0.18), transparent 62%), linear-gradient(180deg, #EAF0F8 0%, rgba(234,240,248,0) 100%)' }}
+        />
+        <div aria-hidden="true" className="absolute left-4 right-4 top-[58px] h-px bg-gradient-to-r from-transparent via-[#C98B2E]/45 to-transparent" />
 
-      <div className={`bg-gradient-to-br ${BRIEF_SLIDE_GRADIENTS[currentKey]} p-4 text-white transition-all duration-500`}>
-
-        {/* Header row — always visible, toggles open/close */}
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => setIsOpen(o => !o)}
-            className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.14em]"
-            style={{ color: '#D4A843' }}
-          >
-            <Sparkles className="h-3 w-3" />
-            Five Towns Daily Brief
-            {isOpen
-              ? <ChevronUp className="h-3 w-3 ml-0.5 opacity-70" />
-              : <ChevronDown className="h-3 w-3 ml-0.5 opacity-70" />}
-          </button>
-          {!isOpen && hebrewDate?.hebrewDate && (
-            <span className="text-[11px] font-semibold text-white/60">{hebrewDate.hebrewDate}</span>
+        <div className="relative flex items-start justify-between gap-3">
+          <div>
+            <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-[#315B8A]">
+              <SunMedium className="h-3.5 w-3.5" />
+              Daily brief · {networkLabel}
+            </p>
+            <h2 className="font-display mt-3 text-[24px] font-semibold leading-none tracking-[-0.025em] text-[#0F1C2E]">
+              What matters today
+            </h2>
+            <p className="mt-1 text-[12px] font-bold text-slate-500">{dateLabel}</p>
+          </div>
+          {hebrewDate?.hebrewDate && (
+            <p className="max-w-[112px] text-right text-[12px] font-semibold leading-snug text-[#6B5A1E]" dir="rtl">
+              {hebrewDate.hebrewDate}
+            </p>
           )}
-          {/* Dot indicators + desktop prev/next */}
-          <div className="flex items-center gap-2">
-            {/* Prev/next arrows — hidden on touch devices, visible on desktop */}
+        </div>
+
+        {jewishTime && (
+          <div className="relative mt-3 inline-flex min-h-8 items-center gap-2 rounded-full border border-[#D9E1EB] bg-white/80 px-3 text-[11px] font-bold text-slate-600 backdrop-blur-sm">
+            <Clock3 className="h-3.5 w-3.5 text-[#C98B2E]" />
+            {jewishTime.label} <span className="text-[#0F1C2E]">{jewishTime.value}</span>
+          </div>
+        )}
+      </header>
+
+      <div className="p-3">
+        {items.length ? (
+          <div className="divide-y divide-slate-100">
+            {items.map((item, index) => <BriefItem key={item.id || index} item={item} index={index} onOpenPost={onOpenPost} />)}
+          </div>
+        ) : (
+          <div className="rounded-[18px] bg-[#F7F8FA] px-4 py-4">
+            <p className="text-[13px] font-black text-[#0F1C2E]">Nothing has been pinned yet.</p>
+            <p className="mt-1 text-[12px] font-medium leading-relaxed text-slate-500">
+              The live feed is still here. Share something useful if your community should know about it.
+            </p>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={primaryAction}
+          className={`motion-press mt-3 flex min-h-12 w-full items-center justify-between rounded-[17px] px-4 text-left ${
+            urgentNeed ? 'bg-[#FFF4EC] text-[#8B3F16]' : 'app-button-primary'
+          }`}
+        >
+          <span>
+            <span className="block text-[10px] font-black uppercase tracking-[0.13em] opacity-65">
+              {urgentNeed ? 'Needs attention' : 'Add what is missing'}
+            </span>
+            <span className="mt-0.5 block text-[13px] font-black">
+              {urgentNeed ? postTitle(urgentNeed) : 'Share a useful local update'}
+            </span>
+          </span>
+          <ArrowRight className="h-4 w-4 shrink-0" />
+        </button>
+
+        <div className="mt-3 flex gap-2">
+          <DisclosureButton
+            active={openPanel === 'mitzvah'}
+            controls="daily-brief-mitzvah"
+            icon={HeartHandshake}
+            title="Today’s mitzvah"
+            description="One small action"
+            onClick={() => togglePanel('mitzvah')}
+          />
+          <DisclosureButton
+            active={openPanel === 'explore'}
+            controls="daily-brief-explore"
+            icon={Compass}
+            title="Explore today"
+            description="Events, map, activity"
+            onClick={() => togglePanel('explore')}
+          />
+        </div>
+
+        {openPanel === 'mitzvah' && (
+          <div id="daily-brief-mitzvah" className="mt-3 rounded-[20px] border border-[#DDE7D1] bg-[#F5F8F0] p-3">
+            <DailyTapMitzvah currentUser={currentUser} streak={streak} />
+            {!currentUser && <p className="text-[12px] font-semibold text-[#556B2F]">Sign in to choose and track today’s mitzvah.</p>}
             <button
               type="button"
-              onClick={() => goToSlide((visibleSlide - 1 + slideKeys.length) % slideKeys.length)}
-              className="hidden sm:flex h-6 w-6 items-center justify-center rounded-full transition hover:bg-white/15 active:scale-90"
-              aria-label="Previous slide"
+              onClick={() => onCreate?.('help', 'chesed', '')}
+              className="motion-press mt-2 flex min-h-11 w-full items-center justify-center rounded-[14px] border border-[#CAD9B7] bg-white text-[12px] font-black text-[#3D4F22]"
             >
-              <ChevronLeft className="h-3.5 w-3.5 text-white/60" />
-            </button>
-            <div className="flex items-center gap-1">
-              {slideKeys.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => goToSlide(i)}
-                  className="rounded-full transition-all duration-300"
-                  style={{
-                    height: '5px',
-                    width: i === visibleSlide ? '18px' : '5px',
-                    background: i === visibleSlide ? '#D4A843' : 'rgba(255,255,255,0.2)',
-                  }}
-                />
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => goToSlide((visibleSlide + 1) % slideKeys.length)}
-              className="hidden sm:flex h-6 w-6 items-center justify-center rounded-full transition hover:bg-white/15 active:scale-90"
-              aria-label="Next slide"
-            >
-              <ChevronRight className="h-3.5 w-3.5 text-white/60" />
+              Post a need or offer
             </button>
           </div>
-        </div>
+        )}
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateRows: isOpen ? '1fr' : '0fr',
-            transition: 'grid-template-rows 0.32s cubic-bezier(0.4,0,0.2,1)',
-          }}
-        >
-        <div style={{ overflow: 'hidden' }}>
-        {/* Gold rule */}
-        <div className="mt-3 mb-3" style={{ height: '1px', background: 'linear-gradient(90deg, #D4A843 0%, rgba(212,168,67,0.15) 100%)' }} />
-
-        {/* Slide label + slide name tabs (horizontal scroll, compact) */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-          {slideLabels.map((label, i) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => goToSlide(i)}
-              className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide transition-all"
-              style={{
-                background: i === visibleSlide ? '#D4A843' : 'rgba(255,255,255,0.08)',
-                color: i === visibleSlide ? '#0a1628' : 'rgba(255,255,255,0.6)',
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Slides container — show only the active slide to avoid dead space from height mismatch */}
-        <div className="mt-4" ref={carouselRef}>
-
-          {/* SLIDE 1 — Today */}
-          <div className={visibleSlide === 0 ? '' : 'hidden'}>
-            <div className="mb-3">
-              <p className="text-[22px] font-black leading-tight tracking-tight">{englishDate}</p>
-              <p className="mt-0.5 text-sm font-semibold" style={{ fontFamily: "'Heebo', 'Arial Hebrew', sans-serif", direction: 'rtl', color: '#D4A843' }}>
-                {hebrewDate?.hebrewString || ''}
-              </p>
-              {hebrewDate?.display && (
-                <p className="text-[11px] font-semibold" style={{ color: 'rgba(212,168,67,0.6)' }}>{hebrewDate.display}</p>
-              )}
-            </div>
-            <div className="mb-3 rounded-xl px-3 py-2" style={{ background: 'rgba(212,168,67,0.1)', border: '1px solid rgba(212,168,67,0.2)' }}>
-              {candleLighting && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">🕯</span>
-                  <span className="text-xs font-semibold text-white/70">Candle lighting</span>
-                  <span className="text-xs font-black text-white">{candleLighting.timeStr}</span>
-                  {candleLighting.parsha && <span className="ml-auto text-[10px] text-white/40">{candleLighting.parsha}</span>}
+        {openPanel === 'explore' && (
+          <div id="daily-brief-explore" className="mt-3 rounded-[20px] border border-[#D9E1EB] bg-[#F6F8FB] p-3">
+            {events.length > 0 && (
+              <div>
+                <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.13em] text-[#315B8A]">
+                  <CalendarDays className="h-3.5 w-3.5" /> Events
+                </p>
+                <div className="mt-2 space-y-1.5">
+                  {events.map((event) => (
+                    <button key={event.id} type="button" onClick={() => onOpenPost?.(event)} className="flex min-h-11 w-full items-center justify-between rounded-[14px] bg-white px-3 text-left text-[12px] font-bold text-[#0F1C2E]">
+                      <span className="line-clamp-2">{postTitle(event)}</span><ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-300" />
+                    </button>
+                  ))}
                 </div>
-              )}
-              {zmanOfDay && !showShabbos && (
-                <div className="flex items-center gap-2 mt-1.5 pt-1.5" style={{ borderTop: '1px solid rgba(212,168,67,0.15)' }}>
-                  <span className="text-sm">🕍</span>
-                  <span className="text-xs font-semibold text-white/70">{zmanOfDay.label}</span>
-                  <span className="text-xs font-black text-white">{zmanOfDay.timeStr}</span>
+              </div>
+            )}
+
+            {activeThreads.length > 0 && (
+              <div className={events.length ? 'mt-4' : ''}>
+                <p className="text-[10px] font-black uppercase tracking-[0.13em] text-[#315B8A]">Active conversations</p>
+                <div className="mt-2 space-y-1.5">
+                  {activeThreads.map((post) => (
+                    <button key={post.id} type="button" onClick={() => onOpenPost?.(post)} className="flex min-h-11 w-full items-center justify-between rounded-[14px] bg-white px-3 text-left text-[12px] font-bold text-[#0F1C2E]">
+                      <span className="line-clamp-2">{postTitle(post)}</span><ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-300" />
+                    </button>
+                  ))}
                 </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              {newsItems.slice(0, 3).map((item) => (
-                <div key={item.id} className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.06)', borderLeft: '2px solid #D4A843' }}>
-                  <p className="text-[10px] font-black uppercase tracking-wide mb-0.5" style={{ color: '#D4A843' }}>{item.community_name}</p>
-                  <p className="text-[13px] font-semibold leading-snug text-white">{item.title}</p>
-                </div>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {events.length === 0 && activeThreads.length === 0 && (
+              <p className="text-[12px] font-semibold leading-relaxed text-slate-500">No events or active conversations are showing yet. The map can still help you find what is nearby.</p>
+            )}
+
             <button
               type="button"
               onClick={onOpenMap}
-              className="motion-press mt-3 w-full rounded-xl py-2.5 text-[12px] font-black flex items-center justify-center gap-2 transition-opacity hover:opacity-80"
-              style={{ background: 'rgba(212,168,67,0.12)', color: '#D4A843', border: '1px solid rgba(212,168,67,0.2)' }}
+              className="app-button-primary mt-3 w-full"
             >
-              <MapPin className="h-3.5 w-3.5" />
-              View Five Towns Map
+              <MapPin className="h-4 w-4" /> Open the local map
             </button>
           </div>
+        )}
 
-          {/* SLIDE 2 — Daily Mitzvah */}
-          <div className={visibleSlide === 1 ? '' : 'hidden'}>
-            <div className="flex items-start justify-between mb-1">
-              <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#4CAF7D' }}>Daily Mitzvah</p>
-              {currentStreak > 1 && (
-                <span className="text-[11px] font-black" style={{ color: '#fb923c' }}>🔥 {currentStreak} days in a row</span>
-              )}
-            </div>
-            <p className="text-[19px] font-black leading-snug mb-1">
-              {(safeBrief.topLocalUpdates?.[0]?.title) || 'Look for one small way to help a neighbor today.'}
-            </p>
-            <p className="text-xs mb-3 text-white/50">Five Towns · {englishDate}</p>
-
-            {/* Progress bar */}
-            <div className="mb-4">
-              <p className="text-[10px] font-black uppercase tracking-wide mb-2 text-white/40">Community progress</p>
-              <div className="rounded-full overflow-hidden" style={{ height: '7px', background: 'rgba(255,255,255,0.08)' }}>
-                <div
-                  className="brief-progress-bar h-full rounded-full"
-                  style={{ width: `${mitzvahProgress}%`, background: 'linear-gradient(90deg, #4CAF7D, #6fcf97)', animationDuration: '1.1s' }}
-                />
-              </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-[9px] text-white/20">Starting out</span>
-                <span className="text-[9px] text-white/20">Community goal</span>
-              </div>
-            </div>
-
-            {/* One-tap daily action — logs a mitzvah and feeds the streak */}
-            <DailyTapMitzvah currentUser={currentUser} streak={streak} />
-
-            {/* Composer box 1 — Mitzvah / act of kindness */}
-            {(() => {
-              const TARGETS = [
-                { label: 'Yourself',    type: 'feed',    subtype: 'self_note' },
-                { label: 'A Friend',    type: 'message', subtype: 'friend'    },
-                { label: 'The Feed',    type: 'feed',    subtype: 'thought'   },
-              ];
-              const send = () => {
-                const t = TARGETS.find(x => x.label === mitzvahShareTarget);
-                if (t) onCreate(t.type, t.subtype, mitzvahText);
-                setMitzvahText(''); setMitzvahShareTarget(null);
-              };
-              return (
-                <div className="rounded-2xl p-4 mb-3" style={{ background: 'rgba(76,175,125,0.08)', border: '1px solid rgba(76,175,125,0.2)' }}>
-                  <p className="text-[11px] font-black uppercase tracking-widest mb-3" style={{ color: '#4CAF7D' }}>✦ Share a mitzvah or act of kindness you did today</p>
-                  <textarea
-                    className="brief-share-input w-full rounded-xl px-4 py-3 text-sm text-white outline-none resize-none mb-3"
-                    style={{ background: 'rgba(255,255,255,0.07)', border: `1.5px solid ${mitzvahText ? 'rgba(76,175,125,0.6)' : 'rgba(255,255,255,0.1)'}`, minHeight: '72px', lineHeight: '1.5' }}
-                    placeholder="I helped a neighbor carry groceries today…"
-                    value={mitzvahText}
-                    onChange={e => setMitzvahText(e.target.value)}
-                  />
-                  <div className="flex flex-wrap gap-2 items-center">
-                    {TARGETS.map(({ label }) => (
-                      <button key={label} type="button"
-                        onClick={() => { setMitzvahShareTarget(mitzvahShareTarget === label ? null : label); }}
-                        className="rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all"
-                        style={{
-                          background: mitzvahShareTarget === label ? '#4CAF7D' : 'rgba(255,255,255,0.09)',
-                          color: mitzvahShareTarget === label ? '#081a10' : 'white',
-                          border: `1px solid ${mitzvahShareTarget === label ? '#4CAF7D' : 'rgba(255,255,255,0.12)'}`,
-                        }}
-                      >{label}</button>
-                    ))}
-                    <button type="button" disabled className="rounded-full px-3 py-1.5 text-[12px] font-semibold"
-                      style={{ background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      Communities ·
-                    </button>
-                    {mitzvahText.trim() && mitzvahShareTarget && (
-                      <button type="button" onClick={send}
-                        className="ml-auto rounded-full px-4 py-1.5 text-[12px] font-black transition-all"
-                        style={{ background: '#4CAF7D', color: '#081a10' }}>
-                        Share →
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Composer box 2 — Thought or Dvar Torah */}
-            {(() => {
-              const TARGETS = [
-                { label: 'Yourself',    type: 'feed',    subtype: 'self_note' },
-                { label: 'A Friend',    type: 'message', subtype: 'friend'    },
-                { label: 'The Feed',    type: 'feed',    subtype: 'thought'   },
-              ];
-              const send = () => {
-                const t = TARGETS.find(x => x.label === shareTarget);
-                if (t) onCreate(t.type, t.subtype, thoughtText);
-                setThoughtText(''); setShareTarget(null);
-              };
-              return (
-                <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
-                  <p className="text-[11px] font-black uppercase tracking-widest mb-3 text-white/60">📖 Share a thought or Dvar Torah</p>
-                  <textarea
-                    className="brief-share-input w-full rounded-xl px-4 py-3 text-sm text-white outline-none resize-none mb-3"
-                    style={{ background: 'rgba(255,255,255,0.07)', border: `1.5px solid ${thoughtText ? 'rgba(76,175,125,0.6)' : 'rgba(255,255,255,0.1)'}`, minHeight: '72px', lineHeight: '1.5' }}
-                    placeholder="This week's parsha teaches us…"
-                    value={thoughtText}
-                    onChange={e => setThoughtText(e.target.value)}
-                  />
-                  <div className="flex flex-wrap gap-2 items-center">
-                    {TARGETS.map(({ label }) => (
-                      <button key={label} type="button"
-                        onClick={() => { setShareTarget(shareTarget === label ? null : label); }}
-                        className="rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all"
-                        style={{
-                          background: shareTarget === label ? '#4CAF7D' : 'rgba(255,255,255,0.09)',
-                          color: shareTarget === label ? '#081a10' : 'white',
-                          border: `1px solid ${shareTarget === label ? '#4CAF7D' : 'rgba(255,255,255,0.12)'}`,
-                        }}
-                      >{label}</button>
-                    ))}
-                    <button type="button" disabled className="rounded-full px-3 py-1.5 text-[12px] font-semibold"
-                      style={{ background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      Communities ·
-                    </button>
-                    {thoughtText.trim() && shareTarget && (
-                      <button type="button" onClick={send}
-                        className="ml-auto rounded-full px-4 py-1.5 text-[12px] font-black transition-all"
-                        style={{ background: '#4CAF7D', color: '#081a10' }}>
-                        Share →
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* SLIDE 3 — Today's Events */}
-          <div className={visibleSlide === 2 ? '' : 'hidden'}>
-            <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: '#a78bfa' }}>Today&rsquo;s Events</p>
-            <div className="space-y-2 mb-4">
-              {eventItems.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                  <span className="text-[11px] font-black shrink-0" style={{ color: '#a78bfa', minWidth: '52px' }}>{item.location_text || ''}</span>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-bold leading-tight text-white truncate">{item.title}</p>
-                    <p className="text-[10px] text-white/40 mt-0.5">{item.community_name || item.location_text || 'Five Towns'}</p>
-                  </div>
-                </div>
-              ))}
-              {eventItems.length === 0 && (
-                <p className="text-sm text-white/30 py-3 text-center">No events posted yet today.</p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => onCreate('event', 'local_event', '')}
-              className="motion-press w-full rounded-xl py-2.5 text-[12px] font-black transition-opacity hover:opacity-80"
-              style={{ background: 'rgba(167,139,250,0.12)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.2)' }}
-            >
-              + Post an event
-            </button>
-          </div>
-
-          {/* SLIDE 4 — Mitzvahs Near You */}
-          <div className={visibleSlide === 3 ? '' : 'hidden'}>
-            <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: '#4CAF7D' }}>Mitzvahs Near You</p>
-            <div className="space-y-2 mb-4">
-              {mitzvahItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between rounded-xl px-3 py-2.5"
-                  style={{
-                    background: item.urgent ? 'rgba(251,146,60,0.1)' : 'rgba(255,255,255,0.06)',
-                    border: item.urgent ? '1px solid rgba(251,146,60,0.3)' : '1px solid transparent',
-                  }}
-                >
-                  <div className="min-w-0 mr-3">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-[13px] font-bold leading-tight text-white">{item.title}</p>
-                      {item.urgent && <span className="text-[10px] font-black shrink-0" style={{ color: '#fb923c' }}>⏳ Urgent</span>}
-                    </div>
-                    <p className="text-[10px] text-white/40 mt-0.5">{item.location_text || item.community_name || 'Five Towns'}</p>
-                  </div>
-                  <button
-                    type="button"
-                    className="shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-black"
-                    style={{ background: item.urgent ? 'rgba(251,146,60,0.2)' : 'rgba(76,175,125,0.15)', color: item.urgent ? '#fb923c' : '#4CAF7D' }}
-                  >
-                    Help →
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => onCreate('help', 'chesed', '')}
-              className="motion-press w-full rounded-xl py-2.5 text-[12px] font-black transition-opacity hover:opacity-80"
-              style={{ background: 'rgba(76,175,125,0.12)', color: '#4CAF7D', border: '1px solid rgba(76,175,125,0.2)' }}
-            >
-              + Post a mitzvah
-            </button>
-          </div>
-
-          {/* SLIDE 5 — Community Pulse */}
-          <div className={visibleSlide === 4 ? '' : 'hidden'}>
-            <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: '#D4A843' }}>Community Pulse</p>
-            <p className="text-[19px] font-black leading-snug mb-4">What&rsquo;s happening in the Five Towns right now</p>
-            <div className="space-y-2">
-              {pulseStats.map((stat, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                  <span className="text-base">{stat.emoji}</span>
-                  <span className="text-[13px] font-semibold text-white">{stat.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* SLIDE 6 — Shabbos (Wed prep / Thu–Fri countdown) */}
-          {showShabbos && (() => {
-            const lastChance = msUntilCandles !== null && msUntilCandles < 30 * 60_000 && msUntilCandles > 0;
-
-            if (shabbosMode === 'prep') {
-              const prepChecklist = [
-                { emoji: '🛒', label: 'Groceries & Shabbos shopping' },
-                { emoji: '🍲', label: 'Meal prep — check what you need' },
-                { emoji: '🚗', label: 'Post ride needs or offers' },
-                { emoji: '👥', label: 'Confirm Shabbos guests' },
-                { emoji: '🕯️', label: `Candles: ${candleLighting?.timeStr || '—'} · Five Towns` },
-              ];
-              return (
-                <div className={`pt-1 pb-1 ${visibleSlide === 5 ? '' : 'hidden'}`}>
-                  <p className="text-[10px] font-black uppercase tracking-widest mb-2 text-center" style={{ color: '#fb923c' }}>
-                    Shabbos Prep
-                  </p>
-                  {candleLighting?.parsha && (
-                    <p className="text-[15px] font-black leading-tight mb-3 text-white text-center">{candleLighting.parsha}</p>
-                  )}
-                  <ul className="space-y-1.5">
-                    {prepChecklist.map(({ emoji, label }) => (
-                      <li key={label} className="flex items-center gap-2 rounded-xl bg-white/8 px-3 py-2">
-                        <span className="text-base leading-none">{emoji}</span>
-                        <span className="text-[12px] font-semibold text-white/90 leading-tight">{label}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <button
-                    type="button"
-                    onClick={onCreate}
-                    className="mt-3 w-full rounded-xl py-2 text-[12px] font-black text-white/80 border border-white/15 hover:bg-white/10 transition-colors"
-                  >
-                    + Post a Shabbos need
-                  </button>
-                </div>
-              );
-            }
-
-            return (
-              <div className={`text-center pt-2 pb-1 ${visibleSlide === 5 ? '' : 'hidden'}`}>
-                <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: lastChance ? '#ef4444' : '#fb923c' }}>
-                  {lastChance ? '⚠️ Last Chance' : 'Shabbos Countdown'}
-                </p>
-                {candleLighting?.parsha && (
-                  <p className="text-[22px] font-black leading-tight mb-3 text-white">{candleLighting.parsha}</p>
-                )}
-                <div className={`mb-1 ${lastChance ? 'brief-last-chance' : ''}`}>
-                  <span className="font-black leading-none tracking-tight" style={{ fontSize: lastChance ? '44px' : '52px', color: lastChance ? '#ef4444' : '#fb923c' }}>
-                    {hoursUntil}h {minutesUntil}m
-                  </span>
-                </div>
-                <p className="text-sm text-white/50 mb-1">until candle lighting</p>
-                <p className="text-base font-black text-white">{candleLighting?.timeStr || '8:14 PM'} · Five Towns</p>
-                <p className="mt-5 text-2xl font-black" style={{ fontFamily: "'Heebo', 'Arial Hebrew', sans-serif", color: '#D4A843' }}>
-                  שבת שלום
-                </p>
-              </div>
-            );
-          })()}
-
-        </div>
-        </div>
-        </div>
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-[10px] font-semibold text-slate-400">
+          <Sparkles className="h-3 w-3" /> Real community activity only
+        </p>
       </div>
     </section>
   );

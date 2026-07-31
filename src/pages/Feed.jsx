@@ -62,7 +62,6 @@ export default function Feed({ isActive = true }) {
   const [interestSignals, setInterestSignals] = useState({ types: {}, subtypes: {}, keywords: [] }); // track user interactions
   const [communityGroups, setCommunityGroups] = useState([]);
   const [loadTimedOut, setLoadTimedOut] = useState(false);
-  const [dailyPrompt, setDailyPrompt] = useState(null);
   const [publishedBrief, setPublishedBrief] = useState(null);
   const [showNetworkBanner, setShowNetworkBanner] = useState(() => !storageService.getItem('junited_network_banner_v2_dismissed'));
   const [feedTab, setFeedTab] = useState('general');
@@ -107,15 +106,6 @@ export default function Feed({ isActive = true }) {
     const net = LOCAL_NETWORKS.find(n => n.cityPreset === currentUser.cityPreset);
     if (net) setPrimaryNetwork(net);
   }, [currentUser?.cityPreset]);
-
-  useEffect(() => {
-    feedRetentionService.getDailyPrompt({
-      network: primaryNetwork.cityPreset || 'Five Towns',
-      userId: currentUser?.id,
-    })
-      .then(setDailyPrompt)
-      .catch(() => setDailyPrompt(null));
-  }, [currentUser?.id, primaryNetwork.cityPreset]);
 
   useEffect(() => {
     feedRetentionService.getPublishedBrief({
@@ -343,12 +333,6 @@ export default function Feed({ isActive = true }) {
     curatedBrief: publishedBrief,
   }), [communityGroups, feedPosts, primaryNetwork.cityPreset, primaryNetwork.shortLabel, publishedBrief]);
 
-  const feedMomentum = useMemo(() => ({
-    activeThreads: feedPosts.filter((post) => Number(post.comments_count || 0) >= 8).length,
-    joinedPosts: feedPosts.filter((post) => post.community_id && joinedCommunityIds.has(post.community_id)).length,
-    localEvents: feedPosts.filter((post) => post.type === 'event').length,
-  }), [feedPosts, joinedCommunityIds]);
-
   const handleCardReply = useCallback((post) => {
     recordInterest(post);
     setReplyPost(post);
@@ -470,15 +454,12 @@ export default function Feed({ isActive = true }) {
           <WidgetBoundary>
             <FiveTownsBrief
               brief={dailyBrief}
-              momentum={feedMomentum}
               posts={feedPosts}
-              joinedCommunityIds={joinedCommunityIds}
-              communitiesEnabled={COMMUNITIES_ENABLED}
-              prompt={dailyPrompt}
               streak={userStreak}
               currentUser={currentUser}
+              networkLabel={primaryNetwork.shortLabel || primaryNetwork.cityPreset || 'Your community'}
               onOpenMap={() => navigate('/Map')}
-              onOpenCommunities={() => navigate('/Communities')}
+              onOpenPost={(post) => navigate(`/PostDetail?id=${post.id}`)}
               onCreate={(type, subtype, body) => openComposer({ type, subtype, initialBody: body })}
             />
           </WidgetBoundary>
