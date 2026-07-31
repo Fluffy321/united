@@ -299,8 +299,8 @@ export default function FriendsHub({ open, onOpenChange, currentUser }) {
     }
   };
 
-  // General app invite — lands on the public welcome page (/InviteJoin is a dead legacy redirect)
-  const inviteUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://www.junited.us'}/welcome`;
+  // General app invite — lands on the single signed-out entry (/InviteJoin is a dead legacy redirect)
+  const inviteUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://www.junited.us'}/login`;
   const inviteText = `Join me on JUnited, the Jewish community app for local updates, mitzvahs, communities, and friends: ${inviteUrl}`;
 
   const openSmsInvite = (phone = '') => {

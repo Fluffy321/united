@@ -16,7 +16,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import OnboardingFlow, { hasCompletedOnboarding } from '@/components/onboarding/OnboardingFlow';
 import { getSupabaseConfigStatus } from '@/api/supabaseClient';
 import { COMMUNITIES_ENABLED } from '@/config/features';
-import { APP_ENTRY_PATH } from '@/lib/appEntry';
+import { APP_ENTRY_PATH, LEGACY_WELCOME_REDIRECT_PATH } from '@/lib/appEntry';
 
 const supabaseStatus = getSupabaseConfigStatus();
 const PROD_CONFIG_MISSING = import.meta.env.PROD && !supabaseStatus.shouldUseSupabase;
@@ -83,7 +83,6 @@ const Support                 = lazy(() => import('@/pages/Support'));
 const DMCAPolicy              = lazy(() => import('@/pages/DMCAPolicy'));
 const PrivacyRights           = lazy(() => import('@/pages/PrivacyRights'));
 const SearchPage              = lazy(() => import('@/pages/Search'));
-const Landing                 = lazy(() => import('@/pages/Landing'));
 const Login                   = lazy(() => import('@/pages/Login'));
 const JewishHub               = lazy(() => import('@/pages/JewishHub'));
 const AdminFeedbackInbox      = lazy(() => import('@/pages/AdminFeedbackInbox'));
@@ -174,7 +173,7 @@ const AuthenticatedApp = () => {
       <Suspense fallback={<PageFallback />}>
         <Routes>
           <Route path="/" element={<Navigate to={APP_ENTRY_PATH} replace />} />
-          <Route path="/welcome" element={<PageTransition><Landing /></PageTransition>} />
+          <Route path="/welcome" element={<Navigate to={LEGACY_WELCOME_REDIRECT_PATH} replace />} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route path="/Jewish" element={<Navigate to="/Feed" replace />} />
           <Route path="/tehillim" element={<Navigate to="/Feed" replace />} />

@@ -254,9 +254,9 @@ Goals:
     status: STATUS.SHIPPED,
     priority: PRIORITY.HIGH,
     title: 'Direct App Entry + Multi-Market Welcome Refresh',
-    description: 'Make / route directly toward the protected Feed, preserve /welcome as the deliberate marketing page, and replace the direct /login welcome mode with the approved Neutral Pearl, natural-sky, market-neutral experience.',
+    description: 'Make / route directly toward the protected Feed, retire the former long-form marketing page, redirect /welcome to /login, and use the approved Neutral Pearl, natural-sky, market-neutral experience as the only signed-out front door.',
     why: 'The current root marketing page and separate login welcome create two layers before app value. Returning users need an app-like launch, while deliberate login visitors need a polished introduction that can travel beyond the Five Towns.',
-    shippedNote: 'Shipped 2026-07-29 on codex/direct-app-entry-welcome. The root route now replaces into the protected /Feed path while /welcome retains Landing. Direct /login renders the approved Neutral Pearl welcome with market-neutral copy, two ink-framed brand marks, a single centered orbital band, and 56 deterministic irregular cool-white stars; protected-route from_url visits still open sign-in directly. Presentation, login-mode integration, and root-entry contracts are covered by focused Vitest suites, with full automated and real-browser verification recorded in the implementation handoff.',
+    shippedNote: 'Shipped 2026-07-29 and simplified 2026-07-31. The root route replaces into the protected /Feed path; /welcome now redirects to /login and the former Landing.jsx marketing page is deleted. Direct /login renders the approved Neutral Pearl welcome with market-neutral copy, two ink-framed brand marks, a single centered orbital band, and 56 deterministic irregular cool-white stars; protected-route from_url visits still open sign-in directly. Presentation, login-mode integration, root-entry, and legacy-welcome redirect contracts are covered by focused Vitest suites and production browser verification.',
     prompt: `You are implementing JUnited's direct app entry and multi-market welcome refresh.
 
 Context:
@@ -267,9 +267,9 @@ Context:
 - Protected-route redirect behavior: src/components/ProtectedRoute.jsx
 
 Goals:
-1. Follow the approved spec exactly: / redirects to /Feed, /welcome retains Landing, and direct /login renders the redesigned welcome mode.
+1. Follow the superseding approved spec at docs/superpowers/specs/2026-07-31-single-production-entry-design.md: / redirects to /Feed, /welcome redirects to /login, the former Landing page is absent, and direct /login renders the redesigned welcome mode.
 2. Extract LoginWelcomeScreen and CommunitySignalGraphic under src/components/auth/ while keeping authentication logic in Login.jsx.
-3. Use the approved market-neutral copy, Neutral Pearl foundation, narrow ink logo frames, 18 deterministic irregular stars, and one centered soft orbital band.
+3. Use the approved market-neutral copy, Neutral Pearl foundation, narrow ink logo frames, 56 deterministic irregular stars, and one centered soft orbital band.
 4. Preserve sign-in, sign-up, OAuth, callback, from_url, onboarding, and deep-link behavior.
 5. Add focused route/component tests and verify mobile and desktop behavior through the real browser paths.
 6. Run npm test, npm run lint, npm run build, and the repository's JUnited self-check.
@@ -3156,7 +3156,7 @@ Goals:
     priority: PRIORITY.MEDIUM,
     title: 'Landing Honesty Pass + Dead-Link Fixes',
     description: 'Landing.jsx marketed features that do not exist as described: "Shuls" as a daily-use surface (shul directory is deferred), and map copy promising shuls/schools/events on a map that only has business categories. Two live links pointed at dead legacy redirects: PrivacyRights "Go to Settings" → /UserSettings and the FriendsHub app-invite URL → /InviteJoin (both silently redirect to /Feed).',
-    shippedNote: 'Shipped 2026-07-01 (master plan Phase 1, item 3). Landing.jsx: differentiator line and "What people use daily" paragraph no longer list Shuls; map use-case copy now describes what the Map actually shows (kosher food, Jewish-owned businesses, local services, live activity). Marketplace stays listed — it became real in marketplace-real-persistence. PrivacyRights.jsx now links to /Settings; FriendsHub invite URL now lands on /welcome.',
+    shippedNote: 'Shipped 2026-07-01 (master plan Phase 1, item 3). The then-live Landing.jsx was corrected to describe only working surfaces; it was later retired entirely on 2026-07-31 when JUnited adopted one signed-out entry. PrivacyRights.jsx links to /Settings; FriendsHub invite URLs now land on /login.',
   },
 
   {
