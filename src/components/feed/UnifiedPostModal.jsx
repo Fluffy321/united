@@ -28,6 +28,7 @@ import { ACTIVITY_KIND } from '@/lib/productInfrastructure';
 import { MARKETPLACE_CATEGORIES } from '@/lib/marketplaceTaxonomy';
 import { toast } from 'sonner';
 import { filterDailyFeedPrompt, updateDailyFeedPrompt } from '@/services/entityServices';
+import { resolveComposerKind, resolveComposerSubtype } from '@/lib/feed/feedIntentions';
 
 const POST_TYPES = [
   { value: 'post', label: 'Post', icon: MessageCircle, tone: 'from-blue-500 to-cyan-500', soft: 'bg-blue-50 text-blue-700', placeholder: "What's happening in the Five Towns?" },
@@ -36,6 +37,7 @@ const POST_TYPES = [
   { value: 'alert', label: 'Alert', icon: Bell, tone: 'from-red-500 to-rose-500', soft: 'bg-red-50 text-red-700', placeholder: 'Share something people should know before they head out...' },
   { value: 'poll', label: 'Poll', icon: BarChart2, tone: 'from-emerald-500 to-teal-500', soft: 'bg-emerald-50 text-emerald-700', placeholder: 'Ask the Five Towns to choose...' },
   { value: 'help', label: 'Need Help', icon: HeartHandshake, tone: 'from-rose-500 to-pink-500', soft: 'bg-rose-50 text-rose-700', placeholder: 'What do you need help with right now?' },
+  { value: 'offer', label: 'Offer Help', icon: HeartHandshake, tone: 'from-emerald-500 to-teal-500', soft: 'bg-emerald-50 text-emerald-700', placeholder: 'What can you help someone with?' },
   { value: 'marketplace', label: 'Sell / Give', icon: ShoppingBag, tone: 'from-teal-500 to-sky-500', soft: 'bg-teal-50 text-teal-700', placeholder: 'What are you selling, giving, or looking for?' },
 ];
 
@@ -60,16 +62,6 @@ const URGENCY_OPTIONS = [
 
 const CITY_OPTIONS = ['Five Towns', 'Lawrence', 'Cedarhurst', 'Woodmere', 'Hewlett', 'Inwood'];
 
-const typeFromLegacyProps = (postType, initialSubtype) => {
-  if (postType === 'help') return 'help';
-  if (postType === 'event' || initialSubtype === 'event') return 'event';
-  if (postType === 'job' || postType === 'housing' || postType === 'food' || initialSubtype === 'marketplace') return 'marketplace';
-  if (initialSubtype === 'question') return 'ask';
-  if (initialSubtype === 'alert') return 'alert';
-  if (initialSubtype === 'poll') return 'poll';
-  return 'post';
-};
-
 const titleFromBody = (value) => {
   const firstLine = (value || '').split('\n').find(Boolean) || '';
   return firstLine.trim().slice(0, 80);
@@ -89,7 +81,7 @@ export default function UnifiedPostModal({
 }) {
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
-  const [postKind, setPostKind] = useState(typeFromLegacyProps(postType, initialSubtype));
+  const [postKind, setPostKind] = useState(resolveComposerKind(postType, initialSubtype));
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [location, setLocation] = useState('');
@@ -126,7 +118,7 @@ export default function UnifiedPostModal({
 
   useEffect(() => {
     if (!open) return;
-    const nextType = typeFromLegacyProps(postType, initialSubtype);
+    const nextType = resolveComposerKind(postType, initialSubtype);
     setPostKind(nextType);
     setTitle('');
     // Pre-fill tapped prompts as real editable text so the post is one tap away,
@@ -169,6 +161,7 @@ export default function UnifiedPostModal({
     if (postKind === 'marketplace') return 'Post Listing';
     if (postKind === 'alert') return 'Send Alert';
     if (postKind === 'ask') return 'Ask Community';
+    if (postKind === 'offer') return 'Share Offer';
     return 'Share Post';
   };
 
@@ -183,6 +176,7 @@ export default function UnifiedPostModal({
     if (isPromptReply) return 'prompt_reply';
     if (postKind === 'post') return 'feed';
     if (postKind === 'ask') return 'question';
+    if (postKind === 'offer') return 'feed';
     if (postKind === 'marketplace') return 'marketplace';
     return postKind;
   };
@@ -262,7 +256,7 @@ export default function UnifiedPostModal({
         image_url: imageUrls[0] || undefined,
         image_urls: imageUrls.length ? imageUrls : undefined,
         caption: caption.trim() || undefined,
-        post_subtype: postKind,
+        post_subtype: resolveComposerSubtype(postKind, initialSubtype),
         community_id: selectedCommunityId || undefined,
         community_name: selectedCommunity?.name || undefined,
         replies_enabled: true,
