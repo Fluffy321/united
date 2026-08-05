@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   BadgeCheck,
@@ -49,6 +49,7 @@ import {
 import useShabbatLocation from '@/hooks/useShabbatLocation';
 import { forwardGeocode, PRESET_LOCATIONS } from '@/lib/shabbatLocation';
 import { COMMUNITIES_ENABLED } from '@/config/features';
+import BriefPreferencesSettings from '@/components/settings/BriefPreferencesSettings';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -66,6 +67,12 @@ const sections = [
   { id: 'app',          label: 'App',             icon: Moon },
   { id: 'account',      label: 'Account',         icon: Lock },
 ];
+
+const sectionIds = new Set(sections.map(({ id }) => id));
+const sectionFromParams = (searchParams) => {
+  const requested = searchParams.get('section');
+  return sectionIds.has(requested) ? requested : 'profile';
+};
 
 const defaultSettings = {
   notification_settings: {
@@ -109,7 +116,8 @@ function sectionDescription(id) {
 
 export default function Settings() {
   const { user: currentUser, logout } = useAuth();
-  const [activeSection, setActiveSection] = useState('profile');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeSection, setActiveSection] = useState(() => sectionFromParams(searchParams));
   const [isSaving, setIsSaving]           = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
@@ -125,6 +133,19 @@ export default function Settings() {
   const [pushLoading, setPushLoading]       = useState(false);
 
   const [portalLoading, setPortalLoading] = useState(false);
+
+  useEffect(() => {
+    const requestedSection = sectionFromParams(searchParams);
+    if (requestedSection !== activeSection) setActiveSection(requestedSection);
+  }, [activeSection, searchParams]);
+
+  const handleSectionChange = useCallback((sectionId) => {
+    if (!sectionIds.has(sectionId)) return;
+    setActiveSection(sectionId);
+    const next = new URLSearchParams(searchParams);
+    next.set('section', sectionId);
+    setSearchParams(next);
+  }, [searchParams, setSearchParams]);
 
   const { data: activeSubscription = null, isLoading: subscriptionLoading } = useQuery({
     queryKey: ['active-subscription', currentUser?.id],
@@ -382,7 +403,7 @@ export default function Settings() {
             return (
               <button
                 key={id}
-                onClick={() => setActiveSection(id)}
+                onClick={() => handleSectionChange(id)}
                 className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 transition ${
                   active ? 'bg-blue-50' : 'hover:bg-slate-50'
                 }`}
@@ -504,6 +525,7 @@ export default function Settings() {
           {/* ─── Notifications ────────────────────────── */}
           {activeSection === 'notifications' && (
             <>
+            <BriefPreferencesSettings currentUser={currentUser} />
             <SettingsCard title="Notification Settings" icon={Bell}>
               <div className="divide-y divide-slate-100">
                 {pushSupported && (
