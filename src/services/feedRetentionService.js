@@ -1,4 +1,13 @@
-import { createFeedEngagementEvent, createFeedUserPreference, filterDailyFeedPrompt, filterFeedUserPreference, filterFiveTownsBrief, updateFeedUserPreference } from '@/services/entityServices';
+import {
+  createFeedEngagementEvent,
+  createFeedUserPreference,
+  filterDailyFeedPrompt,
+  filterFeedEngagementEvent,
+  filterFeedUserPreference,
+  filterFiveTownsBrief,
+  updateFeedUserPreference,
+} from '@/services/entityServices';
+import { BRIEF_CATEGORY_IDS, DEFAULT_BRIEF_CATEGORY_IDS } from '@/lib/feed/briefCategories';
 
 const PROMPT_LIBRARY = [
   {
@@ -41,6 +50,40 @@ const PROMPT_LIBRARY = [
 
 const lower = (value) => String(value || '').toLowerCase();
 const todayKey = () => new Date().toISOString().slice(0, 10);
+const VALID_CATEGORY_IDS = new Set(BRIEF_CATEGORY_IDS);
+const VALID_ENGAGEMENT_LEVELS = new Set(['quiet', 'balanced', 'active', 'all_in']);
+const CATEGORY_EVENT_TYPES = new Set(['save', 'reply', 'join', 'category_open', 'show_less']);
+
+export function normalizeFeedPreferences(preferences, userId = null) {
+  const hasStoredRow = Boolean(preferences);
+  const interests = Array.isArray(preferences?.interests)
+    ? preferences.interests.filter((categoryId) => VALID_CATEGORY_IDS.has(categoryId))
+    : [...DEFAULT_BRIEF_CATEGORY_IDS];
+
+  return {
+    ...(preferences || {}),
+    user_id: preferences?.user_id || userId,
+    interests: hasStoredRow ? interests : [...DEFAULT_BRIEF_CATEGORY_IDS],
+    engagement_level: VALID_ENGAGEMENT_LEVELS.has(preferences?.engagement_level)
+      ? preferences.engagement_level
+      : 'balanced',
+  };
+}
+
+function sanitizePreferencePatch(patch = {}) {
+  const sanitized = { ...patch };
+  if (Object.hasOwn(patch, 'interests')) {
+    sanitized.interests = Array.isArray(patch.interests)
+      ? patch.interests.filter((categoryId) => VALID_CATEGORY_IDS.has(categoryId))
+      : [];
+  }
+  if (Object.hasOwn(patch, 'engagement_level')) {
+    sanitized.engagement_level = VALID_ENGAGEMENT_LEVELS.has(patch.engagement_level)
+      ? patch.engagement_level
+      : 'balanced';
+  }
+  return sanitized;
+}
 
 const stableIndex = (seed, size) => {
   const total = String(seed).split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
@@ -63,18 +106,27 @@ export const feedRetentionService = {
   async getPreferences(userId) {
     if (!userId) return null;
     const existing = await filterFeedUserPreference({ user_id: userId }, '-updated_date', 1);
-    return existing?.[0] || null;
+    return normalizeFeedPreferences(existing?.[0], userId);
   },
 
   async savePreferences(userId, patch) {
     if (!userId) return null;
     const existing = await this.getPreferences(userId);
-    if (existing?.id) return updateFeedUserPreference(existing.id, patch);
-    return createFeedUserPreference({ user_id: userId, ...patch });
+    const sanitizedPatch = sanitizePreferencePatch(patch);
+    if (existing?.id) return updateFeedUserPreference(existing.id, sanitizedPatch);
+    return createFeedUserPreference({ user_id: userId, ...sanitizedPatch });
+  },
+
+  async getCategorySignals(userId) {
+    if (!userId) return [];
+    const events = await filterFeedEngagementEvent({ user_id: userId }, '-created_at', 100);
+    return (events || []).filter(({ event_type }) => CATEGORY_EVENT_TYPES.has(event_type));
   },
 
   async recordEvent({ userId, post, eventType, metadata = {} }) {
     if (!eventType) return null;
+    const safeMetadata = { ...metadata };
+    if (!VALID_CATEGORY_IDS.has(safeMetadata.category_id)) delete safeMetadata.category_id;
     return createFeedEngagementEvent({
       user_id: userId || null,
       post_id: post?.id || null,
@@ -83,7 +135,7 @@ export const feedRetentionService = {
       post_type: post?.type || null,
       post_subtype: post?.post_subtype || null,
       neighborhood: post?.location_text || post?.city || null,
-      metadata,
+      metadata: safeMetadata,
     });
   },
 
