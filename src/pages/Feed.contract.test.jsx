@@ -26,4 +26,11 @@ describe('Mobile headquarters Feed contract', () => {
     expect(source).toContain("eventType: 'reply'");
     expect(source).not.toContain("eventType: 'engaged'");
   });
+
+  it('lets members privately reduce unwanted categories', () => {
+    expect(source).toContain('handleShowLess');
+    expect(source).toContain("eventType: 'show_less'");
+    expect(source).toContain('onShowLess={handleShowLess}');
+    expect(source).toContain('hiddenPostIds');
+  });
 });

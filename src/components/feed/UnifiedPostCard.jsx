@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Heart, MessageCircle, MoreHorizontal, Flag, Trash2, MapPin, Clock, CheckCircle2, Ban, Megaphone, Pin } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Flag, Trash2, MapPin, Clock, CheckCircle2, Ban, Megaphone, Pin, EyeOff, ArrowRight } from 'lucide-react';
 import { feedBody, feedText, formatPostAge, getCardIntent, postDate, toneClasses } from '@/lib/feed/feedRanking';
 import { authorColor } from '@/lib/feed/feedColors';
 import PostImage from '@/components/common/PostImage';
@@ -111,7 +111,7 @@ const InterestedButton = React.memo(function InterestedButton({ post, currentUse
 });
 
 // Compact card used by the Feed list (variant="compact") — formerly FeedPostCard.jsx
-function CompactPostCard({ post, liked = false, onLike, onReply, onOpen }) {
+function CompactPostCard({ post, currentUser, liked = false, onLike, onReply, onOpen, onShowLess }) {
   const intent = getCardIntent(post);
   const tone = toneClasses[intent.tone] || toneClasses.slate;
   const Icon = intent.icon || MessageCircle;
@@ -123,6 +123,8 @@ function CompactPostCard({ post, liked = false, onLike, onReply, onOpen }) {
   const initials = (post.author_name || 'J').split(/\s+/).map(p => p[0]).join('').slice(0, 2).toUpperCase();
   const avatarBg = authorColor(post.author_id || post.author_name || '');
   const avatarUrl = post.author_avatar_url;
+  const context = post.community_name || post.location_text || post.city;
+  const isOwner = currentUser?.id && currentUser.id === (post.user_id || post.author_id);
 
   return (
     <article className="rounded-[16px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden">
@@ -135,47 +137,68 @@ function CompactPostCard({ post, liked = false, onLike, onReply, onOpen }) {
               {initials}
             </div>
           )}
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-[14px] font-bold text-slate-900 leading-tight truncate">{post.author_name || 'Neighbor'}</div>
-            <div className="text-[12px] text-slate-400">{age}</div>
+            <div className="truncate text-[12px] text-slate-400">{age}{context ? ` · ${context}` : ''}</div>
           </div>
           <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border shrink-0 ${tone.pill}`}>
             <Icon className="h-3 w-3 shrink-0" />
             {intent.label}
           </span>
+          {onShowLess && !isOwner && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={`More options for ${title}`}
+                  className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-slate-400 outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-600"
+                >
+                  <MoreHorizontal aria-hidden="true" className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onShowLess(post)}>
+                  <EyeOff className="mr-2 h-4 w-4" />
+                  Show less like this
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
-        <button type="button" onClick={() => onOpen?.(post)} className="block w-full text-left">
-          <p className="text-[16px] leading-[1.55] text-slate-900 font-medium">{title}</p>
+        <button type="button" onClick={() => onOpen?.(post)} className="block min-h-11 w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-blue-600">
+          <p className="line-clamp-3 text-[15px] font-semibold leading-[1.5] text-slate-900">{title}</p>
           {body && body !== title && (
-            <p className="mt-1 text-[14px] leading-snug text-slate-500 line-clamp-2">{body}</p>
+            <p className="mt-1 line-clamp-3 text-[13px] leading-snug text-slate-500">{body}</p>
           )}
         </button>
       </div>
       <div className="flex border-t border-slate-100">
         <button
           type="button"
-          onClick={() => onLike(post.id)}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-medium transition-colors ${liked ? 'text-rose-500' : 'text-slate-400'}`}
+          aria-label={`Mark ${title} as helpful`}
+          onClick={() => onLike?.(post.id)}
+          className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 text-[12px] font-bold transition-colors ${liked ? 'text-rose-500' : 'text-slate-500'}`}
         >
           <Heart className={`h-[17px] w-[17px] ${liked ? 'fill-rose-500' : ''}`} />
-          {reactions > 0 && <span>{reactions}</span>}
+          <span>Helpful{reactions > 0 ? ` ${reactions}` : ''}</span>
         </button>
         <button
           type="button"
-          onClick={() => onReply(post)}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-medium text-slate-400"
+          aria-label={`Reply to ${title}`}
+          onClick={() => onReply?.(post)}
+          className="flex min-h-11 flex-1 items-center justify-center gap-1.5 text-[12px] font-bold text-slate-500"
         >
           <MessageCircle className="h-[17px] w-[17px]" />
-          {replies > 0 ? <span>{replies}</span> : null}
+          <span>Reply{replies > 0 ? ` ${replies}` : ''}</span>
         </button>
         <button
           type="button"
-          className="flex-1 flex items-center justify-center py-3 text-slate-400"
+          aria-label={`Open ${title}`}
+          onClick={() => onOpen?.(post)}
+          className="flex min-h-11 flex-1 items-center justify-center gap-1.5 text-[12px] font-bold text-slate-500"
         >
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-          </svg>
+          <span>Open</span>
+          <ArrowRight aria-hidden="true" className="h-4 w-4" />
         </button>
       </div>
     </article>
@@ -1046,6 +1069,10 @@ function arePropsEqual(prev, next) {
     prev.post === next.post &&
     prev.currentUser === next.currentUser &&
     prev.liked === next.liked &&
+    prev.onLike === next.onLike &&
+    prev.onReply === next.onReply &&
+    prev.onOpen === next.onOpen &&
+    prev.onShowLess === next.onShowLess &&
     prev.communities === next.communities &&
     prev.isFromJoinedCommunity === next.isFromJoinedCommunity &&
     blockedIdsEqual(prev.blockedIds, next.blockedIds)

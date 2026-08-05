@@ -52,6 +52,7 @@ export default function Feed() {
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('All');
   const [userLikes, setUserLikes] = useState([]);
   const [blockedIds, setBlockedIds] = useState([]);
+  const [hiddenPostIds, setHiddenPostIds] = useState([]);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const composerRef = useRef(null);
   const [showEventsSheet, setShowEventsSheet] = useState(false);
@@ -281,6 +282,7 @@ export default function Feed() {
     if ((p.activity_kind === 'marketplace_listing' || p.type === 'marketplace')
       && p.listing_status && p.listing_status !== 'available') return false;
     if (blockedIds.includes(p.user_id)) return false;
+    if (hiddenPostIds.includes(p.id)) return false;
     // Age gate — hide posts older than 14 days
     const ts = p.updated_date || p.created_date;
     if (ts && Date.now() - new Date(ts).getTime() > FEED_TTL) return false;
@@ -388,6 +390,20 @@ export default function Feed() {
     }
     if (action.destination) navigate(action.destination);
   }, [navigate, openComposer]);
+
+  const handleShowLess = useCallback((post) => {
+    setHiddenPostIds((current) => current.includes(post.id) ? current : [...current, post.id]);
+    toast.message('You’ll see fewer posts like this.');
+    if (!currentUser?.id) return;
+    feedRetentionService.recordEvent({
+      userId: currentUser.id,
+      post,
+      eventType: 'show_less',
+      metadata: { category_id: classifyBriefCategory(post), source: 'feed' },
+    }).catch(() => {}).finally(() => queryClient.invalidateQueries({
+      queryKey: feedPreferenceKeys.signals(currentUser.id),
+    }));
+  }, [currentUser?.id, queryClient]);
 
   const handleCardReply = useCallback((post) => {
     recordInterest(post);
@@ -589,10 +605,12 @@ export default function Feed() {
                         variant="compact"
                         key={post.id}
                         post={post}
+                        currentUser={currentUser}
                         liked={userLikes.includes(post.id)}
                         onLike={handleLike}
                         onReply={handleCardReply}
                         onOpen={handleCardOpen}
+                        onShowLess={handleShowLess}
                         onMap={() => navigate('/Map')}
                       />
                     ))}
