@@ -87,7 +87,7 @@ export default function HomeContributionEntry({ onSelect }) {
             type="button"
             aria-label="Close posting options"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-slate-950/45 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-[#07132E]/45 backdrop-blur-[2px]"
           />
           <section
             role="dialog"
