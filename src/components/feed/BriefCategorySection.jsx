@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, ArrowRight, MapPinned, MessageCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, LockKeyhole, MapPinned, MessageCircle } from 'lucide-react';
 import { classifyBriefCategory } from '@/lib/feed/briefRanking';
 import UnifiedPostCard from './UnifiedPostCard';
 
@@ -10,6 +10,20 @@ const TAB_LABELS = {
 };
 
 const postTitle = (post) => String(post?.title || post?.body || '').trim();
+const CLOSED_HELP_STATES = new Set(['closed', 'filled', 'completed', 'cancelled', 'canceled', 'resolved']);
+
+export function isOpenCategoryItem(post, categoryId) {
+  if (categoryId !== 'helping') return true;
+  const status = String(post?.status || post?.request_status || post?.help_status || 'open').toLowerCase();
+  return !CLOSED_HELP_STATES.has(status);
+}
+
+export function categoryCountLabel(posts, category) {
+  const count = posts.filter((post) => isOpenCategoryItem(post, category.id)).length;
+  if (!count) return 'No current activity';
+  if (category.id === 'helping') return `${count} open`;
+  return `${count} current`;
+}
 
 export default function BriefCategorySection({
   category,
@@ -24,6 +38,10 @@ export default function BriefCategorySection({
   if (!category) return null;
 
   const categoryPosts = posts.filter((post) => classifyBriefCategory(post) === category.id);
+  const openCategoryPosts = categoryPosts.filter((post) => isOpenCategoryItem(post, category.id));
+  const completedHelpingCount = category.id === 'helping'
+    ? categoryPosts.length - openCategoryPosts.length
+    : 0;
   const discussionPosts = categoryPosts.filter((post) => (
     post.post_subtype === 'question' || Number(post.comments_count || 0) > 0
   ));
@@ -46,6 +64,17 @@ export default function BriefCategorySection({
               {category.label}
             </h1>
             <p className="mt-1 text-[12px] font-medium leading-relaxed text-slate-500">{category.description}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <span className="rounded-full bg-[#EAF0F8] px-2.5 py-1 text-[10px] font-black text-[#234E7A]">
+                {categoryCountLabel(categoryPosts, category)}
+              </span>
+              {category.id === 'helping' && (
+                <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-800">
+                  <LockKeyhole aria-hidden="true" className="h-3 w-3" />
+                  Private coordination
+                </span>
+              )}
+            </div>
           </div>
         </header>
 
@@ -82,7 +111,7 @@ export default function BriefCategorySection({
 
       {activeTab === 'updates' && (
         <div data-category-panel="updates" role="tabpanel" className="space-y-2.5">
-          {categoryPosts.length > 0 ? categoryPosts.map((post) => (
+          {openCategoryPosts.length > 0 ? openCategoryPosts.map((post) => (
             <UnifiedPostCard
               key={post.id}
               variant="compact"
@@ -92,7 +121,13 @@ export default function BriefCategorySection({
               onOpen={onOpenPost}
             />
           )) : (
-            <EmptyPanel title={`No trusted ${category.label} updates yet`} body="When your community shares something useful here, it will appear in this section." />
+            <EmptyPanel title="No current activity" body={`When your community shares a useful ${category.label} update, it will appear here.`} />
+          )}
+          {completedHelpingCount > 0 && (
+            <div className="flex min-h-11 items-center gap-2 rounded-[14px] border border-emerald-100 bg-emerald-50 px-3 text-[11px] font-bold text-emerald-800">
+              <CheckCircle2 aria-hidden="true" className="h-4 w-4 shrink-0" />
+              {completedHelpingCount} recently completed
+            </div>
           )}
         </div>
       )}

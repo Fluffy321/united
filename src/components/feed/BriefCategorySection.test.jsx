@@ -52,4 +52,43 @@ describe('Focused Brief category section', () => {
     expect(html).toContain('A structured Local Updates directory is not available yet.');
     expect(html).toContain('Open the community map');
   });
+
+  it('renders Helping as private coordination with truthful open activity', () => {
+    const html = renderToStaticMarkup(
+      <BriefCategorySection
+        category={getBriefCategory('helping')}
+        posts={[
+          { id: 'need-1', type: 'help', title: 'Driver needed', status: 'open' },
+          { id: 'need-2', type: 'help', title: 'Meal route filled', status: 'filled' },
+        ]}
+        activeTab="updates"
+        onBack={() => {}}
+        onAction={() => {}}
+        onOpenPost={() => {}}
+      />
+    );
+
+    expect(html).toContain('Private coordination');
+    expect(html).toContain('1 open');
+    expect(html).not.toContain('2 open');
+    expect(html).toContain('Ask for help');
+    expect(html).toContain('Offer help');
+  });
+
+  it('does not invent activity counts for an empty category', () => {
+    const html = renderToStaticMarkup(
+      <BriefCategorySection
+        category={getBriefCategory('events')}
+        posts={[]}
+        activeTab="updates"
+        onBack={() => {}}
+        onAction={() => {}}
+        onOpenPost={() => {}}
+      />
+    );
+
+    expect(html).toContain('No current activity');
+    expect(html).not.toContain('0 open');
+    expect(html).not.toContain('0 updates');
+  });
 });
