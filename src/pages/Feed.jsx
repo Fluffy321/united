@@ -22,8 +22,9 @@ import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import CommentsSheet from '@/components/feed/CommentsSheet';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import CommunitiesFeedView from '@/components/feed/CommunitiesFeedView';
-import FiveTownsBrief from '@/components/feed/FiveTownsBrief';
-import FeedIntentionRail from '@/components/feed/FeedIntentionRail';
+import HomePriorityStack from '@/components/feed/HomePriorityStack';
+import HomeContributionEntry from '@/components/feed/HomeContributionEntry';
+import LiveCategoryDeck from '@/components/feed/LiveCategoryDeck';
 import BriefCategoryLaunchpad from '@/components/feed/BriefCategoryLaunchpad';
 import BriefCategorySection from '@/components/feed/BriefCategorySection';
 import WidgetBoundary from '@/components/feed/WidgetBoundary';
@@ -35,6 +36,7 @@ import { FEED_LOAD_TIMEOUT_MS, feedText, getPostLivePriority } from '@/lib/feed/
 import { feedPreferenceKeys, postKeys } from '@/lib/queryKeys';
 import { DEFAULT_BRIEF_CATEGORY_IDS, getBriefCategory } from '@/lib/feed/briefCategories';
 import { classifyBriefCategory, rankBriefItems } from '@/lib/feed/briefRanking';
+import { buildHomePriorityModel } from '@/lib/feed/homePriority';
 import {
   closeBriefCategoryParams,
   closeBriefParams,
@@ -326,21 +328,34 @@ export default function Feed() {
     curatedBrief: publishedBrief,
   }), [communityGroups, feedPosts, primaryNetwork.cityPreset, primaryNetwork.shortLabel, publishedBrief]);
 
-  const rankedBriefItems = useMemo(() => {
-    const curatedItems = (dailyBrief.topLocalUpdates || []).map((item, index) => ({
+  const curatedItems = useMemo(() => (
+    (dailyBrief.topLocalUpdates || []).map((item, index) => ({
       ...item,
       id: item.id || `${publishedBrief?.id || 'daily-brief'}-${index}`,
       provenance: 'editor',
       verified: true,
       created_at: publishedBrief?.updated_at || publishedBrief?.created_at,
-    }));
+    }))
+  ), [dailyBrief.topLocalUpdates, publishedBrief?.created_at, publishedBrief?.id, publishedBrief?.updated_at]);
+
+  const rankedBriefItems = useMemo(() => {
     return rankBriefItems({
       items: [...curatedItems, ...feedPosts],
       selectedCategoryIds: briefPreferences?.interests || DEFAULT_BRIEF_CATEGORY_IDS,
       events: briefSignalEvents,
       primaryNetwork,
     });
-  }, [briefPreferences?.interests, briefSignalEvents, dailyBrief.topLocalUpdates, feedPosts, primaryNetwork, publishedBrief?.created_at, publishedBrief?.id, publishedBrief?.updated_at]);
+  }, [briefPreferences?.interests, briefSignalEvents, curatedItems, feedPosts, primaryNetwork]);
+
+  const homePriorityModel = useMemo(() => buildHomePriorityModel({
+    items: rankedBriefItems,
+    selectedCategoryIds: briefPreferences?.interests || DEFAULT_BRIEF_CATEGORY_IDS,
+    events: briefSignalEvents,
+    primaryNetwork,
+    currentUserId: currentUser?.id,
+    engagementLevel: briefPreferences?.engagement_level || 'balanced',
+    blockedUserIds: blockedIds,
+  }), [blockedIds, briefPreferences?.engagement_level, briefPreferences?.interests, briefSignalEvents, currentUser?.id, primaryNetwork, rankedBriefItems]);
 
   const { isBriefOpen, categoryId } = readBriefRouteState(searchParams);
   const selectedBriefCategory = getBriefCategory(categoryId);
@@ -440,6 +455,14 @@ export default function Feed() {
       initialBody: '',
     });
   }, [navigate, openComposer, recordInterest]);
+
+  const handlePriorityOpen = useCallback((item) => {
+    if (item.provenance === 'editor' && !item.post_id) {
+      handleOpenBriefCategory(item.category_id);
+      return;
+    }
+    handleCardOpen(item);
+  }, [handleCardOpen, handleOpenBriefCategory]);
 
   return (
     <div className="app-page relative">
@@ -556,15 +579,24 @@ export default function Feed() {
               )}
 
               <WidgetBoundary>
-                <FiveTownsBrief
-                  items={rankedBriefItems}
+                <HomePriorityStack
+                  items={homePriorityModel.priorities}
                   networkLabel={primaryNetwork.shortLabel || primaryNetwork.cityPreset || 'Your community'}
-                  onOpenBrief={handleOpenBrief}
-                  onOpenItem={(post) => navigate(`/PostDetail?id=${post.id}`)}
+                  engagementLevel={briefPreferences?.engagement_level || 'balanced'}
+                  onOpenItem={handlePriorityOpen}
+                  onOpenEngagement={() => navigate('/Settings')}
                 />
               </WidgetBoundary>
 
-              <FeedIntentionRail onSelect={(intention) => openComposer(intention.composer)} />
+              <HomeContributionEntry onSelect={(intention) => openComposer(intention.composer)} />
+
+              <WidgetBoundary>
+                <LiveCategoryDeck
+                  leads={homePriorityModel.categoryLeads}
+                  onOpenCategory={handleOpenBriefCategory}
+                  onSeeAll={handleOpenBrief}
+                />
+              </WidgetBoundary>
 
               <section aria-labelledby="from-your-community-heading" className="space-y-2.5">
                 <div className="flex items-end justify-between px-1 pt-1">

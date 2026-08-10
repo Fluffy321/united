@@ -4,15 +4,22 @@ import { describe, expect, it } from 'vitest';
 const source = readFileSync(new URL('./Feed.jsx', import.meta.url), 'utf8');
 
 describe('Mobile headquarters Feed contract', () => {
-  it('uses the new Brief, intentions, and community stream composition', () => {
-    expect(source).toContain("import FeedIntentionRail from '@/components/feed/FeedIntentionRail'");
+  it('uses Priority Stack C and removes repeated Home prompt surfaces', () => {
+    expect(source).toContain("import HomePriorityStack from '@/components/feed/HomePriorityStack'");
+    expect(source).toContain("import HomeContributionEntry from '@/components/feed/HomeContributionEntry'");
+    expect(source).toContain("import LiveCategoryDeck from '@/components/feed/LiveCategoryDeck'");
     expect(source).toContain("import BriefCategoryLaunchpad from '@/components/feed/BriefCategoryLaunchpad'");
     expect(source).toContain("import BriefCategorySection from '@/components/feed/BriefCategorySection'");
+    expect(source).toContain('buildHomePriorityModel');
     expect(source).toContain('readBriefRouteState');
-    expect(source).toContain('<FeedIntentionRail');
+    expect(source).toContain('<HomePriorityStack');
+    expect(source).toContain('<HomeContributionEntry');
+    expect(source).toContain('<LiveCategoryDeck');
     expect(source).toContain('<BriefCategoryLaunchpad');
     expect(source).toContain('<BriefCategorySection');
     expect(source).toContain('From your community');
+    expect(source).not.toContain('<FeedIntentionRail');
+    expect(source).not.toContain('<FiveTownsBrief');
     expect(source).not.toContain('PostingPrompts');
     expect(source).not.toContain('FiveTownsConversationHub');
     expect(source).not.toContain('useFloatingActions');
