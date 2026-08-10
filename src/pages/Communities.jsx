@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, Search, X, AlertCircle, Map, Compass, ArrowUpRight, MessageCircleMore, Sparkles, BookOpenText, ChevronRight, UsersRound } from 'lucide-react';
+import { Loader2, Search, X, AlertCircle, Map, Compass, MessageCircleMore, Sparkles, BookOpenText, ChevronRight, UsersRound } from 'lucide-react';
 import DestinationHeader from '@/components/layout/DestinationHeader';
-import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
@@ -363,6 +362,26 @@ function getDisplayMetric(community = {}) {
   return members ? `${members.toLocaleString()} members` : '';
 }
 
+function CommunityJoinAction({ community, isJoined, isJoining, onOpen, onJoin, compact = false }) {
+  return (
+    <button
+      type="button"
+      data-join-btn="true"
+      onClick={(event) => {
+        event.stopPropagation();
+        if (isJoined) onOpen(community.id);
+        else onJoin(community);
+      }}
+      disabled={isJoining}
+      className={`motion-press min-h-11 rounded-full font-black text-white outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:opacity-60 ${
+        compact ? 'px-3.5 text-[11px]' : 'w-full px-4 text-[13px]'
+      } ${isJoined ? 'bg-[#0F1C2E]' : 'bg-blue-600 hover:bg-blue-700'}`}
+    >
+      {isJoining ? 'Joining…' : isJoined ? 'Open room' : 'Join room'}
+    </button>
+  );
+}
+
 function CommunityDiscoveryCard({ community, isJoined, isJoining, onOpen, onJoin, featured = false }) {
   if (!community?.id || !community?.name) return null;
   const gradient = community.gradient || CATEGORY_CARD_GRADIENTS[community.type] || CATEGORY_GRADIENTS[community.category] || 'from-blue-500 to-indigo-600';
@@ -434,25 +453,13 @@ function CommunityDiscoveryCard({ community, isJoined, isJoining, onOpen, onJoin
         </div>
         )}
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); isJoined ? onOpen(community.id) : onJoin(community); }}
-            disabled={isJoining}
-            className={`flex-1 rounded-full px-4 py-2.5 text-[13px] font-black transition-all active:scale-95 disabled:opacity-60 ${
-              isJoined ? 'bg-slate-950 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {isJoining ? 'Joining...' : isJoined ? 'Open room' : 'Join room'}
-          </button>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onOpen(community.id); }}
-            className="rounded-full border border-slate-200 bg-white px-3.5 py-2.5 text-[13px] font-black text-blue-600 active:scale-95"
-          >
-            View
-          </button>
-        </div>
+        <CommunityJoinAction
+          community={community}
+          isJoined={isJoined}
+          isJoining={isJoining}
+          onOpen={onOpen}
+          onJoin={onJoin}
+        />
       </div>
     </article>
   );
@@ -549,26 +556,14 @@ function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOp
         </div>
         )}
 
-        <div className={`mt-auto ${isJoined ? '' : 'grid grid-cols-[1fr_auto]'} gap-2`}>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); isJoined ? onOpen(room.id) : onJoin(room); }}
-            disabled={isJoining}
-            className={`w-full rounded-full px-4 py-2.5 text-[13px] font-black transition-all active:scale-95 disabled:opacity-60 ${
-              isJoined ? 'bg-slate-950 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {isJoining ? 'Joining...' : isJoined ? 'Open room' : 'Join room'}
-          </button>
-          {!isJoined && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onOpen(room.id); }}
-              className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-black text-blue-600 transition-all active:scale-95"
-            >
-              {room.roomPrompt}
-            </button>
-          )}
+        <div className="mt-auto">
+          <CommunityJoinAction
+            community={room}
+            isJoined={isJoined}
+            isJoining={isJoining}
+            onOpen={onOpen}
+            onJoin={onJoin}
+          />
         </div>
       </div>
     </article>
@@ -807,16 +802,6 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, hasNewA
               </div>
             </div>
           </div>
-          <button
-            data-join-btn="true"
-            onClick={e => { e.stopPropagation(); onJoin(community); }}
-            disabled={isJoining}
-            className={`mt-10 shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-bold shadow-sm transition-all active:scale-95 disabled:opacity-60 ${
-              isJoined ? 'bg-slate-100 text-slate-600' : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {isJoining ? '…' : isJoined ? '✓ Joined' : 'Join'}
-          </button>
         </div>
 
         <div className="rounded-2xl border border-slate-100 bg-white/85 px-3 py-3 shadow-sm">
@@ -837,10 +822,14 @@ function CommunityCard({ community, isJoined, isJoining, onOpen, onJoin, hasNewA
             </div>
             )}
           </div>
-          <div className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition-transform group-hover:translate-x-0.5">
-            <span>{actionCopy.primary}</span>
-            <ArrowUpRight className="h-3 w-3" />
-          </div>
+          <CommunityJoinAction
+            community={community}
+            isJoined={isJoined}
+            isJoining={isJoining}
+            onOpen={onOpen}
+            onJoin={onJoin}
+            compact
+          />
         </div>
       </div>
     </div>
@@ -924,9 +913,7 @@ export default function Communities() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
-  const [reseedingFeatured, setReseedingFeatured] = useState(false);
   const [showCategoryBrowse, setShowCategoryBrowse] = useState(false);
-  const [featuredError, setFeaturedError] = useState(false);
   const [sizeFilter, setSizeFilter] = useState('all_sizes');
   const [activityFilter, setActivityFilter] = useState('all_activity');
 
@@ -1007,11 +994,10 @@ export default function Communities() {
     allCommunitiesRef.current = catalogCommunities;
   }, [catalogCommunities]);
 
-  const mainFeatured = useMemo(() => !featuredError ? ((catalogCommunities || []).find(c => c.isMainFeatured === true) || null) : null, [catalogCommunities, featuredError]);
+  const mainFeatured = useMemo(() => (catalogCommunities || []).find(c => c.isMainFeatured === true) || null, [catalogCommunities]);
   const secondaryFeatured = useMemo(() => {
-    if (featuredError) return [];
     return (catalogCommunities || []).filter(c => c.isFeatured === true && c.isMainFeatured !== true).sort((a, b) => (a.featuredRank || 999) - (b.featuredRank || 999)).slice(0, 3);
-  }, [catalogCommunities, featuredError]);
+  }, [catalogCommunities]);
   const myCommunities = useMemo(() => (catalogCommunities || []).filter(c => userCommunityIds.has(c.id)), [catalogCommunities, userCommunityIds]);
   const myGroups = useMemo(() => (allGroups || []).filter(g => memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
   const discoverCommunities = useMemo(() => (catalogCommunities || []).filter(c => !userCommunityIds.has(c.id)), [catalogCommunities, userCommunityIds]);
@@ -1156,32 +1142,6 @@ export default function Communities() {
   }, [navigate]); // navigate is stable; communities come from ref
   const backToList = () => navigate('/Communities');
 
-  const reseedFeatured = async () => {
-    if (currentUser?.role !== 'admin') {
-      toast.error('Admin access required');
-      return;
-    }
-    setReseedingFeatured(true);
-    try {
-      const { data: result, error: fnError } = await supabase.functions.invoke('reseedFeaturedCommunities', {});
-      if (fnError) throw fnError;
-      toast.success(`Reseeded featured communities: ${result?.data?.main_featured || 'done'}`);
-      setFeaturedError(false);
-      // Silently refresh communities without resetting loading state:
-      // write the fresh list straight into the query cache.
-      const comms = await listCommunity('-follower_count', 80);
-      if (comms?.length > 0) {
-        queryClient.setQueryData(['communities-list'], comms);
-      }
-    } catch (error) {
-      console.error('[reseedFeatured] error:', error?.message || error);
-      toast.error('Failed to reseed featured communities');
-      // Do NOT change any page state on failure — preserve existing data
-    } finally {
-      setReseedingFeatured(false);
-    }
-  };
-
   if (currentUser?.is_profile_complete === false) {
     return <ProfileSetup user={currentUser} onComplete={() => {}} />;
   }
@@ -1237,16 +1197,6 @@ export default function Communities() {
             >
               <Compass className="h-[18px] w-[18px] text-slate-500" />
             </button>
-            {currentUser?.role === 'admin' && (
-              <button
-                onClick={reseedFeatured}
-                disabled={reseedingFeatured}
-                className="rounded-full bg-amber-600 px-3 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-amber-700 disabled:opacity-50 active:scale-95 transition-all duration-150"
-                title="Reseed featured communities (admin only)"
-              >
-                {reseedingFeatured ? '⟳ ...' : '⟳ Reseed'}
-              </button>
-            )}
             <button
               onClick={() => setShowCreateModal(true)}
               className="shrink-0 rounded-full bg-blue-600 px-3.5 py-2 text-[12px] font-bold text-white shadow-sm transition-all duration-150 hover:bg-blue-700 active:scale-95"
