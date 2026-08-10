@@ -21,6 +21,8 @@ const EXPECTED_IDS = [
   'shabbos_plans',
 ];
 
+const CARD_TONES = ['blue', 'emerald', 'amber', 'orange', 'lime', 'indigo', 'sky', 'violet', 'teal', 'slate', 'rose', 'fuchsia'];
+
 describe('Daily Brief category contract', () => {
   it('keeps the complete category registry in the approved order', () => {
     expect(BRIEF_CATEGORY_IDS).toEqual(EXPECTED_IDS);
@@ -36,6 +38,9 @@ describe('Daily Brief category contract', () => {
       expect(category.tabs).toEqual(['updates', 'discuss', 'directory']);
       expect(category.actions).toHaveLength(2);
       expect(category.actions.every(({ id, label }) => id && label)).toBe(true);
+      expect(category.card.shortLabel).toBeTruthy();
+      expect(CARD_TONES).toContain(category.card.tone);
+      expect(category.card.emptyLabel).toBeTruthy();
     }
   });
 
