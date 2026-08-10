@@ -14,6 +14,7 @@ dependencies) plus a `vercel.json`.
 | Folder | Business | URL |
 |---|---|---|
 | `nutinfits/` | Nutinfits — tailor, Wellington | https://nutinfits.vercel.app |
+| `central-barbershop/` | Central Barbershop — Cedarhurst NY | not yet deployed |
 | — | Flawless Finishes — mobile body shop | https://flawless-finishes-sage.vercel.app |
 | — | WPB Mobile Mechanic | https://wpb-mobile-mechanic.vercel.app |
 
