@@ -68,6 +68,23 @@ describe('buildHomePriorityModel', () => {
     expect(model.categoryLeads.find(({ category }) => category.id === 'local').item?.id).toBe('ordinary-post');
   });
 
+  it('keeps an ordinary item in its category instead of presenting it as an unexplained priority', () => {
+    const model = buildHomePriorityModel({
+      items: [post({
+        id: 'ordinary-balanced-post',
+        type: 'feed',
+        title: 'A general neighborhood thought',
+        status: null,
+        deadline_at: null,
+      })],
+      engagementLevel: 'balanced',
+      now: NOW,
+    });
+
+    expect(model.priorities).toEqual([]);
+    expect(model.categoryLeads.find(({ category }) => category.id === 'local').item?.id).toBe('ordinary-balanced-post');
+  });
+
   it('uses stable tie breaking and does not repeat a priority as its category lead', () => {
     const model = buildHomePriorityModel({
       items: [

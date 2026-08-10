@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ArrowRight,
   CalendarPlus,
@@ -81,8 +82,8 @@ export default function HomeContributionEntry({ onSelect }) {
         <ArrowRight aria-hidden="true" className="h-5 w-5 shrink-0 text-white/80" />
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center" role="presentation">
+      {open && createPortal((
+        <div className="fixed inset-0 z-[60] flex items-end justify-center" role="presentation">
           <button
             type="button"
             aria-label="Close posting options"
@@ -113,7 +114,7 @@ export default function HomeContributionEntry({ onSelect }) {
             <ContributionOptions onSelect={handleSelect} />
           </section>
         </div>
-      )}
+      ), document.body)}
     </>
   );
 }

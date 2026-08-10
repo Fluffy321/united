@@ -1,6 +1,6 @@
 # JUnited Mobile Home: Priority Stack Redesign
 
-**Status:** Visual direction C selected; pending written-spec review  
+**Status:** Approved and implemented on `codex/mobile-home-brief`; pending merge and production deployment
 **Date:** 2026-08-10  
 **Scope:** Mobile Home priority stack, explainable ranking, contribution entry, live category deck, and focused category openings
 

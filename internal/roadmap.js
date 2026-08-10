@@ -224,7 +224,7 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'World-Class Screen-by-Screen Product Redesign',
     description: 'Redesign JUnited one real user-facing screen at a time, using the approved login welcome as the first quality benchmark. Each screen gets its own visual exploration, focused design spec, implementation plan, browser verification, and shipped roadmap note instead of a risky global reskin.',
-    why: 'Product direction confirmed 2026-07-28: JUnited should feel like a cohesive, successful consumer app across every path, but each surface has different jobs, density, trust, and mobile constraints. Screen-level decisions need deliberate owner review while shared patterns accumulate into a coherent system.',
+    why: 'Product direction confirmed 2026-07-28: JUnited should feel like a cohesive, successful consumer app across every path, but each surface has different jobs, density, trust, and mobile constraints. Screen-level decisions need deliberate owner review while shared patterns accumulate into a coherent system. Progress 2026-08-10: the approved Feed Priority Stack Home is implemented and locally verified on codex/mobile-home-brief (explainable priorities, one contribution entry, two-row category deck, focused Helping route, and Communities action cleanup). It is not marked shipped until merged, deployed, and verified on production. Next recommended screen after that production verification: Communities.',
     prompt: `You are continuing JUnited's world-class screen-by-screen product redesign.
 
 Context:

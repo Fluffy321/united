@@ -208,9 +208,10 @@ export function buildHomePriorityModel({
       now,
     }))
     .sort(compareHomeItems);
+  const explained = ranked.filter((item) => item.priority_reasons.length > 0);
   const priorityPool = engagementLevel === 'quiet'
-    ? ranked.filter(belongsInQuietPriority)
-    : ranked;
+    ? explained.filter(belongsInQuietPriority)
+    : explained;
   const priorities = priorityPool.slice(0, Math.max(0, limit));
   const priorityIds = new Set(priorities.map(({ id }) => id));
 
