@@ -12,7 +12,7 @@ create policy "Signed in users can create posts"
       community_id is null
       or exists (
         select 1 from public.communities c
-        where c.id = posts.community_id
+        where c.id::text = posts.community_id
           and (
             c.posting_mode = 'open'
             or c.created_by_user_id = auth.uid()
