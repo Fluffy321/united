@@ -29,7 +29,12 @@ create policy "Posts readable in accessible communities"
   to authenticated
   using (
     community_id is null
-    or public.can_access_community(community_id)
+    or exists (
+      select 1
+      from public.communities c
+      where c.id::text = posts.community_id
+        and public.can_access_community(c.id)
+    )
   );
 
 -- Live-only duplicates that weakened or duplicated file-tracked policies:
@@ -175,8 +180,8 @@ select
   c.name            as community_name_fresh,
   c.logo_url        as community_logo_fresh
 from public.posts p
-left join public.public_profiles pr on pr.id = p.user_id
-left join public.communities c on c.id = p.community_id;
+left join public.public_profiles pr on pr.id::text = p.user_id
+left join public.communities c on c.id::text = p.community_id;
 
 revoke all on public.posts_feed_view from public, anon;
 grant select on public.posts_feed_view to authenticated;

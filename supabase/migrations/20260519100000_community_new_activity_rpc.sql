@@ -20,7 +20,7 @@ as $$
       -- new posts since last visit
       exists (
         select 1 from public.posts p
-        where p.community_id = clv.community_id
+        where p.community_id = clv.community_id::text
           and p.created_at > clv.visited_at
       )
       or

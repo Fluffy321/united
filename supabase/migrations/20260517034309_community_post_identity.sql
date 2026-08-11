@@ -109,6 +109,6 @@ set
   author_name       = c.name,
   author_avatar_url = c.logo_url
 from public.communities c
-where p.community_id = c.id
+where p.community_id = c.id::text
   and p.post_kind    = 'local_update'
   and p.author_name  is null;

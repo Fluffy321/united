@@ -8,5 +8,5 @@ SELECT
   c.name            AS community_name_fresh,
   c.logo_url        AS community_logo_fresh
 FROM posts p
-LEFT JOIN profiles pr ON pr.id = p.user_id
-LEFT JOIN communities c ON c.id = p.community_id;
+LEFT JOIN profiles pr ON pr.id::text = p.user_id
+LEFT JOIN communities c ON c.id::text = p.community_id;
