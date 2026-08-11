@@ -7,7 +7,8 @@ import {
   filterFiveTownsBrief,
   updateFeedUserPreference,
 } from '@/services/entityServices';
-import { BRIEF_CATEGORY_IDS, DEFAULT_BRIEF_CATEGORY_IDS } from '@/lib/feed/briefCategories';
+import { BRIEF_CATEGORY_IDS } from '@/lib/feed/briefCategories';
+import { normalizePreferenceProfile } from '@/lib/feed/feedPreferenceModel';
 
 const PROMPT_LIBRARY = [
   {
@@ -51,36 +52,35 @@ const PROMPT_LIBRARY = [
 const lower = (value) => String(value || '').toLowerCase();
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const VALID_CATEGORY_IDS = new Set(BRIEF_CATEGORY_IDS);
-const VALID_ENGAGEMENT_LEVELS = new Set(['quiet', 'balanced', 'active', 'all_in']);
 const CATEGORY_EVENT_TYPES = new Set(['save', 'reply', 'join', 'category_open', 'show_less']);
 
 export function normalizeFeedPreferences(preferences, userId = null) {
-  const hasStoredRow = Boolean(preferences);
-  const interests = Array.isArray(preferences?.interests)
-    ? preferences.interests.filter((categoryId) => VALID_CATEGORY_IDS.has(categoryId))
-    : [...DEFAULT_BRIEF_CATEGORY_IDS];
-
-  return {
-    ...(preferences || {}),
-    user_id: preferences?.user_id || userId,
-    interests: hasStoredRow ? interests : [...DEFAULT_BRIEF_CATEGORY_IDS],
-    engagement_level: VALID_ENGAGEMENT_LEVELS.has(preferences?.engagement_level)
-      ? preferences.engagement_level
-      : 'balanced',
-  };
+  return normalizePreferenceProfile(preferences, userId);
 }
 
 function sanitizePreferencePatch(patch = {}) {
   const sanitized = { ...patch };
+  const normalized = normalizePreferenceProfile(patch);
   if (Object.hasOwn(patch, 'interests')) {
-    sanitized.interests = Array.isArray(patch.interests)
-      ? patch.interests.filter((categoryId) => VALID_CATEGORY_IDS.has(categoryId))
-      : [];
+    sanitized.interests = normalized.interests;
   }
   if (Object.hasOwn(patch, 'engagement_level')) {
-    sanitized.engagement_level = VALID_ENGAGEMENT_LEVELS.has(patch.engagement_level)
-      ? patch.engagement_level
-      : 'balanced';
+    sanitized.engagement_level = normalized.engagement_level;
+  }
+  if (Object.hasOwn(patch, 'interest_groups')) {
+    sanitized.interest_groups = normalized.interest_groups;
+  }
+  if (Object.hasOwn(patch, 'category_preferences')) {
+    sanitized.category_preferences = normalized.category_preferences;
+  }
+  if (Object.hasOwn(patch, 'catch_up_windows')) {
+    sanitized.catch_up_windows = normalized.catch_up_windows;
+  }
+  if (Object.hasOwn(patch, 'preference_setup_version')) {
+    sanitized.preference_setup_version = normalized.preference_setup_version;
+  }
+  if (Object.hasOwn(patch, 'preference_setup_completed_at')) {
+    sanitized.preference_setup_completed_at = normalized.preference_setup_completed_at;
   }
   return sanitized;
 }
@@ -113,8 +113,10 @@ export const feedRetentionService = {
     if (!userId) return null;
     const existing = await this.getPreferences(userId);
     const sanitizedPatch = sanitizePreferencePatch(patch);
-    if (existing?.id) return updateFeedUserPreference(existing.id, sanitizedPatch);
-    return createFeedUserPreference({ user_id: userId, ...sanitizedPatch });
+    const saved = existing?.id
+      ? await updateFeedUserPreference(existing.id, sanitizedPatch)
+      : await createFeedUserPreference({ user_id: userId, ...sanitizedPatch });
+    return normalizeFeedPreferences(saved, userId);
   },
 
   async getCategorySignals(userId) {

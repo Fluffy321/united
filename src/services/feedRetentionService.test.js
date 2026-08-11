@@ -16,6 +16,7 @@ const {
   createFeedUserPreference,
   filterFeedEngagementEvent,
   filterFeedUserPreference,
+  updateFeedUserPreference,
 } = await import('@/services/entityServices');
 
 const freshPost = (extra = {}) => ({
@@ -40,6 +41,10 @@ describe('feedRetentionService preferences', () => {
         user_id: 'user-1',
         engagement_level: 'balanced',
         interests: ['local', 'helping', 'events', 'jewish_times'],
+        interest_groups: [],
+        catch_up_windows: [],
+        preference_setup_version: 0,
+        preference_setup_completed_at: null,
       })
     );
   });
@@ -58,6 +63,40 @@ describe('feedRetentionService preferences', () => {
       interests: ['minyanim', 'helping'],
       engagement_level: 'balanced',
     });
+  });
+
+  it('sanitizes and returns the complete personalized preference profile', async () => {
+    filterFeedUserPreference.mockResolvedValue([{ id: 'preference-1', user_id: 'user-1' }]);
+    updateFeedUserPreference.mockImplementation(async (_id, payload) => ({
+      id: 'preference-1',
+      user_id: 'user-1',
+      ...payload,
+    }));
+
+    const saved = await feedRetentionService.savePreferences('user-1', {
+      interest_groups: ['food', 'unknown'],
+      category_preferences: { local: 'less', helping: 'hide', events: 'invalid' },
+      catch_up_windows: ['morning', 'important_only', 'later'],
+      preference_setup_version: -4,
+      preference_setup_completed_at: '2026-08-11T16:00:00.000Z',
+    });
+
+    expect(updateFeedUserPreference).toHaveBeenCalledWith('preference-1', expect.objectContaining({
+      interest_groups: ['food'],
+      category_preferences: expect.objectContaining({
+        local: 'less',
+        helping: 'hide',
+        events: 'normal',
+      }),
+      catch_up_windows: ['important_only'],
+      preference_setup_version: 0,
+    }));
+    expect(saved).toEqual(expect.objectContaining({
+      user_id: 'user-1',
+      interest_groups: ['food'],
+      catch_up_windows: ['important_only'],
+      preference_setup_version: 0,
+    }));
   });
 
   it('reads only recent allowed category-learning events for the signed-in user', async () => {
