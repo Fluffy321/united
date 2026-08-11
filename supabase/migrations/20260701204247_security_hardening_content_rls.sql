@@ -29,7 +29,12 @@ create policy "Posts readable in accessible communities"
   to authenticated
   using (
     community_id is null
-    or public.can_access_community(community_id)
+    or exists (
+      select 1
+      from public.communities c
+      where c.id::text = posts.community_id
+        and public.can_access_community(c.id)
+    )
   );
 
 -- Live-only duplicates that weakened or duplicated file-tracked policies:
