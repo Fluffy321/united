@@ -67,7 +67,7 @@ create policy "Owners update invite links"
 create policy "Members increment invite link uses_count"
   on invite_links for update
   to authenticated
-  using (status = 'active')
+  using (is_active = true)
   with check (
     -- only uses_count may change; all other columns stay the same
     community_id    = community_id
