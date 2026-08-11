@@ -1,6 +1,6 @@
 # JUnited Personalized Feed Setup
 
-**Status:** Approved visual direction; pending written-spec review
+**Status:** Approved for implementation
 **Date:** 2026-08-11
 **Scope:** Three-step first-run preference setup, editable detailed preferences, deterministic learning, and time-aware Home ordering
 
@@ -232,4 +232,3 @@ Browser acceptance at iPhone size must verify the complete Save path, Skip path,
 - Organization-specific sub-feeds or institution administration.
 - Scheduled digest infrastructure.
 - Replacing JUnited's existing community/network selection.
-
