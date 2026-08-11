@@ -1,5 +1,12 @@
 import { BRIEF_CATEGORIES } from './briefCategories';
 import { aggregateCategorySignals, classifyBriefCategory } from './briefRanking';
+import {
+  getActiveCatchUpWindow,
+  getCategoryPreference,
+  getCategoryPreferenceAdjustment,
+  matchesInterestGroup,
+  normalizePreferenceProfile,
+} from './feedPreferenceModel';
 
 const CLOSED_STATES = new Set(['closed', 'filled', 'completed', 'cancelled', 'canceled', 'resolved']);
 const ENGAGEMENT_LIMITS = { quiet: 1, balanced: 2, active: 3, all_in: 3 };
@@ -32,6 +39,15 @@ function isEmergency(item) {
   return item.post_subtype === 'alert'
     || item.category === 'safety'
     || item.urgency === 'emergency';
+}
+
+function isRequiredNotice(item) {
+  return Boolean(
+    item.moderation_notice
+    || item.is_moderation_notice
+    || item.legal_notice
+    || item.is_legally_required,
+  );
 }
 
 function isOpenHelp(item, categoryId) {
@@ -79,6 +95,9 @@ function scoreHomeItem(item, context) {
     primaryNetwork,
     currentUserId,
     now,
+    preferences,
+    hasExplicitPreferences,
+    activeCatchUpWindow,
   } = context;
   const categoryId = classifyBriefCategory(item);
   const reasons = [];
@@ -91,8 +110,19 @@ function scoreHomeItem(item, context) {
   const verified = Boolean(item.verified || item.provenance === 'editor');
   let score = 0;
 
-  if (selectedCategoryIds.includes(categoryId)) score += 30;
-  score += Math.min(20, Math.max(-20, (Number(categorySignals[categoryId]) || 0) * 4));
+  if (!hasExplicitPreferences && selectedCategoryIds.includes(categoryId)) score += 30;
+  score += getCategoryPreferenceAdjustment(getCategoryPreference(preferences, categoryId));
+  score += Math.min(10, Math.max(-10, Number(categorySignals[categoryId]) || 0)) * 4;
+
+  const matchedGroup = preferences.interest_groups.find((groupId) => matchesInterestGroup({
+    ...item,
+    category_id: categoryId,
+  }, groupId));
+  if (matchedGroup) {
+    score += 15;
+    const groupLabel = matchedGroup === 'people' ? 'People and groups' : BRIEF_CATEGORIES.find(({ id }) => id === categoryId)?.label;
+    addReason(reasons, `follows_${matchedGroup}`, `Because you follow ${groupLabel}`, 45);
+  }
 
   if (hoursRemaining <= 6) {
     score += 100;
@@ -127,12 +157,30 @@ function scoreHomeItem(item, context) {
   if (ageHours <= 24) score += 15;
   else if (ageHours <= 72) score += 8;
 
+  let catchUpReason = null;
+  if (activeCatchUpWindow === 'morning'
+    && ageHours <= 18
+    && ['local', 'events', 'jewish_times'].includes(categoryId)) {
+    catchUpReason = { id: 'morning_catch_up', label: 'For this morning' };
+  } else if (activeCatchUpWindow === 'daytime'
+    && (openHelp || (Number.isFinite(hoursRemaining) && hoursRemaining <= 12))) {
+    catchUpReason = { id: 'daytime_catch_up', label: 'For today' };
+  } else if (activeCatchUpWindow === 'evening'
+    && ['events', 'sports_social', 'shabbos_plans'].includes(categoryId)
+    && (!Number.isFinite(hoursRemaining) || hoursRemaining <= 36)) {
+    catchUpReason = { id: 'evening_catch_up', label: 'For this evening' };
+  }
+  if (catchUpReason) {
+    score += 20;
+    addReason(reasons, catchUpReason.id, catchUpReason.label, 55);
+  }
+
   if (emergency) {
     score += EMERGENCY_OVERRIDE_SCORE;
     addReason(reasons, 'emergency', 'Emergency alert', 110);
   }
 
-  const actionable = emergency || openHelp || Number.isFinite(hoursRemaining) || owned || unreadReplies > 0;
+  const actionable = emergency || openHelp || Number.isFinite(hoursRemaining) || owned || unreadReplies > 0 || Boolean(catchUpReason);
   return {
     ...item,
     category_id: categoryId,
@@ -187,16 +235,25 @@ export function buildHomePriorityModel({
   primaryNetwork = null,
   currentUserId = null,
   engagementLevel = 'balanced',
+  preferences = null,
   blockedUserIds = [],
   now = new Date(),
   limit = ENGAGEMENT_LIMITS[engagementLevel] || 2,
 } = {}) {
+  const normalizedPreferences = normalizePreferenceProfile(preferences);
+  const activeCatchUpWindow = getActiveCatchUpWindow(normalizedPreferences.catch_up_windows, now);
+  const hasExplicitPreferences = Boolean(preferences);
   const blocked = new Set(blockedUserIds);
   const seen = new Set();
   const eligible = items.filter((item) => {
     if (seen.has(item?.id)) return false;
     if (item?.id) seen.add(item.id);
-    return isEligible(item, { blockedUserIds: blocked, now });
+    if (!isEligible(item, { blockedUserIds: blocked, now })) return false;
+
+    const categoryId = classifyBriefCategory(item);
+    const hidden = getCategoryPreference(normalizedPreferences, categoryId) === 'hide';
+    const owned = Boolean(currentUserId && item.user_id === currentUserId);
+    return !hidden || isEmergency(item) || owned || isRequiredNotice(item);
   });
 
   const ranked = eligible
@@ -206,6 +263,9 @@ export function buildHomePriorityModel({
       primaryNetwork,
       currentUserId,
       now,
+      preferences: normalizedPreferences,
+      hasExplicitPreferences,
+      activeCatchUpWindow,
     }))
     .sort(compareHomeItems);
   const explained = ranked.filter((item) => item.priority_reasons.length > 0);

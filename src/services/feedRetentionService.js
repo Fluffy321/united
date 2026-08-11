@@ -8,7 +8,12 @@ import {
   updateFeedUserPreference,
 } from '@/services/entityServices';
 import { BRIEF_CATEGORY_IDS } from '@/lib/feed/briefCategories';
-import { normalizePreferenceProfile } from '@/lib/feed/feedPreferenceModel';
+import {
+  getCategoryPreference,
+  getCategoryPreferenceAdjustment,
+  normalizePreferenceProfile,
+} from '@/lib/feed/feedPreferenceModel';
+import { classifyBriefCategory } from '@/lib/feed/briefRanking';
 
 const PROMPT_LIBRARY = [
   {
@@ -201,6 +206,7 @@ export const feedRetentionService = {
       primaryNetwork,
       userInterests = [],
       interestSignals = { types: {}, subtypes: {}, keywords: [] },
+      preferences = null,
     } = context;
 
     const likes = post.likes_count || 0;
@@ -211,6 +217,10 @@ export const feedRetentionService = {
     const ageHours = Math.max(0, (Date.now() - created) / 3600000);
     const timeDecay = Math.max(0.2, 1 - ageHours / 72);
     let score = (likes + comments * 4 + 4) * timeDecay;
+    if (preferences) {
+      const categoryId = classifyBriefCategory(post);
+      score += getCategoryPreferenceAdjustment(getCategoryPreference(preferences, categoryId));
+    }
 
     if (post.community_id && joinedCommunityIds.has(post.community_id)) score = score * 3 + 60;
     if (comments >= 5) score += 18;

@@ -183,4 +183,17 @@ describe('feedRetentionService.scorePost', () => {
     expect(Number.isNaN(feedRetentionService.scorePost({}, {}))).toBe(false);
     expect(Number.isNaN(feedRetentionService.scorePost({ created_date: 'garbage' }, {}))).toBe(false);
   });
+
+  it('applies the same explicit category preference adjustment', () => {
+    const more = feedRetentionService.scorePost(
+      freshPost({ category_id: 'local' }),
+      { preferences: { category_preferences: { local: 'more' } } }
+    );
+    const less = feedRetentionService.scorePost(
+      freshPost({ category_id: 'local' }),
+      { preferences: { category_preferences: { local: 'less' } } }
+    );
+
+    expect(more - less).toBe(50);
+  });
 });
