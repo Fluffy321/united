@@ -342,8 +342,8 @@ drop policy if exists "Authors can update their own posts" on public.posts;
 create policy "Authors can update their own posts"
   on public.posts
   for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using (auth.uid()::text = user_id)
+  with check (auth.uid()::text = user_id);
 
 drop policy if exists "Admins can update any post" on public.posts;
 create policy "Admins can update any post"
@@ -357,7 +357,7 @@ drop policy if exists "Authors can delete their own posts" on public.posts;
 create policy "Authors can delete their own posts"
   on public.posts
   for delete
-  using (auth.uid() = user_id);
+  using (auth.uid()::text = user_id);
 
 drop policy if exists "Admins can delete any post" on public.posts;
 create policy "Admins can delete any post"
