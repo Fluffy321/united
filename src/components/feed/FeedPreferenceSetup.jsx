@@ -8,15 +8,15 @@ import {
 } from '@/lib/feed/feedPreferenceModel';
 
 const INTEREST_DESCRIPTIONS = {
-  local: 'News, weather, roads, and schools',
-  plans: 'Things happening nearby',
-  food: 'Restaurants and local openings',
-  help: 'Needs, offers, rides, and chesed',
-  learning: 'Shiurim, guides, and Jewish ideas',
-  minyan: 'Prayer times and zmanim',
-  people: 'Leaders, groups, and community',
-  market: 'Giveaways, work, and referrals',
-  family: 'Parent and school information',
+  local: 'News, weather, traffic, closings, and openings',
+  plans: 'Events, sports, meetups, and Shabbos plans',
+  food: 'New restaurants, kosher updates, and recommendations',
+  help: 'Rides, volunteers, quick needs, and chesed',
+  learning: 'Short Torah, useful guides, and shiurim',
+  minyan: 'Nearby minyanim, zmanim, and candle lighting',
+  people: 'Local leaders, groups, and people making things happen',
+  market: 'Local work, services, listings, and free stuff',
+  family: 'School updates, carpools, and useful parent info',
 };
 
 const AMOUNT_OPTIONS = [

@@ -49,19 +49,19 @@ Existing members receive the setup once after the feature ships. New members rec
 
 ### Step 1: Interests
 
-The member can select any of nine plain-language interest groups. `Local updates` and `Events and plans` begin selected so the screen is useful without requiring taps.
+The member can select any of nine benefit-led interest groups. `Around you` and `Things to do` begin selected so the screen is useful without requiring taps.
 
 | Setup label | What it means | Feed category mapping |
 | --- | --- | --- |
-| Local updates | News, weather, roads, schools, and verified local changes | `local` |
-| Events and plans | Public events, social plans, sports, and Shabbos opportunities | `events`, `sports_social`, `shabbos_plans` |
-| Food and openings | Kosher food, restaurants, stores, and business openings | `kosher_food` |
-| Help and chesed | Needs, offers, rides, and volunteering | `helping` |
-| Learning | Shiurim, learning opportunities, and community guides | `torah_learning` |
+| Around you | News, weather, roads, schools, and verified local changes | `local` |
+| Things to do | Public events, social plans, sports, and Shabbos opportunities | `events`, `sports_social`, `shabbos_plans` |
+| Food and new spots | Kosher food, restaurants, stores, and business openings | `kosher_food` |
+| Help out or get help | Needs, offers, rides, and volunteering | `helping` |
+| Jewish ideas | Shiurim, learning opportunities, and useful Jewish guides | `torah_learning` |
 | Minyanim and times | Minyanim, zmanim, and timely Jewish reminders | `minyanim`, `jewish_times` |
-| People and groups | Trusted leaders, organizations, joined communities, and local groups | community-source relevance signal |
-| Marketplace and jobs | Listings, giveaways, jobs, services, and referrals | `marketplace`, `jobs_business` |
-| Family and schools | School information and parent-to-parent updates | `parents_schools` |
+| People to know | Trusted leaders, organizations, joined communities, and local groups | community-source relevance signal |
+| Deals, jobs and giveaways | Listings, giveaways, jobs, services, and referrals | `marketplace`, `jobs_business` |
+| School and family | School information and parent-to-parent updates | `parents_schools` |
 
 Selection means **prioritize**, not **only show**. Unselected topics remain available and begin at Normal. The setup never silently hides a topic.
 
@@ -154,7 +154,7 @@ New fields:
 
 `category_preferences` is a map from canonical category ID to `more`, `normal`, `less`, or `hide`. Service-layer sanitization removes unknown keys and invalid values before persistence.
 
-`interests` remains populated with the expanded canonical category IDs for backward compatibility with current ranking and Settings code. `interest_groups` preserves the member-facing selections and supports non-category signals such as People and groups.
+`interests` remains populated with the expanded canonical category IDs for backward compatibility with current ranking and Settings code. `interest_groups` preserves the member-facing selections and supports non-category signals such as People to know.
 
 The migration adds check constraints for supported catch-up values and nonnegative setup versions. Existing row-level security remains owner-only: a member can read, insert, and update only the preference row whose `user_id` matches `auth.uid()`. No service-role key or privileged browser mutation is introduced.
 
@@ -210,7 +210,7 @@ Each unit has one purpose and can be tested without rendering the full Feed page
 Automated coverage must prove:
 
 - Interest-group expansion produces the expected canonical categories.
-- Default selection is Local updates plus Events and plans.
+- Default selection is Around you plus Things to do.
 - Unselected groups remain Normal rather than hidden.
 - Amount mappings are correct and legacy `active` rows normalize safely.
 - Important only is mutually exclusive with fixed timing windows.

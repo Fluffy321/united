@@ -36,7 +36,7 @@ describe('FeedPreferenceSetupView', () => {
       },
     });
 
-    expect(html).toContain('Food and openings');
+    expect(html).toContain('Food and new spots');
     expect(html).toContain('Essentials only');
     expect(html).toContain('Daytime');
     expect(html).toContain('Save and open Home');
@@ -71,7 +71,7 @@ describe('FeedPreferenceSetupView', () => {
 
     expect(html).toContain('Could not save your preferences. Your choices are still here.');
     expect(html).toContain('Retry');
-    expect(html).toContain('Food and openings');
+    expect(html).toContain('Food and new spots');
   });
 
   it('disables repeat saving while pending', () => {

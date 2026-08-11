@@ -1,15 +1,15 @@
 import { BRIEF_CATEGORY_IDS, DEFAULT_BRIEF_CATEGORY_IDS } from './briefCategories';
 
 export const INTEREST_GROUPS = Object.freeze([
-  { id: 'local', label: 'Local updates', categoryIds: ['local'] },
-  { id: 'plans', label: 'Events and plans', categoryIds: ['events', 'sports_social', 'shabbos_plans'] },
-  { id: 'food', label: 'Food and openings', categoryIds: ['kosher_food'] },
-  { id: 'help', label: 'Help and chesed', categoryIds: ['helping'] },
-  { id: 'learning', label: 'Learning', categoryIds: ['torah_learning'] },
+  { id: 'local', label: 'Around you', categoryIds: ['local'] },
+  { id: 'plans', label: 'Things to do', categoryIds: ['events', 'sports_social', 'shabbos_plans'] },
+  { id: 'food', label: 'Food and new spots', categoryIds: ['kosher_food'] },
+  { id: 'help', label: 'Help out or get help', categoryIds: ['helping'] },
+  { id: 'learning', label: 'Jewish ideas', categoryIds: ['torah_learning'] },
   { id: 'minyan', label: 'Minyanim and times', categoryIds: ['minyanim', 'jewish_times'] },
-  { id: 'people', label: 'People and groups', categoryIds: [] },
-  { id: 'market', label: 'Marketplace and jobs', categoryIds: ['marketplace', 'jobs_business'] },
-  { id: 'family', label: 'Family and schools', categoryIds: ['parents_schools'] },
+  { id: 'people', label: 'People to know', categoryIds: [] },
+  { id: 'market', label: 'Deals, jobs and giveaways', categoryIds: ['marketplace', 'jobs_business'] },
+  { id: 'family', label: 'School and family', categoryIds: ['parents_schools'] },
 ]);
 
 export const CATEGORY_PREFERENCE_VALUES = Object.freeze(['more', 'normal', 'less', 'hide']);

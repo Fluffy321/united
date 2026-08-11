@@ -1,6 +1,7 @@
 import { BRIEF_CATEGORIES } from './briefCategories';
 import { aggregateCategorySignals, classifyBriefCategory } from './briefRanking';
 import {
+  INTEREST_GROUPS,
   getActiveCatchUpWindow,
   getCategoryPreference,
   getCategoryPreferenceAdjustment,
@@ -120,7 +121,8 @@ function scoreHomeItem(item, context) {
   }, groupId));
   if (matchedGroup) {
     score += 15;
-    const groupLabel = matchedGroup === 'people' ? 'People and groups' : BRIEF_CATEGORIES.find(({ id }) => id === categoryId)?.label;
+    const groupLabel = INTEREST_GROUPS.find(({ id }) => id === matchedGroup)?.label
+      || BRIEF_CATEGORIES.find(({ id }) => id === categoryId)?.label;
     addReason(reasons, `follows_${matchedGroup}`, `Because you follow ${groupLabel}`, 45);
   }
 
