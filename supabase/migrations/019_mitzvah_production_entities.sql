@@ -232,6 +232,8 @@ create index if not exists user_blocks_blocked_id_idx
   on public.user_blocks (blocked_id);
 create index if not exists user_blocks_blocker_blocked_idx
   on public.user_blocks (blocker_id, blocked_id);
+create index if not exists user_blocks_blocked_blocker_idx
+  on public.user_blocks (blocked_id, blocker_id);
 
 alter table public.user_blocks enable row level security;
 
