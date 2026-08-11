@@ -28,6 +28,7 @@ import LiveCategoryDeck from '@/components/feed/LiveCategoryDeck';
 import BriefCategoryLaunchpad from '@/components/feed/BriefCategoryLaunchpad';
 import BriefCategorySection from '@/components/feed/BriefCategorySection';
 import WidgetBoundary from '@/components/feed/WidgetBoundary';
+import FeedPreferenceSetup from '@/components/feed/FeedPreferenceSetup';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
 
 import { DEMO_POSTS } from '@/lib/feed/demoPosts';
@@ -105,7 +106,7 @@ export default function Feed() {
 
   const { posts, fetchNextPage, hasNextPage, isLoading, isError, refetch } = useFeedData();
   const { isRefreshing, pullDistance } = usePullToRefresh(refetch);
-  const { data: briefPreferences = null } = useQuery({
+  const { data: briefPreferences = null, isFetched: briefPreferencesFetched } = useQuery({
     queryKey: feedPreferenceKeys.user(currentUser?.id),
     queryFn: () => feedRetentionService.getPreferences(currentUser.id),
     enabled: Boolean(currentUser?.id && appParams.hasBackendConfig),
@@ -271,6 +272,16 @@ export default function Feed() {
     }
   }, [appParams]);
 
+  const handlePreferenceSetupSave = useCallback(async (patch) => {
+    const saved = await feedRetentionService.savePreferences(currentUser.id, patch);
+    queryClient.setQueryData(feedPreferenceKeys.user(currentUser.id), saved);
+    await queryClient.invalidateQueries({ queryKey: feedPreferenceKeys.signals(currentUser.id) });
+  }, [currentUser?.id, queryClient]);
+
+  const handlePreferenceSetupSkip = useCallback(async (patch) => {
+    await handlePreferenceSetupSave(patch);
+  }, [handlePreferenceSetupSave]);
+
   const feedCanRender = !isLoading || loadTimedOut;
   const isPreviewContent = canShowPreviewContent && feedCanRender && posts.length === 0;
   const feedSourcePosts = isPreviewContent ? DEMO_POSTS : posts;
@@ -298,15 +309,34 @@ export default function Feed() {
 
   const joinedCommunityIds = useMemo(() => new Set(communityGroups.map(c => c.id)), [communityGroups]);
 
+  const isPreferenceOverridePost = (post) => (
+    post.post_subtype === 'alert'
+    || post.category === 'safety'
+    || post.urgency === 'emergency'
+    || post.user_id === currentUser?.id
+    || post.moderation_notice
+    || post.is_moderation_notice
+    || post.legal_notice
+    || post.is_legally_required
+  );
+
+  const preferenceVisiblePosts = visiblePosts.filter((post) => {
+    const categoryId = classifyBriefCategory(post);
+    const hidden = briefPreferences?.category_preferences?.[categoryId] === 'hide';
+    return !hidden || isPreferenceOverridePost(post);
+  });
+
   const engagementScore = (p) => feedRetentionService.scorePost(p, {
     joinedCommunityIds,
     primaryNetwork,
     userInterests: currentUser?.interests || [],
     interestSignals,
+    currentUserId: currentUser?.id,
+    preferences: briefPreferences,
   });
 
   const feedPosts = (() => {
-    const sorted = [...visiblePosts].sort((a, b) => {
+    const sorted = [...preferenceVisiblePosts].sort((a, b) => {
       const liveDelta = getPostLivePriority(b) - getPostLivePriority(a);
       if (liveDelta !== 0) return liveDelta;
       return engagementScore(b) - engagementScore(a);
@@ -344,6 +374,7 @@ export default function Feed() {
       selectedCategoryIds: briefPreferences?.interests || DEFAULT_BRIEF_CATEGORY_IDS,
       events: briefSignalEvents,
       primaryNetwork,
+      limit: curatedItems.length + feedPosts.length,
     });
   }, [briefPreferences?.interests, briefSignalEvents, curatedItems, feedPosts, primaryNetwork]);
 
@@ -355,7 +386,8 @@ export default function Feed() {
     currentUserId: currentUser?.id,
     engagementLevel: briefPreferences?.engagement_level || 'balanced',
     blockedUserIds: blockedIds,
-  }), [blockedIds, briefPreferences?.engagement_level, briefPreferences?.interests, briefSignalEvents, currentUser?.id, primaryNetwork, rankedBriefItems]);
+    preferences: briefPreferences,
+  }), [blockedIds, briefPreferences, briefSignalEvents, currentUser?.id, primaryNetwork, rankedBriefItems]);
 
   const { isBriefOpen, categoryId } = readBriefRouteState(searchParams);
   const selectedBriefCategory = getBriefCategory(categoryId);
@@ -463,6 +495,25 @@ export default function Feed() {
     }
     handleCardOpen(item);
   }, [handleCardOpen, handleOpenBriefCategory]);
+
+  const shouldShowPreferenceSetup = Boolean(
+    currentUser?.id
+    && appParams.hasBackendConfig
+    && briefPreferencesFetched
+    && briefPreferences
+    && !briefPreferences.preference_setup_completed_at,
+  );
+
+  if (shouldShowPreferenceSetup) {
+    return (
+      <FeedPreferenceSetup
+        initialPreferences={briefPreferences}
+        networkLabel={primaryNetwork.shortLabel || primaryNetwork.cityPreset || 'your area'}
+        onSave={handlePreferenceSetupSave}
+        onSkip={handlePreferenceSetupSkip}
+      />
+    );
+  }
 
   return (
     <div className="app-page relative">

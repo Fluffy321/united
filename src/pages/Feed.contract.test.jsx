@@ -34,6 +34,15 @@ describe('Mobile headquarters Feed contract', () => {
     expect(source).not.toContain("eventType: 'engaged'");
   });
 
+  it('shows the approved setup once and wires the full profile into Home', () => {
+    expect(source).toContain("import FeedPreferenceSetup from '@/components/feed/FeedPreferenceSetup'");
+    expect(source).toContain('preference_setup_completed_at');
+    expect(source).toContain('feedRetentionService.savePreferences');
+    expect(source).toContain('preferences: briefPreferences');
+    expect(source).toContain('briefPreferencesFetched');
+    expect(source).toContain('<FeedPreferenceSetup');
+  });
+
   it('lets members privately reduce unwanted categories', () => {
     expect(source).toContain('handleShowLess');
     expect(source).toContain("eventType: 'show_less'");

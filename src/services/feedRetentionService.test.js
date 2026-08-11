@@ -196,4 +196,24 @@ describe('feedRetentionService.scorePost', () => {
 
     expect(more - less).toBe(50);
   });
+
+  it('does not let Hide remove an emergency or the member\'s own activity', () => {
+    const preferences = { category_preferences: { local: 'hide' } };
+    const ordinary = feedRetentionService.scorePost(
+      freshPost({ category_id: 'local' }),
+      { preferences, currentUserId: 'me' }
+    );
+    const mine = feedRetentionService.scorePost(
+      freshPost({ category_id: 'local', user_id: 'me' }),
+      { preferences, currentUserId: 'me' }
+    );
+    const emergency = feedRetentionService.scorePost(
+      freshPost({ category_id: 'local', urgency: 'emergency' }),
+      { preferences, currentUserId: 'me' }
+    );
+
+    expect(ordinary).toBe(Number.NEGATIVE_INFINITY);
+    expect(Number.isFinite(mine)).toBe(true);
+    expect(Number.isFinite(emergency)).toBe(true);
+  });
 });

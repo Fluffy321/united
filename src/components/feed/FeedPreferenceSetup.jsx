@@ -178,7 +178,7 @@ function ReviewStep({ draft }) {
         Check it once. Every choice stays editable in Settings.
       </StepIntro>
       <section className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)]">
-        <div className="bg-slate-950 px-5 py-5 text-white">
+        <div className="bg-[#0F1C2E] px-5 py-5 text-white">
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-300">Your feed</p>
           <h2 className="mt-2 text-[21px] font-black leading-tight tracking-[-0.025em]">Useful local information, in your order.</h2>
         </div>
@@ -237,7 +237,7 @@ function SetupFooter({ step, status, onAction }) {
           type="button"
           onClick={() => onAction({ type: finalStep ? (status === 'error' ? 'retry' : 'save') : 'next' })}
           disabled={pending}
-          className={`min-h-12 flex-1 rounded-xl px-4 text-[13px] font-black text-white outline-none transition focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${finalStep ? 'bg-emerald-700 active:bg-emerald-800' : 'bg-slate-950 active:bg-slate-800'}`}
+          className={`min-h-12 flex-1 rounded-xl px-4 text-[13px] font-black text-white outline-none transition focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${finalStep ? 'bg-emerald-700 active:bg-emerald-800' : 'bg-blue-600 active:bg-blue-700'}`}
         >
           {pending ? 'Saving…' : finalStep ? (status === 'error' ? 'Retry' : 'Save and open Home') : step === 2 ? 'Review' : 'Continue'}
         </button>

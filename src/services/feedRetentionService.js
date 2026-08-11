@@ -207,6 +207,7 @@ export const feedRetentionService = {
       userInterests = [],
       interestSignals = { types: {}, subtypes: {}, keywords: [] },
       preferences = null,
+      currentUserId = null,
     } = context;
 
     const likes = post.likes_count || 0;
@@ -219,7 +220,16 @@ export const feedRetentionService = {
     let score = (likes + comments * 4 + 4) * timeDecay;
     if (preferences) {
       const categoryId = classifyBriefCategory(post);
-      score += getCategoryPreferenceAdjustment(getCategoryPreference(preferences, categoryId));
+      const categoryAdjustment = getCategoryPreferenceAdjustment(getCategoryPreference(preferences, categoryId));
+      const cannotHide = post.post_subtype === 'alert'
+        || post.category === 'safety'
+        || post.urgency === 'emergency'
+        || post.user_id === currentUserId
+        || post.moderation_notice
+        || post.is_moderation_notice
+        || post.legal_notice
+        || post.is_legally_required;
+      score += categoryAdjustment === Number.NEGATIVE_INFINITY && cannotHide ? 0 : categoryAdjustment;
     }
 
     if (post.community_id && joinedCommunityIds.has(post.community_id)) score = score * 3 + 60;
