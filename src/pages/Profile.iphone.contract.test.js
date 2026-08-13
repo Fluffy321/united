@@ -9,17 +9,19 @@ const posts = readFileSync(new URL('../components/profile/RecentPostsSection.jsx
 const progressUrl = new URL('../components/profile/ProfileProgressSection.jsx', import.meta.url);
 
 describe('Profile iPhone hierarchy', () => {
-  it('puts identity and activity before private progress', () => {
+  it('keeps owner Me separate from the other-member activity profile', () => {
+    const ownerDashboard = profile.indexOf('data-testid="me-dashboard"');
+    const progress = profile.indexOf('data-testid="profile-progress"');
     const identity = profile.indexOf('data-testid="profile-identity"');
     const recentPosts = profile.indexOf('data-testid="profile-recent-posts"');
     const communities = profile.indexOf('data-testid="profile-communities"');
-    const progress = profile.indexOf('data-testid="profile-progress"');
 
+    expect(ownerDashboard).toBeGreaterThan(-1);
+    expect(progress).toBeGreaterThan(ownerDashboard);
     expect(identity).toBeGreaterThan(-1);
     expect(recentPosts).toBeGreaterThan(identity);
     expect(communities).toBeGreaterThan(recentPosts);
-    expect(progress).toBeGreaterThan(communities);
-    expect(profile).toContain('isOwnProfile && (');
+    expect(profile).toContain('isOwnProfile ? (');
   });
 
   it('keeps the existing relationship actions connected', () => {
