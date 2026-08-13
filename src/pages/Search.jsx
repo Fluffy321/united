@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Search, X, Clock, Filter, ChevronLeft, Users, Calendar, FileText, User, Loader2, Store, ShoppingBag, HeartHandshake, MapPin } from 'lucide-react';
 import { dataService, storageService } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
@@ -115,12 +115,17 @@ function SimpleResult({ item, icon: Icon, title, subtitle, onClick }) {
 
 export default function SearchPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const inputRef = useRef(null);
+  const requestedPostType = searchParams.get('type');
+  const initialPostType = POST_TYPES.some(({ value }) => value === requestedPostType)
+    ? requestedPostType
+    : '';
 
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({ post_type: '', community_id: '', date_from: '', date_to: '' });
+  const [showFilters, setShowFilters] = useState(Boolean(initialPostType));
+  const [filters, setFilters] = useState({ post_type: initialPostType, community_id: '', date_from: '', date_to: '' });
   const [recentSearches, setRecentSearches] = useState(() => storageService.getJson('junited_recent_searches', []));
   const { user } = useAuth();
   useEffect(() => { inputRef.current?.focus(); }, []);
