@@ -38,4 +38,9 @@ describe('Communities iPhone hierarchy contract', () => {
   it('does not promise three recommendations when fewer than three exist', () => {
     expect(source).toContain("recommendedRooms.length === 3 ? 'Three useful places to start.' : 'Useful places to start.'");
   });
+
+  it('clears Discover-only category filters when returning to joined rooms', () => {
+    expect(source).toContain("if (tabId === 'mine') setActiveCategory('all')");
+    expect(source).toContain('onClick={() => changeCommunityMode(tab.id)}');
+  });
 });

@@ -29,21 +29,21 @@
 - Consumes: `activeCategory: string`, `onSelectCategory(key: string): void`.
 - Produces: `DiscoverCategoryCards`, a horizontal compact category filter including an `all` option.
 
-- [ ] **Step 1: Write a failing render test**
+- [x] **Step 1: Write a failing render test**
 
 Render the component to static markup and assert it contains `Explore by category`, all ten category labels, `All`, `aria-pressed`, `min-h-11`, and does not contain the old copy `Join a room with a reason` or `min-w-[178px]`.
 
-- [ ] **Step 2: Run the focused test and verify RED**
+- [x] **Step 2: Run the focused test and verify RED**
 
 Run: `npx vitest run src/components/communities/DiscoverCategoriesScreen.test.jsx`
 
 Expected: FAIL because the current component is a large card deck.
 
-- [ ] **Step 3: Implement the compact rail**
+- [x] **Step 3: Implement the compact rail**
 
 Render one horizontally scrollable row of pill buttons. Each pill uses the existing category emoji and label, toggles to `all`, exposes `aria-pressed`, and keeps `min-h-11` touch height.
 
-- [ ] **Step 4: Run the focused test and verify GREEN**
+- [x] **Step 4: Run the focused test and verify GREEN**
 
 Run: `npx vitest run src/components/communities/DiscoverCategoriesScreen.test.jsx`
 
@@ -59,25 +59,25 @@ Expected: PASS.
 - Consumes: existing `FiveTownsRoomsHub`, `DiscoverTabContent`, query state, membership sets, navigation and mutation callbacks.
 - Produces: the approved page hierarchy and real three-community recommendation path.
 
-- [ ] **Step 1: Write a failing source contract**
+- [x] **Step 1: Write a failing source contract**
 
 Assert that the source order is `community-mode-switch` before `community-search`, the main result before `community-jewish-tools`, and that `FiveTownsRoomsHub` uses `rooms.slice(0, 3)`, the heading `Recommended for you`, and a `categoryRail` between recommendations and the remaining catalog. Assert the old top-level featured card imports are gone.
 
-- [ ] **Step 2: Run the contract and verify RED**
+- [x] **Step 2: Run the contract and verify RED**
 
 Run: `npx vitest run src/pages/Communities.iphone.contract.test.js`
 
 Expected: FAIL on hierarchy and old featured imports.
 
-- [ ] **Step 3: Reorder the real page**
+- [x] **Step 3: Reorder the real page**
 
 Move the My/Discover switch directly below `DestinationHeader`, place search second, render loading or tab content next, and put Jewish Content last. Delete the duplicate top-level featured hero/secondary block while preserving the same communities in the catalog.
 
-- [ ] **Step 4: Simplify Discover hierarchy**
+- [x] **Step 4: Simplify Discover hierarchy**
 
 Change `FiveTownsRoomsHub` to show `Recommended for you`, exactly the first three current rooms, then the category rail, then `More communities`. Pass the compact category rail through `DiscoverTabContent`; when a filter is active, keep the rail above filtered results.
 
-- [ ] **Step 5: Run focused tests**
+- [x] **Step 5: Run focused tests**
 
 Run: `npx vitest run src/pages/Communities.iphone.contract.test.js src/components/communities/DiscoverCategoriesScreen.test.jsx src/components/communities/CommunitiesLoadingRecovery.test.jsx`
 
@@ -93,7 +93,7 @@ Expected: PASS.
 - Consumes: completed UI and tests.
 - Produces: accurate roadmap progress, GitHub PR, Vercel deployment, and live iPhone evidence.
 
-- [ ] **Step 1: Update the existing redesign roadmap item**
+- [x] **Step 1: Update the existing redesign roadmap item**
 
 Add a dated Communities iPhone progress note to `screen-by-screen-world-class-redesign`; do not create a duplicate item.
 

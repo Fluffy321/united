@@ -988,6 +988,11 @@ export default function Communities() {
     refetchCommunities();
   }, [refetchCommunities]);
 
+  const changeCommunityMode = useCallback((tabId) => {
+    if (tabId === 'mine') setActiveCategory('all');
+    setActiveTab(tabId);
+  }, []);
+
   // Persist fresh server data to the localStorage offline cache.
   useEffect(() => {
     if (communitiesIsPlaceholder) return;
@@ -1219,7 +1224,7 @@ export default function Communities() {
               key={tab.id}
               type="button"
               aria-pressed={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => changeCommunityMode(tab.id)}
               className={`min-h-11 flex-1 rounded-[14px] px-3 text-[13px] font-black transition-all active:scale-[0.98] ${
                 activeTab === tab.id
                   ? 'bg-blue-600 text-white shadow-sm'
