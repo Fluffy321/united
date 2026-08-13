@@ -376,7 +376,7 @@ export default function Profile() {
 
         <div className="space-y-3 pb-4">
           <div id="recent-posts-section" data-testid="profile-recent-posts" className="mx-3 motion-soft-in">
-            <RecentPostsSection posts={unifiedPosts} currentUser={currentUser} profileUser={profileUser} isOwnProfile={isOwnProfile} />
+            <RecentPostsSection posts={unifiedPosts} isOwnProfile={isOwnProfile} />
           </div>
 
           <div id="communities-section" data-testid="profile-communities" className="mx-3 motion-soft-in">

@@ -3,7 +3,7 @@ import { MessageCircle, Heart } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
-export default function RecentPostsSection({ posts, currentUser, profileUser, isOwnProfile }) {
+export default function RecentPostsSection({ posts, isOwnProfile }) {
   const preview = (posts || []).slice(0, 3);
   const navigate = useNavigate();
 
