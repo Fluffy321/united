@@ -1546,7 +1546,7 @@ export default function MapPage() {
   const { user: currentUser } = useAuth();
   const [searchParams] = useSearchParams();
   const hasMapDeepLink = Boolean(searchParams.get('category') || searchParams.get('requestId') || searchParams.get('place'));
-  const [activeView, setActiveView] = useState('community');
+  const [activeView, setActiveView] = useState('businesses');
   const [userLocation, setUserLocation] = useState(null);
   const [locationStatus, setLocationStatus] = useState('idle');
 
