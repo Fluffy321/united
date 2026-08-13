@@ -594,7 +594,9 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, newActivityIds = EMP
       {recommendedRooms.length > 0 && <section className="space-y-3">
         <div>
           <h2 className="text-[18px] font-black tracking-tight text-slate-950">Recommended for you</h2>
-          <p className="text-[12px] font-semibold text-slate-500">Three useful places to start.</p>
+          <p className="text-[12px] font-semibold text-slate-500">
+            {recommendedRooms.length === 3 ? 'Three useful places to start.' : 'Useful places to start.'}
+          </p>
         </div>
         <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
           {recommendedRooms.map((room, index) => (
@@ -1431,7 +1433,7 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
     return (b.follower_count || 0) - (a.follower_count || 0);
   });
 
-  const noResults = sortedCommunities.length === 0 && groups.length === 0;
+  const noResults = hasFilter && sortedCommunities.length === 0 && groups.length === 0;
   const categoryRail = (
     <DiscoverCategoryCards
       activeCategory={activeCategory}

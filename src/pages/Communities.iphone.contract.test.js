@@ -30,4 +30,12 @@ describe('Communities iPhone hierarchy contract', () => {
     expect(source).not.toContain('mainFeatured');
     expect(source).not.toContain('secondaryFeatured');
   });
+
+  it('only calls filtered Discover empty when a filter is actually active', () => {
+    expect(source).toContain('const noResults = hasFilter && sortedCommunities.length === 0 && groups.length === 0');
+  });
+
+  it('does not promise three recommendations when fewer than three exist', () => {
+    expect(source).toContain("recommendedRooms.length === 3 ? 'Three useful places to start.' : 'Useful places to start.'");
+  });
 });
