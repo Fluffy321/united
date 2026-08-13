@@ -50,4 +50,11 @@ describe('Map iPhone Directory contract', () => {
     expect(businessSource).toContain('data-testid="directory-view-mode"');
     expect(source).toContain('title="Directory"');
   });
+
+  it('uses the shared JUnited filter and empty-state styles', () => {
+    expect(businessSource).toContain("`app-chip motion-press min-h-11 shrink-0 ${isActive ? 'app-chip-active' : ''}`");
+    expect(businessSource).toContain('className="app-empty-state"');
+    expect(businessSource).toContain('className="app-empty-state-icon"');
+    expect(businessSource).not.toContain('cat.chipActive');
+  });
 });

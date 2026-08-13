@@ -1185,7 +1185,7 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => setCategory(cat.key)}
-                className={`motion-press flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3 text-center transition ${isActive ? `${cat.chipActive} border-transparent` : cat.chipInactive}`}
+                className={`app-chip motion-press min-h-11 shrink-0 ${isActive ? 'app-chip-active' : ''}`}
               >
                 <CatIcon className={`h-4 w-4 ${isActive ? 'text-current opacity-90' : cat.iconColor}`} />
                 <span className="text-[11px] font-black leading-tight">{cat.shortLabel}</span>
@@ -1222,19 +1222,19 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
             <BusinessMap businesses={mapBusinesses} userLocation={userLocation} />
           </Suspense>
         ) : businesses.length === 0 ? (
-          <div className="rounded-[26px] border border-dashed border-slate-200 bg-white p-6 text-center">
-            <Store className="mx-auto h-10 w-10 text-slate-300" />
-            <p className="mt-3 text-base font-black text-slate-900">The directory is getting started</p>
-            <p className="mx-auto mt-1 max-w-sm text-sm font-semibold leading-6 text-slate-500">
+          <div className="app-empty-state">
+            <div className="app-empty-state-icon"><Store className="h-6 w-6" /></div>
+            <p className="app-empty-state-title">The directory is getting started</p>
+            <p className="app-empty-state-body">
               Know a useful local business? Add it for review so neighbors can find it here.
             </p>
             <button type="button" onClick={() => setShowSubmit(true)} className="motion-press mt-4 min-h-11 rounded-full bg-blue-600 px-5 text-sm font-black text-white">List a Business</button>
           </div>
         ) : filteredBusinesses.length === 0 ? (
-          <div className="rounded-[26px] border border-dashed border-slate-200 bg-white p-6 text-center">
-            <Search className="mx-auto h-10 w-10 text-slate-300" />
-            <p className="mt-3 text-base font-black text-slate-900">No matches for these filters</p>
-            <p className="mx-auto mt-1 max-w-sm text-sm font-semibold leading-6 text-slate-500">Try everything again or search for something different.</p>
+          <div className="app-empty-state">
+            <div className="app-empty-state-icon"><Search className="h-6 w-6" /></div>
+            <p className="app-empty-state-title">No matches for these filters</p>
+            <p className="app-empty-state-body">Try everything again or search for something different.</p>
             <button type="button" onClick={clearBusinessFilters} className="motion-press mt-4 min-h-11 rounded-full bg-blue-600 px-5 text-sm font-black text-white">Clear filters</button>
           </div>
         ) : (
