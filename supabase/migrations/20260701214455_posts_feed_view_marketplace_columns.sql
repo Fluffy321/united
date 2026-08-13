@@ -15,8 +15,8 @@ select
   c.name            as community_name_fresh,
   c.logo_url        as community_logo_fresh
 from public.posts p
-left join public.public_profiles pr on pr.id = p.user_id
-left join public.communities c on c.id = p.community_id;
+left join public.public_profiles pr on pr.id::text = p.user_id
+left join public.communities c on c.id::text = p.community_id;
 
 revoke all on public.posts_feed_view from public, anon;
 grant select on public.posts_feed_view to authenticated;

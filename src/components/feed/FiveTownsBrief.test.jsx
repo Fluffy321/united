@@ -1,89 +1,87 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import FiveTownsBrief, { buildBriefingItems, findUrgentNeed } from './FiveTownsBrief';
+import FiveTownsBrief, { buildBriefingItems } from './FiveTownsBrief';
 
-describe('Daily Brief data contract', () => {
-  it('gives editor-published updates precedence without inventing more items', () => {
-    const items = buildBriefingItems({
-      brief: {
-        topLocalUpdates: [
-          { id: 'curated-1', title: 'The eruv inspection is complete', source_label: 'Community desk' },
-        ],
-      },
-      posts: [
-        { id: 'post-1', type: 'news', title: 'A feed update', community_name: 'Lawrence' },
-      ],
-    });
+const rankedItems = [
+  {
+    id: 'local-1',
+    title: 'Road work begins on Central Avenue',
+    category_id: 'local',
+    community_name: 'Cedarhurst',
+  },
+  {
+    id: 'help-1',
+    title: 'A family needs a ride this afternoon',
+    category_id: 'helping',
+    location_text: 'Woodmere',
+  },
+  {
+    id: 'event-1',
+    title: 'Community blood drive tonight',
+    category_id: 'events',
+    source_label: 'Community desk',
+  },
+  {
+    id: 'fourth',
+    title: 'This item must stay out of the preview',
+    category_id: 'sports_social',
+  },
+];
 
-    expect(items).toEqual([
-      expect.objectContaining({
-        id: 'curated-1',
-        title: 'The eruv inspection is complete',
-        label: 'Community desk',
-        provenance: 'editor',
-      }),
+describe('Daily Brief preview data', () => {
+  it('keeps no more than three distinct truthful items', () => {
+    expect(buildBriefingItems([...rankedItems, rankedItems[0]])).toEqual([
+      expect.objectContaining({ id: 'local-1', categoryLabel: 'Local Updates', context: 'Cedarhurst' }),
+      expect.objectContaining({ id: 'help-1', categoryLabel: 'Helping', context: 'Woodmere' }),
+      expect.objectContaining({ id: 'event-1', categoryLabel: 'Events', context: 'Community desk' }),
     ]);
   });
 
-  it('uses only useful real feed posts when no editor brief exists', () => {
-    const items = buildBriefingItems({
-      brief: null,
-      posts: [
-        { id: 'question-1', type: 'question', title: 'Who repairs a stroller?', community_name: 'Woodmere' },
-        { id: 'event-1', type: 'event', title: 'Community blood drive', community_name: 'Hewlett' },
-        { id: 'noise-1', type: 'daily_greeting', title: 'Good morning' },
-      ],
-    });
-
-    expect(items).toHaveLength(2);
-    expect(items[0]).toEqual(expect.objectContaining({ id: 'question-1', label: 'Woodmere', provenance: 'feed' }));
-    expect(items[1]).toEqual(expect.objectContaining({ id: 'event-1', label: 'Hewlett', provenance: 'feed' }));
-    expect(buildBriefingItems({ brief: null, posts: [] })).toEqual([]);
-  });
-
-  it('selects only a real need with a future deadline inside two hours', () => {
-    const now = new Date('2026-07-31T14:00:00.000Z');
-    const urgent = { id: 'need-now', type: 'help', title: 'Ride needed', expires_at: '2026-07-31T15:15:00.000Z' };
-    const later = { id: 'need-later', type: 'help', title: 'Meal train', expires_at: '2026-08-01T14:00:00.000Z' };
-
-    expect(findUrgentNeed([later, urgent], now)).toBe(urgent);
-    expect(findUrgentNeed([later], now)).toBeNull();
-    expect(findUrgentNeed([], now)).toBeNull();
+  it('drops rows that do not have a real ID or readable title', () => {
+    expect(buildBriefingItems([
+      { id: null, title: 'No source identity' },
+      { id: 'blank', title: '   ' },
+      { id: 'real', body: 'A useful body-only update', category_id: 'local' },
+    ])).toEqual([
+      expect.objectContaining({ id: 'real', title: 'A useful body-only update' }),
+    ]);
   });
 });
 
-describe('Daily Brief summary', () => {
-  it('keeps the briefing visible and progressively discloses mitzvah and exploration', () => {
+describe('Daily Brief mobile card', () => {
+  it('renders the approved three-row preview with accessible actions', () => {
     const html = renderToStaticMarkup(
       <FiveTownsBrief
-        networkLabel="Woodmere"
-        brief={{ topLocalUpdates: [] }}
-        posts={[]}
-        currentUser={null}
-        onOpenMap={() => {}}
-        onCreate={() => {}}
+        items={rankedItems}
+        networkLabel="Five Towns"
+        onOpenBrief={() => {}}
+        onOpenItem={() => {}}
       />
     );
 
-    expect(html).toContain('What matters today');
-    expect(html).toContain('Woodmere');
-    expect(html).toContain('Today’s mitzvah');
-    expect(html).toContain('Explore today');
-    expect(html).toContain('Nothing has been pinned yet');
-    expect(html).toContain('aria-expanded="false"');
+    expect(html).toContain('Your Daily Brief');
+    expect(html).toContain('Five Towns');
+    expect(html.match(/data-brief-item=/g)).toHaveLength(3);
+    expect(html).toContain('Local Updates');
+    expect(html).toContain('Cedarhurst');
+    expect(html).toContain('Open Brief');
+    expect(html).toContain('aria-label="Open brief item: Road work begins on Central Avenue"');
+    expect(html).toContain('aria-label="Open your complete Daily Brief"');
   });
 
-  it('does not render legacy carousel controls or fabricated activity', () => {
+  it('renders a truthful empty state without legacy or fabricated modules', () => {
     const html = renderToStaticMarkup(
-      <FiveTownsBrief brief={null} posts={[]} currentUser={null} onCreate={() => {}} />
+      <FiveTownsBrief items={[]} networkLabel="Your community" onOpenBrief={() => {}} />
     );
 
-    expect(html).not.toContain('Previous slide');
+    expect(html).toContain('No trusted updates are ready yet');
+    expect(html).toContain('Check back soon or share what your community should know.');
+    expect(html).not.toContain('Why these three?');
+    expect(html).not.toContain('Today’s mitzvah');
+    expect(html).not.toContain('Explore today');
     expect(html).not.toContain('Community progress');
-    expect(html).not.toContain('Schwartz family');
-    expect(html).not.toContain('Mrs. Cohen');
-    expect(html).not.toContain('Hatzalah fundraiser');
-    expect(html).not.toContain('meal requests open');
+    expect(html).not.toContain('engagement slider');
+    expect(html).not.toContain('Previous slide');
   });
 });

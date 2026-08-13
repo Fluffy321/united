@@ -7,12 +7,12 @@ drop policy if exists "Signed in users can create posts" on public.posts;
 create policy "Signed in users can create posts"
   on public.posts for insert to authenticated
   with check (
-    auth.uid() = user_id
+    auth.uid()::text = user_id
     and (
       community_id is null
       or exists (
         select 1 from public.communities c
-        where c.id = posts.community_id
+        where c.id::text = posts.community_id
           and (
             c.posting_mode = 'open'
             or c.created_by_user_id = auth.uid()

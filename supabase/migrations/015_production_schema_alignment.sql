@@ -350,9 +350,3 @@ create policy "Volunteers and verifiers can update chesed hour logs"
   for update
   using (auth.uid() in (volunteer_id, user_id, verifier_id))
   with check (auth.uid() in (volunteer_id, user_id, verifier_id));
-
-
--- ─── Mitzvah entity indexes ─────────────────────────────────────────────────
-
-create index if not exists user_blocks_blocked_blocker_idx
-  on public.user_blocks (blocked_id, blocker_id);

@@ -10,10 +10,17 @@ alter table public.communities
   add column if not exists location text;
 
 -- Preserve existing city/neighborhood data as the app-facing location value.
-update public.communities
-set location = coalesce(location, city, neighborhood)
-where location is null
-  and (city is not null or neighborhood is not null);
+update public.communities as communities
+set location = coalesce(
+  communities.location,
+  to_jsonb(communities) ->> 'city',
+  to_jsonb(communities) ->> 'neighborhood'
+)
+where communities.location is null
+  and coalesce(
+    to_jsonb(communities) ->> 'city',
+    to_jsonb(communities) ->> 'neighborhood'
+  ) is not null;
 
 -- Useful for the app's common list('-follower_count') queries.
 create index if not exists communities_follower_count_idx

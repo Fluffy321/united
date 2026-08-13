@@ -70,6 +70,7 @@ export const updateConversation = (...args) => supabaseBackend.entities.Conversa
 export const filterDailyFeedPrompt = (...args) => supabaseBackend.entities.DailyFeedPrompt.filter(...args);
 export const updateDailyFeedPrompt = (...args) => supabaseBackend.entities.DailyFeedPrompt.update(...args);
 export const createFeedEngagementEvent = (...args) => supabaseBackend.entities.FeedEngagementEvent.create(...args);
+export const filterFeedEngagementEvent = (...args) => supabaseBackend.entities.FeedEngagementEvent.filter(...args);
 export const createFeedUserPreference = (...args) => supabaseBackend.entities.FeedUserPreference.create(...args);
 export const filterFeedUserPreference = (...args) => supabaseBackend.entities.FeedUserPreference.filter(...args);
 export const updateFeedUserPreference = (...args) => supabaseBackend.entities.FeedUserPreference.update(...args);

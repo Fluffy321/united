@@ -65,3 +65,9 @@ export const postKeys = {
   /** Community posts rendered by the shul community page. */
   communityShul: (communityId) => ['posts', 'community', communityId, 'shul'],
 };
+
+export const feedPreferenceKeys = {
+  all: ['feed-preferences'],
+  user: (userId) => ['feed-preferences', userId],
+  signals: (userId) => ['feed-preferences', userId, 'signals'],
+};
