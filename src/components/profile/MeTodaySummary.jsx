@@ -52,7 +52,7 @@ export default function MeTodaySummary({
         <button
           type="button"
           onClick={onOpenPlan}
-          className="min-h-[116px] rounded-2xl bg-slate-950 p-3 text-left text-white shadow-[0_12px_26px_rgba(15,23,42,0.18)] transition active:scale-[0.98]"
+          className="min-h-[116px] rounded-2xl bg-blue-600 p-3 text-left text-white shadow-[0_12px_26px_rgba(37,99,235,0.20)] transition active:scale-[0.98]"
         >
           <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wide text-blue-200">
             <CalendarDays className="h-3.5 w-3.5" /> Next plan
