@@ -10,7 +10,7 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const BASELINE = 112; // occurrences of bg-slate-950 in src/**/*.jsx as of 2026-08-10
+const BASELINE = 110; // occurrences of bg-slate-950 in src/**/*.jsx as of 2026-08-13
 
 const PATTERN = /bg-slate-950/g;
 const exts = new Set(['.jsx', '.js']);
