@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Settings, Share2, UserRound } from 'lucide-react';
-import { dataService, findOrCreateDirectConversation, friendsService, streakService } from '@/services';
+import { dataService, findOrCreateDirectConversation, friendsService, notificationsService, streakService } from '@/services';
 import { FRIEND_STATUS } from '@/services/friendsService';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,7 +13,6 @@ import { parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import ModernProfileHeader from '@/components/profile/ModernProfileHeader.jsx';
 import ModernStatsRow from '@/components/profile/ModernStatsRow.jsx';
 import ModernActionButtons from '@/components/profile/ModernActionButtons.jsx';
-import StreakCard from '@/components/profile/StreakCard.jsx';
 import InterestsSection from '@/components/profile/InterestsSection.jsx';
 import ImpactSection from '@/components/profile/ImpactSection.jsx';
 import GetStartedCard from '@/components/profile/GetStartedCard.jsx';
@@ -24,11 +23,19 @@ import { COMMUNITIES_ENABLED } from '@/config/features';
 import RecentPostsSection from '@/components/profile/RecentPostsSection.jsx';
 import SavedPostsSection from '@/components/profile/SavedPostsSection.jsx';
 import ProfileProgressSection from '@/components/profile/ProfileProgressSection.jsx';
+import MeTodaySummary from '@/components/profile/MeTodaySummary.jsx';
+import MePersonalAlerts from '@/components/profile/MePersonalAlerts.jsx';
+import MeShortcutGrid from '@/components/profile/MeShortcutGrid.jsx';
+import MeIdentityRow from '@/components/profile/MeIdentityRow.jsx';
 import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
 import FriendsHub from '@/components/profile/FriendsHub.jsx';
 import DestinationHeader from '@/components/layout/DestinationHeader';
-import { createBlock, filterMitzvahAction, filterMitzvahLog, filterMitzvahPoints, filterUnifiedPost, filterUser, filterUserCommunity } from '@/services/entityServices';
+import { createBlock, filterBookmark, filterMitzvahAction, filterMitzvahLog, filterMitzvahPoints, filterUnifiedPost, filterUser, filterUserCommunity } from '@/services/entityServices';
 import { postKeys } from '@/lib/queryKeys';
+import useShabbatLocation from '@/hooks/useShabbatLocation';
+import { getShabbatTimes, getZmanim } from '@/lib/hebrewDate';
+import { getNotificationRoute } from '@/lib/notificationRoute';
+import { rankPersonalAlerts, selectNextJewishTime, selectNextPersonalPlan } from '@/lib/profile/meDashboard';
 
 export default function Profile() {
   const [searchParams] = useSearchParams();
@@ -40,11 +47,13 @@ export default function Profile() {
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   const [showInterestPicker, setShowInterestPicker] = useState(false);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
+  const [progressOpenRequest, setProgressOpenRequest] = useState(0);
 
   // Relationship state: { status: FRIEND_STATUS.*, requestId: string|null }
   const [relationship, setRelationship] = useState({ status: FRIEND_STATUS.NONE, requestId: null });
   const [friendLoading, setFriendLoading] = useState(false);
   const navigate = useNavigate();
+  const { location: jewishLocation } = useShabbatLocation({ autoRequest: false });
 
   useEffect(() => {
     setProfileLoadError(false);
@@ -168,6 +177,43 @@ export default function Profile() {
     staleTime: 60000,
   });
 
+  const {
+    data: personalNotifications = [],
+    isLoading: notificationsLoading,
+    isError: notificationsError,
+    refetch: refetchNotifications,
+  } = useQuery({
+    queryKey: ['me-dashboard-notifications', profileUser?.id],
+    queryFn: () => notificationsService.listForUser(profileUser.id, 20),
+    enabled: !!profileUser && isOwnProfile,
+    staleTime: 30000,
+    retry: 1,
+  });
+
+  const { data: zmanim, isLoading: zmanimLoading, isError: zmanimError } = useQuery({
+    queryKey: ['me-dashboard-zmanim', jewishLocation?.lat, jewishLocation?.lng, jewishLocation?.tzid, new Date().toDateString()],
+    queryFn: () => getZmanim(jewishLocation.lat, jewishLocation.lng, new Date(), jewishLocation.tzid),
+    enabled: !!profileUser && isOwnProfile && !!jewishLocation?.lat && !!jewishLocation?.lng,
+    staleTime: 15 * 60 * 1000,
+    retry: 1,
+  });
+
+  const { data: shabbatTimes, isLoading: shabbatLoading, isError: shabbatError } = useQuery({
+    queryKey: ['me-dashboard-shabbat', jewishLocation?.lat, jewishLocation?.lng, jewishLocation?.tzid, new Date().toDateString()],
+    queryFn: () => getShabbatTimes(jewishLocation.lat, jewishLocation.lng, jewishLocation.tzid, new Date()),
+    enabled: !!profileUser && isOwnProfile && !!jewishLocation?.lat && !!jewishLocation?.lng,
+    staleTime: 60 * 60 * 1000,
+    retry: 1,
+  });
+
+  const { data: savedCount = 0 } = useQuery({
+    queryKey: ['me-dashboard-bookmarks', profileUser?.id],
+    queryFn: async () => (await filterBookmark({ user_id: profileUser.id }, '-created_date', 100)).length,
+    enabled: !!profileUser && isOwnProfile,
+    staleTime: 30000,
+    retry: 1,
+  });
+
   // ── Friend action handlers ───────────────────────────────────────────────
 
   const withFriendLoading = async (fn) => {
@@ -254,6 +300,20 @@ export default function Profile() {
 
   const handleEditProfile = () => navigate(createPageUrl('Settings'));
 
+  const handleOpenAlert = async (notification) => {
+    const route = getNotificationRoute(notification);
+    if (!route) return;
+    if (!notification.is_read) {
+      notificationsService.markRead(notification.id).catch(() => {});
+    }
+    navigate(route);
+  };
+
+  const handleOpenSaved = () => {
+    setProgressOpenRequest((value) => value + 1);
+    window.setTimeout(() => scrollTo('saved-posts-section'), 100);
+  };
+
   const scrollTo = (id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -301,12 +361,15 @@ export default function Profile() {
 
   const displayName = profileUser.display_name || profileUser.full_name?.split(' ')[0] || 'User';
   const hasActivity = mitzvahPoints > 0 || weeklyMitzvahCount > 0 || (userStreak?.current_streak || 0) > 0 || mitzvahLogs.length >= 3;
+  const personalAlerts = rankPersonalAlerts(personalNotifications, 3);
+  const nextPlan = selectNextPersonalPlan(personalNotifications);
+  const nextJewishTime = selectNextJewishTime(zmanim, shabbatTimes);
 
   return (
     <div className="min-h-screen bg-transparent mobile-safe-bottom">
       <DestinationHeader
         icon={UserRound}
-        title={isOwnProfile ? 'Profile' : 'Member Profile'}
+        title={isOwnProfile ? 'Me' : 'Member Profile'}
         actions={(
           <>
             {isOwnProfile && (
@@ -318,28 +381,90 @@ export default function Profile() {
                 <Settings className="h-[18px] w-[18px] text-slate-500" />
               </button>
             )}
-            <button
-              onClick={handleShareProfile}
-              className="app-icon-button surface-tile-hover touch-manipulation"
-              aria-label="Share profile"
-            >
-              <Share2 className="h-[18px] w-[18px] text-slate-500" />
-            </button>
+            {!isOwnProfile && (
+              <button
+                onClick={handleShareProfile}
+                className="app-icon-button surface-tile-hover touch-manipulation"
+                aria-label="Share profile"
+              >
+                <Share2 className="h-[18px] w-[18px] text-slate-500" />
+              </button>
+            )}
           </>
         )}
       />
 
       <div className="mobile-page">
+        {isOwnProfile ? (
+          <div data-testid="me-dashboard" className="space-y-4 px-3 pb-4 pt-3">
+            <MeTodaySummary
+              firstName={displayName.split(' ')[0]}
+              jewishTime={nextJewishTime}
+              jewishLocation={jewishLocation?.label || 'Your location'}
+              timeZone={jewishLocation?.tzid}
+              nextPlan={nextPlan}
+              onOpenJewish={() => navigate('/JewishHub')}
+              onOpenPlan={() => navigate(nextPlan ? getNotificationRoute(nextPlan) : '/Search?type=event')}
+              isLoading={zmanimLoading || shabbatLoading}
+              hasError={zmanimError || shabbatError}
+            />
 
+            <MePersonalAlerts
+              alerts={personalAlerts}
+              isLoading={notificationsLoading}
+              isError={notificationsError}
+              onRetry={refetchNotifications}
+              onOpenAlert={handleOpenAlert}
+              onSeeAll={() => navigate('/Notifications')}
+            />
+
+            <MeShortcutGrid
+              communityCount={userCommunities.length}
+              savedCount={savedCount}
+              helpCount={weeklyMitzvahCount}
+              onCommunities={() => navigate('/Communities')}
+              onSaved={handleOpenSaved}
+              onHelp={() => navigate('/MitzvahCircle')}
+              onPlans={() => navigate('/Search?type=event')}
+            />
+
+            <MeIdentityRow user={profileUser} onEdit={handleEditProfile} />
+
+            <div data-testid="profile-progress">
+              <ProfileProgressSection openRequest={progressOpenRequest}>
+                <InterestsSection
+                  interests={profileUser.interests || []}
+                  onAddInterest={() => setShowInterestPicker(true)}
+                />
+
+                <div id="impact-section">
+                  {hasActivity ? (
+                    <ImpactSection points={mitzvahPoints} weeklyCount={weeklyMitzvahCount} streak={userStreak} />
+                  ) : (
+                    <GetStartedCard />
+                  )}
+                </div>
+
+                <BadgesSection user={profileUser} />
+                {mitzvahLogs.length > 0 && <MitzvahJourneySection logs={mitzvahLogs} />}
+
+                <div id="saved-posts-section">
+                  <SavedPostsSection userId={profileUser.id} />
+                </div>
+              </ProfileProgressSection>
+            </div>
+          </div>
+        ) : (
+          <>
         <section data-testid="profile-identity" className="px-3 pt-3">
           <div className="surface-panel overflow-hidden rounded-[28px] shadow-[0_18px_48px_rgba(15,23,42,0.08)]">
             <ModernProfileHeader
               user={{ ...profileUser, current_streak: userStreak?.current_streak || 0 }}
-              isOwnProfile={isOwnProfile}
+              isOwnProfile={false}
               onMessage={handleMessage}
               onReport={() => setShowReport(true)}
               onBlock={handleBlock}
-              onSettings={isOwnProfile ? handleEditProfile : undefined}
+              onSettings={undefined}
             />
 
             <ModernStatsRow
@@ -348,15 +473,15 @@ export default function Profile() {
               posts={unifiedPosts.length}
               impact={mitzvahPoints}
               showFollowing={COMMUNITIES_ENABLED}
-              isOwnProfile={isOwnProfile}
-              onFriendsClick={isOwnProfile ? () => setShowFriendsHub(true) : undefined}
+              isOwnProfile={false}
+              onFriendsClick={undefined}
               onPostsClick={() => scrollTo('recent-posts-section')}
               onImpactClick={() => scrollTo('impact-section')}
               onFollowingClick={COMMUNITIES_ENABLED ? () => scrollTo('communities-section') : undefined}
             />
 
             <ModernActionButtons
-              isOwnProfile={isOwnProfile}
+              isOwnProfile={false}
               onEditProfile={handleEditProfile}
               onFindFriends={() => setShowFriendsHub(true)}
               onMessage={handleMessage}
@@ -376,7 +501,7 @@ export default function Profile() {
 
         <div className="space-y-3 pb-4">
           <div id="recent-posts-section" data-testid="profile-recent-posts" className="mx-3 motion-soft-in">
-            <RecentPostsSection posts={unifiedPosts} isOwnProfile={isOwnProfile} />
+            <RecentPostsSection posts={unifiedPosts} isOwnProfile={false} />
           </div>
 
           <div id="communities-section" data-testid="profile-communities" className="mx-3 motion-soft-in">
@@ -385,35 +510,9 @@ export default function Profile() {
             )}
           </div>
 
-          {isOwnProfile && (
-            <div data-testid="profile-progress" className="mx-3 motion-soft-in">
-              <ProfileProgressSection>
-                <StreakCard streak={userStreak} />
-
-                <InterestsSection
-                  interests={profileUser.interests || []}
-                  onAddInterest={() => setShowInterestPicker(true)}
-                />
-
-                <div id="impact-section">
-                  {hasActivity ? (
-                    <ImpactSection points={mitzvahPoints} weeklyCount={weeklyMitzvahCount} streak={userStreak} />
-                  ) : (
-                    <GetStartedCard />
-                  )}
-                </div>
-
-                <BadgesSection user={profileUser} />
-
-                {mitzvahLogs.length > 0 && <MitzvahJourneySection logs={mitzvahLogs} />}
-
-                <div id="saved-posts-section">
-                  <SavedPostsSection userId={profileUser.id} />
-                </div>
-              </ProfileProgressSection>
-            </div>
-          )}
         </div>
+          </>
+        )}
       </div>
 
       <ReportModal
