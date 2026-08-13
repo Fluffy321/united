@@ -13,12 +13,14 @@ export default function RecentPostsSection({ posts, currentUser, profileUser, is
         <h2 className="text-sm font-bold text-slate-900 mb-3">Recent Posts</h2>
         <div className="flex items-center justify-between gap-3 bg-white rounded-2xl border border-slate-100 px-4 py-3">
           <p className="text-slate-400 text-sm">Nothing shared yet</p>
-          <button
-            onClick={() => navigate('/Feed')}
-            className="shrink-0 rounded-full bg-blue-600 px-3.5 py-1.5 text-[12px] font-bold text-white active:scale-95 transition-transform"
-          >
-            Write your first post
-          </button>
+          {isOwnProfile && (
+            <button
+              onClick={() => navigate('/Feed')}
+              className="min-h-11 shrink-0 rounded-full bg-blue-600 px-3.5 text-[12px] font-bold text-white transition-transform active:scale-95"
+            >
+              Write your first post
+            </button>
+          )}
         </div>
       </div>
     );

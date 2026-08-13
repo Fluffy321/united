@@ -23,6 +23,7 @@ import CommunitiesSection from '@/components/profile/CommunitiesSection.jsx';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 import RecentPostsSection from '@/components/profile/RecentPostsSection.jsx';
 import SavedPostsSection from '@/components/profile/SavedPostsSection.jsx';
+import ProfileProgressSection from '@/components/profile/ProfileProgressSection.jsx';
 import InterestPickerModal from '@/components/profile/InterestPickerModal.jsx';
 import FriendsHub from '@/components/profile/FriendsHub.jsx';
 import DestinationHeader from '@/components/layout/DestinationHeader';
@@ -330,7 +331,7 @@ export default function Profile() {
 
       <div className="mobile-page">
 
-        <section className="px-3 pt-3">
+        <section data-testid="profile-identity" className="px-3 pt-3">
           <div className="surface-panel overflow-hidden rounded-[28px] shadow-[0_18px_48px_rgba(15,23,42,0.08)]">
             <ModernProfileHeader
               user={{ ...profileUser, current_streak: userStreak?.current_streak || 0 }}
@@ -374,47 +375,42 @@ export default function Profile() {
         </section>
 
         <div className="space-y-3 pb-4">
-
-          {isOwnProfile && <div className="px-3 motion-soft-in"><StreakCard streak={userStreak} /></div>}
-
-          {isOwnProfile && (
-            <div className="mx-3 motion-soft-in">
-              <InterestsSection
-                interests={profileUser.interests || []}
-                onAddInterest={() => setShowInterestPicker(true)}
-              />
-            </div>
-          )}
-
-          {isOwnProfile && (
-            <div id="impact-section" className="mx-3 motion-soft-in">
-              {hasActivity ? (
-                <ImpactSection points={mitzvahPoints} weeklyCount={weeklyMitzvahCount} streak={userStreak} />
-              ) : (
-                <GetStartedCard />
-              )}
-            </div>
-          )}
-
-          {COMMUNITIES_ENABLED && userCommunities.length > 0 && (
-            <div id="communities-section" className="mx-3 motion-soft-in">
-              <CommunitiesSection userCommunities={userCommunities} />
-            </div>
-          )}
-
-          {isOwnProfile && <div className="mx-3 motion-soft-in"><BadgesSection user={profileUser} /></div>}
-
-          {isOwnProfile && mitzvahLogs.length > 0 && (
-            <div className="mx-3 motion-soft-in"><MitzvahJourneySection logs={mitzvahLogs} /></div>
-          )}
-
-          <div id="recent-posts-section" className="mx-3 motion-soft-in">
+          <div id="recent-posts-section" data-testid="profile-recent-posts" className="mx-3 motion-soft-in">
             <RecentPostsSection posts={unifiedPosts} currentUser={currentUser} profileUser={profileUser} isOwnProfile={isOwnProfile} />
           </div>
 
+          <div id="communities-section" data-testid="profile-communities" className="mx-3 motion-soft-in">
+            {COMMUNITIES_ENABLED && userCommunities.length > 0 && (
+              <CommunitiesSection userCommunities={userCommunities} />
+            )}
+          </div>
+
           {isOwnProfile && (
-            <div id="saved-posts-section" className="mx-3 motion-soft-in">
-              <SavedPostsSection userId={profileUser.id} />
+            <div data-testid="profile-progress" className="mx-3 motion-soft-in">
+              <ProfileProgressSection>
+                <StreakCard streak={userStreak} />
+
+                <InterestsSection
+                  interests={profileUser.interests || []}
+                  onAddInterest={() => setShowInterestPicker(true)}
+                />
+
+                <div id="impact-section">
+                  {hasActivity ? (
+                    <ImpactSection points={mitzvahPoints} weeklyCount={weeklyMitzvahCount} streak={userStreak} />
+                  ) : (
+                    <GetStartedCard />
+                  )}
+                </div>
+
+                <BadgesSection user={profileUser} />
+
+                {mitzvahLogs.length > 0 && <MitzvahJourneySection logs={mitzvahLogs} />}
+
+                <div id="saved-posts-section">
+                  <SavedPostsSection userId={profileUser.id} />
+                </div>
+              </ProfileProgressSection>
             </div>
           )}
         </div>
