@@ -15,4 +15,30 @@ describe('Map iPhone Directory contract', () => {
     expect(source).toContain('<BusinessDirectoryExperience');
     expect(source).toContain('<CommunityMapExperience');
   });
+
+  it('puts search before compact categories and results', () => {
+    const searchIndex = businessSource.indexOf('data-testid="directory-search"');
+    const categoriesIndex = businessSource.indexOf('data-testid="directory-categories"');
+    const resultsIndex = businessSource.indexOf('data-testid="directory-results"');
+    expect(searchIndex).toBeGreaterThan(-1);
+    expect(categoriesIndex).toBeGreaterThan(searchIndex);
+    expect(resultsIndex).toBeGreaterThan(categoriesIndex);
+    expect(businessSource).not.toContain('Support Jewish<br />Business');
+    expect(businessSource).not.toContain('>Listed<');
+    expect(businessSource).toContain('aria-pressed={isActive}');
+    expect(businessSource).toContain('min-h-11');
+  });
+
+  it('keeps an empty directory distinct from filtered no matches', () => {
+    expect(businessSource).toContain('businesses.length === 0');
+    expect(businessSource).toContain('The directory is getting started');
+    expect(businessSource).toContain('No matches for these filters');
+    expect(businessSource).toContain("setCategory('all')");
+    expect(businessSource).toContain("setSearch('')");
+    expect(businessSource).toContain("setType('all')");
+  });
+
+  it('does not put the activity map before business search', () => {
+    expect(source).toContain("activeView === 'community' && (");
+  });
 });

@@ -5,7 +5,6 @@ import {
   BarChart3,
   Baby,
   Car,
-  Edit3,
   ExternalLink,
   EyeOff,
   Globe2,
@@ -1097,54 +1096,34 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
     && !business.hide_exact_address
   )), [filteredBusinesses]);
 
-  const onlineCount = businesses.filter((b) => b.listing_type === 'online').length;
-  const verifiedCount = businesses.filter((b) => b.jewish_owned_status === 'verified' || b.verification_status === 'verified_owner').length;
   const verifiedBusinesses = useMemo(
     () => businesses.filter((b) => b.verification_status === 'verified_owner' || b.is_claimed || b.jewish_owned_status === 'verified'),
     [businesses]
   );
 
+  const clearBusinessFilters = () => {
+    setCategory('all');
+    setSearch('');
+    setType('all');
+  };
+
   return (
     <>
-      {/* Hero */}
-      <section className="overflow-hidden rounded-[30px] bg-slate-950 p-5 shadow-xl">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/20 ring-1 ring-blue-400/30">
-            <Store className="h-5 w-5 text-blue-300" />
-          </div>
-          <p className="text-[11px] font-black uppercase tracking-widest text-blue-300">JUnited Directory</p>
+      <section className="flex items-center justify-between gap-3 px-1 py-2">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">JUnited Directory</p>
+          <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950">Find something nearby</h1>
         </div>
-        <h1 className="mt-3 text-[27px] font-black leading-tight tracking-tight text-white">
-          Support Jewish<br />Business
-        </h1>
-        <p className="mt-2 text-[13px] font-semibold leading-5 text-slate-400">
-          <em className="not-italic text-slate-300">Kol Yisrael arevim zeh lazeh</em> — Five Towns food, services, chessed, mikvahs, eruv info, rentals, and trusted local businesses in one place.
-        </p>
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <div className="rounded-2xl bg-white/8 p-3 ring-1 ring-white/10">
-            <p className="text-xl font-black text-white">{businesses.length}</p>
-            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Listed</p>
-          </div>
-          <div className="rounded-2xl bg-white/8 p-3 ring-1 ring-white/10">
-            <p className="text-xl font-black text-white">{verifiedCount}</p>
-            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Verified</p>
-          </div>
-          <div className="rounded-2xl bg-white/8 p-3 ring-1 ring-white/10">
-            <p className="text-xl font-black text-white">{onlineCount}</p>
-            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Online</p>
-          </div>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button type="button" onClick={() => setShowSubmit(true)} className="motion-press inline-flex h-10 items-center gap-2 rounded-full bg-white px-5 text-sm font-black text-slate-950">
-            <Plus className="h-3.5 w-3.5" />
-            List a Business
-          </button>
+        <div className="flex shrink-0 items-center gap-2">
           {(ownerManagerRows.length > 0 || claimRequests.length > 0) && (
-            <button type="button" onClick={() => setShowOwnerTools(true)} className="motion-press inline-flex h-10 items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 text-sm font-black text-white">
-              <Edit3 className="h-3.5 w-3.5" />
+            <button type="button" onClick={() => setShowOwnerTools(true)} className="motion-press min-h-11 rounded-full border border-slate-200 bg-white px-3 text-xs font-black text-slate-600">
               Owner Tools
             </button>
           )}
+          <button type="button" onClick={() => setShowSubmit(true)} className="motion-press inline-flex min-h-11 items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 text-xs font-black text-blue-700">
+            <Plus className="h-3.5 w-3.5" />
+            Add business
+          </button>
         </div>
       </section>
 
@@ -1157,9 +1136,50 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
         </section>
       )}
 
-      {/* Category grid */}
-      <section className="mt-3">
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+      <section data-testid="directory-search" className="mt-2 rounded-[24px] border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="flex min-h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3">
+          <Search className="h-4 w-4 shrink-0 text-slate-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search food, services, or a neighborhood"
+            className="min-w-0 flex-1 bg-transparent text-sm font-bold text-slate-800 outline-none placeholder:text-slate-400"
+          />
+          {search && (
+            <button type="button" aria-label="Clear search" onClick={() => setSearch('')} className="motion-press flex min-h-11 min-w-11 items-center justify-center text-slate-400">
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <div className="mobile-scroll-x flex min-w-0 flex-1 gap-1.5 pb-0.5">
+            {LISTING_TYPES.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                aria-pressed={type === item.key}
+                onClick={() => setType(item.key)}
+                className={`motion-press min-h-11 shrink-0 rounded-full border px-3 text-[11px] font-black ${type === item.key ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-500'}`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex shrink-0 rounded-full border border-slate-200 bg-slate-50 p-1">
+            <button type="button" aria-pressed={mode === 'list'} onClick={() => setMode('list')} className={`motion-press inline-flex min-h-11 items-center gap-1 rounded-full px-2.5 text-[11px] font-black ${mode === 'list' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}>
+              <List className="h-3 w-3" /> List
+            </button>
+            <button type="button" aria-pressed={mode === 'map'} onClick={() => setMode('map')} className={`motion-press inline-flex min-h-11 items-center gap-1 rounded-full px-2.5 text-[11px] font-black ${mode === 'map' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}>
+              <MapIcon className="h-3 w-3" /> Map
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section data-testid="directory-categories" aria-label="Business categories" className="mt-3">
+        <p className="px-1 text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">Browse categories</p>
+        <div className="mobile-scroll-x mt-2 flex gap-2 pb-1">
           {BUSINESS_CATEGORIES.map((cat) => {
             const CatIcon = cat.icon;
             const isActive = category === cat.key;
@@ -1167,13 +1187,12 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
               <button
                 key={cat.key}
                 type="button"
+                aria-pressed={isActive}
                 onClick={() => setCategory(cat.key)}
-                className={`motion-press flex flex-col items-center gap-2 rounded-[20px] border p-3 text-center transition ${isActive ? `${cat.chipActive} border-transparent` : cat.chipInactive}`}
+                className={`motion-press flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3 text-center transition ${isActive ? `${cat.chipActive} border-transparent` : cat.chipInactive}`}
               >
-                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${isActive ? 'bg-white/20' : cat.iconBg}`}>
-                  <CatIcon className={`h-5 w-5 ${isActive ? 'text-current opacity-90' : cat.iconColor}`} />
-                </div>
-                <span className="text-[10px] font-black leading-tight">{cat.shortLabel}</span>
+                <CatIcon className={`h-4 w-4 ${isActive ? 'text-current opacity-90' : cat.iconColor}`} />
+                <span className="text-[11px] font-black leading-tight">{cat.shortLabel}</span>
               </button>
             );
           })}
@@ -1196,51 +1215,8 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
         </section>
       )}
 
-      {/* Search + filter toolbar */}
-      <section className="mt-3 rounded-[26px] border border-slate-200 bg-white p-3 shadow-sm">
-        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
-          <Search className="h-4 w-4 shrink-0 text-slate-400" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search businesses, services, neighborhoods"
-            className="min-w-0 flex-1 bg-transparent text-sm font-bold text-slate-800 outline-none placeholder:text-slate-400"
-          />
-          {search && (
-            <button type="button" onClick={() => setSearch('')} className="shrink-0 text-slate-400">
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-
-        <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-1.5">
-            {LISTING_TYPES.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => setType(item.key)}
-                className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-black ${type === item.key ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-500'}`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex w-fit shrink-0 rounded-full border border-slate-200 bg-slate-50 p-1">
-            <button type="button" onClick={() => setMode('list')} className={`inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-black ${mode === 'list' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}>
-              <List className="h-3 w-3" />
-              List
-            </button>
-            <button type="button" onClick={() => setMode('map')} className={`inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-black ${mode === 'map' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}>
-              <MapIcon className="h-3 w-3" />
-              Map
-            </button>
-          </div>
-        </div>
-      </section>
-
       {/* Results */}
-      <section className="mt-3">
+      <section data-testid="directory-results" className="mt-3">
         {isLoading ? (
           <div className="flex justify-center rounded-[26px] border border-slate-200 bg-white py-12">
             <Loader2 className="h-7 w-7 animate-spin text-blue-600" />
@@ -1249,14 +1225,21 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
           <Suspense fallback={<MapModuleFallback label="Loading business map..." />}>
             <BusinessMap businesses={mapBusinesses} userLocation={userLocation} />
           </Suspense>
-        ) : filteredBusinesses.length === 0 ? (
+        ) : businesses.length === 0 ? (
           <div className="rounded-[26px] border border-dashed border-slate-200 bg-white p-6 text-center">
             <Store className="mx-auto h-10 w-10 text-slate-300" />
-            <p className="mt-3 text-base font-black text-slate-900">No approved listings match this view</p>
+            <p className="mt-3 text-base font-black text-slate-900">The directory is getting started</p>
             <p className="mx-auto mt-1 max-w-sm text-sm font-semibold leading-6 text-slate-500">
-              Switch categories or submit a local business so it can be reviewed for the directory.
+              Know a useful local business? Add it for review so neighbors can find it here.
             </p>
-            <button type="button" onClick={() => setShowSubmit(true)} className="mt-4 rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white">List a Business</button>
+            <button type="button" onClick={() => setShowSubmit(true)} className="motion-press mt-4 min-h-11 rounded-full bg-blue-600 px-5 text-sm font-black text-white">List a Business</button>
+          </div>
+        ) : filteredBusinesses.length === 0 ? (
+          <div className="rounded-[26px] border border-dashed border-slate-200 bg-white p-6 text-center">
+            <Search className="mx-auto h-10 w-10 text-slate-300" />
+            <p className="mt-3 text-base font-black text-slate-900">No matches for these filters</p>
+            <p className="mx-auto mt-1 max-w-sm text-sm font-semibold leading-6 text-slate-500">Try everything again or search for something different.</p>
+            <button type="button" onClick={clearBusinessFilters} className="motion-press mt-4 min-h-11 rounded-full bg-blue-600 px-5 text-sm font-black text-white">Clear filters</button>
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
@@ -1615,16 +1598,18 @@ export default function MapPage() {
         <div className="glass-toolbar grid grid-cols-2 gap-1.5 rounded-2xl p-1">
           <button
             type="button"
+            aria-pressed={activeView === 'businesses'}
             onClick={() => switchView('businesses')}
-            className={`flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 text-xs font-black transition ${activeView === 'businesses' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}
+            className={`flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 text-xs font-black transition ${activeView === 'businesses' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}
           >
             <Store className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">Businesses</span>
           </button>
           <button
             type="button"
+            aria-pressed={activeView === 'community'}
             onClick={() => switchView('community')}
-            className={`flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 text-xs font-black transition ${activeView === 'community' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}
+            className={`flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 text-xs font-black transition ${activeView === 'community' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}
           >
             <Sparkles className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{COMMUNITIES_ENABLED ? 'Community Map' : 'Local Map'}</span>
@@ -1635,13 +1620,15 @@ export default function MapPage() {
 
       <div className="mobile-page-wide px-3 pt-1 sm:px-4">
 
-        <LiveNowRail
-          className="mb-3"
-          title="Activity map"
-          subtitle="Live needs, minyanim, and trusted places around the Five Towns"
-          items={buildMapLiveNowItems()}
-          onItemClick={(item) => navigate(item.href || '/Map')}
-        />
+        {activeView === 'community' && (
+          <LiveNowRail
+            className="mb-3"
+            title="Activity map"
+            subtitle="Live needs, minyanim, and trusted places around the Five Towns"
+            items={buildMapLiveNowItems()}
+            onItemClick={(item) => navigate(item.href || '/Map')}
+          />
+        )}
 
         {activeView === 'businesses' ? (
           <BusinessDirectoryExperience
