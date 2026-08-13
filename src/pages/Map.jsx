@@ -1127,15 +1127,6 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
         </div>
       </section>
 
-      {locationStatus === 'denied' && (
-        <section className="mt-3 rounded-[22px] border border-amber-200 bg-amber-50 p-3">
-          <p className="text-[13px] font-black text-amber-900">Location is off</p>
-          <p className="mt-1 text-[12px] font-semibold leading-5 text-amber-800">
-            Turn on location access to see distances and directions for nearby businesses.
-          </p>
-        </section>
-      )}
-
       <section data-testid="directory-search" className="mt-2 rounded-[24px] border border-slate-200 bg-white p-3 shadow-sm">
         <div className="flex min-h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3">
           <Search className="h-4 w-4 shrink-0 text-slate-400" />
@@ -1152,8 +1143,7 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
           )}
         </div>
 
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <div className="mobile-scroll-x flex min-w-0 flex-1 gap-1.5 pb-0.5">
+        <div data-testid="directory-listing-types" className="mobile-scroll-x mt-2 flex gap-1.5 pb-0.5">
             {LISTING_TYPES.map((item) => (
               <button
                 key={item.key}
@@ -1165,17 +1155,23 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
                 {item.label}
               </button>
             ))}
-          </div>
-          <div className="flex shrink-0 rounded-full border border-slate-200 bg-slate-50 p-1">
-            <button type="button" aria-pressed={mode === 'list'} onClick={() => setMode('list')} className={`motion-press inline-flex min-h-11 items-center gap-1 rounded-full px-2.5 text-[11px] font-black ${mode === 'list' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}>
-              <List className="h-3 w-3" /> List
-            </button>
-            <button type="button" aria-pressed={mode === 'map'} onClick={() => setMode('map')} className={`motion-press inline-flex min-h-11 items-center gap-1 rounded-full px-2.5 text-[11px] font-black ${mode === 'map' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}>
-              <MapIcon className="h-3 w-3" /> Map
-            </button>
-          </div>
+        </div>
+        <div data-testid="directory-view-mode" className="mt-2 flex w-fit rounded-full border border-slate-200 bg-slate-50 p-1">
+          <button type="button" aria-pressed={mode === 'list'} onClick={() => setMode('list')} className={`motion-press inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-[11px] font-black ${mode === 'list' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}>
+            <List className="h-3 w-3" /> List
+          </button>
+          <button type="button" aria-pressed={mode === 'map'} onClick={() => setMode('map')} className={`motion-press inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-[11px] font-black ${mode === 'map' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}>
+            <MapIcon className="h-3 w-3" /> Map
+          </button>
         </div>
       </section>
+
+      {locationStatus === 'denied' && (
+        <section className="mt-2 flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+          <MapPin className="h-4 w-4 shrink-0 text-amber-700" />
+          <p className="text-[11px] font-bold leading-4 text-amber-900">Location is off. Search still works; turn it on for nearby distances.</p>
+        </section>
+      )}
 
       <section data-testid="directory-categories" aria-label="Business categories" className="mt-3">
         <p className="px-1 text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">Browse categories</p>
@@ -1580,7 +1576,7 @@ export default function MapPage() {
           showBack={isDeepLinkedMap}
           backTo="/Feed"
           icon={Store}
-          title={activeView === 'businesses' ? 'Our Businesses' : 'Five Towns Map'}
+          title="Directory"
           help={<PageHelp text="Discover trusted Jewish-owned businesses, kosher spots, and local services near you or online." />}
           actions={(
             <button

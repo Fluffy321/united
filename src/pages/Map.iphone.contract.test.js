@@ -41,4 +41,13 @@ describe('Map iPhone Directory contract', () => {
   it('does not put the activity map before business search', () => {
     expect(source).toContain("activeView === 'community' && (");
   });
+
+  it('keeps location help after search and gives view controls their own row', () => {
+    const searchIndex = businessSource.indexOf('data-testid="directory-search"');
+    const locationIndex = businessSource.indexOf("locationStatus === 'denied'");
+    expect(locationIndex).toBeGreaterThan(searchIndex);
+    expect(businessSource).toContain('data-testid="directory-listing-types"');
+    expect(businessSource).toContain('data-testid="directory-view-mode"');
+    expect(source).toContain('title="Directory"');
+  });
 });
