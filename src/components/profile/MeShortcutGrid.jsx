@@ -4,7 +4,7 @@ import { Bookmark, CalendarDays, HandHeart, Users } from 'lucide-react';
 const shortcuts = [
   { key: 'communities', label: 'My communities', Icon: Users, tone: 'bg-blue-50 text-blue-600', detail: ({ communityCount }) => `${communityCount} joined` },
   { key: 'saved', label: 'Saved', Icon: Bookmark, tone: 'bg-violet-50 text-violet-600', detail: ({ savedCount }) => savedCount ? `${savedCount} saved` : 'Posts and places' },
-  { key: 'help', label: 'Help activity', Icon: HandHeart, tone: 'bg-emerald-50 text-emerald-600', detail: ({ helpCount }) => helpCount ? `${helpCount} actions` : 'Requests and offers' },
+  { key: 'help', label: 'Help activity', Icon: HandHeart, tone: 'bg-emerald-50 text-emerald-600', detail: ({ helpCount }) => helpCount ? `${helpCount} ${helpCount === 1 ? 'action' : 'actions'}` : 'Requests and offers' },
   { key: 'plans', label: 'Plans', Icon: CalendarDays, tone: 'bg-orange-50 text-orange-600', detail: () => 'Events and reminders' },
 ];
 
