@@ -14,31 +14,37 @@ export const DISCOVER_CATEGORIES = [
 ];
 
 export default function DiscoverCategoryCards({ activeCategory, onSelectCategory }) {
+  const categories = [
+    { key: 'all', label: 'All', emoji: '✨' },
+    ...DISCOVER_CATEGORIES,
+  ];
+
   return (
-    <div className="mb-6">
-      <div className="text-lg font-bold text-slate-900 mb-3">Discover communities that are useful today</div>
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4">
-        {DISCOVER_CATEGORIES.map((cat) => (
+    <section className="space-y-2.5" aria-labelledby="community-category-heading">
+      <h2 id="community-category-heading" className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">
+        Explore by category
+      </h2>
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide">
+        {categories.map((cat) => {
+          const isActive = activeCategory === cat.key;
+          return (
           <button
             key={cat.key}
-            onClick={() => onSelectCategory(activeCategory === cat.key ? 'all' : cat.key)}
-            className={`relative min-w-[178px] overflow-hidden rounded-[28px] p-4 text-left text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98] bg-gradient-to-br ${cat.gradient} ${
-              activeCategory === cat.key ? 'ring-2 ring-slate-900 ring-offset-2' : ''
+            type="button"
+            aria-pressed={isActive}
+            onClick={() => onSelectCategory(isActive && cat.key !== 'all' ? 'all' : cat.key)}
+            className={`motion-press flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[12px] font-black transition-colors ${
+              isActive
+                ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                : 'border-slate-200 bg-white text-slate-700'
             }`}
           >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.28),transparent_28%)]" />
-            <div className="relative flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 text-2xl backdrop-blur-sm">
-                {cat.emoji}
-              </div>
-              <div className="min-w-0">
-                <div className="font-bold leading-tight">{cat.label}</div>
-                <div className="mt-1 text-[11px] font-semibold text-white/80">Join a room with a reason</div>
-              </div>
-            </div>
+            <span aria-hidden="true">{cat.emoji}</span>
+            <span>{cat.label}</span>
           </button>
-        ))}
+          );
+        })}
       </div>
-    </div>
+    </section>
   );
 }
