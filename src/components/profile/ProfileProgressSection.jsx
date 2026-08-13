@@ -1,14 +1,28 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronDown, Sparkles } from 'lucide-react';
 
-export default function ProfileProgressSection({ children }) {
+export default function ProfileProgressSection({ children, openRequest = 0, onOpenChange }) {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (openRequest > 0) {
+      setOpen(true);
+      onOpenChange?.(true);
+    }
+  }, [openRequest, onOpenChange]);
+
+  const toggleOpen = () => {
+    setOpen((value) => {
+      onOpenChange?.(!value);
+      return !value;
+    });
+  };
 
   return (
     <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={toggleOpen}
         aria-expanded={open}
         aria-controls="profile-progress-content"
         className="flex min-h-14 w-full items-center gap-3 px-4 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
