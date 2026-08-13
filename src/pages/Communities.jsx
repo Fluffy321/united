@@ -7,8 +7,6 @@ import { useAuth } from '@/lib/AuthContext';
 import ProfileSetup from '@/components/profile/ProfileSetup';
 import CommunityGroupPage from '@/components/communities/CommunityGroupPage';
 import CreateCommunityModal from '@/components/communities/CreateCommunityModal';
-import FeaturedHeroCard from '@/components/communities/FeaturedHeroCard.jsx';
-import FeaturedSecondaryCard from '@/components/communities/FeaturedSecondaryCard.jsx';
 import DiscoverCategoryCards, { DISCOVER_CATEGORIES } from '@/components/communities/DiscoverCategoriesScreen';
 import CommunityInterestOnboarding from '@/components/communities/CommunityInterestOnboarding';
 import CommunitiesLoadingRecovery from '@/components/communities/CommunitiesLoadingRecovery';
@@ -571,14 +569,14 @@ function LiveFiveTownsRoomCard({ community, index = 0, isJoined, isJoining, onOp
   );
 }
 
-function FiveTownsRoomsHub({ communities, userCommunityIds, newActivityIds = EMPTY_ID_SET, joiningId, onOpen, onJoin }) {
+function FiveTownsRoomsHub({ communities, userCommunityIds, newActivityIds = EMPTY_ID_SET, joiningId, onOpen, onJoin, categoryRail }) {
   const blueprintRooms = getCoreFiveTownsRooms(communities);
   // Fall back to all communities (as viewmodels) when blueprint matching yields too few —
   // e.g. before the Essential 10 seed migration has run in an environment.
   const rooms = blueprintRooms.length >= 2
     ? blueprintRooms.slice(0, 10)
     : communities.filter(c => c?.id && c?.name).map((c, i) => buildRoomViewModel(c, i));
-  const leadRooms = rooms.slice(0, 3);
+  const recommendedRooms = rooms.slice(0, 3);
   const remainingRooms = rooms.slice(3);
   if (!rooms.length) {
     return (
@@ -593,27 +591,14 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, newActivityIds = EMP
 
   return (
     <div className="space-y-5">
-      <section className="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-sm">
-        <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-blue-700 p-5 text-white">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-white/80">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            JUnited Essential 10
-          </div>
-          <h2 className="text-[26px] font-black leading-tight tracking-tight">Find your people in the Five Towns.</h2>
-          <p className="mt-2 text-[13px] font-semibold leading-relaxed text-white/78">
-            Join a group for your shul, neighborhood, or interest — ask questions, plan things, and help each other out.
-          </p>
-        </div>
-      </section>
-
-      {leadRooms.length > 0 && <section className="space-y-3">
+      {recommendedRooms.length > 0 && <section className="space-y-3">
         <div>
-          <h2 className="text-[18px] font-black tracking-tight text-slate-950">Start Here</h2>
-          <p className="text-[12px] font-semibold text-slate-500">The rooms most likely to create a real conversation today.</p>
+          <h2 className="text-[18px] font-black tracking-tight text-slate-950">Recommended for you</h2>
+          <p className="text-[12px] font-semibold text-slate-500">Three useful places to start.</p>
         </div>
         <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
-          {leadRooms.map((room, index) => (
-            <div key={room.id} className="w-[310px] shrink-0">
+          {recommendedRooms.map((room, index) => (
+            <div key={room.id} className="w-[286px] shrink-0">
               <LiveFiveTownsRoomCard
                 community={room}
                 index={index}
@@ -628,10 +613,12 @@ function FiveTownsRoomsHub({ communities, userCommunityIds, newActivityIds = EMP
         </div>
       </section>}
 
+      {categoryRail}
+
       {remainingRooms.length > 0 && <section className="space-y-3">
         <div>
-          <h2 className="text-[18px] font-black tracking-tight text-slate-950">The Essential 10</h2>
-          <p className="text-[12px] font-semibold text-slate-500">Built around local action, not generic categories.</p>
+          <h2 className="text-[18px] font-black tracking-tight text-slate-950">More communities</h2>
+          <p className="text-[12px] font-semibold text-slate-500">Keep exploring by what matters to you.</p>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {remainingRooms.map((room, index) => (
@@ -1012,10 +999,6 @@ export default function Communities() {
     allCommunitiesRef.current = catalogCommunities;
   }, [catalogCommunities]);
 
-  const mainFeatured = useMemo(() => (catalogCommunities || []).find(c => c.isMainFeatured === true) || null, [catalogCommunities]);
-  const secondaryFeatured = useMemo(() => {
-    return (catalogCommunities || []).filter(c => c.isFeatured === true && c.isMainFeatured !== true).sort((a, b) => (a.featuredRank || 999) - (b.featuredRank || 999)).slice(0, 3);
-  }, [catalogCommunities]);
   const myCommunities = useMemo(() => (catalogCommunities || []).filter(c => userCommunityIds.has(c.id)), [catalogCommunities, userCommunityIds]);
   const myGroups = useMemo(() => (allGroups || []).filter(g => memberGroupIds.has(g.id)), [allGroups, memberGroupIds]);
   const discoverCommunities = useMemo(() => (catalogCommunities || []).filter(c => !userCommunityIds.has(c.id)), [catalogCommunities, userCommunityIds]);
@@ -1227,56 +1210,27 @@ export default function Communities() {
       />
       <div className="mobile-page-wide px-4 pt-2">
 
-        <button
-          type="button"
-          onClick={() => navigate('/JewishHub')}
-          className="motion-press mb-5 flex w-full items-center gap-3 rounded-[24px] border border-blue-100 bg-white p-3 text-left shadow-sm transition-colors active:bg-blue-50"
-        >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border border-blue-100 bg-blue-50 text-blue-700">
-            <BookOpenText className="h-5 w-5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[10px] font-black uppercase tracking-wide text-blue-500">Jewish content</span>
-            <span className="mt-0.5 block text-[15px] font-black leading-tight text-slate-950">Tehillim, Torah, Zmanim, Siddur</span>
-            <span className="mt-1 block text-[12px] font-semibold leading-snug text-slate-500">
-              Daily Jewish tools inside the community hub.
-            </span>
-          </span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
-        </button>
-
-        {/* Directory picks - 1 hero + up to 4 secondary */}
-        {mainFeatured || secondaryFeatured.length > 0 ? (
-          <div className="mb-8 space-y-4">
-            {mainFeatured && (
-              <FeaturedHeroCard
-                community={mainFeatured}
-                isJoined={userCommunityIds.has(mainFeatured.id)}
-                isJoining={joiningId === mainFeatured.id}
-                onOpen={openCommunity}
-                onJoin={joinCommunity}
-              />
-            )}
-            {secondaryFeatured.length > 0 && (
-              <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
-                {secondaryFeatured.map(c => (
-                  <div key={c.id} className="flex-shrink-0 w-80">
-                    <FeaturedSecondaryCard
-                      community={c}
-                      isJoined={userCommunityIds.has(c.id)}
-                      isJoining={joiningId === c.id}
-                      onOpen={openCommunity}
-                      onJoin={joinCommunity}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : null}
+        {/* Choose the job first: return to joined rooms or find a new one. */}
+        <div data-testid="community-mode-switch" className="surface-panel-soft mb-3 flex rounded-[18px] p-1">
+          {[{ id: 'mine', label: 'My Communities' }, { id: 'discover', label: 'Discover' }].map(tab => (
+            <button
+              key={tab.id}
+              type="button"
+              aria-pressed={activeTab === tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`min-h-11 flex-1 rounded-[14px] px-3 text-[13px] font-black transition-all active:scale-[0.98] ${
+                activeTab === tab.id
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
         {/* Search */}
-        <div className="mb-4 flex gap-2">
+        <div data-testid="community-search" className="mb-4 flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             <input
@@ -1297,23 +1251,6 @@ export default function Communities() {
           </button>
         </div>
 
-        {/* Tab switcher */}
-        <div className="surface-panel-soft mb-6 flex rounded-[22px] p-1">
-          {[{ id: 'mine', label: 'My Communities' }, { id: 'discover', label: 'Discover' }].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-150 active:scale-95 ${
-                activeTab === tab.id
-                  ? 'bg-white text-blue-600 shadow'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
         {!isLoading && !showCommunitiesRecovery && catalogCommunities.length === 0 && (
           <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4 text-[11px] text-amber-800">
             <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> No communities are available yet. You can create one or try again later.
@@ -1321,6 +1258,7 @@ export default function Communities() {
         )}
 
         {/* Grid */}
+        <div data-testid="community-results">
         {isLoading || showCommunitiesRecovery ? (
           <CommunitiesLoadingRecovery
             timedOut={communitiesLoadTimedOut}
@@ -1355,13 +1293,6 @@ export default function Communities() {
                 }}
               />
             ) : (
-              <>
-                {!searchQuery && (
-                  <DiscoverCategoryCards
-                    activeCategory={activeCategory}
-                    onSelectCategory={(key) => setActiveCategory(key)}
-                  />
-                )}
               <DiscoverTabContent
                 communities={filterItems(discoverCommunities)}
                 groups={filterItems(discoverGroups)}
@@ -1383,10 +1314,28 @@ export default function Communities() {
                 currentUser={currentUser}
                 allCommunities={catalogCommunities}
                 onJoinCommunity={joinCommunity}
-              /></>
+                activeCategory={activeCategory}
+              />
             )}
           </div>
         )}
+        </div>
+
+        <button
+          data-testid="community-jewish-tools"
+          type="button"
+          onClick={() => navigate('/JewishHub')}
+          className="motion-press mt-6 flex w-full items-center gap-3 rounded-2xl border border-blue-100 bg-white p-3 text-left shadow-sm transition-colors active:bg-blue-50"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-blue-100 bg-blue-50 text-blue-700">
+            <BookOpenText className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[10px] font-black uppercase tracking-wide text-blue-500">Jewish tools</span>
+            <span className="mt-0.5 block text-[14px] font-black leading-tight text-slate-950">Tehillim, Torah, Zmanim, Siddur</span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
+        </button>
       </div>
 
       <CreateCommunityModal
@@ -1473,7 +1422,7 @@ function MineTab({ myCommunities, myGroups, openCommunity, setSelectedGroup, set
   );
 }
 
-function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, newActivityIds = EMPTY_ID_SET, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory, sizeFilter, setSizeFilter, activityFilter, setActivityFilter, currentUser, allCommunities, onJoinCommunity }) {
+function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGroup, onJoin, onJoinGroup, joiningId, userCommunityIds, newActivityIds = EMPTY_ID_SET, memberGroupIds, setShowCreateModal, hasFilter, setActiveCategory, sizeFilter, setSizeFilter, activityFilter, setActivityFilter, currentUser, allCommunities, onJoinCommunity, activeCategory }) {
   // Apply extra filters then sort: directory picks first, then by follower count
   const filtered = applyExtraFilters(communities, sizeFilter, activityFilter);
   const sortedCommunities = [...filtered].sort((a, b) => {
@@ -1483,6 +1432,12 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
   });
 
   const noResults = sortedCommunities.length === 0 && groups.length === 0;
+  const categoryRail = (
+    <DiscoverCategoryCards
+      activeCategory={activeCategory}
+      onSelectCategory={setActiveCategory}
+    />
+  );
 
   return (
     <div className="space-y-6">
@@ -1494,10 +1449,12 @@ function DiscoverTabContent({ communities, groups, openCommunity, setSelectedGro
           joiningId={joiningId}
           onOpen={openCommunity}
           onJoin={onJoinCommunity || onJoin}
+          categoryRail={categoryRail}
         />
       )}
       {hasFilter && (
         <>
+          {categoryRail}
           <SuggestedCommunities
             currentUser={currentUser}
             allCommunities={allCommunities}
