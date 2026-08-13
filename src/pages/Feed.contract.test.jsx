@@ -7,6 +7,7 @@ describe('Mobile headquarters Feed contract', () => {
   it('uses Priority Stack C and removes repeated Home prompt surfaces', () => {
     expect(source).toContain("import HomePriorityStack from '@/components/feed/HomePriorityStack'");
     expect(source).toContain("import HomeContributionEntry from '@/components/feed/HomeContributionEntry'");
+    expect(source).toContain("import HomeStartHere from '@/components/feed/HomeStartHere'");
     expect(source).toContain("import LiveCategoryDeck from '@/components/feed/LiveCategoryDeck'");
     expect(source).toContain("import BriefCategoryLaunchpad from '@/components/feed/BriefCategoryLaunchpad'");
     expect(source).toContain("import BriefCategorySection from '@/components/feed/BriefCategorySection'");
@@ -14,6 +15,7 @@ describe('Mobile headquarters Feed contract', () => {
     expect(source).toContain('readBriefRouteState');
     expect(source).toContain('<HomePriorityStack');
     expect(source).toContain('<HomeContributionEntry');
+    expect(source).toContain('<HomeStartHere');
     expect(source).toContain('<LiveCategoryDeck');
     expect(source).toContain('<BriefCategoryLaunchpad');
     expect(source).toContain('<BriefCategorySection');

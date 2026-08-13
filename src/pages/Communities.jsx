@@ -11,6 +11,7 @@ import FeaturedHeroCard from '@/components/communities/FeaturedHeroCard.jsx';
 import FeaturedSecondaryCard from '@/components/communities/FeaturedSecondaryCard.jsx';
 import DiscoverCategoryCards, { DISCOVER_CATEGORIES } from '@/components/communities/DiscoverCategoriesScreen';
 import CommunityInterestOnboarding from '@/components/communities/CommunityInterestOnboarding';
+import CommunitiesLoadingRecovery from '@/components/communities/CommunitiesLoadingRecovery';
 import SuggestedCommunities from '@/components/communities/SuggestedCommunities';
 import DiscoverFilters, { applyExtraFilters } from '@/components/communities/DiscoverFilters';
 import { toast } from 'sonner';
@@ -916,6 +917,7 @@ export default function Communities() {
   const [showCategoryBrowse, setShowCategoryBrowse] = useState(false);
   const [sizeFilter, setSizeFilter] = useState('all_sizes');
   const [activityFilter, setActivityFilter] = useState('all_activity');
+  const [communitiesLoadTimedOut, setCommunitiesLoadTimedOut] = useState(false);
 
   // Stable ref so openCommunity never needs to be recreated when communities reload
   const allCommunitiesRef = useRef([]);
@@ -931,7 +933,9 @@ export default function Communities() {
   const {
     data: communitiesData,
     isLoading: communitiesLoading,
+    isError: communitiesError,
     isPlaceholderData: communitiesIsPlaceholder,
+    refetch: refetchCommunities,
   } = useQuery({
     queryKey: ['communities-list'],
     queryFn: () => listCommunity('-follower_count', 80),
@@ -980,6 +984,20 @@ export default function Communities() {
     if (sanitized.length > 0) return sanitized;
     return getCached().filter(c => c?.id && c?.name);
   }, [communitiesData]);
+
+  useEffect(() => {
+    if (!communitiesLoading || allCommunities.length > 0) {
+      setCommunitiesLoadTimedOut(false);
+      return undefined;
+    }
+    const timer = setTimeout(() => setCommunitiesLoadTimedOut(true), 8_000);
+    return () => clearTimeout(timer);
+  }, [allCommunities.length, communitiesLoading]);
+
+  const retryCommunities = useCallback(() => {
+    setCommunitiesLoadTimedOut(false);
+    refetchCommunities();
+  }, [refetchCommunities]);
 
   // Persist fresh server data to the localStorage offline cache.
   useEffect(() => {
@@ -1168,9 +1186,10 @@ export default function Communities() {
 
   // Only show skeleton if we have no data at all (not even cached)
   const isLoading = communitiesLoading && catalogCommunities.length === 0;
+  const showCommunitiesRecovery = Boolean(communitiesError && catalogCommunities.length === 0);
 
   return (
-    <div className="min-h-screen bg-transparent pb-24">
+    <div className="min-h-screen bg-transparent mobile-safe-bottom">
       <style>{`
         @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .fade-up { animation: fadeUp 180ms ease both; }
@@ -1295,24 +1314,20 @@ export default function Communities() {
           ))}
         </div>
 
-        {catalogCommunities.length === 0 && (
+        {!isLoading && !showCommunitiesRecovery && catalogCommunities.length === 0 && (
           <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4 text-[11px] text-amber-800">
-            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> No communities yet — seed communities to see data.
+            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> No communities are available yet. You can create one or try again later.
           </div>
         )}
 
         {/* Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white rounded-3xl p-4 space-y-3">
-                <div className="skeleton w-11 h-11 rounded-2xl" />
-                <div className="skeleton h-3 w-24 rounded" />
-                <div className="skeleton h-2.5 w-16 rounded" />
-                <div className="skeleton h-8 w-full rounded-full" />
-              </div>
-            ))}
-          </div>
+        {isLoading || showCommunitiesRecovery ? (
+          <CommunitiesLoadingRecovery
+            timedOut={communitiesLoadTimedOut}
+            isError={communitiesError}
+            onRetry={retryCommunities}
+            onGoHome={() => navigate('/Feed')}
+          />
         ) : (
           <div className="fade-up">
             {activeTab === 'mine' ? (

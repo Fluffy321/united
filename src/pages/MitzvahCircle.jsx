@@ -53,6 +53,17 @@ export default function MitzvahCircle() {
   const [quickViewRequest, setQuickViewRequest] = React.useState(null);
 
   React.useEffect(() => {
+    if (searchParams.get('action') !== 'request') return;
+    setRequestDefaults(null);
+    setShowCreate(true);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('action');
+      return next;
+    }, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  React.useEffect(() => {
     const tab = searchParams.get('tab');
     const nextView = tab === 'open' || tab === 'carpool'
       ? 'browse'

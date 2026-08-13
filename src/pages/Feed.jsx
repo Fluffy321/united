@@ -24,6 +24,7 @@ import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import CommunitiesFeedView from '@/components/feed/CommunitiesFeedView';
 import HomePriorityStack from '@/components/feed/HomePriorityStack';
 import HomeContributionEntry from '@/components/feed/HomeContributionEntry';
+import HomeStartHere from '@/components/feed/HomeStartHere';
 import LiveCategoryDeck from '@/components/feed/LiveCategoryDeck';
 import BriefCategoryLaunchpad from '@/components/feed/BriefCategoryLaunchpad';
 import BriefCategorySection from '@/components/feed/BriefCategorySection';
@@ -563,7 +564,7 @@ export default function Feed() {
 
 
       {feedTab === 'general' ? (
-        <div className="mobile-page min-h-screen space-y-2.5 bg-[#F0EEE8] px-3 pb-6 pt-3">
+        <div className="mobile-page mobile-safe-bottom min-h-screen space-y-2.5 bg-[#F0EEE8] px-3 pt-3">
           {/* One-time network banner */}
           {showNetworkBanner && (
             <div className="graphic-stripes flex items-center gap-2 rounded-[22px] bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-4 py-3 text-white text-[12px] font-medium shadow-[0_14px_30px_rgba(37,99,235,0.18)]">
@@ -670,12 +671,12 @@ export default function Feed() {
                 )}
 
                 {feedCanRender && !isError && feedPosts.length === 0 && (
-                  <div className="rounded-[18px] border border-slate-200 bg-white px-4 py-5">
-                    <p className="text-[13px] font-black text-[#0F1C2E]">Nothing has been shared here yet</p>
-                    <p className="mt-1 text-[12px] font-medium leading-relaxed text-slate-500">
-                      Use Ask, Share, Need, Offer, or Plan to start something useful.
-                    </p>
-                  </div>
+                  <HomeStartHere
+                    onShare={() => openComposer({ type: 'feed', subtype: 'local_update', initialBody: '' })}
+                    onHelp={() => navigate('/MitzvahCircle?action=request')}
+                    onCommunities={() => navigate('/Communities')}
+                    onDirectory={() => navigate('/Map')}
+                  />
                 )}
 
                 {feedCanRender && feedPosts.length > 0 && (
