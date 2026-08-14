@@ -11,6 +11,8 @@ describe('Help public offer contract', () => {
     expect(source).toContain("onPostOffer={() => openRequestForm(null, 'offer')}");
     expect(source).toContain('direction={requestDirection}');
     expect(source).toContain("if (request.direction === 'offer')");
+    expect(source).toContain("navigate(`/PublicProfile?id=${encodeURIComponent(request.poster_id)}`)");
+    expect(source).toContain('onViewProfile={openOfferProfile}');
   });
 
   it('does not invite a member to privately help someone already offering help', () => {

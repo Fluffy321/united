@@ -13,5 +13,7 @@ describe('CreateRequestModal direction copy', () => {
   it('uses friendly public offer language in offer mode', () => {
     expect(source).toContain('Public help offer');
     expect(source).toContain('What can you help with?');
+    expect(source).toContain('Available today. Shows orange.');
+    expect(source).toContain('Needed today. Shows orange.');
   });
 });

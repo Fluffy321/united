@@ -4,7 +4,7 @@ import { Clock, HandHeart, X } from 'lucide-react';
 import { STATUSES, getApproxDistance, getHelpCta, getRequestProgress, getUrgencyInfo } from './shared';
 import StatusPill from './StatusPill';
 
-export default function QuickViewSheet({ request, offers, comments = [], currentUser, onClose, onOffer, onOpenMap }) {
+export default function QuickViewSheet({ request, offers, comments = [], currentUser, onClose, onOffer, onOpenMap, onViewProfile }) {
   if (!request || typeof document === 'undefined') return null;
   const myOffer = offers.find(
     (o) => o.requestId === request.id && o.volunteerId === currentUser?.id
@@ -98,6 +98,14 @@ export default function QuickViewSheet({ request, offers, comments = [], current
         </div>
 
         <div className="mt-4 flex gap-2">
+          {isPublicOffer && request.poster_id !== currentUser?.id && onViewProfile && (
+            <button
+              onClick={() => { onViewProfile(request); onClose(); }}
+              className="app-button-primary h-10 flex-1 text-[13px]"
+            >
+              View member
+            </button>
+          )}
           {canOffer && (
             <button
               onClick={() => { onOffer(request); onClose(); }}

@@ -146,9 +146,9 @@ export default function CreateRequestModal({ open, onClose, onCreate, isLoading,
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
             <p className="text-[11px] font-black text-slate-800">
               {form.urgency === 'Urgent'
-                ? 'ASAP. Shows red.'
+                ? (direction === 'offer' ? 'Available now. Shows red.' : 'ASAP. Shows red.')
                 : form.urgency === 'Today'
-                  ? 'Needed today. Shows orange.'
+                  ? (direction === 'offer' ? 'Available today. Shows orange.' : 'Needed today. Shows orange.')
                   : 'Flexible timing. Shows gray.'}
             </p>
           </div>

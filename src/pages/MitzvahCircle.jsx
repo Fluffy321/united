@@ -103,6 +103,10 @@ export default function MitzvahCircle() {
     navigate(`/Map?requestId=${encodeURIComponent(request.id)}`);
   };
 
+  const openOfferProfile = (request) => {
+    navigate(`/PublicProfile?id=${encodeURIComponent(request.poster_id)}`);
+  };
+
   // ── Data loading ───────────────────────────────────────────────────────────
 
 	  const { data: rawRequests = [], isLoading: loadingRequests } = useQuery({
@@ -578,6 +582,7 @@ export default function MitzvahCircle() {
           onClose={() => setQuickViewRequest(null)}
           onOffer={(r) => { handleOffer(r); setQuickViewRequest(null); }}
           onOpenMap={openRequestOnMap}
+          onViewProfile={openOfferProfile}
         />
       )}
     </div>
