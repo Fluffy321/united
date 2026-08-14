@@ -49,12 +49,14 @@ export default function MitzvahCircle() {
   const [detailCategoryFilter, setDetailCategoryFilter] = React.useState('All');
   const [showCreate, setShowCreate] = React.useState(false);
   const [requestDefaults, setRequestDefaults] = React.useState(null);
+  const [requestDirection, setRequestDirection] = React.useState('need');
   const [carpoolCreateMode, setCarpoolCreateMode] = React.useState(null);
   const [quickViewRequest, setQuickViewRequest] = React.useState(null);
 
   React.useEffect(() => {
     if (searchParams.get('action') !== 'request') return;
     setRequestDefaults(null);
+    setRequestDirection('need');
     setShowCreate(true);
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
@@ -91,13 +93,18 @@ export default function MitzvahCircle() {
     if (activeView !== 'browse') changeView('browse');
   };
 
-  const openRequestForm = (defaults = null) => {
+  const openRequestForm = (defaults = null, direction = 'need') => {
     setRequestDefaults(defaults);
+    setRequestDirection(direction);
     setShowCreate(true);
   };
 
   const openRequestOnMap = (request) => {
     navigate(`/Map?requestId=${encodeURIComponent(request.id)}`);
+  };
+
+  const openOfferProfile = (request) => {
+    navigate(`/PublicProfile?id=${encodeURIComponent(request.poster_id)}`);
   };
 
   // ── Data loading ───────────────────────────────────────────────────────────
@@ -185,6 +192,7 @@ export default function MitzvahCircle() {
     try {
       await createRequestMutation({
         title: formData.title,
+        direction: requestDirection,
         description: formData.description,
         category: formData.category,
         neighborhood: formData.neighborhood,
@@ -210,7 +218,7 @@ export default function MitzvahCircle() {
       });
       setShowCreate(false);
       changeView('mine');
-      toast.success('Request posted.');
+      toast.success(requestDirection === 'offer' ? 'Public help offer posted.' : 'Request posted.');
     } catch (err) {
       toast.error(err.message || 'Could not post request.');
     }
@@ -251,6 +259,7 @@ export default function MitzvahCircle() {
 	        urgency: 'medium',
 	        status: 'open',
 	        request_kind: 'carpool',
+	        direction: mode === 'offer' ? 'offer' : 'need',
 	        ride_direction: mode === 'offer' ? 'offering' : 'needed',
 	        pickup_window: formData.pickup,
 	        expires_at: new Date(Date.now() + REQUEST_EXPIRY_MS).toISOString(),
@@ -266,6 +275,10 @@ export default function MitzvahCircle() {
   };
 
   const handleOffer = async (request) => {
+    if (request.direction === 'offer') {
+      toast.error('This member is already offering help.');
+      return;
+    }
     if (request.poster_id === currentUser?.id) {
       toast.error('You cannot offer to help on your own request.');
       return;
@@ -505,19 +518,9 @@ export default function MitzvahCircle() {
               activeCategory={activeCategory}
               loadingRequests={loadingRequests}
               browseRequests={browseRequests}
-              offers={offers}
-              commentsByRequest={commentsByRequest}
-              currentUser={currentUser}
-              onOffer={handleOffer}
-              onAcceptOffer={handleAcceptOffer}
-              onStart={handleStart}
-              onComplete={handleComplete}
-              onVerify={handleVerify}
-              onComment={handleCommentOnRequest}
-              onOpenMap={openRequestOnMap}
               onQuickView={setQuickViewRequest}
-              onUrgencyChange={handleUrgencyChange}
-              onPostRequest={() => setShowCreate(true)}
+              onPostNeed={() => openRequestForm(null, 'need')}
+              onPostOffer={() => openRequestForm(null, 'offer')}
             />
           )}
 
@@ -560,6 +563,7 @@ export default function MitzvahCircle() {
         onCreate={handleCreateRequest}
         isLoading={isCreating}
         initialValues={requestDefaults}
+        direction={requestDirection}
       />
 
       <CreateCarpoolModal
@@ -578,6 +582,7 @@ export default function MitzvahCircle() {
           onClose={() => setQuickViewRequest(null)}
           onOffer={(r) => { handleOffer(r); setQuickViewRequest(null); }}
           onOpenMap={openRequestOnMap}
+          onViewProfile={openOfferProfile}
         />
       )}
     </div>

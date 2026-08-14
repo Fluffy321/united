@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Loader2, X } from 'lucide-react';
 import { CATEGORIES } from './shared';
 
-export default function CreateRequestModal({ open, onClose, onCreate, isLoading, initialValues = null }) {
+export default function CreateRequestModal({ open, onClose, onCreate, isLoading, initialValues = null, direction = 'need' }) {
   const [form, setForm] = React.useState({
     title: '',
     description: '',
@@ -50,8 +50,12 @@ export default function CreateRequestModal({ open, onClose, onCreate, isLoading,
       >
         <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-3">
           <div>
-            <p className="text-[11px] font-black uppercase text-blue-600">New help request</p>
-            <h2 className="text-lg font-black text-slate-950">What is needed?</h2>
+            <p className="text-[11px] font-black uppercase text-blue-600">
+              {direction === 'offer' ? 'Public help offer' : 'New help request'}
+            </p>
+            <h2 className="text-lg font-black text-slate-950">
+              {direction === 'offer' ? 'What can you help with?' : 'What is needed?'}
+            </h2>
           </div>
           <button
             type="button"
@@ -71,7 +75,7 @@ export default function CreateRequestModal({ open, onClose, onCreate, isLoading,
               value={form.title}
               onChange={(e) => update('title', e.target.value)}
               className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              placeholder="Example: Pick up groceries"
+              placeholder={direction === 'offer' ? 'Example: Available for grocery runs' : 'Example: Pick up groceries'}
             />
           </label>
           <label className="block">
@@ -81,7 +85,7 @@ export default function CreateRequestModal({ open, onClose, onCreate, isLoading,
               value={form.description}
               onChange={(e) => update('description', e.target.value)}
               className="min-h-20 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              placeholder="What should helpers know?"
+              placeholder={direction === 'offer' ? 'What can people ask you for?' : 'What should helpers know?'}
             />
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -142,9 +146,9 @@ export default function CreateRequestModal({ open, onClose, onCreate, isLoading,
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
             <p className="text-[11px] font-black text-slate-800">
               {form.urgency === 'Urgent'
-                ? 'ASAP. Shows red.'
+                ? (direction === 'offer' ? 'Available now. Shows red.' : 'ASAP. Shows red.')
                 : form.urgency === 'Today'
-                  ? 'Needed today. Shows orange.'
+                  ? (direction === 'offer' ? 'Available today. Shows orange.' : 'Needed today. Shows orange.')
                   : 'Flexible timing. Shows gray.'}
             </p>
           </div>
@@ -177,7 +181,7 @@ export default function CreateRequestModal({ open, onClose, onCreate, isLoading,
             disabled={isLoading}
             className="app-button-primary h-10 flex-1 text-[12px]"
           >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post'}
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : direction === 'offer' ? 'Post offer' : 'Post need'}
           </button>
         </div>
       </form>
