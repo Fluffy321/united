@@ -247,6 +247,7 @@ export const normalizeRequest = (row) => {
   if (!row) return row;
   return {
     ...row,
+    direction: row.direction === 'offer' ? 'offer' : 'need',
     status: DB_TO_UI_STATUS[row.status] || row.status || STATUSES.OPEN,
     poster_id: row.requester_id || row.created_by_user_id,
     postedById: row.requester_id || row.created_by_user_id,
@@ -258,6 +259,11 @@ export const normalizeRequest = (row) => {
     accepted_volunteer_id: row.claimed_by_user_id,
   };
 };
+
+export const splitPublicHelpPosts = (requests = []) => ({
+  needs: requests.filter((request) => request.direction !== 'offer'),
+  offers: requests.filter((request) => request.direction === 'offer'),
+});
 
 export const normalizeOffer = (row) => {
   if (!row) return row;
