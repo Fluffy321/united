@@ -29,8 +29,9 @@ describe('iPhone app shell contract', () => {
     expect(communitiesSource).not.toContain('seed communities');
   });
 
-  it('opens the real help request flow from the empty Home action', () => {
-    expect(feedSource).toContain("navigate('/MitzvahCircle?action=request')");
+  it('keeps the real help request flow available after removing the duplicate Home action', () => {
+    expect(feedSource).toContain('<LiveCategoryDeck');
+    expect(feedSource).not.toContain('<HomeStartHere');
     expect(helpSource).toContain("searchParams.get('action') !== 'request'");
     expect(helpSource).toContain("next.delete('action')");
   });
