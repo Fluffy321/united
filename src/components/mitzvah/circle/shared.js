@@ -247,7 +247,7 @@ export const normalizeRequest = (row) => {
   if (!row) return row;
   return {
     ...row,
-    direction: row.direction === 'offer' ? 'offer' : 'need',
+    direction: row.direction === 'offer' || row.ride_direction === 'offering' ? 'offer' : 'need',
     status: DB_TO_UI_STATUS[row.status] || row.status || STATUSES.OPEN,
     poster_id: row.requester_id || row.created_by_user_id,
     postedById: row.requester_id || row.created_by_user_id,

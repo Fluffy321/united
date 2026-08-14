@@ -5,6 +5,7 @@ describe('public Help directions', () => {
   it('keeps existing requests as needs and preserves explicit public offers', () => {
     expect(normalizeRequest({ id: 'legacy' }).direction).toBe('need');
     expect(normalizeRequest({ id: 'offer', direction: 'offer' }).direction).toBe('offer');
+    expect(normalizeRequest({ id: 'ride-offer', ride_direction: 'offering' }).direction).toBe('offer');
   });
 
   it('splits only public request rows without consuming private response records', () => {

@@ -9,7 +9,8 @@ export default function QuickViewSheet({ request, offers, comments = [], current
   const myOffer = offers.find(
     (o) => o.requestId === request.id && o.volunteerId === currentUser?.id
   );
-  const canOffer = request.poster_id !== currentUser?.id && request.status === STATUSES.OPEN && !myOffer;
+  const isPublicOffer = request.direction === 'offer';
+  const canOffer = request.direction !== 'offer' && request.poster_id !== currentUser?.id && request.status === STATUSES.OPEN && !myOffer;
   const helperOffers = offers.filter((o) => o.requestId === request.id);
   const savedOfferCount = Number(request.offers_count || request.helper_count || request.volunteer_count || 0);
   const visibleHelperCount = Math.max(helperOffers.length, Number.isFinite(savedOfferCount) ? savedOfferCount : 0);
@@ -19,6 +20,10 @@ export default function QuickViewSheet({ request, offers, comments = [], current
   const progress = getRequestProgress(request, visibleHelperCount);
   const helpCta = getHelpCta(request);
   const distanceLabel = getApproxDistance(request);
+  const timingLabel = isPublicOffer
+    ? (urgencyInfo.label === 'Urgent' ? 'Available now' : urgencyInfo.label === 'Today' ? 'Available today' : 'Flexible availability')
+    : urgencyInfo.detail;
+  const timingDetail = isPublicOffer ? 'Message them to coordinate details.' : urgencyInfo.remaining;
 
   return createPortal(
     <div
@@ -33,6 +38,11 @@ export default function QuickViewSheet({ request, offers, comments = [], current
           <div className="min-w-0">
             <div className="mb-2 flex flex-wrap gap-2">
               <StatusPill status={request.status} />
+              {isPublicOffer && (
+                <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
+                  Available to help
+                </span>
+              )}
               <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-black ${urgencyInfo.tone}`}>
                 <span className={`h-2 w-2 rounded-full ${urgencyInfo.dot}`} />
                 {urgencyInfo.label}
@@ -56,11 +66,11 @@ export default function QuickViewSheet({ request, offers, comments = [], current
           <div className={`rounded-2xl border px-3 py-2 ${urgencyInfo.tone}`}>
             <p className="flex items-center gap-2 text-[12px] font-black">
               <Clock className="h-4 w-4" />
-              {urgencyInfo.detail}
+              {timingLabel}
             </p>
-            <p className="mt-0.5 text-[11px] font-black opacity-80">{urgencyInfo.remaining}</p>
+            <p className="mt-0.5 text-[11px] font-black opacity-80">{timingDetail}</p>
           </div>
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2">
+          {!isPublicOffer && <div className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[13px] font-black text-slate-950">{progress.title}</p>
@@ -73,11 +83,11 @@ export default function QuickViewSheet({ request, offers, comments = [], current
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
               <div className="h-full rounded-full bg-blue-600" style={{ width: `${progress.percent}%` }} />
             </div>
-          </div>
+          </div>}
           <div className="flex flex-wrap gap-2 text-[12px] font-black">
-            <span className="rounded-full bg-blue-50 px-2.5 py-1.5 text-blue-700">
+            {!isPublicOffer && <span className="rounded-full bg-blue-50 px-2.5 py-1.5 text-blue-700">
               {visibleHelperCount} {visibleHelperCount === 1 ? 'person offered help' : 'people offered help'}
-            </span>
+            </span>}
             <span className="rounded-full bg-slate-50 px-2.5 py-1.5 text-slate-700">
               {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
             </span>

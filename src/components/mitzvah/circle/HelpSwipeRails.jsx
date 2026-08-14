@@ -26,7 +26,7 @@ function HelpRailCard({ request, direction, onOpen }) {
         <MapPin className="h-3.5 w-3.5" />
         <span className="truncate">{request.neighborhood || 'Five Towns'}</span>
         <span aria-hidden="true">·</span>
-        <span className="shrink-0">{isOffer ? 'Flexible' : urgency.remaining}</span>
+        <span className="shrink-0">{isOffer ? (urgency.label === 'Urgent' ? 'Available now' : urgency.label === 'Today' ? 'Available today' : 'Flexible') : urgency.remaining}</span>
       </div>
     </button>
   );

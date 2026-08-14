@@ -51,7 +51,7 @@ export default function RequestCard({
     (o) => o.requestId === request.id && o.volunteerId === currentUser?.id
   );
   const isAcceptedVolunteer = acceptedVolunteerId === currentUser?.id;
-  const canOffer = !isPoster && request.status === STATUSES.OPEN && !myOffer;
+  const canOffer = request.direction !== 'offer' && !isPoster && request.status === STATUSES.OPEN && !myOffer;
   const canStart = isAcceptedVolunteer && request.status === STATUSES.ACCEPTED;
   const canComplete = isAcceptedVolunteer && request.status === STATUSES.IN_PROG;
   const canVerify =
