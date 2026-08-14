@@ -24,7 +24,6 @@ import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import CommunitiesFeedView from '@/components/feed/CommunitiesFeedView';
 import HomePriorityStack from '@/components/feed/HomePriorityStack';
 import HomeContributionEntry from '@/components/feed/HomeContributionEntry';
-import HomeStartHere from '@/components/feed/HomeStartHere';
 import LiveCategoryDeck from '@/components/feed/LiveCategoryDeck';
 import BriefCategoryLaunchpad from '@/components/feed/BriefCategoryLaunchpad';
 import BriefCategorySection from '@/components/feed/BriefCategorySection';
@@ -650,6 +649,7 @@ export default function Feed() {
                 />
               </WidgetBoundary>
 
+              {(isLoading || isError || feedPosts.length > 0) && (
               <section aria-labelledby="from-your-community-heading" className="space-y-2.5">
                 <div className="flex items-end justify-between px-1 pt-1">
                   <div>
@@ -668,15 +668,6 @@ export default function Feed() {
 
                 {isError && !isLoading && feedPosts.length === 0 && (
                   <QueryError message="The feed could not load." onRetry={refetch} />
-                )}
-
-                {feedCanRender && !isError && feedPosts.length === 0 && (
-                  <HomeStartHere
-                    onShare={() => openComposer({ type: 'feed', subtype: 'local_update', initialBody: '' })}
-                    onHelp={() => navigate('/MitzvahCircle?action=request')}
-                    onCommunities={() => navigate('/Communities')}
-                    onDirectory={() => navigate('/Map')}
-                  />
                 )}
 
                 {feedCanRender && feedPosts.length > 0 && (
@@ -712,6 +703,7 @@ export default function Feed() {
                   </div>
                 )}
               </section>
+              )}
             </>
           )}
         </div>
