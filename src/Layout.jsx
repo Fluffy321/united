@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookOpenText, Home, Store, MessageSquarePlus, User, Users } from 'lucide-react';
+import { BookOpenText, Home, Store, MessageSquarePlus, Plus, User, Users } from 'lucide-react';
 import { MitzvahIcon } from '@/components/common/JIcons';
 import { createPageUrl } from '@/utils';
 import { Toaster } from 'sonner';
@@ -144,6 +144,15 @@ function LayoutContent({ children, currentPageName }) {
         <div className="app-fixed-layer">
           <div className="app-fixed-frame">
             <div className="app-floating-stack">
+              <button
+                type="button"
+                onClick={() => navigate('/Publish')}
+                aria-label="Create a post"
+                className="app-floating-action flex h-[52px] w-[52px] items-center justify-center self-end rounded-[18px] bg-blue-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.32)] transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                title="Create"
+              >
+                <Plus className="h-6 w-6" strokeWidth={3} />
+              </button>
               {/* Feedback shares the floating stack so it never overlaps page content */}
               <button
                 onClick={() => setShowFeedback(true)}

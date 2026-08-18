@@ -23,7 +23,6 @@ import CommentsSheet from '@/components/feed/CommentsSheet';
 import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import CommunitiesFeedView from '@/components/feed/CommunitiesFeedView';
 import HomePriorityStack from '@/components/feed/HomePriorityStack';
-import HomeContributionEntry from '@/components/feed/HomeContributionEntry';
 import LiveCategoryDeck from '@/components/feed/LiveCategoryDeck';
 import BriefCategoryLaunchpad from '@/components/feed/BriefCategoryLaunchpad';
 import BriefCategorySection from '@/components/feed/BriefCategorySection';
@@ -638,8 +637,6 @@ export default function Feed() {
                   onOpenEngagement={() => navigate('/Settings')}
                 />
               </WidgetBoundary>
-
-              <HomeContributionEntry onSelect={(intention) => openComposer(intention.composer)} />
 
               <WidgetBoundary>
                 <LiveCategoryDeck

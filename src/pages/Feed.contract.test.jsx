@@ -6,7 +6,7 @@ const source = readFileSync(new URL('./Feed.jsx', import.meta.url), 'utf8');
 describe('Mobile headquarters Feed contract', () => {
   it('uses Priority Stack C and removes repeated Home prompt surfaces', () => {
     expect(source).toContain("import HomePriorityStack from '@/components/feed/HomePriorityStack'");
-    expect(source).toContain("import HomeContributionEntry from '@/components/feed/HomeContributionEntry'");
+    expect(source).not.toContain("import HomeContributionEntry from '@/components/feed/HomeContributionEntry'");
     expect(source).not.toContain("import HomeStartHere from '@/components/feed/HomeStartHere'");
     expect(source).toContain("import LiveCategoryDeck from '@/components/feed/LiveCategoryDeck'");
     expect(source).toContain("import BriefCategoryLaunchpad from '@/components/feed/BriefCategoryLaunchpad'");
@@ -14,7 +14,7 @@ describe('Mobile headquarters Feed contract', () => {
     expect(source).toContain('buildHomePriorityModel');
     expect(source).toContain('readBriefRouteState');
     expect(source).toContain('<HomePriorityStack');
-    expect(source).toContain('<HomeContributionEntry');
+    expect(source).not.toContain('<HomeContributionEntry');
     expect(source).not.toContain('<HomeStartHere');
     expect(source).toContain('<LiveCategoryDeck');
     expect(source).toContain('<BriefCategoryLaunchpad');
