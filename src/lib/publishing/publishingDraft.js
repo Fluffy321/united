@@ -30,6 +30,10 @@ export function createPublishingDraft(typeId, userContext = {}) {
       communityId: null,
     },
     joinedCommunityIds: (userContext.joinedCommunities || []).map((community) => community.id),
+    joinedCommunities: (userContext.joinedCommunities || []).map((community) => ({
+      id: community.id,
+      name: community.name || community.community_name || 'Joined community',
+    })),
     sourceName: '',
     sourceUrl: '',
     media: [],
@@ -94,7 +98,7 @@ export function toPublishCommand(draft, submissionKey) {
   if (!submissionKey) throw new Error('A submission key is required.');
 
   const reserved = new Set([
-    'publishingType', 'headline', 'details', 'audience', 'joinedCommunityIds', 'sourceName',
+    'publishingType', 'headline', 'details', 'audience', 'joinedCommunityIds', 'joinedCommunities', 'sourceName',
     'sourceUrl', 'media', 'expiresAt', 'publicAuthorHidden', 'allowPublicAuthorHidden',
     'authorId', 'userId', 'createdBy', 'created_by_user_id',
   ]);
