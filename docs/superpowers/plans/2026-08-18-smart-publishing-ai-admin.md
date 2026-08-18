@@ -30,7 +30,7 @@
 - `src/lib/publishing/publishingDraft.js` — draft defaults, conditional-field validation, preview model, and request serialization.
 - `src/services/publishingService.js` — typed client boundary for publish/list/update/end/appeal/admin actions.
 - `src/pages/Publish.jsx` — full-screen iPhone publisher and My Publishing view.
-- `src/components/publishing/PublishingTypePicker.jsx` — six friendly groups and searchable 25-type picker.
+- `src/components/publishing/PublishingTypePicker.jsx` — six friendly groups and the complete 26-type picker.
 - `src/components/publishing/PublishingForm.jsx` — dynamic fields, audience, privacy, expiry, and source controls.
 - `src/components/publishing/PublishingPreview.jsx` — exact pre-publish preview and immediate-publish confirmation.
 - `src/components/publishing/MyPublishing.jsx` — edit, end, duplicate, moderation state, and appeal entry.
@@ -67,9 +67,9 @@
 import { describe, expect, it } from 'vitest';
 import { PUBLISHING_GROUPS, PUBLISHING_TYPES, getPublishingType } from './publishingTypes';
 
-it('exposes six groups and exactly twenty-five unique types', () => {
+it('exposes six groups and exactly twenty-six unique types', () => {
   expect(PUBLISHING_GROUPS).toHaveLength(6);
-  expect(new Set(PUBLISHING_TYPES.map((type) => type.id)).size).toBe(25);
+  expect(new Set(PUBLISHING_TYPES.map((type) => type.id)).size).toBe(26);
 });
 
 it.each(['local_news', 'event', 'help_need', 'job', 'business_update'])('%s has routing and expiry', (id) => {
@@ -86,7 +86,7 @@ Expected: FAIL because both modules do not exist.
 
 - [ ] **Step 3: Implement the exact approved taxonomy and draft rules**
 
-Use these IDs without renaming them: `local_news`, `urgent_safety`, `weather`, `road_traffic`, `school_update`, `community_announcement`, `minyan_zmanim`, `shiur_learning`, `simcha`, `funeral_shiva_tehillim`, `event`, `casual_plan`, `youth_activity`, `help_need`, `help_offer`, `ride_carpool`, `lost_found`, `volunteer`, `job`, `housing`, `giveaway`, `sale`, `business_opening`, `business_update`, `kosher_menu_deal`. Map each to one of `post`, `event`, `help`, `marketplace`, or `business_submission`, and encode the fields and expiry defaults from the approved design spec.
+Use these IDs without renaming them: `local_news`, `urgent_safety`, `weather`, `road_traffic`, `school_update`, `community_announcement`, `minyan_zmanim`, `shiur_learning`, `simcha`, `funeral_shiva_tehillim`, `event`, `casual_plan`, `youth_activity`, `help_need`, `help_offer`, `ride_carpool`, `lost_found`, `volunteer`, `job`, `housing`, `giveaway`, `sale`, `business_opening`, `business_update`, `kosher_menu_update`, `local_deal`. Map each to one of `post`, `event`, `help`, `marketplace`, or `business_submission`, and encode the fields and expiry defaults from the approved design spec.
 
 - [ ] **Step 4: Add validation and serialization tests**
 
@@ -107,7 +107,7 @@ it('never serializes a public anonymous identity', () => {
 
 Run: `npm test -- src/lib/publishing/publishingTypes.test.js src/lib/publishing/publishingDraft.test.js && npm run typecheck`
 
-Expected: PASS with 25 unique types and no type errors.
+Expected: PASS with 26 unique types and no type errors.
 
 - [ ] **Step 6: Commit**
 
@@ -138,7 +138,7 @@ Expected: FAIL because the columns and RPCs do not exist.
 
 - [ ] **Step 3: Implement metadata, constraints, indexes, and RLS**
 
-Add check constraints for the 25 type IDs, audience scopes (`local_area`, `community`), moderation states (`pending`, `clear`, `needs_review`, `temporarily_hidden`, `restored`, `removed`), and trust states (`community_submitted`, `source_linked`, `verified`). Add unique partial indexes on `(created_by_user_id, submission_key)` or the native creator equivalent. Keep real author IDs in native owner columns; expose `public_author_hidden` only as presentation metadata.
+Add check constraints for the 26 type IDs, audience scopes (`area`, `community`), moderation states (`pending`, `clear`, `needs_review`, `temporarily_hidden`, `restored`, `removed`), and trust states (`community_submitted`, `source_linked`, `verified`). Add unique partial indexes on `(created_by_user_id, submission_key)` or the native creator equivalent. Keep real author IDs in native owner columns; expose `public_author_hidden` only as presentation metadata.
 
 - [ ] **Step 4: Implement one security-definer routing RPC**
 
@@ -222,7 +222,7 @@ git commit -m "feat: expose authenticated publishing endpoint"
 
 - [ ] **Step 1: Write service and screen behavior tests**
 
-Tests must prove the service calls `supabase.functions.invoke('publish-content')`, forwards no author ID, preserves the submission key on retry, shows six groups/25 types, defaults to local area, only lists joined communities, blocks invalid preview, changes button text to `Publish now`, and shows a success state with `View post` and `Post another`.
+Tests must prove the service calls `supabase.functions.invoke('publish-content')`, forwards no author ID, preserves the submission key on retry, shows six groups/26 types, defaults to local area, only lists joined communities, blocks invalid preview, changes button text to `Publish now`, and shows a success state with `View post` and `Post another`.
 
 - [ ] **Step 2: Run tests and verify RED**
 
@@ -236,7 +236,7 @@ Use the current Supabase session automatically. Translate stable endpoint codes 
 
 - [ ] **Step 4: Implement the screen as four clear steps**
 
-The header reads `Create`; steps are `Choose`, `Details`, `Preview`, `Done`. The picker shows friendly groups and search. The form renders only fields declared by the chosen type. Preview shows the exact card, audience, public identity state, source label, and expiration. Preserve drafts in `sessionStorage` until success. Disable double taps and reuse the same UUID submission key for retries.
+The header reads `Create`; steps are `Choose`, `Details`, `Preview`, `Done`. The picker shows six compact groups and up to four remembered shortcuts, without a search field. The form renders only fields declared by the chosen type. Preview shows the exact card, audience, public identity state, source label, and expiration. Preserve drafts in `sessionStorage` until success. Disable double taps and reuse the same UUID submission key for retries.
 
 - [ ] **Step 5: Add `/Publish` without the normal bottom bar**
 
@@ -568,7 +568,7 @@ Use the linked Supabase project. Set `OPENAI_API_KEY`, `OPENAI_CLASSIFIER_MODEL`
 
 - [ ] **Step 5: Merge and verify the Vercel production deployment**
 
-Merge only with green checks. Confirm `https://www.junited.us/Publish` loads for a signed-in user and verify at 390 × 844: all 25 types; local/community audience; immediate safe publish; native routing; hidden-name Help privacy; double-tap idempotency; My Publishing edit/end/duplicate; harmful fixture temporary hide; admin restore/remove; appeal; expiration; offline/provider-failure messaging; no horizontal overflow; bottom controls remain visible above the iPhone safe area.
+Merge only with green checks. Confirm `https://www.junited.us/Publish` loads for a signed-in user and verify at 390 × 844: all 26 types; local/community audience; immediate safe publish; native routing; hidden-name Help privacy; double-tap idempotency; My Publishing edit/end/duplicate; harmful fixture temporary hide; admin restore/remove; appeal; expiration; offline/provider-failure messaging; no horizontal overflow; bottom controls remain visible above the iPhone safe area.
 
 - [ ] **Step 6: Update the roadmap only for verified work**
 
