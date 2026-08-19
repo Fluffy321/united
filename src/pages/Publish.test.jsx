@@ -91,7 +91,36 @@ describe('PublishView', () => {
     };
     const html = renderView({ step: 'preview', draft, status: 'error' });
 
-    expect(html).toContain('We couldn’t publish that. Your draft is still here.');
+    expect(html).toContain('We couldn’t save that. Your changes are still here.');
     expect(html).toContain('Eruv inspection is complete');
+  });
+
+  it('uses clear save language when editing an existing post', () => {
+    const draft = {
+      ...createPublishingDraft('community_announcement', context),
+      headline: 'Updated eruv status',
+      details: 'The route was checked again.',
+    };
+    const html = renderView({ step: 'preview', draft, editing: true });
+
+    expect(html).toContain('Save changes');
+    expect(html).not.toContain('Publish now');
+  });
+
+  it('opens My posts as a real screen instead of looping back to Create', () => {
+    const html = renderView({
+      step: 'mine',
+      myPosts: [{
+        contentId: 'post-1',
+        publishingType: 'local_news',
+        headline: 'Road work begins Monday',
+        destinationLabel: 'Five Towns Home',
+        lifecycleStatus: 'active',
+        moderationStatus: 'clear',
+      }],
+    });
+
+    expect(html).toContain('Your publishing');
+    expect(html).toContain('Road work begins Monday');
   });
 });
