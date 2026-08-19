@@ -1977,6 +1977,31 @@ Goals:
   // ── Automation & AI ───────────────────────────────────────────────────────
 
   {
+    id: 'smart-publishing-ai-admin',
+    category: 'Automation & AI',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.HIGH,
+    title: 'Smart Publishing and AI Admin',
+    description: 'Give every signed-in member one iPhone-first publishing flow for 26 useful local content types, route each submission into JUnited’s existing native surfaces, and support it with conservative asynchronous AI review plus final human control for Aryeh and Jonny.',
+    why: 'Implementation is active on codex/smart-publishing-ai-admin with the publisher, authenticated Edge Function boundary, AI moderation policy/worker, and iPhone Admin Center UI built. The secure Postgres routing, RLS, appeals, expiration, deployment, and live verification remain open because the Mac does not yet have Docker for a safe local Supabase test database.',
+    prompt: `You are finishing Smart Publishing and AI Admin for JUnited.
+
+Context:
+- Approved design: docs/superpowers/specs/2026-08-18-smart-publishing-ai-admin-design.md
+- Implementation plan: docs/superpowers/plans/2026-08-18-smart-publishing-ai-admin.md
+- Active branch: codex/smart-publishing-ai-admin
+- Existing work includes the 26-type /Publish flow, one global creation entry, authenticated publish-content Edge Function, conservative OpenAI moderation worker, and iPhone Admin Center AI review UI.
+
+Goals:
+1. Install/start Docker locally and run the existing pgTAP tests against a disposable Supabase database; never use production as the migration test database.
+2. Complete and verify the smart publishing migration: native destination routing, idempotency, RLS, explicit grants, moderation jobs, admin-only review RPCs, and owner list/update/end operations.
+3. Add and verify My Publishing, appeals, content expiration, retry-safe worker scheduling, and plain user-facing moderation states.
+4. Run the complete JUnited self-check, Supabase security/performance advisors, iPhone and responsive browser checks, and provider-failure tests.
+5. Push through the existing draft PR, deploy only after green review, and verify junited.us end to end before merging.
+6. Update internal/roadmap.js: change this item's status to 'shipped' only after production verification and add the verification report path to shippedNote.`,
+  },
+
+  {
     id: 'five-towns-automation',
     category: 'Automation & AI',
     status: STATUS.SHIPPED,

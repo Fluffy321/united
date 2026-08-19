@@ -65,6 +65,26 @@ Deno.test('update, end, and listMine call only their owner-scoped RPCs', async (
   assertEquals(calls.map((call) => call.name), ['update_published_content', 'end_published_content', 'list_my_publishing']);
 });
 
+Deno.test('admin operations call only admin-checked moderation RPCs', async () => {
+  const { deps, calls } = dependencies([]);
+
+  await handlePublishingRequest(request({ operation: 'adminQueue', payload: { status: 'needs_review' } }), deps);
+  await handlePublishingRequest(request({ operation: 'adminHealth', payload: {} }), deps);
+  await handlePublishingRequest(request({
+    operation: 'adminDecide',
+    payload: { jobId: 'job-1', decision: 'restore', reason: 'Reviewed by Aryeh' },
+  }), deps);
+
+  assertEquals(calls, [
+    { name: 'list_admin_moderation_queue', args: { p_filters: { status: 'needs_review' } } },
+    { name: 'moderation_queue_health', args: {} },
+    {
+      name: 'admin_decide_moderation',
+      args: { p_job_id: 'job-1', p_decision: 'restore', p_reason: 'Reviewed by Aryeh' },
+    },
+  ]);
+});
+
 Deno.test('database errors become stable public error codes without SQL details', async () => {
   const deps = {
     createUserClient: () => ({

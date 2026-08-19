@@ -35,6 +35,9 @@ export function createPublishingService(client) {
     end: (contentId) => invoke('end', { contentId }),
     listMine: (cursor = null) => invoke('listMine', { cursor }),
     appeal: (contentId, reason) => invoke('appeal', { contentId, reason }),
+    listModerationQueue: (filters = {}) => invoke('adminQueue', filters),
+    getModerationHealth: () => invoke('adminHealth'),
+    decideModeration: (jobId, decision, reason) => invoke('adminDecide', { jobId, decision, reason }),
   };
 }
 

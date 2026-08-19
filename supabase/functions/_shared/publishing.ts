@@ -69,6 +69,22 @@ export async function handlePublishingRequest(request: Request, deps: Publishing
       rpcName = 'list_my_publishing';
       rpcArgs = { p_limit: 50, p_before: payload.cursor || null };
       break;
+    case 'adminQueue':
+      rpcName = 'list_admin_moderation_queue';
+      rpcArgs = { p_filters: payload };
+      break;
+    case 'adminHealth':
+      rpcName = 'moderation_queue_health';
+      rpcArgs = {};
+      break;
+    case 'adminDecide':
+      rpcName = 'admin_decide_moderation';
+      rpcArgs = {
+        p_job_id: payload.jobId,
+        p_decision: payload.decision,
+        p_reason: payload.reason,
+      };
+      break;
     default:
       return json({ code: 'INVALID_COMMAND', message: 'Choose a supported publishing action.' }, 400);
   }

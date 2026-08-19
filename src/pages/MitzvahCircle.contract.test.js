@@ -7,8 +7,8 @@ const quickView = readFileSync(new URL('../components/mitzvah/circle/QuickViewSh
 describe('Help public offer contract', () => {
   it('persists direction and connects both rail posting modes', () => {
     expect(source).toContain('direction: requestDirection');
-    expect(source).toContain("onPostNeed={() => openRequestForm(null, 'need')}");
-    expect(source).toContain("onPostOffer={() => openRequestForm(null, 'offer')}");
+    expect(source).toContain("onPostNeed={() => navigate('/Publish?type=help_need')}");
+    expect(source).toContain("onPostOffer={() => navigate('/Publish?type=help_offer')}");
     expect(source).toContain('direction={requestDirection}');
     expect(source).toContain("if (request.direction === 'offer')");
     expect(source).toContain("navigate(`/PublicProfile?id=${encodeURIComponent(request.poster_id)}`)");

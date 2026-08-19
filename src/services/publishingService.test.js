@@ -32,6 +32,24 @@ describe('publishingService', () => {
     ]);
   });
 
+  it('uses the authenticated publishing boundary for admin moderation work', async () => {
+    const client = createClient({ data: { items: [], health: { pending: 0 } }, error: null });
+    const service = createPublishingService(client);
+
+    await service.listModerationQueue({ status: 'needs_review' });
+    await service.getModerationHealth();
+    await service.decideModeration('job-1', 'restore', 'Reviewed by Aryeh');
+
+    expect(client.functions.invoke.mock.calls.map((call) => call[1].body)).toEqual([
+      { operation: 'adminQueue', payload: { status: 'needs_review' } },
+      { operation: 'adminHealth', payload: {} },
+      {
+        operation: 'adminDecide',
+        payload: { jobId: 'job-1', decision: 'restore', reason: 'Reviewed by Aryeh' },
+      },
+    ]);
+  });
+
   it.each([
     ['UNAUTHENTICATED', 'Please sign in again.'],
     ['NOT_A_MEMBER', 'Join that community before posting there.'],

@@ -16,6 +16,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { formatDistanceToNow, format } from 'date-fns';
 import ActionModal from '@/components/moderation/ActionModal';
+import AiModerationPanel from '@/components/moderation/AiModerationPanel';
+import { publishingService } from '@/services/publishingService';
 import { createModerationAuditLog, filterBusinessClaimRequest, filterBusinessListing, filterClaimRequest, filterReport, listMitzvahRequest, listModerationAuditLog, updateClaimRequest, updateCommunity, updateMitzvahRequest, updateReport } from '@/services/entityServices';
 
 const PRIORITY_CONFIG = {
@@ -48,6 +50,28 @@ const businessLocationLabel = (business) => {
 const businessCategoryLabel = (value) => String(value || 'other')
   .replace(/_/g, ' ')
   .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const titleCase = (value) => String(value || 'Community post')
+  .replace(/_/g, ' ')
+  .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const moderationItems = (data) => {
+  const items = Array.isArray(data) ? data : data?.items || [];
+  return items.map((item) => ({
+    id: item.id,
+    contentPreview: item.contentPreview || item.content_preview || item.content_snapshot || 'Content preview unavailable.',
+    authorName: item.authorName || item.author_name || 'JUnited member',
+    audienceLabel: item.audienceLabel || item.audience_label || item.network || 'Local area',
+    publishingTypeLabel: item.publishingTypeLabel || titleCase(item.publishing_type),
+    moderationStatus: item.moderationStatus || item.moderation_status || item.status,
+    aiReason: item.aiReason || item.ai_reason || item.human_reason || item.reasons?.[0] || 'This post needs a closer look.',
+    confidence: item.confidence,
+    provider: item.providerName || item.provider_name || item.provider || 'OpenAI',
+    model: item.model || item.provider_model || 'Not recorded',
+    policyVersion: item.policyVersion || item.policy_version || 'JUnited safety 1.0',
+    sourceUrl: item.sourceUrl || item.source_url || null,
+  }));
+};
 
 function PriorityBadge({ priority }) {
   const cfg = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.medium;
@@ -160,6 +184,30 @@ export default function AdminModerationQueue() {
       return requests.filter(r => r.is_hidden);
     },
     enabled: !!currentUser,
+  });
+
+  const { data: aiReviewResponse, isLoading: aiReviewLoading, error: aiReviewError, refetch: refetchAiReview } = useQuery({
+    queryKey: ['admin-ai-moderation', 'needs_review'],
+    queryFn: () => publishingService.listModerationQueue({ status: 'needs_review' }),
+    enabled: currentUser?.role === 'admin',
+    refetchInterval: 60000,
+    retry: false,
+  });
+
+  const { data: aiHiddenResponse, isLoading: aiHiddenLoading, error: aiHiddenError, refetch: refetchAiHidden } = useQuery({
+    queryKey: ['admin-ai-moderation', 'temporarily_hidden'],
+    queryFn: () => publishingService.listModerationQueue({ status: 'temporarily_hidden' }),
+    enabled: currentUser?.role === 'admin',
+    refetchInterval: 60000,
+    retry: false,
+  });
+
+  const { data: moderationHealthResponse } = useQuery({
+    queryKey: ['admin-moderation-health'],
+    queryFn: () => publishingService.getModerationHealth(),
+    enabled: currentUser?.role === 'admin',
+    refetchInterval: 60000,
+    retry: false,
   });
 
   const resolveReportMutation = useMutation({
@@ -322,6 +370,17 @@ export default function AdminModerationQueue() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-flagged-requests'] }); toast.success('Request restored'); },
   });
 
+  const decideAiModerationMutation = useMutation({
+    mutationFn: ({ jobId, decision, reason }) => publishingService.decideModeration(jobId, decision, reason),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-ai-moderation'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-moderation-health'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-audit'] });
+      toast.success(variables.decision === 'restore' ? 'Post restored' : variables.decision === 'remove' ? 'Post removed' : 'Decision saved');
+    },
+    onError: (error) => toast.error(error.message || 'Could not save that decision'),
+  });
+
   const filteredReports = reports.filter(r => {
     if (priorityFilter !== 'all' && r.priority !== priorityFilter) return false;
     if (typeFilter !== 'all' && r.content_type !== typeFilter) return false;
@@ -331,6 +390,9 @@ export default function AdminModerationQueue() {
   const criticalCount = reports.filter(r => r.priority === 'critical').length;
   const highCount = reports.filter(r => r.priority === 'high').length;
   const businessQueueCount = businessSubmissions.length + businessClaims.length;
+  const aiReviewItems = moderationItems(aiReviewResponse);
+  const aiHiddenItems = moderationItems(aiHiddenResponse);
+  const moderationHealth = moderationHealthResponse?.health || moderationHealthResponse || {};
 
   if (!currentUser) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>;
@@ -338,27 +400,27 @@ export default function AdminModerationQueue() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="mx-auto max-w-5xl px-4 pb-28 pt-[max(1rem,env(safe-area-inset-top))] sm:py-6">
         {/* Header */}
-        <div className="mb-6 flex items-start justify-between">
+        <div className="mb-4 flex items-start justify-between gap-2 sm:mb-6">
           <div className="flex items-center gap-3">
             <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors">
               <ArrowLeft className="w-5 h-5 text-slate-600" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                <Shield className="w-6 h-6 text-slate-700" /> Moderation Queue
+              <h1 className="flex items-center gap-2 text-xl font-black text-navy sm:text-2xl">
+                <Shield className="w-6 h-6 text-blue-700" /> Admin Center
               </h1>
-              <p className="text-sm text-slate-500 mt-1">Review flagged content and take action</p>
+              <p className="mt-0.5 text-xs text-slate-500 sm:text-sm">AI sorts the work. You make the call.</p>
             </div>
           </div>
-          <button onClick={() => refetchReports()} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors">
-            <RefreshCw className="w-4 h-4" /> Refresh
+          <button onClick={() => { refetchReports(); queryClient.invalidateQueries({ queryKey: ['admin-ai-moderation'] }); queryClient.invalidateQueries({ queryKey: ['admin-moderation-health'] }); }} aria-label="Refresh every admin queue" className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:text-slate-700">
+            <RefreshCw className="w-4 h-4" />
           </button>
         </div>
 
         {/* Summary chips */}
-        <div className="flex gap-3 mb-6 flex-wrap">
+        <div className="mb-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] sm:mb-6 sm:flex-wrap">
           {criticalCount > 0 && (
             <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2">
               <AlertTriangle className="w-4 h-4 text-red-600" />
@@ -376,11 +438,21 @@ export default function AdminModerationQueue() {
           </div>
         </div>
 
-        <Tabs defaultValue="reports">
-          <TabsList className="mb-6 flex-wrap h-auto">
+        <Tabs defaultValue="ai-review">
+          <TabsList className="sticky top-0 z-20 -mx-4 mb-4 flex h-auto w-[calc(100%+2rem)] justify-start gap-1 overflow-x-auto rounded-none border-y border-slate-200 bg-slate-50/95 px-4 py-2 backdrop-blur [scrollbar-width:none] sm:static sm:mx-0 sm:mb-6 sm:w-full sm:rounded-xl sm:border">
+            <TabsTrigger value="ai-review" className="min-h-11 shrink-0 gap-1.5 rounded-lg px-3">
+              <Bot className="h-4 w-4" />
+              Needs review
+              {aiReviewItems.length > 0 && <span className="rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">{aiReviewItems.length}</span>}
+            </TabsTrigger>
+            <TabsTrigger value="ai-hidden" className="min-h-11 shrink-0 gap-1.5 rounded-lg px-3">
+              <EyeOff className="h-4 w-4" />
+              AI hidden
+              {aiHiddenItems.length > 0 && <span className="rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white">{aiHiddenItems.length}</span>}
+            </TabsTrigger>
             <TabsTrigger value="reports" className="gap-2">
               <AlertTriangle className="w-4 h-4" />
-              Reports
+              User reports
               {reports.length > 0 && <span className="ml-1 bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">{reports.length}</span>}
             </TabsTrigger>
             <TabsTrigger value="claims" className="gap-2">
@@ -399,9 +471,41 @@ export default function AdminModerationQueue() {
             </TabsTrigger>
             <TabsTrigger value="audit" className="gap-2">
               <FileText className="w-4 h-4" />
-              Audit Log
+              History
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="ai-review">
+            {aiReviewLoading ? (
+              <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-blue-700" /></div>
+            ) : (
+              <AiModerationPanel
+                title="Needs review"
+                items={aiReviewItems}
+                health={moderationHealth}
+                error={aiReviewError}
+                onRetry={refetchAiReview}
+                busyJobId={decideAiModerationMutation.variables?.jobId}
+                onDecision={(decision) => decideAiModerationMutation.mutate(decision)}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="ai-hidden">
+            {aiHiddenLoading ? (
+              <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-blue-700" /></div>
+            ) : (
+              <AiModerationPanel
+                title="AI hidden"
+                items={aiHiddenItems}
+                health={moderationHealth}
+                error={aiHiddenError}
+                onRetry={refetchAiHidden}
+                busyJobId={decideAiModerationMutation.variables?.jobId}
+                onDecision={(decision) => decideAiModerationMutation.mutate(decision)}
+              />
+            )}
+          </TabsContent>
 
           {/* ── REPORTS TAB ── */}
           <TabsContent value="reports">
