@@ -53,4 +53,12 @@ describe('AiReviewCard', () => {
       reason: 'Reviewed by a platform admin and restored.',
     });
   });
+
+  it('puts the member’s appeal above the AI explanation', () => {
+    const html = renderToStaticMarkup(<AiReviewCard review={{ ...review, appealReason: 'The town website confirms this closure.' }} onDecision={() => {}} />);
+
+    expect(html).toContain('Member appeal');
+    expect(html).toContain('The town website confirms this closure.');
+    expect(html.indexOf('Member appeal')).toBeLessThan(html.indexOf('AI flagged this because'));
+  });
 });

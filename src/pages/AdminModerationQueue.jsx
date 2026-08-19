@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Loader2, Eye, EyeOff, CheckCircle2, AlertTriangle, Building2,
   X, Filter, Shield, Clock, Bot, User, RefreshCw,
-  FileText, ArrowLeft, Store, Globe2, MapPin, ExternalLink, BadgeCheck
+  FileText, ArrowLeft, Store, Globe2, MapPin, ExternalLink, BadgeCheck, MessageSquare
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -70,6 +70,7 @@ const moderationItems = (data) => {
     model: item.model || item.provider_model || 'Not recorded',
     policyVersion: item.policyVersion || item.policy_version || 'JUnited safety 1.0',
     sourceUrl: item.sourceUrl || item.source_url || null,
+    appealReason: item.appealReason || item.appeal_reason || item.appeal?.reason || null,
   }));
 };
 
@@ -197,6 +198,14 @@ export default function AdminModerationQueue() {
   const { data: aiHiddenResponse, isLoading: aiHiddenLoading, error: aiHiddenError, refetch: refetchAiHidden } = useQuery({
     queryKey: ['admin-ai-moderation', 'temporarily_hidden'],
     queryFn: () => publishingService.listModerationQueue({ status: 'temporarily_hidden' }),
+    enabled: currentUser?.role === 'admin',
+    refetchInterval: 60000,
+    retry: false,
+  });
+
+  const { data: appealsResponse, isLoading: appealsLoading, error: appealsError, refetch: refetchAppeals } = useQuery({
+    queryKey: ['admin-ai-moderation', 'appealed'],
+    queryFn: () => publishingService.listModerationQueue({ status: 'appealed' }),
     enabled: currentUser?.role === 'admin',
     refetchInterval: 60000,
     retry: false,
@@ -392,6 +401,7 @@ export default function AdminModerationQueue() {
   const businessQueueCount = businessSubmissions.length + businessClaims.length;
   const aiReviewItems = moderationItems(aiReviewResponse);
   const aiHiddenItems = moderationItems(aiHiddenResponse);
+  const appealItems = moderationItems(appealsResponse);
   const moderationHealth = moderationHealthResponse?.health || moderationHealthResponse || {};
 
   if (!currentUser) {
@@ -450,6 +460,11 @@ export default function AdminModerationQueue() {
               AI hidden
               {aiHiddenItems.length > 0 && <span className="rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white">{aiHiddenItems.length}</span>}
             </TabsTrigger>
+            <TabsTrigger value="appeals" className="min-h-11 shrink-0 gap-1.5 rounded-lg px-3">
+              <MessageSquare className="h-4 w-4" />
+              Appeals
+              {appealItems.length > 0 && <span className="rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white">{appealItems.length}</span>}
+            </TabsTrigger>
             <TabsTrigger value="reports" className="gap-2">
               <AlertTriangle className="w-4 h-4" />
               User reports
@@ -501,6 +516,22 @@ export default function AdminModerationQueue() {
                 health={moderationHealth}
                 error={aiHiddenError}
                 onRetry={refetchAiHidden}
+                busyJobId={decideAiModerationMutation.variables?.jobId}
+                onDecision={(decision) => decideAiModerationMutation.mutate(decision)}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="appeals">
+            {appealsLoading ? (
+              <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-blue-700" /></div>
+            ) : (
+              <AiModerationPanel
+                title="Appeals"
+                items={appealItems}
+                health={moderationHealth}
+                error={appealsError}
+                onRetry={refetchAppeals}
                 busyJobId={decideAiModerationMutation.variables?.jobId}
                 onDecision={(decision) => decideAiModerationMutation.mutate(decision)}
               />

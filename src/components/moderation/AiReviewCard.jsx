@@ -5,6 +5,7 @@ import {
   ExternalLink,
   EyeOff,
   MapPin,
+  MessageSquare,
   ShieldCheck,
   Trash2,
   UserRound,
@@ -55,8 +56,8 @@ export default function AiReviewCard({ review, onDecision, busy = false }) {
             <Bot className="h-5 w-5" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-200">AI review</p>
-            <p className="truncate text-sm font-bold">Needs a human decision</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-200">{review.appealReason ? 'Appeal review' : 'AI review'}</p>
+            <p className="truncate text-sm font-bold">{review.appealReason ? 'A member asked us to look again' : 'Needs a human decision'}</p>
           </div>
         </div>
         <span className="rounded-full bg-amber-300 px-2.5 py-1 text-[11px] font-black text-navy">{confidence}%</span>
@@ -75,6 +76,16 @@ export default function AiReviewCard({ review, onDecision, busy = false }) {
             <MetadataPill><EyeOff className="mr-1 inline h-3.5 w-3.5" />Temporarily hidden</MetadataPill>
           )}
         </div>
+
+        {review.appealReason && (
+          <section className="rounded-2xl border border-blue-200 bg-blue-50 p-3.5">
+            <div className="mb-1 flex items-center gap-2 text-sm font-black text-blue-950">
+              <MessageSquare className="h-4 w-4" aria-hidden="true" />
+              Member appeal
+            </div>
+            <p className="text-sm leading-relaxed text-blue-950/80">{review.appealReason}</p>
+          </section>
+        )}
 
         <section className="rounded-2xl border border-amber-200 bg-amber-50 p-3.5">
           <div className="mb-1 flex items-center gap-2 text-sm font-black text-amber-950">
