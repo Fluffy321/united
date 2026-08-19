@@ -28,12 +28,12 @@ function Header({ step, onBack, onMine }) {
   );
 }
 
-export function PublishView({ step, draft, expandedGroup, status, errors = {}, result, myPosts = [], myPostsLoading = false, myPostsError = null, myActionError = '', pendingAction = null, editing = false, onAction, onRetryMine }) {
+export function PublishView({ step, draft, expandedGroup, status, errors = {}, result, myPosts = [], myPostsLoading = false, myPostsError = null, myActionError = '', myActionNotice = '', appealItem = null, appealReason = '', pendingAction = null, editing = false, onAction, onRetryMine, onAppealReason }) {
   return (
     <div className="min-h-screen bg-[#F6F8FC] text-slate-950">
       <Header step={step} onBack={() => onAction('back')} onMine={() => onAction('mine')} />
       <main className="mx-auto w-full max-w-[430px] px-3.5 pb-[calc(28px+env(safe-area-inset-bottom))] pt-5">
-        {step === 'mine' && <MyPublishing items={myPosts} loading={myPostsLoading} error={myPostsError} actionError={myActionError} pendingAction={pendingAction} onRetry={onRetryMine} onAction={onAction} />}
+        {step === 'mine' && <MyPublishing items={myPosts} loading={myPostsLoading} error={myPostsError} actionError={myActionError} actionNotice={myActionNotice} appealItem={appealItem} appealReason={appealReason} onAppealReason={onAppealReason} pendingAction={pendingAction} onRetry={onRetryMine} onAction={onAction} />}
         {step === 'choose' && <><h2 className="px-1 text-[28px] font-black leading-[1.02] tracking-[-0.045em]">What are you sharing?</h2><p className="mb-5 mt-2 px-1 text-sm font-medium text-slate-600">Pick the closest fit. JUnited puts it in the right place.</p><PublishingTypePicker expandedGroup={expandedGroup} onGroup={(id) => onAction('group', id)} onType={(id) => onAction('type', id)} /></>}
         {step === 'details' && draft && <><PublishingForm draft={draft} errors={errors} onChange={(field, value) => onAction('change', { field, value })} /><button type="button" onClick={() => onAction('preview')} className="mt-5 flex min-h-14 w-full items-center justify-center gap-2 rounded-[18px] bg-[#0A1838] text-base font-black text-white shadow-[0_14px_28px_rgba(10,24,56,0.2)]">Preview <ChevronRight className="h-5 w-5" /></button></>}
         {step === 'preview' && draft && <><p className="mb-3 px-1 text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Preview</p><PublishingPreview draft={draft} />{status === 'error' && <p className="mt-3 rounded-[14px] bg-rose-50 px-3 py-2.5 text-sm font-bold text-rose-700">We couldn’t save that. Your changes are still here.</p>}<button type="button" disabled={status === 'pending'} onClick={() => onAction('publish')} className="mt-5 flex min-h-14 w-full items-center justify-center gap-2 rounded-[18px] bg-blue-600 text-base font-black text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] disabled:opacity-60">{status === 'pending' ? <><Loader2 className="h-5 w-5 animate-spin" /> {editing ? 'Saving…' : 'Publishing…'}</> : editing ? 'Save changes' : 'Publish now'}</button><button type="button" onClick={() => onAction('edit')} className="mt-2 min-h-12 w-full text-sm font-extrabold text-slate-600">Edit details</button></>}
@@ -58,6 +58,9 @@ export default function Publish() {
   const [result, setResult] = React.useState(null);
   const [pendingAction, setPendingAction] = React.useState(null);
   const [myActionError, setMyActionError] = React.useState('');
+  const [myActionNotice, setMyActionNotice] = React.useState('');
+  const [appealItem, setAppealItem] = React.useState(null);
+  const [appealReason, setAppealReason] = React.useState('');
   const [editingContentId, setEditingContentId] = React.useState(null);
   const submissionKey = React.useRef(globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`);
   const { data: memberships = [] } = useQuery({
@@ -97,6 +100,8 @@ export default function Publish() {
     if (name === 'back') { if (step === 'choose') navigate(-1); else if (step === 'details') setStep('choose'); else if (step === 'preview') setStep('details'); else if (step === 'mine') navigate('/Profile'); else navigate('/Feed'); }
     if (name === 'mine') navigate('/Publish?mode=mine');
     if (name === 'create') navigate('/Publish');
+    if (name === 'startAppeal') { setMyActionError(''); setMyActionNotice(''); setAppealItem(payload); setAppealReason(''); }
+    if (name === 'cancelAppeal') { setAppealItem(null); setAppealReason(''); }
     if (step === 'mine' && name === 'open') navigate(payload.destinationUrl || payload.destination_url || `/PostDetail?id=${payload.contentId || payload.content_id || payload.id}`);
     if (step === 'mine' && ['edit', 'reuse'].includes(name)) {
       setMyActionError('');
@@ -134,8 +139,27 @@ export default function Publish() {
       try {
         await publishingService.end(contentId);
         await queryClient.invalidateQueries({ queryKey: ['my-publishing', user?.id] });
+        setMyActionNotice('Post ended. It is no longer shown as active.');
       } catch {
         setMyActionError('That post couldn’t be ended. Nothing was changed—please try again.');
+      } finally {
+        setPendingAction(null);
+      }
+    }
+    if (step === 'mine' && name === 'appeal') {
+      const contentId = payload.item?.contentId || payload.item?.content_id || payload.item?.id;
+      if (!contentId || payload.reason?.length < 10 || pendingAction) return;
+      setMyActionError('');
+      setMyActionNotice('');
+      setPendingAction({ name, contentId });
+      try {
+        await publishingService.appeal(contentId, payload.reason);
+        setAppealItem(null);
+        setAppealReason('');
+        setMyActionNotice('Appeal sent. Aryeh or Jonny will make the final call.');
+        await queryClient.invalidateQueries({ queryKey: ['my-publishing', user?.id] });
+      } catch {
+        setMyActionError('Your appeal couldn’t be sent. Your message is still here—please try again.');
       } finally {
         setPendingAction(null);
       }
@@ -155,5 +179,5 @@ export default function Publish() {
     }
   };
 
-  return <PublishView step={step} draft={draft} expandedGroup={expandedGroup} status={status} errors={errors} result={result} myPosts={myPosts} myPostsLoading={myPublishingQuery.isLoading} myPostsError={myPublishingQuery.error} myActionError={myActionError} pendingAction={pendingAction} editing={Boolean(editingContentId)} onRetryMine={() => myPublishingQuery.refetch()} onAction={action} />;
+  return <PublishView step={step} draft={draft} expandedGroup={expandedGroup} status={status} errors={errors} result={result} myPosts={myPosts} myPostsLoading={myPublishingQuery.isLoading} myPostsError={myPublishingQuery.error} myActionError={myActionError} myActionNotice={myActionNotice} appealItem={appealItem} appealReason={appealReason} pendingAction={pendingAction} editing={Boolean(editingContentId)} onRetryMine={() => myPublishingQuery.refetch()} onAppealReason={setAppealReason} onAction={action} />;
 }

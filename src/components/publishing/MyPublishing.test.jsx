@@ -48,4 +48,22 @@ describe('MyPublishing', () => {
     expect(html).toContain('Nothing was changed');
     expect(html).toContain('Road work begins Monday');
   });
+
+  it('lets a member appeal a hidden post in plain language', () => {
+    const hidden = { ...item, moderationStatus: 'temporarily_hidden' };
+    const html = renderToStaticMarkup(
+      <MyPublishing
+        items={[hidden]}
+        appealItem={hidden}
+        appealReason="This is a verified road closure."
+        onAppealReason={() => {}}
+        onAction={() => {}}
+      />,
+    );
+
+    expect(html).toContain('Appeal');
+    expect(html).toContain('Why should we take another look?');
+    expect(html).toContain('This is a verified road closure.');
+    expect(html).toContain('Send appeal');
+  });
 });

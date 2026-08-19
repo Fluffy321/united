@@ -123,4 +123,22 @@ describe('PublishView', () => {
     expect(html).toContain('Your publishing');
     expect(html).toContain('Road work begins Monday');
   });
+
+  it('shows the appeal form inside My posts when requested', () => {
+    const hidden = {
+      contentId: 'post-1',
+      publishingType: 'local_news',
+      headline: 'Road work begins Monday',
+      moderationStatus: 'temporarily_hidden',
+    };
+    const html = renderView({
+      step: 'mine',
+      myPosts: [hidden],
+      appealItem: hidden,
+      appealReason: 'The town posted this notice.',
+    });
+
+    expect(html).toContain('Why should we take another look?');
+    expect(html).toContain('The town posted this notice.');
+  });
 });
