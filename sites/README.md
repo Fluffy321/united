@@ -16,7 +16,7 @@ dependencies) plus a `vercel.json`.
 | `nutinfits/` | Nutinfits — tailor, Wellington | https://nutinfits.vercel.app |
 | `central-barbershop/` | Central Barbershop — Cedarhurst NY | not yet deployed |
 | `vip-efraim/` | VIP by Efraim — 2 shops, Cedarhurst NY | https://vip-efraim.vercel.app |
-| `multipro-turf/` | Multipro Turf & Equipment — Greenacres FL | not yet deployed |
+| `multipro-turf/` | Multipro Turf & Equipment — Greenacres FL | https://multipro-turf.vercel.app |
 | — | Flawless Finishes — mobile body shop | https://flawless-finishes-sage.vercel.app |
 | — | WPB Mobile Mechanic | https://wpb-mobile-mechanic.vercel.app |
 
