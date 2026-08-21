@@ -18,6 +18,7 @@ dependencies) plus a `vercel.json`.
 | `vip-efraim/` | VIP by Efraim — 2 shops, Cedarhurst NY | https://vip-efraim.vercel.app |
 | `multipro-turf/` | Multipro Turf & Equipment — Greenacres FL | https://multipro-turf.vercel.app |
 | `pizzaoli/` | Pizzaoli — kosher pizzeria, Davie FL | https://pizzaoli.vercel.app |
+| `portfolio/` | Portfolio — sales page listing the work | not yet deployed |
 | — | Flawless Finishes — mobile body shop | https://flawless-finishes-sage.vercel.app |
 | — | WPB Mobile Mechanic | https://wpb-mobile-mechanic.vercel.app |
 

@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Websites for Local Business — Recent Work</title>
+<meta name="description" content="Fast, mobile-first websites built for local businesses in South Florida and the Five Towns. Recent work and live examples.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Recent Work">
+<meta property="og:title" content="Websites for Local Business — Recent Work">
+<meta property="og:description" content="Fast, mobile-first websites built for local businesses. Live examples you can click through.">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0d0f14">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d0f14'/%3E%3Cpath d='M8 21V11h4.4a3.3 3.3 0 0 1 0 6.6H8' stroke='%234f8cff' stroke-width='2.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M18 11v10' stroke='%234f8cff' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root{
+--bg:#0d0f14; --bg-2:#131720; --card:#171c27; --line:rgba(255,255,255,.09);
+--fg:#f2f5fa; --fg-2:#aab4c6; --muted:#7b8598;
+--blue:#4f8cff; --blue-lt:#7aa9ff; --mint:#3ddc97;
+--r:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none !important}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition-duration:.001ms !important}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg);line-height:1.6;-webkit-font-smoothing:antialiased;font-size:16.5px}
+a{color:inherit}
+a:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* Hero */
+.top{position:relative;padding:78px 0 56px;overflow:hidden}
+.top::before{content:"";position:absolute;inset:-40% -20% auto -20%;height:150%;pointer-events:none;
+background:radial-gradient(42% 40% at 22% 8%, rgba(79,140,255,.24), transparent 66%),
+           radial-gradient(38% 36% at 82% 20%, rgba(61,220,151,.14), transparent 66%)}
+.top>*{position:relative;z-index:1}
+.eyebrow{display:inline-block;font-size:.76rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--blue-lt);margin-bottom:16px}
+h1{font-size:clamp(2.1rem,5.4vw,3.5rem);line-height:1.06;font-weight:800;letter-spacing:-.035em;max-width:760px;text-wrap:balance}
+.top p{margin-top:18px;font-size:1.1rem;color:var(--fg-2);max-width:640px;text-wrap:pretty}
+.facts{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.fact{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:.88rem;color:var(--fg-2);font-weight:600}
+.fact b{color:var(--fg)}
+
+/* Work grid */
+.work{padding:20px 0 84px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.proj{display:block;text-decoration:none;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+transition:transform .24s,border-color .24s,box-shadow .24s}
+.proj:hover{transform:translateY(-4px);border-color:rgba(79,140,255,.5);box-shadow:0 26px 60px -30px rgba(0,0,0,.9)}
+.thumb{display:block;width:100%;aspect-ratio:1100/739;object-fit:cover;object-position:top center;background:var(--bg-2);border-bottom:1px solid var(--line)}
+.meta{padding:22px 24px 24px}
+.meta h2{font-size:1.2rem;font-weight:800;letter-spacing:-.01em;margin-bottom:4px}
+.meta .cat{font-size:.92rem;color:var(--muted)}
+.meta .go{margin-top:14px;display:inline-flex;align-items:center;gap:7px;font-size:.92rem;font-weight:800;color:var(--blue-lt)}
+.proj:hover .go{color:var(--blue)}
+.meta .go span{transition:transform .22s}
+.proj:hover .go span{transform:translateX(3px)}
+
+/* Capability strip */
+.caps{background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:64px 0}
+.caps h3{font-size:.78rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--blue-lt);margin-bottom:26px}
+.cap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:820px){.cap-grid{grid-template-columns:1fr}}
+.cap{padding:22px 0 0;border-top:2px solid var(--line)}
+.cap b{display:block;font-size:1.04rem;font-weight:800;margin-bottom:5px}
+.cap span{color:var(--fg-2);font-size:.96rem}
+
+/* Close */
+.end{padding:76px 0 40px;text-align:center}
+.end h2{font-size:clamp(1.7rem,4vw,2.4rem);font-weight:800;letter-spacing:-.03em;margin-bottom:12px}
+.end p{color:var(--fg-2);max-width:520px;margin:0 auto 28px;font-size:1.05rem}
+.btn{display:inline-block;text-decoration:none;background:var(--blue);color:#fff;padding:15px 32px;border-radius:999px;font-weight:800;font-size:1rem;
+transition:background .18s,transform .18s;box-shadow:0 12px 30px rgba(79,140,255,.3)}
+.btn:hover{background:var(--blue-lt);transform:translateY(-2px)}
+.contact{margin-top:22px;font-size:1rem;color:var(--fg-2)}
+.contact a{color:var(--fg);font-weight:700;text-decoration:underline;text-decoration-color:rgba(79,140,255,.6);text-underline-offset:4px}
+
+footer{border-top:1px solid var(--line);padding:26px 24px 34px;text-align:center;color:var(--muted);font-size:.86rem}
+</style>
+</head>
+<body>
+
+<header class="top">
+<div class="wrap">
+<span class="eyebrow" id="eyebrow">Recent work</span>
+<h1>Websites for local businesses that actually bring in calls.</h1>
+<p>Fast, mobile-first sites built one at a time for shops, trades and restaurants across South Florida and the Five Towns. Click any of them below &mdash; they&rsquo;re real pages, not pictures.</p>
+<div class="facts">
+<div class="fact"><b>Live in days</b>, not months</div>
+<div class="fact">Built for <b>phones first</b></div>
+<div class="fact"><b>Loads instantly</b> &mdash; no page builder bloat</div>
+</div>
+</div>
+</header>
+
+<section class="work">
+<div class="wrap">
+<div class="grid" id="grid"></div>
+</div>
+</section>
+
+<section class="caps">
+<div class="wrap">
+<h3>What goes into every build</h3>
+<div class="cap-grid">
+<div class="cap"><b>Live hours that update themselves</b><span>The page knows whether the shop is open right now and says so.</span></div>
+<div class="cap"><b>Tap-to-call and tap-for-directions</b><span>A bar that follows the customer down the page on their phone.</span></div>
+<div class="cap"><b>Quote and booking forms</b><span>Requests land in the owner&rsquo;s inbox with the details already filled in.</span></div>
+<div class="cap"><b>Written from the real business</b><span>Real services, real hours, real prices. Nothing invented to fill space.</span></div>
+<div class="cap"><b>Set up to be found</b><span>Structured for Google &mdash; business type, address, hours, phone.</span></div>
+<div class="cap"><b>Your own domain</b><span>Pointed at yourname.com, with the hosting handled.</span></div>
+</div>
+</div>
+</section>
+
+<section class="end">
+<div class="wrap">
+<h2>Want one for your shop?</h2>
+<p>Tell me what you do and where you are. I&rsquo;ll put a real page together so you can see it before you decide anything.</p>
+<a class="btn" id="cta" href="#" hidden>Get in touch</a>
+<p class="contact" id="contact" hidden></p>
+</div>
+</section>
+
+<footer>
+<span id="foot">Recent work</span>
+</footer>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   EDIT ONLY THIS BLOCK.
+   Anything left null / [] is removed from the page.
+   ══════════════════════════════════════════════════════════════ */
+var ME = {
+  name:  null,          // e.g. 'Aryeh Kohn' — shown in the footer
+  phone: null,          // e.g. '561-555-0134' — becomes a tap-to-call link
+  email: null,          // e.g. 'you@example.com'
+
+  // Live sites, newest first. `shot` is optional.
+  work: [
+    { name:'Multipro Turf & Equipment', cat:'Equipment repair · Greenacres, FL',
+      url:'https://multipro-turf.vercel.app', shot:'shots/multipro-turf.jpg' },
+
+    { name:'VIP by Efraim', cat:'Barbershop, two locations · Cedarhurst, NY',
+      url:'https://vip-efraim.vercel.app', shot:'shots/vip-efraim.jpg' },
+
+    { name:'Nutinfits', cat:'Tailoring & alterations · Wellington, FL',
+      url:'https://nutinfits.vercel.app', shot:'shots/nutinfits.jpg' },
+
+    { name:'Central Barbershop', cat:'Barbershop · Cedarhurst, NY',
+      url:null, shot:'shots/central-barbershop.jpg' },
+
+    { name:'Flawless Finishes', cat:'Mobile auto body · South Florida',
+      url:'https://flawless-finishes-sage.vercel.app', shot:null },
+
+    { name:'WPB Mobile Mechanic', cat:'Mobile mechanic · West Palm Beach, FL',
+      url:'https://wpb-mobile-mechanic.vercel.app', shot:null }
+  ]
+};
+/* ═══════════════════════ END OF EDIT BLOCK ═══════════════════════ */
+
+(function(){
+var $=function(i){return document.getElementById(i);};
+
+// Work grid
+var grid=$('grid');
+(ME.work||[]).forEach(function(w){
+  if(!w || !w.name) return;
+  var card=document.createElement(w.url ? 'a' : 'div');
+  card.className='proj';
+  if(w.url){ card.href=w.url; card.target='_blank'; card.rel='noopener'; }
+
+  if(w.shot){
+    var img=document.createElement('img');
+    img.className='thumb'; img.loading='lazy'; img.alt=w.name+' website';
+    img.addEventListener('error', function(){ img.remove(); });
+    img.src=w.shot;
+    card.appendChild(img);
+  }
+
+  var meta=document.createElement('div');
+  meta.className='meta';
+  var h=document.createElement('h2'); h.textContent=w.name; meta.appendChild(h);
+  if(w.cat){ var c=document.createElement('div'); c.className='cat'; c.textContent=w.cat; meta.appendChild(c); }
+  if(w.url){
+    var go=document.createElement('div'); go.className='go';
+    go.appendChild(document.createTextNode('View the site'));
+    var ar=document.createElement('span'); ar.textContent='→'; go.appendChild(ar);
+    meta.appendChild(go);
+  }
+  card.appendChild(meta);
+  grid.appendChild(card);
+});
+
+// Contact — only appears once it's filled in
+var bits=[];
+if(ME.phone) bits.push('<a href="tel:'+ME.phone.replace(/[^0-9+]/g,'')+'">'+ME.phone+'</a>');
+if(ME.email) bits.push('<a href="mailto:'+ME.email+'">'+ME.email+'</a>');
+if(bits.length){
+  var ct=$('contact'); ct.innerHTML=bits.join(' &nbsp;·&nbsp; '); ct.hidden=false;
+  var cta=$('cta');
+  cta.setAttribute('href', ME.phone ? 'tel:'+ME.phone.replace(/[^0-9+]/g,'') : 'mailto:'+ME.email);
+  cta.textContent = ME.phone ? 'Call '+ME.phone : 'Send an email';
+  cta.hidden=false;
+}
+
+// Footer
+var yr=new Date().getFullYear();
+$('foot').textContent = (ME.name ? ME.name+' · ' : '') + 'Websites for local business · ' + yr;
+})();
+</script>
+
+</body>
+</html>
