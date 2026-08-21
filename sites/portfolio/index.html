@@ -51,6 +51,10 @@ h1{font-size:clamp(2.1rem,5.4vw,3.5rem);line-height:1.06;font-weight:800;letter-
 transition:transform .24s,border-color .24s,box-shadow .24s}
 .proj:hover{transform:translateY(-4px);border-color:rgba(79,140,255,.5);box-shadow:0 26px 60px -30px rgba(0,0,0,.9)}
 .thumb{display:block;width:100%;aspect-ratio:1100/739;object-fit:cover;object-position:top center;background:var(--bg-2);border-bottom:1px solid var(--line)}
+.cover{display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;
+aspect-ratio:1100/739;border-bottom:1px solid var(--line)}
+.cover b{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;color:#fff;max-width:80%;line-height:1.2;
+text-shadow:0 2px 20px rgba(0,0,0,.35)}
 .meta{padding:22px 24px 24px}
 .meta h2{font-size:1.2rem;font-weight:800;letter-spacing:-.01em;margin-bottom:4px}
 .meta .cat{font-size:.92rem;color:var(--muted)}
@@ -140,24 +144,38 @@ var ME = {
   email: 'aryeh18kohn@gmail.com',
 
   // Live sites, newest first. `shot` is optional.
+  // To add a project: copy a line, change the details.
+  //   shot — optional. Save a screenshot as shots/<name>.jpg and point at it.
+  //          Leave it null and a coloured cover tile is drawn instead.
+  //   url  — optional. Without one the card shows but doesn't link anywhere.
   work: [
-    { name:'Multipro Turf & Equipment', cat:'Equipment repair · Greenacres, FL',
+    { name:'Pizzaoli', cat:'Kosher pizzeria \u00b7 Davie, FL',
+      url:'https://pizzaoli.vercel.app', shot:'shots/pizzaoli.jpg' },
+
+    { name:'Multipro Turf & Equipment', cat:'Equipment repair \u00b7 Greenacres, FL',
       url:'https://multipro-turf.vercel.app', shot:'shots/multipro-turf.jpg' },
 
-    { name:'VIP by Efraim', cat:'Barbershop, two locations · Cedarhurst, NY',
+    { name:'VIP by Efraim', cat:'Barbershop, two locations \u00b7 Cedarhurst, NY',
       url:'https://vip-efraim.vercel.app', shot:'shots/vip-efraim.jpg' },
 
-    { name:'Nutinfits', cat:'Tailoring & alterations · Wellington, FL',
+    { name:'Nutinfits', cat:'Tailoring & alterations \u00b7 Wellington, FL',
       url:'https://nutinfits.vercel.app', shot:'shots/nutinfits.jpg' },
 
-    { name:'Central Barbershop', cat:'Barbershop · Cedarhurst, NY',
+    { name:'Central Barbershop', cat:'Barbershop \u00b7 Cedarhurst, NY',
       url:null, shot:'shots/central-barbershop.jpg' },
 
-    { name:'Flawless Finishes', cat:'Mobile auto body · South Florida',
+    { name:'Flawless Finishes', cat:'Mobile auto body \u00b7 South Florida',
       url:'https://flawless-finishes-sage.vercel.app', shot:null },
 
-    { name:'WPB Mobile Mechanic', cat:'Mobile mechanic · West Palm Beach, FL',
+    { name:'WPB Mobile Mechanic', cat:'Mobile mechanic \u00b7 West Palm Beach, FL',
       url:'https://wpb-mobile-mechanic.vercel.app', shot:null }
+
+    // Waiting on links — paste the URL in and they go live on this page:
+    // { name:"Puro's Cigar",           cat:'Cigar lounge',            url:null, shot:null },
+    // { name:'Ettie Wigs',             cat:'Wigs',                    url:null, shot:null },
+    // { name:'Elite Care',             cat:'Home care',               url:null, shot:null },
+    // { name:'Paradise Caterers',      cat:'Catering',                url:null, shot:null },
+    // { name:'Elegant Lady Dressmaker',cat:'Dressmaking \u00b7 Wellington, FL', url:null, shot:null }
   ]
 };
 /* ═══════════════════════ END OF EDIT BLOCK ═══════════════════════ */
@@ -167,18 +185,31 @@ var $=function(i){return document.getElementById(i);};
 
 // Work grid
 var grid=$('grid');
-(ME.work||[]).forEach(function(w){
+var COVERS=[
+  '#1e3a8a,#0f1d47', '#7c2d12,#3b1408', '#134e4a,#082523',
+  '#4c1d95,#241046', '#7f1d1d,#3d0d0d', '#155e75,#0a2e39'
+];
+(ME.work||[]).forEach(function(w, idx){
   if(!w || !w.name) return;
   var card=document.createElement(w.url ? 'a' : 'div');
   card.className='proj';
   if(w.url){ card.href=w.url; card.target='_blank'; card.rel='noopener'; }
 
+  function cover(){
+    var d=document.createElement('div');
+    d.className='cover';
+    d.style.background='linear-gradient(140deg,'+COVERS[idx%COVERS.length]+')';
+    var n=document.createElement('b'); n.textContent=w.name; d.appendChild(n);
+    return d;
+  }
   if(w.shot){
     var img=document.createElement('img');
     img.className='thumb'; img.loading='lazy'; img.alt=w.name+' website';
-    img.addEventListener('error', function(){ img.remove(); });
+    img.addEventListener('error', function(){ card.replaceChild(cover(), img); });
     img.src=w.shot;
     card.appendChild(img);
+  } else {
+    card.appendChild(cover());
   }
 
   var meta=document.createElement('div');
