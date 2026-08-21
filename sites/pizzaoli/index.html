@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Pizzaoli — Home of the Connecticut Thin-Crust Pizza</title>
+<meta name="description" content="Pizzaoli — kosher Connecticut thin-crust pizza on Griffin Rd. Charred, blistered, ultra-thin pies made with extra virgin olive oil, never seed oils. ORB certified dairy. Open late. Order direct.">
+<meta property="og:type" content="restaurant">
+<meta property="og:title" content="Pizzaoli — Home of the Connecticut Thin-Crust Pizza">
+<meta property="og:description" content="Charred, blistered, ultra-thin kosher pies. Extra virgin olive oil, never seed oils. ORB certified. Open till 2 AM.">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Pizzaoli — Connecticut Thin-Crust, Kosher">
+<meta name="twitter:description" content="Charred, blistered, ultra-thin pies. Open till 2 AM.">
+<meta name="theme-color" content="#140f0d">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23140f0d'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23d4442e' stroke-width='2'/%3E%3Ccircle cx='13' cy='14' r='1.6' fill='%23d4442e'/%3E%3Ccircle cx='19' cy='17' r='1.6' fill='%23d4442e'/%3E%3Ccircle cx='15' cy='19' r='1.3' fill='%23d4442e'/%3E%3C/svg%3E">
+<style>
+:root{
+--char:#140f0d; --char-2:#1f1815; --smoke:#2b221e;
+--dough:#f8f1e3; --paper:#fffdf7; --crust:#e9d8b8;
+--ember:#d4442e; --ember-lt:#e8674f; --ember-dk:#a8331f;
+--basil:#5c7a4a;
+--line:#e5dac4; --ink:#181310; --ink-2:#40342d; --muted:#7d7065;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none !important}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition-duration:.001ms !important}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--dough);color:var(--ink);line-height:1.62;-webkit-font-smoothing:antialiased}
+.serif{font-family:'Hoefler Text','Baskerville',Georgia,'Times New Roman',serif}
+a{color:inherit}
+a:focus-visible,button:focus-visible{outline:2px solid var(--ember);outline-offset:3px;border-radius:3px}
+.wrap{max-width:1060px;margin:0 auto;padding:0 22px}
+
+.demo-strip{background:#0b0807;color:#e39a8a;text-align:center;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;padding:8px 12px;font-weight:700}
+.demo-strip b{color:#fff}
+
+header{position:sticky;top:0;z-index:40;background:rgba(20,15,13,.97);backdrop-filter:blur(10px);border-bottom:1px solid rgba(212,68,46,.22)}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:13px 0;gap:12px}
+.brand{color:#fff;font-size:1.34rem;font-weight:700;letter-spacing:.02em;white-space:nowrap;font-style:italic}
+.brand span{color:var(--ember-lt)}
+nav{display:flex;gap:21px;font-size:.73rem;letter-spacing:.13em;text-transform:uppercase;color:#a2938a;font-weight:700}
+nav a{text-decoration:none}
+nav a:hover{color:var(--ember-lt)}
+@media(max-width:940px){nav{display:none}}
+@media(max-width:430px){.brand{font-size:1.08rem}.order-pill{padding:9px 14px;font-size:.72rem}}
+.order-pill{text-decoration:none;background:var(--ember);color:#fff;padding:10px 19px;border-radius:4px;font-size:.76rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;transition:background .2s}
+.order-pill:hover{background:var(--ember-lt)}
+
+/* Hero — charred crust texture */
+.hero{background:var(--char);color:var(--dough);text-align:center;padding:82px 0 74px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;
+background:
+ radial-gradient(circle at 12% 22%, rgba(212,68,46,.16), transparent 26%),
+ radial-gradient(circle at 86% 30%, rgba(212,68,46,.12), transparent 24%),
+ radial-gradient(circle at 24% 78%, rgba(233,216,184,.05), transparent 20%),
+ radial-gradient(circle at 72% 82%, rgba(233,216,184,.04), transparent 18%);}
+.hero > *{position:relative;z-index:1}
+.kosher-tag{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(233,216,184,.3);border-radius:999px;padding:7px 16px;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--crust);font-weight:700;margin-bottom:24px}
+.kosher-tag .o{color:var(--ember-lt);font-weight:800}
+.hero h1{font-size:clamp(2.6rem,8vw,4.9rem);line-height:.96;font-weight:400;letter-spacing:-.01em;text-wrap:balance;max-width:880px;margin:0 auto}
+.hero h1 em{font-style:italic;color:var(--ember-lt)}
+.hero .sub{margin-top:22px;font-size:1.12rem;color:#b3a69c;max-width:560px;margin-left:auto;margin-right:auto}
+.status{margin-top:24px;display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,.05);border:1px solid rgba(212,68,46,.28);border-radius:999px;padding:8px 18px;font-size:.86rem;color:#cdc1b7}
+.status .dot{width:8px;height:8px;border-radius:50%;background:#7a6f66}
+.status.is-open .dot{background:#5fc98a;box-shadow:0 0 0 3px rgba(95,201,138,.18)}
+.status.is-open .lbl{color:#5fc98a}
+.status .lbl{font-weight:800}
+.cta-row{margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{text-decoration:none;padding:17px 34px;border-radius:4px;font-size:.84rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;transition:transform .18s,background .18s,color .18s,border-color .18s}
+.btn-ember{background:var(--ember);color:#fff;box-shadow:0 12px 30px rgba(212,68,46,.3)}
+.btn-ember:hover{transform:translateY(-2px);background:var(--ember-lt)}
+.btn-out{border:1.5px solid rgba(248,241,227,.38);color:var(--dough)}
+.btn-out:hover{border-color:var(--crust);background:rgba(248,241,227,.08)}
+
+/* Ribbon */
+.ribbon{background:var(--char-2);border-bottom:1px solid rgba(212,68,46,.18)}
+.rib-row{display:grid;grid-template-columns:repeat(3,1fr);max-width:1000px;margin:0 auto}
+.rib{padding:22px 16px;text-align:center;border-right:1px solid rgba(255,255,255,.06)}
+.rib:last-child{border-right:none}
+@media(max-width:720px){.rib-row{grid-template-columns:1fr}.rib{border-right:none;border-bottom:1px solid rgba(255,255,255,.06)}.rib:last-child{border-bottom:none}}
+.rib .t{font-size:.98rem;font-weight:800;color:#fff}
+.rib .s{margin-top:2px;font-size:.76rem;color:#9c8f86}
+
+section{padding:76px 0}
+.kicker{font-size:.69rem;letter-spacing:.26em;text-transform:uppercase;color:var(--ember-dk);font-weight:800;margin-bottom:10px}
+h2{font-size:clamp(1.85rem,4.3vw,2.6rem);font-weight:400;letter-spacing:-.01em;margin-bottom:12px;text-wrap:balance}
+.lede{color:var(--muted);font-size:1.04rem;max-width:640px;margin-bottom:44px}
+.ctr{text-align:center}
+.ctr .lede{margin-left:auto;margin-right:auto}
+
+/* The style explainer */
+.style-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:center}
+@media(max-width:860px){.style-grid{grid-template-columns:1fr;gap:30px}}
+.style-copy p{color:var(--muted);font-size:1.05rem;margin-bottom:16px}
+.style-copy p b{color:var(--ink)}
+.facts{list-style:none}
+.facts li{display:flex;gap:16px;padding:18px 0;border-bottom:1px solid var(--line)}
+.facts li:last-child{border-bottom:none}
+.facts .n{font-family:'Hoefler Text',Georgia,serif;font-style:italic;font-size:1.15rem;color:var(--ember);flex-shrink:0;width:26px}
+.facts .b{font-size:.97rem}
+.facts .b b{display:block;font-weight:800;margin-bottom:2px}
+.facts .b span{color:var(--muted)}
+
+/* Menu */
+.menu{background:var(--char);color:var(--dough)}
+.menu h2{color:#fff}
+.menu .kicker{color:var(--ember-lt)}
+.menu .lede{color:#a99c92}
+.pies{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:900px){.pies{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.pies{grid-template-columns:1fr}}
+.pie{border:1px solid rgba(233,216,184,.16);border-radius:8px;padding:28px 24px;background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));transition:border-color .22s,transform .22s}
+.pie:hover{border-color:rgba(212,68,46,.5);transform:translateY(-3px)}
+.pie h3{font-size:1.12rem;font-weight:700;color:#fff;margin-bottom:7px}
+.pie p{font-size:.9rem;color:#a99c92}
+.pie .px{margin-top:12px;font-size:.82rem;color:var(--ember-lt);font-weight:800}
+.menu-note{text-align:center;margin-top:34px;font-size:.96rem;color:#a99c92}
+.menu-note a{color:var(--ember-lt);font-weight:800}
+
+/* Late night band */
+.late{background:var(--ember);color:#fff}
+.late-in{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;padding:42px 0}
+@media(max-width:720px){.late-in{grid-template-columns:1fr;gap:14px}}
+.late-mark{font-size:2.4rem;line-height:1}
+.late h2{font-size:1.55rem;color:#fff;margin-bottom:7px;font-weight:800;letter-spacing:-.01em}
+.late p{font-size:1.02rem;max-width:720px;opacity:.92}
+
+/* Catering form */
+.cater{background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.c-grid{display:grid;grid-template-columns:.95fr 1.05fr;gap:52px;align-items:start}
+@media(max-width:880px){.c-grid{grid-template-columns:1fr;gap:32px}}
+.c-copy p{color:var(--muted);font-size:1.04rem;margin-bottom:16px}
+.c-points{list-style:none;margin-top:20px}
+.c-points li{position:relative;padding:9px 0 9px 26px;font-size:.96rem;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.c-points li:last-child{border-bottom:none}
+.c-points li::before{content:"";position:absolute;left:0;top:17px;width:9px;height:9px;border-radius:50%;background:var(--ember)}
+.c-card{background:var(--dough);border:1px solid var(--line);border-radius:10px;padding:32px;box-shadow:0 14px 40px rgba(24,19,16,.07)}
+.c-card h3{font-size:1.18rem;font-weight:800;margin-bottom:6px}
+.c-card .sm{font-size:.88rem;color:var(--muted);margin-bottom:22px}
+.fld{margin-bottom:16px}
+.fld label{display:block;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;font-weight:800;color:var(--ink-2);margin-bottom:6px}
+.fld label .req{color:var(--ember)}
+.fld input,.fld textarea,.fld select{width:100%;font:inherit;font-size:.97rem;color:var(--ink);background:var(--paper);
+border:1px solid var(--line);border-radius:6px;padding:13px 14px;transition:border-color .18s,box-shadow .18s}
+.fld textarea{min-height:96px;resize:vertical}
+.fld input:focus,.fld textarea:focus,.fld select:focus{outline:none;border-color:var(--ember);box-shadow:0 0 0 3px rgba(212,68,46,.14)}
+.fld input::placeholder,.fld textarea::placeholder{color:#b3a595}
+.fld.err input,.fld.err textarea{border-color:#b3301c;box-shadow:0 0 0 3px rgba(179,48,28,.12)}
+.fld .msg{display:none;margin-top:6px;font-size:.8rem;color:#b3301c;font-weight:700}
+.fld.err .msg{display:block}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:520px){.two{grid-template-columns:1fr}}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.c-submit{width:100%;font:inherit;cursor:pointer;border:none;background:var(--ember);color:#fff;padding:17px 24px;border-radius:6px;
+font-size:.86rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;transition:background .18s,transform .18s}
+.c-submit:hover{background:var(--ember-lt);transform:translateY(-1px)}
+.c-submit:disabled{opacity:.6;cursor:default;transform:none}
+.c-alt{margin-top:14px;text-align:center;font-size:.88rem;color:var(--muted)}
+.c-alt a{color:var(--ember-dk);font-weight:800}
+.c-ok{display:none;text-align:center;padding:34px 20px}
+.c-ok .tick{width:52px;height:52px;border-radius:50%;background:var(--char);color:var(--ember-lt);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto 16px}
+.c-ok h3{font-size:1.3rem;margin-bottom:8px}
+.c-ok p{color:var(--muted);font-size:.97rem}
+.c-card.sent .c-form{display:none}
+.c-card.sent .c-ok{display:block}
+
+/* Visit */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media(max-width:760px){.split{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:30px}
+.panel h3{letter-spacing:.15em;text-transform:uppercase;font-size:.72rem;color:var(--ember-dk);margin-bottom:18px;font-weight:800}
+.hours{width:100%;border-collapse:collapse;font-size:.95rem;font-variant-numeric:tabular-nums}
+.hours td{padding:9px 0;border-bottom:1px solid var(--line)}
+.hours tr:last-child td{border-bottom:none}
+.hours td:last-child{text-align:right;color:var(--muted)}
+.hours tr.today td{color:var(--ember-dk);font-weight:800}
+.hours .shab td{font-style:italic}
+.visit p{margin-bottom:15px;font-size:.96rem}
+.visit strong{display:block;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ember-dk);margin-bottom:3px;font-weight:800}
+.visit a{color:var(--ink);text-decoration:underline;text-decoration-color:#e0b3a8}
+
+/* Close */
+.close{background:var(--char);color:var(--dough);text-align:center;padding:88px 0;position:relative;overflow:hidden}
+.close::after{content:"";position:absolute;left:50%;bottom:-180px;transform:translateX(-50%);width:620px;height:380px;background:radial-gradient(ellipse,rgba(212,68,46,.26),transparent 66%);pointer-events:none}
+.close > *{position:relative;z-index:1}
+.close h2{color:#fff}
+.close p{color:#a99c92;max-width:500px;margin:0 auto 30px}
+
+footer{background:#0b0807;color:#7d7169;text-align:center;padding:32px 20px 28px;font-size:.82rem}
+footer a{color:var(--ember-lt)}
+footer .note{margin-top:8px;font-size:.72rem;opacity:.8}
+
+.sticky{position:fixed;left:0;right:0;bottom:0;z-index:50;display:none;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(20,15,13,.97);backdrop-filter:blur(10px);border-top:1px solid rgba(212,68,46,.24)}
+.sticky a{flex:1;text-align:center;text-decoration:none;padding:14px 8px;border-radius:4px;font-size:.83rem;font-weight:800}
+.sticky .s1{background:var(--ember);color:#fff}
+.sticky .s2{border:1.5px solid rgba(248,241,227,.38);color:var(--dough)}
+@media(max-width:760px){.sticky{display:flex}body{padding-bottom:80px}}
+</style>
+</head>
+<body>
+
+<div class="demo-strip" id="demo-strip"><b>Sample design</b> &nbsp;·&nbsp; prepared for Pizzaoli &nbsp;·&nbsp; not yet live</div>
+
+<header>
+<div class="wrap bar">
+<div class="brand serif">Pizza<span>oli</span></div>
+<nav>
+<a href="#style">The Style</a>
+<a href="#menu">The Pies</a>
+<a href="#catering">Catering</a>
+<a href="#visit">Hours</a>
+</nav>
+<a class="order-pill" id="hdr-order" href="https://www.pizzaoli.com/" target="_blank" rel="noopener">Order Now</a>
+</div>
+</header>
+
+<section class="hero">
+<div class="wrap">
+<span class="kosher-tag"><span class="o">ORB</span> Certified Kosher · Dairy</span>
+<h1 class="serif">Home of the Connecticut <em>thin-crust</em>.</h1>
+<p class="sub">Charred, blistered, ultra-thin pies — the New Haven way. Extra virgin olive oil, never seed oils.</p>
+<div class="status" id="status" hidden>
+<span class="dot" aria-hidden="true"></span>
+<span class="lbl" id="slabel"></span>
+<span id="snext"></span>
+</div>
+<div class="cta-row">
+<a class="btn btn-ember" id="hero-order" href="https://www.pizzaoli.com/" target="_blank" rel="noopener">Order Online</a>
+<a class="btn btn-out" href="#menu">See the Pies</a>
+</div>
+</div>
+</section>
+
+<div class="ribbon">
+<div class="rib-row wrap">
+<div class="rib"><div class="t">Olive Oil Only</div><div class="s">No seed oils anywhere on the menu</div></div>
+<div class="rib"><div class="t">Open Till 2 AM</div><div class="s">Sunday through Thursday</div></div>
+<div class="rib"><div class="t">Order Direct</div><div class="s">Pickup &amp; delivery, straight from us</div></div>
+</div>
+</div>
+
+<section id="style">
+<div class="wrap style-grid">
+<div class="style-copy">
+<p class="kicker">What you're getting</p>
+<h2 class="serif">This isn't New York pizza.</h2>
+<p>Connecticut thin-crust — <b>apizza</b>, if you're from New Haven — is its own thing. The dough goes in thin and comes out blistered and charred at the edges, with a chew you don't get from a soft, foldable slice.</p>
+<p>It's the pizza people drive across state lines for up north. Now it's here, and it's kosher.</p>
+</div>
+<ul class="facts">
+<li><span class="n">01</span><span class="b"><b>Charred, not burnt</b><span>Those black blisters on the crust are the whole point — that's where the flavour is.</span></span></li>
+<li><span class="n">02</span><span class="b"><b>Ultra-thin, properly chewy</b><span>Thin enough to hold its shape, never cracker-dry.</span></span></li>
+<li><span class="n">03</span><span class="b"><b>Extra virgin olive oil, full stop</b><span>No seed oils on the menu — not in the dough, not on the pie.</span></span></li>
+<li><span class="n">04</span><span class="b"><b>ORB certified kosher dairy</b><span>Under supervision, so you don't have to ask.</span></span></li>
+</ul>
+</div>
+</section>
+
+<section class="menu" id="menu">
+<div class="wrap ctr">
+<p class="kicker">The pies</p>
+<h2 class="serif">What's coming out of the oven</h2>
+<p class="lede">Classic pies, loaded pies, and calzones — all on the same thin, charred crust.</p>
+</div>
+<div class="wrap">
+<div class="pies" id="pies">
+<div class="pie"><h3>Classic Cheese</h3><p>The one to judge a pizzeria by. Sauce, cheese, char.</p></div>
+<div class="pie"><h3>Thin Crust Meat Lovers</h3><p>Loaded up, still thin enough to eat like a pizza should be.</p></div>
+<div class="pie"><h3>Thin Crust Caprese</h3><p>Fresh mozzarella, tomato, basil — olive oil doing the work.</p></div>
+<div class="pie"><h3>Vegetarian Pies</h3><p>A real selection, not one sad afterthought on the menu.</p></div>
+<div class="pie"><h3>Classic Cheese Calzone</h3><p>Same dough, folded over, baked to the same char.</p></div>
+<div class="pie"><h3>Build Your Own</h3><p>Start with the crust and take it wherever you like.</p></div>
+</div>
+<p class="menu-note" id="menu-note">Full menu and prices are on the <a id="menu-link" href="https://www.pizzaoli.com/" target="_blank" rel="noopener">ordering page</a>.</p>
+</div>
+</section>
+
+<div class="late">
+<div class="wrap late-in">
+<div class="late-mark" aria-hidden="true">🌙</div>
+<div>
+<h2>Kosher pizza at midnight. And at 1 AM.</h2>
+<p>Open till 2 AM Sunday through Thursday, and again Motzei Shabbos from 10 PM — because that's exactly when everyone actually wants pizza and nowhere kosher is open.</p>
+</div>
+</div>
+</div>
+
+<section class="cater" id="catering">
+<div class="wrap c-grid">
+
+<div class="c-copy">
+<p class="kicker">Large orders</p>
+<h2 class="serif">Feeding a crowd?</h2>
+<p>Shul kiddush, bar mitzvah, school event, office lunch, melava malka — tell us the date and headcount and we'll put together a quote.</p>
+<ul class="c-points">
+<li>Any size, from a few pies to a full event</li>
+<li>ORB certified, so it clears anywhere</li>
+<li>Ask about Motzei Shabbos and late-night drop-offs</li>
+</ul>
+</div>
+
+<div class="c-card" id="c-card">
+<form class="c-form" id="c-form" novalidate>
+<h3>Catering &amp; large orders</h3>
+<p class="sm">Send the details and we'll come back with a price.</p>
+
+<div class="hp" aria-hidden="true">
+<label for="c-website">Website</label>
+<input type="text" id="c-website" name="website" tabindex="-1" autocomplete="off">
+</div>
+
+<div class="two">
+<div class="fld" id="f-name">
+<label for="c-name">Your name <span class="req">*</span></label>
+<input type="text" id="c-name" name="name" autocomplete="name" placeholder="First and last">
+<div class="msg">Please add your name</div>
+</div>
+<div class="fld" id="f-phone">
+<label for="c-phone">Phone <span class="req">*</span></label>
+<input type="tel" id="c-phone" name="phone" autocomplete="tel" placeholder="(555) 000-0000" inputmode="tel">
+<div class="msg">Please add a phone number</div>
+</div>
+</div>
+
+<div class="two">
+<div class="fld" id="f-date">
+<label for="c-date">Date needed</label>
+<input type="date" id="c-date" name="date">
+</div>
+<div class="fld" id="f-count">
+<label for="c-count">How many people?</label>
+<input type="text" id="c-count" name="headcount" placeholder="e.g. 40" inputmode="numeric">
+</div>
+</div>
+
+<div class="fld" id="f-details">
+<label for="c-details">What's the occasion? <span class="req">*</span></label>
+<textarea id="c-details" name="details" placeholder="Kiddush after davening, need it there by 11am, mix of cheese and veggie…"></textarea>
+<div class="msg">Tell us a little about the order</div>
+</div>
+
+<button type="submit" class="c-submit" id="c-submit">Send Request</button>
+<p class="c-alt">Or call <a href="tel:+15168567437" id="c-alt-phone">516-856-7437</a></p>
+</form>
+
+<div class="c-ok" id="c-ok">
+<div class="tick" aria-hidden="true">✓</div>
+<h3>Request sent</h3>
+<p id="c-ok-msg">We'll be in touch with a quote. For anything last-minute, give us a call.</p>
+</div>
+</div>
+
+</div>
+</section>
+
+<section id="visit">
+<div class="wrap">
+<p class="kicker">Find us</p>
+<h2 class="serif">Hours &amp; location</h2>
+<p class="lede">Pickup and delivery — order online or call it in.</p>
+<div class="split">
+<div class="panel">
+<h3>Hours</h3>
+<table class="hours">
+<tr data-day="Sun"><td>Sunday</td><td>2:00 PM – 2:00 AM</td></tr>
+<tr data-day="Mon"><td>Monday</td><td>2:00 PM – 2:00 AM</td></tr>
+<tr data-day="Tue"><td>Tuesday</td><td>2:00 PM – 2:00 AM</td></tr>
+<tr data-day="Wed"><td>Wednesday</td><td>2:00 PM – 2:00 AM</td></tr>
+<tr data-day="Thu"><td>Thursday</td><td>2:00 PM – 2:00 AM</td></tr>
+<tr data-day="Fri"><td>Friday</td><td>12:00 PM – 4:00 PM</td></tr>
+<tr data-day="Sat" class="shab"><td>Motzei Shabbos</td><td>10:00 PM – 2:00 AM</td></tr>
+</table>
+</div>
+<div class="panel visit">
+<h3>Where we are</h3>
+<p><strong>Address</strong><span id="addr-line">3523 Griffin Rd, Unit B<br>Davie, FL 33312</span></p>
+<p><strong>Phone</strong><a href="tel:+15168567437" id="visit-phone">516-856-7437</a></p>
+<p><strong>Kosher</strong>ORB certified · Dairy</p>
+<p><strong>Directions</strong><a id="map-link" href="https://www.google.com/maps/search/?api=1&amp;query=Pizzaoli+3523+Griffin+Rd+FL+33312" target="_blank" rel="noopener">Open in Google Maps</a></p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="close">
+<div class="wrap">
+<p class="kicker" style="color:var(--ember-lt)">Hungry yet</p>
+<h2 class="serif">Get a pie in the oven</h2>
+<p>Order online for pickup or delivery — or call and we'll sort you out.</p>
+<div class="cta-row">
+<a class="btn btn-ember" id="close-order" href="https://www.pizzaoli.com/" target="_blank" rel="noopener">Order Online</a>
+<a class="btn btn-out" id="close-call" href="tel:+15168567437">516-856-7437</a>
+</div>
+</div>
+</section>
+
+<footer>
+<div id="foot-line">Pizzaoli &middot; 3523 Griffin Rd, Unit B, Davie, FL 33312 &middot; <a href="tel:+15168567437">516-856-7437</a></div>
+<div class="note">Sample design prepared for Pizzaoli.</div>
+</footer>
+
+<div class="sticky">
+<a class="s1" id="sticky-order" href="https://www.pizzaoli.com/" target="_blank" rel="noopener">Order Online</a>
+<a class="s2" id="sticky-call" href="tel:+15168567437">Call</a>
+</div>
+
+<script type="application/ld+json">
+{
+"@context":"https://schema.org",
+"@type":"Restaurant",
+"name":"Pizzaoli",
+"servesCuisine":["Pizza","Kosher","Italian"],
+"telephone":"+1-516-856-7437",
+"address":{"@type":"PostalAddress","streetAddress":"3523 Griffin Rd, Unit B","addressLocality":"Davie","addressRegion":"FL","postalCode":"33312","addressCountry":"US"},
+"openingHoursSpecification":[
+{"@type":"OpeningHoursSpecification","dayOfWeek":["Sunday","Monday","Tuesday","Wednesday","Thursday"],"opens":"14:00","closes":"02:00"},
+{"@type":"OpeningHoursSpecification","dayOfWeek":"Friday","opens":"12:00","closes":"16:00"},
+{"@type":"OpeningHoursSpecification","dayOfWeek":"Saturday","opens":"22:00","closes":"02:00"}
+]
+}
+</script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   EDIT ONLY THIS BLOCK.
+   Anything left null / [] is removed from the page.
+
+   ⚠️ CONFIRM BEFORE THIS GOES LIVE:
+      City — their own site says DAVIE, the kosher press said DANIA
+      BEACH, and the street is right on the line. Change `city` below
+      to whatever they actually call themselves.
+   ══════════════════════════════════════════════════════════════ */
+var SHOP = {
+  phone: '516-856-7437',
+  tel:   '+15168567437',
+  street:'3523 Griffin Rd, Unit B',
+  city:  'Davie, FL 33312',
+
+  orderUrl: 'https://www.pizzaoli.com/',   // their own online ordering
+
+  // Real menu items. Empty [] keeps the six shown on the page.
+  // e.g. { name:'Classic Cheese', desc:'Sauce, cheese, char.', price:'$18' }
+  pies: [],
+
+  // Catering requests. Works now by opening the customer's email app.
+  // For requests to land straight in the inbox, get a free key at
+  // web3forms.com and paste it here, plus the email below.
+  formKey: null,
+  email:   null,      // e.g. 'orders@pizzaoli.com'
+
+  demoMode: true
+};
+/* ═══════════════════════ END OF EDIT BLOCK ═══════════════════════ */
+
+(function(){
+var $=function(i){return document.getElementById(i);};
+
+// Phone
+if(SHOP.phone && SHOP.tel){
+  ['visit-phone','close-call','c-alt-phone'].forEach(function(id){
+    var el=$(id); if(el){ el.setAttribute('href','tel:'+SHOP.tel); el.textContent=SHOP.phone; }
+  });
+  var sc=$('sticky-call'); if(sc) sc.setAttribute('href','tel:'+SHOP.tel);
+  var f=document.querySelector('footer a[href^="tel"]');
+  if(f){ f.setAttribute('href','tel:'+SHOP.tel); f.textContent=SHOP.phone; }
+}
+
+// Address
+if(SHOP.street && SHOP.city){
+  var al=$('addr-line');
+  if(al){ al.innerHTML=''; al.appendChild(document.createTextNode(SHOP.street));
+          al.appendChild(document.createElement('br'));
+          al.appendChild(document.createTextNode(SHOP.city)); }
+  var fl=$('foot-line');
+  if(fl){
+    fl.innerHTML='';
+    fl.appendChild(document.createTextNode('Pizzaoli · '+SHOP.street+', '+SHOP.city+' · '));
+    var a=document.createElement('a'); a.href='tel:'+SHOP.tel; a.textContent=SHOP.phone;
+    fl.appendChild(a);
+  }
+  var ml=$('map-link');
+  if(ml) ml.setAttribute('href','https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('Pizzaoli '+SHOP.street+' '+SHOP.city));
+}
+
+// Order links
+if(SHOP.orderUrl){
+  ['hdr-order','hero-order','close-order','sticky-order','menu-link'].forEach(function(id){
+    var el=$(id); if(el) el.setAttribute('href',SHOP.orderUrl);
+  });
+}
+
+// Menu
+if(SHOP.pies && SHOP.pies.length){
+  var g=$('pies');
+  if(g){
+    g.innerHTML='';
+    SHOP.pies.forEach(function(p){
+      var d=document.createElement('div'); d.className='pie';
+      var h=document.createElement('h3'); h.textContent=p.name;
+      d.appendChild(h);
+      if(p.desc){ var pp=document.createElement('p'); pp.textContent=p.desc; d.appendChild(pp); }
+      if(p.price){ var px=document.createElement('div'); px.className='px'; px.textContent=p.price; d.appendChild(px); }
+      g.appendChild(d);
+    });
+  }
+}
+
+// ── Catering form ──
+(function(){
+  var form=$('c-form'), card=$('c-card'), btn=$('c-submit');
+  if(!form||!card||!btn) return;
+  function fieldErr(id,on){ var f=$(id); if(f) f.classList.toggle('err',!!on); }
+  function val(id){ var e=$(id); return e ? e.value.trim() : ''; }
+
+  form.addEventListener('submit',function(ev){
+    ev.preventDefault();
+    if(val('c-website')) return;   // honeypot
+
+    var name=val('c-name'), phone=val('c-phone'), details=val('c-details');
+    var bad=false;
+    fieldErr('f-name',!name);       if(!name) bad=true;
+    fieldErr('f-phone',!phone);     if(!phone) bad=true;
+    fieldErr('f-details',!details); if(!details) bad=true;
+    if(bad){
+      var first=document.querySelector('.fld.err input, .fld.err textarea');
+      if(first) first.focus();
+      return;
+    }
+
+    var date=val('c-date'), count=val('c-count');
+    var lines=[
+      'Name: '+name,
+      'Phone: '+phone,
+      'Date needed: '+(date||'(not specified)'),
+      'Headcount: '+(count||'(not specified)'),
+      '',
+      'Details:',
+      details
+    ].join('\n');
+
+    btn.disabled=true; btn.textContent='Sending…';
+
+    if(SHOP.formKey){
+      fetch('https://api.web3forms.com/submit',{
+        method:'POST',
+        headers:{'Content-Type':'application/json',Accept:'application/json'},
+        body:JSON.stringify({
+          access_key:SHOP.formKey,
+          subject:'Catering request — '+name,
+          from_name:'Pizzaoli website',
+          name:name, phone:phone, date:date, headcount:count, message:details
+        })
+      }).then(function(r){return r.json();})
+        .then(function(d){ if(d&&d.success){ card.classList.add('sent'); } else { throw new Error('rejected'); } })
+        .catch(function(){
+          btn.disabled=false; btn.textContent='Send Request';
+          alert("Sorry — that didn't go through. Please call "+(SHOP.phone||'us')+" and we'll take care of it.");
+        });
+      return;
+    }
+
+    var to=SHOP.email||'';
+    var href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent('Catering request — '+name)+'&body='+encodeURIComponent(lines);
+    window.location.href=href;
+    setTimeout(function(){
+      card.classList.add('sent');
+      var m=$('c-ok-msg');
+      if(m) m.textContent='Your email app should have opened with the details filled in — just hit send. If it didn’t, call '+(SHOP.phone||'us')+'.';
+    },600);
+  });
+})();
+
+if(SHOP.demoMode===false){
+  var s=$('demo-strip'); if(s) s.remove();
+  var fn=document.querySelector('footer .note'); if(fn) fn.remove();
+  var rb=document.querySelector('meta[name="robots"]'); if(rb) rb.setAttribute('content','index, follow');
+}
+})();
+</script>
+
+<script>
+(function(){
+// Hours that run past midnight: close is expressed in minutes and may exceed 1440.
+var SCHED={Sun:[840,1560],Mon:[840,1560],Tue:[840,1560],Wed:[840,1560],Thu:[840,1560],Fri:[720,960],Sat:[1320,1560]};
+var ORDER=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function now(){
+try{
+var p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date());
+var o={};p.forEach(function(x){o[x.type]=x.value;});
+return {day:o.weekday,mins:(parseInt(o.hour,10)%24)*60+parseInt(o.minute,10)};
+}catch(e){return null;}
+}
+function fmt(m){m=m%1440;var h=Math.floor(m/60),mm=m%60,ap=h>=12?'PM':'AM',h12=h%12;if(!h12)h12=12;return h12+(mm?':'+(mm<10?'0':'')+mm:'')+' '+ap;}
+var n=now(); if(!n) return;
+var row=document.querySelector('.hours tr[data-day="'+n.day+'"]'); if(row) row.classList.add('today');
+var el=document.getElementById('status'),lbl=document.getElementById('slabel'),nx=document.getElementById('snext');
+if(!el||!lbl||!nx) return;
+
+var i=ORDER.indexOf(n.day), open=false, closesAt=0;
+// Open if today's window covers now, or yesterday's window spilled past midnight
+var t=SCHED[n.day];
+if(t && n.mins>=t[0] && n.mins<Math.min(t[1],1440)){ open=true; closesAt=t[1]; }
+if(!open){
+  var y=SCHED[ORDER[(i+6)%7]];
+  if(y && y[1]>1440 && n.mins < (y[1]-1440)){ open=true; closesAt=y[1]; }
+}
+if(open){ el.classList.add('is-open'); lbl.textContent='Open now'; nx.textContent='· until '+fmt(closesAt); }
+else{
+  lbl.textContent='Closed';
+  for(var s=0;s<=7;s++){
+    var d=ORDER[(i+s)%7], sc=SCHED[d];
+    if(!sc) continue;
+    if(s===0 && n.mins>=sc[0]) continue;
+    nx.textContent='· opens '+(s===0?'':(s===1?'tomorrow ':d+' '))+fmt(sc[0]);
+    break;
+  }
+}
+el.hidden=false;
+})();
+</script>
+
+</body>
+</html>
