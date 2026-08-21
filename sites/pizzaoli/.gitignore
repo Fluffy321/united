@@ -1,0 +1,5 @@
+# Client photos live next to index.html at deploy time, not in the repo.
+*.jpg
+*.jpeg
+*.png
+*.webp
