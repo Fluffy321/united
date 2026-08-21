@@ -124,6 +124,18 @@ h2{font-size:clamp(1.9rem,4.2vw,2.65rem);font-weight:400;letter-spacing:-.02em;l
 .owner-bio p{color:var(--muted);font-size:1.06rem;margin-bottom:16px;text-wrap:pretty}
 .owner-bio p:last-child{margin-bottom:0}
 
+/* Open slots — shown while the design is still being filled in */
+.slot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+background:var(--tint);border:1px solid var(--line);color:#a2988c;text-align:center;padding:20px}
+.slot svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.5}
+.slot span{font-size:.86rem;line-height:1.4;max-width:190px}
+.hero-shot .slot{border-radius:var(--r);aspect-ratio:16/7}
+@media(max-width:620px){.hero-shot .slot{aspect-ratio:4/3}}
+.shot .slot{border-radius:var(--r);aspect-ratio:1/1;height:100%}
+.owner-pic .slot{border-radius:var(--r);aspect-ratio:4/5;border:none}
+.owner-ask{color:var(--muted);font-size:1.06rem;text-wrap:pretty}
+.owner-ask b{color:var(--ink);font-weight:600}
+
 /* Catering form */
 .cater{border-top:1px solid var(--line-2)}
 .c-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
@@ -290,6 +302,7 @@ footer .note{margin-top:8px;font-size:.82rem;opacity:.75}
 <h2 class="serif" id="owner-h"></h2>
 <p class="owner-name" id="owner-name" hidden></p>
 <div class="owner-bio" id="owner-bio"></div>
+<p class="owner-ask" id="owner-ask" hidden></p>
 </div>
 </div>
 </section>
@@ -466,6 +479,11 @@ var SHOP = {
     bio:     []      // array of paragraphs, in his own words
   },
 
+  // While true, photo slots and the owner section stay visible and
+  // labelled so the owner can see what to send over. Set to false and
+  // anything still empty disappears completely.
+  showPlaceholders: true,
+
   formKey: null,
   email:   null,      // e.g. 'orders@pizzaoli.com'
 
@@ -591,51 +609,101 @@ if(SHOP.pies && SHOP.pies.length){
   });
 })();
 
-// Photos — an image that isn't there removes itself, so nothing ever breaks.
+// Photos. A file that's there renders. A file that isn't leaves a
+// labelled slot while showPlaceholders is on, and nothing at all once
+// it's off.
 (function(){
-  function watch(img, onFail){
-    if(img.complete){ if(!img.naturalWidth) onFail(); return; }
-    img.addEventListener('error', onFail);
-    img.addEventListener('load', function(){ if(!img.naturalWidth) onFail(); });
+  var OPEN = SHOP.showPlaceholders !== false;
+
+  function slot(text){
+    var d=document.createElement('div');
+    d.className='slot';
+    d.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+
+      '<path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.7l1.1-1.6A1 1 0 0 1 9.1 4h5.8a1 1 0 0 1 .8.4L16.8 6h1.7A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/>'+
+      '<circle cx="12" cy="12" r="3.4"/></svg>';
+    var sp=document.createElement('span'); sp.textContent=text; d.appendChild(sp);
+    return d;
   }
+
+  function place(img, holder, text, onGone){
+    function fail(){
+      img.remove();
+      if(OPEN) holder.appendChild(slot(text));
+      else if(onGone) onGone();
+    }
+    if(img.complete){ if(!img.naturalWidth) fail(); return; }
+    img.addEventListener('error', fail);
+    img.addEventListener('load', function(){ if(!img.naturalWidth) fail(); });
+  }
+
   var hs=$('hero-shot'), hi=$('hero-img');
-  if(hs&&hi){ watch(hi,function(){ hs.remove(); }); hs.hidden=false; }
+  if(hs&&hi){ place(hi, hs, 'Your best pizza photo goes here', function(){ hs.remove(); }); hs.hidden=false; }
 
   var gal=$('gallery'), shots=$('shots'), nav=$('nav-gallery');
   if(gal&&shots){
     var figs=[].slice.call(shots.querySelectorAll('.shot'));
     var left=figs.length;
-    function prune(fig){
-      fig.remove(); left--;
-      if(left<=0){ gal.remove(); if(nav) nav.remove(); }
-    }
-    figs.forEach(function(fig){ watch(fig.querySelector('img'), function(){ prune(fig); }); });
+    figs.forEach(function(fig){
+      place(fig.querySelector('img'), fig, 'Photo', function(){
+        fig.remove(); left--;
+        if(left<=0){ gal.remove(); if(nav) nav.remove(); }
+      });
+    });
     gal.hidden=false; if(nav) nav.hidden=false;
   }
 })();
 
-// Owner — only renders once there are real words to show.
+// Owner. Renders his real words when they're in; otherwise stays open
+// and says what's needed, so he knows what to send back.
 (function(){
   var o=SHOP.owner||{}, sec=$('owner');
   if(!sec) return;
   var bio=(o.bio||[]).filter(Boolean);
-  if(!o.name || !bio.length) return;
+  var have=!!(o.name && bio.length);
+  if(!have && SHOP.showPlaceholders===false) return;
 
   var h=$('owner-h');
-  if(h) h.textContent = o.heading || ('Meet '+o.name);
-  var nm=$('owner-name');
-  if(nm){ nm.textContent = o.role ? (o.name+' · '+o.role) : o.name; nm.hidden=false; }
-  var wrap=$('owner-bio');
-  if(wrap){
-    bio.forEach(function(t){ var p=document.createElement('p'); p.textContent=t; wrap.appendChild(p); });
+  if(h) h.textContent = o.heading || (have ? 'Meet '+o.name : 'The story behind Pizzaoli');
+
+  if(have){
+    var nm=$('owner-name');
+    if(nm){ nm.textContent = o.role ? (o.name+' \u00b7 '+o.role) : o.name; nm.hidden=false; }
+    var wrap=$('owner-bio');
+    if(wrap) bio.forEach(function(t){ var p=document.createElement('p'); p.textContent=t; wrap.appendChild(p); });
+  } else {
+    var ask=$('owner-ask');
+    if(ask){
+      ask.innerHTML='<b>This section is yours.</b> Send over your name, how long you\u2019ve been making pizza, '+
+                    'and why you opened a kosher shop \u2014 we\u2019ll write it up and put your photo alongside it. '+
+                    'Customers buy from people, not from menus.';
+      ask.hidden=false;
+    }
   }
+
   var pic=$('owner-pic'), pi=$('owner-img');
   if(pic&&pi){
-    pi.setAttribute('alt', o.name);
-    pi.addEventListener('error', function(){ pic.remove(); });
-    pi.addEventListener('load', function(){ if(pi.naturalWidth) pic.hidden=false; else pic.remove(); });
-    pi.src='owner.jpg';   // only requested once there is an owner section to show
+    pi.setAttribute('alt', o.name || 'Owner of Pizzaoli');
+    pi.addEventListener('load', function(){
+      if(pi.naturalWidth) pic.hidden=false; else pi.dispatchEvent(new Event('error'));
+    });
+    pi.addEventListener('error', function(){
+      pi.remove();
+      if(SHOP.showPlaceholders!==false){
+        pic.appendChild(slotFor('A photo of you behind the counter'));
+        pic.hidden=false;
+      } else { pic.remove(); }
+    });
+    pi.src='owner.jpg';
   }
+
+  function slotFor(text){
+    var d=document.createElement('div'); d.className='slot';
+    d.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+
+      '<circle cx="12" cy="8.5" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';
+    var sp=document.createElement('span'); sp.textContent=text; d.appendChild(sp);
+    return d;
+  }
+
   sec.hidden=false;
 })();
 
