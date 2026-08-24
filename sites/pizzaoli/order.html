@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Order Online — Pizzaoli</title>
+<meta name="theme-color" content="#140d0b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23140d0b'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23f0402c' stroke-width='2'/%3E%3Ccircle cx='13' cy='14' r='1.6' fill='%23f0402c'/%3E%3Ccircle cx='19' cy='17' r='1.6' fill='%23f0402c'/%3E%3Ccircle cx='15' cy='19' r='1.3' fill='%23f0402c'/%3E%3C/svg%3E">
+<style>
+:root{
+--night:#140d0b; --cream:#fff7ec; --sand:#ffeed8; --card:#fff;
+--tomato:#f0402c; --tomato-dk:#c92a19; --ember:#ff6b35; --gold:#ffb524; --basil:#2f9e5f;
+--ink:#1a1210; --ink-2:#4a3a33; --muted:#8a776c;
+--line:rgba(26,18,16,.10); --line-lt:rgba(255,255,255,.12);
+--r:18px; --r-sm:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none !important}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--cream);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased;font-size:16.5px}
+a{color:inherit}
+button{font:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+
+.demo-strip{background:var(--night);color:var(--gold);text-align:center;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:8px 14px;font-weight:700}
+.demo-strip b{color:#fff}
+
+header{position:sticky;top:0;z-index:40;background:rgba(20,13,11,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--line-lt)}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:13px 0;gap:12px}
+.brand{font-size:1.35rem;font-weight:700;font-style:italic;color:#fff;text-decoration:none}
+.brand span{color:var(--gold)}
+.back{color:#cbb9ad;text-decoration:none;font-size:.9rem;font-weight:600}
+.back:hover{color:var(--gold)}
+
+.head{padding:34px 0 22px}
+.head h1{font-size:clamp(1.9rem,5vw,2.7rem);font-weight:800;letter-spacing:-.03em;line-height:1.06}
+.state{margin-top:14px;display:inline-flex;align-items:center;gap:9px;border-radius:999px;padding:8px 18px;font-size:.92rem;font-weight:700;
+background:var(--sand);color:var(--tomato-dk)}
+.state.open{background:rgba(47,158,95,.14);color:#1d7048}
+.state .dot{width:9px;height:9px;border-radius:50%;background:currentColor}
+
+.cols{display:grid;grid-template-columns:1.35fr .65fr;gap:26px;align-items:start;padding-bottom:80px}
+@media(max-width:900px){.cols{grid-template-columns:1fr}}
+
+.cat{margin-bottom:26px}
+.cat h2{font-size:.78rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:var(--tomato);margin-bottom:12px}
+.item{display:flex;gap:16px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);padding:16px 18px;margin-bottom:10px}
+.item .txt{flex:1;min-width:0}
+.item h3{font-size:1.04rem;font-weight:800;letter-spacing:-.01em}
+.item p{font-size:.9rem;color:var(--muted)}
+.item .price{font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap}
+.add{border:none;cursor:pointer;background:var(--tomato);color:#fff;border-radius:999px;padding:10px 20px;font-weight:800;font-size:.9rem;white-space:nowrap;transition:background .18s}
+.add:hover{background:var(--ember)}
+.add:disabled{background:#c9bcb1;cursor:default}
+
+.empty{background:var(--card);border:1px dashed var(--line);border-radius:var(--r-sm);padding:30px 22px;color:var(--muted);text-align:center}
+
+/* Cart */
+.cart{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;position:sticky;top:82px}
+@media(max-width:900px){.cart{position:static}}
+.cart h2{font-size:1.14rem;font-weight:800;margin-bottom:4px}
+.cart .sm{font-size:.88rem;color:var(--muted);margin-bottom:16px}
+.lines{list-style:none;margin-bottom:14px}
+.lines li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.lines li:last-child{border-bottom:none}
+.lines .n{flex:1;min-width:0;font-size:.94rem;font-weight:600}
+.qty{display:flex;align-items:center;gap:2px;background:var(--cream);border-radius:999px;padding:2px}
+.qty button{border:none;background:none;cursor:pointer;width:26px;height:26px;border-radius:50%;font-weight:900;color:var(--tomato-dk);line-height:1}
+.qty button:hover{background:rgba(240,64,44,.12)}
+.qty .v{min-width:20px;text-align:center;font-weight:800;font-size:.9rem;font-variant-numeric:tabular-nums}
+.lines .amt{font-weight:800;font-variant-numeric:tabular-nums;font-size:.94rem;min-width:58px;text-align:right}
+
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 16px}
+.mode{cursor:pointer;text-align:center;border:2px solid var(--line);background:var(--cream);border-radius:var(--r-sm);padding:11px 8px;font-weight:800;font-size:.92rem;transition:border-color .18s,background .18s}
+.mode.on{border-color:var(--tomato);background:#fff}
+.mode:disabled{opacity:.45;cursor:default}
+
+.fld{margin-bottom:11px}
+.fld label{display:block;font-size:.82rem;font-weight:700;margin-bottom:5px;color:var(--ink-2)}
+.fld input,.fld textarea{width:100%;font:inherit;font-size:.96rem;background:var(--cream);border:2px solid transparent;border-radius:10px;padding:11px 13px}
+.fld textarea{min-height:64px;resize:vertical}
+.fld input:focus,.fld textarea:focus{outline:none;background:#fff;border-color:var(--tomato)}
+.fld input::placeholder,.fld textarea::placeholder{color:#b3a294}
+
+.totals{border-top:1px solid var(--line);padding-top:12px;margin-top:4px;font-size:.94rem}
+.totals div{display:flex;justify-content:space-between;padding:3px 0;color:var(--muted)}
+.totals .grand{color:var(--ink);font-weight:900;font-size:1.1rem;padding-top:8px}
+.pay{width:100%;margin-top:14px;border:none;cursor:pointer;background:var(--tomato);color:#fff;border-radius:999px;padding:15px;font-weight:800;font-size:1rem;transition:background .18s}
+.pay:hover{background:var(--ember)}
+.pay:disabled{background:#c9bcb1;cursor:default}
+.note{margin-top:10px;font-size:.82rem;color:var(--muted);text-align:center}
+.err{margin-top:12px;background:#fff2ef;border:1px solid rgba(201,42,25,.3);color:var(--tomato-dk);border-radius:10px;padding:11px 13px;font-size:.9rem;font-weight:600}
+.callout{background:var(--sand);border-radius:var(--r-sm);padding:14px 16px;font-size:.9rem;color:var(--ink-2);margin-bottom:16px}
+.callout b{color:var(--ink)}
+footer{border-top:1px solid var(--line);padding:22px;text-align:center;color:var(--muted);font-size:.86rem}
+</style>
+</head>
+<body>
+
+<div class="demo-strip" id="demo-strip"><b>Sample design</b> &nbsp;·&nbsp; prepared for Pizzaoli &nbsp;·&nbsp; not yet live</div>
+
+<header>
+<div class="wrap bar">
+<a class="brand" href="/">Pizza<span>oli</span></a>
+<a class="back" href="/">&larr; Back to the site</a>
+</div>
+</header>
+
+<div class="wrap head">
+<h1>Order online</h1>
+<div class="state" id="state" hidden><span class="dot"></span><span id="state-txt"></span></div>
+</div>
+
+<div class="wrap cols">
+
+<div>
+<div id="menu"></div>
+</div>
+
+<aside class="cart">
+<h2>Your order</h2>
+<p class="sm" id="cart-sm">Nothing in it yet.</p>
+
+<ul class="lines" id="lines"></ul>
+
+<div id="checkout" hidden>
+<div class="modes">
+<button class="mode on" id="m-pickup" data-mode="pickup" type="button">Pickup</button>
+<button class="mode" id="m-delivery" data-mode="delivery" type="button">Delivery</button>
+</div>
+
+<div class="callout" id="mode-note" hidden></div>
+
+<div class="fld"><label for="f-name">Name</label><input id="f-name" autocomplete="name" placeholder="First and last"></div>
+<div class="fld"><label for="f-phone">Phone</label><input id="f-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(555) 000-0000"></div>
+<div class="fld" id="wrap-addr" hidden><label for="f-addr">Delivery address</label><input id="f-addr" autocomplete="street-address" placeholder="Street, apt, city"></div>
+<div class="fld"><label for="f-notes">Anything we should know?</label><textarea id="f-notes" placeholder="Well done, cut in squares, leave at the door…"></textarea></div>
+
+<div class="totals" id="totals"></div>
+<button class="pay" id="pay" type="button">Pay &amp; place order</button>
+<p class="note" id="pay-note">Card payment is handled by Stripe. We never see your card details.</p>
+<div class="err" id="err" hidden></div>
+</div>
+</aside>
+
+</div>
+
+<footer>
+Pizzaoli &middot; 3523 Griffin Rd, Unit B, Davie, FL 33312 &middot; <a href="tel:+15168567437">516-856-7437</a>
+</footer>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const money = (c) => '$' + (c / 100).toFixed(2);
+
+let DATA = null;
+let mode = 'pickup';
+const cart = new Map();   // id → qty
+
+function fail(msg){
+  $('menu').innerHTML =
+    '<div class="empty">' + msg + ' In the meantime, call us on ' +
+    '<a href="tel:+15168567437"><b>516-856-7437</b></a> and we’ll take the order.</div>';
+}
+
+async function boot(){
+  let r;
+  try { r = await fetch('/api/order-status'); } catch { return fail('Online ordering isn’t reachable right now.'); }
+  if (!r.ok) return fail('Online ordering isn’t available right now.');
+  DATA = await r.json();
+
+  const st = $('state');
+  st.hidden = false;
+  st.classList.toggle('open', DATA.status.open);
+  $('state-txt').textContent = DATA.status.open
+    ? 'Open now — ' + DATA.status.next.replace('open until', 'taking orders until')
+    : 'Closed — ' + DATA.status.next;
+
+  const d = DATA.fulfilment.delivery;
+  $('m-delivery').disabled = !d || !d.enabled;
+
+  renderMenu();
+  renderCart();
+}
+
+function renderMenu(){
+  const host = $('menu');
+  host.innerHTML = '';
+  if (!DATA.items.length) return fail('The menu is being set up.');
+
+  for (const c of DATA.categories){
+    const items = DATA.items.filter(i => i.cat === c.id);
+    if (!items.length) continue;
+
+    const sec = document.createElement('section');
+    sec.className = 'cat';
+    const h = document.createElement('h2'); h.textContent = c.name; sec.appendChild(h);
+
+    for (const it of items){
+      const row = document.createElement('div');
+      row.className = 'item';
+
+      const txt = document.createElement('div');
+      txt.className = 'txt';
+      const n = document.createElement('h3'); n.textContent = it.name; txt.appendChild(n);
+      if (it.desc){ const p = document.createElement('p'); p.textContent = it.desc; txt.appendChild(p); }
+      row.appendChild(txt);
+
+      const pr = document.createElement('div');
+      pr.className = 'price'; pr.textContent = money(it.price);
+      row.appendChild(pr);
+
+      const b = document.createElement('button');
+      b.className = 'add'; b.type = 'button'; b.textContent = 'Add';
+      b.disabled = !DATA.status.open;
+      b.addEventListener('click', () => { cart.set(it.id, (cart.get(it.id) || 0) + 1); renderCart(); });
+      row.appendChild(b);
+
+      sec.appendChild(row);
+    }
+    host.appendChild(sec);
+  }
+}
+
+function totals(){
+  let subtotal = 0;
+  for (const [id, qty] of cart){
+    const it = DATA.items.find(i => i.id === id);
+    if (it) subtotal += it.price * qty;
+  }
+  const f = DATA.fulfilment[mode] || { fee: 0 };
+  const fee = f.fee || 0;
+  const tax = DATA.taxRate ? Math.round((subtotal + fee) * DATA.taxRate) : 0;
+  return { subtotal, fee, tax, total: subtotal + fee + tax, min: f.minimum || 0 };
+}
+
+function renderCart(){
+  $('err').hidden = true;
+  const list = $('lines');
+  list.innerHTML = '';
+
+  if (!cart.size){
+    $('cart-sm').textContent = 'Nothing in it yet.';
+    $('checkout').hidden = true;
+    return;
+  }
+  $('cart-sm').textContent = DATA.status.open ? 'Ready when you are.' : 'We’re closed — you can’t place this yet.';
+  $('checkout').hidden = false;
+
+  for (const [id, qty] of cart){
+    const it = DATA.items.find(i => i.id === id);
+    if (!it) continue;
+
+    const li = document.createElement('li');
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = it.name; li.appendChild(n);
+
+    const q = document.createElement('div'); q.className = 'qty';
+    const minus = document.createElement('button'); minus.type='button'; minus.textContent='−';
+    minus.setAttribute('aria-label','One less ' + it.name);
+    minus.addEventListener('click', () => {
+      const v = (cart.get(id) || 1) - 1;
+      if (v <= 0) cart.delete(id); else cart.set(id, v);
+      renderCart();
+    });
+    const v = document.createElement('span'); v.className='v'; v.textContent = qty;
+    const plus = document.createElement('button'); plus.type='button'; plus.textContent='+';
+    plus.setAttribute('aria-label','One more ' + it.name);
+    plus.addEventListener('click', () => { cart.set(id, qty + 1); renderCart(); });
+    q.append(minus, v, plus);
+    li.appendChild(q);
+
+    const amt = document.createElement('span'); amt.className='amt'; amt.textContent = money(it.price * qty);
+    li.appendChild(amt);
+    list.appendChild(li);
+  }
+
+  const t = totals();
+  const rows = [['Subtotal', t.subtotal]];
+  if (t.fee) rows.push([DATA.fulfilment[mode].label + ' fee', t.fee]);
+  if (t.tax) rows.push(['Sales tax', t.tax]);
+
+  const box = $('totals');
+  box.innerHTML = '';
+  for (const [label, cents] of rows){
+    const d = document.createElement('div');
+    d.innerHTML = '<span></span><span></span>';
+    d.children[0].textContent = label; d.children[1].textContent = money(cents);
+    box.appendChild(d);
+  }
+  const g = document.createElement('div');
+  g.className = 'grand';
+  g.innerHTML = '<span></span><span></span>';
+  g.children[0].textContent = 'Total'; g.children[1].textContent = money(t.total);
+  box.appendChild(g);
+
+  const short = mode === 'delivery' && t.min && t.subtotal < t.min;
+  $('pay').disabled = !DATA.status.open || short;
+  $('pay').textContent = !DATA.status.open ? 'Closed right now'
+    : short ? 'Delivery minimum is ' + money(t.min)
+    : 'Pay ' + money(t.total);
+  if (!DATA.paymentsReady) {
+    $('pay').disabled = true;
+    $('pay').textContent = 'Payments not switched on yet';
+  }
+}
+
+for (const b of document.querySelectorAll('.mode')){
+  b.addEventListener('click', () => {
+    if (b.disabled) return;
+    mode = b.dataset.mode;
+    document.querySelectorAll('.mode').forEach(x => x.classList.toggle('on', x === b));
+    $('wrap-addr').hidden = mode !== 'delivery';
+    const f = DATA.fulfilment[mode];
+    const note = $('mode-note');
+    const bits = [];
+    if (f.fee) bits.push('<b>' + money(f.fee) + '</b> ' + f.label.toLowerCase() + ' fee');
+    if (f.minimum) bits.push('<b>' + money(f.minimum) + '</b> minimum');
+    if (f.note) bits.push(f.note);
+    note.innerHTML = bits.join(' &middot; ');
+    note.hidden = !bits.length;
+    renderCart();
+  });
+}
+
+$('pay').addEventListener('click', async () => {
+  const btn = $('pay'), err = $('err');
+  err.hidden = true;
+
+  const name = $('f-name').value.trim();
+  const phone = $('f-phone').value.trim();
+  const address = $('f-addr').value.trim();
+  if (!name)  return show('Please add your name.');
+  if (!phone) return show('Please add a phone number.');
+  if (mode === 'delivery' && !address) return show('Please add a delivery address.');
+
+  btn.disabled = true; btn.textContent = 'Taking you to payment…';
+  try {
+    const r = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode, name, phone, address,
+        notes: $('f-notes').value.trim(),
+        lines: [...cart].map(([id, qty]) => ({ id, qty }))
+      })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.url) throw new Error(d.error || 'Could not start checkout.');
+    window.location.href = d.url;
+  } catch (e) {
+    show(e.message);
+    btn.disabled = false;
+    renderCart();
+  }
+
+  function show(msg){
+    err.textContent = msg; err.hidden = false;
+    btn.disabled = false;
+    return null;
+  }
+});
+
+boot();
+</script>
+
+</body>
+</html>
