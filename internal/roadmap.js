@@ -2008,7 +2008,7 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'Five Towns Local Updates Automation',
     description: 'Automated pipeline ingesting local updates from monitored sources and publishing to the local_updates feed.',
-    shippedNote: 'Shipped. Migration 20260515180122_local_updates_automation.sql + cron job. Cron secret verified in 20260515184322. Community post identity fix (migration 20260517034309) added community name denormalization to publish_local_update_item so feed cards show community as author. Hardened 2026-07-08: ingestion accepts only public HTTPS sources, rejects local/private addresses and redirects, enforces content types, and caps source bodies at 1 MB.',
+    shippedNote: 'Shipped. Migration 20260515180122_local_updates_automation.sql + cron job. Cron secret verified in 20260515184322. Community post identity fix (migration 20260517034309) added community name denormalization to publish_local_update_item so feed cards show community as author. Hardened 2026-07-08: ingestion accepts only public HTTPS sources, rejects local/private addresses and redirects, enforces content types, and caps source bodies at 1 MB. The 2026-08-25 Five Towns live-information expansion on codex/smart-publishing-ai-admin adds eight verified public feeds, a 30-minute schedule, a seven-day freshness gate, a four-item-per-source flood limit, verified source metadata, conservative NWS emergency handling, and direct source opening from Home. Production migration and Edge Function deployment remain subject to safe Supabase verification and merge.',
   },
 
   {

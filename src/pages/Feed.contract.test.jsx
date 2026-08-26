@@ -51,4 +51,10 @@ describe('Mobile headquarters Feed contract', () => {
     expect(source).toContain('onShowLess={handleShowLess}');
     expect(source).toContain('hiddenPostIds');
   });
+
+  it('opens verified automated updates at their original source before normal post actions', () => {
+    expect(source).toContain('if (post.source_url)');
+    expect(source).toContain("window.open(post.source_url, '_blank', 'noopener,noreferrer')");
+    expect(source.indexOf('if (post.source_url)')).toBeLessThan(source.indexOf("if (post.type === 'help')"));
+  });
 });

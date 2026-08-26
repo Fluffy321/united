@@ -468,6 +468,17 @@ export default function Feed() {
 
   const handleCardOpen = useCallback((post) => {
     recordInterest(post);
+    if (post.source_url) {
+      try {
+        const sourceUrl = new URL(post.source_url);
+        if (sourceUrl.protocol === 'https:') {
+          window.open(post.source_url, '_blank', 'noopener,noreferrer');
+          return;
+        }
+      } catch {
+        // Invalid or unsafe source URLs fall through to normal post behavior.
+      }
+    }
     if (post.type === 'help') {
       navigate('/MitzvahCircle');
       return;
