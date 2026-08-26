@@ -7,7 +7,7 @@ import { COMMUNITIES_ENABLED } from '@/config/features';
 import { toast } from 'sonner';
 import ReportModal from '@/components/common/ReportModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
-import { ArrowRight, CalendarDays, Heart, MessageCircle, RefreshCw, Search, Sparkles, Users, X } from 'lucide-react';
+import { ArrowRight, CalendarDays, Heart, MessageCircle, RefreshCw, Search, Users, X } from 'lucide-react';
 import SkeletonCard from '@/components/common/SkeletonCard';
 import QueryError from '@/components/common/QueryError';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -30,7 +30,6 @@ import WidgetBoundary from '@/components/feed/WidgetBoundary';
 import FeedPreferenceSetup from '@/components/feed/FeedPreferenceSetup';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
 
-import { DEMO_POSTS } from '@/lib/feed/demoPosts';
 import { createBlock, deleteComment, deleteUnifiedPost, filterBlock, filterComment, filterUserCommunity, getCommunity, getUnifiedPost } from '@/services/entityServices';
 import { FEED_LOAD_TIMEOUT_MS, feedText, getPostLivePriority } from '@/lib/feed/feedRanking';
 import { feedPreferenceKeys, postKeys } from '@/lib/queryKeys';
@@ -77,7 +76,6 @@ export default function Feed() {
   const [showNetworkBanner, setShowNetworkBanner] = useState(() => !storageService.getItem('junited_network_banner_v2_dismissed'));
   const [feedTab, setFeedTab] = useState('general');
   const [activeBriefTab, setActiveBriefTab] = useState('updates');
-  const canShowPreviewContent = !import.meta.env.PROD;
 
   useEffect(() => {
     if (!COMMUNITIES_ENABLED && feedTab !== 'general') {
@@ -282,11 +280,9 @@ export default function Feed() {
   }, [handlePreferenceSetupSave]);
 
   const feedCanRender = !isLoading || loadTimedOut;
-  const isPreviewContent = canShowPreviewContent && feedCanRender && posts.length === 0;
-  const feedSourcePosts = isPreviewContent ? DEMO_POSTS : posts;
 
   const FEED_TTL = 14 * 24 * 3_600_000; // posts older than 14 days are hidden from feed
-  const visiblePosts = feedSourcePosts.filter(p => {
+  const visiblePosts = posts.filter(p => {
     if (p.type === 'dating') return false;
     if (p.type === 'prompt') return false;
     if (p.type === 'daily_greeting') return false;
@@ -580,20 +576,6 @@ export default function Feed() {
               <span className="text-lg">{primaryNetwork.emoji}</span>
               <span className="flex-1">You're viewing <strong>{primaryNetwork.shortLabel}</strong> — tap the chip above to switch networks.</span>
               <button onClick={() => { setShowNetworkBanner(false); storageService.setItem('junited_network_banner_v2_dismissed', '1'); }} className="text-white/70 hover:text-white text-lg leading-none font-bold flex-shrink-0">×</button>
-            </div>
-          )}
-
-          {isPreviewContent && (
-            <div className="rounded-[20px] border border-amber-200 bg-amber-50 px-4 py-3 text-amber-950 shadow-sm">
-              <div className="flex items-start gap-2.5">
-                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                <div className="min-w-0">
-                  <p className="text-[12px] font-black uppercase tracking-wide">Preview content</p>
-                  <p className="mt-0.5 text-[12px] font-semibold leading-snug text-amber-800">
-                    Showing sample Five Towns posts because no Supabase posts loaded in this non-production preview.
-                  </p>
-                </div>
-              </div>
             </div>
           )}
 

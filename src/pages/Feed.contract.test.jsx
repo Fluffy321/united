@@ -57,4 +57,12 @@ describe('Mobile headquarters Feed contract', () => {
     expect(source).toContain("window.open(post.source_url, '_blank', 'noopener,noreferrer')");
     expect(source.indexOf('if (post.source_url)')).toBeLessThan(source.indexOf("if (post.type === 'help')"));
   });
+
+  it('uses only real backend posts on Home', () => {
+    expect(source).not.toContain("import { DEMO_POSTS }");
+    expect(source).not.toContain('Preview content');
+    expect(source).not.toContain('Showing sample Five Towns posts');
+    expect(source).not.toContain('feedSourcePosts');
+    expect(source).toContain('const visiblePosts = posts.filter');
+  });
 });
