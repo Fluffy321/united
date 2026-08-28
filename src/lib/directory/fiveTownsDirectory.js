@@ -105,6 +105,12 @@ const LEGACY_TYPE_MAP = {
   services: ['community', 'community-organizations'],
 };
 
+const LISTING_CATEGORY_OVERRIDES = {
+  'service-mikvah-sara-laya': ['jewish-life', 'mikvahs'],
+  'service-levi-yitzchak-library': ['jewish-life', 'torah-learning'],
+  'service-achiezer': ['community', 'chesed'],
+};
+
 const TOWNS = ['Cedarhurst', 'Lawrence', 'Woodmere', 'Hewlett', 'Inwood', 'North Woodmere'];
 
 function isHttpUrl(value) {
@@ -121,10 +127,14 @@ function inferTown(address = '') {
 }
 
 export function normalizeDirectoryListing(record) {
-  const [groupId, categoryId] = LEGACY_TYPE_MAP[record.type] || [
+  const [legacyGroupId, legacyCategoryId] = LISTING_CATEGORY_OVERRIDES[record.id]
+    || LEGACY_TYPE_MAP[record.type] || [
     'community',
     'community-organizations',
   ];
+  const groupId = record.group_id || legacyGroupId;
+  const categoryId = record.category_id || legacyCategoryId;
+  const certifiedByVaad = /vaadhakashrus\.org/i.test(record.kosher_source_url || record.source_url || '');
 
   return {
     id: String(record.id),
@@ -140,9 +150,9 @@ export function normalizeDirectoryListing(record) {
     website: record.website || record.source_url || '',
     sourceUrl: record.source_url || '',
     sourceLabel: record.verification || 'Public source',
-    kosher: Boolean(record.kosher),
-    kosherCertifier: record.kosher_certifier || '',
-    kosherSourceUrl: record.kosher_source_url || '',
+    kosher: Boolean(record.kosher || certifiedByVaad),
+    kosherCertifier: record.kosher_certifier || (certifiedByVaad ? 'Five Towns & Far Rockaway Vaad Hakashrus' : ''),
+    kosherSourceUrl: record.kosher_source_url || (certifiedByVaad ? record.source_url : ''),
     lastChecked: record.last_checked || '',
   };
 }

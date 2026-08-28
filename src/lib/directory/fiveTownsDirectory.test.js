@@ -32,6 +32,23 @@ describe('Five Towns directory', () => {
     ).toBe(true);
   });
 
+  it('provides real options across all approved groups', () => {
+    const counts = Object.fromEntries(
+      DIRECTORY_GROUPS.map((group) => [
+        group.id,
+        FIVE_TOWNS_LISTINGS.filter((item) => item.groupId === group.id).length,
+      ]),
+    );
+    expect(counts['jewish-life']).toBeGreaterThan(0);
+    expect(counts.food).toBeGreaterThan(0);
+    expect(counts.family).toBeGreaterThan(0);
+    expect(counts.shopping).toBeGreaterThan(0);
+    expect(counts.health).toBeGreaterThan(0);
+    expect(counts.services).toBeGreaterThan(0);
+    expect(counts.community).toBeGreaterThan(0);
+    expect(counts['things-to-do']).toBeGreaterThan(0);
+  });
+
   it('shows kosher verification only with a certification source', () => {
     expect(canShowKosherVerification({ kosher: true, kosherSourceUrl: '' })).toBe(false);
     expect(
