@@ -87,7 +87,7 @@ export default function FiveTownsDirectory({
   };
 
   return (
-    <section className="fixed inset-0 z-[90] mx-auto flex w-full max-w-md flex-col overflow-hidden bg-[#F5F7FB] text-[#0F1C2E]">
+    <section role="dialog" aria-modal="true" aria-label="Five Towns directory" className="fixed inset-0 z-[90] mx-auto flex w-full max-w-md flex-col overflow-hidden bg-[#F5F7FB] text-[#0F1C2E]">
       <header className="shrink-0 border-b border-slate-200/80 bg-white px-4 pb-3 pt-[max(14px,env(safe-area-inset-top))]">
         <div className="flex min-h-11 items-center gap-2">
           <button

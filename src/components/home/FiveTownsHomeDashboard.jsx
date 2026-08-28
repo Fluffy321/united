@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ArrowRight,
   Baby,
@@ -270,12 +271,13 @@ export default function FiveTownsHomeDashboard({
         </button>
       </div>
 
-      {directoryGroupId !== null && (
+      {directoryGroupId !== null && typeof document !== 'undefined' && createPortal(
         <FiveTownsDirectory
           initialGroupId={directoryGroupId}
           onClose={() => setDirectoryGroupId(null)}
           onReportCorrection={onReportCorrection}
-        />
+        />,
+        document.body,
       )}
     </main>
   );
