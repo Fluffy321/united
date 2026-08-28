@@ -46,7 +46,6 @@ describe('Mobile headquarters Feed contract', () => {
 
   it('keeps unwanted posts and hidden categories out of the personalized dashboard', () => {
     expect(source).toContain("briefPreferences?.category_preferences?.[categoryId] === 'hide'");
-    expect(source).toContain('hiddenPostIds');
     expect(source).toContain('posts={rankedBriefItems}');
   });
 

@@ -264,7 +264,7 @@ export default function FiveTownsHomeDashboard({
           </div>
         </section>
 
-        <button type="button" onClick={onPublish} className="flex min-h-14 w-full items-center justify-between rounded-[20px] bg-[#0B1D42] px-5 text-left text-white shadow-[0_12px_28px_rgba(11,29,66,0.18)]">
+        <button type="button" onClick={onPublish} className="flex min-h-14 w-full items-center justify-between rounded-[20px] bg-blue-600 px-5 text-left text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)]">
           <span><strong className="block text-[14px] font-black">Add something useful</strong><span className="mt-0.5 block text-[10px] font-semibold text-slate-300">Post an update, event, offer, or request</span></span>
           <ArrowRight className="h-5 w-5" />
         </button>

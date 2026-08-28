@@ -5,7 +5,6 @@ import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 import { toast } from 'sonner';
-import ReportModal from '@/components/common/ReportModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { CalendarDays, Heart, MessageCircle, RefreshCw, Search, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -26,7 +25,7 @@ import WidgetBoundary from '@/components/feed/WidgetBoundary';
 import FeedPreferenceSetup from '@/components/feed/FeedPreferenceSetup';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
 
-import { createBlock, deleteComment, deleteUnifiedPost, filterBlock, filterComment, filterUserCommunity, getCommunity, getUnifiedPost } from '@/services/entityServices';
+import { filterBlock, filterUserCommunity, getCommunity, getUnifiedPost } from '@/services/entityServices';
 import { FEED_LOAD_TIMEOUT_MS, feedText, getPostLivePriority } from '@/lib/feed/feedRanking';
 import { feedPreferenceKeys, postKeys } from '@/lib/queryKeys';
 import { DEFAULT_BRIEF_CATEGORY_IDS, getBriefCategory } from '@/lib/feed/briefCategories';
@@ -35,7 +34,6 @@ import {
   closeBriefCategoryParams,
   closeBriefParams,
   openBriefCategoryParams,
-  openBriefParams,
   readBriefRouteState,
 } from '@/lib/feed/briefRouteState';
 
@@ -48,15 +46,12 @@ export default function Feed() {
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('All');
   const [userLikes, setUserLikes] = useState([]);
   const [blockedIds, setBlockedIds] = useState([]);
-  const [hiddenPostIds, setHiddenPostIds] = useState([]);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const composerRef = useRef(null);
   const [showEventsSheet, setShowEventsSheet] = useState(false);
   const [showCalendarSheet, setShowCalendarSheet] = useState(false);
   const [showMinyanSheet, setShowMinyanSheet] = useState(false);
   const [replyPost, setReplyPost] = useState(null);
-  const [showReport, setShowReport] = useState(false);
-  const [reportTarget, setReportTarget] = useState({ id: null, type: null });
   useEffect(() => {
     const enabled = Boolean(currentUser)
       && currentUser?.notification_settings?.shabbatReminders !== false
@@ -170,16 +165,6 @@ export default function Feed() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (postId) => {
-      await deleteUnifiedPost(postId);
-      await deleteComment(await filterComment({ post_id: postId }).then(c => c.map(x => x.id)));
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: postKeys.all });
-    },
-  });
-
   const recordInterest = useCallback((post) => {
     setInterestSignals(prev => ({
       types: { ...prev.types, [post.type]: (prev.types[post.type] || 0) + 1 },
@@ -204,34 +189,6 @@ export default function Feed() {
     likeMutation.mutate(postId);
   }, [currentUser, appParams, recordInterest, likeMutation]);
 
-  const handleBlock = useCallback(async (userId) => {
-    if (!currentUser) return;
-    if (!appParams.hasBackendConfig) {
-      setBlockedIds(prev => [...prev, userId]);
-      toast.success('User blocked locally for this demo session');
-      return;
-    }
-    try {
-      await createBlock({ blocker_id: currentUser.id, blocked_id: userId });
-      setBlockedIds(prev => [...prev, userId]);
-      toast.success('User blocked');
-    } catch { toast.error('Could not block user'); }
-  }, [currentUser, appParams]);
-
-  const handleReport = useCallback((contentId, contentType) => {
-    setReportTarget({ id: contentId, type: contentType });
-    setShowReport(true);
-  }, []);
-
-  const handleCommunityClick = useCallback((communityId) => {
-    if (!communityId) return;
-    navigate(`/communities/${communityId}`);
-  }, [navigate]);
-
-  const handleComment = useCallback((p) => {
-    recordInterest(p);
-  }, [recordInterest]);
-
   useEffect(() => {
     const postId = searchParams.get('postId');
     const shouldOpenReply = searchParams.get('reply') === '1' || searchParams.get('comments') === '1';
@@ -250,8 +207,6 @@ export default function Feed() {
       })
       .catch(() => toast.error('Could not open that post'));
   }, [searchParams, replyPost?.id, appParams.hasBackendConfig]);
-
-  const handleDelete = useCallback((id) => deleteMutation.mutate(id), [deleteMutation.mutate]);
 
   const handleNetworkSelect = useCallback(async (net) => {
     setPrimaryNetwork(net);
@@ -280,7 +235,6 @@ export default function Feed() {
     if ((p.activity_kind === 'marketplace_listing' || p.type === 'marketplace')
       && p.listing_status && p.listing_status !== 'available') return false;
     if (blockedIds.includes(p.user_id)) return false;
-    if (hiddenPostIds.includes(p.id)) return false;
     // Age gate — hide posts older than 14 days
     const ts = p.updated_date || p.created_date;
     if (ts && Date.now() - new Date(ts).getTime() > FEED_TTL) return false;
@@ -369,10 +323,6 @@ export default function Feed() {
   useEffect(() => {
     setActiveBriefTab('updates');
   }, [categoryId]);
-
-  const handleOpenBrief = useCallback(() => {
-    setSearchParams(openBriefParams(searchParams));
-  }, [searchParams, setSearchParams]);
 
   const handleCloseBrief = useCallback(() => {
     setSearchParams(closeBriefParams(searchParams));
@@ -583,14 +533,6 @@ export default function Feed() {
         currentUser={currentUser}
         userCommunities={communityGroups}
         onPostCreated={() => queryClient.invalidateQueries({ queryKey: postKeys.all })}
-      />
-
-      <ReportModal
-        open={showReport}
-        onOpenChange={setShowReport}
-        contentId={reportTarget.id}
-        contentType={reportTarget.type}
-        currentUser={currentUser}
       />
 
       {/* Jewish Calendar popup */}
