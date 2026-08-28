@@ -16,6 +16,7 @@ describe('iPhone app shell contract', () => {
     expect(layoutSource).toContain('app-bottom-nav');
     expect(layoutSource).toContain('app-fixed-layer');
     expect(layoutSource).toContain('app-floating-stack');
+    expect(layoutSource).toContain("currentPageName !== 'Feed'");
   });
 
   it('keeps Communities errors inside the same actionable recovery path', () => {
